@@ -1,0 +1,10 @@
+/database/
+/uploads/dokumen/
+/uploads/faktur/
+/uploads/foto/
+/uploads/lainnya/
+/uploads/rme/
+/uploads/ttd/
+.htaccess
+/logs
+.env
