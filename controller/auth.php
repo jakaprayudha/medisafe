@@ -23,12 +23,6 @@ if (isset($_POST['login'])) {
             //  </script>";
             $_SESSION["sukses"] = 'Selamat Anda Berhasil Login Sebagai Admin';
             $_SESSION['redirectlogin'] = 'module/admin';
-         } else if ($datauser['roles'] == 'Waiters') {
-            $_SESSION["sukses"] = 'Selamat Anda Berhasil Login Sebagai Waiters';
-            $_SESSION['redirectlogin'] = 'module/waiter';
-         } else if ($datauser['roles'] == 'Cassier') {
-            $_SESSION["sukses"] = 'Selamat Anda Berhasil Login Sebagai Cassier';
-            $_SESSION['redirectlogin'] = 'module/cassier';
          }
       } else {
          $_SESSION["error"] = 'Password Salah';

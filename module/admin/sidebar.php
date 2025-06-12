@@ -31,57 +31,57 @@
                <span class="hide-menu">Master Data</span>
             </li>
             <li class="sidebar-item">
-               <a class="sidebar-link <?php if ($title == 'Product' || $title == 'Satuan' || $title == "Kategori") {
+               <a class="sidebar-link <?php if ($title == 'Dokter') {
                                           echo 'active';
                                        } ?>"
-                  href="module/admin/product"
+                  href="module/admin/dokter"
                   aria-expanded="false">
                   <iconify-icon icon="solar:layers-minimalistic-bold-duotone"></iconify-icon>
-                  <span class="hide-menu">Produk</span>
+                  <span class="hide-menu">Dokter</span>
                </a>
             </li>
             <li class="sidebar-item">
             <li class="sidebar-item">
-               <a class="sidebar-link <?php if ($title == 'Supplier' || $title == 'Kategori Supplier') {
+               <a class="sidebar-link <?php if ($title == 'Pasien') {
                                           echo 'active';
                                        } ?>"
-                  href="module/admin/supplier"
+                  href="module/admin/pasien"
                   aria-expanded="false">
                   <iconify-icon icon="solar:danger-circle-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Supplier</span>
+                  <span class="hide-menu">Pasien</span>
                </a>
             </li>
             <li class="sidebar-item">
-               <a class="sidebar-link <?php if ($title == 'Pelanggan' || $title == 'Kategori Pelanggan') {
+               <a class="sidebar-link <?php if ($title == 'Farmasi') {
                                           echo 'active';
                                        } ?>"
-                  href="module/admin/customer"
+                  href="module/admin/farmasi"
                   aria-expanded="false">
                   <iconify-icon icon="solar:bookmark-square-minimalistic-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Customer</span>
+                  <span class="hide-menu">Farmasi</span>
                </a>
             </li>
-            <li class="sidebar-item">
-               <a class="sidebar-link <?php if ($title == 'Gudang') {
+            <!-- <li class="sidebar-item">
+               <a class="sidebar-link <?php if ($title == 'Poliklinik') {
                                           echo 'active';
                                        } ?>"
-                  href="module/admin/warehouse"
+                  href="module/admin/poliklinik"
                   aria-expanded="false">
                   <iconify-icon icon="solar:file-text-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Gudang</span>
+                  <span class="hide-menu">Poliklinik</span>
                </a>
-            </li>
+            </li> -->
             <li class="sidebar-item">
-               <a class="sidebar-link <?php if ($title == 'Karyawan') {
+               <a class="sidebar-link <?php if ($title == 'Tarif') {
                                           echo 'active';
                                        } ?>"
-                  href="module/admin/employee"
+                  href="module/admin/tarif"
                   aria-expanded="false">
-                  <iconify-icon icon="solar:text-field-focus-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Karyawan</span>
+                  <iconify-icon icon="solar:folder-line-duotone"></iconify-icon>
+                  <span class="hide-menu">Tarif</span>
                </a>
             </li>
-            <li class="sidebar-item">
+            <!-- <li class="sidebar-item">
                <a class="sidebar-link <?php if ($title == 'User') {
                                           echo 'active';
                                        } ?>"
@@ -90,13 +90,13 @@
                   <iconify-icon icon="solar:user-line-duotone"></iconify-icon>
                   <span class="hide-menu">User Management</span>
                </a>
-            </li>
-            <li class="sidebar-item">
+            </li> -->
+            <!-- <li class="sidebar-item">
                <a class="sidebar-link" href="module/admin/setting" aria-expanded="false">
                   <iconify-icon icon="solar:key-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Pengaturan Bisnis</span>
+                  <span class="hide-menu">Pengaturan Klinik</span>
                </a>
-            </li>
+            </li> -->
             <li>
                <span class="sidebar-divider lg"></span>
             </li>
@@ -105,21 +105,21 @@
                <span class="hide-menu">Aktivitas</span>
             </li>
             <li class="sidebar-item">
-               <a class="sidebar-link" href="module/admin/sales" aria-expanded="false">
+               <a class="sidebar-link" href="module/admin/registrasi" aria-expanded="false">
                   <iconify-icon icon="solar:login-3-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Penjualan</span>
+                  <span class="hide-menu">Registrasi Pasien</span>
                </a>
             </li>
             <li class="sidebar-item">
-               <a class="sidebar-link" href="module/admin/purchase" aria-expanded="false">
+               <a class="sidebar-link" href="module/admin/permintaan_farmasi" aria-expanded="false">
                   <iconify-icon icon="solar:user-plus-rounded-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Pembelian</span>
+                  <span class="hide-menu">Permintaan Farmasi</span>
                </a>
             </li>
             <li class="sidebar-item">
-               <a class="sidebar-link" href="module/admin/stock" aria-expanded="false">
+               <a class="sidebar-link" href="module/admin/kasir" aria-expanded="false">
                   <iconify-icon icon="solar:folder-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Persediaan</span>
+                  <span class="hide-menu">Kasir</span>
                </a>
             </li>
             <li>
@@ -139,6 +139,12 @@
                <a class="sidebar-link" href="module/admin/profit" aria-expanded="false">
                   <iconify-icon icon="solar:planet-3-line-duotone"></iconify-icon>
                   <span class="hide-menu">Laba Rugi</span>
+               </a>
+            </li>
+            <li class="sidebar-item">
+               <a class="sidebar-link" href="module/admin/report" aria-expanded="false">
+                  <iconify-icon icon="solar:sticker-smile-circle-2-line-duotone"></iconify-icon>
+                  <span class="hide-menu">Persediaan Farmasi</span>
                </a>
             </li>
          </ul>

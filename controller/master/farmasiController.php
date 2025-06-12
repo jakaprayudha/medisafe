@@ -9,25 +9,25 @@ $method = $_SERVER['REQUEST_METHOD'];
 switch ($method) {
    case 'POST':
       // Create User
-      createMerk();
+      createFarmasi();
       break;
    case 'GET':
       if (isset($_GET['id'])) {
          // Jika iduser ada di parameter, ambil data user berdasarkan iduser
-         getMerkID($_GET['id']);
+         getFarmasiID($_GET['id']);
       } else {
          // Jika tidak ada iduser, ambil semua data user
-         getMerk();
+         getFarmasi();
       }
       break;
    case 'PUT':
       // Update User
-      updateMerk();
+      updateFarmasi();
       break;
 
    case 'DELETE':
       // Delete User
-      deleteMerk();
+      deleteFarmasi();
       break;
 
    default:
@@ -39,27 +39,29 @@ switch ($method) {
 }
 
 // Function untuk Create User
-function createMerk()
+function createFarmasi()
 {
    global $koneksi;
 
    // Ambil data dari request body
-   $merk = isset($_POST['merk']) ? $_POST['merk'] : '';
+   $nama_barang = $_POST['nama_barang'] ?? '';
+   $kategori_barang = $_POST['kategori_barang'] ?? '';
+   $satuan = $_POST['satuan'] ?? '';
+   $tarif_dasar = $_POST['harga_jual'] ?? '';
+   $kandungan = $_POST['kandungan'] ?? '';
 
-   if (empty($merk)) {
+   if (empty($nama_barang)) {
       echo json_encode([
          'status' => 'error',
-         'message' => 'Merk harus diisi.'
+         'message' => 'Nama harus diisi.'
       ]);
       exit;
    }
 
-   // Query untuk insert data user
-   $query = "INSERT INTO ms_merk (merk_name) VALUES (?)";
-
+   // Query insert data
+   $query = "INSERT INTO ms_farmasi (nama_barang, kandungan, satuan, kategori_barang, tarif_dasar) VALUES (?,  ?,  ?, ?, ?)";
    if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $merk);
-
+      $stmt->bind_param("sssss", $nama_barang, $kandungan, $satuan, $kategori_barang, $tarif_dasar);
       if ($stmt->execute()) {
          echo json_encode([
             'status' => 'success',
@@ -68,10 +70,9 @@ function createMerk()
       } else {
          echo json_encode([
             'status' => 'error',
-            'message' => 'Gagal menambahkan.'
+            'message' => 'Gagal menambahkan data.'
          ]);
       }
-
       $stmt->close();
    } else {
       echo json_encode([
@@ -82,7 +83,7 @@ function createMerk()
 }
 
 // Function untuk Read User
-function getMerk()
+function getFarmasi()
 {
    global $koneksi;
 
@@ -92,11 +93,11 @@ function getMerk()
    $search = isset($_GET['search']) && isset($_GET['search']['value']) ? $_GET['search']['value'] : '';
 
    // Query dasar untuk mengambil data user
-   $query = "SELECT * FROM ms_merk";
+   $query = "SELECT * FROM ms_farmasi ";
 
    // Jika ada pencarian, tambahkan kondisi pencarian
    if ($search) {
-      $query .= " WHERE merk_name LIKE '%$search%'";
+      $query .= " WHERE nama_barang LIKE '%$search%'";
    }
 
    // Ambil data sesuai dengan pagination
@@ -118,7 +119,7 @@ function getMerk()
    }
 
    // Query untuk menghitung total data
-   $totalQuery = "SELECT COUNT(*) AS total FROM ms_merk";
+   $totalQuery = "SELECT COUNT(*) AS total FROM ms_farmasi";
    $totalResult = mysqli_query($koneksi, $totalQuery);
    $totalData = mysqli_fetch_assoc($totalResult);
    $totalRecords = $totalData['total'];
@@ -134,12 +135,12 @@ function getMerk()
 }
 
 // Function untuk Read User berdasarkan ID
-function getMerkID($iduser)
+function getFarmasiID($iduser)
 {
    global $koneksi;
 
    // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM ms_merk WHERE id_merk = ?";
+   $query = "SELECT * FROM ms_farmasi WHERE id = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $iduser); // Bind parameter iduser
@@ -169,30 +170,35 @@ function getMerkID($iduser)
 }
 
 // Function untuk Update User
-function updateMerk()
+function updateFarmasi()
 {
    global $koneksi;
 
    // Ambil data dari request body
    parse_str(file_get_contents("php://input"), $_PUT);
    $id = isset($_PUT['iduser']) ? $_PUT['iduser'] : '';
-   $merk = isset($_PUT['merk']) ? $_PUT['merk'] : '';
+   $satuan = isset($_PUT['satuan']) ? $_PUT['satuan'] : '';
+   $product = isset($_PUT['produk']) ? $_PUT['produk'] : '';
+   $code = isset($_PUT['kode']) ? $_PUT['kode'] : '';
+   $product_price = isset($_PUT['harga_jual']) ? $_PUT['harga_jual'] : '';
+   $product_base = isset($_PUT['harga_beli']) ? $_PUT['harga_beli'] : '';
+   $category = isset($_PUT['kategori']) ? $_PUT['kategori'] : '';
+   $description = isset($_PUT['deskripsi']) ? $_PUT['deskripsi'] : '';
 
    // Debugging input data
-   if (empty($merk) || empty($id)) {
+   if (empty($product) || empty($id)) {
       echo json_encode([
          'status' => 'error',
-         'message' => 'ID dan Merk harus diisi.'
+         'message' => 'ID dan Product Item harus diisi.'
       ]);
       exit;
    }
 
    // Query untuk update data user
-   $query = "UPDATE ms_merk SET merk_name = ?, updated_at = ? WHERE id_merk = ?";
+   $query = "UPDATE ms_farmasi SET product_name = ?, product_code = ?, product_price = ?, product_base = ?, id_category = ?, product_description = ?, id_unit = ? WHERE id_product = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
-      $updated_at = date('Y-m-d H:i:s');
-      $stmt->bind_param("ssi", $merk, $updated_at, $id);
+      $stmt->bind_param("ssssssss", $product, $code, $product_price, $product_base, $category, $description, $satuan, $id);
       if ($stmt->execute()) {
          header('Content-Type: application/json');
          echo json_encode([
@@ -215,7 +221,7 @@ function updateMerk()
 }
 
 // Function untuk Delete User
-function deleteMerk()
+function deleteFarmasi()
 {
    global $koneksi;
 
@@ -231,7 +237,7 @@ function deleteMerk()
    }
 
    // Query untuk menghapus data user
-   $query = "DELETE FROM ms_merk WHERE id_merk = ?";
+   $query = "DELETE FROM ms_farmasi WHERE id = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $id);

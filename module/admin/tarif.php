@@ -1,5 +1,6 @@
 <?php
-$title = 'Kategori';
+$title = 'Tarif';
+require '../../controller/view.php';
 require '../../utility/env.php';
 // Memuat file .env
 $env = loadEnv();
@@ -39,12 +40,9 @@ $apiUrl = getenv('API_URL');
               <div class="card w-100">
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Data Kategori</h5>
+                    <h5 class="card-title fw-semibold">Data Tarif</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
-                      <a href="module/admin/product">
-                        <button class="btn btn-light"><i class="fas fa-arrow-left"></i> Kembali</button>
-                      </a>
                       <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add"><i class="fas fa-plus"></i> Tambah</button>
                     </div>
                   </div>
@@ -52,10 +50,11 @@ $apiUrl = getenv('API_URL');
                     <table class="table text-nowrap align-middle table-custom mb-0" id="zero_config">
                       <thead>
                         <tr>
-                          <th scope="col" class="text-dark fw-normal">Kategori</th>
-                          <th class="text-dark fw-normal">Description</th>
-                          <th>Create</th>
-                          <th>Update</th>
+                          <th scope="col" class="text-dark fw-normal">Kode</th>
+                          <th class="text-dark fw-normal">Layanan</th>
+                          <th class="text-dark fw-normal">Nama Tarif</th>
+                          <th class="text-dark fw-normal">Tarif</th>
+                          <th class="text-dark fw-normal">Keterangan</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                         </tr>
@@ -72,8 +71,6 @@ $apiUrl = getenv('API_URL');
     </div>
   </div>
 
-
-
   <?php
   require 'library.php';
   ?>
@@ -88,12 +85,30 @@ $apiUrl = getenv('API_URL');
       <form id="addForm">
         <div class="modal-body">
           <div class="mb-3">
-            <label for="kategori" class="form-label">Kategori <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="kategori" name="kategori" required>
+            <label for="kode" class="form-label">Kode</label>
+            <input type="text" name="kode" id="kode" class="form-control">
           </div>
           <div class="mb-3">
-            <label for="deskripsi" class="form-label">Deskripsi </label>
-            <textarea name="deskripsi" id="deskripsi" class="form-control" rows="10"></textarea>
+            <label for="layanan" class="form-label">Layanan <span class="text-danger">*</span> </label>
+            <select name="layanan" id="layanan" class="form-select">
+              <option value="Poliklinik">Poliklinik</option>
+              <option value="UGD">UGD</option>
+              <option value="Rawat Inap">Rawat Inap</option>
+              <option value="Intensive Care">Intensive Care</option>
+              <option value="Operasi">Operasi</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="nama_tarif" class="form-label">Nama Tarif <span class="text-danger">*</span> </label>
+            <input type="text" name="nama_tarif" id="nama_tarif" required class="form-control">
+          </div>
+          <div class="mb-3">
+            <label for="tarif" class="form-label">Tarif<span class="text-danger">*</span> </label>
+            <input type="number" name="tarif" id="tarif" required class="form-control">
+          </div>
+          <div class="mb-3">
+            <label for="keterangan" class="form-label">Keterangan </label>
+            <textarea name="keterangan" id="keterangan" class="form-control" rows="5"></textarea>
           </div>
         </div>
         <div class="modal-footer">
@@ -105,37 +120,11 @@ $apiUrl = getenv('API_URL');
   </div>
 </div>
 
-<div class="modal fade" id="edit" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h1 class="modal-title fs-5" id="exampleModalLabel">Perubahan Data</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form id="editForm">
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="editkategori" class="form-label">Kategori <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="editkategori" name="editkategori" required>
-          </div>
-          <div class="mb-3">
-            <label for="editdeskripsi" class="form-label">Deskripsi </label>
-            <textarea name="editdeskripsi" id="editdeskripsi" class="form-control" rows="10"></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-primary">Simpan</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
 
 
 <script>
   // Mengambil nilai API_URL dari PHP
-  const apiUrl = '<?php echo $apiUrl . 'product/' . 'categoryProductController' ?>';
+  const apiUrl = '<?php echo $apiUrl . 'master/' . 'tarifController' ?>';
   $(document).ready(function() {
     // Initialize DataTable
     var table = $('#zero_config').DataTable({
@@ -150,33 +139,37 @@ $apiUrl = getenv('API_URL');
             return {
               "actions": `
                   <div class="text-center">
-                      <button class="btn btn-warning edit-btn" data-id="${row.id_category}">Ubah</button>
-                      <button class="btn btn-danger delete-btn" data-id="${row.id_category}">Hapus</button>
+                      <button class="btn btn-warning edit-btn" data-id="${row.id}">Ubah</button>
+                      <button class="btn btn-danger delete-btn" data-id="${row.id}">Hapus</button>
                   </div>
               `,
-              "category_name": row.category_name,
-              "category_description": row.category_description,
-              "create_at": row.create_at,
-              "update_at": row.update_at,
-              "status_category": '<span class="badge ' + (row.status_category == 1 ? 'bg-success' : 'bg-danger') + ' d-block text-center">' + (row.status_category == 1 ? 'Active' : 'Inactive') + '</span>'
+              "kode": row.kode,
+              "layanan": row.layanan,
+              "nama_tarif": row.nama_tarif,
+              "tarif": row.tarif,
+              "keterangan": row.keterangan,
+              "status_tarif": '<span class="badge ' + (row.status_tarif == 1 ? 'bg-success' : 'bg-danger') + ' d-block text-center">' + (row.status_tarif == 1 ? 'Active' : 'Inactive') + '</span>'
             };
           });
         }
       },
       "columns": [{
-          "data": "category_name"
+          "data": "kode"
         },
         {
-          "data": "category_description"
+          "data": "layanan"
         },
         {
-          "data": "create_at"
+          "data": "nama_tarif"
         },
         {
-          "data": "update_at"
+          "data": "tarif"
         },
         {
-          "data": "status_category"
+          "data": "keterangan"
+        },
+        {
+          "data": "status_tarif"
         },
         {
           "data": "actions"
@@ -188,18 +181,29 @@ $apiUrl = getenv('API_URL');
     document.getElementById("addForm").addEventListener("submit", function(event) {
       event.preventDefault();
 
-      const kategori = document.getElementById("kategori").value;
-      const description = document.getElementById("deskripsi").value;
+      const kode = document.getElementById("kode").value;
+      const layanan = document.getElementById("layanan").value;
+      const nama_tarif = document.getElementById("nama_tarif").value;
+      const tarif = document.getElementById("tarif").value;
+      const keterangan = document.getElementById("keterangan").value;
+
+      const formData = new URLSearchParams({
+        kode: kode,
+        layanan: layanan,
+        nama_tarif: nama_tarif,
+        tarif: tarif,
+        keterangan: keterangan
+      });
+
+      // ✅ Tampilkan data ke console
+      console.log("Data yang dikirim:", formData.toString());
 
       fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
           },
-          body: new URLSearchParams({
-            'kategori': kategori,
-            'description': description
-          })
+          body: formData
         })
         .then(response => response.json())
         .then(data => {
@@ -210,13 +214,8 @@ $apiUrl = getenv('API_URL');
               icon: 'success',
               confirmButtonText: 'OK'
             }).then(() => {
-              // RESET FORM INPUT
               document.getElementById("addForm").reset();
-
-              // TUTUP MODAL
               $('#add').modal('hide');
-
-              // REFRESH DATA TABLE
               table.ajax.reload(null, false);
             });
           } else {
@@ -275,76 +274,6 @@ $apiUrl = getenv('API_URL');
       });
     });
 
-    // Handle click on edit button
-    $(document).on('click', '.edit-btn', function() {
-      var userId = $(this).data('id'); // Ambil iduser dari data-id
-
-      // Fetch data user by iduser and populate the form
-      fetch(apiUrl + `?id=${userId}`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.status === 'success') {
-            const user = data.user;
-            // Populate the modal form with user data
-            $('#editkategori').val(user.category_name);
-            $('#editdeskripsi').val(user.category_description);
-
-            // Show the modal
-            $('#edit').modal('show'); // Show the modal after populating the form
-
-            // Store the user id in the form for later use
-            $('#editForm').data('id_category', user.id_category);
-          } else {
-            Swal.fire('Gagal!', 'Data user tidak ditemukan.', 'error');
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          Swal.fire('Terjadi Kesalahan!', 'Gagal memuat data. Coba lagi nanti.', 'error');
-        });
-    });
-
-    // Handle form submit for updating user
-    $('#editForm').on('submit', function(e) {
-      e.preventDefault(); // Prevent default form submission
-
-      var userId = $(this).data('id_category'); // Get user id from form data
-      var kategori = $('#editkategori').val();
-      var deskripsi = $('#editdeskripsi').val();
-
-      // Create the data to send with the PUT request
-      var data = {
-        iduser: userId,
-        kategori: kategori,
-        deskripsi: deskripsi
-      };
-
-      // Send PUT request to update user
-      // Kirim request ke server menggunakan fetch
-      fetch(apiUrl, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: new URLSearchParams(data).toString(),
-        })
-        .then(response => response.json())
-        .then(data => {
-          // console.log('Response from server:', data); 
-          if (data.status === 'success') {
-            Swal.fire('Berhasil!', 'Data berhasil diperbarui.', 'success').then(() => {
-              $('#edit').modal('hide'); // Hide the modal after successful update
-              table.ajax.reload(null, false); // Reload the table data (if using DataTables)
-            });
-          } else {
-            Swal.fire('Gagal!', data.message || 'Terjadi kesalahan saat memperbarui data.', 'error');
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error); // Log error
-          Swal.fire('Terjadi Kesalahan!', 'Gagal memperbarui data. Coba lagi nanti.', 'error');
-        });
-    });
   });
 </script>
 

@@ -9,25 +9,25 @@ $method = $_SERVER['REQUEST_METHOD'];
 switch ($method) {
    case 'POST':
       // Create User
-      createSatuan();
+      createTarif();
       break;
    case 'GET':
       if (isset($_GET['id'])) {
          // Jika iduser ada di parameter, ambil data user berdasarkan iduser
-         getSatuanID($_GET['id']);
+         getTarifID($_GET['id']);
       } else {
          // Jika tidak ada iduser, ambil semua data user
-         getSatuan();
+         getTarif();
       }
       break;
    case 'PUT':
       // Update User
-      updateSatuan();
+      updateFarmasi();
       break;
 
    case 'DELETE':
       // Delete User
-      deleteSatuan();
+      deleteTarif();
       break;
 
    default:
@@ -39,28 +39,29 @@ switch ($method) {
 }
 
 // Function untuk Create User
-function createSatuan()
+function createTarif()
 {
    global $koneksi;
 
    // Ambil data dari request body
-   $unit = isset($_POST['unit']) ? $_POST['unit'] : '';
-   $description = isset($_POST['description']) ? $_POST['description'] : '';
+   $kode = $_POST['kode'] ?? '';
+   $layanan = $_POST['layanan'] ?? '';
+   $nama_tarif = $_POST['nama_tarif'] ?? '';
+   $tarif = $_POST['tarif'] ?? '';
+   $keterangan = $_POST['keterangan'] ?? '';
 
-   if (empty($unit)) {
+   if (empty($nama_tarif)) {
       echo json_encode([
          'status' => 'error',
-         'message' => 'satuan harus diisi.'
+         'message' => 'Nama Tarif harus diisi.'
       ]);
       exit;
    }
 
-   // Query untuk insert data user
-   $query = "INSERT INTO ms_product_unit (unit_name, unit_description) VALUES (?, ?)";
-
+   // Query insert data
+   $query = "INSERT INTO ms_tarif (kode, layanan, nama_tarif, tarif, keterangan) VALUES (?, ?, ?, ?, ?)";
    if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("ss", $unit, $description);
-
+      $stmt->bind_param("sssss", $kode, $layanan, $nama_tarif, $tarif, $keterangan);
       if ($stmt->execute()) {
          echo json_encode([
             'status' => 'success',
@@ -69,10 +70,9 @@ function createSatuan()
       } else {
          echo json_encode([
             'status' => 'error',
-            'message' => 'Gagal menambahkan.'
+            'message' => 'Gagal menambahkan data.'
          ]);
       }
-
       $stmt->close();
    } else {
       echo json_encode([
@@ -83,7 +83,7 @@ function createSatuan()
 }
 
 // Function untuk Read User
-function getSatuan()
+function getTarif()
 {
    global $koneksi;
 
@@ -93,11 +93,11 @@ function getSatuan()
    $search = isset($_GET['search']) && isset($_GET['search']['value']) ? $_GET['search']['value'] : '';
 
    // Query dasar untuk mengambil data user
-   $query = "SELECT * FROM ms_product_unit";
+   $query = "SELECT * FROM ms_tarif ";
 
    // Jika ada pencarian, tambahkan kondisi pencarian
    if ($search) {
-      $query .= " WHERE unit_name LIKE '%$search%'";
+      $query .= " WHERE nama_tarif LIKE '%$search%'";
    }
 
    // Ambil data sesuai dengan pagination
@@ -119,7 +119,7 @@ function getSatuan()
    }
 
    // Query untuk menghitung total data
-   $totalQuery = "SELECT COUNT(*) AS total FROM ms_product_unit";
+   $totalQuery = "SELECT COUNT(*) AS total FROM ms_tarif";
    $totalResult = mysqli_query($koneksi, $totalQuery);
    $totalData = mysqli_fetch_assoc($totalResult);
    $totalRecords = $totalData['total'];
@@ -135,12 +135,12 @@ function getSatuan()
 }
 
 // Function untuk Read User berdasarkan ID
-function getSatuanID($iduser)
+function getTarifID($iduser)
 {
    global $koneksi;
 
    // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM ms_product_unit WHERE id_unit = ?";
+   $query = "SELECT * FROM ms_tarif WHERE id = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $iduser); // Bind parameter iduser
@@ -170,30 +170,35 @@ function getSatuanID($iduser)
 }
 
 // Function untuk Update User
-function updateSatuan()
+function updateFarmasi()
 {
    global $koneksi;
 
    // Ambil data dari request body
    parse_str(file_get_contents("php://input"), $_PUT);
    $id = isset($_PUT['iduser']) ? $_PUT['iduser'] : '';
-   $unit = isset($_PUT['unit']) ? $_PUT['unit'] : '';
+   $satuan = isset($_PUT['satuan']) ? $_PUT['satuan'] : '';
+   $product = isset($_PUT['produk']) ? $_PUT['produk'] : '';
+   $code = isset($_PUT['kode']) ? $_PUT['kode'] : '';
+   $product_price = isset($_PUT['harga_jual']) ? $_PUT['harga_jual'] : '';
+   $product_base = isset($_PUT['harga_beli']) ? $_PUT['harga_beli'] : '';
+   $category = isset($_PUT['kategori']) ? $_PUT['kategori'] : '';
    $description = isset($_PUT['deskripsi']) ? $_PUT['deskripsi'] : '';
 
    // Debugging input data
-   if (empty($unit) || empty($id)) {
+   if (empty($product) || empty($id)) {
       echo json_encode([
          'status' => 'error',
-         'message' => 'ID dan Unit harus diisi.'
+         'message' => 'ID dan Product Item harus diisi.'
       ]);
       exit;
    }
 
    // Query untuk update data user
-   $query = "UPDATE ms_product_unit SET unit_name = ?, unit_description = ? WHERE id_unit = ?";
+   $query = "UPDATE ms_tarif SET product_name = ?, product_code = ?, product_price = ?, product_base = ?, id_category = ?, product_description = ?, id_unit = ? WHERE id_product = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("ssi", $unit, $description, $id);
+      $stmt->bind_param("ssssssss", $product, $code, $product_price, $product_base, $category, $description, $satuan, $id);
       if ($stmt->execute()) {
          header('Content-Type: application/json');
          echo json_encode([
@@ -216,7 +221,7 @@ function updateSatuan()
 }
 
 // Function untuk Delete User
-function deleteSatuan()
+function deleteTarif()
 {
    global $koneksi;
 
@@ -232,7 +237,7 @@ function deleteSatuan()
    }
 
    // Query untuk menghapus data user
-   $query = "DELETE FROM ms_product_unit WHERE id_unit = ?";
+   $query = "DELETE FROM ms_tarif WHERE id = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $id);

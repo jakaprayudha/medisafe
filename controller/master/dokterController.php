@@ -9,25 +9,25 @@ $method = $_SERVER['REQUEST_METHOD'];
 switch ($method) {
    case 'POST':
       // Create User
-      createProduct();
+      createDokter();
       break;
    case 'GET':
       if (isset($_GET['id'])) {
          // Jika iduser ada di parameter, ambil data user berdasarkan iduser
-         getProductID($_GET['id']);
+         getDokterID($_GET['id']);
       } else {
          // Jika tidak ada iduser, ambil semua data user
-         getProduct();
+         getDokter();
       }
       break;
    case 'PUT':
       // Update User
-      updateProduct();
+      updateDokter();
       break;
 
    case 'DELETE':
       // Delete User
-      deleteProduct();
+      deleteDokter();
       break;
 
    default:
@@ -39,32 +39,31 @@ switch ($method) {
 }
 
 // Function untuk Create User
-function createProduct()
+function createDokter()
 {
    global $koneksi;
 
    // Ambil data dari request body
-   $satuan = isset($_POST['satuan']) ? $_POST['satuan'] : '';
-   $code = isset($_POST['kode']) ? $_POST['kode'] : '';
-   $category = isset($_POST['kategori']) ? $_POST['kategori'] : '';
-   $product = isset($_POST['produk']) ? $_POST['produk'] : '';
-   $description = isset($_POST['description']) ? $_POST['description'] : '';
-   $product_price = isset($_POST['harga_jual']) ? $_POST['harga_jual'] : '';
-   $product_base = isset($_POST['harga_beli']) ? $_POST['harga_beli'] : '';
-   if (empty($product || empty($satuan))) {
+   $str = isset($_POST['str']) ? $_POST['str'] : '';
+   $nik = isset($_POST['nik']) ? $_POST['nik'] : '';
+   $nama = isset($_POST['nama']) ? $_POST['nama'] : '';
+   $kategori = isset($_POST['kategori']) ? $_POST['kategori'] : '';
+   $spesialis = isset($_POST['spesialis']) ? $_POST['spesialis'] : '';
+   $telepon = isset($_POST['telepon']) ? $_POST['telepon'] : '';
+   $email = isset($_POST['email']) ? $_POST['email'] : '';
+   if (empty($nama || empty($kategori))) {
       echo json_encode([
          'status' => 'error',
-         'message' => 'produk item dan satuan harus diisi.'
+         'message' => 'Nama dan Kategori harus diisi.'
       ]);
       exit;
    }
 
    // Query untuk insert data user
-   $query = "INSERT INTO ms_product (product_name, id_unit, product_description, product_code, product_price, product_base, id_category) VALUES (?, ?, ?, ?, ?, ?, ?)";
+   $query = "INSERT INTO ms_dokter (nama_dokter, kategori_dokter, spesialis, nik_dokter, phone_dokter, email_dokter, str) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
    if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("sssssss", $product, $satuan, $description, $code, $product_price, $product_base, $category);
-
+      $stmt->bind_param("sssssss", $nama, $kategori, $spesialis, $nik, $telepon, $email, $str);
       if ($stmt->execute()) {
          echo json_encode([
             'status' => 'success',
@@ -87,7 +86,7 @@ function createProduct()
 }
 
 // Function untuk Read User
-function getProduct()
+function getDokter()
 {
    global $koneksi;
 
@@ -97,11 +96,11 @@ function getProduct()
    $search = isset($_GET['search']) && isset($_GET['search']['value']) ? $_GET['search']['value'] : '';
 
    // Query dasar untuk mengambil data user
-   $query = "SELECT * FROM ms_product LEFT OUTER JOIN ms_product_unit ON ms_product.id_unit = ms_product_unit.id_unit LEFT OUTER JOIN ms_product_category ON ms_product.id_category = ms_product_category.id_category";
+   $query = "SELECT * FROM ms_dokter ";
 
    // Jika ada pencarian, tambahkan kondisi pencarian
    if ($search) {
-      $query .= " WHERE product_name LIKE '%$search%' or product_code LIKE '%$search%'";
+      $query .= " WHERE nama LIKE '%$search%' or phone_dokter LIKE '%$search%'";
    }
 
    // Ambil data sesuai dengan pagination
@@ -123,7 +122,7 @@ function getProduct()
    }
 
    // Query untuk menghitung total data
-   $totalQuery = "SELECT COUNT(*) AS total FROM ms_product";
+   $totalQuery = "SELECT COUNT(*) AS total FROM ms_dokter";
    $totalResult = mysqli_query($koneksi, $totalQuery);
    $totalData = mysqli_fetch_assoc($totalResult);
    $totalRecords = $totalData['total'];
@@ -139,12 +138,12 @@ function getProduct()
 }
 
 // Function untuk Read User berdasarkan ID
-function getProductID($iduser)
+function getDokterID($iduser)
 {
    global $koneksi;
 
    // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM ms_product WHERE id_product = ?";
+   $query = "SELECT * FROM ms_dokter WHERE id = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $iduser); // Bind parameter iduser
@@ -174,7 +173,7 @@ function getProductID($iduser)
 }
 
 // Function untuk Update User
-function updateProduct()
+function updateDokter()
 {
    global $koneksi;
 
@@ -199,7 +198,7 @@ function updateProduct()
    }
 
    // Query untuk update data user
-   $query = "UPDATE ms_product SET product_name = ?, product_code = ?, product_price = ?, product_base = ?, id_category = ?, product_description = ?, id_unit = ? WHERE id_product = ?";
+   $query = "UPDATE ms_dokter SET product_name = ?, product_code = ?, product_price = ?, product_base = ?, id_category = ?, product_description = ?, id_unit = ? WHERE id_product = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("ssssssss", $product, $code, $product_price, $product_base, $category, $description, $satuan, $id);
@@ -225,7 +224,7 @@ function updateProduct()
 }
 
 // Function untuk Delete User
-function deleteProduct()
+function deleteDokter()
 {
    global $koneksi;
 
@@ -241,7 +240,7 @@ function deleteProduct()
    }
 
    // Query untuk menghapus data user
-   $query = "DELETE FROM ms_product WHERE id_product = ?";
+   $query = "DELETE FROM ms_dokter WHERE id = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $id);
