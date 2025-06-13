@@ -111,6 +111,16 @@
                </a>
             </li>
             <li class="sidebar-item">
+               <a class="sidebar-link <?php if ($title == 'Pemeriksaan') {
+                                          echo 'active';
+                                       } ?>"
+                  href="module/admin/pemeriksaan"
+                  aria-expanded="false">
+                  <iconify-icon icon="mdi:stethoscope"></iconify-icon>
+                  <span class="hide-menu">Pemeriksaan Dokter</span>
+               </a>
+            </li>
+            <li class="sidebar-item">
                <a class="sidebar-link" href="module/admin/permintaan_farmasi" aria-expanded="false">
                   <iconify-icon icon="solar:user-plus-rounded-line-duotone"></iconify-icon>
                   <span class="hide-menu">Permintaan Farmasi</span>
