@@ -1,3 +1,7 @@
+<?php
+$role = $_SESSION['roles']; // ambil dari session login
+var_dump($role);
+?>
 <!-- Sidebar Start -->
 <aside class="left-sidebar">
    <!-- Sidebar scroll-->
@@ -10,58 +14,60 @@
             <i class="ti ti-x fs-8"></i>
          </div>
       </div>
-      <!-- Sidebar navigation-->
-      <nav class="sidebar-nav scroll-sidebar" data-simplebar="">
-         <ul id="sidebarnav">
-            <li class="nav-small-cap">
-               <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
-               <span class="hide-menu">Home</span>
-            </li>
-            <li class="sidebar-item">
-               <a class="sidebar-link" href="module/admin/" aria-expanded="false">
-                  <iconify-icon icon="solar:widget-add-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Dashboard</span>
-               </a>
-            </li>
-            <li>
-               <span class="sidebar-divider lg"></span>
-            </li>
-            <li class="nav-small-cap">
-               <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
-               <span class="hide-menu">Master Data</span>
-            </li>
-            <li class="sidebar-item">
-               <a class="sidebar-link <?php if ($title == 'Dokter') {
-                                          echo 'active';
-                                       } ?>"
-                  href="module/admin/dokter"
-                  aria-expanded="false">
-                  <iconify-icon icon="solar:layers-minimalistic-bold-duotone"></iconify-icon>
-                  <span class="hide-menu">Dokter</span>
-               </a>
-            </li>
-            <li class="sidebar-item">
-            <li class="sidebar-item">
-               <a class="sidebar-link <?php if ($title == 'Pasien') {
-                                          echo 'active';
-                                       } ?>"
-                  href="module/admin/pasien"
-                  aria-expanded="false">
-                  <iconify-icon icon="solar:danger-circle-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Pasien</span>
-               </a>
-            </li>
-            <li class="sidebar-item">
-               <a class="sidebar-link <?php if ($title == 'Farmasi') {
-                                          echo 'active';
-                                       } ?>"
-                  href="module/admin/farmasi"
-                  aria-expanded="false">
-                  <iconify-icon icon="solar:bookmark-square-minimalistic-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Farmasi</span>
-               </a>
-            </li>
-            <!-- <li class="sidebar-item">
+      <?php
+      if ($role == 'admin') { ?>
+         <!-- admin navigation-->
+         <nav class="sidebar-nav scroll-sidebar" data-simplebar="">
+            <ul id="sidebarnav">
+               <li class="nav-small-cap">
+                  <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
+                  <span class="hide-menu">Home</span>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link" href="module/admin/" aria-expanded="false">
+                     <iconify-icon icon="solar:widget-add-line-duotone"></iconify-icon>
+                     <span class="hide-menu">Dashboard</span>
+                  </a>
+               </li>
+               <li>
+                  <span class="sidebar-divider lg"></span>
+               </li>
+               <li class="nav-small-cap">
+                  <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
+                  <span class="hide-menu">Master Data</span>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link <?php if ($title == 'Dokter') {
+                                             echo 'active';
+                                          } ?>"
+                     href="module/admin/dokter"
+                     aria-expanded="false">
+                     <iconify-icon icon="solar:layers-minimalistic-bold-duotone"></iconify-icon>
+                     <span class="hide-menu">Dokter</span>
+                  </a>
+               </li>
+               <li class="sidebar-item">
+               <li class="sidebar-item">
+                  <a class="sidebar-link <?php if ($title == 'Pasien') {
+                                             echo 'active';
+                                          } ?>"
+                     href="module/admin/pasien"
+                     aria-expanded="false">
+                     <iconify-icon icon="solar:danger-circle-line-duotone"></iconify-icon>
+                     <span class="hide-menu">Pasien</span>
+                  </a>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link <?php if ($title == 'Farmasi') {
+                                             echo 'active';
+                                          } ?>"
+                     href="module/admin/farmasi"
+                     aria-expanded="false">
+                     <iconify-icon icon="solar:bookmark-square-minimalistic-line-duotone"></iconify-icon>
+                     <span class="hide-menu">Farmasi</span>
+                  </a>
+               </li>
+               <!-- <li class="sidebar-item">
                <a class="sidebar-link <?php if ($title == 'Poliklinik') {
                                           echo 'active';
                                        } ?>"
@@ -71,113 +77,250 @@
                   <span class="hide-menu">Poliklinik</span>
                </a>
             </li> -->
-            <li class="sidebar-item">
-               <a class="sidebar-link <?php if ($title == 'Tarif') {
-                                          echo 'active';
-                                       } ?>"
-                  href="module/admin/tarif"
-                  aria-expanded="false">
-                  <iconify-icon icon="solar:folder-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Tarif</span>
-               </a>
-            </li>
-            <!-- <li class="sidebar-item">
-               <a class="sidebar-link <?php if ($title == 'User') {
-                                          echo 'active';
-                                       } ?>"
-                  href="module/admin/user"
-                  aria-expanded="false">
-                  <iconify-icon icon="solar:user-line-duotone"></iconify-icon>
-                  <span class="hide-menu">User Management</span>
-               </a>
-            </li> -->
-            <!-- <li class="sidebar-item">
-               <a class="sidebar-link" href="module/admin/setting" aria-expanded="false">
-                  <iconify-icon icon="solar:key-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Pengaturan Klinik</span>
-               </a>
-            </li> -->
-            <li>
-               <span class="sidebar-divider lg"></span>
-            </li>
-            <li class="nav-small-cap">
-               <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
-               <span class="hide-menu">Aktivitas</span>
-            </li>
-            <li class="sidebar-item">
-               <a class="sidebar-link" href="module/admin/registrasi" aria-expanded="false">
-                  <iconify-icon icon="solar:login-3-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Registrasi Pasien</span>
-               </a>
-            </li>
-            <li class="sidebar-item">
-               <a class="sidebar-link <?php if ($title == 'Pemeriksaan') {
-                                          echo 'active';
-                                       } ?>"
-                  href="module/admin/pemeriksaan"
-                  aria-expanded="false">
-                  <iconify-icon icon="mdi:stethoscope"></iconify-icon>
-                  <span class="hide-menu">Pemeriksaan Dokter</span>
-               </a>
-            </li>
-            <li class="sidebar-item">
-               <a class="sidebar-link <?php if ($title == 'Farmasi Order') {
-                                          echo 'active';
-                                       } ?>"
-                  href="module/admin/farmasi_order"
-                  aria-expanded="false">
-                  <iconify-icon icon="solar:user-plus-rounded-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Permintaan Farmasi</span>
-               </a>
-            </li>
-            <li class="sidebar-item">
-               <a class="sidebar-link <?php if ($title == 'Kasir') {
-                                          echo 'active';
-                                       } ?>"
-                  href="module/admin/kasir"
-                  aria-expanded="false">
-                  <iconify-icon icon="solar:folder-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Kasir</span>
-               </a>
-            </li>
-            <li>
-               <span class="sidebar-divider lg"></span>
-            </li>
-            <li class="nav-small-cap">
-               <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
-               <span class="hide-menu">Laporan</span>
-            </li>
-            <li class="sidebar-item">
-               <a class="sidebar-link" href="module/admin/report" aria-expanded="false">
-                  <iconify-icon icon="solar:sticker-smile-circle-2-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Transaksi</span>
-               </a>
-            </li>
-            <li class="sidebar-item">
-               <a class="sidebar-link" href="module/admin/profit" aria-expanded="false">
-                  <iconify-icon icon="solar:planet-3-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Laba Rugi</span>
-               </a>
-            </li>
-            <li class="sidebar-item">
-               <a class="sidebar-link" href="module/admin/report" aria-expanded="false">
-                  <iconify-icon icon="solar:sticker-smile-circle-2-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Persediaan Farmasi</span>
-               </a>
-            </li>
-         </ul>
-         <div
-            class="unlimited-access d-flex align-items-center hide-menu bg-primary-subtle position-relative mb-7 mt-4 p-3 rounded">
-            <div class="me-2 flex-shrink-0">
-               <h6 class="fw-semibold fs-4 mb-6 text-dark w-75">Upgrade to Pro</h6>
-               <a href="https://imzack.id/" target="_blank" class="btn btn-primary fs-2 fw-semibold lh-sm">Buy Pro</a>
+               <li class="sidebar-item">
+                  <a class="sidebar-link <?php if ($title == 'Tarif') {
+                                             echo 'active';
+                                          } ?>"
+                     href="module/admin/tarif"
+                     aria-expanded="false">
+                     <iconify-icon icon="solar:folder-line-duotone"></iconify-icon>
+                     <span class="hide-menu">Tarif</span>
+                  </a>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link <?php if ($title == 'User') {
+                                             echo 'active';
+                                          } ?>"
+                     href="module/admin/user"
+                     aria-expanded="false">
+                     <iconify-icon icon="solar:user-line-duotone"></iconify-icon>
+                     <span class="hide-menu">User Management</span>
+                  </a>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link" href="module/admin/setting" aria-expanded="false">
+                     <iconify-icon icon="solar:key-line-duotone"></iconify-icon>
+                     <span class="hide-menu">Pengaturan Klinik</span>
+                  </a>
+               </li>
+               <li>
+                  <span class="sidebar-divider lg"></span>
+               </li>
+               <li class="nav-small-cap">
+                  <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
+                  <span class="hide-menu">Aktivitas</span>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link" href="module/admin/registrasi" aria-expanded="false">
+                     <iconify-icon icon="solar:login-3-line-duotone"></iconify-icon>
+                     <span class="hide-menu">Registrasi Pasien</span>
+                  </a>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link <?php if ($title == 'Pemeriksaan') {
+                                             echo 'active';
+                                          } ?>"
+                     href="module/admin/pemeriksaan"
+                     aria-expanded="false">
+                     <iconify-icon icon="mdi:stethoscope"></iconify-icon>
+                     <span class="hide-menu">Pemeriksaan Dokter</span>
+                  </a>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link <?php if ($title == 'Farmasi Order') {
+                                             echo 'active';
+                                          } ?>"
+                     href="module/admin/farmasi_order"
+                     aria-expanded="false">
+                     <iconify-icon icon="solar:user-plus-rounded-line-duotone"></iconify-icon>
+                     <span class="hide-menu">Permintaan Farmasi</span>
+                  </a>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link <?php if ($title == 'Kasir') {
+                                             echo 'active';
+                                          } ?>"
+                     href="module/admin/kasir"
+                     aria-expanded="false">
+                     <iconify-icon icon="solar:folder-line-duotone"></iconify-icon>
+                     <span class="hide-menu">Kasir</span>
+                  </a>
+               </li>
+               <li>
+                  <span class="sidebar-divider lg"></span>
+               </li>
+               <li class="nav-small-cap">
+                  <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
+                  <span class="hide-menu">Laporan</span>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link" href="module/admin/report" aria-expanded="false">
+                     <iconify-icon icon="solar:sticker-smile-circle-2-line-duotone"></iconify-icon>
+                     <span class="hide-menu">Transaksi</span>
+                  </a>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link" href="module/admin/profit" aria-expanded="false">
+                     <iconify-icon icon="solar:planet-3-line-duotone"></iconify-icon>
+                     <span class="hide-menu">Laba Rugi</span>
+                  </a>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link" href="module/admin/report" aria-expanded="false">
+                     <iconify-icon icon="solar:sticker-smile-circle-2-line-duotone"></iconify-icon>
+                     <span class="hide-menu">Persediaan Farmasi</span>
+                  </a>
+               </li>
+            </ul>
+            <div
+               class="unlimited-access d-flex align-items-center hide-menu bg-primary-subtle position-relative mb-7 mt-4 p-3 rounded">
+               <div class="me-2 flex-shrink-0">
+                  <h6 class="fw-semibold fs-4 mb-6 text-dark w-75">Upgrade to Pro</h6>
+                  <a href="https://imzack.id/" target="_blank" class="btn btn-primary fs-2 fw-semibold lh-sm">Buy Pro</a>
+               </div>
+               <div class="unlimited-access-img">
+                  <img src="assets/images/backgrounds/rupee.png" alt="" class="img-fluid">
+               </div>
             </div>
-            <div class="unlimited-access-img">
-               <img src="assets/images/backgrounds/rupee.png" alt="" class="img-fluid">
+         </nav>
+         <!-- admin Sidebar navigation -->
+      <?php } else if ($role == 'dokter' or $role == 'perawat') { ?>
+         <!-- dokter navigation-->
+         <nav class="sidebar-nav scroll-sidebar" data-simplebar="">
+            <ul id="sidebarnav">
+               <li class="nav-small-cap">
+                  <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
+                  <span class="hide-menu">Home</span>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link" href="module/admin/" aria-expanded="false">
+                     <iconify-icon icon="solar:widget-add-line-duotone"></iconify-icon>
+                     <span class="hide-menu">Dashboard</span>
+                  </a>
+               </li>
+               <li>
+                  <span class="sidebar-divider lg"></span>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link <?php if ($title == 'Pemeriksaan') {
+                                             echo 'active';
+                                          } ?>"
+                     href="module/admin/pemeriksaan"
+                     aria-expanded="false">
+                     <iconify-icon icon="mdi:stethoscope"></iconify-icon>
+                     <span class="hide-menu">Pemeriksaan Dokter</span>
+                  </a>
+               </li>
+            </ul>
+            <div
+               class="unlimited-access d-flex align-items-center hide-menu bg-primary-subtle position-relative mb-7 mt-4 p-3 rounded">
+               <div class="me-2 flex-shrink-0">
+                  <h6 class="fw-semibold fs-4 mb-6 text-dark w-75">Upgrade to Pro</h6>
+                  <a href="https://imzack.id/" target="_blank" class="btn btn-primary fs-2 fw-semibold lh-sm">Buy Pro</a>
+               </div>
+               <div class="unlimited-access-img">
+                  <img src="assets/images/backgrounds/rupee.png" alt="" class="img-fluid">
+               </div>
             </div>
-         </div>
-      </nav>
-      <!-- End Sidebar navigation -->
+         </nav>
+         <!-- dokter Sidebar navigation -->
+      <?php } else if ($role == 'receptionis' or $role == 'kasir') { ?>
+         <!-- receiptionis navigation-->
+         <nav class="sidebar-nav scroll-sidebar" data-simplebar="">
+            <ul id="sidebarnav">
+               <li class="nav-small-cap">
+                  <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
+                  <span class="hide-menu">Home</span>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link" href="module/admin/" aria-expanded="false">
+                     <iconify-icon icon="solar:widget-add-line-duotone"></iconify-icon>
+                     <span class="hide-menu">Dashboard</span>
+                  </a>
+               </li>
+               <li>
+                  <span class="sidebar-divider lg"></span>
+               </li>
+               <li class="nav-small-cap">
+                  <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
+                  <span class="hide-menu">Aktivitas</span>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link" href="module/admin/registrasi" aria-expanded="false">
+                     <iconify-icon icon="solar:login-3-line-duotone"></iconify-icon>
+                     <span class="hide-menu">Registrasi Pasien</span>
+                  </a>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link <?php if ($title == 'Kasir') {
+                                             echo 'active';
+                                          } ?>"
+                     href="module/admin/kasir"
+                     aria-expanded="false">
+                     <iconify-icon icon="solar:folder-line-duotone"></iconify-icon>
+                     <span class="hide-menu">Kasir</span>
+                  </a>
+               </li>
+            </ul>
+            <div
+               class="unlimited-access d-flex align-items-center hide-menu bg-primary-subtle position-relative mb-7 mt-4 p-3 rounded">
+               <div class="me-2 flex-shrink-0">
+                  <h6 class="fw-semibold fs-4 mb-6 text-dark w-75">Upgrade to Pro</h6>
+                  <a href="https://imzack.id/" target="_blank" class="btn btn-primary fs-2 fw-semibold lh-sm">Buy Pro</a>
+               </div>
+               <div class="unlimited-access-img">
+                  <img src="assets/images/backgrounds/rupee.png" alt="" class="img-fluid">
+               </div>
+            </div>
+         </nav>
+         <!-- dokter receiptionis navigation -->
+      <?php  } else if ($role == 'apoteker') { ?>
+         <!-- receiptionis navigation-->
+         <nav class="sidebar-nav scroll-sidebar" data-simplebar="">
+            <ul id="sidebarnav">
+               <li class="nav-small-cap">
+                  <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
+                  <span class="hide-menu">Home</span>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link" href="module/admin/" aria-expanded="false">
+                     <iconify-icon icon="solar:widget-add-line-duotone"></iconify-icon>
+                     <span class="hide-menu">Dashboard</span>
+                  </a>
+               </li>
+               <li>
+                  <span class="sidebar-divider lg"></span>
+               </li>
+               <li class="nav-small-cap">
+                  <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
+                  <span class="hide-menu">Aktivitas</span>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link <?php if ($title == 'Farmasi Order') {
+                                             echo 'active';
+                                          } ?>"
+                     href="module/admin/farmasi_order"
+                     aria-expanded="false">
+                     <iconify-icon icon="solar:user-plus-rounded-line-duotone"></iconify-icon>
+                     <span class="hide-menu">Permintaan Farmasi</span>
+                  </a>
+               </li>
+            </ul>
+            <div
+               class="unlimited-access d-flex align-items-center hide-menu bg-primary-subtle position-relative mb-7 mt-4 p-3 rounded">
+               <div class="me-2 flex-shrink-0">
+                  <h6 class="fw-semibold fs-4 mb-6 text-dark w-75">Upgrade to Pro</h6>
+                  <a href="https://imzack.id/" target="_blank" class="btn btn-primary fs-2 fw-semibold lh-sm">Buy Pro</a>
+               </div>
+               <div class="unlimited-access-img">
+                  <img src="assets/images/backgrounds/rupee.png" alt="" class="img-fluid">
+               </div>
+            </div>
+         </nav>
+         <!-- dokter receiptionis navigation -->
+      <?php }
+      ?>
+
    </div>
    <!-- End Sidebar scroll-->
 </aside>

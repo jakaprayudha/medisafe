@@ -57,11 +57,12 @@ function createUser()
    }
    $uid = md5(date('Ymd') . rand(1111, 9999));
    $hash = md5($password);
+   $path = 'admin';
    // Query untuk insert data user
    $query = "INSERT INTO ms_users (uid_user, fullname, username, password, roles, path) VALUES (?, ?, ?, ?, ?, ?)";
 
    if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("ssssss", $uid, $fullname, $username, $hash, $roles, $roles);
+      $stmt->bind_param("ssssss", $uid, $fullname, $username, $hash, $roles, $path);
 
       if ($stmt->execute()) {
          echo json_encode([
@@ -142,7 +143,7 @@ function getUserID($iduser)
    global $koneksi;
 
    // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM ms_users WHERE id_user = ?";
+   $query = "SELECT * FROM ms_users WHERE id = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $iduser); // Bind parameter iduser
@@ -190,7 +191,7 @@ function updateUser()
       ]);
       exit;
    }
-   $checkpass = mysqli_query($koneksi, "SELECT * FROM ms_users WHERE id_user='$id'");
+   $checkpass = mysqli_query($koneksi, "SELECT * FROM ms_users WHERE id='$id'");
    $datapass = mysqli_fetch_array($checkpass);
    $oldpass = $datapass['password'];
    if ($password == $oldpass) {
@@ -200,7 +201,7 @@ function updateUser()
    }
 
    // Query untuk update data user
-   $query = "UPDATE ms_users SET fullname = ?, username = ?, password = ? WHERE id_user = ?";
+   $query = "UPDATE ms_users SET fullname = ?, username = ?, password = ? WHERE id = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("sssi", $fullname, $username, $newpassword, $id);
@@ -242,7 +243,7 @@ function deleteUser()
    }
 
    // Query untuk menghapus data user
-   $query = "DELETE FROM ms_users WHERE id_user = ?";
+   $query = "DELETE FROM ms_users WHERE id = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $id);

@@ -14,16 +14,11 @@ if (isset($_POST['login'])) {
          $_SESSION['uid_user'] = $datauser['uid_user'];
          $_SESSION['username'] = $datauser['username'];
          $_SESSION['roles'] = $datauser['roles'];
+         $role = $datauser['roles'];
          $_SESSION['status'] = $datauser['status_user'];
          $_SESSION['fullname'] = $datauser['fullname'];
-         if ($datauser['roles'] == 'admin') {
-            // echo "<script>
-            // alert('Selamat datang, Admin !');
-            // window.location.href = 'module/admin/';
-            //  </script>";
-            $_SESSION["sukses"] = 'Selamat Anda Berhasil Login Sebagai Admin';
-            $_SESSION['redirectlogin'] = 'module/admin';
-         }
+         $_SESSION["sukses"] = 'Selamat Anda Berhasil Login Sebagai ' . $role;
+         $_SESSION['redirectlogin'] = 'module/admin';
       } else {
          $_SESSION["error"] = 'Password Salah';
          $_SESSION['redirectlogin'] = '';

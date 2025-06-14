@@ -85,19 +85,37 @@ $apiUrl = getenv('API_URL');
       <form id="addForm">
         <div class="modal-body">
           <div class="mb-3">
-            <label for="nama" class="form-label">Nama Lengkap <span class="text-danger">*</span> </label>
-            <input type="text" name="nama" id="nama" class="form-control" required>
-          </div>
-          <div class="mb-3">
             <label for="roles" class="form-label">Roles <span class="text-danger">*</span> </label>
             <select name="roles" required id="roles" class="form-select">
               <option value="">PILIH</option>
               <option value="admin">Admin</option>
+              <option value="dokter">Dokter</option>
+              <option value="perawat">Perawat</option>
+              <option value="kasir">Kasir</option>
+              <option value="apoteker">Apoteker</option>
+              <option value="receptionis">Receptionis</option>
+            </select>
+          </div>
+          <div class="mb-3" id="namaInputGroup">
+            <label for="nama" class="form-label">Nama Lengkap <span class="text-danger">*</span> </label>
+            <input type="text" name="nama" id="nama" class="form-control">
+          </div>
+          <div class="mb-3 d-none" id="namaDokterGroup">
+            <label for="nama_dokter" class="form-label">Pilih Dokter <span class="text-danger">*</span> </label>
+            <select name="nama" id="nama_dokter" class="form-select">
+              <option value="">PILIH DOKTER</option>
+              <?php
+              require '../../database/connect.php';
+              $dokter = mysqli_query($koneksi, "SELECT nama_dokter FROM ms_dokter ORDER BY nama_dokter ASC");
+              while ($d = mysqli_fetch_assoc($dokter)) {
+                echo '<option value="' . htmlspecialchars($d['nama_dokter']) . '">' . htmlspecialchars($d['nama_dokter']) . '</option>';
+              }
+              ?>
             </select>
           </div>
           <div class="mb-3">
-            <label for="username" class="form-label">Email <span class="text-danger">*</span> </label>
-            <input type="email" name="username" id="username" class="form-control" required>
+            <label for="username" class="form-label">Username <span class="text-danger">*</span> </label>
+            <input type="text" name="username" id="username" class="form-control" required>
           </div>
           <div class="mb-3">
             <label for="password" class="form-label">Password <span class="text-danger">*</span> </label>
@@ -125,6 +143,25 @@ $apiUrl = getenv('API_URL');
 
 
 
+<script>
+  document.getElementById('roles').addEventListener('change', function() {
+    const selectedRole = this.value;
+    const namaInput = document.getElementById('namaInputGroup');
+    const namaDokter = document.getElementById('namaDokterGroup');
+
+    if (selectedRole === 'dokter') {
+      namaInput.classList.add('d-none');
+      namaDokter.classList.remove('d-none');
+      document.getElementById('nama').removeAttribute('required');
+      document.getElementById('nama_dokter').setAttribute('required', true);
+    } else {
+      namaInput.classList.remove('d-none');
+      namaDokter.classList.add('d-none');
+      document.getElementById('nama').setAttribute('required', true);
+      document.getElementById('nama_dokter').removeAttribute('required');
+    }
+  });
+</script>
 
 <script>
   // Mengambil nilai API_URL dari PHP
@@ -174,15 +211,15 @@ $apiUrl = getenv('API_URL');
             return {
               "actions": `
                   <div class="text-center">
-                      <button class="btn btn-warning edit-btn" data-id="${row.id_user}">Ubah</button>
-                      <button class="btn btn-danger delete-btn" data-id="${row.id_user}">Hapus</button>
+                      <button class="btn btn-warning edit-btn" data-id="${row.id}">Ubah</button>
+                      <button class="btn btn-danger delete-btn" data-id="${row.id}">Hapus</button>
                   </div>
               `,
               "fullname": row.fullname,
               "username": row.username,
               "roles": row.roles,
-              "create_at": row.create_at,
-              "update_at": row.update_at,
+              "create_at": row.created_at,
+              "update_at": row.udpated_at,
               "status_user": '<span class="badge ' + (row.status_user == 1 ? 'bg-success' : 'bg-danger') + ' d-block text-center">' + (row.status_user == 1 ? 'Active' : 'Inactive') + '</span>'
             };
           });
@@ -215,10 +252,16 @@ $apiUrl = getenv('API_URL');
     // Handle form submission for adding 
     document.getElementById("addForm").addEventListener("submit", function(event) {
       event.preventDefault();
-      const nama = document.getElementById("nama").value;
+      let nama = '';
+      const roles = document.getElementById("roles").value;
+      if (roles === 'dokter') {
+        nama = document.getElementById("nama_dokter").value;
+      } else {
+        nama = document.getElementById("nama").value;
+      }
       const username = document.getElementById("username").value;
       const password = document.getElementById("password").value;
-      const roles = document.getElementById("roles").value;
+
       fetch(apiUrl, {
           method: 'POST',
           headers: {
@@ -326,7 +369,7 @@ $apiUrl = getenv('API_URL');
             // Show the modal
             $('#edit').modal('show'); // Show the modal after populating the form
             // Store the user id in the form for later use
-            $('#editForm').data('id_user', user.id_user);
+            $('#editForm').data('id', user.id);
           } else {
             Swal.fire('Gagal!', 'Data user tidak ditemukan.', 'error');
           }
@@ -341,7 +384,7 @@ $apiUrl = getenv('API_URL');
     $('#editForm').on('submit', function(e) {
       e.preventDefault(); // Prevent default form submission
 
-      var userId = $(this).data('id_user'); // Get user id from form data
+      var userId = $(this).data('id'); // Get user id from form data
       var supplier = $('#editsupplier').val();
       var kategori = $('#editkategori').val();
       var telepon = $('#edittelepon').val();
