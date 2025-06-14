@@ -182,29 +182,20 @@ function updateUser()
    $id = isset($_PUT['iduser']) ? $_PUT['iduser'] : '';
    $fullname = isset($_PUT['nama']) ? $_PUT['nama'] : '';
    $username = isset($_PUT['username']) ? $_PUT['username'] : '';
-   $password = isset($_PUT['password']) ? $_PUT['password'] : '';
    // Debugging input data
-   if (empty($fullname) || empty($id) || empty($username) || empty($password)) {
+   if (empty($fullname) || empty($id) || empty($username)) {
       echo json_encode([
          'status' => 'error',
          'message' => 'seluruh field harus diisi.'
       ]);
       exit;
    }
-   $checkpass = mysqli_query($koneksi, "SELECT * FROM ms_users WHERE id='$id'");
-   $datapass = mysqli_fetch_array($checkpass);
-   $oldpass = $datapass['password'];
-   if ($password == $oldpass) {
-      $newpassword = $password;
-   } else {
-      $newpassword = md5($password);
-   }
 
    // Query untuk update data user
-   $query = "UPDATE ms_users SET fullname = ?, username = ?, password = ? WHERE id = ?";
+   $query = "UPDATE ms_users SET fullname = ?, username = ? WHERE id = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("sssi", $fullname, $username, $newpassword, $id);
+      $stmt->bind_param("ssi", $fullname, $username, $id);
       if ($stmt->execute()) {
          header('Content-Type: application/json');
          echo json_encode([

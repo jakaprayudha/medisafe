@@ -138,6 +138,33 @@ $apiUrl = getenv('API_URL');
   </div>
 </div>
 
+<div class="modal fade" id="edit" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Perubahan Data</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="editForm">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="editnama" class="form-label">Nama Lengkap <span class="text-danger">*</span> </label>
+            <input type="text" name="editnama" id="editnama" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label for="editusername" class="form-label">Username <span class="text-danger">*</span> </label>
+            <input type="text" name="editusername" id="editusername" class="form-control" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 
 
 
@@ -359,13 +386,8 @@ $apiUrl = getenv('API_URL');
           if (data.status === 'success') {
             const user = data.user;
             // Populate the modal form with user data
-            $('#editsupplier').val(user.supplier_name);
-            $('#editkategori').val(user.id_category);
-            $('#edittelepon').val(user.supplier_phone);
-            $('#editfax').val(user.supplier_fax);
-            $('#editemail').val(user.supplier_email);
-            $('#editalamat').val(user.supplier_address);
-            $('#editdeskripsi').val(user.supplier_description);
+            $('#editnama').val(user.fullname);
+            $('#editusername').val(user.username);
             // Show the modal
             $('#edit').modal('show'); // Show the modal after populating the form
             // Store the user id in the form for later use
@@ -385,24 +407,14 @@ $apiUrl = getenv('API_URL');
       e.preventDefault(); // Prevent default form submission
 
       var userId = $(this).data('id'); // Get user id from form data
-      var supplier = $('#editsupplier').val();
-      var kategori = $('#editkategori').val();
-      var telepon = $('#edittelepon').val();
-      var fax = $('#editfax').val();
-      var email = $('#editemail').val();
-      var alamat = $('#editalamat').val();
-      var deskripsi = $('#editdeskripsi').val();
+      var nama = $('#editnama').val();
+      var username = $('#editusername').val();
 
       // Create the data to send with the PUT request
       var data = {
         iduser: userId,
-        supplier: supplier,
-        kategori: kategori,
-        telepon: telepon,
-        fax: fax,
-        email: email,
-        alamat: alamat,
-        deskripsi: deskripsi
+        nama: nama,
+        username: username
       };
 
       // Send PUT request to update user
