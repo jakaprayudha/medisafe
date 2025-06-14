@@ -33,6 +33,13 @@ $total = 0;
          padding: 20px;
       }
 
+      .logo {
+         display: block;
+         margin: 0 auto 10px auto;
+         height: 100px;
+         object-fit: contain;
+      }
+
       h2,
       h3 {
          text-align: center;
@@ -86,12 +93,19 @@ $total = 0;
             size: A4;
             margin: 20mm;
          }
+
+         #action-buttons {
+            display: none;
+         }
       }
    </style>
 </head>
 
 <body onload="window.print()">
    <div class="container">
+      <!-- Logo Klinik -->
+      <img src="../../assets/images/logos/logokinder.png" alt="Logo Klinik" class="logo">
+
       <h2><?= $klinik['clinic_name'] ?></h2>
       <div class="clinic-info">
          <?= $klinik['alamat'] ?><br>
@@ -183,21 +197,21 @@ $total = 0;
          </div>
       </div>
    </div>
+
    <div style="text-align: right; margin-bottom: 15px;" id="action-buttons">
       <button onclick="printAndClose()" style="padding: 6px 12px;">🖨️ Cetak</button>
       <button onclick="window.close()" style="padding: 6px 12px;">❌ Batal</button>
    </div>
 </body>
+
 <script>
    function printAndClose() {
       window.print();
-      // Setelah print selesai (delay pendek), tutup tab
       setTimeout(() => {
          window.close();
-      }, 1000); // tunggu 1 detik
+      }, 1000);
    }
 
-   // Opsional: Sembunyikan tombol saat dicetak
    window.onbeforeprint = () => {
       document.getElementById('action-buttons').style.display = 'none';
    };
