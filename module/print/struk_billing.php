@@ -183,6 +183,27 @@ $total = 0;
          </div>
       </div>
    </div>
+   <div style="text-align: right; margin-bottom: 15px;" id="action-buttons">
+      <button onclick="printAndClose()" style="padding: 6px 12px;">🖨️ Cetak</button>
+      <button onclick="window.close()" style="padding: 6px 12px;">❌ Batal</button>
+   </div>
 </body>
+<script>
+   function printAndClose() {
+      window.print();
+      // Setelah print selesai (delay pendek), tutup tab
+      setTimeout(() => {
+         window.close();
+      }, 1000); // tunggu 1 detik
+   }
+
+   // Opsional: Sembunyikan tombol saat dicetak
+   window.onbeforeprint = () => {
+      document.getElementById('action-buttons').style.display = 'none';
+   };
+   window.onafterprint = () => {
+      document.getElementById('action-buttons').style.display = 'block';
+   };
+</script>
 
 </html>
