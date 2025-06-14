@@ -195,28 +195,22 @@ function updateFarmasi()
    // Ambil data dari request body
    parse_str(file_get_contents("php://input"), $_PUT);
    $id = isset($_PUT['iduser']) ? $_PUT['iduser'] : '';
-   $satuan = isset($_PUT['satuan']) ? $_PUT['satuan'] : '';
-   $product = isset($_PUT['produk']) ? $_PUT['produk'] : '';
-   $code = isset($_PUT['kode']) ? $_PUT['kode'] : '';
-   $product_price = isset($_PUT['harga_jual']) ? $_PUT['harga_jual'] : '';
-   $product_base = isset($_PUT['harga_beli']) ? $_PUT['harga_beli'] : '';
-   $category = isset($_PUT['kategori']) ? $_PUT['kategori'] : '';
-   $description = isset($_PUT['deskripsi']) ? $_PUT['deskripsi'] : '';
+   $diskon = isset($_PUT['diskon']) ? $_PUT['diskon'] : '';
 
    // Debugging input data
-   if (empty($product) || empty($id)) {
+   if (empty($diskon) || empty($id)) {
       echo json_encode([
          'status' => 'error',
-         'message' => 'ID dan Product Item harus diisi.'
+         'message' => 'ID dan Diskon Item harus diisi.'
       ]);
       exit;
    }
 
    // Query untuk update data user
-   $query = "UPDATE permintaan_farmasi SET product_name = ?, product_code = ?, product_price = ?, product_base = ?, id_category = ?, product_description = ?, id_unit = ? WHERE id_product = ?";
+   $query = "UPDATE pasien_billing SET diskon = ? WHERE id = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("ssssssss", $product, $code, $product_price, $product_base, $category, $description, $satuan, $id);
+      $stmt->bind_param("ii", $diskon, $id);
       if ($stmt->execute()) {
          header('Content-Type: application/json');
          echo json_encode([

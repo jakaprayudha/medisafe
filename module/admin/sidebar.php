@@ -131,7 +131,11 @@
                </a>
             </li>
             <li class="sidebar-item">
-               <a class="sidebar-link" href="module/admin/kasir" aria-expanded="false">
+               <a class="sidebar-link <?php if ($title == 'Kasir') {
+                                          echo 'active';
+                                       } ?>"
+                  href="module/admin/kasir"
+                  aria-expanded="false">
                   <iconify-icon icon="solar:folder-line-duotone"></iconify-icon>
                   <span class="hide-menu">Kasir</span>
                </a>
