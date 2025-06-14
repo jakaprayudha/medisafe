@@ -246,6 +246,7 @@ function deleteTarif()
 
    // Ambil ID user dari query parameter
    $id = isset($_GET['id']) ? $_GET['id'] : '';
+   $method = isset($_GET['method']) ? $_GET['method'] : '';
 
    if (empty($id)) {
       echo json_encode([
@@ -254,30 +255,56 @@ function deleteTarif()
       ]);
       exit;
    }
+   if ($method != "approve") {
+      // Query untuk menghapus data user
+      $query = "DELETE FROM permintaan_farmasi WHERE id = ?";
 
-   // Query untuk menghapus data user
-   $query = "DELETE FROM permintaan_farmasi WHERE id = ?";
+      if ($stmt = $koneksi->prepare($query)) {
+         $stmt->bind_param("s", $id);
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $id);
+         if ($stmt->execute()) {
+            echo json_encode([
+               'status' => 'success',
+               'message' => 'Data berhasil dihapus.'
+            ]);
+         } else {
+            echo json_encode([
+               'status' => 'error',
+               'message' => 'Gagal menghapus.'
+            ]);
+         }
 
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil dihapus.'
-         ]);
+         $stmt->close();
       } else {
          echo json_encode([
             'status' => 'error',
-            'message' => 'Gagal menghapus.'
+            'message' => 'Gagal menyiapkan query.'
          ]);
       }
-
-      $stmt->close();
    } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
+      $query = "UPDATE permintaan_farmasi SET status_permintaan='1' WHERE id = ?";
+
+      if ($stmt = $koneksi->prepare($query)) {
+         $stmt->bind_param("s", $id);
+
+         if ($stmt->execute()) {
+            echo json_encode([
+               'status' => 'success',
+               'message' => 'Data berhasil dihapus.'
+            ]);
+         } else {
+            echo json_encode([
+               'status' => 'error',
+               'message' => 'Gagal menghapus.'
+            ]);
+         }
+
+         $stmt->close();
+      } else {
+         echo json_encode([
+            'status' => 'error',
+            'message' => 'Gagal menyiapkan query.'
+         ]);
+      }
    }
 }
