@@ -56,13 +56,13 @@ if ($data) {
                   <button class="nav-link ">Pemeriksaan Medis</button>
                 </a>
                 <a href="module/admin/permintaan_farmasi?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">
-                  <button class="nav-link active">Permintaan Farmasi</button>
+                  <button class="nav-link ">Permintaan Farmasi</button>
                 </a>
                 <a href="module/admin/vaksin?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">
                   <button class="nav-link">Vaksin</button>
                 </a>
                 <a href="module/admin/tindakan?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">
-                  <button class="nav-link">Tindakan</button>
+                  <button class="nav-link active">Tindakan</button>
                 </a>
                 <a href="module/admin/riwayat?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">
                   <button class="nav-link">Riwayat Pengobatan</button>
@@ -73,7 +73,7 @@ if ($data) {
               <div class="card w-100">
                 <div class="card-body p-4 " class="">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Permintaan Farmasi</h5>
+                    <h5 class="card-title fw-semibold">Tindakan</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
                       <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add"><i class="fas fa-plus"></i> Tambah</button>
@@ -84,12 +84,11 @@ if ($data) {
                       <thead>
                         <tr>
                           <th scope="col" class="text-dark fw-normal">Item</th>
-                          <th class="text-dark fw-normal">Satuan</th>
-                          <th class="text-dark fw-normal">Signa</th>
                           <th class="text-dark fw-normal">QTY</th>
                           <th class="text-dark fw-normal">Harga</th>
+                          <th class="text-dark fw-normal">Diskon</th>
                           <th class="text-dark fw-normal">Total</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Status</th>
+                          <th class="text-dark fw-normal">Status</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                         </tr>
                       </thead>
@@ -121,24 +120,24 @@ if ($data) {
         <input type="hidden" name="nomor_visit" id="nomor_visit" value="<?= $no ?>">
         <div class="modal-body">
           <div class="mb-3">
-            <label for="item" class="form-label">Nama Barang <span class="text-danger">*</span> </label>
+            <label for="item" class="form-label">Nama Tindakan <span class="text-danger">*</span> </label>
             <select name="item" id="item" class="js-example-basic-item" required>
               <option value="">Select Option</option>
               <?php
-              $getbarang = tampildata("SELECT * FROM ms_farmasi WHERE status_barang='1'");
+              $gettarif = tampildata("SELECT * FROM ms_tarif WHERE status_tarif='1'");
               ?>
-              <?php foreach ($getbarang as $barang): ?>
-                <option value="<?= $barang['nama_barang']; ?>"><?= $barang['nama_barang']; ?></option>
+              <?php foreach ($gettarif as $tarif): ?>
+                <option value="<?= $tarif['nama_tarif']; ?>"><?= $tarif['nama_tarif']; ?></option>
               <?php endforeach ?>
             </select>
           </div>
           <div class="mb-3">
-            <label for="signa" class="form-label">Signa <span class="text-danger">*</span> </label>
-            <input type="text" name="signa" id="signa" required class="form-control">
+            <label for="qty" class="form-label">Jumlah <span class="text-danger">*</span> </label>
+            <input type="number" value="1" name="qty" id="qty" required class="form-control">
           </div>
           <div class="mb-3">
-            <label for="qty" class="form-label">Jumlah <span class="text-danger">*</span> </label>
-            <input type="number" name="qty" id="qty" required class="form-control">
+            <label for="diskon" class="form-label">Diskon </label>
+            <input type="number" name="diskon" id="diskon" class="form-control">
           </div>
           <div class="mb-3">
             <label for="catatan" class="form-label">Catatan </label>
@@ -165,7 +164,7 @@ if ($data) {
 </script>
 <script>
   // Mengambil nilai API_URL dari PHP
-  const apiUrl = '<?php echo $apiUrl . 'visit/' . 'permintaanFarmasi' ?>';
+  const apiUrl = '<?php echo $apiUrl . 'visit/' . 'tindakan' ?>';
   $(document).ready(function() {
     // Formatter untuk angka biasa (qty)
     const formatter = new Intl.NumberFormat('id-ID', {
@@ -204,12 +203,11 @@ if ($data) {
             </div>
           `,
               "item": row.item,
-              "satuan": row.satuan,
-              "signa": row.signa,
               "qty": formatter.format(row.qty),
               "harga": rupiahFormatter.format(row.harga),
-              "total": rupiahFormatter.format(row.qty * row.harga),
-              "status_permintaan": '<span class="badge ' + (row.status_permintaan == 1 ? 'bg-success' : 'bg-warning ') + ' d-block text-center">' + (row.status_permintaan == 1 ? 'Selesai' : 'Proses') + '</span>'
+              "diskon": rupiahFormatter.format(row.diskon),
+              "total": rupiahFormatter.format(row.qty * row.harga - row.diskon),
+              "status_billing": '<span class="badge ' + (row.status_billing == 1 ? 'bg-success' : 'bg-warning ') + ' d-block text-center">' + (row.status_billing == 1 ? 'Selesai' : 'On Check') + '</span>'
             };
           });
         }
@@ -218,22 +216,19 @@ if ($data) {
           "data": "item"
         },
         {
-          "data": "satuan"
-        },
-        {
-          "data": "signa"
-        },
-        {
           "data": "qty"
         },
         {
           "data": "harga"
         },
         {
+          "data": "diskon"
+        },
+        {
           "data": "total"
         },
         {
-          "data": "status_permintaan"
+          "data": "status_billing"
         },
         {
           "data": "actions"
@@ -247,15 +242,15 @@ if ($data) {
       const nomor_rm = document.getElementById("nomor_rm").value;
       const nomor_visit = document.getElementById("nomor_visit").value;
       const item = document.getElementById("item").value;
-      const signa = document.getElementById("signa").value;
       const qty = document.getElementById("qty").value;
+      const diskon = document.getElementById("diskon").value;
       const catatan = document.getElementById("catatan").value;
 
       const formData = new URLSearchParams({
         nomor_rm: nomor_rm,
         nomor_visit: nomor_visit,
         item: item,
-        signa: signa,
+        diskon: diskon,
         qty: qty,
         catatan: catatan
       });

@@ -66,6 +66,9 @@ $datarme = json_decode($dataresume['pemeriksaan'], true);
                 <a href="module/admin/vaksin?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">
                   <button class="nav-link">Vaksin</button>
                 </a>
+                <a href="module/admin/tindakan?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">
+                  <button class="nav-link">Tindakan</button>
+                </a>
                 <a href="module/admin/riwayat?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">
                   <button class="nav-link">Riwayat Pengobatan</button>
                 </a>
