@@ -25,7 +25,7 @@ require 'controller/auth.php';
                 <a href="javascript:;" class="text-nowrap logo-img text-center d-block py-3 w-100">
                   <img src="assets/images/logos/logo.svg" alt="">
                 </a>
-                <p class="text-center">ERP Integration</p>
+                <p class="text-center">Medisafe Clinic Management</p>
                 <form method="POST">
                   <div class="mb-3">
                     <label for="username" class="form-label">Username</label>

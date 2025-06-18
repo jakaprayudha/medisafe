@@ -79,9 +79,12 @@ $totalKeseluruhan = $totalObat + $totalBilling;
                     </h5>
                     <p class="card-text">Tanggal Lahir : <?= $data['tanggal_lahir'] ?> <?= $data['gender'] ?></p>
                   </div>
-                  <h1 class="text-end text-danger" style="font-size: 24px;">
-                    Rp <?= number_format($totalKeseluruhan, 0, ',', '.') ?>
-                  </h1>
+                  <div class="text-end">
+                    <h1 class="text-danger" style="font-size: 24px;">
+                      Rp <?= number_format($totalKeseluruhan, 0, ',', '.') ?>
+                    </h1>
+                    <button class="btn btn-success mt-2" data-bs-toggle="modal" data-bs-target="#bayar"><i class="fas fa-coins"></i> Bayar</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -224,6 +227,46 @@ $totalKeseluruhan = $totalObat + $totalBilling;
           <div class="mb-3">
             <label for="editdiskon" class="form-label">Diskon </label>
             <input type="number" name="editdiskon" id="editdiskon" class="form-control">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
+<div class="modal fade" id="bayar" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Pembayaran</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="bayarForm">
+        <input type="hidden" name="nomor_rm" id="nomor_rm" value="<?= $rm ?>">
+        <input type="hidden" name="total" id="total" value="<?= $totalKeseluruhan ?>">
+        <input type="hidden" name="nomor_visit" id="nomor_visit" value="<?= $no ?>">
+        <div class="modal-body">
+          <div class="alert alert-primary" role="alert">
+            <h1> Rp <?= number_format($totalKeseluruhan, 0, ',', '.') ?></h1>
+          </div>
+          <div class="mb-3">
+            <label for="metode_bayar" class="form-label">Metode Bayar <span class="text-danger">*</span> </label>
+            <select name="metode_bayar" id="metode_bayar" required class="form-select">
+              <option value="Tunai">Tunai</option>
+              <option value="Transfer">Transfer</option>
+              <option value="QRIS">QRIS</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="nomor_transaksi" class="form-label">(Nomor Kartu/Nomor ID Transaksi/Nomor Referensi) </label>
+            <input type="text" name="nomor_transaksi" id="nomor_transaksi" class="form-control">
           </div>
         </div>
         <div class="modal-footer">
@@ -475,5 +518,8 @@ $totalKeseluruhan = $totalObat + $totalBilling;
           Swal.fire('Terjadi Kesalahan!', 'Gagal memperbarui data. Coba lagi nanti.', 'error');
         });
     });
+
+
+
   });
 </script>
