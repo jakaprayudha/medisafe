@@ -1,11 +1,6 @@
 <?php
-$title = 'Dkter';
+$title = 'Dokter';
 require '../../controller/view.php';
-require '../../utility/env.php';
-// Memuat file .env
-$env = loadEnv();
-// Mengambil nilai API_URL dari environment
-$apiUrl = getenv('API_URL');
 ?>
 <!doctype html>
 <html lang="en">
@@ -43,10 +38,7 @@ $apiUrl = getenv('API_URL');
                     <h5 class="card-title fw-semibold">Data Dokter</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
-                      <a href="module/admin/spesialis">
-                        <button class="btn btn-outline-primary"><i class="fas fa-plus"></i> Spesialis</button>
-                      </a>
-                      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add"><i class="fas fa-plus"></i> Tambah</button>
+                      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#doctorModal"><i class="fas fa-plus"></i> Tambah</button>
                     </div>
                   </div>
                   <div class="table-responsive" data-simplebar>
@@ -56,7 +48,8 @@ $apiUrl = getenv('API_URL');
                           <th scope="col" class="text-dark fw-normal">Nama Dokter</th>
                           <th class="text-dark fw-normal">Kategori</th>
                           <th class="text-dark fw-normal">Spesialis</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Status</th>
+                          <th class="text-dark fw-normal">No.Handphone</th>
+                          <th class="text-dark fw-normal">Email</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                         </tr>
                       </thead>
@@ -78,78 +71,50 @@ $apiUrl = getenv('API_URL');
   require 'library.php';
   ?>
 </body>
-<div class="modal fade" id="add" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="doctorModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-header">
-        <h1 class="modal-title fs-5" id="exampleModalLabel">Tambah Data</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form id="addForm">
+      <form id="doctorForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalTitle">Tambah Dokter</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
         <div class="modal-body">
-          <div class="row">
-            <div class="col">
-              <div class="mb-3">
-                <label for="str" class="form-label">STR </label>
-                <input type="text" class="form-control" id="str" name="str">
-              </div>
-            </div>
-            <div class="col">
-              <div class="mb-3">
-                <label for="nik" class="form-label">NIK </label>
-                <input type="text" name="nik" id="nik" class="form-control">
-              </div>
-            </div>
+          <input type="hidden" name="id_doctor" id="id_doctor">
+          <div class="mb-3">
+            <label for="doctor_name" class="form-label required">Nama Dokter</label>
+            <input type="text" name="doctor_name" id="doctor_name" class="form-control" required>
           </div>
           <div class="mb-3">
-            <label for="nama" class="form-label">Nama Dokter <span class="text-danger">*</span> </label>
-            <input type="text" name="nama" id="nama" class="form-control" required>
+            <label for="doctor_category" class="form-label required">Kategori</label>
+            <select name="doctor_category" id="doctor_category" required class="form-select">
+              <option value="Umum">Dokter Umum</option>
+              <option value="Spesialis">Dokter Spesialis</option>
+            </select>
           </div>
-          <div class="row">
-            <div class="col">
-              <div class="mb-3">
-                <label for="kategori" class="form-label">Kategori <span class="text-danger">*</span> </label>
-                <select name="kategori" required id="kategori" class="form-select">
-                  <option value="Dokter Umum">Dokter Umum</option>
-                  <option value="Dokter Spesialis">Dokter Spesialis</option>
-                </select>
-              </div>
-            </div>
-            <div class="col">
-              <div class="mb-3">
-                <label for="spesialis" class="form-label">Spesialis <span class="text-danger">*</span> </label>
-                <select name="spesialis" required id="spesialis" class="form-select">
-                  <option value="">PILIH</option>
-                  <?php
-                  $getCategory = tampildata("SELECT * FROM ms_spesialis WHERE status=1");
-                  ?>
-                  <?php foreach ($getCategory as $category): ?>
-                    <option value="<?= $category['spesialis'] ?>"><?= $category['spesialis'] ?></option>
-                  <?php endforeach ?>
-                </select>
-              </div>
-            </div>
+          <div class="mb-3">
+            <label for="doctor_spesialis" class="form-label required">Spesialis (Poli)</label>
+            <select name="doctor_spesialis" id="doctor_spesialis" required class="form-select">
+              <option value="">PILIH</option>
+              <?php
+              $getpoli = tampildata("SELECT * FROM ms_poli ORDER BY poliklinik ASC");
+              ?>
+              <?php foreach ($getpoli as $poli): ?>
+                <option value="<?= $poli['id_poli'] ?>"><?= $poli['poliklinik'] ?></option>
+              <?php endforeach ?>
+            </select>
           </div>
-          <div class="row">
-            <div class="col">
-              <div class="mb-3">
-                <label for="telepon" class="form-label">No.Telepon </label>
-                <input type="tel" name="telepon" id="telepon" class="form-control">
-              </div>
-            </div>
-            <div class="col">
-              <div class="mb-3">
-                <label for="email" class="form-label">Email </label>
-                <input type="email" name="email" id="email" class="form-control">
-              </div>
-            </div>
+          <div class="mb-3">
+            <label for="doctor_phone" class="form-label required">Telepon</label>
+            <input type="tel" name="doctor_phone" required id="doctor_phone" class="form-control">
           </div>
-          <div class="alert alert-warning" role="alert">
-            Apabila data medis ingin dikirim ke platform satu sehat kemenkes maka silahkan isi nomor NIK dokter dengan benar karena ini jadi kunci untuk mengirim data medis ke platform satu sehat
+          <div class="mb-3">
+            <label for="doctor_mail" class="form-label">Email</label>
+            <input type="email" name="doctor_mail" id="doctor_mail" class="form-control">
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+          <button type="button" class="btn btn-light  " data-bs-dismiss="modal">Batal</button>
           <button type="submit" class="btn btn-primary">Simpan</button>
         </div>
       </form>
@@ -159,7 +124,7 @@ $apiUrl = getenv('API_URL');
 
 <script>
   // Mengambil nilai API_URL dari PHP
-  const apiUrl = '<?php echo $apiUrl . 'master/' . 'dokterController' ?>';
+  const apiUrl = 'controller/master/dokterController.php';
   $(document).ready(function() {
     var table = $('#zero_config').DataTable({
       "processing": true,
@@ -176,16 +141,16 @@ $apiUrl = getenv('API_URL');
           // Ubah struktur JSON agar sesuai format DataTables
           return json.data.map(function(row) {
             return {
-              "nama_dokter": row.nama_dokter || "-",
-              "kategori_dokter": row.kategori_dokter || "-",
-              "spesialis": row.spesialis || "-",
-              "status_dokter": `<span class="badge ${row.status_dokter == 1 ? 'bg-success' : 'bg-danger'} d-block text-center">
-                              ${row.status_dokter == 1 ? 'Active' : 'Inactive'}
-                            </span>`,
+              "nama": row.doctor_name || "-",
+              "kategori_dokter": row.doctor_category || "-",
+              "spesialis": row.poliklinik || "-",
+              "phone": row.doctor_phone || "-",
+              "email": row.doctor_mail || "-",
               "actions": `
             <div class="text-center">
-              <button class="btn btn-warning edit-btn" data-id="${row.id}">Ubah</button>
-              <button class="btn btn-danger delete-btn" data-id="${row.id}">Hapus</button>
+             <button class="btn btn-info details-btn" data-id="${row.id_doctor}"><i class="fas fa-info-circle"></i> Detail</button>
+              <button class="btn btn-warning edit-btn" data-id="${row.id_doctor}"><i class="fas fa-edit"></i> Ubah</button>
+              <button class="btn btn-danger delete-btn" data-id="${row.id_doctor}"><i class="fas fa-trash"></i> Hapus</button>
             </div>
           `
             };
@@ -193,7 +158,7 @@ $apiUrl = getenv('API_URL');
         }
       },
       "columns": [{
-          "data": "nama_dokter"
+          "data": "nama"
         },
         {
           "data": "kategori_dokter"
@@ -202,80 +167,65 @@ $apiUrl = getenv('API_URL');
           "data": "spesialis"
         },
         {
-          "data": "status_dokter"
+          "data": "phone"
+        },
+        {
+          "data": "email"
         },
         {
           "data": "actions"
         }
       ]
     });
+    // Tambah data → buka modal kosong
+    function addDokter() {
+      document.getElementById("doctorForm").reset();
+      document.getElementById("id_doctor").value = "";
+      document.getElementById("modalTitle").innerText = "Tambah Dokter";
+      $("#doctorModal").modal("show");
+    }
 
-    // Handle form submission for adding 
-    document.getElementById("addForm").addEventListener("submit", function(event) {
-      event.preventDefault();
-      const str = document.getElementById("str").value;
-      const nik = document.getElementById("nik").value;
-      const nama = document.getElementById("nama").value;
-      const kategori = document.getElementById("kategori").value;
-      const spesialis = document.getElementById("spesialis").value;
-      const telepon = document.getElementById("telepon").value;
-      const email = document.getElementById("email").value;
-
-      fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: new URLSearchParams({
-            'str': str,
-            'nik': nik,
-            'nama': nama,
-            'kategori': kategori,
-            'spesialis': spesialis,
-            'telepon': telepon,
-            'email': email
-          })
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.status === 'success') {
-            Swal.fire({
-              title: 'Berhasil!',
-              text: data.message,
-              icon: 'success',
-              confirmButtonText: 'OK'
-            }).then(() => {
-              // RESET FORM INPUT
-              document.getElementById("addForm").reset();
-
-              // TUTUP MODAL
-              $('#add').modal('hide');
-
-              // REFRESH DATA TABLE
-              table.ajax.reload(null, false);
+    // Edit data → ambil by ID
+    function editDokter(id) {
+      fetch(apiUrl + "?id=" + id)
+        .then(res => res.json())
+        .then(res => {
+          if (res.status === "success") {
+            Object.keys(res.data).forEach(key => {
+              if (document.getElementById(key)) {
+                document.getElementById(key).value = res.data[key];
+              }
             });
-          } else {
-            Swal.fire({
-              title: 'Gagal!',
-              text: data.message,
-              icon: 'error',
-              confirmButtonText: 'Coba Lagi'
-            });
+            document.getElementById("modalTitle").innerText = "Ubah Dokter";
+            $("#doctorModal").modal("show");
           }
+        });
+    }
+
+    // Submit form (Tambah / Update)
+    document.getElementById("doctorForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      fetch(apiUrl, {
+          method: "POST",
+          body: new FormData(this)
         })
-        .catch(error => {
-          console.error('Error:', error);
-          Swal.fire({
-            title: 'Terjadi Kesalahan!',
-            text: 'Gagal mengirim data. Coba lagi nanti.',
-            icon: 'error',
-            confirmButtonText: 'OK'
-          });
+        .then(res => res.json())
+        .then(res => {
+          Swal.fire(res.status, res.message, res.status);
+          $("#doctorModal").modal("hide");
+          $("#zero_config").DataTable().ajax.reload(null, false);
         });
     });
+
+    // Handle edit action
+    $(document).on('click', '.edit-btn', function() {
+      var id = $(this).data('id');
+      editDokter(id);
+    });
+
     // Handle delete action
     $(document).on('click', '.delete-btn', function() {
-      var id = $(this).data('id'); // Ambil iduser dari data-id
+      var id = $(this).data('id');
       Swal.fire({
         title: 'Hapus Data?',
         text: "Apakah Anda yakin ingin menghapus data ini?",
@@ -285,9 +235,8 @@ $apiUrl = getenv('API_URL');
         cancelButtonText: 'Batal'
       }).then((result) => {
         if (result.isConfirmed) {
-          // Perform the deletion action using GET method
           fetch(apiUrl + `?id=${id}`, {
-              method: 'DELETE', // Gunakan GET, bukan DELETE
+              method: 'DELETE',
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
               }
@@ -296,7 +245,7 @@ $apiUrl = getenv('API_URL');
             .then(data => {
               if (data.status === 'success') {
                 Swal.fire('Berhasil!', 'Data berhasil dihapus.', 'success').then(() => {
-                  table.ajax.reload(null, false); // Reload table without changing page
+                  table.ajax.reload(null, false);
                 });
               } else {
                 Swal.fire('Gagal!', 'Terjadi kesalahan saat menghapus data.', 'error');
@@ -308,6 +257,32 @@ $apiUrl = getenv('API_URL');
             });
         }
       });
+    });
+
+    // Handle detail action (POST ke session)
+    $(document).on('click', '.details-btn', function() {
+      var id = $(this).data('id');
+
+      fetch('controller/master/setSessionDoctor.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: 'id_doctor=' + encodeURIComponent(id)
+        })
+        .then(res => res.json())
+        .then(res => {
+          if (res.status === 'success') {
+            // Redirect tanpa id di URL
+            window.location.href = 'module/admin/dokterDetail';
+          } else {
+            Swal.fire('Gagal!', res.message, 'error');
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          Swal.fire('Error!', 'Tidak bisa menyimpan session.', 'error');
+        });
     });
 
   });

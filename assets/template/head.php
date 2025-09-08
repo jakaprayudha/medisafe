@@ -53,6 +53,12 @@
    .select2-container {
       width: 100% !important;
    }
+
+   /* styling untuk label yang required */
+   .form-label.required::after {
+      content: " *";
+      color: red;
+   }
 </style>
 <script type="text/javascript">
    var koneksiinternet = 0;

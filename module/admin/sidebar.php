@@ -37,6 +37,26 @@ var_dump($role);
                   <span class="hide-menu">Master Data</span>
                </li>
                <li class="sidebar-item">
+                  <a class="sidebar-link <?php if ($title == 'Poliklinik') {
+                                             echo 'active';
+                                          } ?>"
+                     href="module/admin/poli"
+                     aria-expanded="false">
+                     <iconify-icon icon="solar:file-line-duotone"></iconify-icon>
+                     <span class="hide-menu">Poliklnik</span>
+                  </a>
+               </li>
+               <li class="sidebar-item">
+                  <a class="sidebar-link <?php if ($title == 'Jenis Bayar') {
+                                             echo 'active';
+                                          } ?>"
+                     href="module/admin/penjamin"
+                     aria-expanded="false">
+                     <iconify-icon icon="solar:file-line-duotone"></iconify-icon>
+                     <span class="hide-menu">Jenis Bayar</span>
+                  </a>
+               </li>
+               <li class="sidebar-item">
                   <a class="sidebar-link <?php if ($title == 'Dokter') {
                                              echo 'active';
                                           } ?>"
@@ -47,6 +67,15 @@ var_dump($role);
                   </a>
                </li>
                <li class="sidebar-item">
+                  <a class="sidebar-link <?php if ($title == 'Perawat') {
+                                             echo 'active';
+                                          } ?>"
+                     href="module/admin/perawat"
+                     aria-expanded="false">
+                     <iconify-icon icon="solar:layers-minimalistic-bold-duotone"></iconify-icon>
+                     <span class="hide-menu">Perawat</span>
+                  </a>
+               </li>
                <li class="sidebar-item">
                   <a class="sidebar-link <?php if ($title == 'Pasien') {
                                              echo 'active';

@@ -53,6 +53,7 @@ $apiUrl = getenv('API_URL');
                           <th scope="col" class="text-dark fw-normal">Nomor RM</th>
                           <th class="text-dark fw-normal">Nama Pasien</th>
                           <th class="text-dark fw-normal">TTL</th>
+                          <th class="text-dark fw-normal">Agama</th>
                           <th class="text-dark fw-normal">P/L</th>
                           <th class="text-dark fw-normal">Alamat</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
@@ -114,6 +115,19 @@ $apiUrl = getenv('API_URL');
             </div>
             <div class="col">
               <div class="mb-3">
+                <label for="agama" class="form-label">Agama </label>
+                <select name="agama" id="agama" class="form-select">
+                  <option value="Islam">Islam</option>
+                  <option value="Kristen">Kristen</option>
+                  <option value="Katolik">Katolik</option>
+                  <option value="Hindu">Hindu</option>
+                  <option value="Buddha">Buddha</option>
+                  <option value="Konghucu">Konghucu</option>
+                </select>
+              </div>
+            </div>
+            <div class="col">
+              <div class="mb-3">
                 <label for="telepon" class="form-label">No.Telepon </label>
                 <input type="text" name="telepon" id="telepon" class="form-control">
               </div>
@@ -137,164 +151,141 @@ $apiUrl = getenv('API_URL');
   </div>
 </div>
 
-
-
 <script>
-  // Mengambil nilai API_URL dari PHP
   const apiUrl = '<?php echo $apiUrl . 'master/' . 'pasienController' ?>';
+  let editMode = false; // flag untuk tahu tambah / edit
+  let editId = null; // simpan id yang sedang diubah
+
   $(document).ready(function() {
-    // Initialize DataTable
+    // Init DataTable
     var table = $('#zero_config').DataTable({
-      "processing": true,
-      "serverSide": true,
-      "ajax": {
-        "url": apiUrl, // Ganti dengan URL API yang sesuai
-        "type": "GET",
-        "dataSrc": function(json) {
-          // Format data yang akan ditampilkan dalam tabel
-          return json.data.map(function(row, index) {
-            return {
-              "actions": `
-                  <div class="text-center">
-                      <button class="btn btn-warning edit-btn" data-id="${row.id}">Ubah</button>
-                      <button class="btn btn-danger delete-btn" data-id="${row.id}">Hapus</button>
-                  </div>
-              `,
-              "nomor_rm": row.nomor_rm,
-              "nama_pasien": row.nama_pasien,
-              "tanggal_lahir": row.tanggal_lahir,
-              "gender": row.gender,
-              "alamat": row.alamat,
-              "status_pasien": '<span class="badge ' + (row.status_pasien == 1 ? 'bg-success' : 'bg-danger') + ' d-block text-center">' + (row.status_pasien == 1 ? 'Active' : 'Inactive') + '</span>'
-            };
-          });
-        }
+      processing: true,
+      serverSide: true,
+      ajax: {
+        url: apiUrl,
+        type: "GET",
+        dataSrc: json => json.data
       },
-      "columns": [{
-          "data": "nomor_rm"
+      columns: [{
+          data: "nomor_rm"
         },
         {
-          "data": "nama_pasien"
+          data: "nama_pasien"
         },
         {
-          "data": "tanggal_lahir"
+          data: "tanggal_lahir"
         },
         {
-          "data": "gender"
+          data: "agama"
         },
         {
-          "data": "alamat"
+          data: "gender"
         },
         {
-          "data": "status_pasien"
+          data: "alamat"
         },
         {
-          "data": "actions"
+          data: "status_pasien",
+          render: d => `<span class="badge ${d == 1 ? 'bg-success':'bg-danger'}">${d == 1 ? 'Active':'Inactive'}</span>`
+        },
+        {
+          data: null,
+          render: row => `
+            <div class="text-center">
+              <button class="btn btn-warning btn-edit" data-id="${row.id}">Ubah</button>
+              <button class="btn btn-danger btn-delete" data-id="${row.id}">Hapus</button>
+            </div>
+          `
         }
       ]
     });
 
-    // Handle form submission for adding 
-    document.getElementById("addForm").addEventListener("submit", function(event) {
-      event.preventDefault();
+    // Reset form saat modal dibuka
+    $('#add').on('hidden.bs.modal', function() {
+      editMode = false;
+      editId = null;
+      document.getElementById("addForm").reset();
+      document.querySelector("#add .modal-title").innerText = "Tambah Data";
+    });
 
-      const nama_pasien = document.getElementById("nama_pasien").value;
-      const tempat_lahir = document.getElementById("tempat_lahir").value;
-      const tanggal_lahir = document.getElementById("tanggal_lahir").value;
-      const gender = document.getElementById("gender").value;
-      const alamat = document.getElementById("alamat").value;
-      const telepon = document.getElementById("telepon").value;
-      const catatan = document.getElementById("catatan").value;
+    // Tambah / Edit submit
+    document.getElementById("addForm").addEventListener("submit", function(e) {
+      e.preventDefault();
 
-      const formData = new URLSearchParams({
-        'nama_pasien': nama_pasien,
-        'tempat_lahir': tempat_lahir,
-        'tanggal_lahir': tanggal_lahir,
-        'gender': gender,
-        'alamat': alamat,
-        'telepon': telepon,
-        'catatan': catatan
-      });
-
-      // ✅ Tampilkan data ke console
-      console.log("Data yang dikirim:", formData.toString());
+      // ambil semua field sesuai name
+      const formData = new FormData(this);
+      let method = editMode ? "PUT" : "POST";
+      if (editMode) formData.append("id", editId);
 
       fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: formData
+          method: method,
+          body: editMode ? new URLSearchParams(formData) : formData
         })
-        .then(response => response.json())
+        .then(r => r.json())
         .then(data => {
           if (data.status === 'success') {
-            Swal.fire({
-              title: 'Berhasil!',
-              text: data.message,
-              icon: 'success',
-              confirmButtonText: 'OK'
-            }).then(() => {
-              document.getElementById("addForm").reset();
+            Swal.fire("Berhasil!", data.message, "success").then(() => {
               $('#add').modal('hide');
               table.ajax.reload(null, false);
             });
           } else {
-            Swal.fire({
-              title: 'Gagal!',
-              text: data.message,
-              icon: 'error',
-              confirmButtonText: 'Coba Lagi'
-            });
+            Swal.fire("Gagal!", data.message, "error");
           }
         })
-        .catch(error => {
-          console.error('Error:', error);
-          Swal.fire({
-            title: 'Terjadi Kesalahan!',
-            text: 'Gagal mengirim data. Coba lagi nanti.',
-            icon: 'error',
-            confirmButtonText: 'OK'
-          });
+        .catch(err => {
+          console.error(err);
+          Swal.fire("Error!", "Terjadi kesalahan.", "error");
         });
     });
-    // Handle delete action
-    $(document).on('click', '.delete-btn', function() {
-      var id = $(this).data('id'); // Ambil iduser dari data-id
-      Swal.fire({
-        title: 'Hapus Data?',
-        text: "Apakah Anda yakin ingin menghapus data ini?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Hapus',
-        cancelButtonText: 'Batal'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // Perform the deletion action using GET method
-          fetch(apiUrl + `?id=${id}`, {
-              method: 'DELETE', // Gunakan GET, bukan DELETE
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
+
+    // Klik tombol Edit
+    $(document).on("click", ".btn-edit", function() {
+      let id = $(this).data("id");
+      fetch(apiUrl + "?id=" + id)
+        .then(r => r.json())
+        .then(res => {
+          if (res.status === "success") {
+            let user = res.user;
+            // isi form sesuai name
+            for (const key in user) {
+              if (document.querySelector(`[name=${key}]`)) {
+                document.querySelector(`[name=${key}]`).value = user[key];
               }
-            })
-            .then(response => response.json())
-            .then(data => {
-              if (data.status === 'success') {
-                Swal.fire('Berhasil!', 'Data berhasil dihapus.', 'success').then(() => {
-                  table.ajax.reload(null, false); // Reload table without changing page
-                });
-              } else {
-                Swal.fire('Gagal!', 'Terjadi kesalahan saat menghapus data.', 'error');
-              }
-            })
-            .catch(error => {
-              console.error('Error:', error);
-              Swal.fire('Terjadi Kesalahan!', 'Gagal menghapus data. Coba lagi nanti.', 'error');
-            });
-        }
-      });
+            }
+            editMode = true;
+            editId = id;
+            document.querySelector("#add .modal-title").innerText = "Ubah Data";
+            $('#add').modal('show');
+          }
+        })
     });
 
+    // Hapus
+    $(document).on("click", ".btn-delete", function() {
+      let id = $(this).data("id");
+      Swal.fire({
+        title: "Yakin hapus?",
+        text: "Data tidak bisa dikembalikan",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Hapus"
+      }).then(res => {
+        if (res.isConfirmed) {
+          fetch(apiUrl + "?id=" + id, {
+              method: "DELETE"
+            })
+            .then(r => r.json())
+            .then(d => {
+              if (d.status === "success") {
+                Swal.fire("Terhapus!", d.message, "success");
+                table.ajax.reload(null, false);
+              } else {
+                Swal.fire("Gagal!", d.message, "error");
+              }
+            })
+        }
+      })
+    });
   });
 </script>
 

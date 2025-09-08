@@ -187,50 +187,34 @@ function getPasienID($iduser)
 function updatePasien()
 {
    global $koneksi;
-
-   // Ambil data dari request body
    parse_str(file_get_contents("php://input"), $_PUT);
-   $id = isset($_PUT['iduser']) ? $_PUT['iduser'] : '';
-   $satuan = isset($_PUT['satuan']) ? $_PUT['satuan'] : '';
-   $product = isset($_PUT['produk']) ? $_PUT['produk'] : '';
-   $code = isset($_PUT['kode']) ? $_PUT['kode'] : '';
-   $product_price = isset($_PUT['harga_jual']) ? $_PUT['harga_jual'] : '';
-   $product_base = isset($_PUT['harga_beli']) ? $_PUT['harga_beli'] : '';
-   $category = isset($_PUT['kategori']) ? $_PUT['kategori'] : '';
-   $description = isset($_PUT['deskripsi']) ? $_PUT['deskripsi'] : '';
 
-   // Debugging input data
-   if (empty($product) || empty($id)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'ID dan Product Item harus diisi.'
-      ]);
+   $id = $_PUT['id'] ?? '';
+   $nama_pasien   = $_PUT['nama_pasien'] ?? '';
+   $tempat_lahir  = $_PUT['tempat_lahir'] ?? '';
+   $tanggal_lahir = $_PUT['tanggal_lahir'] ?? '';
+   $gender        = $_PUT['gender'] ?? '';
+   $telepon       = $_PUT['telepon'] ?? '';
+   $alamat        = $_PUT['alamat'] ?? '';
+   $catatan       = $_PUT['catatan'] ?? '';
+   $agama         = $_PUT['agama'] ?? '';
+
+   if (empty($id) || empty($nama_pasien)) {
+      echo json_encode(['status' => 'error', 'message' => 'ID dan Nama wajib diisi.']);
       exit;
    }
 
-   // Query untuk update data user
-   $query = "UPDATE ms_pasien SET product_name = ?, product_code = ?, product_price = ?, product_base = ?, id_category = ?, product_description = ?, id_unit = ? WHERE id_product = ?";
-
+   $query = "UPDATE ms_pasien SET 
+      nama_pasien=?, tempat_lahir=?, tanggal_lahir=?, gender=?, telepon=?, alamat=?, catatan_khusus=?, agama=? 
+      WHERE id=?";
    if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("ssssssss", $product, $code, $product_price, $product_base, $category, $description, $satuan, $id);
+      $stmt->bind_param("ssssssssi", $nama_pasien, $tempat_lahir, $tanggal_lahir, $gender, $telepon, $alamat, $catatan, $agama, $id);
       if ($stmt->execute()) {
-         header('Content-Type: application/json');
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil diperbarui.'
-         ]);
+         echo json_encode(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
       } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal memperbarui data.'
-         ]);
+         echo json_encode(['status' => 'error', 'message' => 'Gagal update data.']);
       }
       $stmt->close();
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
    }
 }
 
