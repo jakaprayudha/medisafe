@@ -162,10 +162,55 @@ $no = $_GET['no'];
                         </div>
                       </form>
                     </div>
-                    <!-- Disabled -->
-                    <div class="tab-pane fade" id="nav-disabled" role="tabpanel"
-                      aria-labelledby="nav-disabled-tab" tabindex="0">
-                      <p>Tab ini bisa dipakai untuk tambahan seperti jadwal praktek atau sertifikasi.</p>
+                    <!-- Jadwal Prakikt -->
+                    <div class="tab-pane fade" id="nav-jadwal" role="tabpanel" aria-labelledby="nav-jadwal-tab" tabindex="0">
+                      <form id="formJadwal">
+                        <div class="row">
+                          <div class="col-4">
+                            <div class="mb-3">
+                              <label class="form-label">Hari</label>
+                              <select class="form-select" name="day_of_week" required>
+                                <option value="">Pilih Hari</option>
+                                <option value="Senin">Senin</option>
+                                <option value="Selasa">Selasa</option>
+                                <option value="Rabu">Rabu</option>
+                                <option value="Kamis">Kamis</option>
+                                <option value="Jumat">Jumat</option>
+                                <option value="Sabtu">Sabtu</option>
+                                <option value="Minggu">Minggu</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div class="col-4">
+                            <div class="mb-3">
+                              <label class="form-label">Jam Mulai</label>
+                              <input type="time" class="form-control" name="start_time" required>
+                            </div>
+                          </div>
+                          <div class="col-4">
+                            <div class="mb-3">
+                              <label class="form-label">Jam Selesai</label>
+                              <input type="time" class="form-control" name="end_time" required>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="mt-3 text-end">
+                          <button type="submit" class="btn btn-primary">Simpan</button>
+                        </div>
+                      </form>
+
+                      <hr>
+                      <h6>Jadwal Dokter</h6>
+                      <table class="table table-bordered" id="jadwalTable">
+                        <thead>
+                          <tr>
+                            <th>Hari</th>
+                            <th>Jam</th>
+                            <th class="col-1">Aksi</th>
+                          </tr>
+                        </thead>
+                        <tbody></tbody>
+                      </table>
                     </div>
                   </div>
 
@@ -330,6 +375,83 @@ $no = $_GET['no'];
           Swal.fire("Error!", "Terjadi kesalahan sistem.", "error");
         });
     });
+  });
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const doctorNo = urlParams.get("no");
+
+    // Load Jadwal
+    function loadJadwal() {
+      fetch("controller/master/dokterJadwalController.php?no=" + doctorNo)
+        .then(res => res.json())
+        .then(data => {
+          const tbody = document.querySelector("#jadwalTable tbody");
+          tbody.innerHTML = "";
+          if (data.success) {
+            data.data.forEach(j => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+              <td>${j.day_of_week}</td>
+              <td>${j.start_time} - ${j.end_time}</td>
+              <td>
+                <button class="btn btn-danger btn-sm" onclick="deleteJadwal(${j.id_schedule})">Hapus</button>
+              </td>
+            `;
+              tbody.appendChild(tr);
+            });
+          }
+        })
+        .catch(err => console.error("Error:", err));
+    }
+
+    // Submit Form Jadwal
+    const formJadwal = document.getElementById("formJadwal");
+    formJadwal.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const formData = new FormData(formJadwal);
+      formData.append("doctor_number", doctorNo);
+      formData.append("_method", "POST");
+
+      fetch("controller/master/dokterJadwalController.php", {
+          method: "POST",
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire("Berhasil", "Jadwal ditambahkan!", "success");
+            formJadwal.reset();
+            loadJadwal();
+          } else {
+            Swal.fire("Gagal", data.message, "error");
+          }
+        });
+    });
+
+    // Delete Jadwal
+    window.deleteJadwal = function(id) {
+      const formData = new FormData();
+      formData.append("id_schedule", id);
+      formData.append("_method", "DELETE");
+
+      fetch("controller/master/dokterJadwalController.php", {
+          method: "POST",
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire("Berhasil", "Jadwal dihapus!", "success");
+            loadJadwal();
+          } else {
+            Swal.fire("Gagal", data.message, "error");
+          }
+        });
+    }
+
+    if (doctorNo) loadJadwal();
   });
 </script>
 
