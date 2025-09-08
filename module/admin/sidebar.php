@@ -50,7 +50,7 @@ var_dump($role);
                   <a class="sidebar-link <?php if ($title == 'Jenis Bayar') {
                                              echo 'active';
                                           } ?>"
-                     href="module/admin/penjamin"
+                     href="module/admin/provider"
                      aria-expanded="false">
                      <iconify-icon icon="solar:file-line-duotone"></iconify-icon>
                      <span class="hide-menu">Jenis Bayar</span>
