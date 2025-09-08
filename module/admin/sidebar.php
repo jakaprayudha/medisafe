@@ -57,10 +57,10 @@ var_dump($role);
                   </a>
                </li>
                <li class="sidebar-item">
-                  <a class="sidebar-link <?php if ($title == 'Dokter') {
+                  <a class="sidebar-link <?php if ($title == 'Dokter' or $title == 'Dokter Details') {
                                              echo 'active';
                                           } ?>"
-                     href="module/admin/dokter"
+                     href="module/admin/doctor"
                      aria-expanded="false">
                      <iconify-icon icon="solar:layers-minimalistic-bold-duotone"></iconify-icon>
                      <span class="hide-menu">Dokter</span>

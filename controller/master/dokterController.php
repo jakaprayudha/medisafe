@@ -1,126 +1,293 @@
 <?php
-include '../../database/connect.php'; // pastikan $koneksi = mysqli_connect(...);
-
+include '../../database/connect.php';
 $method = $_SERVER['REQUEST_METHOD'];
-$table = "ms_doctor"; // nama tabel target
-
 switch ($method) {
    case 'POST':
-      saveData();
+      createData();
       break;
    case 'GET':
       if (isset($_GET['id'])) {
-         getDataById($_GET['id']);
+         getID($_GET['id']);
       } else {
          getData();
       }
       break;
+   case 'PUT':
+      // Update User
+      updateData();
+      break;
+
    case 'DELETE':
+      // Delete User
       deleteData();
       break;
+
    default:
-      echo json_encode(['status' => 'error', 'message' => 'Method tidak diizinkan']);
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Method tidak diizinkan.'
+      ]);
       break;
 }
 
-function saveData()
+// Function untuk Create
+function createData()
 {
-   global $koneksi, $table;
+   global $koneksi;
 
-   // Ambil struktur tabel
-   $cols = [];
-   $result = mysqli_query($koneksi, "DESCRIBE $table");
-   while ($row = mysqli_fetch_assoc($result)) {
-      if ($row['Field'] != 'id') { // skip primary key auto increment
-         $cols[] = $row['Field'];
+   if (empty($_POST)) {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Data tidak ditemukan.'
+      ]);
+      exit;
+   }
+
+   // Ambil semua field yang valid untuk tabel ms_doctor
+   $allowedFields = [
+      'doctor_name',
+      'id_poli',
+      'doctor_category',
+      'doctor_phone',
+      'doctor_address'
+   ];
+
+   $fields = ['doctor_number']; // tambahkan doctor_number
+   $values = [generateDoctorNumber($koneksi)];
+
+   foreach ($allowedFields as $f) {
+      if (isset($_POST[$f])) {
+         $fields[] = $f;
+         $values[] = $_POST[$f];
       }
    }
 
-   $data = [];
-   foreach ($cols as $col) {
-      $data[$col] = $_POST[$col] ?? null;
+   if (empty($fields)) {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Tidak ada data yang dikirim.'
+      ]);
+      exit;
    }
 
-   // Jika ada id → update
-   if (!empty($_POST['id_doctor'])) {
-      $id = $_POST['id_doctor'];
-      $set = implode(", ", array_map(function ($c) {
-         return "$c = ?";
-      }, array_keys($data)));
+   // Buat placeholder dan tipe untuk prepared statement
+   $placeholders = implode(', ', array_fill(0, count($fields), '?'));
+   $columns = implode(', ', $fields);
+   $types = str_repeat('s', count($fields)); // semua string
 
-      $sql = "UPDATE $table SET $set WHERE id_doctor = ?";
-      $stmt = mysqli_prepare($koneksi, $sql);
+   $query = "INSERT INTO ms_doctor ($columns) VALUES ($placeholders)";
 
-      $types = str_repeat("s", count($data)) . "i"; // semua string, terakhir int untuk id
-      $values = array_values($data);
-      $values[] = $id;
+   if ($stmt = $koneksi->prepare($query)) {
+      $stmt->bind_param($types, ...$values);
 
-      mysqli_stmt_bind_param($stmt, $types, ...$values);
-      mysqli_stmt_execute($stmt);
+      if ($stmt->execute()) {
+         echo json_encode([
+            'status' => 'success',
+            'message' => 'Data berhasil ditambahkan.'
+         ]);
+      } else {
+         echo json_encode([
+            'status' => 'error',
+            'message' => 'Gagal menambahkan data: ' . $stmt->error
+         ]);
+      }
 
-      echo json_encode(['status' => 'success', 'message' => 'Data berhasil diperbarui']);
+      $stmt->close();
    } else {
-      // Insert
-      $fields = implode(", ", array_keys($data));
-      $placeholders = implode(", ", array_fill(0, count($data), "?"));
-
-      $sql = "INSERT INTO $table ($fields) VALUES ($placeholders)";
-      $stmt = mysqli_prepare($koneksi, $sql);
-
-      $types = str_repeat("s", count($data));
-      $values = array_values($data);
-
-      mysqli_stmt_bind_param($stmt, $types, ...$values);
-      mysqli_stmt_execute($stmt);
-
-      echo json_encode(['status' => 'success', 'message' => 'Data berhasil ditambahkan']);
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Gagal menyiapkan query: ' . $koneksi->error
+      ]);
    }
+}
+
+/**
+ * Generate doctor_number unik dengan format DCT-XXXXXX
+ */
+function generateDoctorNumber($koneksi)
+{
+   $count = 0; // inisialisasi supaya tidak merah
+   do {
+      $random = mt_rand(100000, 999999); // 6 digit angka
+      $doctorNumber = "DCT-" . $random;
+
+      // cek ke database apakah sudah ada
+      $check = $koneksi->prepare("SELECT COUNT(*) FROM ms_doctor WHERE doctor_number = ?");
+      $check->bind_param("s", $doctorNumber);
+      $check->execute();
+      $check->bind_result($count);
+      $check->fetch();
+      $check->close();
+   } while ($count > 0); // ulang jika sudah ada
+
+   return $doctorNumber;
 }
 
 function getData()
 {
-   global $koneksi, $table;
+   global $koneksi;
 
-   // Hitung total data
-   $sqlCount = "SELECT COUNT(*) as total FROM ms_doctor";
-   $resultCount = mysqli_query($koneksi, $sqlCount);
-   $rowCount = mysqli_fetch_assoc($resultCount);
-   $total = $rowCount['total'];
+   $query = "SELECT * FROM ms_doctor INNER  JOIN ms_poli ON ms_poli.id_poli = ms_doctor.id_poli  ORDER BY doctor_name DESC";
+   $result = mysqli_query($koneksi, $query);
 
-   // Query utama join dokter + poli
-   $sql = "SELECT d.*, s.poliklinik 
-           FROM ms_doctor d 
-           INNER JOIN ms_poli s ON d.doctor_spesialis = s.id_poli";
-   $result = mysqli_query($koneksi, $sql);
+   if (!$result) {
+      http_response_code(500);
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Gagal mengambil data: ' . mysqli_error($koneksi)
+      ]);
+      return;
+   }
+
+   // Ambil semua data dalam bentuk array asosiatif
    $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
+   // Tutup hasil query
+   mysqli_free_result($result);
+
+   // Kirimkan data dalam format JSON
+   header('Content-Type: application/json');
    echo json_encode([
-      "draw" => intval($_GET['draw'] ?? 1),
-      "recordsTotal" => $total,
-      "recordsFiltered" => $total, // bisa ditambah filter kalau pakai pencarian
-      "data" => $data
+      'status' => 'success',
+      'data' => $data,
    ]);
 }
-function getDataById($id)
+
+// Function untuk Read User berdasarkan ID
+function  getID($iduser)
 {
    global $koneksi;
-   $sql = "SELECT d.*, s.poliklinik 
-           FROM ms_doctor d 
-          INNER JOIN ms_poli s ON d.doctor_spesialis = s.id_poli
-           WHERE d.id_doctor = ?";
-   $stmt = mysqli_prepare($koneksi, $sql);
-   mysqli_stmt_bind_param($stmt, "i", $id);
-   mysqli_stmt_execute($stmt);
-   $result = mysqli_stmt_get_result($stmt);
-   $data = mysqli_fetch_assoc($result);
-   echo json_encode(['status' => 'success', 'data' => $data]);
+
+   // Query untuk mengambil data user berdasarkan iduser
+   $query = "SELECT * FROM ms_doctor WHERE id_doctor = ?";
+
+   if ($stmt = $koneksi->prepare($query)) {
+      $stmt->bind_param("s", $iduser); // Bind parameter iduser
+      $stmt->execute();
+      $result = $stmt->get_result();
+
+      if ($result->num_rows > 0) {
+         $data = $result->fetch_assoc();
+         echo json_encode([
+            'status' => 'success',
+            'data' => $data
+         ]);
+      } else {
+         echo json_encode([
+            'status' => 'error',
+            'message' => 'Data tidak ditemukan.'
+         ]);
+      }
+
+      $stmt->close();
+   } else {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Gagal menyiapkan query.'
+      ]);
+   }
 }
+
+
+
+function updateData()
+{
+   global $koneksi;
+   parse_str(file_get_contents("php://input"), $_PUT);
+
+   if (empty($_PUT['id_doctor'])) {
+      echo json_encode(['status' => 'error', 'message' => 'ID tidak ditemukan.']);
+      return;
+   }
+
+   $id = $_PUT['id_doctor'];
+   $allowedFields = [
+      'doctor_nik',
+      'doctor_name',
+      'id_poli',
+      'doctor_subspesialis',
+      'doctor_category',
+      'doctor_phone',
+      'doctor_mail',
+      'doctor_address',
+      'doctor_gender',
+      'doctor_region'
+   ];
+   $fields = [];
+   $values = [];
+
+   foreach ($allowedFields as $f) {
+      if (isset($_PUT[$f])) {
+         $fields[] = "$f=?";
+         $values[] = $_PUT[$f];
+      }
+   }
+
+   if (empty($fields)) {
+      echo json_encode(['status' => 'error', 'message' => 'Tidak ada data diupdate.']);
+      return;
+   }
+
+   $values[] = $id;
+   $types = str_repeat('s', count($values) - 1) . "i";
+
+   $query = "UPDATE ms_doctor SET " . implode(',', $fields) . " WHERE id_doctor=?";
+   $stmt = $koneksi->prepare($query);
+
+   if ($stmt) {
+      $stmt->bind_param($types, ...$values);
+      if ($stmt->execute()) {
+         echo json_encode(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
+      } else {
+         echo json_encode(['status' => 'error', 'message' => 'Update gagal: ' . $stmt->error]);
+      }
+      $stmt->close();
+   } else {
+      echo json_encode(['status' => 'error', 'message' => 'Query error: ' . $koneksi->error]);
+   }
+}
+
+
+
+// Function untuk Delete User
 function deleteData()
 {
-   global $koneksi, $table;
-   $id = $_GET['id'] ?? '';
-   $stmt = mysqli_prepare($koneksi, "DELETE FROM $table WHERE id_doctor = ?");
-   mysqli_stmt_bind_param($stmt, "i", $id);
-   mysqli_stmt_execute($stmt);
-   echo json_encode(['status' => 'success', 'message' => 'Data berhasil dihapus']);
+   global $koneksi;
+
+   // Ambil ID user dari query parameter
+   $id = isset($_GET['id']) ? $_GET['id'] : '';
+
+   if (empty($id)) {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'ID tidak ditemukan.'
+      ]);
+      exit;
+   }
+
+   // Query untuk menghapus data user
+   $query = "DELETE FROM ms_doctor WHERE id_doctor = ?";
+
+   if ($stmt = $koneksi->prepare($query)) {
+      $stmt->bind_param("s", $id);
+
+      if ($stmt->execute()) {
+         echo json_encode([
+            'status' => 'success',
+            'message' => 'Data berhasil dihapus.'
+         ]);
+      } else {
+         echo json_encode([
+            'status' => 'error',
+            'message' => 'Gagal menghapus.'
+         ]);
+      }
+
+      $stmt->close();
+   } else {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Gagal menyiapkan query.'
+      ]);
+   }
 }
