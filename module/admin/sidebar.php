@@ -42,8 +42,8 @@ var_dump($role);
                                           } ?>"
                      href="module/admin/poli"
                      aria-expanded="false">
-                     <iconify-icon icon="solar:file-line-duotone"></iconify-icon>
-                     <span class="hide-menu">Poliklnik</span>
+                     <iconify-icon icon="fa6-solid:hospital-user"></iconify-icon>
+                     <span class="hide-menu">Poliklinik</span>
                   </a>
                </li>
                <li class="sidebar-item">
@@ -52,7 +52,7 @@ var_dump($role);
                                           } ?>"
                      href="module/admin/provider"
                      aria-expanded="false">
-                     <iconify-icon icon="solar:file-line-duotone"></iconify-icon>
+                     <iconify-icon icon="streamline-ultimate:cash-payment-bills-bold"></iconify-icon>
                      <span class="hide-menu">Jenis Bayar</span>
                   </a>
                </li>
@@ -62,18 +62,18 @@ var_dump($role);
                                           } ?>"
                      href="module/admin/doctor"
                      aria-expanded="false">
-                     <iconify-icon icon="solar:layers-minimalistic-bold-duotone"></iconify-icon>
+                     <iconify-icon icon="fontisto:doctor"></iconify-icon>
                      <span class="hide-menu">Dokter</span>
                   </a>
                </li>
                <li class="sidebar-item">
-                  <a class="sidebar-link <?php if ($title == 'Perawat') {
+                  <a class="sidebar-link <?php if ($title == 'Tenaga Kesehatan' or $title == 'Tenaga Kesehatan Details') {
                                              echo 'active';
                                           } ?>"
-                     href="module/admin/perawat"
+                     href="module/admin/nurse"
                      aria-expanded="false">
-                     <iconify-icon icon="solar:layers-minimalistic-bold-duotone"></iconify-icon>
-                     <span class="hide-menu">Perawat</span>
+                     <iconify-icon icon="mdi:doctor"></iconify-icon>
+                     <span class="hide-menu">Tenaga Kesehatan</span>
                   </a>
                </li>
                <li class="sidebar-item">
@@ -82,7 +82,7 @@ var_dump($role);
                                           } ?>"
                      href="module/admin/pasien"
                      aria-expanded="false">
-                     <iconify-icon icon="solar:danger-circle-line-duotone"></iconify-icon>
+                     <iconify-icon icon="mdi:patient"></iconify-icon>
                      <span class="hide-menu">Pasien</span>
                   </a>
                </li>
@@ -92,27 +92,17 @@ var_dump($role);
                                           } ?>"
                      href="module/admin/farmasi"
                      aria-expanded="false">
-                     <iconify-icon icon="solar:bookmark-square-minimalistic-line-duotone"></iconify-icon>
+                     <iconify-icon icon="healthicons:pharmacy"></iconify-icon>
                      <span class="hide-menu">Farmasi</span>
                   </a>
                </li>
-               <!-- <li class="sidebar-item">
-               <a class="sidebar-link <?php if ($title == 'Poliklinik') {
-                                          echo 'active';
-                                       } ?>"
-                  href="module/admin/poliklinik"
-                  aria-expanded="false">
-                  <iconify-icon icon="solar:file-text-line-duotone"></iconify-icon>
-                  <span class="hide-menu">Poliklinik</span>
-               </a>
-            </li> -->
                <li class="sidebar-item">
                   <a class="sidebar-link <?php if ($title == 'Tarif') {
                                              echo 'active';
                                           } ?>"
                      href="module/admin/tarif"
                      aria-expanded="false">
-                     <iconify-icon icon="solar:folder-line-duotone"></iconify-icon>
+                     <iconify-icon icon="jam:book"></iconify-icon>
                      <span class="hide-menu">Tarif</span>
                   </a>
                </li>
@@ -122,13 +112,13 @@ var_dump($role);
                                           } ?>"
                      href="module/admin/user"
                      aria-expanded="false">
-                     <iconify-icon icon="solar:user-line-duotone"></iconify-icon>
+                     <iconify-icon icon="mynaui:users-solid"></iconify-icon>
                      <span class="hide-menu">User Management</span>
                   </a>
                </li>
                <li class="sidebar-item">
                   <a class="sidebar-link" href="module/admin/setting" aria-expanded="false">
-                     <iconify-icon icon="solar:key-line-duotone"></iconify-icon>
+                     <iconify-icon icon="lets-icons:setting-line"></iconify-icon>
                      <span class="hide-menu">Pengaturan Klinik</span>
                   </a>
                </li>
@@ -141,7 +131,7 @@ var_dump($role);
                </li>
                <li class="sidebar-item">
                   <a class="sidebar-link" href="module/admin/registrasi" aria-expanded="false">
-                     <iconify-icon icon="solar:login-3-line-duotone"></iconify-icon>
+                     <iconify-icon icon="mdi:register-outline"></iconify-icon>
                      <span class="hide-menu">Registrasi Pasien</span>
                   </a>
                </li>
@@ -161,7 +151,7 @@ var_dump($role);
                                           } ?>"
                      href="module/admin/farmasi_order"
                      aria-expanded="false">
-                     <iconify-icon icon="solar:user-plus-rounded-line-duotone"></iconify-icon>
+                     <iconify-icon icon="covid:vaccine-protection-medicine-pill"></iconify-icon>
                      <span class="hide-menu">Permintaan Farmasi</span>
                   </a>
                </li>
@@ -171,7 +161,7 @@ var_dump($role);
                                           } ?>"
                      href="module/admin/kasir"
                      aria-expanded="false">
-                     <iconify-icon icon="solar:folder-line-duotone"></iconify-icon>
+                     <iconify-icon icon="hugeicons:cashier-02"></iconify-icon>
                      <span class="hide-menu">Kasir</span>
                   </a>
                </li>
@@ -184,19 +174,19 @@ var_dump($role);
                </li>
                <li class="sidebar-item">
                   <a class="sidebar-link" href="module/admin/report" aria-expanded="false">
-                     <iconify-icon icon="solar:sticker-smile-circle-2-line-duotone"></iconify-icon>
+                     <iconify-icon icon="tdesign:undertake-transaction"></iconify-icon>
                      <span class="hide-menu">Transaksi</span>
                   </a>
                </li>
                <li class="sidebar-item">
                   <a class="sidebar-link" href="module/admin/profit" aria-expanded="false">
-                     <iconify-icon icon="solar:planet-3-line-duotone"></iconify-icon>
+                     <iconify-icon icon="game-icons:profit"></iconify-icon>
                      <span class="hide-menu">Laba Rugi</span>
                   </a>
                </li>
                <li class="sidebar-item">
                   <a class="sidebar-link" href="module/admin/report" aria-expanded="false">
-                     <iconify-icon icon="solar:sticker-smile-circle-2-line-duotone"></iconify-icon>
+                     <iconify-icon icon="vaadin:stock"></iconify-icon>
                      <span class="hide-menu">Persediaan Farmasi</span>
                   </a>
                </li>
