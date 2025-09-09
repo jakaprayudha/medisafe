@@ -36,7 +36,7 @@ $no = $_GET['no'];
               <div class="card w-100">
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Formulir Data Pasien</h5>
+                    <h5 class="card-title fw-semibold">Formulir Data Farmasi</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
                       <button class="btn btn-light" onclick="window.history.back()">
@@ -51,10 +51,10 @@ $no = $_GET['no'];
                         aria-selected="true">Data Umum</button>
                       <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab"
                         data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile"
-                        aria-selected="false">Kontak & Alamat</button>
+                        aria-selected="false">Data Persediaan & Harga</button>
                       <button class="nav-link" id="nav-contact-tab" data-bs-toggle="tab"
                         data-bs-target="#nav-contact" type="button" role="tab" aria-controls="nav-contact"
-                        aria-selected="false">Emergency Kontak</button>
+                        aria-selected="false">Supplier</button>
                       <button class="nav-link" id="nav-dokumen-tab" data-bs-toggle="tab"
                         data-bs-target="#nav-dokumen" type="button" role="tab" aria-controls="nav-dokumen"
                         aria-selected="false">Dokumen</button>
@@ -69,123 +69,91 @@ $no = $_GET['no'];
                         <div class="row">
                           <div class="col-6">
                             <div class="mb-3">
-                              <label class="form-label required">Nomor Rekam Medis</label>
-                              <input type="text" class="form-control" name="nomor_rm" required>
+                              <label class="form-label" id="pharmacy_name_trade">ID Pharmacy</label>
+                              <input type="text" id="pharmacy_number" name="pharmacy_number" readonly class="form-control bg-light">
                             </div>
                           </div>
                           <div class="col-6">
                             <div class="mb-3">
-                              <label class="form-label">Nomor Induk Kependudukan</label>
-                              <input type="text" class="form-control" name="patient_nik">
-                            </div>
-                          </div>
-                          <div class="col">
-                            <div class="mb-3">
-                              <label class="form-label required">Nama Pasien</label>
-                              <input type="text" class="form-control" name="patient_name" required>
+                              <label class="form-label" id="pharmacy_name_trade">Kode Barang</label>
+                              <input type="text" id="pharmacy_code" name="pharmacy_code" class="form-control">
                             </div>
                           </div>
                           <div class="col-6">
                             <div class="mb-3">
-                              <label class="form-label required">Tempat Lahir</label>
-                              <input type="text" class="form-control" name="patient_place" required>
+                              <label class="form-label required" id="pharmacy_name_generic">Nama Generic</label>
+                              <input type="text" id="pharmacy_name_generic" name="pharmacy_name_generic" class="form-control" required>
                             </div>
                           </div>
                           <div class="col-6">
                             <div class="mb-3">
-                              <label class="form-label required">Tanggal Lahir</label>
-                              <input type="date" class="form-control" name="patient_datebirth" required>
+                              <label class="form-label required" id="pharmacy_name_trade">Nama Pabrikan/Dagang</label>
+                              <input type="text" id="pharmacy_name_trade" name="pharmacy_name_trade" class="form-control" required>
                             </div>
                           </div>
                           <div class="col-6">
                             <div class="mb-3">
-                              <label class="form-label required">Jenis Kelamin</label>
-                              <select name="patient_gender" class="form-select" id="patient_gender" required>
+                              <label class="form-label required">Kategori</label>
+                              <select name="pharmacy_category" class="form-select" id="pharmacy_category" required>
                                 <option value="">PILIH</option>
-                                <option value="Laki-laki">Laki-laki</option>
-                                <option value="Perempuan">Perempuan</option>
+                                <option value="Obat">Obat</option>
+                                <option value="BMHP">BMHP</option>
+                                <option value="Alkes">Alkes</option>
                               </select>
                             </div>
                           </div>
                           <div class="col-6">
                             <div class="mb-3">
-                              <label class="form-label required">Agama</label>
-                              <select name="patient_religion" class="form-select" id="patient_religion" required>
+                              <label class="form-label">Sub Kategori</label>
+                              <input type="text" id="pharmacy_sub_category" name="pharmacy_sub_category" class="form-control">
+                            </div>
+                          </div>
+                          <div class="col-6">
+                            <div class="mb-3">
+                              <label class="form-label required">Golongan</label>
+                              <select name="pharmcy_golongan" class="form-select" id="pharmcy_golongan" required>
                                 <option value="">PILIH</option>
-                                <option value="Islam">Islam</option>
-                                <option value="Kristen">Kristen</option>
-                                <option value="Katolik">Katolik</option>
-                                <option value="Hindu">Hindu</option>
-                                <option value="Budha">Budha</option>
+                                <option value="Bebas">Bebas</option>
+                                <option value="Bebas Terbatas">Bebas Terbatas</option>
+                                <option value="Keras">Keras</option>
+                                <option value="Psikotropika">Psikotropika</option>
+                                <option value="Narkotika">Narkotika</option>
                               </select>
                             </div>
                           </div>
                           <div class="col-6">
                             <div class="mb-3">
-                              <label class="form-label">Golongan Darah</label>
-                              <select name="patient_blood" class="form-select" id="patient_blood">
+                              <label class="form-label required">Jenis</label>
+                              <select name="pharmcy_jenis_drugs" class="form-select" id="pharmcy_jenis_drugs" required>
                                 <option value="">PILIH</option>
-                                <option value="A">A</option>
-                                <option value="B">B</option>
-                                <option value="O">O</option>
-                                <option value="AB">AB</option>
+                                <option value="Generic">Generic</option>
+                                <option value="Paten">Paten</option>
+                                <option value="Non-Generic">Non-Generic</option>
                               </select>
                             </div>
                           </div>
                           <div class="col-6">
                             <div class="mb-3">
-                              <label class="form-label">Status Perkawinan</label>
-                              <select name="patient_marital_status" class="form-select" id="patient_marital_status">
-                                <option value="">PILIH</option>
-                                <option value="Kawin">Kawin</option>
-                                <option value="Belum Kawin">Belum Kawin</option>
-                                <option value="Janda/Duda">Janda/Duda</option>
-                              </select>
+                              <label class="form-label" id="pharmacy_bentuk_sediaan">Bentuk Sediaan</label>
+                              <input type="text" id="pharmacy_bentuk_sediaan" name="pharmacy_bentuk_sediaan" class="form-control">
                             </div>
                           </div>
                           <div class="col-6">
                             <div class="mb-3">
-                              <label class="form-label">Kewarganegaraan</label>
-                              <input type="text" value="Indonesia" class="form-control" name="patient_nationality">
+                              <label class="form-label" id="pharmacy_dosis">Dosis Penggunaan</label>
+                              <input type="text" id="pharmacy_dosis" name="pharmacy_dosis" class="form-control">
                             </div>
                           </div>
                           <div class="col-6">
                             <div class="mb-3">
-                              <label class="form-label">Pendidikan Terakhir</label>
-                              <select name="patient_education" class="form-select" id="">
-                                <option value="">PILIH</option>
-                                <option value="SD">SD</option>
-                                <option value="SMP">SMP</option>
-                                <option value="SMA">SMA</option>
-                                <option value="D3">D3</option>
-                                <option value="S1">S1</option>
-                                <option value="S2">S2</option>
-                                <option value="S3">S3</option>
-                              </select>
+                              <label class="form-label" id="pharmacy_unit">Unit Terkecil</label>
+                              <input type="text" id="pharmacy_unit" name="pharmacy_unit" class="form-control">
                             </div>
                           </div>
                           <div class="col-6">
                             <div class="mb-3">
-                              <label class="form-label">Pekerjaan</label>
-                              <input type="text" class="form-control" name="patient_occupation">
-                            </div>
-                          </div>
-                          <div class="col-6">
-                            <div class="mb-3">
-                              <label class="form-label">Disabilitas</label>
-                              <input type="text" class="form-control" name="patient_disability">
-                            </div>
-                          </div>
-                          <div class="col-6">
-                            <div class="mb-3">
-                              <label class="form-label">Alergi</label>
-                              <input type="text" class="form-control" name="patient_allergy">
-                            </div>
-                          </div>
-                          <div class="col-12">
-                            <div class="mb-3">
-                              <label class="form-label">Catatan Pasien</label>
-                              <textarea name="patient_notes" class="form-control" id="" rows="5"></textarea>
+                              <label class="form-label" id="pharmacy_kemasan">Kemasan</label>
+                              <input type="text" id="pharmacy_kemasan" name="pharmacy_kemasan" class="form-control">
                             </div>
                           </div>
                         </div>
@@ -197,24 +165,64 @@ $no = $_GET['no'];
                     <!-- Profil -->
                     <div class="tab-pane fade" id="nav-profile" role="tabpanel"
                       aria-labelledby="nav-profile-tab" tabindex="0">
-                      <form id="formKontakAlamat">
+                      <form id="formPersediaan">
                         <div class="row">
                           <div class="col-6">
                             <div class="mb-3">
-                              <label class="form-label">No. HP</label>
-                              <input type="text" class="form-control" name="patient_phone">
+                              <label class="form-label">Harga Beli Terakhir</label>
+                              <input type="number" id="pharmacy_buy" class="form-control" name="pharmacy_buy">
                             </div>
                           </div>
-                          <div class="col">
+                          <div class="col-6">
                             <div class="mb-3">
-                              <label class="form-label">Email</label>
-                              <input type="email" class="form-control" name="patient_mail">
+                              <label class="form-label">Harga JUal</label>
+                              <input type="number" class="form-control" name="pharmacy_sale" id="pharmacy_sale">
+                            </div>
+                          </div>
+                          <div class="col-6">
+                            <div class="mb-3">
+                              <label class="form-label required">Stock Minumum</label>
+                              <input type="number" class="form-control" name="stok_min" id="stok_min" required>
+                            </div>
+                          </div>
+                          <div class="col-6">
+                            <div class="mb-3">
+                              <label class="form-label required">Stock Maksimum</label>
+                              <input type="number" class="form-control" name="stok_max" id="stok_max" required>
+                            </div>
+                          </div>
+                          <div class="col-6">
+                            <div class="mb-3">
+                              <label class="form-label">Kode E-Katalog</label>
+                              <input type="text" class="form-control" name="pharmacy_code_catalog" id="pharmacy_code_catalog">
+                            </div>
+                          </div>
+                          <div class="col-6">
+                            <div class="mb-3">
+                              <label class="form-label">Fornas</label>
+                              <input type="text" class="form-control" name="fornas" id="fornas">
+                            </div>
+                          </div>
+                          <div class="col-6">
+                            <div class="mb-3">
+                              <label class="form-label">Formularium RS</label>
+                              <input type="text" class="form-control" name="formularium_rs" id="formularium_rs">
+                            </div>
+                          </div>
+                          <div class="col-6">
+                            <div class="mb-3">
+                              <label class="form-label">Status</label>
+                              <select name="pharmacy_status" class="form-select" id="pharmacy_status">
+                                <option value="">PILIH</option>
+                                <option value="1">Aktif</option>
+                                <option value="0">Tidak Aktif</option>
+                              </select>
                             </div>
                           </div>
                         </div>
                         <div class="mb-3">
-                          <label class="form-label">Alamat</label>
-                          <textarea class="form-control" name="patient_address"></textarea>
+                          <label class="form-label">Deskripsi</label>
+                          <textarea class="form-control" name="pharmacy_description" id="pharmacy_description"></textarea>
                         </div>
                         <div class="mt-3 text-end">
                           <button type="submit" class="btn btn-primary">Simpan</button>
@@ -225,20 +233,21 @@ $no = $_GET['no'];
                     <!-- Kepegawaian -->
                     <div class="tab-pane fade" id="nav-contact" role="tabpanel"
                       aria-labelledby="nav-contact-tab" tabindex="0">
-                      <form id="formEmergency">
-                        <div class="mb-3">
-                          <label class="form-label required">Nama Kontak Darurat</label>
-                          <input type="text" class="form-control" name="patient_emergency_contact_name" required>
+                      <form id="formSupplier">
+                        <div class="row">
+                          <div class="col-6">
+                            <div class="mb-3">
+                              <label class="form-label">Supplier</label>
+                              <input type="text" class="form-control" name="pharmacy_supplier" id="pharmacy_supplier">
+                            </div>
+                          </div>
+                          <div class="col-6">
+                            <div class="mb-3">
+                              <label class="form-label">Pabrik</label>
+                              <input type="text" class="form-control" name="pharmacy_factory" id="pharmacy_factory">
+                            </div>
+                          </div>
                         </div>
-                        <div class="mb-3">
-                          <label class="form-label required">Nomor Handpone Emergency</label>
-                          <input type="text" class="form-control" name="patient_emergency_contact_phone" required>
-                        </div>
-                        <div class="mb-3">
-                          <label class="form-label required">Hubungan</label>
-                          <input type="text" class="form-control" name="patient_emergency_contact_relation" required>
-                        </div>
-
                         <div class="mt-3 text-end">
                           <button type="submit" class="btn btn-primary">Simpan</button>
                         </div>
@@ -250,30 +259,16 @@ $no = $_GET['no'];
                         <div class="row">
                           <div class="col-6">
                             <div class="mb-3">
-                              <label class="form-label">Upload KTP</label>
-                              <input type="file" class="form-control" name="ktp" accept="image/*,application/pdf">
-                              <p class="mt-1 small" id="statusKtp"></p>
+                              <label class="form-label">Upload Image</label>
+                              <input type="file" class="form-control" name="gambar" accept="image/*,application/pdf">
+                              <p class="mt-1 small" id="statusImage"></p>
                             </div>
                           </div>
                           <div class="col-6">
                             <div class="mb-3">
-                              <label class="form-label">Upload Kartu Keluarga (KK)</label>
-                              <input type="file" class="form-control" name="kk" accept="image/*,application/pdf">
-                              <p class="mt-1 small" id="statusKk"></p>
-                            </div>
-                          </div>
-                          <div class="col-6">
-                            <div class="mb-3">
-                              <label class="form-label">Upload Kartu BPJS</label>
-                              <input type="file" class="form-control" name="bpjs" accept="image/*,application/pdf">
-                              <p class="mt-1 small" id="statusBpjs"></p>
-                            </div>
-                          </div>
-                          <div class="col-6">
-                            <div class="mb-3">
-                              <label class="form-label">Upload Foto Diri</label>
-                              <input type="file" class="form-control" name="foto" accept="image/*">
-                              <p class="mt-1 small" id="statusFoto"></p>
+                              <label class="form-label">Upload Dokumen Barang</label>
+                              <input type="file" class="form-control" name="dokumen" accept="image/*,application/pdf">
+                              <p class="mt-1 small" id="statusDocs"></p>
                             </div>
                           </div>
                         </div>
@@ -281,7 +276,6 @@ $no = $_GET['no'];
                           <button type="submit" class="btn btn-primary">Upload Dokumen</button>
                         </div>
                     </div>
-
                     </form>
                   </div>
                 </div>
@@ -309,25 +303,23 @@ $no = $_GET['no'];
 
     if (patientNumber) {
       $.ajax({
-        url: "controller/master/getPatientDocs.php",
+        url: "controller/master/getPharmacyDocs.php",
         type: "GET",
         data: {
-          patient_number: patientNumber
+          pharmacy_number: patientNumber
         },
         success: function(res) {
           let data = JSON.parse(res);
           if (data.status === "success") {
-            updateStatus("statusKtp", data.files.patient_ktp, "KTP");
-            updateStatus("statusKk", data.files.patient_kk, "KK");
-            updateStatus("statusBpjs", data.files.patient_bpjs, "BPJS");
-            updateStatus("statusFoto", data.files.patient_foto, "Foto");
+            updateStatus("statusImage", data.files.pharmacy_image, "Image");
+            updateStatus("statusDocs", data.files.patient_kk, "KK");
           }
         }
       });
     }
 
     function updateStatus(elementId, fileName, label) {
-      const baseUrl = "uploads/patient/";
+      const baseUrl = "uploads/pharmacy/";
       if (fileName) {
         $("#" + elementId).html(
           `<a href="${baseUrl + fileName}" target="_blank" class="text-success">
@@ -344,18 +336,17 @@ $no = $_GET['no'];
 </script>
 <script>
   $(document).ready(function() {
-    // Ambil nomor pasien dari URL (?patient_number=XXXXXX)
     const urlParams = new URLSearchParams(window.location.search);
-    const patient_number = urlParams.get("no");
+    const pharmacy_number = urlParams.get("no");
 
     $("#formDokumen").on("submit", function(e) {
       e.preventDefault();
 
       let formData = new FormData(this);
-      formData.append("patient_number", patient_number); // tambahkan manual
+      formData.append("pharmacy_number", pharmacy_number); // tambahkan manual
 
       $.ajax({
-        url: "controller/master/uploadPatient.php",
+        url: "controller/master/uploadPharmacy.php",
         type: "POST",
         data: formData,
         contentType: false,
@@ -379,11 +370,12 @@ $no = $_GET['no'];
 <script>
   document.addEventListener("DOMContentLoaded", function() {
     const urlParams = new URLSearchParams(window.location.search);
-    const patientNo = urlParams.get("no");
+    const pharmacyNo = urlParams.get("no");
+    console.log(pharmacyNo);
 
     // Auto fill form
-    if (patientNo) {
-      fetch("controller/master/patientDetailsController.php?no=" + patientNo)
+    if (pharmacyNo) {
+      fetch("controller/master/pharmacyDetailsController.php?no=" + pharmacyNo)
         .then(res => res.json())
         .then(data => {
           if (data.success) {
@@ -406,16 +398,16 @@ $no = $_GET['no'];
     formIdentitas.addEventListener("submit", function(e) {
       e.preventDefault();
 
-      if (!patientNo) {
+      if (!pharmacyNo) {
         Swal.fire("Oops!", "Parameter ?no= tidak ditemukan!", "error");
         return;
       }
 
       const formData = new FormData(formIdentitas);
-      formData.append("patient_number", patientNo);
+      formData.append("pharmacy_number", pharmacyNo);
       formData.append("_method", "PUT");
 
-      fetch("controller/master/patientDetailsController.php", {
+      fetch("controller/master/pharmacyDetailsController.php", {
           method: "POST",
           body: formData
         })
@@ -442,20 +434,20 @@ $no = $_GET['no'];
     });
 
     // Handle Profile submit
-    const formKontakAlamat = document.getElementById("formKontakAlamat");
-    formKontakAlamat.addEventListener("submit", function(e) {
+    const formPersediaan = document.getElementById("formPersediaan");
+    formPersediaan.addEventListener("submit", function(e) {
       e.preventDefault();
 
-      if (!patientNo) {
+      if (!pharmacyNo) {
         Swal.fire("Oops!", "Parameter ?no= tidak ditemukan!", "error");
         return;
       }
 
-      const formData = new FormData(formKontakAlamat);
-      formData.append("patient_number", patientNo);
+      const formData = new FormData(formPersediaan);
+      formData.append("pharmacy_number", pharmacyNo);
       formData.append("_method", "PUT");
 
-      fetch("controller/master/patientDetailsController.php", {
+      fetch("controller/master/pharmacyDetailsController.php", {
           method: "POST",
           body: formData
         })
@@ -482,20 +474,20 @@ $no = $_GET['no'];
     });
 
     // Handle Kepegawaian submit
-    const formEmergency = document.getElementById("formEmergency");
-    formEmergency.addEventListener("submit", function(e) {
+    const formSupplier = document.getElementById("formSupplier");
+    formSupplier.addEventListener("submit", function(e) {
       e.preventDefault();
 
-      if (!patientNo) {
+      if (!pharmacyNo) {
         Swal.fire("Oops!", "Parameter ?no= tidak ditemukan!", "error");
         return;
       }
 
-      const formData = new FormData(formEmergency);
-      formData.append("patient_number", patientNo);
+      const formData = new FormData(formSupplier);
+      formData.append("pharmacy_number", pharmacyNo);
       formData.append("_method", "PUT");
 
-      fetch("controller/master/patientDetailsController.php", {
+      fetch("controller/master/pharmacyDetailsController.php", {
           method: "POST",
           body: formData
         })
@@ -522,6 +514,5 @@ $no = $_GET['no'];
     });
   });
 </script>
-
 
 </html>

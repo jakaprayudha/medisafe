@@ -90,7 +90,7 @@ var_dump($role);
                   <a class="sidebar-link <?php if ($title == 'Farmasi') {
                                              echo 'active';
                                           } ?>"
-                     href="module/admin/farmasi"
+                     href="module/admin/pharmacy"
                      aria-expanded="false">
                      <iconify-icon icon="healthicons:pharmacy"></iconify-icon>
                      <span class="hide-menu">Farmasi</span>
