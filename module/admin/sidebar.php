@@ -77,10 +77,10 @@ var_dump($role);
                   </a>
                </li>
                <li class="sidebar-item">
-                  <a class="sidebar-link <?php if ($title == 'Pasien') {
+                  <a class="sidebar-link <?php if ($title == 'Pasien' or $title == 'Pasien Details') {
                                              echo 'active';
                                           } ?>"
-                     href="module/admin/pasien"
+                     href="module/admin/patient"
                      aria-expanded="false">
                      <iconify-icon icon="mdi:patient"></iconify-icon>
                      <span class="hide-menu">Pasien</span>
