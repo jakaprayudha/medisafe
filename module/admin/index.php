@@ -1,7 +1,7 @@
 <?php
 $title = 'Dashboard';
 require '../../controller/view.php';
-$checkvisit = mysqli_query($koneksi, "SELECT nomor_visit FROM pasien_visit");
+$checkvisit = mysqli_query($koneksi, "SELECT visit_ID FROM pasien_visit");
 $totalorder = mysqli_num_rows($checkvisit);
 $checkbilling = mysqli_query($koneksi, "SELECT SUM(harga * qty - diskon) AS total FROM pasien_billing");
 $data = mysqli_fetch_assoc($checkbilling);

@@ -133,7 +133,11 @@ var_dump($role);
                <span class="hide-menu">Aktivitas</span>
             </li>
             <li class="sidebar-item">
-               <a class="sidebar-link" href="module/admin/registrasi" aria-expanded="false">
+               <a class="sidebar-link <?php if ($title == 'Registrasi' or $title == 'List Pasien') {
+                                          echo 'active';
+                                       } ?>"
+                  href="module/admin/registrasi"
+                  aria-expanded="false">
                   <iconify-icon icon="mdi:register-outline"></iconify-icon>
                   <span class="hide-menu">Registrasi Pasien</span>
                </a>

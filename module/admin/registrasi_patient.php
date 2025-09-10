@@ -1,5 +1,6 @@
 <?php
-$title = 'Registrasi Pasien';
+session_start();
+$title = 'List Pasien';
 require '../../controller/view.php';
 ?>
 <!doctype html>
@@ -10,7 +11,6 @@ require '../../controller/view.php';
   <?php
   require '../../assets/template/head.php';
   ?>
-  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 </head>
 
 <body>
@@ -36,26 +36,25 @@ require '../../controller/view.php';
               <div class="card w-100">
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Data Registrasi</h5>
+                    <h5 class="card-title fw-semibold">Data Pasien</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
-                      <a href="module/admin/registrasi_patient">
-                        <button class="btn btn-primary"><i class="fas fa-plus"></i> Tambah</button>
-                      </a>
+                      <!-- Tombol -->
+                      <button type="button" class="btn btn-light" onclick="window.history.back()">
+                        <i class="fas fa-arrow-left"></i> Kembali
+                      </button>
                     </div>
                   </div>
                   <div class="table-responsive" data-simplebar>
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
-                          <th scope="col" class="text-dark fw-normal">Registrasi</th>
-                          <th>Antrian</th>
                           <th class="text-dark fw-normal">Nomor RM</th>
-                          <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
+                          <th scope="col" class="text-dark fw-normal">Nama Lengkap</th>
+                          <th scope="col" class="text-dark fw-normal">TTL</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
-                          <th scope="col" class="text-dark fw-normal">Dokter</th>
-                          <th scope="col" class="text-dark fw-normal">Layanan</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Status</th>
+                          <th scope="col" class="text-dark fw-normal">Agama</th>
+                          <th scope="col" class="text-dark fw-normal">No.Handphone</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                         </tr>
                       </thead>
@@ -79,10 +78,66 @@ require '../../controller/view.php';
 </body>
 
 
+<div class="modal fade" id="programModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form id="programForm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="id_visit" id="id_visit">
+        <input type="hidden" name="id_patient" id="id_patient"> <!-- 🔹 dari klik add -->
+        <input type="hidden" name="user" value="<?= $_SESSION['fullname'] ?>" id="user">
+        <div class="mb-3">
+          <label class="form-label required">Layanan (Poli)</label>
+          <select name="id_poli" id="id_poli" class="form-select" required>
+            <option value="">PILIH</option>
+            <?php
+            $getpoli = tampildata("SELECT * FROM ms_poli WHERE poli_status='1'");
+            foreach ($getpoli as $poli) :
+            ?>
+              <option value="<?= $poli['id_poli'] ?>"><?= $poli['poli_name'] ?></option>
+            <?php endforeach ?>
+          </select>
+        </div>
 
+        <div class="mb-3">
+          <label class="form-label required">Dokter</label>
+          <select name="id_doctor" id="id_doctor" class="form-select" required>
+            <option value="">PILIH</option>
+            <?php
+            $getdoc = tampildata("SELECT * FROM ms_doctor WHERE doctor_status='1'");
+            foreach ($getdoc as $doc) :
+            ?>
+              <option value="<?= $doc['id_doctor'] ?>"><?= $doc['doctor_name'] ?></option>
+            <?php endforeach ?>
+          </select>
+        </div>
+
+
+        <div class="mb-3">
+          <label class="form-label required">Layanan</label>
+          <select name="source_hub" id="source_hub" class="form-select" required>
+            <option value="Poliklinik">Poliklinik</option>
+            <option value="UGD">UGD</option>
+            <option value="Rawat Inap">Rawat Inap</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Catatan</label>
+          <textarea name="visit_notes" id="visit_notes" class="form-control" rows="5"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
 <script>
-  const apiUrl = 'controller/visit/registrasiController';
-
+  const apiUrl = 'controller/visit/addListController';
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
       processing: true,
@@ -96,51 +151,38 @@ require '../../controller/view.php';
               "actions": `
                       <div class="text-center">
 								<div class="btn-group btn-group-sm" role="group">
-									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_visit}">
-											<i class="fas fa-edit"></i>
-									</a>
-									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_visit}">
-											<i class="fas fa-trash"></i>
+									<a class="btn btn-primary edit-btn" href="javascript:;" data-id="${row.id_patient}">
+											<i class="fas fa-plus"></i>
 									</a>
 								</div>
 							</div>
                     `,
-              "registrasi": row.visit_ID ?? "-",
-              "antrian": row.visit_antrian ?? "-",
-              "nomor_rm": row.nomor_rm ?? "-",
-              "nama": row.patient_name ?? "-",
+              "rm": row.nomor_rm ?? "-",
+              "name": row.patient_name ?? "-",
+              "ttl": row.patient_datebirth + '/' + row.patient_place ?? "-",
               "gender": row.patient_gender ?? "-",
-              "dokter": row.doctor_name ?? "-",
-              "layanan": row.poli_name ?? "-",
-              "status": row.visit_status === '1' ?
-                '<span class="badge bg-success text-center d-block">Aktif</span>' : '<span class="badge bg-danger text-center d-block">Belum Di Layani</span>'
+              "agama": row.patient_religion ?? "-",
+              "phone": row.patient_phone ?? "-"
             };
           });
         }
       },
       columns: [{
-          data: "registrasi"
+          data: "rm"
+        }, {
+          data: "name"
         },
         {
-          data: "antrian"
-        },
-        {
-          data: "nomor_rm"
-        },
-        {
-          data: "nama"
+          data: "ttl"
         },
         {
           data: "gender"
         },
         {
-          data: "dokter"
+          data: "agama"
         },
         {
-          data: "layanan"
-        },
-        {
-          data: "status"
+          data: "phone"
         },
         {
           data: "actions",
@@ -173,19 +215,18 @@ require '../../controller/view.php';
     // 🔹 Tambah
     $('#btnTambah').on('click', function() {
       $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
-      $('#id_visit').val('');
+      $('#id_patient').val('');
       $('#programModal .modal-title').text('Tambah Data');
       $('#programModal').modal('show');
     });
 
-    // 🔹 Submit (Tambah / Update)
+    // 🔹 Submit hanya POST
     $('#programForm').on('submit', function(e) {
       e.preventDefault();
       let formData = new URLSearchParams(new FormData(this));
-      let id = $('#id_visit').val();
 
-      fetch(apiUrl + (id ? `?id=${id}` : ''), {
-          method: id ? 'PUT' : 'POST',
+      fetch(apiUrl, {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
           },
@@ -216,7 +257,7 @@ require '../../controller/view.php';
               $(`[name="${key}"]`).val(d[key]);
             }
 
-            $('#programModal .modal-title').text('Edit Data');
+            $('#programModal .modal-title').text('Registrasi Data');
             $('#programModal').modal('show');
           }
         });
