@@ -50,25 +50,9 @@ $dataresume = $query->fetch_assoc();
       <div class="body-wrapper-inner">
         <div class="container-fluid">
           <div class="row">
-            <nav>
-              <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                <a href="module/admin/pemeriksaan_a?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">
-                  <button class="nav-link active">Pemeriksaan Medis</button>
-                </a>
-                <a href="module/admin/permintaan_farmasi?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">
-                  <button class="nav-link">Permintaan Farmasi</button>
-                </a>
-                <a href="module/admin/vaksin?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">
-                  <button class="nav-link">Vaksin</button>
-                </a>
-                <a href="module/admin/tindakan?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">
-                  <button class="nav-link">Tindakan</button>
-                </a>
-                <a href="module/admin/riwayat?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">
-                  <button class="nav-link">Riwayat Pengobatan</button>
-                </a>
-              </div>
-            </nav>
+            <?php
+            require 'menu_rme.php';
+            ?>
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
                 <div class="card-body p-4">
