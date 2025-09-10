@@ -119,6 +119,12 @@ var_dump($role);
                   <span class="hide-menu">Pengaturan Klinik</span>
                </a>
             </li>
+            <li class="sidebar-item">
+               <a class="sidebar-link" href="module/admin/setting_rme" aria-expanded="false">
+                  <iconify-icon icon="tdesign:task-setting"></iconify-icon>
+                  <span class="hide-menu">Pengaturan RME</span>
+               </a>
+            </li>
             <li>
                <span class="sidebar-divider lg"></span>
             </li>
