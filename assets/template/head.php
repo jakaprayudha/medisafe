@@ -78,3 +78,19 @@
       }
    }, 5000);
 </script>
+
+<style>
+   /* Biar select2 di modal Bootstrap selalu full */
+   .select2-container {
+      width: 100% !important;
+   }
+
+   .select2-selection {
+      height: calc(2.25rem + 2px) !important;
+      /* biar sejajar sama form-control bootstrap */
+      padding: 0.375rem 0.75rem !important;
+      font-size: 1rem;
+      border: 1px solid #ced4da !important;
+      border-radius: 0.375rem !important;
+   }
+</style>

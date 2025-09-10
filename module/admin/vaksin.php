@@ -52,7 +52,7 @@ if ($data) {
           <div class="row">
             <nav>
               <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                <a href="module/admin/pemeriksaan_details?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">
+                <a href="module/admin/pemeriksaan_a?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">
                   <button class="nav-link ">Pemeriksaan Medis</button>
                 </a>
                 <a href="module/admin/permintaan_farmasi?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">

@@ -52,6 +52,7 @@ $apiUrl = getenv('API_URL');
                         <tr>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                           <th class="text-dark fw-normal">Registrasi</th>
+                          <th>Antrian</th>
                           <th scope="col" class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
@@ -78,10 +79,14 @@ $apiUrl = getenv('API_URL');
   require 'library.php';
   ?>
 </body>
-
+<?php
+$setting = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT rme_type FROM setting_clinic LIMIT 1"));
+$rme_type = $setting ? $setting['rme_type'] : 1; // default 1
+?>
 <script>
   // Mengambil nilai API_URL dari PHP
   const apiUrl = '<?php echo $apiUrl . 'visit/' . 'registrasiController' ?>';
+  const rmeType = '<?php echo $rme_type ?>'; // ambil dari PHP
   $(document).ready(function() {
     // Initialize DataTable
     var table = $('#zero_config').DataTable({
@@ -93,21 +98,24 @@ $apiUrl = getenv('API_URL');
         "dataSrc": function(json) {
           // Format data yang akan ditampilkan dalam tabel
           return json.data.map(function(row, index) {
+            // pilih file tujuan sesuai rme_type
+            let pemeriksaanFile = (rmeType == 1) ? 'pemeriksaan_a' : 'pemeriksaan_b';
             return {
               "actions": `
                   <div class="text-center">
-                    <a href="module/admin/pemeriksaan_details?no=${row.nomor_visit}&rm=${row.nomor_rm}">
+                    <a href="module/admin/${pemeriksaanFile}?no=${row.visit_ID}&rm=${row.nomor_rm}">
                       <button class="btn btn-primary">Pemeriksaan</button>
                     </a>
                   </div>
               `,
-              "tanggal": row.tanggal + ' ' + row.waktu,
+              "tanggal": row.visit_date + ' ' + row.visit_time,
+              "antrian": row.visit_antrian,
               "nomor_rm": row.nomor_rm,
-              "nama_pasien": row.nama_pasien,
-              "gender": row.gender,
-              "ttl": row.tempat_lahir + ' ' + row.tanggal_lahir,
-              "dokter": row.dokter + ' ' + row.dokter,
-              "layanan": row.layanan + ' ' + row.layanan,
+              "nama_pasien": row.patient_name,
+              "gender": row.patient_gender,
+              "ttl": row.patient_datebirth + '/' + row.patient_place,
+              "dokter": row.doctor_name,
+              "layanan": row.poli_name,
               "status_visit": '<span class="badge ' + (row.status_visit == 1 ? 'bg-success' : 'bg-danger') + ' d-block text-center">' + (row.status_visit == 1 ? 'Selesai' : 'Belum') + '</span>'
             };
           });
@@ -117,6 +125,9 @@ $apiUrl = getenv('API_URL');
           "data": "actions"
         }, {
           "data": "tanggal"
+        },
+        {
+          "data": "antrian"
         },
         {
           "data": "nomor_rm"
@@ -143,100 +154,6 @@ $apiUrl = getenv('API_URL');
       ]
     });
 
-    // Handle form submission for adding 
-    document.getElementById("addForm").addEventListener("submit", function(event) {
-      event.preventDefault();
-
-      const data = document.getElementById("data").value;
-      const layanan = document.getElementById("layanan").value;
-      const dokter = document.getElementById("dokter").value;
-      const catatan = document.getElementById("catatan").value;
-
-      const formData = new URLSearchParams({
-        data: data,
-        layanan: layanan,
-        dokter: dokter,
-        catatan: catatan
-      });
-
-      // ✅ Tampilkan data ke console
-      console.log("Data yang dikirim:", formData.toString());
-
-      fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.status === 'success') {
-            Swal.fire({
-              title: 'Berhasil!',
-              text: data.message,
-              icon: 'success',
-              confirmButtonText: 'OK'
-            }).then(() => {
-              document.getElementById("addForm").reset();
-              $('#add').modal('hide');
-              table.ajax.reload(null, false);
-            });
-          } else {
-            Swal.fire({
-              title: 'Gagal!',
-              text: data.message,
-              icon: 'error',
-              confirmButtonText: 'Coba Lagi'
-            });
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          Swal.fire({
-            title: 'Terjadi Kesalahan!',
-            text: 'Gagal mengirim data. Coba lagi nanti.',
-            icon: 'error',
-            confirmButtonText: 'OK'
-          });
-        });
-    });
-    // Handle delete action
-    $(document).on('click', '.delete-btn', function() {
-      var id = $(this).data('id'); // Ambil iduser dari data-id
-      Swal.fire({
-        title: 'Hapus Data?',
-        text: "Apakah Anda yakin ingin menghapus data ini?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Hapus',
-        cancelButtonText: 'Batal'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // Perform the deletion action using GET method
-          fetch(apiUrl + `?id=${id}`, {
-              method: 'DELETE', // Gunakan GET, bukan DELETE
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-              }
-            })
-            .then(response => response.json())
-            .then(data => {
-              if (data.status === 'success') {
-                Swal.fire('Berhasil!', 'Data berhasil dihapus.', 'success').then(() => {
-                  table.ajax.reload(null, false); // Reload table without changing page
-                });
-              } else {
-                Swal.fire('Gagal!', 'Terjadi kesalahan saat menghapus data.', 'error');
-              }
-            })
-            .catch(error => {
-              console.error('Error:', error);
-              Swal.fire('Terjadi Kesalahan!', 'Gagal menghapus data. Coba lagi nanti.', 'error');
-            });
-        }
-      });
-    });
 
   });
 </script>
