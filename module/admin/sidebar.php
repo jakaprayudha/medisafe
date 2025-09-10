@@ -143,7 +143,7 @@ var_dump($role);
                </a>
             </li>
             <li class="sidebar-item">
-               <a class="sidebar-link <?php if ($title == 'Pemeriksaan') {
+               <a class="sidebar-link <?php if ($title == 'Pemeriksaan' or $title == 'Permintan Farmasi' or $title == 'Resep Luar' or $title == 'Vaksin' or $title == 'Biaya Transaksi' or $title == 'Riwayat') {
                                           echo 'active';
                                        } ?>"
                   href="module/admin/pemeriksaan"
