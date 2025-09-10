@@ -79,7 +79,64 @@ require '../../controller/view.php';
 </body>
 
 
+<div class="modal fade" id="programModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form id="programForm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="id_visit" id="id_visit">
+        <input type="hidden" name="id_patient" id="id_patient"> <!-- 🔹 dari klik add -->
+        <input type="hidden" name="user" value="<?= $_SESSION['fullname'] ?>" id="user">
+        <div class="mb-3">
+          <label class="form-label required">Layanan (Poli)</label>
+          <select name="id_poli" id="id_poli" class="form-select" required>
+            <option value="">PILIH</option>
+            <?php
+            $getpoli = tampildata("SELECT * FROM ms_poli WHERE poli_status='1'");
+            foreach ($getpoli as $poli) :
+            ?>
+              <option value="<?= $poli['id_poli'] ?>"><?= $poli['poli_name'] ?></option>
+            <?php endforeach ?>
+          </select>
+        </div>
 
+        <div class="mb-3">
+          <label class="form-label required">Dokter</label>
+          <select name="id_doctor" id="id_doctor" class="form-select" required>
+            <option value="">PILIH</option>
+            <?php
+            $getdoc = tampildata("SELECT * FROM ms_doctor WHERE doctor_status='1'");
+            foreach ($getdoc as $doc) :
+            ?>
+              <option value="<?= $doc['id_doctor'] ?>"><?= $doc['doctor_name'] ?></option>
+            <?php endforeach ?>
+          </select>
+        </div>
+
+
+        <div class="mb-3">
+          <label class="form-label required">Layanan</label>
+          <select name="source_hub" id="source_hub" class="form-select" required>
+            <option value="Poliklinik">Poliklinik</option>
+            <option value="UGD">UGD</option>
+            <option value="Rawat Inap">Rawat Inap</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Catatan</label>
+          <textarea name="visit_notes" id="visit_notes" class="form-control" rows="5"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
 <script>
   const apiUrl = 'controller/visit/registrasiController';
 
@@ -96,7 +153,14 @@ require '../../controller/view.php';
               "actions": `
                       <div class="text-center">
 								<div class="btn-group btn-group-sm" role="group">
-									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_visit}">
+									<a class="btn btn-warning edit-btn" href="javascript:;" 
+                    data-id="${row.id_visit}" 
+                  data-patient="${row.id_patient}" 
+                  data-doctor="${row.id_doctor}" 
+                  data-poli="${row.id_poli}" 
+                  data-source="${row.source_hub}" 
+                  data-notes="${row.visit_notes}">
+                  
 											<i class="fas fa-edit"></i>
 									</a>
 									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_visit}">
@@ -105,7 +169,7 @@ require '../../controller/view.php';
 								</div>
 							</div>
                     `,
-              "registrasi": row.visit_ID ?? "-",
+              "registrasi": row.visit_ID + '<br>' + row.visit_date + ' ' + row.visit_time ?? "-",
               "antrian": row.visit_antrian ?? "-",
               "nomor_rm": row.nomor_rm ?? "-",
               "nama": row.patient_name ?? "-",

@@ -90,6 +90,15 @@ require '../../controller/view.php';
         <input type="hidden" name="id_patient" id="id_patient"> <!-- 🔹 dari klik add -->
         <input type="hidden" name="user" value="<?= $_SESSION['fullname'] ?>" id="user">
         <div class="mb-3">
+          <label class="form-label required">Layanan</label>
+          <select name="source_hub" id="source_hub" class="form-select" required>
+            <option value="Poliklinik">Poliklinik</option>
+            <option value="UGD">UGD</option>
+            <option value="Rawat Inap">Rawat Inap</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
           <label class="form-label required">Layanan (Poli)</label>
           <select name="id_poli" id="id_poli" class="form-select" required>
             <option value="">PILIH</option>
@@ -115,15 +124,6 @@ require '../../controller/view.php';
           </select>
         </div>
 
-
-        <div class="mb-3">
-          <label class="form-label required">Layanan</label>
-          <select name="source_hub" id="source_hub" class="form-select" required>
-            <option value="Poliklinik">Poliklinik</option>
-            <option value="UGD">UGD</option>
-            <option value="Rawat Inap">Rawat Inap</option>
-          </select>
-        </div>
 
         <div class="mb-3">
           <label class="form-label">Catatan</label>

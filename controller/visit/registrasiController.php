@@ -111,7 +111,8 @@ function updateData()
    $id = $_PUT['id_visit'];
    $allowedFields = [
       'id_doctor',
-      'id_poli'
+      'id_poli',
+      'visit_notes'
    ];
    $fields = [];
    $values = [];
