@@ -1,19 +1,12 @@
 <?php
-// Sertakan file koneksi database
 include '../../database/connect.php';
-
-// Mengambil method request
 $method = $_SERVER['REQUEST_METHOD'];
-
-// Handle request berdasarkan method (POST, GET, PUT, DELETE)
 switch ($method) {
    case 'GET':
       if (isset($_GET['id'])) {
-         // Jika iduser ada di parameter, ambil data user berdasarkan iduser
-         getTarifID($_GET['id']);
+         getID($_GET['id']);
       } else {
-         // Jika tidak ada iduser, ambil semua data user
-         getTarif();
+         getData();
       }
       break;
    default:
@@ -26,69 +19,46 @@ switch ($method) {
 
 
 
-// Function untuk Read User
-function getTarif()
+function getData()
 {
    global $koneksi;
-
-   // Ambil parameter pagination dan pencarian dari request
-   $start = isset($_GET['start']) ? (int)$_GET['start'] : 0;
-   $length = isset($_GET['length']) ? (int)$_GET['length'] : 10;
-   $search = isset($_GET['search']['value']) ? $_GET['search']['value'] : '';
-
-   $rm = isset($_GET['rm']) ? $_GET['rm'] : '';
-
-   // Base query
-   $query = "SELECT * FROM pasien_visit WHERE 1=1";
-
-   // Tambahkan filter berdasarkan nomor_rm dan nomor_visit
-   if (!empty($rm)) {
-      $query .= " AND nomor_rm = '" . mysqli_real_escape_string($koneksi, $rm) . "'";
-   }
-
-   // Tambahkan filter pencarian jika ada
-   if (!empty($search)) {
-      $query .= " AND dokter LIKE '%" . mysqli_real_escape_string($koneksi, $search) . "%'";
-   }
-
-   // Hitung total records (tanpa limit)
-   $totalQuery = "SELECT COUNT(*) AS total FROM ($query) AS filtered";
-   $totalResult = mysqli_query($koneksi, $totalQuery);
-   $totalData = mysqli_fetch_assoc($totalResult);
-   $totalRecords = $totalData['total'];
-
-   // Tambahkan limit untuk pagination
-   $query .= " LIMIT $start, $length";
+   // pastikan ada parameter "no" (nomor_visit)
+   $rm = isset($_GET['rm']) ? mysqli_real_escape_string($koneksi, $_GET['rm']) : '';
+   $query = "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor INNER JOIN ms_poli ON ms_poli.id_poli = pasien_visit.id_poli
+             WHERE ms_patient.nomor_rm = '$rm'
+             ORDER BY pasien_visit.visit_date ASC";
    $result = mysqli_query($koneksi, $query);
 
    if (!$result) {
+      http_response_code(500);
       echo json_encode([
          'status' => 'error',
          'message' => 'Gagal mengambil data: ' . mysqli_error($koneksi)
       ]);
-      exit;
+      return;
    }
 
-   $data = [];
-   while ($row = mysqli_fetch_assoc($result)) {
-      $data[] = $row;
-   }
+   // Ambil semua data dalam bentuk array asosiatif
+   $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
+   // Tutup hasil query
+   mysqli_free_result($result);
+
+   // Kirimkan data dalam format JSON
    header('Content-Type: application/json');
    echo json_encode([
       'status' => 'success',
       'data' => $data,
-      'recordsTotal' => $totalRecords,
-      'recordsFiltered' => $totalRecords
    ]);
 }
+
 // Function untuk Read User berdasarkan ID
-function getTarifID($iduser)
+function  getID($iduser)
 {
    global $koneksi;
 
    // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM pasien_visit WHERE id = ?";
+   $query = "SELECT * FROM pasien_billing    WHERE id_billing = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $iduser); // Bind parameter iduser
@@ -96,10 +66,10 @@ function getTarifID($iduser)
       $result = $stmt->get_result();
 
       if ($result->num_rows > 0) {
-         $user = $result->fetch_assoc();
+         $data = $result->fetch_assoc();
          echo json_encode([
             'status' => 'success',
-            'user' => $user
+            'data' => $data
          ]);
       } else {
          echo json_encode([
