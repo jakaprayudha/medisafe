@@ -168,23 +168,38 @@ $dataresume = $query->fetch_assoc();
                         ?>
                       </select>
                     </div>
-
-                    <div id="anamnesaCheckboxContainer" class="alert alert-primary" role="alert">
+                    <div id="anamnesaCheckboxContainer" class="alert alert-primary" role="alert" style="display:none;">
                       Pilih Anamnesa :
                       <hr>
                       <!-- Checkbox akan diisi via AJAX -->
                     </div>
+
+                    <div id="terapiCheckboxContainer" class="alert alert-success" role="alert" style="display:none;">
+                      Pilih Terapi :
+                      <hr>
+                      <!-- Checkbox akan diisi via AJAX -->
+                    </div>
+
+
                     <script>
                       $(document).ready(function() {
                         $('#kerangka').on('change', function() {
                           let idAnamnesa = $(this).val();
-                          let container = $('#anamnesaCheckboxContainer');
 
-                          container.find('.anamnesa-item').remove(); // kosongkan dulu
+                          let anamnesaContainer = $('#anamnesaCheckboxContainer');
+                          let terapiContainer = $('#terapiCheckboxContainer');
+
+                          // kosongkan container
+                          anamnesaContainer.find('.anamnesa-item').remove();
+                          terapiContainer.find('.terapi-item').remove();
 
                           if (idAnamnesa) {
+                            anamnesaContainer.show();
+                            terapiContainer.show();
+
+                            // ==== Load Anamnesa Detail ====
                             $.ajax({
-                              url: 'controller/visit/getDetails.php', // endpoint untuk ambil detail
+                              url: 'controller/visit/getDetails.php',
                               type: 'GET',
                               data: {
                                 id_anamnesa: idAnamnesa
@@ -194,45 +209,80 @@ $dataresume = $query->fetch_assoc();
                                 if (res.status === 'success') {
                                   res.data.forEach(function(ass) {
                                     let html = `
-                                    <div class="d-flex align-items-center mb-2 anamnesa-item">
-                                      <div class="form-check me-2" style="min-width: 180px;">
-                                        <input class="form-check-input check-ass" type="checkbox" value="${ass.id_ass}" id="check_${ass.id_ass}">
-                                        <label class="form-check-label" for="check_${ass.id_ass}">
-                                          ${ass.ass_name}
-                                        </label>
-                                      </div>
-                                      <input type="text" class="form-control form-control-sm input-ass flex-grow-1" placeholder="Isi detail..." disabled data-ass-id="${ass.id_ass}">
-                                    </div>
-                                  `;
-                                    container.append(html);
+                              <div class="d-flex align-items-center mb-2 anamnesa-item">
+                                <div class="form-check me-2" style="min-width: 300px;">
+                                  <input class="form-check-input check-ass" type="checkbox" value="${ass.id_ass}" id="check_${ass.id_ass}">
+                                  <label class="form-check-label" for="check_${ass.id_ass}">${ass.ass_name}</label>
+                                </div>
+                                <input type="text" class="form-control form-control-sm input-ass flex-grow-1" 
+                                      placeholder="Isi detail..." disabled data-ass-id="${ass.id_ass}" name="anamnesa[${ass.id_ass}]">
+                              </div>`;
+                                    anamnesaContainer.append(html);
                                   });
 
                                   // bind event checkbox
                                   $('.check-ass').on('change', function() {
                                     let assId = $(this).val();
                                     let input = $(`.input-ass[data-ass-id="${assId}"]`);
-                                    if ($(this).is(':checked')) {
-                                      input.prop('disabled', false);
-                                      input.focus();
-                                    } else {
-                                      input.prop('disabled', true).val('');
-                                    }
+                                    input.prop('disabled', !$(this).is(':checked'));
+                                    if (!$(this).is(':checked')) input.val('');
                                   });
                                 }
                               }
                             });
+
+                            // ==== Load Terapi ====
+                            $.ajax({
+                              url: 'controller/visit/getTherapi.php',
+                              type: 'GET',
+                              data: {
+                                id_anamnesa: idAnamnesa
+                              },
+                              dataType: 'json',
+                              success: function(res) {
+                                if (res.status === 'success') {
+                                  res.data.forEach(function(terapi) {
+                                    let html = `
+                              <div class="d-flex align-items-center mb-2 terapi-item">
+                                <div class="form-check me-2" style="min-width: 300px;">
+                                  <input class="form-check-input check-terapi" type="checkbox" value="${terapi.id_terapi}" id="terapi_${terapi.id_terapi}">
+                                  <label class="form-check-label" for="terapi_${terapi.id_terapi}">${terapi.terapi_name}</label>
+                                </div>
+                              <input type="text" class="form-control form-control-sm input-terapi flex-grow-1" 
+                                  abled data-terapi-id="${terapi.id_terapi}" name="terapi[${terapi.id_terapi}]">`;
+                                    terapiContainer.append(html);
+                                  });
+
+                                  // bind event checkbox terapi
+                                  $('.check-terapi').on('change', function() {
+                                    let terapiId = $(this).val();
+                                    let input = $(`.input-terapi[data-terapi-id="${terapiId}"]`);
+                                    input.prop('disabled', !$(this).is(':checked'));
+                                    if (!$(this).is(':checked')) input.val('');
+                                  });
+                                }
+                              }
+                            });
+
+                          } else {
+                            anamnesaContainer.hide();
+                            terapiContainer.hide();
                           }
                         });
                       });
                     </script>
-
                     <div class="mb-3">
-                      <label for="keluhan_penyerta" class="form-label">Keluhan Penyerta</label>
-                      <textarea id="keluhan_penyerta" name="keluhan_penyerta" rows="2" class="form-control"><?= @$datarme['keluhan_penyerta'] ?></textarea>
+                      <label for="analyst" class="form-label">Analyst</label>
+                      <textarea id="analyst" name="analyst" rows="2" class="form-control"></textarea>
                     </div>
-
-
-
+                    <div class="mb-3">
+                      <label for="riwayat_konsumsi" class="form-label">Riwayat Konsumsi Obat</label>
+                      <textarea id="riwayat_konsumsi" name="riwayat_konsumsi" rows="2" class="form-control"></textarea>
+                    </div>
+                    <div class="mb-3">
+                      <label for="pemeriksaan_fisik" class="form-label">Pemeriksaan Fisik</label>
+                      <textarea id="pemeriksaan_fisik" name="pemeriksaan_fisik" rows="2" class="form-control"></textarea>
+                    </div>
                     <!-- Tombol Submit -->
                     <div class="d-grid">
                       <button type="submit" name="simpan_pemeriksaan" class="btn btn-primary">Simpan Pemeriksaan</button>
@@ -251,7 +301,40 @@ $dataresume = $query->fetch_assoc();
   require 'library.php';
   ?>
 </body>
+<script>
+  $(document).ready(function() {
+    $('#formPemeriksaan').on('submit', function(e) {
+      e.preventDefault(); // cegah reload page
 
+      let formData = $(this).serialize(); // ambil semua data form
 
+      $.ajax({
+        url: 'controller/visit/savePemeriksaan.php', // file PHP controller kamu
+        type: 'POST',
+        data: formData,
+        dataType: 'json',
+        beforeSend: function() {
+          // optional: disable button supaya tidak double submit
+          $('button[name="simpan_pemeriksaan"]').prop('disabled', true).text('Menyimpan...');
+        },
+        success: function(res) {
+          if (res.status === 'success') {
+            alert(res.message); // atau gunakan toast notification
+            $('#formPemeriksaan')[0].reset(); // reset form jika perlu
+            $('#anamnesaCheckboxContainer, #terapiCheckboxContainer').hide();
+          } else {
+            alert('Error: ' + res.message);
+          }
+        },
+        error: function(xhr, status, error) {
+          alert('Terjadi error: ' + error);
+        },
+        complete: function() {
+          $('button[name="simpan_pemeriksaan"]').prop('disabled', false).text('Simpan Pemeriksaan');
+        }
+      });
+    });
+  });
+</script>
 
 </html>
