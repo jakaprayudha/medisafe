@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
    // Pindahkan file ke folder uploads
    if (move_uploaded_file($fileTmpName, $targetFilePath)) {
       // Simpan path file ke database
-      $query = "UPDATE setting_bisnis SET image_logo = ? LIMIT 1";
+      $query = "UPDATE setting_clinic SET image_clinic = ? LIMIT 1";
       $stmt = $koneksi->prepare($query);
       $stmt->bind_param("s", $newFileName);
 

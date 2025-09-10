@@ -124,7 +124,7 @@ require '../../controller/view.php';
 </div>
 
 <script>
-  const apiUrl = 'controller/user/userController';
+  const apiUrl = 'controller/master/userController';
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
@@ -162,8 +162,7 @@ require '../../controller/view.php';
               "roles": row.roles ?? "-",
               "password": maskedPassword,
               "status": row.status === '1' ?
-                '<span class="badge bg-success text-center d-block">Aktif</span>' :
-                '<span class="badge bg-danger text-center d-block">Nonaktif</span>'
+                '<span class="badge bg-success text-center d-block">Aktif</span>' : '<span class="badge bg-danger text-center d-block">Nonaktif</span>'
             };
           });
         }

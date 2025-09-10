@@ -1,10 +1,5 @@
 <?php
 $title = 'Setting Bisnis';
-require '../../utility/env.php';
-// Memuat file .env
-$env = loadEnv();
-// Mengambil nilai API_URL dari environment
-$apiUrl = getenv('API_URL');
 ?>
 <!doctype html>
 <html lang="en">
@@ -39,7 +34,7 @@ $apiUrl = getenv('API_URL');
               <div class="card w-100">
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Pengaturan Bisnis </h5>
+                    <h5 class="card-title fw-semibold">Pengaturan Klinik </h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
                     </div>
@@ -47,8 +42,8 @@ $apiUrl = getenv('API_URL');
                   <div class="table-responsive" data-simplebar>
                     <form id="updateForm" method="POST">
                       <div class="mb-3">
-                        <label for="nama_bisnis" class="form-label">Nama Bisnis (Toko) <span class="text-danger">*</span> </label>
-                        <input type="text" class="form-control" id="nama_bisnis" name="nama_bisnis" required>
+                        <label for="clinic_name" class="form-label">Nama Klinik <span class="text-danger">*</span> </label>
+                        <input type="text" class="form-control" id="clinic_name" name="clinic_name" required>
                       </div>
                       <div class="mb-3">
                         <label for="telepon" class="form-label">No.Telepon <span class="text-danger">*</span> </label>
@@ -67,10 +62,10 @@ $apiUrl = getenv('API_URL');
             <?php
             require '../../database/connect.php'; // Koneksi ke database
             // Ambil logo dari database
-            $query = "SELECT image_logo FROM setting_bisnis LIMIT 1";
+            $query = "SELECT image_clinic FROM setting_clinic LIMIT 1";
             $result = $koneksi->query($query);
             $data = $result->fetch_assoc();
-            $logoPath = isset($data['image_logo']) ? "uploads/" . $data['image_logo'] : "uploads/default.png";
+            $logoPath = isset($data['image_clinic']) ? "uploads/" . $data['image_clinic'] : "uploads/default.png";
             ?>
 
             <div class="col-lg-6">
@@ -106,7 +101,7 @@ $apiUrl = getenv('API_URL');
 </body>
 <script>
   $(document).ready(function() {
-    const apiUrl = '<?php echo $apiUrl . "user/settingController"; ?>';
+    const apiUrl = 'controller/master/settingController';
 
     // Fungsi untuk mengambil data bisnis (tanpa parameter ID)
     function getSurveyData() {
@@ -115,7 +110,7 @@ $apiUrl = getenv('API_URL');
         .then(data => {
           if (data.status === 'success') {
             let survey = data.user;
-            $('#nama_bisnis').val(survey.business_name);
+            $('#clinic_name').val(survey.clinic_name);
             $('#telepon').val(survey.phone_number);
             $('#alamat').val(survey.address);
           } else {
@@ -164,7 +159,7 @@ $apiUrl = getenv('API_URL');
       let formData = new FormData(this);
 
       $.ajax({
-        url: "controller/user/upload_logo.php", // Endpoint PHP untuk menangani upload
+        url: "controller/master/upload_logo.php", // Endpoint PHP untuk menangani upload
         type: "POST",
         data: formData,
         contentType: false,

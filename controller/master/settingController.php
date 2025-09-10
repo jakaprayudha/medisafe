@@ -7,7 +7,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 // Handle GET: Ambil 1 data setting bisnis
 if ($method === 'GET') {
-   $query = "SELECT * FROM setting_bisnis LIMIT 1";
+   $query = "SELECT * FROM setting_clinic LIMIT 1";
    $result = $koneksi->query($query);
    $data = $result->fetch_assoc();
 
@@ -21,7 +21,7 @@ if ($method === 'GET') {
 
 // Handle POST: Insert atau Update data setting bisnis
 if ($method === 'POST') {
-   $namaBisnis = trim($_POST['nama_bisnis']);
+   $namaBisnis = trim($_POST['clinic_name']);
    $telepon = trim($_POST['telepon']);
    $alamat = trim($_POST['alamat']);
 
@@ -32,16 +32,16 @@ if ($method === 'POST') {
    }
 
    // Cek apakah data sudah ada
-   $checkQuery = "SELECT COUNT(*) as total FROM setting_bisnis";
+   $checkQuery = "SELECT COUNT(*) as total FROM setting_clinic";
    $result = $koneksi->query($checkQuery);
    $row = $result->fetch_assoc();
 
    if ($row['total'] == 0) {
       // Insert jika belum ada data
-      $query = "INSERT INTO setting_bisnis (business_name, phone_number, address) VALUES (?, ?, ?)";
+      $query = "INSERT INTO setting_clinic (clinic_name, phone_number, address) VALUES (?, ?, ?)";
    } else {
       // Update jika data sudah ada
-      $query = "UPDATE setting_bisnis SET business_name = ?, phone_number = ?, address = ?";
+      $query = "UPDATE setting_clinic SET clinic_name = ?, phone_number = ?, address = ?";
    }
 
    // Jalankan query dengan prepared statement
