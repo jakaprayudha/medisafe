@@ -1,5 +1,5 @@
 <?php
-$title = 'Pasien Details';
+$title = 'Farmasi Details';
 require '../../controller/view.php';
 $no = $_GET['no'];
 ?>
