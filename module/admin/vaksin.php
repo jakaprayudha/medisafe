@@ -1,25 +1,8 @@
 <?php
-$title = 'Pemeriksaan';
+$title = 'Vaksin ';
 require '../../controller/view.php';
-require '../../database/connect.php';
-require '../../utility/env.php';
-// Memuat file .env
-$env = loadEnv();
-// Mengambil nilai API_URL dari environment
-$apiUrl = getenv('API_URL');
 $no = $_GET['no'];
 $rm = $_GET['rm'];
-$check = mysqli_query($koneksi, "SELECT * FROM ms_pasien INNER JOIN pasien_visit ON pasien_visit.nomor_rm = ms_pasien.nomor_rm WHERE pasien_visit.nomor_rm='$rm'");
-$data = mysqli_fetch_array($check);
-
-// Hitung usia jika data ditemukan
-if ($data) {
-  $tanggal_lahir = new DateTime($data['tanggal_lahir']);
-  $tanggal_visit = new DateTime($data['tanggal']);
-
-  $usia = $tanggal_lahir->diff($tanggal_visit);
-}
-
 ?>
 <!doctype html>
 <html lang="en">
@@ -49,44 +32,28 @@ if ($data) {
       <!--  Header End -->
       <div class="body-wrapper-inner">
         <div class="container-fluid">
+          <?php
+          require 'menu_rme.php';
+          ?>
           <div class="row">
-            <nav>
-              <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                <a href="module/admin/pemeriksaan_a?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">
-                  <button class="nav-link ">Pemeriksaan Medis</button>
-                </a>
-                <a href="module/admin/permintaan_farmasi?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">
-                  <button class="nav-link ">Permintaan Farmasi</button>
-                </a>
-                <a href="module/admin/vaksin?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">
-                  <button class="nav-link active">Vaksin</button>
-                </a>
-                <a href="module/admin/tindakan?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">
-                  <button class="nav-link">Tindakan</button>
-                </a>
-                <a href="module/admin/riwayat?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>">
-                  <button class="nav-link">Riwayat Pengobatan</button>
-                </a>
-              </div>
-            </nav>
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
-                <div class="card-body p-4 " class="">
+                <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Vaksin</h5>
+                    <h5 class="card-title fw-semibold">Data Vaksin</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
-
+                      <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
                     </div>
                   </div>
                   <div class="table-responsive" data-simplebar>
-                    <table class="table text-nowrap align-middle table-custom mb-0" id="zero_config">
+                    <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
-                          <th class="text-dark fw-normal">Tanggal Diberikan</th>
-                          <th scope="col" class="text-dark fw-normal">Vaksin</th>
-                          <th class="text-dark fw-normal">Oleh</th>
-                          <th class="text-dark fw-normal">Catatan</th>
+                          <th class="text-dark fw-normal">Nama Vaksin</th>
+                          <th scope="col" class="text-dark fw-normal">Tanggal</th>
+                          <th scope="col" class="text-dark fw-normal">Dosis</th>
+                          <th>Catatan</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                         </tr>
                       </thead>
@@ -102,160 +69,209 @@ if ($data) {
     </div>
   </div>
 
+
+
   <?php
   require 'library.php';
   ?>
 </body>
-<div class="modal fade" id="edit" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="programModal" tabindex="-1">
   <div class="modal-dialog">
-    <div class="modal-content">
+    <form id="programForm" class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="exampleModalLabel">Catatan Vaksin</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <form id="editForm">
-        <input type="hidden" name="nomor_rm" id="nomor_rm" value="<?= $rm ?>">
-        <input type="hidden" name="nomor_visit" id="nomor_visit" value="<?= $no ?>">
-        <div class="modal-body">
+      <div class="modal-body">
+        <input type="hidden" name="id_vaksin" id="id_vaksin">
+        <input type="hidden" name="id_visit" id="id_visit" value="<?= $_GET['no'] ?>">
+        <div class="row">
           <div class="mb-3">
-            <label for="catatan" class="form-label">Catatan Vaksin </label>
-            <textarea name="catatan" id="catatan" class="form-control" rows="10"></textarea>
+            <label for="vaksin_name" class="form-label required">Nama Vaksin</label>
+            <input type="text" class="form-control" id="vaksin_name" name="vaksin_name" placeholder="Contoh: Sinovac, Pfizer" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="vaksin_date" class="form-label required">Tanggal Vaksinasi</label>
+            <input type="date" value="<?= date('Y-m-d') ?>" class="form-control" id="vaksin_date" name="vaksin_date" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="vaksin_dosis" class="form-label required">Dosis ke-</label>
+            <select class="form-select" id="vaksin_dosis" name="vaksin_dosis" required>
+              <option value="">-- Pilih Dosis --</option>
+              <option value="1">Dosis 1</option>
+              <option value="2">Dosis 2</option>
+              <option value="3">Dosis 3</option>
+              <option value="Booster">Booster</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="vaksin_notes" class="form-label">Catatan Tambahan</label>
+            <textarea class="form-control" id="vaksin_notes" name="vaksin_notes" rows="5"></textarea>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-primary">Simpan</button>
-        </div>
-      </form>
-    </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
   </div>
 </div>
-
-
-</html>
-
 <script>
-  $('.js-example-basic-item').select2({
-    placeholder: 'Cari Data',
-    dropdownParent: '#add'
-  });
-</script>
-<script>
-  // Variabel table dibuat global
-  let table;
-
-  // Mengambil nilai API_URL dari PHP
-  const apiUrl = '<?php echo $apiUrl . 'visit/' . 'vaksin' ?>';
+  const apiUrl = 'controller/visit/vaksin?no=<?= $_GET['no'] ?>';
 
   $(document).ready(function() {
-    // Ambil nilai nomor_rm dan nomor_visit dari input tersembunyi
-    const nomor_rm = document.getElementById('nomor_rm').value;
-    const nomor_visit = document.getElementById('nomor_visit').value;
-
-    // Inisialisasi DataTable
-    table = $('#zero_config').DataTable({
-      "processing": true,
-      "serverSide": true,
-      "ajax": {
-        "url": apiUrl,
-        "type": "GET",
-        "data": function(d) {
-          d.rm = nomor_rm;
-          d.no = nomor_visit;
-          d._ts = Date.now(); // Tambahkan timestamp untuk hindari cache
-        },
-        "dataSrc": function(json) {
-          return json.data.map(function(row, index) {
+    var table = $('#periodeTable').DataTable({
+      processing: true,
+      serverSide: false, // 🔹 ubah jadi false
+      ajax: {
+        url: apiUrl,
+        type: "GET",
+        dataSrc: function(json) {
+          return json.data.map(function(row) {
             return {
-              "tanggal": row.created_at,
-              "item": row.item,
-              "oleh": row.dokter,
-              "catatan_vaksin": row.catatan_vaksin,
               "actions": `
-                <div class="text-center">
-                  <button class="btn btn-primary edit-btn" data-id="${row.id}">Catatan</button>
-                </div>
-              `
+                      <div class="text-center">
+								<div class="btn-group btn-group-sm" role="group">
+									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_vaksin}">
+											<i class="fas fa-edit"></i>
+									</a>
+									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_vaksin}">
+											<i class="fas fa-trash"></i>
+									</a>
+								</div>
+							</div>
+                    `,
+              "name": row.vaksin_name ?? "-",
+              "tanggal": row.vaksin_date ?? "-",
+              "dosis": row.vaksin_dosis ?? "-",
+              "notes": row.vaksin_notes ?? "-"
             };
           });
         }
       },
-      "columns": [{
-          "data": "tanggal"
+      columns: [{
+          data: "name",
+          className: "text-wrap"
         },
         {
-          "data": "item"
+          data: "tanggal",
+          className: "text-wrap"
         },
         {
-          "data": "oleh"
+          data: "dosis",
+          className: "text-wrap"
         },
         {
-          "data": "catatan_vaksin"
+          data: "notes",
+          className: "text-wrap"
         },
         {
-          "data": "actions"
+          data: "actions",
+          orderable: false,
+          searchable: false
         }
-      ]
+      ],
+      footerCallback: function(row, data, start, end, display) {
+        var api = this.api();
+
+        // Hitung total bobot
+        let total = api
+          .column(3, {
+            page: 'current'
+          })
+          .data()
+          .reduce((a, b) => {
+            return (parseFloat(a) || 0) + (parseFloat(b) || 0);
+          }, 0);
+
+        // Tampilkan di footer
+        $(api.column(3).footer()).html(total.toFixed(2) + " %");
+      }
+    });
+
+    $('#customSearch').on('keyup', function() {
+      table.search(this.value).draw();
+    });
+
+    // 🔹 Tambah
+    $('#btnTambah').on('click', function() {
+      $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
+      $('#id_vaksin').val('');
+      $('#programModal .modal-title').text('Tambah Data');
+      $('#programModal').modal('show');
+    });
+
+    // 🔹 Submit (Tambah / Update)
+    $('#programForm').on('submit', function(e) {
+      e.preventDefault();
+      let formData = new URLSearchParams(new FormData(this));
+      let id = $('#id_vaksin').val();
+
+      fetch(apiUrl + (id ? `?id=${id}` : ''), {
+          method: id ? 'PUT' : 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success') {
+            Swal.fire('Berhasil!', data.message, 'success');
+            $('#programModal').modal('hide');
+            table.ajax.reload(null, false);
+          } else {
+            Swal.fire('Gagal!', data.message, 'error');
+          }
+        });
+    });
+    // 🔹 Edit
+    $(document).on('click', '.edit-btn', function() {
+      let id = $(this).data('id');
+      fetch(apiUrl + `&id=${id}`)
+        .then(res => res.json())
+        .then(resp => {
+          if (resp.status === 'success') {
+            let d = resp.data;
+
+            // isi otomatis berdasarkan name field
+            for (let key in d) {
+              $(`[name="${key}"]`).val(d[key]);
+            }
+
+            $('#programModal .modal-title').text('Edit Data');
+            $('#programModal').modal('show');
+          }
+        });
+    });
+    // 🔹 Delete
+    $(document).on('click', '.delete-btn', function() {
+      let id = $(this).data('id');
+      Swal.fire({
+        title: 'Hapus Data?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Hapus',
+        cancelButtonText: 'Batal'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(apiUrl + `&id=${id}`, {
+              method: 'DELETE'
+            })
+            .then(res => res.json())
+            .then(data => {
+              if (data.status === 'success') {
+                Swal.fire('Berhasil!', 'Data dihapus.', 'success');
+                table.ajax.reload(null, false);
+              }
+            });
+        }
+      });
     });
   });
-
-  // Handle klik tombol edit
-  $(document).on('click', '.edit-btn', function() {
-    const userId = $(this).data('id');
-
-    fetch(apiUrl + `?id=${userId}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === 'success') {
-          const user = data.user;
-          $('#catatan').val(user.catatan_vaksin);
-          $('#edit').modal('show');
-          $('#editForm').data('id', user.id); // Simpan ID di form
-        } else {
-          Swal.fire('Gagal!', 'Data user tidak ditemukan.', 'error');
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        Swal.fire('Terjadi Kesalahan!', 'Gagal memuat data. Coba lagi nanti.', 'error');
-      });
-  });
-
-  // Handle submit form update
-  $('#editForm').on('submit', function(e) {
-    e.preventDefault();
-
-    const userId = $(this).data('id');
-    const catatan = $('#catatan').val();
-
-    const data = {
-      iduser: userId,
-      catatan: catatan
-    };
-
-    console.log('Data dikirim:', data);
-
-    fetch(apiUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams(data).toString(),
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === 'success') {
-          Swal.fire('Berhasil!', 'Data berhasil diperbarui.', 'success').then(() => {
-            $('#edit').modal('hide');
-            table.ajax.reload(null, false); // Reload tanpa reset halaman
-          });
-        } else {
-          Swal.fire('Gagal!', data.message || 'Terjadi kesalahan saat memperbarui data.', 'error');
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        Swal.fire('Terjadi Kesalahan!', 'Gagal memperbarui data. Coba lagi nanti.', 'error');
-      });
-  });
 </script>
+
+</html>
