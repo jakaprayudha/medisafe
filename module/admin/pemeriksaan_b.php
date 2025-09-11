@@ -16,10 +16,6 @@ if ($data) {
   $usia = $tanggal_lahir->diff($tanggal_visit);
 }
 
-$query = $koneksi->query("SELECT * FROM pasien_resume WHERE nomor_visit = '$no'");
-$dataresume = $query->fetch_assoc();
-// Decode JSON dari kolom 'pemeriksaan'
-@$datarme = json_decode($dataresume['pemeriksaan'], true);
 ?>
 <!doctype html>
 <html lang="en">
@@ -100,7 +96,7 @@ $dataresume = $query->fetch_assoc();
                       <div class="col-md-4">
                         <label for="kondisi_masuk" class="form-label">Kondisi Masuk <span class="text-danger">*</span></label>
                         <select name="kondisi_masuk" id="kondisi_masuk" class="form-select" required>
-                          <option value="<?= @$datarme['kondisi_masuk'] ?>"><?= @$datarme['kondisi_masuk'] ?></option>
+
                           <option value="Baik">Baik</option>
                           <option value="Lemah">Lemah</option>
                           <option value="Sedang">Sedang</option>
@@ -117,7 +113,7 @@ $dataresume = $query->fetch_assoc();
                           name="tekanan_darah"
                           class="form-control"
 
-                          value="<?= @$datarme['tekanan_darah'] ?>"
+
                           maxlength="7"
                           required>
                       </div>
@@ -132,23 +128,23 @@ $dataresume = $query->fetch_assoc();
                       </script>
                       <div class="col-md-4">
                         <label for="suhu" class="form-label">Suhu (°C) <span class="text-danger">*</span></label>
-                        <input type="number" value="<?= $datarme['suhu'] ?>" step="0.1" id="suhu" required name="suhu" class="form-control">
+                        <input type="number" step="0.1" id="suhu" required name="suhu" class="form-control">
                       </div>
                       <div class="col-md-4">
                         <label for="nadi" class="form-label">Nadi (x/menit) <span class="text-danger">*</span></label>
-                        <input type="number" value="<?= $datarme['nadi'] ?>" id="nadi" name="nadi" required class="form-control">
+                        <input type="number" id="nadi" name="nadi" required class="form-control">
                       </div>
                       <div class="col-md-4 mt-2">
                         <label for="respirasi" class="form-label">Respirasi (x/menit) <span class="text-danger">*</span></label>
-                        <input type="number" value="<?= $datarme['respirasi'] ?>" id="respirasi" name="respirasi" required class="form-control">
+                        <input type="number" id="respirasi" name="respirasi" required class="form-control">
                       </div>
                       <div class="col-md-4 mt-2">
                         <label for="tinggi" class="form-label">Tinggi Badan (cm) <span class="text-danger">*</span></label>
-                        <input type="number" value="<?= $datarme['tinggi'] ?>" id="tinggi" name="tinggi" required class="form-control">
+                        <input type="number" id="tinggi" name="tinggi" required class="form-control">
                       </div>
                       <div class="col-md-4 mt-2">
                         <label for="berat" class="form-label">Berat Badan (kg) <span class="text-danger">*</span></label>
-                        <input type="number" value="<?= $datarme['berat'] ?>" id="berat" name="berat" required class="form-control">
+                        <input type="number" id="berat" name="berat" required class="form-control">
                       </div>
                     </div>
 
@@ -303,6 +299,8 @@ $dataresume = $query->fetch_assoc();
 </body>
 <script>
   $(document).ready(function() {
+    // load kembali data yang baru saja disimpan
+    loadVisitData($('input[name="nomor_visit"]').val());
     $('#formPemeriksaan').on('submit', function(e) {
       e.preventDefault(); // cegah reload page
 
@@ -335,6 +333,85 @@ $dataresume = $query->fetch_assoc();
       });
     });
   });
+</script>
+
+<script>
+  function loadVisitData(nomor_visit) {
+    $.ajax({
+      url: 'controller/visit/getasesment.php',
+      type: 'GET',
+      data: {
+        nomor_visit: nomor_visit
+      },
+      dataType: 'json',
+      success: function(res) {
+        if (res.status === 'success') {
+          let data = res.pemeriksaan;
+
+          // isi form pemeriksaan
+          $('#kondisi_masuk').val(data.kondisi_masuk);
+          $('#tekanan_darah').val(data.tekanan_darah);
+          $('#suhu').val(data.suhu);
+          $('#nadi').val(data.nadi);
+          $('#respirasi').val(data.respirasi);
+          $('#tinggi').val(data.tinggi);
+          $('#berat').val(data.berat);
+          $('#analyst').val(data.analyst);
+          $('#riwayat_konsumsi').val(data.riwayat_konsumsi);
+          $('#pemeriksaan_fisik').val(data.pemeriksaan_fisik);
+
+          // render anamnesa
+          let anamnesaContainer = $('#anamnesaCheckboxContainer');
+          anamnesaContainer.show();
+          anamnesaContainer.find('.anamnesa-item').remove();
+
+          res.anamnesa.forEach(function(a) {
+            let html = `
+                    <div class="d-flex align-items-center mb-2 anamnesa-item">
+                        <div class="form-check me-2" style="min-width: 300px;">
+                            <input class="form-check-input check-ass" type="checkbox" value="${a.id_anamnesa_detail}" id="check_${a.id_anamnesa_detail}" checked>
+                            <label class="form-check-label" for="check_${a.id_anamnesa_detail}">Anamnesa ${a.id_anamnesa_detail}</label>
+                        </div>
+                        <input type="text" class="form-control form-control-sm input-ass flex-grow-1" data-ass-id="${a.id_anamnesa_detail}" name="anamnesa[${a.id_anamnesa_detail}]" value="${a.detail}">
+                    </div>`;
+            anamnesaContainer.append(html);
+          });
+
+          // render terapi
+          let terapiContainer = $('#terapiCheckboxContainer');
+          terapiContainer.show();
+          terapiContainer.find('.terapi-item').remove();
+
+          res.terapi.forEach(function(t) {
+            let html = `
+                    <div class="d-flex align-items-center mb-2 terapi-item">
+                        <div class="form-check me-2" style="min-width: 300px;">
+                            <input class="form-check-input check-terapi" type="checkbox" value="${t.id_terapi}" id="terapi_${t.id_terapi}" checked>
+                            <label class="form-check-label" for="terapi_${t.id_terapi}">Terapi ${t.id_terapi}</label>
+                        </div>
+                        <input type="text" class="form-control form-control-sm input-terapi flex-grow-1" data-terapi-id="${t.id_terapi}" name="terapi[${t.id_terapi}]" value="${t.detail}">
+                    </div>`;
+            terapiContainer.append(html);
+          });
+
+          // bind event checkbox seperti sebelumnya
+          $('.check-ass').on('change', function() {
+            let assId = $(this).val();
+            let input = $(`.input-ass[data-ass-id="${assId}"]`);
+            input.prop('disabled', !$(this).is(':checked'));
+            if (!$(this).is(':checked')) input.val('');
+          });
+
+          $('.check-terapi').on('change', function() {
+            let terapiId = $(this).val();
+            let input = $(`.input-terapi[data-terapi-id="${terapiId}"]`);
+            input.prop('disabled', !$(this).is(':checked'));
+            if (!$(this).is(':checked')) input.val('');
+          });
+        }
+      }
+    });
+  }
 </script>
 
 </html>
