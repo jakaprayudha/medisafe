@@ -152,7 +152,7 @@ var_dump($role);
                   <span class="hide-menu">Pemeriksaan Dokter</span>
                </a>
             </li>
-            <li class="sidebar-item">
+            <!-- <li class="sidebar-item">
                <a class="sidebar-link <?php if ($title == 'Farmasi Order') {
                                           echo 'active';
                                        } ?>"
@@ -196,7 +196,7 @@ var_dump($role);
                   <iconify-icon icon="vaadin:stock"></iconify-icon>
                   <span class="hide-menu">Persediaan Farmasi</span>
                </a>
-            </li>
+            </li> -->
          </ul>
          <div
             class="unlimited-access d-flex align-items-center hide-menu bg-primary-subtle position-relative mb-7 mt-4 p-3 rounded">
