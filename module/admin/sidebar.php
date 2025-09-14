@@ -152,14 +152,14 @@ var_dump($role);
                   <span class="hide-menu">Pemeriksaan Dokter</span>
                </a>
             </li>
-            <!-- <li class="sidebar-item">
-               <a class="sidebar-link <?php if ($title == 'Farmasi Order') {
+            <li class="sidebar-item">
+               <a class="sidebar-link <?php if ($title == 'Farmasi Order' or $title == 'Farmasi Order Luar') {
                                           echo 'active';
                                        } ?>"
                   href="module/admin/farmasi_order"
                   aria-expanded="false">
                   <iconify-icon icon="covid:vaccine-protection-medicine-pill"></iconify-icon>
-                  <span class="hide-menu">Permintaan Farmasi</span>
+                  <span class="hide-menu">Farmasi</span>
                </a>
             </li>
             <li class="sidebar-item">
@@ -196,7 +196,7 @@ var_dump($role);
                   <iconify-icon icon="vaadin:stock"></iconify-icon>
                   <span class="hide-menu">Persediaan Farmasi</span>
                </a>
-            </li> -->
+            </li>
          </ul>
          <div
             class="unlimited-access d-flex align-items-center hide-menu bg-primary-subtle position-relative mb-7 mt-4 p-3 rounded">

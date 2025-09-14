@@ -1,5 +1,5 @@
 <?php
-$title = 'Farmasi Order';
+$title = 'Farmasi Order Luar';
 require '../../controller/view.php';
 require '../../utility/env.php';
 // Memuat file .env
