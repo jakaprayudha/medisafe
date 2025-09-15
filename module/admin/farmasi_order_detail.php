@@ -64,7 +64,7 @@ if ($data) {
                     <h5 class="card-title fw-semibold">Permintaan Farmasi</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
-                      <a href="module/print/struk_obat?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                      <a href="module/print/struk_obat?no=<?= $no ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
                         <button class="btn btn-info"><i class="fas fa-print"></i> Cetak</button>
                       </a>
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
