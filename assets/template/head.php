@@ -2,7 +2,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Medisafe | <?= $title ?>
 </title>
-<link rel="shortcut icon" type="image/png" href="assets/images/logos/favicon.png" />
+<link rel="shortcut icon" type="image/png" href="assets/images/logos/icon_medisafe.png" />
 <link rel="stylesheet" href="assets/css/styles.min.css" />
 <!-- DataTables CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap5.min.css">

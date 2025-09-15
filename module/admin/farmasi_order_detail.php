@@ -8,16 +8,15 @@ $env = loadEnv();
 // Mengambil nilai API_URL dari environment
 $apiUrl = getenv('API_URL');
 $no = $_GET['no'];
-$rm = $_GET['rm'];
-$check = mysqli_query($koneksi, "SELECT * FROM ms_pasien INNER JOIN pasien_visit ON pasien_visit.nomor_rm = ms_pasien.nomor_rm WHERE pasien_visit.nomor_rm='$rm'");
+$check = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient  WHERE pasien_visit.visit_ID='$no'");
 $data = mysqli_fetch_array($check);
 
 // Hitung usia jika data ditemukan
 if ($data) {
-  $tanggal_lahir = new DateTime($data['tanggal_lahir']);
-  $tanggal_visit = new DateTime($data['tanggal']);
+  $patient_datebirth = new DateTime($data['patient_datebirth']);
+  $tanggal_visit = new DateTime($data['visit_date']);
 
-  $usia = $tanggal_lahir->diff($tanggal_visit);
+  $usia = $patient_datebirth->diff($tanggal_visit);
 }
 
 ?>
@@ -53,8 +52,8 @@ if ($data) {
             <div class="col-12">
               <div class="card">
                 <div class="card-body">
-                  <h5 class="card-title"><?= $data['nama_pasien'] ?> <span class="badge bg-warning">RM : <?= $data['nomor_rm'] ?></span> </h5>
-                  <p class="card-text">Tanggal Lahir : <?= $data['tanggal_lahir'] ?> <?= $data['gender'] ?></p>
+                  <h5 class="card-title"><?= $data['patient_name'] ?> <span class="badge bg-warning">RM : <?= $data['nomor_rm'] ?></span> </h5>
+                  <p class="card-text">Usia : <?php echo $usia->y . " Tahun " . $usia->m . " Bulan " . $usia->d . " Hari"; ?> <br> <?= $data['patient_gender'] ?></p>
                 </div>
               </div>
             </div>
