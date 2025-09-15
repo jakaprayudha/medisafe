@@ -43,7 +43,7 @@ $apiUrl = getenv('API_URL');
               <div class="card w-100">
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Farmasi Order</h5>
+                    <h5 class="card-title fw-semibold">Farmasi Resep Luar</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
 
@@ -98,7 +98,7 @@ $apiUrl = getenv('API_URL');
             return {
               "actions": `
                   <div class="text-center">
-                    <a href="module/admin/farmasi_order_detail?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                    <a href="module/admin/farmasi_order_luar_detail?no=${row.visit_ID}&rm=${row.nomor_rm}">
                       <button class="btn btn-primary">Lihat Resep</button>
                     </a>
                   </div>
