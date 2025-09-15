@@ -153,7 +153,7 @@ var_dump($role);
                </a>
             </li>
             <li class="sidebar-item">
-               <a class="sidebar-link <?php if ($title == 'Farmasi Order' or $title == 'Farmasi Order Luar') {
+               <a class="sidebar-link <?php if ($title == 'Farmasi Order' or $title == 'Farmasi Order Luar'  or $title == 'Farmasi Pembelian') {
                                           echo 'active';
                                        } ?>"
                   href="module/admin/farmasi_order"

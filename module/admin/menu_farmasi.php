@@ -14,7 +14,11 @@ $current = basename($_SERVER['PHP_SELF']);
          role="tab">
          <iconify-icon icon="solar:call-medicine-rounded-broken"></iconify-icon> Resep Luar
       </a>
-      <a class="nav-link <?= ($current == 'farmasi_pembelian.php' ? 'active' : '') ?>"
+      <a class="nav-link <?= (
+                              $current == 'farmasi_pembelian.php' ||
+                              $current == 'farmasi_pembelian_details.php'
+                              ? 'active' : ''
+                           ) ?>"
          href="module/admin/farmasi_pembelian"
          role="tab">
          <iconify-icon icon="lucide:file-box"></iconify-icon> Pembelian Farmasi
