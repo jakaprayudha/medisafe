@@ -186,13 +186,13 @@ var_dump($role);
                </a>
             </li>
             <li class="sidebar-item">
-               <a class="sidebar-link" href="module/admin/profit" aria-expanded="false">
+               <a class="sidebar-link" href="module/admin/profit" target="_blank" aria-expanded="false">
                   <iconify-icon icon="game-icons:profit"></iconify-icon>
                   <span class="hide-menu">Laba Rugi</span>
                </a>
             </li>
             <li class="sidebar-item">
-               <a class="sidebar-link" href="module/admin/report" aria-expanded="false">
+               <a class="sidebar-link" href="module/admin/persediaan" target="_blank" aria-expanded="false">
                   <iconify-icon icon="vaadin:stock"></iconify-icon>
                   <span class="hide-menu">Persediaan Farmasi</span>
                </a>
