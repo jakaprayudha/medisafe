@@ -67,19 +67,19 @@ if ($data) {
                       <a href="module/print/struk_obat?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
                         <button class="btn btn-info"><i class="fas fa-print"></i> Cetak</button>
                       </a>
-                      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add"><i class="fas fa-plus"></i> Tambah</button>
+                      <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
                     </div>
                   </div>
                   <div class="table-responsive" data-simplebar>
-                    <table class="table text-nowrap align-middle table-custom mb-0" id="zero_config">
+                    <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
-                          <th scope="col" class="text-dark fw-normal">Item</th>
-                          <th class="text-dark fw-normal">Satuan</th>
-                          <th class="text-dark fw-normal">Signa</th>
-                          <th class="text-dark fw-normal">QTY</th>
-                          <th class="text-dark fw-normal">Harga</th>
-                          <th class="text-dark fw-normal">Total</th>
+                          <th class="text-dark fw-normal">Item</th>
+                          <th scope="col" class="text-dark fw-normal">Qty</th>
+                          <th scope="col" class="text-dark fw-normal">Signa</th>
+                          <th scope="col" class="text-dark fw-normal">Harga</th>
+                          <th scope="col" class="text-dark fw-normal">Total</th>
+                          <th scope="col" class="text-dark fw-normal">Catatan</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                         </tr>
@@ -100,274 +100,247 @@ if ($data) {
   require 'library.php';
   ?>
 </body>
-<div class="modal fade" id="add" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="programModal" tabindex="-1">
   <div class="modal-dialog">
-    <div class="modal-content">
+    <form id="programForm" class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="exampleModalLabel">Tambah Data</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <form id="addForm">
-        <input type="hidden" name="nomor_rm" id="nomor_rm" value="<?= $rm ?>">
-        <input type="hidden" name="nomor_visit" id="nomor_visit" value="<?= $no ?>">
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="item" class="form-label">Nama Barang <span class="text-danger">*</span> </label>
-            <select name="item" id="item" class="js-example-basic-item" required>
-              <option value="">Select Option</option>
-              <?php
-              $getbarang = tampildata("SELECT * FROM ms_farmasi WHERE status_barang='1'");
-              ?>
-              <?php foreach ($getbarang as $barang): ?>
-                <option value="<?= $barang['nama_barang']; ?>"><?= $barang['nama_barang']; ?></option>
-              <?php endforeach ?>
-            </select>
+      <div class="modal-body">
+        <input type="hidden" name="id_permintaan_farmasi" id="id_permintaan_farmasi">
+        <input type="hidden" name="id_visit" id="id_visit" value="<?= $_GET['no'] ?>">
+        <div class="row">
+          <div class="col-12">
+            <div class="mb-3">
+              <label for="id_pharmacy" class="form-label">Nama Item <span class="text-danger">*</span> </label>
+              <select name="id_pharmacy" id="id_pharmacy" class="form-select js-example-basic-item" required>
+                <option value="">Select Option</option>
+                <?php
+                $getbarang = tampildata("SELECT * FROM ms_pharmacy WHERE pharmacy_status='1'");
+                ?>
+                <?php foreach ($getbarang as $barang): ?>
+                  <option value="<?= $barang['id_pharmacy']; ?>" data-harga="<?= $barang['pharmacy_sale']; ?>"><?= $barang['pharmacy_name_generic']; ?>/<?= $barang['pharmacy_name_trade']; ?></option>
+                <?php endforeach ?>
+              </select>
+            </div>
           </div>
-          <div class="mb-3">
-            <label for="signa" class="form-label">Signa <span class="text-danger">*</span> </label>
-            <input type="text" name="signa" id="signa" required class="form-control">
+          <div class="col-6">
+            <div class="mb-3">
+              <label class="form-label required">Harga Dasar</label>
+              <input type="number" id="harga" name="harga" class="form-control" required>
+            </div>
           </div>
-          <div class="mb-3">
-            <label for="qty" class="form-label">Jumlah <span class="text-danger">*</span> </label>
-            <input type="number" name="qty" id="qty" required class="form-control">
+          <div class="col-6">
+            <div class="mb-3">
+              <label class="form-label required">Qty</label>
+              <input type="number" id="qty" name="qty" class="form-control" required>
+            </div>
           </div>
-          <div class="mb-3">
-            <label for="catatan" class="form-label">Catatan </label>
-            <textarea name="catatan" id="catatan" class="form-control" rows="5"></textarea>
+          <div class="col-12">
+            <div class="mb-3">
+              <label class="form-label required">Signa</label>
+              <input type="text" id="signa" name="signa" class="form-control" required>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="mb-3">
+              <label class="form-label">Catatan</label>
+              <textarea name="catatan_permintaan" id="catatan_permintaan" class="form-control" rows="5"></textarea>
+            </div>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-primary">Simpan</button>
-        </div>
-      </form>
-    </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
   </div>
 </div>
-
 
 </html>
 
 <script>
-  $('.js-example-basic-item').select2({
-    placeholder: 'Cari Data',
-    dropdownParent: '#add'
-  });
-</script>
-<script>
-  // Mengambil nilai API_URL dari PHP
-  const apiUrl = '<?php echo $apiUrl . 'visit/' . 'permintaanFarmasi' ?>';
-  $(document).ready(function() {
-    // Formatter untuk angka biasa (qty)
-    const formatter = new Intl.NumberFormat('id-ID', {
-      style: 'decimal',
-      maximumFractionDigits: 0
-    });
+  const apiUrl = 'controller/visit/permintaanFarmasi?no=<?= $_GET['no'] ?>';
 
-    // Formatter untuk harga dan total (Rp)
-    const rupiahFormatter = new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    });
-    // Ambil nilai nomor_rm dan nomor_visit (bisa dari input tersembunyi atau field form)
-    const nomor_rm = document.getElementById('nomor_rm').value;
-    const nomor_visit = document.getElementById('nomor_visit').value;
-    // Initialize DataTable
-    var table = $('#zero_config').DataTable({
-      "processing": true,
-      "serverSide": true,
-      "ajax": {
-        "url": apiUrl, // Ganti dengan URL API yang sesuai
-        "type": "GET",
-        "data": function(d) {
-          d.rm = nomor_rm;
-          d.no = nomor_visit;
-        },
-        "dataSrc": function(json) {
-          // Format data yang akan ditampilkan dalam tabel
-          return json.data.map(function(row, index) {
+  $(document).ready(function() {
+    var table = $('#periodeTable').DataTable({
+      processing: true,
+      serverSide: false, // 🔹 ubah jadi false
+      ajax: {
+        url: apiUrl,
+        type: "GET",
+        dataSrc: function(json) {
+          return json.data.map(function(row) {
+            let harga = parseFloat(row.harga) || 0;
+            let qty = parseFloat(row.qty) || 0;
+            let total = qty * harga;
+
+
+            // Formatter IDR
+            let formatter = new Intl.NumberFormat("id-ID", {
+              style: "currency",
+              currency: "IDR",
+              minimumFractionDigits: 0
+            });
+
+
             return {
               "actions": `
-            <div class="text-center">
-              <button class="btn btn-success edit-btn" data-id="${row.id}">Approve</button>
-              <button class="btn btn-danger delete-btn" data-id="${row.id}">Hapus</button>
-            </div>
-          `,
-              "item": row.item,
-              "satuan": row.satuan,
-              "signa": row.signa,
-              "qty": formatter.format(row.qty),
-              "harga": rupiahFormatter.format(row.harga),
-              "total": rupiahFormatter.format(row.qty * row.harga),
-              "status_permintaan": '<span class="badge ' + (row.status_permintaan == 1 ? 'bg-success' : 'bg-warning ') + ' d-block text-center">' + (row.status_permintaan == 1 ? 'Selesai' : 'Proses') + '</span>'
+                      <div class="text-center">
+								<div class="btn-group btn-group-sm" role="group">
+									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_permintaan_farmasi}">
+											<i class="fas fa-edit"></i>
+									</a>
+									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_permintaan_farmasi}">
+											<i class="fas fa-trash"></i>
+									</a>
+								</div>
+							</div>
+                    `,
+              "nama": row.pharmacy_name_generic + '/' + row.pharmacy_name_trade ?? "-",
+              "qty": row.qty ?? "-",
+              "signa": row.signa ?? "-",
+              "harga": formatter.format(harga), // ✅ harga format IDR
+              "total": formatter.format(total), // ✅ total format IDR
+              "catatan": row.catatan_permintaan ?? "-",
+              "status": row.status_permintaan === '1' ?
+                '<span class="badge bg-success text-center d-block">Selesai</span>' : '<span class="badge bg-danger text-center d-block">Belum proses</span>'
             };
           });
         }
       },
-      "columns": [{
-          "data": "item"
+      columns: [{
+          data: "nama"
         },
         {
-          "data": "satuan"
+          data: "qty"
         },
         {
-          "data": "signa"
+          data: "signa"
         },
         {
-          "data": "qty"
+          data: "harga"
         },
         {
-          "data": "harga"
+          data: "total"
         },
         {
-          "data": "total"
+          data: "catatan"
         },
         {
-          "data": "status_permintaan"
+          data: "status"
         },
         {
-          "data": "actions"
-        }
-      ]
+          data: "actions",
+          orderable: false,
+          searchable: false
+        },
+      ],
+      footerCallback: function(row, data, start, end, display) {
+        var api = this.api();
+
+        // Hitung total bobot
+        let total = api
+          .column(3, {
+            page: 'current'
+          })
+          .data()
+          .reduce((a, b) => {
+            return (parseFloat(a) || 0) + (parseFloat(b) || 0);
+          }, 0);
+
+        // Tampilkan di footer
+        $(api.column(3).footer()).html(total.toFixed(2) + " %");
+      }
     });
 
-    // Handle form submission for adding 
-    document.getElementById("addForm").addEventListener("submit", function(event) {
-      event.preventDefault();
-      const nomor_rm = document.getElementById("nomor_rm").value;
-      const nomor_visit = document.getElementById("nomor_visit").value;
-      const item = document.getElementById("item").value;
-      const signa = document.getElementById("signa").value;
-      const qty = document.getElementById("qty").value;
-      const catatan = document.getElementById("catatan").value;
+    $('#customSearch').on('keyup', function() {
+      table.search(this.value).draw();
+    });
 
-      const formData = new URLSearchParams({
-        nomor_rm: nomor_rm,
-        nomor_visit: nomor_visit,
-        item: item,
-        signa: signa,
-        qty: qty,
-        catatan: catatan
-      });
+    // 🔹 Tambah
+    $('#btnTambah').on('click', function() {
+      $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
+      $('#id_permintaan_farmasi').val('');
+      $('#programModal .modal-title').text('Tambah Data');
+      $('#programModal').modal('show');
+    });
 
-      // ✅ Tampilkan data ke console
-      console.log("Data yang dikirim:", formData.toString());
+    // 🔹 Submit (Tambah / Update)
+    $('#programForm').on('submit', function(e) {
+      e.preventDefault();
+      let formData = new URLSearchParams(new FormData(this));
+      let id = $('#id_permintaan_farmasi').val();
 
-      fetch(apiUrl, {
-          method: 'POST',
+      fetch(apiUrl + (id ? `?id=${id}` : ''), {
+          method: id ? 'PUT' : 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
           },
           body: formData
         })
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
           if (data.status === 'success') {
-            Swal.fire({
-              title: 'Berhasil!',
-              text: data.message,
-              icon: 'success',
-              confirmButtonText: 'OK'
-            }).then(() => {
-              document.getElementById("addForm").reset();
-              $('#add').modal('hide');
-              table.ajax.reload(null, false);
-            });
+            Swal.fire('Berhasil!', data.message, 'success');
+            $('#programModal').modal('hide');
+            table.ajax.reload(null, false);
           } else {
-            Swal.fire({
-              title: 'Gagal!',
-              text: data.message,
-              icon: 'error',
-              confirmButtonText: 'Coba Lagi'
-            });
+            Swal.fire('Gagal!', data.message, 'error');
           }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          Swal.fire({
-            title: 'Terjadi Kesalahan!',
-            text: 'Gagal mengirim data. Coba lagi nanti.',
-            icon: 'error',
-            confirmButtonText: 'OK'
-          });
         });
     });
-    // Handle delete action
+    // 🔹 Edit
+    $(document).on('click', '.edit-btn', function() {
+      let id = $(this).data('id');
+      fetch(apiUrl + `&id=${id}`)
+        .then(res => res.json())
+        .then(resp => {
+          if (resp.status === 'success') {
+            let d = resp.data;
+
+            // isi otomatis field biasa
+            for (let key in d) {
+              if (key !== "id_pharmacy" && key !== "harga") { // skip select & harga
+                $(`[name="${key}"]`).val(d[key]);
+              }
+            }
+
+            // isi dropdown select2
+            $('#id_pharmacy').val(d.id_pharmacy).trigger("change");
+
+            // isi harga langsung dari response DB
+            $('#harga').val(d.harga);
+
+            $('#programModal .modal-title').text('Edit Data');
+            $('#programModal').modal('show');
+          }
+        });
+    });
+    // 🔹 Delete
     $(document).on('click', '.delete-btn', function() {
-      var id = $(this).data('id'); // Ambil iduser dari data-id
+      let id = $(this).data('id');
       Swal.fire({
         title: 'Hapus Data?',
-        text: "Apakah Anda yakin ingin menghapus data ini?",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Hapus',
         cancelButtonText: 'Batal'
       }).then((result) => {
         if (result.isConfirmed) {
-          // Perform the deletion action using GET method
-          fetch(apiUrl + `?id=${id}`, {
-              method: 'DELETE', // Gunakan GET, bukan DELETE
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-              }
+          fetch(apiUrl + `&id=${id}`, {
+              method: 'DELETE'
             })
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
               if (data.status === 'success') {
-                Swal.fire('Berhasil!', 'Data berhasil dihapus.', 'success').then(() => {
-                  table.ajax.reload(null, false); // Reload table without changing page
-                });
-              } else {
-                Swal.fire('Gagal!', 'Terjadi kesalahan saat menghapus data.', 'error');
+                Swal.fire('Berhasil!', 'Data dihapus.', 'success');
+                table.ajax.reload(null, false);
               }
-            })
-            .catch(error => {
-              console.error('Error:', error);
-              Swal.fire('Terjadi Kesalahan!', 'Gagal menghapus data. Coba lagi nanti.', 'error');
             });
         }
       });
     });
-
-    // Handle delete action
-    $(document).on('click', '.edit-btn', function() {
-      var id = $(this).data('id'); // Ambil iduser dari data-id
-      Swal.fire({
-        title: 'Approve Item?',
-        text: "Apakah Anda yakin ingin approve data ini untuk mengurangi stock?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Approve',
-        cancelButtonText: 'Batal'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // Perform the deletion action using GET method
-          fetch(apiUrl + `?id=${id}&method=approve`, {
-              method: 'DELETE',
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-              }
-            })
-            .then(response => response.json())
-            .then(data => {
-              if (data.status === 'success') {
-                Swal.fire('Berhasil!', 'Data berhasil diapprove.', 'success').then(() => {
-                  table.ajax.reload(null, false); // Reload table without changing page
-                });
-              } else {
-                Swal.fire('Gagal!', 'Terjadi kesalahan saat approve data.', 'error');
-              }
-            })
-            .catch(error => {
-              console.error('Error:', error);
-              Swal.fire('Terjadi Kesalahan!', 'Gagal approve data. Coba lagi nanti.', 'error');
-            });
-        }
-      });
-    });
-
-
-
   });
 </script>
