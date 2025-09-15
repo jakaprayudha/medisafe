@@ -9,30 +9,30 @@ $env = loadEnv();
 $apiUrl = getenv('API_URL');
 $no = $_GET['no'];
 $rm = $_GET['rm'];
-$check = mysqli_query($koneksi, "SELECT * FROM ms_pasien INNER JOIN pasien_visit ON pasien_visit.nomor_rm = ms_pasien.nomor_rm WHERE pasien_visit.nomor_rm='$rm'");
+$check = mysqli_query($koneksi, "SELECT * FROM ms_patient INNER JOIN pasien_visit ON pasien_visit.id_patient = ms_patient.id_patient WHERE pasien_visit.visit_ID='$no'");
 $data = mysqli_fetch_array($check);
 
 // Hitung usia jika data ditemukan
 if ($data) {
-  $tanggal_lahir = new DateTime($data['tanggal_lahir']);
-  $tanggal_visit = new DateTime($data['tanggal']);
+  $patient_datebirth = new DateTime($data['patient_datebirth']);
+  $tanggal_visit = new DateTime($data['visit_date']);
 
-  $usia = $tanggal_lahir->diff($tanggal_visit);
+  $usia = $patient_datebirth->diff($tanggal_visit);
 }
 
 
-// Total dari permintaan_farmasi
-$queryObat = mysqli_query($koneksi, "SELECT qty, harga FROM permintaan_farmasi WHERE nomor_visit='$no' AND nomor_rm='$rm'");
+// Total dari permintaan_pharmacy
+$queryObat = mysqli_query($koneksi, "SELECT qty, harga FROM permintaan_pharmacy WHERE id_visit='$no'");
 $totalObat = 0;
 while ($row = mysqli_fetch_assoc($queryObat)) {
   $totalObat += $row['qty'] * $row['harga'];
 }
 
 // Total dari pasien_billing
-$queryBilling = mysqli_query($koneksi, "SELECT qty, harga, diskon FROM pasien_billing WHERE nomor_visit='$no' AND nomor_rm='$rm'");
+$queryBilling = mysqli_query($koneksi, "SELECT * FROM pasien_billing WHERE id_visit='$no'");
 $totalBilling = 0;
 while ($row = mysqli_fetch_assoc($queryBilling)) {
-  $subtotal = ($row['qty'] * $row['harga']) - $row['diskon'];
+  $subtotal = ($row['billing_qty'] * $row['billing_price']) - $row['billing_discount'];
   $totalBilling += max(0, $subtotal); // Hindari nilai negatif
 }
 
@@ -74,10 +74,10 @@ $totalKeseluruhan = $totalObat + $totalBilling;
                 <div class="card-body d-flex justify-content-between align-items-start">
                   <div>
                     <h5 class="card-title">
-                      <?= $data['nama_pasien'] ?>
+                      <?= $data['patient_name'] ?>
                       <span class="badge bg-warning">RM : <?= $data['nomor_rm'] ?></span>
                     </h5>
-                    <p class="card-text">Tanggal Lahir : <?= $data['tanggal_lahir'] ?> <?= $data['gender'] ?></p>
+                    <p class="card-text">Tanggal Lahir : <?= $data['patient_datebirth'] ?> <?= $data['patient_gender'] ?></p>
                   </div>
                   <div class="text-end">
                     <h1 class="text-danger" style="font-size: 24px;">
@@ -142,11 +142,11 @@ $totalKeseluruhan = $totalObat + $totalBilling;
                       </thead>
                       <tbody>
                         <?php
-                        $getobat = tampildata("SELECT * FROM permintaan_farmasi WHERE nomor_visit='$no' AND nomor_rm='$rm'");
+                        $getobat = tampildata("SELECT * FROM permintaan_pharmacy INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy.id_pharmacy  WHERE id_visit='$no'");
                         ?>
                         <?php foreach ($getobat as $obat): ?>
                           <tr>
-                            <td><?= $obat['item'] ?></td>
+                            <td><?= $obat['pharmacy_name_generic'] ?>/<?= $obat['pharmacy_name_trade'] ?></td>
                             <td><?= number_format($obat['qty']) ?></td>
                             <td><?= number_format($obat['harga']) ?></td>
                             <td><?= number_format($obat['harga'] * $obat['qty']) ?></td>
@@ -184,10 +184,10 @@ $totalKeseluruhan = $totalObat + $totalBilling;
             <select name="item" id="item" class="js-example-basic-item" required>
               <option value="">Select Option</option>
               <?php
-              $gettarif = tampildata("SELECT * FROM ms_tarif WHERE status_tarif='1'");
+              $gettarif = tampildata("SELECT * FROM ms_tarif WHERE tarif_status='1'");
               ?>
               <?php foreach ($gettarif as $tarif): ?>
-                <option value="<?= $tarif['nama_tarif']; ?>"><?= $tarif['nama_tarif']; ?></option>
+                <option value="<?= $tarif['tarif_name']; ?>"><?= $tarif['tarif_name']; ?></option>
               <?php endforeach ?>
             </select>
           </div>
@@ -289,7 +289,7 @@ $totalKeseluruhan = $totalObat + $totalBilling;
 </script>
 <script>
   // Mengambil nilai API_URL dari PHP
-  const apiUrl = '<?php echo $apiUrl . 'visit/' . 'tindakan' ?>';
+  const apiUrl = 'controller/visit/tindakan?no=<?= $_GET['no'] ?>';
   $(document).ready(function() {
     // Formatter untuk angka biasa (qty)
     const formatter = new Intl.NumberFormat('id-ID', {
@@ -313,10 +313,6 @@ $totalKeseluruhan = $totalObat + $totalBilling;
       "ajax": {
         "url": apiUrl, // Ganti dengan URL API yang sesuai
         "type": "GET",
-        "data": function(d) {
-          d.rm = nomor_rm;
-          d.no = nomor_visit;
-        },
         "dataSrc": function(json) {
           // Format data yang akan ditampilkan dalam tabel
           return json.data.map(function(row, index) {
@@ -326,12 +322,12 @@ $totalKeseluruhan = $totalObat + $totalBilling;
               <button class="btn btn-warning edit-btn" data-id="${row.id}">Diskon</button>
             </div>
           `,
-              "item": row.item,
-              "qty": formatter.format(row.qty),
-              "harga": rupiahFormatter.format(row.harga),
-              "diskon": rupiahFormatter.format(row.diskon),
-              "total": rupiahFormatter.format(row.qty * row.harga - row.diskon),
-              "catatan": row.catatan_billing,
+              "item": row.billing_item,
+              "qty": formatter.format(row.billing_qty),
+              "harga": rupiahFormatter.format(row.billing_price),
+              "diskon": rupiahFormatter.format(row.billing_discount),
+              "total": rupiahFormatter.format(row.billing_qty * row.billing_price - row.billing_discount),
+              "catatan": row.billing_notes,
             };
           });
         }

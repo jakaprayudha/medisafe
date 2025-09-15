@@ -2,15 +2,14 @@
 session_start();
 require '../../database/connect.php';
 $no = $_GET['no'];
-$rm = $_GET['rm'];
 
 $klinik = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM setting_clinic LIMIT 1"));
 $pasien = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM pasien_visit 
-    JOIN ms_pasien ON ms_pasien.nomor_rm = pasien_visit.nomor_rm 
-    WHERE pasien_visit.nomor_visit='$no' AND pasien_visit.nomor_rm='$rm'"));
+    JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient 
+    WHERE pasien_visit.visit_ID='$no'"));
 
-$obat = mysqli_query($koneksi, "SELECT * FROM permintaan_farmasi WHERE nomor_visit='$no' AND nomor_rm='$rm'");
-$billing = mysqli_query($koneksi, "SELECT * FROM pasien_billing WHERE nomor_visit='$no' AND nomor_rm='$rm'");
+$obat = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy.id_pharmacy WHERE id_visit='$no'");
+$billing = mysqli_query($koneksi, "SELECT * FROM pasien_billing WHERE id_visit='$no' ");
 
 // Hitung total
 $total = 0;
@@ -108,8 +107,8 @@ $total = 0;
 
       <h2><?= $klinik['clinic_name'] ?></h2>
       <div class="clinic-info">
-         <?= $klinik['alamat'] ?><br>
-         Telp: <?= $klinik['telepon'] ?>
+         <?= $klinik['address'] ?><br>
+         Telp: <?= $klinik['phone_number'] ?>
       </div>
 
       <div class="section">
@@ -117,19 +116,19 @@ $total = 0;
          <table>
             <tr>
                <td>Nama</td>
-               <td><?= $pasien['nama_pasien'] ?></td>
+               <td><?= $pasien['patient_name'] ?></td>
                <td>No. RM</td>
                <td><?= $pasien['nomor_rm'] ?></td>
             </tr>
             <tr>
                <td>Tanggal Lahir</td>
-               <td><?= $pasien['tanggal_lahir'] ?></td>
+               <td><?= $pasien['patient_place'] ?>/<?= $pasien['patient_datebirth'] ?></td>
                <td>Jenis Kelamin</td>
-               <td><?= $pasien['gender'] ?></td>
+               <td><?= $pasien['patient_gender'] ?></td>
             </tr>
             <tr>
                <td>Tanggal Kunjungan</td>
-               <td colspan="3"><?= date('d-m-Y', strtotime($pasien['tanggal'])) ?> <?= $pasien['waktu'] ?></td>
+               <td colspan="3"><?= date('d-m-Y', strtotime($pasien['visit_date'])) ?> <?= $pasien['visit_time'] ?></td>
             </tr>
          </table>
       </div>
@@ -150,12 +149,12 @@ $total = 0;
             <tbody>
                <?php $i = 1; ?>
                <?php while ($row = mysqli_fetch_assoc($obat)) :
-                  $sub = $row['qty'] * $row['harga'];
+                  $sub = $row['harga'] * $row['qty'];
                   $total += $sub;
                ?>
                   <tr>
                      <td><?= $i++ ?></td>
-                     <td><?= $row['item'] ?> (Obat)</td>
+                     <td><?= $row['pharmacy_name_generic'] ?>/ <?= $row['pharmacy_name_trade'] ?>(Obat)</td>
                      <td><?= $row['qty'] ?></td>
                      <td class="right"><?= number_format($row['harga']) ?></td>
                      <td class="right">0</td>
@@ -164,15 +163,15 @@ $total = 0;
                <?php endwhile; ?>
 
                <?php while ($row = mysqli_fetch_assoc($billing)) :
-                  $sub = ($row['qty'] * $row['harga']) - $row['diskon'];
+                  $sub = ($row['billing_qty'] * $row['billing_price']) - $row['billing_discount'];
                   $total += $sub;
                ?>
                   <tr>
                      <td><?= $i++ ?></td>
-                     <td><?= $row['item'] ?></td>
-                     <td><?= $row['qty'] ?></td>
-                     <td class="right"><?= number_format($row['harga']) ?></td>
-                     <td class="right"><?= number_format($row['diskon']) ?></td>
+                     <td><?= $row['billing_item'] ?></td>
+                     <td><?= $row['billing_qty'] ?></td>
+                     <td class="right"><?= number_format($row['billing_price']) ?></td>
+                     <td class="right"><?= number_format($row['billing_discount']) ?></td>
                      <td class="right"><?= number_format($sub) ?></td>
                   </tr>
                <?php endwhile; ?>
@@ -188,12 +187,12 @@ $total = 0;
          <div class="signature">
             <p>Penerima</p>
             <br><br>
-            <p><?= $pasien['nama_pasien'] ?></p>
+            <p><?= $pasien['patient_name'] ?></p>
          </div>
          <div class="signature">
             <p>Petugas</p>
             <br><br>
-            <p><?= $_SESSION['fullname'] ?></p>
+            <p><?= @$_SESSION['fullname'] ?></p>
          </div>
       </div>
    </div>

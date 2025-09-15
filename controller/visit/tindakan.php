@@ -102,18 +102,12 @@ function getTarif()
 
    // Ambil parameter nomor_rm dan nomor_visit
    $no = isset($_GET['no']) ? $_GET['no'] : '';
-   $rm = isset($_GET['rm']) ? $_GET['rm'] : '';
 
    // Base query
    $query = "SELECT * FROM pasien_billing WHERE 1=1";
 
-   // Tambahkan filter berdasarkan nomor_rm dan nomor_visit
-   if (!empty($rm)) {
-      $query .= " AND nomor_rm = '" . mysqli_real_escape_string($koneksi, $rm) . "'";
-   }
-
    if (!empty($no)) {
-      $query .= " AND nomor_visit = '" . mysqli_real_escape_string($koneksi, $no) . "'";
+      $query .= " AND id_visit = '" . mysqli_real_escape_string($koneksi, $no) . "'";
    }
 
    // Tambahkan filter pencarian jika ada
