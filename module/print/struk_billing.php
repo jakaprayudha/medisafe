@@ -103,7 +103,7 @@ $total = 0;
 <body onload="window.print()">
    <div class="container">
       <!-- Logo Klinik -->
-      <img src="../../assets/images/logos/logokinder.png" alt="Logo Klinik" class="logo">
+      <img src="../../uploads/<?= $klinik['image_clinic'] ?>" alt="Logo Klinik" class="logo">
 
       <h2><?= $klinik['clinic_name'] ?></h2>
       <div class="clinic-info">
