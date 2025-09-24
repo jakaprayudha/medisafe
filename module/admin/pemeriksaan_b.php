@@ -369,8 +369,8 @@ if ($data) {
             let html = `
                     <div class="d-flex align-items-center mb-2 anamnesa-item">
                         <div class="form-check me-2" style="min-width: 300px;">
-                            <input class="form-check-input check-ass" type="checkbox" value="${a.id_anamnesa_detail}" id="check_${a.id_anamnesa_detail}" checked>
-                            <label class="form-check-label" for="check_${a.id_anamnesa_detail}">Anamnesa ${a.id_anamnesa_detail}</label>
+                            <input class="form-check-input check-ass" type="checkbox" value="${a.id_anamnesa_detail}" id="check_${a.ass_name}" checked>
+                            <label class="form-check-label" for="check_${a.id_anamnesa_detail}">${a.ass_name}</label>
                         </div>
                         <input type="text" class="form-control form-control-sm input-ass flex-grow-1" data-ass-id="${a.id_anamnesa_detail}" name="anamnesa[${a.id_anamnesa_detail}]" value="${a.detail}">
                     </div>`;
@@ -387,7 +387,7 @@ if ($data) {
                     <div class="d-flex align-items-center mb-2 terapi-item">
                         <div class="form-check me-2" style="min-width: 300px;">
                             <input class="form-check-input check-terapi" type="checkbox" value="${t.id_terapi}" id="terapi_${t.id_terapi}" checked>
-                            <label class="form-check-label" for="terapi_${t.id_terapi}">Terapi ${t.id_terapi}</label>
+                            <label class="form-check-label" for="terapi_${t.id_terapi}">${t.terapi_name}</label>
                         </div>
                         <input type="text" class="form-control form-control-sm input-terapi flex-grow-1" data-terapi-id="${t.id_terapi}" name="terapi[${t.id_terapi}]" value="${t.detail}">
                     </div>`;
