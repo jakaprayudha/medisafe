@@ -33,7 +33,12 @@ $rm = $_GET['rm'];
       <div class="body-wrapper-inner">
         <div class="container-fluid">
           <?php
-          require 'menu_rme.php';
+          $rme = $_GET['rme']; // default a
+          if ($rme == 'a') {
+            include 'menu_rme.php';
+          } else if ($rme == 'b') {
+            include 'menu_rmeb.php';
+          }
           ?>
           <div class="row">
             <div class="col-lg-12 d-flex align-items-stretch">

@@ -85,7 +85,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 ?>
 <script>
   // Mengambil nilai API_URL dari PHP
-  const apiUrl = '<?php echo $apiUrl . 'visit/' . 'registrasiController' ?>';
+  const apiUrl = 'controller/visit/registrasiController';
   const rmeType = '<?php echo $rme_type ?>'; // ambil dari PHP
   $(document).ready(function() {
     // Initialize DataTable
