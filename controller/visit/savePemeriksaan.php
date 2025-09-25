@@ -16,6 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
    $pemeriksaan_fisik = $_POST['pemeriksaan_fisik'];
    $bmi = $_POST['bmi'];
    $bmi_ket = $_POST['bmi_ket'];
+   $diagnosa = $_POST['diagnosa'];
 
    $koneksi->begin_transaction();
    try {
@@ -32,11 +33,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       riwayat_konsumsi=?, 
       pemeriksaan_fisik=?, 
       bmi=?, 
-      bmi_ket=? 
+      bmi_ket=?,
+      diagnosa =? 
 WHERE nomor_rm=? AND nomor_visit=?");
 
       $stmt->bind_param(
-         "ssssdddsssssss",
+         "ssssdddssssssss",
          $kondisi_masuk,     // s
          $tekanan_darah,     // s
          $suhu,              // s
@@ -49,6 +51,7 @@ WHERE nomor_rm=? AND nomor_visit=?");
          $pemeriksaan_fisik, // s
          $bmi,               // d
          $bmi_ket,           // s
+         $diagnosa,
          $nomor_rm,          // s (WHERE)
          $nomor_visit        // s (WHERE)
       );

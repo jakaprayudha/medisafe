@@ -132,9 +132,9 @@ require '../../controller/view.php';
               <label class="form-label required">Jenis</label>
               <select name="pharmcy_jenis_drugs" class="form-select" id="pharmcy_jenis_drugs" required>
                 <option value="">PILIH</option>
-                <option value="Generic">Generic</option>
+                <option value="Generik">Generik</option>
                 <option value="Paten">Paten</option>
-                <option value="Non-Generic">Non-Generic</option>
+                <option value="Non-Generik">Non-Generik</option>
               </select>
             </div>
           </div>

@@ -57,6 +57,7 @@ require '../../controller/view.php';
                           <th scope="col" class="text-dark fw-normal">Dokter</th>
                           <th scope="col" class="text-dark fw-normal">Layanan</th>
                           <th scope="col" class="text-dark fw-normal">Poliklinik</th>
+                          <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody></tbody>
@@ -78,13 +79,16 @@ require '../../controller/view.php';
   ?>
 </body>
 
+
+</html>
+
 <script>
   const apiUrl = 'controller/visit/riwayat?rm=<?= $_GET['rm'] ?>';
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
       processing: true,
-      serverSide: false, // 🔹 ubah jadi false
+      serverSide: false,
       ajax: {
         url: apiUrl,
         type: "GET",
@@ -95,7 +99,8 @@ require '../../controller/view.php';
               "tanggal": row.visit_date + ' ' + row.visit_time ?? "-",
               "dokter": row.doctor_name ?? "-",
               "layanan": row.source_hub ?? "-",
-              "poli": row.poli_name ?? "-"
+              "poli": row.poli_name ?? "-",
+              "actions": row.visit_ID
             };
           });
         }
@@ -115,11 +120,22 @@ require '../../controller/view.php';
         {
           data: "poli"
         },
+        {
+          data: "actions",
+          render: function(data, type, row) {
+            return `
+              <a href="module/admin/rmeView?visit=${data}" 
+                 target="_blank" 
+                 class="btn btn-sm btn-primary">
+                <i class="bi bi-eye"></i> Lihat RME
+              </a>
+            `;
+          }
+        }
       ],
       footerCallback: function(row, data, start, end, display) {
         var api = this.api();
 
-        // Hitung total bobot
         let total = api
           .column(3, {
             page: 'current'
@@ -129,7 +145,6 @@ require '../../controller/view.php';
             return (parseFloat(a) || 0) + (parseFloat(b) || 0);
           }, 0);
 
-        // Tampilkan di footer
         $(api.column(3).footer()).html(total.toFixed(2) + " %");
       }
     });
@@ -139,5 +154,3 @@ require '../../controller/view.php';
     });
   });
 </script>
-
-</html>

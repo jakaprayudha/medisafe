@@ -289,6 +289,10 @@ if ($data) {
                       <textarea id="analyst" name="analyst" rows="2" class="form-control"></textarea>
                     </div>
                     <div class="mb-3">
+                      <label for="diagnosa" class="form-label">Diagnosa</label>
+                      <textarea id="diagnosa" name="diagnosa" rows="2" class="form-control"></textarea>
+                    </div>
+                    <div class="mb-3">
                       <label for="riwayat_konsumsi" class="form-label">Riwayat Konsumsi Obat</label>
                       <textarea id="riwayat_konsumsi" name="riwayat_konsumsi" rows="2" class="form-control"></textarea>
                     </div>
@@ -441,6 +445,7 @@ if ($data) {
           $('#pemeriksaan_fisik').val(data.pemeriksaan_fisik);
           $('#bmi').val(data.bmi);
           $('#bmi_ket').val(data.bmi_ket);
+          $('#diagnosa').val(data.diagnosa);
 
           // render anamnesa
           let anamnesaContainer = $('#anamnesaCheckboxContainer');
