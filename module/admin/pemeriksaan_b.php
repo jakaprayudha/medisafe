@@ -146,15 +146,22 @@ if ($data) {
                         <label for="berat" class="form-label">Berat Badan (kg) <span class="text-danger">*</span></label>
                         <input type="number" id="berat" name="berat" required class="form-control">
                       </div>
+                      <div class="col-md-4 mt-2">
+                        <label for="bmi" class="form-label">BMI <span class="text-danger">*</span></label>
+                        <input type="number" readonly id="bmi" name="bmi" required class="form-control bg-light">
+                      </div>
+                      <div class="col-md-4 mt-2">
+                        <label class="form-label">Keterangan</label>
+                        <input type="text" id="bmi_ket" name="bmi_ket" readonly class="form-control bg-light">
+                      </div>
                     </div>
-
                     <hr>
 
                     <!-- Pemeriksaan oleh Dokter -->
                     <h5>Pemeriksaan Dokter</h5>
                     <div class="mb-3">
                       <label for="kerangka" class="form-label">Kerangka Anamnesa</label>
-                      <select name="kerangka" id="kerangka" class="form-select" required>
+                      <select name="kerangka" id="kerangka" class="form-select">
                         <option value="">PILIH</option>
                         <?php
                         $getanamnesa = tampildata("SELECT * FROM ms_framework_anamnesa WHERE anamnesa_status='1'");
@@ -205,14 +212,14 @@ if ($data) {
                                 if (res.status === 'success') {
                                   res.data.forEach(function(ass) {
                                     let html = `
-                              <div class="d-flex align-items-center mb-2 anamnesa-item">
-                                <div class="form-check me-2" style="min-width: 300px;">
-                                  <input class="form-check-input check-ass" type="checkbox" value="${ass.id_ass}" id="check_${ass.id_ass}">
-                                  <label class="form-check-label" for="check_${ass.id_ass}">${ass.ass_name}</label>
-                                </div>
-                                <input type="text" class="form-control form-control-sm input-ass flex-grow-1" 
-                                      placeholder="Isi detail..." disabled data-ass-id="${ass.id_ass}" name="anamnesa[${ass.id_ass}]">
-                              </div>`;
+                                      <div class="d-flex align-items-center mb-2 anamnesa-item">
+                                        <div class="form-check me-2" style="min-width: 300px;">
+                                          <input class="form-check-input check-ass" type="checkbox" value="${ass.id_ass}" id="check_${ass.id_ass}">
+                                          <label class="form-check-label" for="check_${ass.id_ass}">${ass.ass_name}</label>
+                                        </div>
+                                        <input type="text" class="form-control form-control-sm input-ass flex-grow-1" 
+                                              placeholder="Isi detail..." disabled data-ass-id="${ass.id_ass}" name="anamnesa[${ass.id_ass}]">
+                                      </div>`;
                                     anamnesaContainer.append(html);
                                   });
 
@@ -239,13 +246,23 @@ if ($data) {
                                 if (res.status === 'success') {
                                   res.data.forEach(function(terapi) {
                                     let html = `
-                              <div class="d-flex align-items-center mb-2 terapi-item">
-                                <div class="form-check me-2" style="min-width: 300px;">
-                                  <input class="form-check-input check-terapi" type="checkbox" value="${terapi.id_terapi}" id="terapi_${terapi.id_terapi}">
-                                  <label class="form-check-label" for="terapi_${terapi.id_terapi}">${terapi.terapi_name}</label>
-                                </div>
-                              <input type="text" class="form-control form-control-sm input-terapi flex-grow-1" 
-                                  abled data-terapi-id="${terapi.id_terapi}" name="terapi[${terapi.id_terapi}]">`;
+                                    <div class="d-flex align-items-center mb-2 terapi-item">
+                                      <div class="form-check me-2" style="min-width: 300px;">
+                                        <input class="form-check-input check-terapi" 
+                                              type="checkbox" 
+                                              value="${terapi.id_terapi}" 
+                                              id="terapi_${terapi.id_terapi}">
+                                        <label class="form-check-label" for="terapi_${terapi.id_terapi}">
+                                          ${terapi.terapi_name}
+                                        </label>
+                                      </div>
+                                      <input type="text" 
+                                            class="form-control form-control-sm input-terapi flex-grow-1" 
+                                            data-terapi-id="${terapi.id_terapi}" 
+                                            name="terapi[${terapi.id_terapi}]" 
+                                            placeholder="Isi detail..." 
+                                            disabled>
+                                    </div>`;
                                     terapiContainer.append(html);
                                   });
 
@@ -298,44 +315,107 @@ if ($data) {
   ?>
 </body>
 <script>
-  $(document).ready(function() {
-    // load kembali data yang baru saja disimpan
-    loadVisitData($('input[name="nomor_visit"]').val());
-    $('#formPemeriksaan').on('submit', function(e) {
-      e.preventDefault(); // cegah reload page
+  function hitungBMI() {
+    let tinggi = parseFloat(document.getElementById("tinggi").value);
+    let berat = parseFloat(document.getElementById("berat").value);
+    let bmiField = document.getElementById("bmi");
+    let ketField = document.getElementById("bmi_ket");
 
-      let formData = $(this).serialize(); // ambil semua data form
+    if (tinggi > 0 && berat > 0) {
+      let tinggiM = tinggi / 100; // ubah cm ke meter
+      let bmi = (berat / (tinggiM * tinggiM)).toFixed(1);
+      bmiField.value = bmi;
+
+      let ket = "";
+      if (bmi < 18.5) ket = "Kurus (Underweight)";
+      else if (bmi >= 18.5 && bmi < 25) ket = "Normal";
+      else if (bmi >= 25 && bmi < 30) ket = "Berat Badan Lebih (Overweight)";
+      else ket = "Obesitas";
+
+      ketField.value = ket;
+    } else {
+      bmiField.value = "";
+      ketField.value = "";
+    }
+  }
+
+  document.getElementById("tinggi").addEventListener("input", hitungBMI);
+  document.getElementById("berat").addEventListener("input", hitungBMI);
+</script>
+<!-- SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  $(document).ready(function() {
+    const nomorVisit = $('input[name="nomor_visit"]').val();
+
+    // Load data awal
+    loadVisitData(nomorVisit);
+
+    // Submit form pemeriksaan
+    $('#formPemeriksaan').on('submit', function(e) {
+      e.preventDefault();
+
+      // Buat formData manual supaya lebih fleksibel
+      let formData = $(this).serializeArray();
+
+      // Hapus semua field terapi dulu (biar tidak ikut yang uncheck)
+      formData = formData.filter(f => !f.name.startsWith("terapi"));
+
+      // Ambil hanya terapi yang dicentang
+      $('.check-terapi:checked').each(function() {
+        let terapiId = $(this).val();
+        let detail = $(`.input-terapi[data-terapi-id="${terapiId}"]`).val();
+        formData.push({
+          name: `terapi[${terapiId}]`,
+          value: detail
+        });
+      });
 
       $.ajax({
-        url: 'controller/visit/savePemeriksaan.php', // file PHP controller kamu
+        url: 'controller/visit/savePemeriksaan.php',
         type: 'POST',
         data: formData,
         dataType: 'json',
         beforeSend: function() {
-          // optional: disable button supaya tidak double submit
-          $('button[name="simpan_pemeriksaan"]').prop('disabled', true).text('Menyimpan...');
+          $('button[name="simpan_pemeriksaan"]')
+            .prop('disabled', true)
+            .text('Menyimpan...');
         },
         success: function(res) {
           if (res.status === 'success') {
-            alert(res.message); // atau gunakan toast notification
-            $('#formPemeriksaan')[0].reset(); // reset form jika perlu
-            $('#anamnesaCheckboxContainer, #terapiCheckboxContainer').hide();
+            Swal.fire({
+              icon: 'success',
+              title: 'Berhasil!',
+              text: res.message,
+              timer: 2000,
+              showConfirmButton: false
+            });
+            loadVisitData($('input[name="nomor_visit"]').val());
           } else {
-            alert('Error: ' + res.message);
+            Swal.fire({
+              icon: 'error',
+              title: 'Gagal!',
+              text: res.message
+            });
           }
         },
         error: function(xhr, status, error) {
-          alert('Terjadi error: ' + error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: 'Terjadi kesalahan: ' + error
+          });
         },
         complete: function() {
-          $('button[name="simpan_pemeriksaan"]').prop('disabled', false).text('Simpan Pemeriksaan');
+          $('button[name="simpan_pemeriksaan"]')
+            .prop('disabled', false)
+            .text('Simpan Pemeriksaan');
         }
       });
     });
   });
-</script>
 
-<script>
   function loadVisitData(nomor_visit) {
     $.ajax({
       url: 'controller/visit/getasesment.php',
@@ -359,42 +439,60 @@ if ($data) {
           $('#analyst').val(data.analyst);
           $('#riwayat_konsumsi').val(data.riwayat_konsumsi);
           $('#pemeriksaan_fisik').val(data.pemeriksaan_fisik);
+          $('#bmi').val(data.bmi);
+          $('#bmi_ket').val(data.bmi_ket);
 
           // render anamnesa
           let anamnesaContainer = $('#anamnesaCheckboxContainer');
-          anamnesaContainer.show();
-          anamnesaContainer.find('.anamnesa-item').remove();
+          anamnesaContainer.show().find('.anamnesa-item').remove();
 
           res.anamnesa.forEach(function(a) {
-            let html = `
-                    <div class="d-flex align-items-center mb-2 anamnesa-item">
-                        <div class="form-check me-2" style="min-width: 300px;">
-                            <input class="form-check-input check-ass" type="checkbox" value="${a.id_anamnesa_detail}" id="check_${a.ass_name}" checked>
-                            <label class="form-check-label" for="check_${a.id_anamnesa_detail}">${a.ass_name}</label>
-                        </div>
-                        <input type="text" class="form-control form-control-sm input-ass flex-grow-1" data-ass-id="${a.id_anamnesa_detail}" name="anamnesa[${a.id_anamnesa_detail}]" value="${a.detail}">
-                    </div>`;
-            anamnesaContainer.append(html);
+            anamnesaContainer.append(`
+              <div class="d-flex align-items-center mb-2 anamnesa-item">
+                <div class="form-check me-2" style="min-width: 300px;">
+                  <input class="form-check-input check-ass" 
+                         type="checkbox" 
+                         value="${a.id_anamnesa_detail}" 
+                         id="check_${a.id_anamnesa_detail}" checked>
+                  <label class="form-check-label" for="check_${a.id_anamnesa_detail}">
+                    ${a.ass_name}
+                  </label>
+                </div>
+                <input type="text" 
+                       class="form-control form-control-sm input-ass flex-grow-1" 
+                       data-ass-id="${a.id_anamnesa_detail}" 
+                       name="anamnesa[${a.id_anamnesa_detail}]" 
+                       value="${a.detail}">
+              </div>
+            `);
           });
 
           // render terapi
           let terapiContainer = $('#terapiCheckboxContainer');
-          terapiContainer.show();
-          terapiContainer.find('.terapi-item').remove();
+          terapiContainer.show().find('.terapi-item').remove();
 
           res.terapi.forEach(function(t) {
-            let html = `
-                    <div class="d-flex align-items-center mb-2 terapi-item">
-                        <div class="form-check me-2" style="min-width: 300px;">
-                            <input class="form-check-input check-terapi" type="checkbox" value="${t.id_terapi}" id="terapi_${t.id_terapi}" checked>
-                            <label class="form-check-label" for="terapi_${t.id_terapi}">${t.terapi_name}</label>
-                        </div>
-                        <input type="text" class="form-control form-control-sm input-terapi flex-grow-1" data-terapi-id="${t.id_terapi}" name="terapi[${t.id_terapi}]" value="${t.detail}">
-                    </div>`;
-            terapiContainer.append(html);
+            terapiContainer.append(`
+              <div class="d-flex align-items-center mb-2 terapi-item">
+                <div class="form-check me-2" style="min-width: 300px;">
+                  <input class="form-check-input check-terapi" 
+                         type="checkbox" 
+                         value="${t.id_terapi}" 
+                         id="terapi_${t.id_terapi}" checked>
+                  <label class="form-check-label" for="terapi_${t.id_terapi}">
+                    ${t.terapi_name}
+                  </label>
+                </div>
+                <input type="text" 
+                       class="form-control form-control-sm input-terapi flex-grow-1" 
+                       data-terapi-id="${t.id_terapi}" 
+                       name="terapi[${t.id_terapi}]" 
+                       value="${t.detail}">
+              </div>
+            `);
           });
 
-          // bind event checkbox seperti sebelumnya
+          // event handler checkboxes
           $('.check-ass').on('change', function() {
             let assId = $(this).val();
             let input = $(`.input-ass[data-ass-id="${assId}"]`);

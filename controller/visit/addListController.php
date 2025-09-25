@@ -45,37 +45,53 @@ function createData()
       return;
    }
 
-   $id_patient  = $_POST['id_patient'];
-   $id_doctor   = $_POST['id_doctor'];
-   $id_poli     = $_POST['id_poli'];
-   $source_hub  = $_POST['source_hub'];
-   $visit_notes = $_POST['visit_notes'] ?? null;
-   $visit_date  = date('Y-m-d');
-   $visit_time  = date('H:i:s');
-   $user        = $_POST['user'];
+   $id_patient   = $_POST['id_patient'];
+   $id_doctor    = $_POST['id_doctor'];
+   $id_poli      = $_POST['id_poli'];
+   $source_hub   = $_POST['source_hub'];
+   $visit_notes  = $_POST['visit_notes'] ?? null;
+   $visit_date   = date('Y-m-d');
+   $visit_time   = date('H:i:s');
+   $user         = $_POST['user'];
+   $checkrm = mysqli_query($koneksi, "SELECT nomor_rm FROM ms_patient WHERE id_patient='$id_patient' ");
+   $datarm = mysqli_fetch_array($checkrm);
+   $nomor_rm = $datarm['nomor_rm'];
 
    // 🔹 Generate kode unik
    $visit_ID = "VIS-" . date('ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
 
-   // 🔹 Hitung antrian hari ini
+   // 🔹 Hitung nomor antrian hari ini
    $sql_antrian = "SELECT COUNT(*) as total FROM pasien_visit WHERE visit_date = ?";
    $stmt_antrian = $koneksi->prepare($sql_antrian);
    $stmt_antrian->bind_param("s", $visit_date);
    $stmt_antrian->execute();
-   $result = $stmt_antrian->get_result();
-   $row = $result->fetch_assoc();
+   $result = $stmt_antrian->get_result()->fetch_assoc();
    $stmt_antrian->close();
 
-   $nomor_urut = $row['total'] + 1;
-   $visit_antrian = str_pad($nomor_urut, 3, "0", STR_PAD_LEFT); // jadi 001, 002, dst
+   $nomor_urut = $result['total'] + 1;
+   $visit_antrian = str_pad($nomor_urut, 3, "0", STR_PAD_LEFT);
 
-   // 🔹 Simpan ke DB
-   $query = "INSERT INTO pasien_visit 
-            (id_patient, visit_ID, visit_date, visit_time, id_doctor, id_poli, visit_notes, created_at, created_user, visit_status, source_hub, visit_antrian) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, 0, ?, ?)";
+   // 🔹 Vital Sign
+   $kondisi_masuk  = $_POST['kondisi_masuk'];
+   $tekanan_darah  = $_POST['tekanan_darah'];
+   $suhu           = $_POST['suhu'];
+   $nadi           = $_POST['nadi'];
+   $respirasi      = $_POST['respirasi'];
+   $tinggi         = $_POST['tinggi'];
+   $berat          = $_POST['berat'];
+   $bmi            = $_POST['bmi'];
+   $bmi_ket        = $_POST['bmi_ket'];
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param(
+   // 🔹 Mulai transaksi
+   $koneksi->begin_transaction();
+
+   try {
+      // Simpan ke pasien_visit
+      $query1 = "INSERT INTO pasien_visit 
+                   (id_patient, visit_ID, visit_date, visit_time, id_doctor, id_poli, visit_notes, created_at, created_user, visit_status, source_hub, visit_antrian) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, 0, ?, ?)";
+      $stmt1 = $koneksi->prepare($query1);
+      $stmt1->bind_param(
          "ssssssssss",
          $id_patient,
          $visit_ID,
@@ -88,30 +104,54 @@ function createData()
          $source_hub,
          $visit_antrian
       );
-
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Kunjungan berhasil ditambahkan.',
-            'antrian' => $visit_antrian
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menambahkan data: ' . $stmt->error
-         ]);
+      if (!$stmt1->execute()) {
+         throw new Exception("Gagal simpan pasien_visit: " . $stmt1->error);
       }
-      $stmt->close();
-   } else {
+      $stmt1->close();
+
+      // Simpan ke visit_pemeriksaan
+      $query2 = "INSERT INTO visit_pemeriksaan 
+           (nomor_rm, nomor_visit, kondisi_masuk, tekanan_darah, suhu, nadi, respirasi, tinggi, berat, created_at, bmi, bmi_ket) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?)";
+
+      $stmt2 = $koneksi->prepare($query2);
+
+      $stmt2->bind_param(
+         "ssssdiiddds",   // ✅ 11 format sesuai 11 variabel
+         $nomor_rm,     // varchar → s
+         $visit_ID,       // varchar → s
+         $kondisi_masuk,  // varchar → s
+         $tekanan_darah,  // varchar → s
+         $suhu,           // decimal → d
+         $nadi,           // int → i
+         $respirasi,      // int → i
+         $tinggi,         // decimal → d
+         $berat,          // decimal → d
+         $bmi,            // float → d
+         $bmi_ket         // varchar → s
+      );
+      if (!$stmt2->execute()) {
+         throw new Exception("Gagal simpan vital sign: " . $stmt2->error);
+      }
+      $stmt2->close();
+
+      // ✅ Commit transaksi
+      $koneksi->commit();
+
       echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query: ' . $koneksi->error
+         'status'  => 'success',
+         'message' => 'Kunjungan & vital sign berhasil ditambahkan.',
+         'antrian' => $visit_antrian
+      ]);
+   } catch (Exception $e) {
+      // ❌ Rollback jika ada error
+      $koneksi->rollback();
+      echo json_encode([
+         'status'  => 'error',
+         'message' => $e->getMessage()
       ]);
    }
 }
-/**
- * Generate patient_number unik dengan format DCT-XXXXXX
- */
 
 
 function getData()
