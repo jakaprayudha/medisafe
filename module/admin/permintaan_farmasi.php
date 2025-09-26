@@ -108,8 +108,8 @@ require '../../controller/view.php';
           </div>
           <div class="col-6">
             <div class="mb-3">
-              <label class="form-label required">Harga Dasar</label>
-              <input type="number" id="harga" name="harga" class="form-control" required>
+              <label class="form-label">Harga Dasar</label>
+              <input type="number" id="harga" name="harga" class="form-control">
             </div>
           </div>
           <div class="col-6">
@@ -146,7 +146,7 @@ require '../../controller/view.php';
     });
 
     $('#id_pharmacy').on('change', function() {
-      let harga = $(this).find(':selected').data('harga') || '';
+      let harga = $(this).find(':selected').data('harga') || 0;
       $('#harga').val(harga);
     });
   });
