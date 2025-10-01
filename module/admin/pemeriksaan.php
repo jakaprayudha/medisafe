@@ -41,9 +41,35 @@ $apiUrl = getenv('API_URL');
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="card-title fw-semibold">Pemeriksaan Pasien Poliklinik</h5>
-                    <!-- Grup tombol di sisi kanan -->
-                    <div class="d-flex ms-auto gap-2">
+                    <!-- 🔽 Filter + Tombol Kembali -->
+                    <div class="d-flex align-items-end gap-2 flex-wrap">
+                      <form id="filterForm" class="row g-2 align-items-end">
+                        <div class="col-auto">
+                          <label for="fromDate" class="form-label mb-0">Dari</label>
+                          <input type="date" id="fromDate" name="fromDate" class="form-control">
+                        </div>
+                        <div class="col-auto">
+                          <label for="toDate" class="form-label mb-0">Sampai</label>
+                          <input type="date" id="toDate" name="toDate" class="form-control">
+                        </div>
+                        <div class="col-auto">
+                          <button type="button" id="btnFilter" class="btn btn-dark">
+                            <i class="fas fa-filter"></i> Filter
+                          </button>
+                        </div>
+                        <div class="col-auto">
+                          <button type="button" id="btnReset" class="btn btn-light">
+                            <i class="fas fa-undo"></i> Reset
+                          </button>
+                        </div>
+                      </form>
 
+                      <!-- Tombol kembali -->
+                      <div class="d-flex ms-auto gap-2">
+                        <a href="module/admin/registrasi_patient">
+                          <button class="btn btn-primary"><i class="fas fa-plus"></i> Tambah</button>
+                        </a>
+                      </div>
                     </div>
                   </div>
                   <div class="table-responsive" data-simplebar>
@@ -86,6 +112,9 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 <script>
   // Mengambil nilai API_URL dari PHP
   const apiUrl = 'controller/visit/registrasiController';
+  var today = new Date().toISOString().split("T")[0];
+  $("#fromDate").val(today);
+  $("#toDate").val(today);
   const rmeType = '<?php echo $rme_type ?>'; // ambil dari PHP
   $(document).ready(function() {
     // Initialize DataTable
@@ -95,6 +124,11 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
       "ajax": {
         "url": apiUrl, // Ganti dengan URL API yang sesuai
         "type": "GET",
+        data: function(d) {
+          // kirim tanggal filter ke backend
+          d.fromDate = $('#fromDate').val();
+          d.toDate = $('#toDate').val();
+        },
         "dataSrc": function(json) {
           // Format data yang akan ditampilkan dalam tabel
           return json.data.map(function(row, index) {
@@ -152,6 +186,18 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
         }
 
       ]
+    });
+
+    // filter manual
+    $('#btnFilter').on('click', function() {
+      table.ajax.reload();
+    });
+
+    // reset filter ke today
+    $('#btnReset').on('click', function() {
+      $('#fromDate').val(today);
+      $('#toDate').val(today);
+      table.ajax.reload();
     });
 
 
