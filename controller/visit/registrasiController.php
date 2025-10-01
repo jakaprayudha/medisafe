@@ -35,30 +35,44 @@ function getData()
 {
    global $koneksi;
 
-   $query = "SELECT * FROM pasien_visit INNER  JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN  ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor INNER JOIN ms_poli ON ms_poli.id_poli = pasien_visit.id_poli ORDER BY visit_date ASC";
-   $result = mysqli_query($koneksi, $query);
+   // Ambil parameter tanggal (opsional)
+   $fromDate = isset($_GET['fromDate']) ? $_GET['fromDate'] : null;
+   $toDate   = isset($_GET['toDate']) ? $_GET['toDate'] : null;
 
-   if (!$result) {
+   // Base query
+   $query = "SELECT * FROM pasien_visit INNER  JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN  ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor INNER JOIN ms_poli ON ms_poli.id_poli = pasien_visit.id_poli  WHERE 1=1";
+
+   // Jika ada filter tanggal (contoh pakai created_at, ganti sesuai kolom di DB)
+   if ($fromDate && $toDate) {
+      $query .= " AND DATE(visit_date) BETWEEN ? AND ?";
+   }
+
+   $query .= " ORDER BY visit_date ASC";
+
+   if ($stmt = $koneksi->prepare($query)) {
+      if ($fromDate && $toDate) {
+         $stmt->bind_param("ss", $fromDate, $toDate);
+      }
+
+      $stmt->execute();
+      $result = $stmt->get_result();
+
+      $data = $result->fetch_all(MYSQLI_ASSOC);
+
+      $stmt->close();
+
+      header('Content-Type: application/json');
+      echo json_encode([
+         'status' => 'success',
+         'data' => $data,
+      ]);
+   } else {
       http_response_code(500);
       echo json_encode([
          'status' => 'error',
-         'message' => 'Gagal mengambil data: ' . mysqli_error($koneksi)
+         'message' => 'Gagal menyiapkan query: ' . $koneksi->error
       ]);
-      return;
    }
-
-   // Ambil semua data dalam bentuk array asosiatif
-   $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
-
-   // Tutup hasil query
-   mysqli_free_result($result);
-
-   // Kirimkan data dalam format JSON
-   header('Content-Type: application/json');
-   echo json_encode([
-      'status' => 'success',
-      'data' => $data,
-   ]);
 }
 
 // Function untuk Read User berdasarkan ID

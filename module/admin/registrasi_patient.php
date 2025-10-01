@@ -35,11 +35,11 @@ require '../../controller/view.php';
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
                 <div class="card-body p-4">
-                  <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Data Pasien</h5>
-                    <!-- Grup tombol di sisi kanan -->
-                    <div class="d-flex ms-auto gap-2">
-                      <!-- Tombol -->
+                  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+                    <!-- Judul -->
+                    <h5 class="card-title fw-semibold mb-0">Data Pasien</h5>
+                    <div class="d-flex align-items-end gap-2 flex-wrap">
+                      <!-- Tombol kembali -->
                       <button type="button" class="btn btn-light" onclick="window.history.back()">
                         <i class="fas fa-arrow-left"></i> Kembali
                       </button>
@@ -104,7 +104,6 @@ require '../../controller/view.php';
             <div class="mb-3">
               <label class="form-label required">Layanan (Poli)</label>
               <select name="id_poli" id="id_poli" class="form-select" required>
-                <option value="">PILIH</option>
                 <?php
                 $getpoli = tampildata("SELECT * FROM ms_poli WHERE poli_status='1'");
                 foreach ($getpoli as $poli) :
@@ -116,7 +115,6 @@ require '../../controller/view.php';
             <div class="mb-3">
               <label class="form-label required">Dokter</label>
               <select name="id_doctor" id="id_doctor" class="form-select" required>
-                <option value="">PILIH</option>
                 <?php
                 $getdoc = tampildata("SELECT * FROM ms_doctor WHERE doctor_status='1'");
                 foreach ($getdoc as $doc) :

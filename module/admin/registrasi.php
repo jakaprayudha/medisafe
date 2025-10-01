@@ -38,10 +38,36 @@ require '../../controller/view.php';
                   <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="card-title fw-semibold">Data Registrasi</h5>
                     <!-- Grup tombol di sisi kanan -->
-                    <div class="d-flex ms-auto gap-2">
-                      <a href="module/admin/registrasi_patient">
-                        <button class="btn btn-primary"><i class="fas fa-plus"></i> Tambah</button>
-                      </a>
+
+                    <!-- 🔽 Filter + Tombol Kembali -->
+                    <div class="d-flex align-items-end gap-2 flex-wrap">
+                      <form id="filterForm" class="row g-2 align-items-end">
+                        <div class="col-auto">
+                          <label for="fromDate" class="form-label mb-0">Dari</label>
+                          <input type="date" id="fromDate" name="fromDate" class="form-control">
+                        </div>
+                        <div class="col-auto">
+                          <label for="toDate" class="form-label mb-0">Sampai</label>
+                          <input type="date" id="toDate" name="toDate" class="form-control">
+                        </div>
+                        <div class="col-auto">
+                          <button type="button" id="btnFilter" class="btn btn-dark">
+                            <i class="fas fa-filter"></i> Filter
+                          </button>
+                        </div>
+                        <div class="col-auto">
+                          <button type="button" id="btnReset" class="btn btn-light">
+                            <i class="fas fa-undo"></i> Reset
+                          </button>
+                        </div>
+                      </form>
+
+                      <!-- Tombol kembali -->
+                      <div class="d-flex ms-auto gap-2">
+                        <a href="module/admin/registrasi_patient">
+                          <button class="btn btn-primary"><i class="fas fa-plus"></i> Tambah</button>
+                        </a>
+                      </div>
                     </div>
                   </div>
                   <div class="table-responsive" data-simplebar>
@@ -69,6 +95,7 @@ require '../../controller/view.php';
         </div>
       </div>
     </div>
+  </div>
   </div>
 
 
@@ -138,15 +165,22 @@ require '../../controller/view.php';
   </div>
 </div>
 <script>
-  const apiUrl = 'controller/visit/registrasiController';
-
   $(document).ready(function() {
+    var today = new Date().toISOString().split("T")[0];
+    $("#fromDate").val(today);
+    $("#toDate").val(today);
+    const apiUrl = 'controller/visit/registrasiController';
     var table = $('#periodeTable').DataTable({
       processing: true,
       serverSide: false, // 🔹 ubah jadi false
       ajax: {
         url: apiUrl,
         type: "GET",
+        data: function(d) {
+          // kirim tanggal filter ke backend
+          d.fromDate = $('#fromDate').val();
+          d.toDate = $('#toDate').val();
+        },
         dataSrc: function(json) {
           return json.data.map(function(row) {
             return {
@@ -309,6 +343,18 @@ require '../../controller/view.php';
             });
         }
       });
+    });
+
+    // filter manual
+    $('#btnFilter').on('click', function() {
+      table.ajax.reload();
+    });
+
+    // reset filter ke today
+    $('#btnReset').on('click', function() {
+      $('#fromDate').val(today);
+      $('#toDate').val(today);
+      table.ajax.reload();
     });
   });
 </script>
