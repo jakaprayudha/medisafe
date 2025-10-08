@@ -39,8 +39,23 @@ function getData()
    $fromDate = isset($_GET['fromDate']) ? $_GET['fromDate'] : null;
    $toDate   = isset($_GET['toDate']) ? $_GET['toDate'] : null;
 
-   // Base query
-   $query = "SELECT * FROM pasien_visit INNER  JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN  ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor INNER JOIN ms_poli ON ms_poli.id_poli = pasien_visit.id_poli  WHERE 1=1";
+   // Base query dengan status_dilayani
+   $query = "SELECT 
+    pasien_visit.*, 
+    ms_patient.*, 
+    ms_doctor.*, 
+    ms_poli.*,
+    CASE 
+        WHEN visit_pemeriksaan.nomor_visit IS NOT NULL THEN 1
+        ELSE 0
+    END AS status_dilayani
+FROM pasien_visit
+INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient
+INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor
+INNER JOIN ms_poli ON ms_poli.id_poli = pasien_visit.id_poli
+LEFT JOIN visit_pemeriksaan ON visit_pemeriksaan.nomor_visit = pasien_visit.visit_ID
+WHERE 1=1
+";
 
    // Jika ada filter tanggal (contoh pakai created_at, ganti sesuai kolom di DB)
    if ($fromDate && $toDate) {

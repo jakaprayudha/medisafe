@@ -150,7 +150,11 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
               "ttl": row.patient_datebirth + '/' + row.patient_place,
               "dokter": row.doctor_name,
               "layanan": row.poli_name,
-              "status_visit": '<span class="badge ' + (row.status_visit == 1 ? 'bg-success' : 'bg-danger') + ' d-block text-center">' + (row.status_visit == 1 ? 'Selesai' : 'Belum') + '</span>'
+              "status_visit": `
+                <span class="badge ${row.status_dilayani == 1 ? 'bg-success' : 'bg-danger'} d-block text-center">
+                  ${row.status_dilayani == 1 ? 'Sudah Dilayani' : 'Belum Dilayani'}
+                </span>
+              `
             };
           });
         }
