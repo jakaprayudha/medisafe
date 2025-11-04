@@ -156,7 +156,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                   </button>
                   <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="z-index:1055; min-width: 180px;">
                     <li>
-                      <a class="dropdown-item" href="module/admin/pemeriksaan_inap?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                      <a class="dropdown-item" href="module/admin/rme_inap?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
                         <i class="bi bi-clipboard2-pulse me-2"></i>Pemeriksaan
                       </a>
                     </li>

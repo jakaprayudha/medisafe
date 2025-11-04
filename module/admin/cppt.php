@@ -1,6 +1,11 @@
 <?php
-$title = 'Biaya Transaksi';
+$title = 'CPPT';
+require '../../database/connect.php';
 require '../../controller/view.php';
+$no = $_GET['no'];
+$rm = $_GET['rm'];
+$patient = mysqli_query($koneksi, "SELECT nomor_rm, id_patient FROM ms_patient WHERE nomor_rm='$rm'");
+$datapatient = mysqli_fetch_array($patient);
 ?>
 <!doctype html>
 <html lang="en">
@@ -45,7 +50,7 @@ require '../../controller/view.php';
               <div class="card w-100">
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Data Biaya Transaksi</h5>
+                    <h5 class="card-title fw-semibold">CPPT</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
@@ -55,12 +60,11 @@ require '../../controller/view.php';
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
-                          <th class="text-dark fw-normal">Item</th>
-                          <th scope="col" class="text-dark fw-normal">Qty</th>
-                          <th scope="col" class="text-dark fw-normal">Harga</th>
-                          <th scope="col" class="text-dark fw-normal">Diskon</th>
-                          <th scope="col" class="text-dark fw-normal">Total</th>
-                          <th>Catatan</th>
+                          <th class="text-dark fw-normal">Tanggal</th>
+                          <th>Profesi</th>
+                          <th scope="col" class="text-dark fw-normal">CPPT</th>
+                          <th scope="col" class="text-dark fw-normal">Instruksi</th>
+                          <th>Verifikasi</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                         </tr>
                       </thead>
@@ -77,68 +81,130 @@ require '../../controller/view.php';
   </div>
 
 
+
   <?php
   require 'library.php';
   ?>
 </body>
 <div class="modal fade" id="programModal" tabindex="-1">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-xl">
     <form id="programForm" class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title"></h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <input type="hidden" name="id_billing" id="id_billing">
-        <input type="hidden" name="id_visit" id="id_visit" value="<?= $_GET['no'] ?>">
+        <input type="hidden" name="id_cppt" id="id_cppt">
+        <input type="hidden" name="visit_ID" id="visit_ID" value="<?= $_GET['no'] ?>">
+        <input type="hidden" name="id_patient" id="id_patient" value="<?= $datapatient['id_patient'] ?>">
         <div class="row">
-          <div class="col-12">
+          <div class="col-3">
             <div class="mb-3">
-              <label for="billing_item" class="form-label">Nama Item <span class="text-danger">*</span> </label>
-              <select name="billing_item" id="billing_item" class="form-select js-example-basic-item" required>
+              <label for="cppt_date" class="form-label">
+                Tanggal <span class="text-danger">*</span>
+              </label>
+              <input type="date" value="<?= date('Y-m-d') ?>" name="cppt_date" class="form-control" id="cppt_date" required>
+            </div>
+          </div>
+          <div class="col-3">
+            <div class="mb-3">
+              <label for="cppt_time" class="form-label">
+                Waktu <span class="text-danger">*</span>
+              </label>
+              <input type="time" value="<?= date('H:i') ?>" name="cppt_time" class="form-control" id="cppt_time" required>
+            </div>
+          </div>
+          <div class="col-3">
+            <div class="mb-3">
+              <label for="cppt_profesi" class="form-label">
+                Profesi <span class="text-danger">*</span>
+              </label>
+              <select name="cppt_profesi" class="form-select" id="cppt_profesi" required>
                 <option value="">Select Option</option>
-                <?php
-                $getbarang = tampildata("SELECT * FROM ms_tarif WHERE tarif_status='1'");
-                ?>
-                <?php foreach ($getbarang as $barang): ?>
-                  <option value="<?= $barang['tarif_name']; ?>" data-harga="<?= $barang['tarif_amount']; ?>"><?= $barang['tarif_name']; ?>[<?= $barang['tarif_services']; ?>]</option>
-                <?php endforeach ?>
+                <option value="Dokter">Dokter</option>
+                <option value="Perawat">Perawat</option>
+                <option value="Apoteker">Apoteker</option>
+                <option value="Paramedis">Paramedis</option>
+                <option value="Tenaga Medis Lainnya">Tenaga Medis Lainnya</option>
+                <option value="Tenaga Kesehatan Lainnya">Tenaga Kesehatan Lainnya</option>
               </select>
             </div>
           </div>
-          <div class="col-6">
+          <div class="col-3">
             <div class="mb-3">
-              <label class="form-label required">Harga</label>
-              <input type="number" id="harga" name="billing_price" class="form-control" required>
+              <label for="users_entry" class="form-label">
+                User Entry <span class="text-danger">*</span>
+              </label>
+              <input type="text" value="<?= $_SESSION['fullname'] ?>" name="users_entry" class="form-control" id="users_entry" required>
             </div>
           </div>
+          <!-- Subjective -->
           <div class="col-6">
             <div class="mb-3">
-              <label class="form-label required">Qty</label>
-              <input type="number" value="1" id="qty" name="billing_qty" class="form-control" required>
+              <label for="subjective" class="form-label">
+                Subjective (S) <span class="text-danger">*</span>
+              </label>
+              <textarea name="subjective" class="form-control" id="subjective" rows="3"></textarea>
+              <small class="form-text text-muted">
+                <strong>Subjective</strong> → keluhan utama atau perasaan pasien yang disampaikan secara verbal.<br>
+                Contoh: <em>Pasien mengeluh nyeri kepala sejak 2 hari, mual, dan tidak nafsu makan.</em>
+              </small>
             </div>
           </div>
+
+          <!-- Objective -->
           <div class="col-6">
             <div class="mb-3">
-              <label class="form-label">Diskon</label>
-              <input type="text" value="0" id="billing_discount" name="billing_discount" class="form-control">
+              <label for="objective" class="form-label">
+                Objective (O) <span class="text-danger">*</span>
+              </label>
+              <textarea name="objective" class="form-control" id="objective" rows="3"></textarea>
+              <small class="form-text text-muted">
+                <strong>Objective</strong> → hasil pemeriksaan fisik, tanda vital, dan hasil penunjang yang terukur.<br>
+                Contoh: <em>TD: 120/80 mmHg, N: 80x/menit, S: 37°C, RR: 20x/menit, pemeriksaan laboratorium normal.</em>
+              </small>
             </div>
           </div>
+
+          <!-- Analysis -->
           <div class="col-6">
             <div class="mb-3">
-              <label class="form-label required">Kategori</label>
-              <select name="billing_category" id="billing_category" class="form-select" require>
-                <option value="Tindakan">Tindakan</option>
-                <option value="Konsultasi">Konsultasi</option>
-                <option value="Obat/BMHP/Alkes">Obat/BMHP/Alkes</option>
-                <option value="Lainnya">Lainnya</option>
-              </select>
+              <label for="analysis" class="form-label">
+                Assessment / Analysis (A) <span class="text-danger">*</span>
+              </label>
+              <textarea name="analysis" class="form-control" id="analysis" rows="3"></textarea>
+              <small class="form-text text-muted">
+                <strong>Assessment</strong> → interpretasi hasil pemeriksaan dan kesimpulan sementara (diagnosa kerja).<br>
+                Contoh: <em>Diagnosis: Gastritis akut.</em>
+              </small>
             </div>
           </div>
+
+          <!-- Planning -->
+          <div class="col-6">
+            <div class="mb-3">
+              <label for="planning" class="form-label">
+                Planning (P) <span class="text-danger">*</span>
+              </label>
+              <textarea name="planning" class="form-control" id="planning" rows="3"></textarea>
+              <small class="form-text text-muted">
+                <strong>Planning</strong> → rencana tindakan medis/keperawatan, pemeriksaan penunjang, terapi, atau edukasi.<br>
+                Contoh: <em>Rencana terapi: Omeprazole 20 mg, edukasi pola makan, kontrol 3 hari lagi.</em>
+              </small>
+            </div>
+          </div>
+
+          <!-- Instruction -->
           <div class="col-12">
             <div class="mb-3">
-              <label class="form-label">Catatan</label>
-              <textarea name="billing_notes" id="billing_notes" class="form-control" rows="5"></textarea>
+              <label for="instruction" class="form-label">
+                Instruksi <span class="text-danger">*</span>
+              </label>
+              <textarea name="instruction" class="form-control" id="instruction" rows="3"></textarea>
+              <small class="form-text text-muted">
+                <strong>Instruksi</strong> → catatan atau perintah khusus dari dokter/perawat untuk tindak lanjut.<br>
+                Contoh: <em>Observasi tanda vital setiap 4 jam, monitor intake-output cairan, follow up keluhan pasien.</em>
+              </small>
             </div>
           </div>
         </div>
@@ -149,39 +215,11 @@ require '../../controller/view.php';
     </form>
   </div>
 </div>
+<?php
+$id_patient = $datapatient['id_patient'];
+?>
 <script>
-  $(document).ready(function() {
-    $('#billing_item').select2({
-      dropdownParent: $('#programModal'),
-      width: '100%',
-      tags: true, // 🔹 izinkan input manual
-      placeholder: "Ketik atau pilih item",
-      createTag: function(params) {
-        return {
-          id: params.term,
-          text: params.term,
-          newOption: true
-        }
-      },
-      templateResult: function(data) {
-        var $result = $("<span></span>");
-        $result.text(data.text);
-        if (data.newOption) {
-          $result.append(" <em>(baru)</em>");
-        }
-        return $result;
-      }
-    });
-
-    // auto isi harga kalau pilih dari database
-    $('#billing_item').on('change', function() {
-      let harga = $(this).find(':selected').data('harga') || '';
-      $('#harga').val(harga);
-    });
-  });
-</script>
-<script>
-  const apiUrl = 'controller/visit/billingController?no=<?= $_GET['no'] ?>';
+  const apiUrl = 'controller/visit/cpptController?no=<?= $_GET['no'] ?>&id_patient=<?= $id_patient ?>';
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
@@ -192,71 +230,57 @@ require '../../controller/view.php';
         type: "GET",
         dataSrc: function(json) {
           return json.data.map(function(row) {
-            let harga = parseFloat(row.billing_price) || 0;
-            let qty = parseFloat(row.billing_qty) || 0;
-            let diskon = parseFloat(row.billing_discount) || 0;
-            let total = (harga * qty) - diskon;
             return {
               "actions": `
                       <div class="text-center">
 								<div class="btn-group btn-group-sm" role="group">
-									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_billing}">
+									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_cppt}">
 											<i class="fas fa-edit"></i>
 									</a>
-									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_billing}">
+									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_cppt}">
 											<i class="fas fa-trash"></i>
 									</a>
 								</div>
 							</div>
                     `,
-              "nama": row.billing_item ?? "-",
-              "qty": row.billing_qty ?? "-",
-              harga_item: harga.toLocaleString('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-              }),
-              diskon: diskon.toLocaleString('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-              }),
-              total: total.toLocaleString('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-              }),
-              "catatan": row.billing_notes ?? "-"
+              "tanggal": row.cppt_date + " " + row.cppt_time ?? "-",
+              "profesi": row.cppt_profesi ?? "-",
+              "cppt": "<strong>S : </strong>" + (row.subjective ?? "-") + "<br>" +
+                "<strong>O : </strong>" + (row.objective ?? "-") + "<br>" +
+                "<strong>A : </strong>" + (row.analysis ?? "-") + "<br>" +
+                "<strong>P : </strong>" + (row.planning ?? "-"),
+              "instruksi": row.instruction ?? "-",
+              "verifikasi": row.verifikasi == 1 ?
+                '<span class="badge bg-success">Sudah Diverifikasi</span>' : '<span class="badge bg-danger">Belum Diverifikasi</span>',
             };
           });
         }
       },
       columns: [{
-          data: "nama"
+          data: "tanggal",
+          className: "text-wrap"
         },
         {
-          data: "qty"
+          data: "profesi",
+          className: "text-wrap"
         },
         {
-          data: "harga_item"
+          data: "cppt",
+          className: "text-wrap"
         },
         {
-          data: "diskon"
+          data: "instruksi",
+          className: "text-wrap"
         },
         {
-          data: "total"
-        },
-        {
-          data: "catatan"
+          data: "verifikasi",
+          className: "text-wrap"
         },
         {
           data: "actions",
           orderable: false,
           searchable: false
-        },
+        }
       ],
       footerCallback: function(row, data, start, end, display) {
         var api = this.api();
@@ -283,7 +307,7 @@ require '../../controller/view.php';
     // 🔹 Tambah
     $('#btnTambah').on('click', function() {
       $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
-      $('#id_billing').val('');
+      $('#id_cppt').val('');
       $('#programModal .modal-title').text('Tambah Data');
       $('#programModal').modal('show');
     });
@@ -292,7 +316,7 @@ require '../../controller/view.php';
     $('#programForm').on('submit', function(e) {
       e.preventDefault();
       let formData = new URLSearchParams(new FormData(this));
-      let id = $('#id_billing').val();
+      let id = $('#id_cppt').val();
 
       fetch(apiUrl + (id ? `?id=${id}` : ''), {
           method: id ? 'PUT' : 'POST',
@@ -321,18 +345,10 @@ require '../../controller/view.php';
           if (resp.status === 'success') {
             let d = resp.data;
 
-            // isi otomatis field biasa
+            // isi otomatis berdasarkan name field
             for (let key in d) {
-              if (key !== "id_pharmacy" && key !== "harga") { // skip select & harga
-                $(`[name="${key}"]`).val(d[key]);
-              }
+              $(`[name="${key}"]`).val(d[key]);
             }
-
-            // isi dropdown select2
-            $('#id_pharmacy').val(d.id_pharmacy).trigger("change");
-
-            // isi harga langsung dari response DB
-            $('#harga').val(d.harga);
 
             $('#programModal .modal-title').text('Edit Data');
             $('#programModal').modal('show');
