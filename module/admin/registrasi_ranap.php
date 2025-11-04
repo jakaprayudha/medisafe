@@ -88,23 +88,23 @@ require '../../controller/view.php';
         <input type="hidden" name="id_visit" id="id_visit">
         <input type="hidden" name="id_patient" id="id_patient"> <!-- 🔹 dari klik add -->
         <input type="hidden" name="user" value="<?= $_SESSION['fullname'] ?>" id="user">
+        <input type="hidden" name="id_ranap" id="id_ranap">
         <div class="row">
           <div class="col-12">
             <!-- Data Registrasi -->
             <div class="mb-3">
               <label class="form-label required">Kelas</label>
-              <select name="source_hub" id="source_hub" class="form-select" required>
+              <select name="service_class" id="service_class" class="form-select" required>
               </select>
             </div>
             <div class="mb-3">
-              <label class="form-label required">Kamar</label>
-              <select name="id_poli" id="id_poli" class="form-select" required>
-                <?php
-                $getpoli = tampildata("SELECT * FROM ms_poli WHERE poli_status='1'");
-                foreach ($getpoli as $poli) :
-                ?>
-                  <option value="<?= $poli['id_poli'] ?>"><?= $poli['poli_name'] ?></option>
-                <?php endforeach ?>
+              <label class="form-label required">Nama Kamar</label>
+              <select name="room_name" id="room_name" class="form-select" required>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label required">No.Tempat Tidur</label>
+              <select name="bed_name" id="bed_name" class="form-select" required>
               </select>
             </div>
           </div>
@@ -116,6 +116,73 @@ require '../../controller/view.php';
     </form>
   </div>
 </div>
+
+<script>
+  $(document).ready(function() {
+    // 🔹 Load data kelas saat modal dibuka
+    $('#programModal').on('show.bs.modal', function() {
+      $('#service_class').html('<option value="">Loading...</option>');
+      $('#room_name').empty();
+      $('#bed_name').empty();
+
+      fetch('controller/visit/getRoomRanap.php?type=service_class')
+        .then(res => res.json())
+        .then(resp => {
+          if (resp.status === 'success') {
+            let opt = '<option value="">-- Pilih Kelas --</option>';
+            resp.data.forEach(v => opt += `<option value="${v}">${v}</option>`);
+            $('#service_class').html(opt);
+          }
+        });
+    });
+
+    // 🔹 Saat pilih kelas → load daftar kamar
+    $('#service_class').on('change', function() {
+      let kelas = $(this).val();
+      $('#room_name').html('<option value="">Loading...</option>');
+      $('#bed_name').html('');
+
+      if (kelas) {
+        fetch(`controller/visit/getRoomRanap.php?type=room_name&value=${kelas}`)
+          .then(res => res.json())
+          .then(resp => {
+            if (resp.status === 'success') {
+              let opt = '<option value="">-- Pilih Kamar --</option>';
+              resp.data.forEach(r => opt += `<option value="${r.id_room}">${r.room_name}</option>`);
+              $('#room_name').html(opt);
+            } else {
+              $('#room_name').html('<option value="">Tidak ada data</option>');
+            }
+          });
+      } else {
+        $('#room_name').html('');
+        $('#bed_name').html('');
+      }
+    });
+
+    // 🔹 Saat pilih kamar → load daftar bed
+    $('#room_name').on('change', function() {
+      let id_room = $(this).val();
+      $('#bed_name').html('<option value="">Loading...</option>');
+
+      if (id_room) {
+        fetch(`controller/visit/getRoomRanap.php?type=bed_name&value=${id_room}`)
+          .then(res => res.json())
+          .then(resp => {
+            if (resp.status === 'success') {
+              let opt = '<option value="">-- Pilih Tempat Tidur --</option>';
+              resp.data.forEach(b => opt += `<option value="${b.id_bed}">${b.bed_name}-${b.bed_gender}</option>`);
+              $('#bed_name').html(opt);
+            } else {
+              $('#bed_name').html('<option value="">Tidak ada data</option>');
+            }
+          });
+      } else {
+        $('#bed_name').html('');
+      }
+    });
+  });
+</script>
 
 <script>
   const apiUrl = 'controller/visit/addListBookingRanap';
@@ -192,6 +259,8 @@ require '../../controller/view.php';
     // 🔹 Approve -> buka modal
     $(document).on('click', '.approve-btn', function() {
       let id = $(this).data('id');
+      $('#id_ranap').val(id); // ✅ simpan ke input hidden
+
       fetch(apiUrl + `?id=${id}`)
         .then(res => res.json())
         .then(resp => {
@@ -204,6 +273,27 @@ require '../../controller/view.php';
             $('#programModal').modal('show');
           } else {
             Swal.fire('Gagal', resp.message || 'Data tidak ditemukan.', 'error');
+          }
+        });
+    });
+
+    // 🔹 Submit Approve
+    $('#programForm').on('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+
+      fetch('controller/visit/approveRawatInap.php', {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(resp => {
+          if (resp.status === 'success') {
+            Swal.fire('Berhasil!', resp.message, 'success');
+            $('#programModal').modal('hide');
+            $('#periodeTable').DataTable().ajax.reload(null, false);
+          } else {
+            Swal.fire('Gagal!', resp.message, 'error');
           }
         });
     });
@@ -250,6 +340,8 @@ require '../../controller/view.php';
         }
       });
     });
+
+
   });
 </script>
 
