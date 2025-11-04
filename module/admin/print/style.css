@@ -77,22 +77,48 @@ body {
 }
 
 .signature {
-   margin-top: 35px;
-   width: 100%;
-   text-align: right;
+   text-align: center;
+   margin-top: 40px;
 }
 
-.signature-line {
-   margin-top: 35px;
-   border-bottom: 1px dotted #000;
-   width: 200px;
-   display: inline-block;
-}
-
-.signature-name {
-   margin-top: 6px;
+.signature p {
+   margin-bottom: 40px;
    font-size: 10pt;
 }
+
+.signature .signature-block {
+   display: inline-block;
+   text-align: center;
+}
+
+.signature .signature-image {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   margin-bottom: 5px;
+}
+
+.signature .signature-image img {
+   max-width: 220px;
+   height: auto;
+   display: block;
+   margin: 0 auto;
+}
+
+
+.signature strong u {
+   display: block;
+   margin-top: 4px;
+   text-decoration: underline;
+   font-size: 10pt;
+   font-weight: bold;
+}
+
+.signature .signature-name {
+   margin-top: 3px;
+   font-size: 9.5pt;
+}
+
 
 @media print {
    body {

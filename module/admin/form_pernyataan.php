@@ -104,6 +104,12 @@ $dataresume = $query->fetch_assoc();
                     </div>
                   </div>
                   <div class="text-end mt-2">
+                    <a href="module/admin/print/formulir_pernyataan.php?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
+                      <button class="btn btn-outline-primary">
+                        <iconify-icon icon="mdi:printer-outline"></iconify-icon>
+                        Cetak
+                      </button>
+                    </a>
                     <button class="btn btn-outline-danger" id="openModal">
                       <iconify-icon icon="mdi:check-decagram-outline"></iconify-icon>
                       Saya Mengerti dan Setuju
@@ -235,6 +241,9 @@ $dataresume = $query->fetch_assoc();
           });
         });
     });
+
+
+
   });
 </script>
 

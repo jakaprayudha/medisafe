@@ -1,8 +1,32 @@
 <?php
 require_once '../../../database/connect.php';
 $no = $_GET['no'];
-$check = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient  WHERE pasien_visit.visit_ID='$no'");
+$rm = $_GET['rm'];
+$check = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN pasien_ttd_pernyataan ON pasien_ttd_pernyataan.visit_ID = pasien_visit.visit_ID  WHERE pasien_visit.visit_ID='$no' AND pasien_ttd_pernyataan.nomor_rm='$rm'");
 $data = mysqli_fetch_array($check);
+
+function formatTanggalIndonesia($tanggal)
+{
+   $bulanIndo = [
+      1 => 'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember'
+   ];
+
+   $pecah = explode('-', $tanggal);
+   return intval($pecah[2]) . ' ' . $bulanIndo[(int)$pecah[1]] . ' ' . $pecah[0];
+}
+
+$tanggalSekarang = formatTanggalIndonesia(date('Y-m-d'));
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -37,7 +61,18 @@ $data = mysqli_fetch_array($check);
       </p>
    </div>
 
-   <?php include 'tandatangan.php'; ?>
+
+
+   <div class="signature">
+      <p>Tanjung Morawa, <?= $tanggalSekarang ?></p>
+      <div class="signature-block">
+         <div class="signature-image">
+            <img src="../../../uploads/ttd/ttd_000002_1762298006.png" width="200" alt="Tanda Tangan Pasien">
+         </div>
+         <strong><u><?= htmlspecialchars($data['patient_name'] ?? '....................................') ?></u></strong>
+         <div class="signature-name">Yang Membuat Pernyataan</div>
+      </div>
+   </div>
 
 </body>
 
