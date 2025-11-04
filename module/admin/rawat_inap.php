@@ -1,5 +1,5 @@
 <?php
-$title = 'Rawat Inap';
+$title = 'Permintaan Rawat Inap';
 require '../../database/connect.php';
 require '../../controller/view.php';
 ?>
