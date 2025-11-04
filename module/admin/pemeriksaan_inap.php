@@ -78,13 +78,12 @@ $apiUrl = getenv('API_URL');
                         <tr>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                           <th class="text-dark fw-normal">Registrasi</th>
-                          <th>Antrian</th>
+                          <th>Kamar</th>
                           <th scope="col" class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">TTL</th>
                           <th class="text-dark fw-normal">Dokter</th>
-                          <th class="text-dark fw-normal">Poliklinik</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
 
                         </tr>
@@ -111,7 +110,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 ?>
 <script>
   // Mengambil nilai API_URL dari PHP
-  const apiUrl = 'controller/visit/registrasiController';
+  const apiUrl = 'controller/visit/registrasiRanapController';
   var today = new Date().toISOString().split("T")[0];
   $("#fromDate").val(today);
   $("#toDate").val(today);
@@ -143,13 +142,12 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                   </div>
               `,
               "tanggal": row.visit_date + ' ' + row.visit_time,
-              "antrian": row.visit_antrian,
+              "kamar": row.room_name + ' - ' + row.bed_name,
               "nomor_rm": row.nomor_rm,
               "nama_pasien": row.patient_name,
               "gender": row.patient_gender,
               "ttl": row.patient_datebirth + '/' + row.patient_place,
               "dokter": row.doctor_name,
-              "layanan": row.poli_name,
               "status_visit": `
                 <span class="badge ${row.status_dilayani == 1 ? 'bg-success' : 'bg-danger'} d-block text-center">
                   ${row.status_dilayani == 1 ? 'Sudah Dilayani' : 'Belum Dilayani'}
@@ -165,7 +163,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
           "data": "tanggal"
         },
         {
-          "data": "antrian"
+          "data": "kamar"
         },
         {
           "data": "nomor_rm"
@@ -181,9 +179,6 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
         },
         {
           "data": "dokter"
-        },
-        {
-          "data": "layanan"
         },
         {
           "data": "status_visit"

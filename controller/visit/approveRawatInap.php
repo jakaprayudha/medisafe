@@ -3,20 +3,22 @@ require_once '../../database/connect.php';
 header('Content-Type: application/json');
 session_start();
 
-$input = $_POST; // data dikirim dari form modal
+$input = $_POST;
+
+// === Ambil data input ===
 $id_ranap   = $input['id_ranap'] ?? null;
 $id_patient = $input['id_patient'] ?? null;
-$id_doctor  = $input['id_doctor'] ?? null;
-$id_poli    = $input['id_poli'] ?? 99; // default poli rawat inap
-$user       = $_SESSION['fullname'] ?? 'System';
+$id_room    = $input['room_name'] ?? null;
+$id_bed     = $input['bed_name'] ?? null;
+$user       = $_SESSION['fullname'] ?? ($input['user'] ?? 'System');
 
-// 🔹 Validasi dasar
-if (!$id_ranap || !$id_patient) {
+// === Validasi dasar ===
+if (!$id_ranap || !$id_patient || !$id_room || !$id_bed) {
    echo json_encode(['status' => 'error', 'message' => 'Data tidak lengkap.']);
    exit;
 }
 
-// 🔹 Ambil data permintaan rawat inap
+// === Ambil data permintaan ranap ===
 $q = $koneksi->prepare("SELECT * FROM permintaan_ranap WHERE id_ranap = ?");
 $q->bind_param("i", $id_ranap);
 $q->execute();
@@ -27,19 +29,19 @@ if (!$d) {
    exit;
 }
 
-// 🔹 Generate kode unik
+// === Generate visit ID unik ===
 $visit_ID = "VIS-" . date('ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
 $timeranap = date('H:i:s');
 $source = "Rawat Inap";
+$id_poli = 99; // default poli rawat inap
 
-// 🔹 Siapkan query insert (9 kolom = 9 tanda ?)
+// === Insert ke pasien_visit ===
 $stmt = $koneksi->prepare("
-  INSERT INTO pasien_visit 
-  (id_patient, visit_ID, visit_date, visit_time, id_doctor, id_poli, source_hub, created_user, visit_notes)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+   INSERT INTO pasien_visit 
+   (id_patient, visit_ID, visit_date, visit_time, id_doctor, id_poli, source_hub, created_user, visit_notes)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 ");
 
-// 🔹 Bind parameter (9 data sesuai urutan kolom)
 $stmt->bind_param(
    "sssssssss",
    $d['id_patient'],
@@ -53,20 +55,40 @@ $stmt->bind_param(
    $d['diagnosa_awal']
 );
 
+// === Jalankan proses insert utama ===
 if ($stmt->execute()) {
-   // 🔹 Update permintaan_ranap jadi approved
-   $update = $koneksi->prepare("UPDATE permintaan_ranap SET ranap_booking = 1 WHERE id_ranap = ?");
-   $update->bind_param("i", $id_ranap);
-   $update->execute();
 
-   echo json_encode([
-      'status' => 'success',
-      'message' => 'Permintaan rawat inap disetujui dan data kunjungan telah dibuat.'
-   ]);
+   // === Step 1: Update permintaan_ranap ===
+   $update = $koneksi->prepare("
+      UPDATE permintaan_ranap 
+      SET ranap_booking = 1, id_room = ?, id_bed = ?, visit_ID_outpatient = ?
+      WHERE id_ranap = ?
+   ");
+   $update->bind_param("iisi", $id_room, $id_bed, $visit_ID, $id_ranap);
+
+   if ($update->execute()) {
+
+      // === Step 2: Update status bed (0 = terpakai) ===
+      $updateBed = $koneksi->prepare("UPDATE ms_room_bed SET bed_status = '0' WHERE id_bed = ?");
+      $updateBed->bind_param("i", $id_bed);
+      $updateBed->execute();
+
+      echo json_encode([
+         'status' => 'success',
+         'message' => 'Permintaan rawat inap disetujui dan data kunjungan berhasil dibuat.',
+         'visit_ID' => $visit_ID
+      ]);
+   } else {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Gagal memperbarui data permintaan ranap.',
+         'error' => $update->error
+      ]);
+   }
 } else {
    echo json_encode([
       'status' => 'error',
-      'message' => 'Gagal menyimpan data kunjungan.',
+      'message' => 'Gagal menyimpan data kunjungan pasien.',
       'error' => $stmt->error
    ]);
 }
