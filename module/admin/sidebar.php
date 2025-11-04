@@ -53,6 +53,16 @@ $role = $_SESSION['roles']; // ambil dari session login
                </a>
             </li>
             <li class="sidebar-item">
+               <a class="sidebar-link <?php if ($title == 'Ruangan Rawat Inap') {
+                                          echo 'active';
+                                       } ?>"
+                  href="module/admin/room"
+                  aria-expanded="false">
+                  <iconify-icon icon="fa6-solid:bed"></iconify-icon>
+                  <span class="hide-menu">Kamar Rawat Inap</span>
+               </a>
+            </li>
+            <li class="sidebar-item">
                <a class="sidebar-link <?php if ($title == 'Dokter' or $title == 'Dokter Details') {
                                           echo 'active';
                                        } ?>"
@@ -152,7 +162,7 @@ $role = $_SESSION['roles']; // ambil dari session login
                </a>
             </li>
             <li class="sidebar-item">
-               <a class="sidebar-link <?php if ($title == 'Rawat Inap') {
+               <a class="sidebar-link <?php if ($title == 'Pemeriksaan Rawat Inap' or $title == 'Permintaan Pasien Rawat Inap') {
                                           echo 'active';
                                        } ?>"
                   href="module/admin/pemeriksaan_inap"
