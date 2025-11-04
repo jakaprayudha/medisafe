@@ -1,6 +1,5 @@
 <?php
 $role = $_SESSION['roles']; // ambil dari session login
-var_dump($role);
 ?>
 <!-- Sidebar Start -->
 <aside class="left-sidebar">
@@ -149,7 +148,17 @@ var_dump($role);
                   href="module/admin/pemeriksaan"
                   aria-expanded="false">
                   <iconify-icon icon="mdi:stethoscope"></iconify-icon>
-                  <span class="hide-menu">Pemeriksaan Dokter</span>
+                  <span class="hide-menu">Poliklinik</span>
+               </a>
+            </li>
+            <li class="sidebar-item">
+               <a class="sidebar-link <?php if ($title == 'Rawat Inap') {
+                                          echo 'active';
+                                       } ?>"
+                  href="module/admin/pemeriksaan_inap"
+                  aria-expanded="false">
+                  <iconify-icon icon="solar:bed-linear"></iconify-icon>
+                  <span class="hide-menu">Rawat Inap</span>
                </a>
             </li>
             <li class="sidebar-item">
