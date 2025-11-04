@@ -15,6 +15,15 @@ $apiUrl = getenv('API_URL');
   <?php
   require '../../assets/template/head.php';
   ?>
+  <style>
+    table.dataTable td {
+      overflow: visible !important;
+    }
+
+    .dropdown-menu {
+      z-index: 9999 !important;
+    }
+  </style>
 </head>
 
 <body>
@@ -115,31 +124,84 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
   $("#fromDate").val(today);
   $("#toDate").val(today);
   const rmeType = '<?php echo $rme_type ?>'; // ambil dari PHP
+
   $(document).ready(function() {
-    // Initialize DataTable
+
+    // 🔹 Initialize DataTable
     var table = $('#zero_config').DataTable({
       "processing": true,
-      "serverSide": true,
+      "serverSide": false,
+      "responsive": true,
+      "autoWidth": false,
+      "drawCallback": function() {
+        // Re-init dropdown supaya event Bootstrap aktif setelah redraw
+        const dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+        dropdowns.forEach(el => new bootstrap.Dropdown(el));
+      },
       "ajax": {
-        "url": apiUrl, // Ganti dengan URL API yang sesuai
+        "url": apiUrl,
         "type": "GET",
         data: function(d) {
-          // kirim tanggal filter ke backend
           d.fromDate = $('#fromDate').val();
           d.toDate = $('#toDate').val();
         },
         "dataSrc": function(json) {
-          // Format data yang akan ditampilkan dalam tabel
           return json.data.map(function(row, index) {
-            // pilih file tujuan sesuai rme_type
-            let pemeriksaanFile = (rmeType == 1) ? 'pemeriksaan_a' : 'pemeriksaan_b';
             return {
               "actions": `
-                  <div class="text-center">
-                    <a href="module/admin/${pemeriksaanFile}?no=${row.visit_ID}&rm=${row.nomor_rm}">
-                      <button class="btn btn-primary">Pemeriksaan</button>
-                    </a>
-                  </div>
+                <div class="dropdown text-center position-relative">
+                  <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    Actions
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="z-index:1055; min-width: 180px;">
+                    <li>
+                      <a class="dropdown-item" href="module/admin/pemeriksaan_inap?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                        <i class="bi bi-clipboard2-pulse me-2"></i>Pemeriksaan
+                      </a>
+                    </li>
+                      <li>
+                        <a class="dropdown-item" href="module/admin/print/formulir_pernyataan?no=${row.visit_ID}&rm=${row.nomor_rm}" target="_blank">
+                          <i class="bi bi-file-earmark-text me-2"></i>Formulir Pernyataan Peserta
+                        </a>
+                      </li>
+                        <li>
+                        <a class="dropdown-item" href="module/admin/print/formulir_keterangan_ranap?no=${row.visit_ID}&rm=${row.nomor_rm}" target="_blank">
+                          <i class="bi bi-file-earmark-text me-2"></i>Keterangan Rawat Inap
+                        </a>
+                      </li>
+                        <li>
+                        <a class="dropdown-item" href="module/admin/print/formulir_surat_persetujuan?no=${row.visit_ID}&rm=${row.nomor_rm}" target="_blank">
+                          <i class="bi bi-file-earmark-text me-2"></i>Surat Persetujuan Tindakan Medis
+                        </a>
+                      </li>
+                        <li>
+                        <a class="dropdown-item" href="module/admin/print/formulir_inout_ranap?no=${row.visit_ID}&rm=${row.nomor_rm}" target="_blank">
+                          <i class="bi bi-file-earmark-text me-2"></i>Lembar Masuk dan Keluar Rawat Inap
+                        </a>
+                      </li>
+                        <li>
+                        <a class="dropdown-item" href="module/admin/print/formulir_instruksi?no=${row.visit_ID}&rm=${row.nomor_rm}" target="_blank">
+                          <i class="bi bi-file-earmark-text me-2"></i>Perkembangan Pasien & Instruksi Dokter
+                        </a>
+                      </li>
+                       <li>
+                        <a class="dropdown-item" href="module/admin/print/formulir_cppt?no=${row.visit_ID}&rm=${row.nomor_rm}" target="_blank">
+                          <i class="bi bi-file-earmark-text me-2"></i>CPPT
+                        </a>
+                      </li>
+                        <li>
+                        <a class="dropdown-item" href="module/admin/print/formulir_resume?no=${row.visit_ID}&rm=${row.nomor_rm}" target="_blank">
+                          <i class="bi bi-file-earmark-text me-2"></i>Resume Medis
+                        </a>
+                      </li>
+                       <li>
+                        <a class="dropdown-item" href="module/admin/print/formulir_lbp?no=${row.visit_ID}&rm=${row.nomor_rm}" target="_blank">
+                          <i class="bi bi-file-earmark-text me-2"></i>Formulir Lembar Bukti Pelayanan (LBP)
+                        </a>
+                      </li>
+                  </ul>
+                </div>
               `,
               "tanggal": row.visit_date + ' ' + row.visit_time,
               "kamar": row.room_name + ' - ' + row.bed_name,
@@ -159,7 +221,8 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
       },
       "columns": [{
           "data": "actions"
-        }, {
+        },
+        {
           "data": "tanggal"
         },
         {
@@ -183,22 +246,28 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
         {
           "data": "status_visit"
         }
-
       ]
     });
 
-    // filter manual
+    // 🔹 Tambahkan perbaikan dropdown agar muncul di atas tabel scroll
+    $(document).on('show.bs.dropdown', '.table-responsive', function(e) {
+      $(e.relatedTarget).next('.dropdown-menu').appendTo('body');
+    });
+    $(document).on('hide.bs.dropdown', '.table-responsive', function(e) {
+      $('.dropdown-menu').appendTo(e.currentTarget);
+    });
+
+    // 🔹 Filter manual
     $('#btnFilter').on('click', function() {
       table.ajax.reload();
     });
 
-    // reset filter ke today
+    // 🔹 Reset filter ke today
     $('#btnReset').on('click', function() {
       $('#fromDate').val(today);
       $('#toDate').val(today);
       table.ajax.reload();
     });
-
 
   });
 </script>

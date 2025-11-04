@@ -1,0 +1,105 @@
+@page {
+   size: A4;
+   margin: 1.5cm 1.5cm 1.2cm 1.5cm;
+}
+
+body {
+   font-family: "Times New Roman", serif;
+   font-size: 10pt;
+   color: #000;
+   line-height: 1.25;
+}
+
+.header {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   border-bottom: 2px solid #000;
+   padding-bottom: 4px;
+   margin-bottom: 4px;
+}
+
+.header img {
+   width: 70px;
+   height: auto;
+}
+
+.header-center {
+   text-align: center;
+   flex: 1;
+}
+
+.header-center h1 {
+   margin: 0;
+   font-size: 16pt;
+   font-weight: bold;
+   letter-spacing: 0.5px;
+}
+
+.header-center h2 {
+   margin: 0;
+   font-size: 13pt;
+   font-weight: bold;
+}
+
+.address {
+   text-align: center;
+   font-size: 9pt;
+   margin-top: 3px;
+   padding-bottom: 3px;
+   border-bottom: 1px solid #000;
+}
+
+.form-title {
+   text-align: center;
+   font-weight: bold;
+   margin: 18px 0 12px 0;
+   text-transform: uppercase;
+   font-size: 11pt;
+}
+
+.content p {
+   margin: 3px 0;
+   font-size: 10pt;
+}
+
+.content span {
+   display: inline-block;
+   width: 190px;
+}
+
+.quote {
+   margin-top: 6px;
+   text-indent: 30px;
+   font-style: italic;
+   text-align: justify;
+   font-size: 9.5pt;
+}
+
+.signature {
+   margin-top: 35px;
+   width: 100%;
+   text-align: right;
+}
+
+.signature-line {
+   margin-top: 35px;
+   border-bottom: 1px dotted #000;
+   width: 200px;
+   display: inline-block;
+}
+
+.signature-name {
+   margin-top: 6px;
+   font-size: 10pt;
+}
+
+@media print {
+   body {
+      margin: 0;
+   }
+
+   .no-print {
+      display: none;
+   }
+}
