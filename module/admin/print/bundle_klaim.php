@@ -21,7 +21,8 @@ $files = [
    "formulir_trisemester3.php",
    "formulir_catatan_persalinan.php",
    "formulir_partograf.php",
-   "formulir_skrining_hipotiroid.php"
+   "formulir_skrining_hipotiroid.php",
+   "formulir_skl.php"
 
 ];
 
