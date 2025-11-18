@@ -9,7 +9,9 @@ $files = [
    "formulir_pernyataan.php",
    "formulir_persalinan.php",
    "formulir_resume.php",
-   "formulir_surat_persetujuan.php"
+   "formulir_surat_persetujuan.php",
+   "formulir_status_kb.php",
+   "formulir_kontrasepsi.php"
 
 ];
 
