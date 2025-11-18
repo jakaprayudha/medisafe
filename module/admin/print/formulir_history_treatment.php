@@ -90,7 +90,7 @@
 <body>
 
    <div class="title">
-      CATATAN PERKEMBANGAN PASIEN TERINTEGRASI (CPPT)
+      PERJALANAN PERKEMBANGAN PENYAKIT, INSTRUKSI DOKTER DAN PENGOBATAN
    </div>
 
    <!-- ================= HEADER PASIEN ================= -->
@@ -112,8 +112,8 @@
    <table>
       <tr class="center" style="font-weight:bold;">
          <td width="15%">Tanggal/Jam</td>
-         <td width="45%">Diagnosa Keperawatan</td>
-         <td width="25%">Perkembangan</td>
+         <td width="45%">Perjalanan Penyakit</td>
+         <td width="25%">Permintaan Dokter dan<br>Pengobatan Medik</td>
          <td width="15%">Paraf/Nama</td>
       </tr>
       <tr class="big-cell">
@@ -124,6 +124,30 @@
       </tr>
    </table>
 
+
+   <!-- ================= BAGIAN BAWAH (SESUAI GAMBAR) ================= -->
+   <div class="section-title">Pemeriksaan Fisik</div>
+   <div class="box-large"></div>
+
+   <table style="border: none; margin-top:10px;">
+      <tr>
+         <td style="border:none; width: 80px;">Diagnosa :</td>
+         <td style="border:none; border-bottom:1px solid #000;"></td>
+      </tr>
+   </table>
+
+   <div class="section-title" style="margin-top:15px;">Pengobatan :</div>
+   <div class="box-large"></div>
+
+   <table class="signature-area">
+      <tr>
+         <td width="50%"></td>
+         <td width="50%">
+            Paraf / Nama Dokter<br><br><br><br>
+            _______________________
+         </td>
+      </tr>
+   </table>
 
    <div class="no-print">
       <button onclick="window.print()">🖨 Cetak Halaman</button>
