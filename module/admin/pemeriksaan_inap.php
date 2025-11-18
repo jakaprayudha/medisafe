@@ -166,8 +166,8 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                         </a>
                       </li>
                        <li>
-                        <a class="dropdown-item" href="module/admin/form_capture_baby?no=${row.visit_ID}&rm=${row.nomor_rm}">
-                          <i class="bi bi-file-earmark-text me-2"></i>Foto Ibu dan Bayi
+                        <a class="dropdown-item" href="module/admin/form_capture_patient?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="bi bi-file-earmark-text me-2"></i>Foto Pasien
                         </a>
                       </li>
                         <li>

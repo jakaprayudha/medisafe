@@ -84,22 +84,12 @@ $dataresume = $query->fetch_assoc();
                       </div>
                     </div>
                   </div>
-                  <div class="mb-3">
-
+                  <div class="mt-3 text-center">
+                    <img id="fotoPasien" src="" class="img-thumbnail" style="max-width:250px; display:none;">
                   </div>
                   <div class="text-end mt-2">
-                    <a href="module/admin/print/formulir_pernyataan.php?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
-                      <button class="btn btn-outline-primary">
-                        <iconify-icon icon="mdi:printer-outline"></iconify-icon>
-                        Cetak
-                      </button>
-                    </a>
                     <button class="btn btn-outline-success" id="btnFoto">
                       <iconify-icon icon="mdi:camera-outline"></iconify-icon> Ambil / Upload Foto
-                    </button>
-                    <button class="btn btn-outline-danger" id="openModal">
-                      <iconify-icon icon="mdi:check-decagram-outline"></iconify-icon>
-                      Saya Mengerti dan Setuju
                     </button>
                   </div>
                 </div>
@@ -277,48 +267,49 @@ $dataresume = $query->fetch_assoc();
     startWebcam();
   });
 
-  // Start webcam
+  // Start Webcam
   function startWebcam() {
     navigator.mediaDevices.getUserMedia({
-      video: true
-    }).then(stream => {
-      document.getElementById("webcam").srcObject = stream;
-    });
+        video: true
+      })
+      .then(stream => {
+        document.getElementById("webcam").srcObject = stream;
+      });
   }
 
-  // Capture foto webcam → canvas
+  // Capture webcam → canvas
   document.getElementById("captureBtn").addEventListener("click", function() {
     let video = document.getElementById("webcam");
     let canvas = document.getElementById("canvas");
+
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext("2d").drawImage(video, 0, 0);
   });
 
-  // Save foto (dari webcam atau upload)
+  // Save foto
   document.getElementById("saveFoto").addEventListener("click", function() {
     const rm = document.querySelector("input[name='nomor_rm']").value;
     const visit = document.querySelector("input[name='nomor_visit']").value;
 
-    let imgData;
+    let fileUpload = document.getElementById("uploadFile").files[0];
 
-    // 1. Jika upload file
-    let fileInput = document.getElementById("uploadFile").files[0];
-    if (fileInput) {
+    // Jika upload file (bukan webcam)
+    if (fileUpload) {
       let reader = new FileReader();
-      reader.onload = function() {
+      reader.onload = () => {
         sendToServer(reader.result, rm, visit);
       };
-      reader.readAsDataURL(fileInput);
+      reader.readAsDataURL(fileUpload);
       return;
     }
 
-    // 2. Jika foto dari webcam
-    imgData = document.getElementById("canvas").toDataURL("image/jpeg");
-    sendToServer(imgData, rm, visit);
+    // Foto dari webcam
+    let base64img = document.getElementById("canvas").toDataURL("image/jpeg");
+    sendToServer(base64img, rm, visit);
   });
 
-  // Kirim foto ke server
+  // Kirim ke server
   function sendToServer(base64img, rm, visit) {
     fetch("controller/visit/saveFoto.php", {
         method: "POST",
@@ -330,10 +321,49 @@ $dataresume = $query->fetch_assoc();
       })
       .then(r => r.json())
       .then(res => {
-        alert(res.message);
-        location.reload();
+        if (res.status === "success") {
+          Swal.fire({
+            icon: "success",
+            title: "Berhasil!",
+            text: res.message,
+            timer: 1700,
+            showConfirmButton: false
+          });
+
+          // Tampilkan foto tanpa reload
+          if (res.foto) {
+            document.getElementById("fotoPasien").src = "uploads/foto/" + res.foto;
+            document.getElementById("fotoPasien").style.display = "block";
+          }
+
+          // Tutup modal
+          setTimeout(() => {
+            bootstrap.Modal.getInstance(document.getElementById('modalFoto')).hide();
+          }, 600);
+
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Gagal!",
+            text: res.message
+          });
+        }
       });
   }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    const rm = document.querySelector("input[name='nomor_rm']").value;
+    const visit = document.querySelector("input[name='nomor_visit']").value;
+
+    fetch(`controller/visit/getFoto.php?rm=${rm}&visit=${visit}`)
+      .then(r => r.json())
+      .then(res => {
+        if (res.foto) {
+          document.getElementById("fotoPasien").src = "uploads/foto/" + res.foto;
+          document.getElementById("fotoPasien").style.display = "block";
+        }
+      });
+  });
 </script>
 
 
