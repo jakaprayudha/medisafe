@@ -1,77 +1,186 @@
-<?php
-require_once '../../../database/connect.php';
-$no = $_GET['no'];
-$rm = $_GET['rm'];
-$check = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN pasien_ttd_pernyataan ON pasien_ttd_pernyataan.visit_ID = pasien_visit.visit_ID  WHERE pasien_visit.visit_ID='$no' AND pasien_ttd_pernyataan.nomor_rm='$rm'");
-$data = mysqli_fetch_array($check);
-
-function formatTanggalIndonesia($tanggal)
-{
-   $bulanIndo = [
-      1 => 'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember'
-   ];
-
-   $pecah = explode('-', $tanggal);
-   return intval($pecah[2]) . ' ' . $bulanIndo[(int)$pecah[1]] . ' ' . $pecah[0];
-}
-
-$tanggalSekarang = formatTanggalIndonesia(date('Y-m-d'));
-?>
 <!DOCTYPE html>
 <html lang="id">
 
 <head>
    <meta charset="UTF-8">
    <title>Formulir Pernyataan Peserta</title>
-   <link rel="stylesheet" href="style.css">
+
+   <style>
+      @page {
+         size: A4 portrait;
+         margin: 15mm;
+      }
+
+      body {
+         font-family: "Times New Roman", Arial, sans-serif;
+         margin: 0;
+         padding: 0;
+      }
+
+      .page {
+         width: 210mm;
+         min-height: 297mm;
+         margin: 0 auto;
+      }
+
+      .kop {
+         text-align: center;
+         margin-bottom: 10px;
+         position: relative;
+      }
+
+      .kop img.logo {
+         width: 80px;
+         position: absolute;
+         top: 0;
+      }
+
+      .kop .left {
+         left: 10px;
+      }
+
+      .kop .right {
+         right: 10px;
+      }
+
+      .kop .title1 {
+         font-size: 32px;
+         font-weight: bold;
+         margin-top: 5px;
+      }
+
+      .kop .title2 {
+         font-size: 34px;
+         font-weight: bold;
+         margin-top: -10px;
+      }
+
+      .address {
+         font-size: 13px;
+         margin-top: -5px;
+      }
+
+      h3 {
+         text-align: center;
+         margin-top: 25px;
+         font-size: 18px;
+         text-decoration: underline;
+      }
+
+      .row {
+         margin: 10px 0;
+         font-size: 16px;
+      }
+
+      .label {
+         width: 180px;
+         display: inline-block;
+      }
+
+      .dots {
+         border-bottom: 1px dotted #000;
+         display: inline-block;
+         width: 320px;
+         height: 16px;
+      }
+
+      .text-area {
+         margin-top: 15px;
+         font-size: 16px;
+         text-align: justify;
+         line-height: 1.4;
+      }
+
+      .ttd {
+         margin-top: 50px;
+         width: 100%;
+         display: flex;
+         justify-content: flex-end;
+      }
+
+      .ttd-box {
+         width: 260px;
+         text-align: center;
+         font-size: 16px;
+      }
+
+      .sign-line {
+         margin-top: 60px;
+         border-bottom: 1px solid #000;
+         height: 0;
+         width: 100%;
+      }
+   </style>
 </head>
 
 <body>
 
-   <?php include 'kopsurat.php'; ?>
+   <div class="page">
 
-   <!-- content.php -->
-   <div class="form-title">Formulir Pernyataan Peserta</div>
+      <!-- =================== KOP SURAT =================== -->
+      <div class="kop">
+         <img src="logo_kiri.png" class="logo left">
+         <img src="logo_kanan.png" class="logo right">
 
-   <div class="content">
-      <p>Saya yang bertanda tangan di bawah ini :</p>
+         <div class="title1">KLINIK</div>
+         <div class="title2">TUTUN SEHATI</div>
 
-      <p><span>Nama</span>: <?= $data['patient_name'] ?></p>
-      <p><span>Tempat / Tanggal Lahir</span>: <?= $data['patient_place'] ?> / <?= $data['patient_datebirth'] ?></p>
-      <p><span>Jenis Kelamin</span>: <?= $data['patient_gender'] ?></p>
-      <p><span>NIK / No. Kartu BPJS</span>: <?= $data['patient_nik'] ?></p>
-      <p><span>Nomor Telepon</span>: <?= $data['patient_phone'] ?></p>
-
-      <p>Dengan sadar, terkait pemanfaatan jaminan pelayanan kesehatan BPJS Kesehatan, dengan ini menyatakan :</p>
-
-      <p class="quote">
-         “Kesediaan atas data medis (Rekam Medis) diri saya untuk dipergunakan oleh Dokter / Rumah Sakit / BPJS Kesehatan
-         sesuai dengan kepentingan.”
-      </p>
-   </div>
-
-
-
-   <div class="signature">
-      <p>Tanjung Morawa, <?= $tanggalSekarang ?></p>
-      <div class="signature-block">
-         <div class="signature-image">
-            <img src="../../../uploads/ttd/ttd_000002_1762298006.png" width="200" alt="Tanda Tangan Pasien">
+         <div class="address">
+            Jl. Pasar Baru Km. 17 Tanjung Morawa A No. 7 Telp. 061-7945676, HP 082165281225<br>
+            Email: tutunsehati@yahoo.com
          </div>
-         <strong><u><?= htmlspecialchars($data['patient_name'] ?? '....................................') ?></u></strong>
-         <div class="signature-name">Yang Membuat Pernyataan</div>
       </div>
+
+      <!-- =================== JUDUL =================== -->
+      <h3>FORMULIR PERNYATAAN PESERTA</h3>
+
+      <!-- =================== ISI DATA =================== -->
+      <div class="row">
+         Saya yang bertanda tangan dibawah ini :
+      </div>
+
+      <div class="row">
+         <span class="label">Nama</span>
+         <span class="dots"></span>
+      </div>
+
+      <div class="row">
+         <span class="label">Tempat/Tanggal Lahir</span>
+         <span class="dots"></span>
+      </div>
+
+      <div class="row">
+         <span class="label">Jenis Kelamin</span>
+         <span class="dots"></span>
+      </div>
+
+      <div class="row">
+         <span class="label">NIK/No. Kartu BPJS</span>
+         <span class="dots"></span>
+      </div>
+
+      <div class="row">
+         <span class="label">Nomor Telepon</span>
+         <span class="dots"></span>
+      </div>
+
+      <!-- =================== PARAGRAF =================== -->
+      <div class="text-area">
+         Dengan Sadar, terkait pemanfaatan jaminan pelayanan kesehatan BPJS Kesehatan, dengan ini menyatakan :
+         <br><br>
+         “Kesesuaian atas data medis (Rekam Medis) diri saya untuk dipergunakan oleh Dokter / Rumah Sakit / BPJS Kesehatan sesuai dengan kepentingan."
+      </div>
+
+      <!-- =================== TANDA TANGAN =================== -->
+      <div class="ttd">
+         <div class="ttd-box">
+            <div>Tj. Morawa, .......................</div>
+            <br>
+            Yang Membuat Pernyataan<br><br><br><br>
+            <div class="sign-line"></div>
+         </div>
+      </div>
+
    </div>
 
 </body>
