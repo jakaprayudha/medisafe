@@ -165,8 +165,13 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                           <i class="bi bi-file-earmark-text me-2"></i>Formulir Pernyataan Peserta
                         </a>
                       </li>
+                       <li>
+                        <a class="dropdown-item" href="module/admin/form_capture_baby?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="bi bi-file-earmark-text me-2"></i>Foto Ibu dan Bayi
+                        </a>
+                      </li>
                         <li>
-                        <a class="dropdown-item" href="module/admin/print/formulir_keterangan_ranap?no=${row.visit_ID}&rm=${row.nomor_rm}" target="_blank">
+                        <a class="dropdown-item" href="module/admin/form_ranap?no=${row.visit_ID}&rm=${row.nomor_rm}">
                           <i class="bi bi-file-earmark-text me-2"></i>Keterangan Rawat Inap
                         </a>
                       </li>
