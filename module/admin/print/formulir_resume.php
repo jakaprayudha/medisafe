@@ -4,80 +4,88 @@
 <head>
    <meta charset="UTF-8">
    <title>FORM RESUME MEDIS PASIEN</title>
+
    <style>
       @page {
          size: A4;
-         margin: 1.5cm;
+         margin: 1.2cm;
       }
 
       body {
          font-family: "Times New Roman", serif;
          font-size: 11pt;
          color: #000;
-         line-height: 1.5;
+         margin: 0;
+         padding: 0;
+         line-height: 1.4;
       }
 
       .title {
          text-align: center;
          font-weight: bold;
          text-transform: uppercase;
-         margin-bottom: 15px;
+         margin-bottom: 12px;
+         font-size: 14pt;
       }
 
       table {
          width: 100%;
          border-collapse: collapse;
-         border: none;
-         margin-bottom: 8px;
+         margin-bottom: 6px;
       }
 
       td {
-         padding: 4px 6px;
+         padding: 3px 4px;
          vertical-align: top;
       }
 
       .underline {
-         border-bottom: 1px dotted #666;
-         height: 18px;
+         border-bottom: 1px dotted #555;
+         height: 16px;
       }
 
       .section {
-         margin-top: 10px;
+         margin-top: 8px;
       }
 
       .section-title {
          font-weight: bold;
          text-transform: uppercase;
-         margin-bottom: 4px;
+         font-size: 11.5pt;
          border-bottom: 1px solid #000;
+         margin-bottom: 4px;
          padding-bottom: 2px;
       }
 
       .box {
          border: 1px solid #000;
-         min-height: 100px;
-         padding: 6px;
+         padding: 5px;
+         min-height: 60px;
+         /* Tinggi disesuaikan biar muat 1 halaman */
       }
 
       .signature {
          margin-top: 20px;
-         width: 100%;
          display: flex;
          justify-content: space-between;
       }
 
       .signature .col {
-         width: 45%;
+         width: 48%;
          text-align: center;
+         font-size: 11pt;
       }
 
-      .spacer {
-         height: 20px;
+      .sign-line {
+         margin-top: 50px;
+         border-top: 1px solid #000;
+         padding-top: 3px;
       }
 
+      /* Tombol cetak hilang saat print */
       .no-print {
-         text-align: center;
          margin-top: 15px;
+         text-align: center;
       }
 
       @media print {
@@ -90,10 +98,9 @@
 
 <body>
 
-   <div class="title">
-      FORM RESUME MEDIS PASIEN
-   </div>
+   <div class="title">FORM RESUME MEDIS PASIEN</div>
 
+   <!-- IDENTITAS PASIEN -->
    <table>
       <tr>
          <td width="20%">Nama Pasien</td>
@@ -125,39 +132,39 @@
       </tr>
    </table>
 
+   <!-- CONTENT BOXES -->
    <div class="section">
       <div class="section-title">Diagnosa</div>
-      <div class="box" style="height: 100px;"></div>
+      <div class="box" style="min-height: 65px;"></div>
    </div>
 
    <div class="section">
       <div class="section-title">Tindakan / Terapi</div>
-      <div class="box" style="height: 100px;"></div>
+      <div class="box" style="min-height: 65px;"></div>
    </div>
 
    <div class="section">
       <div class="section-title">Hasil Pemeriksaan Penunjang</div>
-      <div class="box" style="height: 100px;"></div>
+      <div class="box" style="min-height: 65px;"></div>
    </div>
 
    <div class="section">
       <div class="section-title">Obat yang Diberikan</div>
-      <div class="box" style="height: 80px;"></div>
+      <div class="box" style="min-height: 60px;"></div>
    </div>
 
    <div class="section">
       <div class="section-title">Instruksi / Anjuran Lanjutan</div>
-      <div class="box" style="height: 80px;"></div>
+      <div class="box" style="min-height: 60px;"></div>
    </div>
 
+   <!-- SIGNATURE -->
    <div class="signature">
       <div class="col">
-         <div>______________________________</div>
-         <div style="margin-top:5px;">Petugas / Perawat</div>
+         <div class="sign-line">Petugas / Perawat</div>
       </div>
       <div class="col">
-         <div>______________________________</div>
-         <div style="margin-top:5px;">Dokter Penanggung Jawab</div>
+         <div class="sign-line">Dokter Penanggung Jawab</div>
       </div>
    </div>
 
