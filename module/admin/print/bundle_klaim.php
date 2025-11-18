@@ -22,7 +22,8 @@ $files = [
    "formulir_catatan_persalinan.php",
    "formulir_partograf.php",
    "formulir_skrining_hipotiroid.php",
-   "formulir_skl.php"
+   "formulir_skl.php",
+   "formulir_usg.php"
 ];
 
 echo "<!DOCTYPE html>
