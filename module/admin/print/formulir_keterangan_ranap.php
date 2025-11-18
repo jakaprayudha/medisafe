@@ -1,125 +1,213 @@
-<?php
-require_once '../../../database/connect.php';
-$no = $_GET['no'];
-
-// Ambil data pasien & kunjungan
-$check = mysqli_query($koneksi, "SELECT pasien_visit.*, ms_patient.*, ms_doctor.doctor_name, permintaan_ranap.* 
-   FROM pasien_visit
-   INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient
-   LEFT JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor
-   INNER JOIN permintaan_ranap ON permintaan_ranap.visit_ID_outpatient = pasien_visit.visit_ID
-   WHERE pasien_visit.visit_ID = '$no'
-");
-$data = mysqli_fetch_array($check);
-
-// Fungsi format tanggal Indonesia
-function formatTanggalIndonesia($tanggal)
-{
-   $bulanIndo = [
-      1 => 'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember'
-   ];
-   $pecah = explode('-', $tanggal);
-   return intval($pecah[2]) . ' ' . $bulanIndo[(int)$pecah[1]] . ' ' . $pecah[0];
-}
-
-$tanggalSekarang = formatTanggalIndonesia(date('Y-m-d'));
-$tanggalMasuk = isset($data['visit_date']) ? formatTanggalIndonesia($data['visit_date']) : '-';
-$tanggalKeluar = isset($data['visit_out']) && $data['visit_out'] != '0000-00-00' ? formatTanggalIndonesia($data['visit_out']) : '...';
-?>
-
 <!DOCTYPE html>
 <html lang="id">
 
 <head>
    <meta charset="UTF-8">
-   <title>Keterangan Rawat Inap</title>
-   <link rel="stylesheet" href="style.css">
+   <title>Keterangan Rawat Inap - A4</title>
    <style>
-      /* Tambahan kecil khusus halaman ini */
+      @page {
+         size: A4;
+         margin: 15mm 20mm;
+      }
+
+      body {
+         font-family: "Times New Roman", serif;
+         margin: 0;
+         padding: 0;
+         background: white;
+      }
+
+      .container {
+         width: 100%;
+         max-width: 750px;
+         margin: auto;
+      }
+
+      /* KOP SURAT */
+      header {
+         text-align: center;
+         margin-bottom: 10px;
+      }
+
+      header h1 {
+         font-size: 32px;
+         margin: 0;
+         letter-spacing: 2px;
+      }
+
+      header h2 {
+         font-size: 26px;
+         margin: 0;
+         font-weight: bold;
+         letter-spacing: 1px;
+      }
+
+      header .alamat {
+         font-size: 12px;
+         margin-top: 8px;
+         line-height: 1.3;
+      }
+
+      hr {
+         margin-top: 12px;
+         border: 0;
+         border-top: 2px solid #000;
+      }
+
+      .judul {
+         text-align: center;
+         margin-top: 15px;
+         text-decoration: underline;
+         font-size: 20px;
+      }
+
       .nomor {
          text-align: center;
-         margin-top: 10px;
-         margin-bottom: 25px;
-         font-size: 12pt;
+         margin-top: -5px;
+         font-size: 14px;
       }
 
-      .footer {
-         margin-top: 60px;
-         text-align: center;
-         width: 100%;
+      .section {
+         margin-top: 20px;
+         font-size: 15px;
       }
 
-      .footer td {
+      .data {
+         margin-left: 20px;
+         margin-bottom: 15px;
+         font-size: 15px;
+      }
+
+      .data td {
+         padding: 2px 5px;
          vertical-align: top;
-         width: 33%;
-         text-align: center;
       }
 
-      .footer .space {
-         height: 80px;
+      .penutup {
+         margin-top: 15px;
+         text-align: justify;
+         font-size: 15px;
+      }
+
+      /* AREA TTD */
+      .ttd-wrapper {
+         width: 100%;
+         display: flex;
+         justify-content: space-between;
+         margin-top: 60px;
+      }
+
+      .kolom-ttd {
+         width: 30%;
+         text-align: center;
+         font-size: 15px;
+      }
+
+      .ttd-box {
+         margin-top: 70px;
+         border-top: 1px solid #000;
+         padding-top: 5px;
+         font-size: 15px;
       }
    </style>
 </head>
 
 <body>
 
-   <!-- Header mengikuti style.css -->
-   <?php include 'kopsurat.php'; ?>
+   <div class="container">
 
-   <!-- Judul Surat -->
-   <div class="form-title">KETERANGAN RAWAT INAP</div>
-   <div class="nomor">NOMOR : _____/RITP/TS/<?= date('Y') ?></div>
+      <header>
+         <h1>KLINIK</h1>
+         <h2>TUTUN SEHATI</h2>
+         <p class="alamat">
+            Jl. Pasar Baru Km. 17 Tanjung Morawa A No. 2<br>
+            Telp. 061-7945676, Hp 082165281225<br>
+            Email: tutsunsehati@yahoo.com
+         </p>
+         <hr>
+      </header>
 
-   <!-- Isi Surat -->
-   <div class="content">
-      <p>Yang bertanda tangan di bawah ini :</p>
-      <p><span>Nama</span>: <?= htmlspecialchars($data['doctor_name']) ?></p>
-      <p><span>Jabatan</span>: Dokter Spesialis</p>
+      <h3 class="judul">KETERANGAN RAWAT INAP</h3>
+      <p class="nomor">NOMOR : 01 / RITP / TS / I / 2015</p>
 
-      <p>Dengan ini menyatakan bahwa pasien:</p>
-      <p><span>Nama</span>: <?= htmlspecialchars($data['patient_name']) ?></p>
-      <p><span>Alamat</span>: <?= htmlspecialchars($data['patient_address']) ?></p>
-      <p><span>No. Kartu Peserta BPJS Kesehatan</span>: <?= htmlspecialchars($data['patient_nik'] ?? '-') ?></p>
+      <div class="section">
 
-      <p>Telah mendapat pelayanan kesehatan rawat inap.</p>
+         <p>Yang bertanda tangan dibawah ini :</p>
 
-      <p><span>Tempat</span>: KLINIK RAWAT INAP TUTUN SEHATI</p>
-      <p><span>Tanggal</span>: <?= $tanggalMasuk ?> s/d <?= $tanggalKeluar ?></p>
-      <p><span>Diagnosa</span>: <?= htmlspecialchars($data['diagnosa_awal'] ?? '................................') ?></p>
-      <p><span>Dokter yang merawat</span>: <?= htmlspecialchars($data['doctor_name'] ?? '................................') ?></p>
+         <table class="data">
+            <tr>
+               <td>Nama</td>
+               <td>: dr. Herison Sinaga</td>
+            </tr>
+            <tr>
+               <td>Jabatan</td>
+               <td>: Penanggung Jawab Klinik</td>
+            </tr>
+         </table>
 
-      <p style="margin-top:15px;">Demikian pernyataan ini dibuat dengan sebenarnya untuk dipergunakan dalam pengajuan klaim biaya rawat inap.</p>
+         <p>Dengan ini menyatakan bahwa pasien :</p>
+
+         <table class="data">
+            <tr>
+               <td>Nama</td>
+               <td>: Churui Ferendy</td>
+            </tr>
+            <tr>
+               <td>Alamat</td>
+               <td>: Jl. Saudara</td>
+            </tr>
+            <tr>
+               <td>No. Kartu Peserta BPJS Kesehatan</td>
+               <td>: 000149727745</td>
+            </tr>
+         </table>
+
+         <p>Telah mendapat pelayanan kesehatan rawat inap.</p>
+
+         <table class="data">
+            <tr>
+               <td>Tempat</td>
+               <td>: KLINIK RAWAT INAP TUTUN SEHATI</td>
+            </tr>
+            <tr>
+               <td>Tanggal</td>
+               <td>: 28-08-15 s/d 01-09-15</td>
+            </tr>
+            <tr>
+               <td>Diagnosa</td>
+               <td>: Gerd</td>
+            </tr>
+            <tr>
+               <td>Dokter yang merawat</td>
+               <td>: dr. M. T. Zega</td>
+            </tr>
+         </table>
+
+         <p class="penutup">
+            Demikian pernyataan ini dibuat dengan sebenarnya untuk dipergunakan dalam pengajuan
+            klaim biaya rawat inap.
+         </p>
+
+      </div>
+
+      <div class="ttd-wrapper">
+         <div class="kolom-ttd">
+            <p>PESERTA / KELUARGA PESERTA</p>
+            <div class="ttd-box">( Friedawang )</div>
+         </div>
+
+         <div class="kolom-ttd">
+            <p>Dokter yang merawat</p>
+            <div class="ttd-box">dr. M. T. Zega</div>
+         </div>
+
+         <div class="kolom-ttd">
+            <p>Dokter penanggung jawab</p>
+            <div class="ttd-box">dr. Herison Sinaga</div>
+         </div>
+      </div>
+
    </div>
-
-   <!-- Tanda Tangan -->
-   <table class="footer">
-      <tr>
-         <td>Peserta / Keluarga Peserta</td>
-         <td>Dokter yang Merawat</td>
-         <td>Tanjung Morawa, <?= $tanggalSekarang ?><br>Dokter Penanggung Jawab</td>
-      </tr>
-      <tr class="space">
-         <td></td>
-         <td></td>
-         <td></td>
-      </tr>
-      <tr>
-         <td>( <?= htmlspecialchars($data['patient_name']) ?> )</td>
-         <td>( <?= htmlspecialchars($data['doctor_name'] ?? '................') ?> )</td>
-         <td>( .......................................... )</td>
-      </tr>
-   </table>
 
 </body>
 
