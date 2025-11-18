@@ -13,7 +13,8 @@ $files = [
    "formulir_status_kb.php",
    "formulir_kontrasepsi.php",
    "formulir_peserta_kb.php",
-   "formulir_history_treatment.php"
+   "formulir_history_treatment.php",
+   "formulir_lab.php"
 
 ];
 
