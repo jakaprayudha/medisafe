@@ -19,7 +19,8 @@ $files = [
    "formulir_spgigi.php",
    "formulir_catatan_ibuhamil.php",
    "formulir_trisemester3.php",
-   "formulir_catatan_persalinan.php"
+   "formulir_catatan_persalinan.php",
+   "formulir_partograf.php"
 
 ];
 
