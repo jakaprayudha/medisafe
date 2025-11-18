@@ -11,7 +11,8 @@ $files = [
    "formulir_resume.php",
    "formulir_surat_persetujuan.php",
    "formulir_status_kb.php",
-   "formulir_kontrasepsi.php"
+   "formulir_kontrasepsi.php",
+   "formulir_peserta_kb.php",
 
 ];
 
