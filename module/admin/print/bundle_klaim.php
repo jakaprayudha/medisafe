@@ -23,7 +23,8 @@ $files = [
    "formulir_partograf.php",
    "formulir_skrining_hipotiroid.php",
    "formulir_skl.php",
-   "formulir_usg.php"
+   "formulir_usg.php",
+   "formulir_ekg.php"
 ];
 
 echo "<!DOCTYPE html>
