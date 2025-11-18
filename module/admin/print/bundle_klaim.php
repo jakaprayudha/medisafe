@@ -15,7 +15,8 @@ $files = [
    "formulir_peserta_kb.php",
    "formulir_history_treatment.php",
    "formulir_lab.php",
-   "formulir_cpok.php"
+   "formulir_cpo.php",
+   "formulir_spgigi.php"
 
 ];
 
