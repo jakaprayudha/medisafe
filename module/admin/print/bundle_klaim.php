@@ -1,5 +1,5 @@
 <?php
-// daftar file HTML yang ingin digabung
+
 $files = [
    "formulir_cppt.php",
    "formulir_inout_ranap.php",
@@ -23,23 +23,45 @@ $files = [
    "formulir_partograf.php",
    "formulir_skrining_hipotiroid.php",
    "formulir_skl.php"
-
 ];
 
-// mulai file HTML
-echo "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Gabungan Cetakan</title></head><body>";
+echo "<!DOCTYPE html>
+<html>
+<head>
+<meta charset='UTF-8'>
+<style>
 
-// loop semua file
-foreach ($files as $file) {
-
-   if (file_exists($file)) {
-      echo "<div style='page-break-after: always;'>"; // supaya setiap file terpisah halaman saat print PDF
-      echo file_get_contents($file);
-      echo "</div>";
-   } else {
-      echo "<p style='color:red;'>File tidak ditemukan: $file</p>";
-   }
+.wrapper {
+   page-break-after: always;
+   page-break-inside: avoid;
 }
 
-// tutup HTML
+/* Tinggi IFRAME tergantung orientasi */
+.portrait { height: 1350px; border:0; width:100%; }
+.landscape { height: 950px; border:0; width:100%; }
+
+</style>
+</head>
+<body>
+";
+
+foreach ($files as $file) {
+
+   if (!file_exists($file)) {
+      echo "<p style='color:red'>File tidak ditemukan: $file</p>";
+      continue;
+   }
+
+   // baca isi file untuk deteksi landscape
+   $content = file_get_contents($file);
+   $isLandscape = preg_match('/landscape/i', $content);
+   $class = $isLandscape ? "landscape" : "portrait";
+
+   echo "
+      <div class='wrapper'>
+         <iframe class='$class' src='$file'></iframe>
+      </div>
+   ";
+}
+
 echo "</body></html>";
