@@ -24,7 +24,8 @@ $files = [
    "formulir_skrining_hipotiroid.php",
    "formulir_skl.php",
    "formulir_usg.php",
-   "formulir_ekg.php"
+   "formulir_ekg.php",
+   "formulir_dokumen.php"
 ];
 
 echo "<!DOCTYPE html>
