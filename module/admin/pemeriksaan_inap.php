@@ -180,6 +180,11 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                           <i class="bi bi-file-earmark-text me-2"></i>Upload Buku Kesehatan Ibu dan Anak
                         </a>
                       </li>
+                       <li>
+                        <a class="dropdown-item" href="module/admin/form_kb?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="bi bi-file-earmark-text me-2"></i>Kartu Status Peserta KB
+                        </a>
+                      </li>
                         <li>
                         <a class="dropdown-item" href="module/admin/form_ranap?no=${row.visit_ID}&rm=${row.nomor_rm}">
                           <i class="bi bi-file-earmark-text me-2"></i>Keterangan Rawat Inap
