@@ -1,27 +1,7 @@
 <?php
-$title = 'Pemeriksaan';
-require '../../controller/view.php';
-require '../../database/connect.php';
-require '../../controller/visit/assesmen.php';
+$title = 'Kartu Status Peserta KB';
 $no = $_GET['no'];
 $rm = $_GET['rm'];
-$check = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor LEFT JOIN pasien_surat_ranap ON pasien_surat_ranap.visit_ID = pasien_visit.visit_ID WHERE pasien_visit.visit_ID='$no' AND ms_patient.nomor_rm='$rm'");
-$data = mysqli_fetch_array($check);
-$checkpasien = mysqli_query($koneksi, "SELECT id_patient, nomor_rm FROM ms_patient WHERE nomor_rm='$rm'");
-$datapasien = mysqli_fetch_array($checkpasien);
-
-// Hitung usia jika data ditemukan
-if ($data) {
-  $tanggal_lahir = new DateTime($data['patient_datebirth']);
-  $tanggal_visit = new DateTime($data['visit_date']);
-
-  $usia = $tanggal_lahir->diff($tanggal_visit);
-}
-
-$query = $koneksi->query("SELECT * FROM pasien_resume WHERE nomor_visit = '$no'");
-$dataresume = $query->fetch_assoc();
-// Decode JSON dari kolom 'pemeriksaan'
-@$datarme = json_decode($dataresume['pemeriksaan'], true);
 ?>
 <!doctype html>
 <html lang="en">
@@ -56,127 +36,184 @@ $dataresume = $query->fetch_assoc();
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
                 <div class="card-body p-4">
-                  <input type="hidden" name="nomor_rm" value="<?= $rm ?>">
-                  <input type="hidden" name="visit_ID" value="<?= $no ?>">
-                  <input type="hidden" name="id_patient" id="id_patient" value="<?= $datapasien['id_patient'] ?>">
                   <h4 class="mb-3">Kartu Status Peserta KB</h4>
-                  <!-- Data Pasien -->
+
+                  <!-- IDENTITAS PASIEN -->
                   <div class="row">
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="number_letter" class="form-label">Nomor Kode Faskes KB</label>
-                        <input type="text" id="number_letter" required name="number_letter" class="form-control">
-                      </div>
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Nama Pasien</label>
+                      <input type="text" id="patient_name" class="form-control bg-light" readonly>
                     </div>
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="number_letter" class="form-label">Kode Keluarga Indonesia</label>
-                        <input type="text" id="number_letter" required name="number_letter" class="form-control">
-                      </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Gender</label>
+                      <input type="text" id="patient_gender" class="form-control bg-light" readonly>
                     </div>
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="patient_name" class="form-label">Nama Peserta KB</label>
-                        <input type="text" id="patient_name" name="patient_name" class="form-control ">
-                      </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Usia</label>
+                      <input type="text" id="usia" class="form-control bg-light" readonly>
                     </div>
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="patient_name" class="form-label">Nama Suami/Istri</label>
-                        <input type="text" id="patient_name" name="patient_name" class="form-control ">
-                      </div>
-                    </div>
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="patient_address" class="form-label">Alamat Peserta KB</label>
-                        <input type="text" value="<?= $data['patient_address'] ?>" id="patient_address" name="patient_name" class="form-control ">
-                      </div>
-                    </div>
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="patient_name" class="form-label">Penggunaan Asuransi</label>
-                        <input type="text" id="patient_name" name="patient_name" class="form-control ">
-                      </div>
-                    </div>
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="usia" class="form-label">Umur</label>
-                        <input type="text" value="<?php echo  $usia->y . " tahun " . $usia->m . " bulan " . $usia->d . " hari"; ?>" id="usia" name="usia" class="form-control ">
-                      </div>
-                    </div>
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="patient_name" class="form-label">Pendidikan Suami dan Istri</label>
-                        <input type="text" id="patient_name" name="patient_name" class="form-control ">
-                      </div>
-                    </div>
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="patient_name" class="form-label">Pekerjaan Suami dan Istri</label>
-                        <input type="text" id="patient_name" name="patient_name" class="form-control ">
-                      </div>
-                    </div>
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="patient_name" class="form-label">Jumlah Anak</label>
-                        <input type="text" id="patient_name" name="patient_name" class="form-control ">
-                      </div>
-                    </div>
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="patient_name" class="form-label">Status Peserta KB</label>
-                        <input type="text" id="patient_name" name="patient_name" class="form-control ">
-                      </div>
-                    </div>
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="patient_name" class="form-label">Umur Anak Terakhir</label>
-                        <input type="text" id="patient_name" name="patient_name" class="form-control ">
-                      </div>
-                    </div>
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="patient_name" class="form-label">Alat/Obat/Cara KB Terakhir</label>
-                        <input type="text" id="patient_name" name="patient_name" class="form-control ">
-                      </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Dokter</label>
+                      <input type="text" id="doctor_name" class="form-control bg-light" readonly>
                     </div>
                   </div>
-                  <div class="mb-3">
-                    <div class="alert alert-danger border-2 shadow-sm" role="alert"
-                      style="background-color:#fff5f5; border-color:#dc3545;">
-                      <div class="d-flex align-items-start">
-                        <div class="me-3">
-                          <iconify-icon icon="streamline-ultimate:cash-payment-bills-bold"
-                            style="font-size: 2rem; color:#dc3545;"></iconify-icon>
-                        </div>
-                        <div>
-                          <h6 class="fw-bold text-danger mb-2">Surat Keterangan Rawat Inap</h6>
-                          <p class="mb-0" style="font-size: 0.9rem; color:#333; line-height:1.5;">
-                            Dengan ini menerangkan bahwa pasien di bawah ini telah menjalani perawatan inap di
-                            <strong>Rumah Sakit</strong> kami. Surat ini diberikan sebagai bukti resmi bahwa pasien
-                            tersebut sedang/telah mendapatkan pelayanan medis sesuai dengan ketentuan yang berlaku.
-                            <br><br>
-                            Surat keterangan ini dapat digunakan untuk keperluan administrasi, klaim jaminan
-                            <strong>BPJS Kesehatan</strong>, maupun kebutuhan resmi lainnya.
-                          </p>
-                        </div>
-                      </div>
+
+                  <hr>
+
+                  <!-- FORM KARTU STATUS KB -->
+                  <div class="row">
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Nomor kode Faskes KB</label>
+                      <input type="text" id="faskes_kode" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Kode Keluarga Indonesia</label>
+                      <input type="text" id="kode_keluarga" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Nama Suami</label>
+                      <input type="text" id="nama_suami" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Pendidikan Suami</label>
+                      <input type="text" id="pendidikan_suami" class="form-control">
+                    </div>
+
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Pekerjaan Suami</label>
+                      <input type="text" id="pekerjaan_suami" class="form-control">
+                    </div>
+
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Anak Hidup (Laki-laki)</label>
+                      <input type="number" id="anak_lk" class="form-control" min="0">
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Anak Hidup (Perempuan)</label>
+                      <input type="number" id="anak_pr" class="form-control" min="0">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Umur Anak Terakhir</label>
+                      <input type="text" id="umur_anak_terakhir" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">KB Terakhir</label>
+                      <input type="text" id="kb_terakhir" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Haid Terakhir</label>
+                      <input type="date" required id="haid_terakhir" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Hamil</label>
+                      <select name="hamil" id="hamil" class="form-select">
+                        <option value="Tidak">Tidak</option>
+                        <option value="Ya">Ya</option>
+                      </select>
+                    </div>
+
+                    <div class="col-2 mb-3">
+                      <label class="form-label">G (Gravida)</label>
+                      <input type="number" id="gpa_g" class="form-control" min="0">
+                    </div>
+
+                    <div class="col-2 mb-3">
+                      <label class="form-label">P (Partus)</label>
+                      <input type="number" id="gpa_p" class="form-control" min="0">
+                    </div>
+
+                    <div class="col-2 mb-3">
+                      <label class="form-label">A (Abortus)</label>
+                      <input type="number" id="gpa_a" class="form-control" min="0">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Menyusui</label>
+                      <select name="menyusui" id="menyusui" class="form-select">
+                        <option value="Tidak">Tidak</option>
+                        <option value="Ya">Ya</option>
+                      </select>
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Riwayat Penyakit</label>
+                      <input type="text" id="riwayat_sakit" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Keaadaan Umum</label>
+                      <input type="text" id="keadaan_umum" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Berat Badan</label>
+                      <input type="number" id="berat_badan" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Tekanan Darah (mmHg)</label>
+                      <input type="text" id="tekanan_darah" class="form-control" maxlength="7" placeholder="120/80">
+                    </div>
+
+                    <script>
+                      document.getElementById('tekanan_darah').addEventListener('input', function(e) {
+                        let v = e.target.value.replace(/[^0-9]/g, ''); // hanya angka
+                        if (v.length > 3) {
+                          e.target.value = v.slice(0, 3) + "/" + v.slice(3, 5);
+                        } else {
+                          e.target.value = v;
+                        }
+                      });
+                    </script>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Pemeriksaan Tambahan</label>
+                      <input type="text" id="pemeriksaan_tambahan" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Metode KB Yang Dipilih</label>
+                      <input type="text" id="metode_pilihan" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Tanggal Dilayani</label>
+                      <input type="date" id="tgl_dilayani" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Tanggal Dicabut</label>
+                      <input type="date" id="tgl_dicabut" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Penanggung Jawab</label>
+                      <input type="text" id="penanggung_jawab" class="form-control">
                     </div>
                   </div>
-                  <div class="text-end mt-2">
-                    <a href="module/admin/print/formulir_keterangan_ranap.php?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
+
+                  <div class="text-end mt-3">
+                    <a href="module/admin/print/formulir_status_kb?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
                       <button class="btn btn-outline-primary">
-                        <iconify-icon icon="mdi:printer-outline"></iconify-icon>
-                        Cetak
+                        <iconify-icon icon="mdi:printer-outline"></iconify-icon> Cetak
                       </button>
                     </a>
-                    <button class="btn btn-outline-danger" id="openModal">
-                      <iconify-icon icon="mdi:check-decagram-outline"></iconify-icon>
-                      Tanda Tangan Pasien/Keluarga
-                    </button>
-                    <button class="btn btn-primary">
-                      <iconify-icon icon="mdi:save"></iconify-icon>
-                      Simpan
+                    <button id="openModal" class="btn btn-primary">
+                      <iconify-icon icon="mdi:content-save-outline"></iconify-icon> Simpan
                     </button>
                   </div>
                 </div>
@@ -187,129 +224,119 @@ $dataresume = $query->fetch_assoc();
       </div>
     </div>
   </div>
-  <!-- Modal Tanda Tangan -->
-  <div class="modal fade" id="modalTtd" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content border-0 shadow">
-        <div class="modal-header bg-danger text-white">
-          <h6 class="modal-title">Tanda Tangan Pasien</h6>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body text-center">
-          <p class="text-muted mb-2">Silakan tanda tangan di area berikut:</p>
-          <canvas id="signature-pad" style="border: 1px dashed #ccc; width: 100%; height: 200px; border-radius: 8px;"></canvas>
-        </div>
-        <div class="modal-footer d-flex justify-content-between">
-          <button type="button" class="btn btn-light" id="clear-signature">Hapus</button>
-          <button type="button" class="btn btn-primary" id="save-signature">Simpan Tanda Tangan</button>
-        </div>
-      </div>
-    </div>
-  </div>
+
   <?php
   require 'library.php';
   ?>
 </body>
-<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const modal = new bootstrap.Modal(document.getElementById("modalTtd"));
-    const openModalBtn = document.getElementById("openModal");
-    const canvas = document.getElementById("signature-pad");
-    const clearBtn = document.getElementById("clear-signature");
-    const saveBtn = document.getElementById("save-signature");
+  function autoSelect(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
 
-    // Setup SignaturePad
-    const signaturePad = new SignaturePad(canvas, {
-      backgroundColor: "rgba(255, 255, 255, 0)",
-      penColor: "rgb(220, 53, 69)" // warna merah BPJS
-    });
+    const val = (value ?? "").toString().toLowerCase();
 
-    // Resize canvas sesuai modal
-    function resizeCanvas() {
-      const ratio = Math.max(window.devicePixelRatio || 1, 1);
-      canvas.width = canvas.offsetWidth * ratio;
-      canvas.height = canvas.offsetHeight * ratio;
-      canvas.getContext("2d").scale(ratio, ratio);
-      signaturePad.clear();
-    }
-
-    window.addEventListener("resize", resizeCanvas);
-    modal._element.addEventListener("shown.bs.modal", resizeCanvas);
-
-    // Buka modal
-    openModalBtn.addEventListener("click", function() {
-      modal.show();
-    });
-
-    // Hapus tanda tangan
-    clearBtn.addEventListener("click", function() {
-      signaturePad.clear();
-    });
-
-    // Simpan tanda tangan
-    saveBtn.addEventListener("click", function() {
-      if (signaturePad.isEmpty()) {
-        Swal.fire({
-          icon: "warning",
-          title: "Belum ada tanda tangan!",
-          text: "Silakan isi tanda tangan terlebih dahulu.",
-          confirmButtonColor: "#dc3545"
-        });
+    for (const opt of el.options) {
+      if (opt.value.toLowerCase() === val) {
+        el.value = opt.value;
         return;
       }
+    }
+  }
 
-      const dataUrl = signaturePad.toDataURL("image/png");
+  document.addEventListener("DOMContentLoaded", () => {
 
-      // Kirim ke server
-      fetch("controller/visit/saveSignature.php", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            nomor_visit: "<?= $no ?>",
-            nomor_rm: "<?= $rm ?>",
-            id_patient: "<?= $data['id_patient'] ?>",
-            ttd: dataUrl
-          })
-        })
-        .then(res => res.json())
-        .then(result => {
-          if (result.status === "success") {
-            Swal.fire({
-              icon: "success",
-              title: "Tanda Tangan Tersimpan!",
-              text: "Terima kasih, pernyataan Anda telah disetujui.",
-              confirmButtonColor: "#198754",
-              timer: 2000,
-              showConfirmButton: false
-            });
-            setTimeout(() => modal.hide(), 2000);
+    const url = new URLSearchParams(window.location.search);
+    const no = url.get("no");
+    const rm = url.get("rm");
+
+    if (!no || !rm) return;
+
+    // ===== GET DATA PASIEN + INAP =====
+    fetch(`controller/ranap/getFormStatusKB.php?no=${no}&rm=${rm}`)
+      .then(r => r.json())
+      .then(res => {
+
+        if (!res || res.status !== "success") return;
+
+        const p = res.pasien ?? {};
+        const i = res.statuskb ?? {};
+
+        // Isi identitas pasien (aman walaupun null)
+        if (document.getElementById("patient_name"))
+          document.getElementById("patient_name").value = p.nama_pasien ?? "";
+
+        if (document.getElementById("patient_gender"))
+          document.getElementById("patient_gender").value = p.jk ?? "";
+
+        if (document.getElementById("doctor_name"))
+          document.getElementById("doctor_name").value = p.doctor_name ?? "";
+
+        if (document.getElementById("usia"))
+          document.getElementById("usia").value = p.usia ?? "";
+
+        // ===== EDIT MODE (Jika i ada) =====
+        for (let key in i) {
+          const el = document.getElementById(key);
+          if (!el) continue;
+
+          if (el.tagName === "SELECT") {
+            autoSelect(key, i[key]);
           } else {
-            Swal.fire({
-              icon: "error",
-              title: "Gagal Menyimpan!",
-              text: "Terjadi kesalahan saat menyimpan tanda tangan.",
-              confirmButtonColor: "#dc3545"
-            });
+            el.value = i[key] ?? "";
           }
-        })
-        .catch(err => {
-          console.error(err);
-          Swal.fire({
-            icon: "error",
-            title: "Kesalahan Server",
-            text: "Tidak dapat terhubung ke server.",
-            confirmButtonColor: "#dc3545"
-          });
-        });
+        }
+
+      })
+      .catch(err => console.error("ERR GET:", err));
+
+  });
+
+  // =============== SAVE DATA RANAP ===============
+  document.getElementById("openModal").addEventListener("click", () => {
+
+    const fields = [
+      "faskes_kode", "kode_keluarga", "nama_suami", "pendidikan_suami",
+      "pekerjaan_suami", "anak_lk", "anak_pr", "umur_anak_terakhir", "kb_terakhir",
+      "haid_terakhir", "hamil", "gpa_g", "gpa_p", "gpa_a", "menyusui", "riwayat_sakit", "keadaan_umum",
+      "berat_badan", "tekanan_darah", "pemeriksaan_tambahan", "metode_pilihan",
+      "tgl_dilayani", "tgl_dicabut", "penanggung_jawab"
+    ];
+
+    let data = {
+      visit_ID: "<?= $_GET['no'] ?>",
+      nomor_rm: "<?= $_GET['rm'] ?>",
+    };
+
+    // Auto ambil semua fields (aman walau ada yang tidak ditemukan)
+    fields.forEach(f => {
+      let el = document.getElementById(f);
+      data[f] = el ? (el.value ?? "") : "";
     });
+
+    fetch("controller/ranap/saveStatusKB.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      })
+      .then(r => r.json())
+      .then(res => {
+        Swal.fire({
+          icon: res.status,
+          title: res.status === "success" ? "Berhasil" : "Gagal",
+          text: res.message
+        });
+      })
+      .catch(err => {
+        alert("Terjadi error saat menyimpan!");
+        console.error(err);
+      });
 
 
 
   });
 </script>
-
 
 </html>

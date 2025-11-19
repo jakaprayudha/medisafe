@@ -76,7 +76,7 @@
    <table>
       <tr>
          <td><strong>III. Nama Peserta KB</strong><br><span id="kb_nama_istri"></span></td>
-         <td><strong>IV. Tgl Lahir / Umur Istri</strong><br><span id="kb_tgllahir"></span></td>
+         <td><strong>IV. Tgl Lahir / Umur Istri</strong><br><span id="kb_tgllahir"></span> Usia : <span id="kb_usia"></span></td>
       </tr>
 
       <tr>
@@ -174,14 +174,15 @@
 
             set("kb_faskes", d.faskes_kode);
             set("kb_keluarga", d.kode_keluarga);
-            set("kb_nama_istri", d.nama_istri);
-            set("kb_tgllahir", d.tgl_lahir_istri);
+            set("kb_nama_istri", d.patient_name);
+            set("kb_tgllahir", d.patient_datebirth);
+            set("kb_usia", d.usia_format); // ⬅️ ini tambahan
             set("kb_nama_suami", d.nama_suami);
 
             set("kb_pendidikan_suami", d.pendidikan_suami);
             set("kb_pendidikan_istri", d.pendidikan_istri);
 
-            set("kb_alamat", d.alamat);
+            set("kb_alamat", d.patient_address);
             set("kb_pekerjaan_suami", d.pekerjaan_suami);
             set("kb_pekerjaan_istri", d.pekerjaan_istri);
 
