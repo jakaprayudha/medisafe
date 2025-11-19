@@ -1,5 +1,5 @@
 <?php
-$title = 'Dokumentasi Perawatan';
+$title = 'Dokumen Pasien';
 require '../../database/connect.php';
 require '../../controller/view.php';
 $no = $_GET['no'];
@@ -50,7 +50,7 @@ $datapatient = mysqli_fetch_array($patient);
               <div class="card w-100">
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Dokumentasi Perawatan</h5>
+                    <h5 class="card-title fw-semibold">Dokumen Pasien</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
                       <a href="module/admin/print/formulir_dokumen?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
@@ -64,6 +64,7 @@ $datapatient = mysqli_fetch_array($patient);
                       <thead>
                         <tr>
                           <th class="text-dark fw-normal">Tanggal</th>
+                          <th>Kategori</th>
                           <th>Dokumentasi</th>
                           <th class="text-center">Actions</th>
                         </tr>
@@ -109,8 +110,23 @@ $datapatient = mysqli_fetch_array($patient);
           </div>
           <div class="col-12">
             <div class="mb-3">
+              <label for="pilih_jenis" class="form-label">
+                Tanggal <span class="text-danger">*</span>
+              </label>
+              <select name="pilih_jenis" id="pilih_jenis" class="form-select" required>
+                <option value="KTP">KTP</option>
+                <option value="KK">KK</option>
+                <option value="AKTA_KELAHIRAN">AKTA KELAHIRAN</option>
+                <option value="AKTA_NIKAH">AKTA NIKAH</option>
+                <option value="KARTU_BPJS">KARTU BPJS</option>
+                <option value="SURAT_RUJUKAN">SURAT RUJUKAN</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="mb-3">
               <label for="foto_path" class="form-label">
-                File Dokumentasi Foto <span class="text-danger">*</span>
+                File Dokumen <span class="text-danger">*</span>
               </label>
               <input type="file" name="foto_path" class="form-control" id="foto_path" required>
             </div>
@@ -127,7 +143,7 @@ $datapatient = mysqli_fetch_array($patient);
 $id_patient = $datapatient['id_patient'];
 ?>
 <script>
-  const apiUrl = 'controller/ranap/dokumentasiPerawatan?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>';
+  const apiUrl = 'controller/ranap/dokumenPasien?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>';
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
@@ -158,6 +174,7 @@ $id_patient = $datapatient['id_patient'];
                 </div>
               `,
             tanggal: row.tgl_upload ?? "-",
+            jenis_dokumen: row.jenis_dokumen ?? "-",
             foto_path: row.foto_path ?
               `<img src="${row.foto_path}" style="max-width:80px">` : "-",
           }));
@@ -165,6 +182,10 @@ $id_patient = $datapatient['id_patient'];
       },
       columns: [{
           data: "tanggal",
+          className: "text-wrap"
+        },
+        {
+          data: "jenis_dokumen",
           className: "text-wrap"
         },
         {
