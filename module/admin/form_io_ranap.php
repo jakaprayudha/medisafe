@@ -1,0 +1,318 @@
+<?php
+$title = 'Form SEP (Surat Eligibilitas Peserta)';
+$no = $_GET['no'];
+$rm = $_GET['rm'];
+?>
+<!doctype html>
+<html lang="en">
+
+<head>
+  <base href="../../">
+  <?php
+  require '../../assets/template/head.php';
+  ?>
+
+</head>
+
+<body>
+  <!--  Body Wrapper -->
+  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
+    data-sidebar-position="fixed" data-header-position="fixed">
+    <!-- Sidebar Start -->
+    <?php
+    require 'sidebar.php';
+    ?>
+    <!--  Sidebar End -->
+    <!--  Main wrapper -->
+    <div class="body-wrapper">
+      <!--  Header Start -->
+      <?php
+      require 'navbar.php';
+      ?>
+      <!--  Header End -->
+      <div class="body-wrapper-inner">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-lg-12 d-flex align-items-stretch">
+              <div class="card w-100">
+                <div class="card-body p-4">
+                  <h4 class="mb-3">Form Masuk dan Keluar Pasien Rawat Inap</h4>
+
+                  <!-- IDENTITAS PASIEN -->
+                  <div class="row">
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Nama Pasien</label>
+                      <input type="text" id="patient_name" class="form-control bg-light" readonly>
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Gender</label>
+                      <input type="text" id="patient_gender" class="form-control bg-light" readonly>
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Usia</label>
+                      <input type="text" id="usia" class="form-control bg-light" readonly>
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Dokter</label>
+                      <input type="text" id="doctor_name" class="form-control bg-light" readonly>
+                    </div>
+                  </div>
+
+                  <hr>
+
+                  <!-- FORM RAWAT INAP -->
+                  <div class="row">
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Tanggal Masuk</label>
+                      <input type="date" id="tanggal_masuk" class="form-control">
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Jam Masuk</label>
+                      <input type="time" id="jam_masuk" class="form-control">
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Status Perkawinan</label>
+                      <select id="status_perkawinan" class="form-control">
+                        <option value="">-- Pilih --</option>
+                        <option>Kawin</option>
+                        <option>Belum Kawin</option>
+                        <option>Cerai</option>
+                      </select>
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Penanggung Jawab</label>
+                      <input type="text" id="penanggung_jawab" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Alamat Penanggung Jawab</label>
+                      <textarea id="alamat_pj" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Tanggal Pindah</label>
+                      <input type="date" id="tanggal_pindah" class="form-control">
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Jam Pindah</label>
+                      <input type="time" id="jam_pindah" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Ruang Rawat / Kelas</label>
+                      <input type="text" id="ruang_rawat" class="form-control">
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Tanggal Keluar</label>
+                      <input type="date" id="tanggal_keluar" class="form-control">
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Jam Keluar</label>
+                      <input type="time" id="jam_keluar" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Diagnosa Medik</label>
+                      <input type="text" id="diagnosa_medik" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Diagnosa Utama</label>
+                      <input type="text" id="diagnosa_utama" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Diagnosa Komplikasi</label>
+                      <input type="text" id="diagnosa_komplikasi" class="form-control">
+                    </div>
+
+                    <div class="col-12 mb-3">
+                      <label class="form-label">Penyebab Cedera / Keracunan</label>
+                      <textarea id="penyebab_keracunan" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Nama Operasi / Tindakan</label>
+                      <input type="text" id="nama_operasi" class="form-control">
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Infeksi Nosokomial</label>
+                      <select id="infeksi_nosokomial" class="form-control">
+                        <option value="">-- Pilih --</option>
+                        <option>Tidak</option>
+                        <option>Ya</option>
+                      </select>
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Penyebab Infeksi</label>
+                      <input type="text" id="penyebab_infeksi" class="form-control">
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Alergi</label>
+                      <input type="text" id="alergi" class="form-control">
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Radio Therapy</label>
+                      <input type="text" id="radioterapi" class="form-control">
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Imunisasi</label>
+                      <input type="text" id="imunisasi" class="form-control">
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Transfusi Darah</label>
+                      <input type="text" id="transfusi" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Keadaan Keluar</label>
+                      <input type="text" id="keadaan_keluar" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Cara Keluar</label>
+                      <input type="text" id="cara_keluar" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Dokter Merawat</label>
+                      <input type="text" id="dokter_merawat" class="form-control">
+                    </div>
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Lama Dirawat</label>
+                      <input type="number" id="lama_dirawat" class="form-control">
+                    </div>
+
+                  </div>
+
+                  <div class="text-end mt-3">
+                    <a href="module/admin/print/formulir_inout_ranap?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                      <button class="btn btn-outline-primary">
+                        <iconify-icon icon="mdi:printer-outline"></iconify-icon> Cetak
+                      </button>
+                    </a>
+                    <button id="openModal" class="btn btn-primary">
+                      <iconify-icon icon="mdi:content-save-outline"></iconify-icon> Simpan
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <?php
+  require 'library.php';
+  ?>
+</body>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+
+    const url = new URLSearchParams(window.location.search);
+    const no = url.get("no");
+    const rm = url.get("rm");
+
+    if (!no || !rm) return;
+
+    // ===== GET DATA PASIEN + INAP =====
+    fetch(`controller/ranap/getFormInap.php?no=${no}&rm=${rm}`)
+      .then(r => r.json())
+      .then(res => {
+
+        if (!res || res.status !== "success") return;
+
+        const p = res.pasien ?? {};
+        const i = res.inap ?? {};
+
+        // Isi identitas pasien (aman walaupun null)
+        if (document.getElementById("patient_name"))
+          document.getElementById("patient_name").value = p.nama_pasien ?? "";
+
+        if (document.getElementById("patient_gender"))
+          document.getElementById("patient_gender").value = p.jk ?? "";
+
+        if (document.getElementById("doctor_name"))
+          document.getElementById("doctor_name").value = p.doctor_name ?? "";
+
+        if (document.getElementById("usia"))
+          document.getElementById("usia").value = p.usia ?? "";
+
+        // ===== EDIT MODE (Jika i ada) =====
+        for (let key in i) {
+          if (document.getElementById(key)) {
+            document.getElementById(key).value = i[key] ?? "";
+          }
+        }
+
+      })
+      .catch(err => console.error("ERR GET:", err));
+
+  });
+
+  // =============== SAVE DATA RANAP ===============
+  document.getElementById("openModal").addEventListener("click", () => {
+
+    const fields = [
+      "tanggal_masuk", "jam_masuk", "status_perkawinan", "penanggung_jawab",
+      "alamat_pj", "tanggal_pindah", "jam_pindah", "ruang_rawat",
+      "tanggal_keluar", "jam_keluar", "diagnosa_medik", "lama_dirawat",
+      "diagnosa_utama", "diagnosa_komplikasi", "penyebab_keracunan",
+      "nama_operasi", "infeksi_nosokomial", "penyebab_infeksi", "alergi",
+      "radioterapi", "imunisasi", "transfusi", "keadaan_keluar",
+      "cara_keluar", "dokter_merawat"
+    ];
+
+    let data = {
+      visit_ID: "<?= $_GET['no'] ?>",
+      nomor_rm: "<?= $_GET['rm'] ?>",
+    };
+
+    // Auto ambil semua fields (aman walau ada yang tidak ditemukan)
+    fields.forEach(f => {
+      let el = document.getElementById(f);
+      data[f] = el ? (el.value ?? "") : "";
+    });
+
+    fetch("controller/ranap/saveInap.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      })
+      .then(r => r.json())
+      .then(res => {
+        Swal.fire({
+          icon: res.status,
+          title: res.status === "success" ? "Berhasil" : "Gagal",
+          text: res.message
+        });
+      })
+      .catch(err => {
+        alert("Terjadi error saat menyimpan!");
+        console.error(err);
+      });
+
+  });
+</script>
+
+</html>

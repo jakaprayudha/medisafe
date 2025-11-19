@@ -185,6 +185,11 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                           <i class="bi bi-file-earmark-text me-2"></i>CPPT
                         </a>
                       </li>
+                         <li>
+                        <a class="dropdown-item" href="module/admin/form_io_ranap?no=${row.visit_ID}&rm=${row.nomor_rm}" >
+                          <i class="bi bi-file-earmark-text me-2"></i>Lembar Masuk dan keluar Rawat Inap
+                        </a>
+                      </li>
                       <li>
                         <a class="dropdown-item" href="module/admin/form_persalinan?no=${row.visit_ID}&rm=${row.nomor_rm}">
                           <i class="bi bi-file-earmark-text me-2"></i>Rekapitulasi Pelayanan Persalinan
