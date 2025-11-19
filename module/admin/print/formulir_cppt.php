@@ -63,15 +63,15 @@
       <!-- ================= HEADER PASIEN ================= -->
       <table>
          <tr class="header">
-            <td>Nama : <span id="p_nama"></span></td>
-            <td>No. RM : <span id="p_rm"></span></td>
-            <td>Ruang : <span id="p_ruang"></span></td>
+            <td>Nama : <span id="p_nama_cppt"></span></td>
+            <td>No. RM : <span id="p_rm_cppt"></span></td>
+            <td>Ruang : <span id="p_ruang_cppt"></span></td>
          </tr>
          <tr class="header">
-            <td>Umur : <span id="p_umur"></span></td>
-            <td>JK : <span id="p_jk"></span></td>
-            <td>Tanggal : <span id="p_tanggal"></span></td>
-            <td>Kelas : <span id="p_kelas"></span></td>
+            <td>Umur : <span id="p_umur_cppt"></span></td>
+            <td>JK : <span id="p_jk_cppt"></span></td>
+            <td>Tanggal : <span id="p_tanggal_cppt"></span></td>
+            <td>Kelas : <span id="p_cppt"></span></td>
          </tr>
       </table>
 
@@ -114,13 +114,13 @@
             const today = new Date();
             let age = today.getFullYear() - birth.getFullYear();
 
-            document.getElementById("p_nama").innerText = data.patient_name;
-            document.getElementById("p_rm").innerText = data.nomor_rm;
-            document.getElementById("p_ruang").innerText = data.source_hub || "-";
-            document.getElementById("p_umur").innerText = age + " tahun";
-            document.getElementById("p_jk").innerText = data.patient_gender;
-            document.getElementById("p_tanggal").innerText = today.toISOString().substring(0, 10);
-            document.getElementById("p_kelas").innerText = data.patient_status == "1" ? "Reguler" : "-";
+            document.getElementById("p_nama_cppt").innerText = data.patient_name;
+            document.getElementById("p_rm_cppt").innerText = data.nomor_rm;
+            document.getElementById("p_ruang_cppt").innerText = data.source_hub || "-";
+            document.getElementById("p_umur_cppt").innerText = age + " tahun";
+            document.getElementById("p_jk_cppt").innerText = data.patient_gender;
+            document.getElementById("p_tanggal_cppt").innerText = today.toISOString().substring(0, 10);
+            document.getElementById("p_cppt").innerText = data.patient_status == "1" ? "Reguler" : "-";
          });
 
       // ======================

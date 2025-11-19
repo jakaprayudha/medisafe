@@ -180,6 +180,11 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                           <i class="bi bi-file-earmark-text me-2"></i>Foto Pasien
                         </a>
                       </li>
+                         <li>
+                        <a class="dropdown-item" href="module/admin/cppt?no=${row.visit_ID}&rm=${row.nomor_rm}" >
+                          <i class="bi bi-file-earmark-text me-2"></i>CPPT
+                        </a>
+                      </li>
                       <li>
                         <a class="dropdown-item" href="module/admin/form_persalinan?no=${row.visit_ID}&rm=${row.nomor_rm}">
                           <i class="bi bi-file-earmark-text me-2"></i>Rekapitulasi Pelayanan Persalinan
@@ -215,11 +220,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                           <i class="bi bi-file-earmark-text me-2"></i>Perkembangan Pasien & Instruksi Dokter
                         </a>
                       </li>
-                       <li>
-                        <a class="dropdown-item" href="module/admin/print/formulir_cppt?no=${row.visit_ID}&rm=${row.nomor_rm}" target="_blank">
-                          <i class="bi bi-file-earmark-text me-2"></i>CPPT
-                        </a>
-                      </li>
+                    
                         <li>
                         <a class="dropdown-item" href="module/admin/print/formulir_resume?no=${row.visit_ID}&rm=${row.nomor_rm}" target="_blank">
                           <i class="bi bi-file-earmark-text me-2"></i>Resume Medis
