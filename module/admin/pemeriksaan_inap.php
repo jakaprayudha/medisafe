@@ -156,6 +156,16 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                   </button>
                   <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="z-index:1055; min-width: 180px;">
                     <li>
+                      <a class="dropdown-item" target="_blank" href="module/admin/print/bundle_klaim?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
+                        <i class="bi bi-clipboard2-pulse me-2"></i>Preview RME Klaim
+                      </a>
+                    </li>
+                       <li>
+                        <a class="dropdown-item" href="module/admin/form_sep?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="bi bi-file-earmark-text me-2"></i>SEP (Surat Eligibilitas Peserta) 
+                        </a>
+                      </li>
+                    <li>
                       <a class="dropdown-item" href="module/admin/rme_inap?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
                         <i class="bi bi-clipboard2-pulse me-2"></i>Pemeriksaan
                       </a>

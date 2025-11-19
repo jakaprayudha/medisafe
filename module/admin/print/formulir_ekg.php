@@ -13,6 +13,47 @@
          background: #fff;
       }
 
+      /* ============================
+         QR CODE (Clean No Conflict)
+      ============================ */
+      /* Reset total biar ga ketarik style lain */
+      .ekgprint-qr-wrap,
+      .ekgprint-qr-wrap * {
+         all: unset;
+      }
+
+      .ekgprint-qr-wrap {
+         position: absolute;
+         top: 20mm;
+         right: 15mm;
+         width: 120px;
+         height: 120px;
+         display: none;
+      }
+
+      .ekgprint-qr-img {
+         width: 120px;
+         height: 120px;
+         object-fit: cover;
+         display: none;
+      }
+
+      /* kalau hide → hilang total */
+      .ekgprint-q-hide {
+         display: none !important;
+         visibility: hidden !important;
+         opacity: 0 !important;
+         width: 0 !important;
+         height: 0 !important;
+         overflow: hidden !important;
+         margin: 0 !important;
+         padding: 0 !important;
+         border: none !important;
+      }
+
+      /* ============================
+         KONTEN EKG
+      ============================ */
       .ekgprint-kop {
          text-align: center;
          margin-bottom: 5px;
@@ -110,22 +151,6 @@
          margin-bottom: -10px;
       }
 
-      /* QR CODE */
-      .ekgprint-qr-wrap {
-         width: 120px;
-         height: 120px;
-         position: absolute;
-         top: 20mm;
-         right: 15mm;
-         border: 1px solid #000;
-      }
-
-      .ekgprint-qr-img {
-         width: 100%;
-         height: 100%;
-         object-fit: cover;
-      }
-
       @media print {
          .no-print {
             display: none;
@@ -133,9 +158,9 @@
       }
    </style>
 
-   <!-- QR Code -->
-   <div class="ekgprint-qr-wrap">
-      <img id="ekgprint_qr" class="ekgprint-qr-img" src="">
+   <!-- QR Code (Auto Hide) -->
+   <div id="ekgprint_qr_wrap" class="ekgprint-qr-wrap ekgprint-q-hide">
+      <img id="ekgprint_qr" class="ekgprint-qr-img">
    </div>
 
    <!-- KOP -->
@@ -167,11 +192,11 @@
 
    <!-- GAMBAR EKG -->
    <div class="ekgprint-box">
-      <img id="ekgprint_img1" class="ekgprint-img" src="" alt="EKG 1">
+      <img id="ekgprint_img1" class="ekgprint-img">
    </div>
 
    <div class="ekgprint-box">
-      <img id="ekgprint_img2" class="ekgprint-img" src="" alt="EKG 2">
+      <img id="ekgprint_img2" class="ekgprint-img">
    </div>
 
    <!-- CATATAN -->
@@ -181,7 +206,7 @@
    <!-- FOOTER -->
    <div class="ekgprint-footer">
       Dokter Pemeriksa:<br><br>
-      <img id="ekgprint_ttd" class="ekgprint-ttd" src="">
+      <img id="ekgprint_ttd" class="ekgprint-ttd">
       <br>
       <b id="ekgprint_dokter"></b>
    </div>
@@ -217,27 +242,39 @@
             set("ekgprint_usia", d.usia_pasien);
             set("ekgprint_tanggal", d.tanggal_pemeriksaan);
 
-            // GAMBAR
-            if (d.ekg1)
-               document.getElementById("ekgprint_img1").src = base + d.ekg1;
-
-            if (d.ekg2)
-               document.getElementById("ekgprint_img2").src = base + d.ekg2;
+            // GAMBAR EKG
+            if (d.ekg1) document.getElementById("ekgprint_img1").src = base + d.ekg1;
+            if (d.ekg2) document.getElementById("ekgprint_img2").src = base + d.ekg2;
 
             // CATATAN
             document.getElementById("ekgprint_catatan").textContent = d.interpretasi ?? "";
 
             // TTD
-            if (d.ttd_dokter)
-               document.getElementById("ekgprint_ttd").src = base + d.ttd_dokter;
+            if (d.ttd_dokter) document.getElementById("ekgprint_ttd").src = base + d.ttd_dokter;
 
             set("ekgprint_dokter", d.dokter);
 
-            // QR CODE
-            if (d.qr_code)
-               document.getElementById("ekgprint_qr").src = base + d.qr_code;
+            // QR CODE FIX
+            const qrWrap = document.getElementById("ekgprint_qr_wrap");
+            const qrImg = document.getElementById("ekgprint_qr");
+
+            if (d.qr_code) {
+
+               qrImg.onload = () => {
+                  qrWrap.classList.remove("ekgprint-q-hide");
+                  qrImg.style.display = "block";
+               };
+
+               qrImg.onerror = () => {
+                  qrWrap.classList.add("ekgprint-q-hide");
+               };
+
+               qrImg.src = base + d.qr_code;
+
+            } else {
+               qrWrap.classList.add("ekgprint-q-hide");
+            }
 
          });
-
    });
 </script>

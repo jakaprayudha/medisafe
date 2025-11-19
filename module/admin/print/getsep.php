@@ -1,12 +1,11 @@
 <?php
 require '../../../database/connect.php';
 
-$visit = $_GET['visit'] ?? '';
+$visit = $_GET['no'] ?? '';
 $rm    = $_GET['rm'] ?? '';
 
-$q = $koneksi->query("SELECT * FROM pasien_visit pv INNER JOIN ms_patient mp ON pv.id_patient = mp.id_patient
-   WHERE pv.visit_ID = '$visit' AND mp.nomor_rm = '$rm'
-");
+$q = $koneksi->query("SELECT * FROM pasien_sep pv 
+   WHERE nomor_rm = '$rm' AND visit_ID = '$visit' LIMIT 1");
 
 $data = [];
 while ($row = $q->fetch_assoc()) {

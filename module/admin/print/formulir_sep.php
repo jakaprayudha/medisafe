@@ -2,38 +2,43 @@
 
    <style>
       @page {
+         margin: 0;
          size: A4;
-         margin: 12mm;
       }
 
-      body.sepprint-body {
-         font-family: "Times New Roman", serif;
-         margin: 0;
-         font-size: 12pt;
-         background: #fff;
+      /* ================= RESET AMAN ================= */
+      .sepprint-wrapper img,
+      .sepprint-wrapper iframe {
+         border: none !important;
+         outline: none !important;
+         box-shadow: none !important;
       }
+
+      /* Hilangkan gambar kosong */
+      .sepprint-wrapper img[src=""],
+      .sepprint-wrapper img:not([src]) {
+         display: none !important;
+      }
+
+      /* ================= LAYOUT CETAK ================= */
 
       .sepprint-wrapper {
          width: 210mm;
-         min-height: 297mm;
+         height: 297mm;
+         background: #fff;
          margin: 0 auto;
+         overflow: hidden;
       }
 
       .sepprint-page {
          width: 100%;
-         min-height: 100%;
-         border: 1px solid #000;
-         padding: 10px;
-         background: #fff;
-         display: flex;
-         justify-content: center;
-         align-items: center;
+         height: 100%;
          position: relative;
-         box-sizing: border-box;
+         overflow: hidden;
+         background: #fff;
       }
 
-      /* Kotak Gambar */
-      .sepprint-photo-box {
+      .sepprint-content-box {
          width: 100%;
          height: 100%;
          display: flex;
@@ -42,93 +47,114 @@
          overflow: hidden;
       }
 
-      /* Hilangkan border error image */
+      /* ===== GAMBAR ===== */
       .sepprint-photo {
-         max-width: 100%;
-         max-height: 100%;
+         width: 100%;
+         height: 100%;
          object-fit: contain;
-         border: none !important;
-         outline: none !important;
+         display: none;
       }
 
-      /* ALERT */
+      /* ===== PDF ===== */
+      .sepprint-pdf {
+         width: 100%;
+         height: 100%;
+         border: none !important;
+         display: none;
+      }
+
+      /* ===== ALERT ===== */
       .sepprint-alert {
          position: absolute;
-         top: 40%;
+         top: 50%;
          left: 50%;
          transform: translate(-50%, -50%);
          background: #fff3cd;
-         padding: 15px 20px;
          border: 1px solid #ffecb5;
+         padding: 16px 20px;
          font-size: 14pt;
-         color: #8a6d3b;
          font-weight: bold;
+         color: #7a5a2b;
+         border-radius: 5px;
+         width: 70%;
          text-align: center;
-         border-radius: 4px;
          display: none;
-         z-index: 10;
-         width: 80%;
+         z-index: 99;
       }
    </style>
 
    <div class="sepprint-page">
-      <div id="sepprint_alert" class="sepprint-alert">
-         Data SEP belum diupload / dibuat.
+
+      <div id="sepprint_alert" class="sepprint-alert">Loading...</div>
+
+      <div class="sepprint-content-box">
+         <img id="sepprint_img" class="sepprint-photo">
+         <iframe id="sepprint_pdf" class="sepprint-pdf"></iframe>
       </div>
 
-      <div class="sepprint-photo-box">
-         <img id="sepprint_img" class="sepprint-photo" src="" alt="">
-      </div>
    </div>
 </div>
 
+
 <script>
-   document.addEventListener("DOMContentLoaded", function() {
+   document.addEventListener("DOMContentLoaded", () => {
 
       const url = new URLSearchParams(window.location.search);
       const no = url.get("no");
       const rm = url.get("rm");
 
-      const img = document.getElementById("sepprint_img");
       const alertBox = document.getElementById("sepprint_alert");
+      const img = document.getElementById("sepprint_img");
+      const pdf = document.getElementById("sepprint_pdf");
+
+      const showAlert = (msg) => {
+         alertBox.style.display = "block";
+         alertBox.textContent = msg;
+         img.style.display = "none";
+         pdf.style.display = "none";
+      };
 
       if (!no || !rm) {
-         alertBox.style.display = "block";
-         alertBox.innerText = "Parameter tidak lengkap.";
-         return;
+         return showAlert("Parameter tidak lengkap.");
       }
 
-      fetch(`getpasien.php?no=${no}&rm=${rm}`)
-         .then(res => res.json())
-         .then(data => {
+      fetch(`getsep.php?no=${no}&rm=${rm}`)
+         .then(r => r.json())
+         .then(result => {
 
-            if (!data || !data.sep_file) {
-               alertBox.style.display = "block";
-               alertBox.innerText = "Data SEP belum diupload / belum dibuat.";
+            if (result.status !== "success" || result.data.length === 0) {
+               return showAlert("Data SEP belum diupload.");
+            }
+
+            const sep = result.data[0];
+            const file = sep.sep_file;
+
+            if (!file) return showAlert("File SEP tidak ditemukan.");
+
+            const ext = file.split('.').pop().toLowerCase();
+            const path = "../../../uploads/sep/" + file;
+
+            // ================== PDF MODE ==================
+            if (ext === "pdf") {
+               pdf.src = path;
+               pdf.style.display = "block";
+               alertBox.style.display = "none";
                img.style.display = "none";
                return;
             }
 
-            const imgPath = "../../../uploads/sep/" + data.sep_file;
+            // ================== IMAGE MODE ==================
+            img.onerror = () => showAlert("File SEP rusak atau tidak ditemukan.");
 
-            // Jika gambar error → hide supaya tidak ada kotak aneh
-            img.onerror = function() {
-               img.style.display = "none";
-               alertBox.style.display = "block";
-               alertBox.innerText = "Gambar SEP tidak dapat dimuat.";
-            };
-
-            img.onload = function() {
+            img.onload = () => {
                img.style.display = "block";
+               alertBox.style.display = "none";
+               pdf.style.display = "none";
             };
 
-            img.src = imgPath;
-         })
-         .catch(err => {
-            alertBox.style.display = "block";
-            alertBox.innerText = "Terjadi kesalahan mengambil data.";
-            img.style.display = "none";
-         });
+            img.src = path;
 
+         })
+         .catch(() => showAlert("Gagal mengambil data dari server."));
    });
 </script>

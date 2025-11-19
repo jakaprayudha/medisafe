@@ -13,6 +13,49 @@
          padding: 0;
       }
 
+      /* ============================
+         QR CODE — NO CONFLICT MODE
+      ============================ */
+
+      /* reset biar ga ketarik style dari file lain */
+      .usg-qr-wrap,
+      .usg-qr-wrap * {
+         all: unset;
+      }
+
+      .usg-qr-wrap {
+         position: absolute;
+         top: 20mm;
+         right: 15mm;
+         width: 120px;
+         height: 120px;
+         display: none;
+         /* default hidden */
+      }
+
+      .usg-qr-img {
+         width: 120px;
+         height: 120px;
+         object-fit: cover;
+         display: none;
+      }
+
+      /* hide total ketika QR kosong */
+      .usg-qr-hide {
+         display: none !important;
+         visibility: hidden !important;
+         opacity: 0 !important;
+         width: 0 !important;
+         height: 0 !important;
+         overflow: hidden !important;
+         border: none !important;
+         padding: 0 !important;
+         margin: 0 !important;
+      }
+
+      /* ============================
+         KONTEN USG
+      ============================ */
       .usg-kop {
          text-align: center;
          margin-bottom: 5px;
@@ -60,7 +103,6 @@
          height: 16px;
       }
 
-      /* BOX USG */
       .usg-box {
          width: 100%;
          height: 450px;
@@ -78,7 +120,6 @@
          object-fit: contain;
       }
 
-      /* FOOTER */
       .usg-footer {
          text-align: right;
          margin-top: 20px;
@@ -90,33 +131,15 @@
          object-fit: contain;
          margin-bottom: -10px;
       }
-
-      /* QR CODE */
-      .usg-qr-wrap {
-         width: 120px;
-         height: 120px;
-         position: absolute;
-         top: 20mm;
-         right: 15mm;
-      }
-
-      .usg-qr-img {
-         width: 100%;
-         height: 100%;
-         object-fit: cover;
-      }
    </style>
 
-
-   <!-- QR CODE -->
-   <div class="usg-qr-wrap">
-      <img id="usg_qr" class="usg-qr-img" src="">
+   <!-- QR CODE (Auto Hide) -->
+   <div class="usg-qr-wrap usg-qr-hide" id="usg_qr_wrap">
+      <img id="usg_qr" class="usg-qr-img">
    </div>
 
-   <!-- KOP SURAT -->
-   <?php
-   require 'kopsurat.php';
-   ?>
+   <!-- KOP -->
+   <?php require 'kopsurat.php'; ?>
 
    <hr class="usg-hr">
 
@@ -144,13 +167,13 @@
 
    <!-- FOTO USG -->
    <div class="usg-box">
-      <img id="usg1_img" class="usg-img" src="" alt="USG 1">
+      <img id="usg1_img" class="usg-img">
    </div>
 
    <!-- FOOTER / TTD -->
    <div class="usg-footer">
       Dokter Pemeriksa:<br><br>
-      <img id="usg_ttd" class="usg-ttd" src="">
+      <img id="usg_ttd" class="usg-ttd">
       <br>
       <b id="usg_dokter"></b>
    </div>
@@ -181,30 +204,41 @@
                if (el) el.textContent = val ?? "";
             };
 
-            // IDENTITAS PASIEN
+            // IDENTITAS
             set("usg_nama", d.nama_pasien);
             set("usg_rm", d.rm);
             set("usg_usia", d.usia_kandungan);
             set("usg_tanggal", d.tanggal_pemeriksaan);
 
-            // GAMBAR USG (IMG)
-            if (d.usg1) {
-               document.getElementById("usg1_img").src = base + d.usg1;
-            }
+            // GAMBAR USG
+            if (d.usg1) document.getElementById("usg1_img").src = base + d.usg1;
 
             // TTD
-            if (d.ttd_dokter) {
-               document.getElementById("usg_ttd").src = base + d.ttd_dokter;
-            }
+            if (d.ttd_dokter) document.getElementById("usg_ttd").src = base + d.ttd_dokter;
 
-            // Dokter
             set("usg_dokter", d.dokter);
 
-            // QR CODE
-            if (d.qr_code) {
-               document.getElementById("usg_qr").src = base + d.qr_code;
-            }
-         });
+            // ============ QR CODE AUTO HIDE ================
+            const qrWrap = document.getElementById("usg_qr_wrap");
+            const qrImg = document.getElementById("usg_qr");
 
+            if (d.qr_code) {
+
+               qrImg.onload = () => {
+                  qrWrap.classList.remove("usg-qr-hide");
+                  qrImg.style.display = "block";
+               };
+
+               qrImg.onerror = () => {
+                  qrWrap.classList.add("usg-qr-hide");
+               };
+
+               qrImg.src = base + d.qr_code;
+
+            } else {
+               qrWrap.classList.add("usg-qr-hide");
+            }
+
+         });
    });
 </script>
