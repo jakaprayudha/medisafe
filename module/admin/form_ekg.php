@@ -50,7 +50,7 @@ $datapatient = mysqli_fetch_array($patient);
               <div class="card w-100">
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Dokumen Pasien</h5>
+                    <h5 class="card-title fw-semibold">Foto USG atau EKG</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
                       <a href="module/admin/print/formulir_dokumen?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
@@ -63,9 +63,11 @@ $datapatient = mysqli_fetch_array($patient);
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
-                          <th class="text-dark fw-normal">Tanggal</th>
-                          <th>Kategori</th>
-                          <th>Dokumentasi</th>
+                          <th class="text-dark fw-normal">Tanggal Pemeriksaan</th>
+                          <th>EKG 1</th>
+                          <th>EKG 2</th>
+                          <th>Interpretasi</th>
+                          <th>Dokter</th>
                           <th class="text-center">Actions</th>
                         </tr>
                       </thead>
@@ -95,32 +97,36 @@ $datapatient = mysqli_fetch_array($patient);
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <input type="hidden" name="id_dokumen" id="id_dokumen">
+        <input type="hidden" name="id_ekg" id="id_ekg">
         <input type="hidden" name="nomor_rm" value="<?= $_GET['rm'] ?>">
         <input type="hidden" name="visit_ID" value="<?= $_GET['no'] ?>">
 
         <div class="row">
           <div class="col-12">
             <div class="mb-3">
-              <label for="tgl_upload" class="form-label">
-                Tanggal <span class="text-danger">*</span>
+              <label for="tanggal_pemeriksaan" class="form-label">
+                Tanggal Pemeriksaan <span class="text-danger">*</span>
               </label>
-              <input type="date" value="<?= date('Y-m-d') ?>" name="tgl_upload" class="form-control" id="tgl_upload" required>
+              <input type="date" value="<?= date('Y-m-d') ?>" name="tanggal_pemeriksaan" class="form-control" id="tanggal_pemeriksaan" required>
             </div>
           </div>
           <div class="col-12">
             <div class="mb-3">
-              <label for="pilih_jenis" class="form-label">
-                Pilih Jenis Dokumen <span class="text-danger">*</span>
+              <label for="pilih_ekg" class="form-label">
+                Pilih EKG <span class="text-danger">*</span>
               </label>
-              <select name="pilih_jenis" id="pilih_jenis" class="form-select" required>
-                <option value="KTP">KTP</option>
-                <option value="KK">KK</option>
-                <option value="AKTA_KELAHIRAN">AKTA KELAHIRAN</option>
-                <option value="AKTA_NIKAH">AKTA NIKAH</option>
-                <option value="KARTU_BPJS">KARTU BPJS</option>
-                <option value="SURAT_RUJUKAN">SURAT RUJUKAN</option>
+              <select name="pilih_ekg" id="pilih_ekg" class="form-select" required>
+                <option value="1">EKG 1</option>
+                <option value="2">EKG 2</option>
               </select>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="mb-3">
+              <label for="dokter" class="form-label">
+                Dokter <span class="text-danger">*</span>
+              </label>
+              <input type="text" name="dokter" class="form-control" id="dokter" required>
             </div>
           </div>
           <div class="col-12">
@@ -129,6 +135,14 @@ $datapatient = mysqli_fetch_array($patient);
                 File Dokumen <span class="text-danger">*</span>
               </label>
               <input type="file" name="foto_path" class="form-control" id="foto_path" required>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="mb-3">
+              <label for="interpretasi" class="form-label">
+                Interpretasi <span class="text-danger">*</span>
+              </label>
+              <textarea name="interpretasi" id="interpretasi" class="form-control" rows="5"></textarea>
             </div>
           </div>
         </div>
@@ -143,7 +157,7 @@ $datapatient = mysqli_fetch_array($patient);
 $id_patient = $datapatient['id_patient'];
 ?>
 <script>
-  const apiUrl = 'controller/ranap/dokumenPasien?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>';
+  const apiUrl = 'controller/ranap/ekgController?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>';
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
@@ -167,16 +181,19 @@ $id_patient = $datapatient['id_patient'];
             actions: `
                 <div class="text-center">
                     <div class="btn-group btn-group-sm" role="group">
-                        <a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_dokumen}">
+                        <a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_ekg}">
                             <i class="fas fa-trash"></i>
                         </a>
                     </div>
                 </div>
               `,
-            tanggal: row.tgl_upload ?? "-",
-            jenis_dokumen: row.jenis_dokumen ?? "-",
-            foto_path: row.foto_path ?
-              `<img src="${row.foto_path}" style="max-width:80px">` : "-",
+            tanggal: row.tanggal_pemeriksaan ?? "-",
+            ekg1: row.ekg1 ?
+              `<img src="${row.ekg1}" style="max-width:80px">` : "-",
+            ekg2: row.ekg2 ?
+              `<img src="${row.ekg2}" style="max-width:80px">` : "-",
+            interpretasi: row.interpretasi ?? "-",
+            dokter: row.dokter ?? "-",
           }));
         }
       },
@@ -185,11 +202,19 @@ $id_patient = $datapatient['id_patient'];
           className: "text-wrap"
         },
         {
-          data: "jenis_dokumen",
+          data: "ekg1",
           className: "text-wrap"
         },
         {
-          data: "foto_path",
+          data: "ekg2",
+          className: "text-wrap"
+        },
+        {
+          data: "interpretasi",
+          className: "text-wrap"
+        },
+        {
+          data: "dokter",
           className: "text-wrap"
         },
         {
@@ -208,7 +233,7 @@ $id_patient = $datapatient['id_patient'];
     // 🔹 Tambah
     $('#btnTambah').on('click', function() {
       $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
-      $('#id_dokumen').val('');
+      $('#id_ekg').val('');
       $('#programModal .modal-title').text('Tambah Data');
       $('#programModal').modal('show');
     });
@@ -218,7 +243,7 @@ $id_patient = $datapatient['id_patient'];
       e.preventDefault();
 
       let formData = new FormData(this); // WAJIB FORM DATA
-      let id = $('#id_dokumen').val();
+      let id = $('#id_ekg').val();
 
       fetch(apiUrl + (id ? `&id=${id}` : ''), {
           method: id ? 'POST' : 'POST', // pakai POST untuk upload

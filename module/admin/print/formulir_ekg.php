@@ -237,15 +237,24 @@
             };
 
             // IDENTITAS
-            set("ekgprint_nama", d.nama_pasien);
+            set("ekgprint_nama", d.patient_name);
             set("ekgprint_rm", d.nomor_rm);
-            set("ekgprint_usia", d.usia_pasien);
+            set("ekgprint_usia", d.usia);
             set("ekgprint_tanggal", d.tanggal_pemeriksaan);
 
-            // GAMBAR EKG
-            if (d.ekg1) document.getElementById("ekgprint_img1").src = base + d.ekg1;
-            if (d.ekg2) document.getElementById("ekgprint_img2").src = base + d.ekg2;
+            // GAMBAR EKG 1
+            if (d.ekg1) {
+               document.getElementById("ekgprint_img1").src = base + d.ekg1;
+            } else {
+               document.getElementById("ekgprint_img1").closest(".ekgprint-box").style.display = "none";
+            }
 
+            // GAMBAR EKG 2 — Auto Hide Jika Tidak Ada
+            if (d.ekg2) {
+               document.getElementById("ekgprint_img2").src = base + d.ekg2;
+            } else {
+               document.getElementById("ekgprint_img2").closest(".ekgprint-box").style.display = "none";
+            }
             // CATATAN
             document.getElementById("ekgprint_catatan").textContent = d.interpretasi ?? "";
 
