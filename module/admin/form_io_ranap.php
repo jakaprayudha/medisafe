@@ -1,5 +1,5 @@
 <?php
-$title = 'Form SEP (Surat Eligibilitas Peserta)';
+$title = 'Form Masuk dan Keluar Pasien Rawat Inap';
 $no = $_GET['no'];
 $rm = $_GET['rm'];
 ?>

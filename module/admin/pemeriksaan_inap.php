@@ -196,7 +196,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                         </a>
                       </li>
                       <li>
-                        <a class="dropdown-item" href="module/admin/form_persalinan?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                        <a class="dropdown-item" href="module/admin/form_rekap_persalinan?no=${row.visit_ID}&rm=${row.nomor_rm}">
                           <i class="bi bi-file-earmark-text me-2"></i>Rekapitulasi Pelayanan Persalinan
                         </a>
                       </li>
