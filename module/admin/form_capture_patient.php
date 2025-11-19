@@ -56,7 +56,7 @@ $dataresume = $query->fetch_assoc();
                 <div class="card-body p-4">
                   <input type="hidden" name="nomor_rm" value="<?= $rm ?>">
                   <input type="hidden" name="nomor_visit" value="<?= $no ?>">
-                  <h4 class="mb-3">Form Foto Ibu dan</h4>
+                  <h4 class="mb-3">Form Foto Pasien</h4>
                   <!-- Data Pasien -->
                   <div class="row">
                     <div class="col-3">
@@ -125,7 +125,7 @@ $dataresume = $query->fetch_assoc();
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Ambil / Upload Foto Ibu & Bayi</h5>
+          <h5 class="modal-title">Ambil / Upload Foto Pasien</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
 
