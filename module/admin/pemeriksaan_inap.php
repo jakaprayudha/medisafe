@@ -191,6 +191,11 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                         </a>
                       </li>
                       <li>
+                        <a class="dropdown-item" href="module/admin/form_lbp?no=${row.visit_ID}&rm=${row.nomor_rm}" >
+                          <i class="bi bi-file-earmark-text me-2"></i>Lembar Bukti Pelayanan (LBP)
+                        </a>
+                      </li>
+                      <li>
                         <a class="dropdown-item" href="module/admin/form_persalinan?no=${row.visit_ID}&rm=${row.nomor_rm}">
                           <i class="bi bi-file-earmark-text me-2"></i>Rekapitulasi Pelayanan Persalinan
                         </a>
@@ -206,11 +211,6 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                         </a>
                       </li>
                         <li>
-                        <a class="dropdown-item" href="module/admin/form_ranap?no=${row.visit_ID}&rm=${row.nomor_rm}">
-                          <i class="bi bi-file-earmark-text me-2"></i>Keterangan Rawat Inap
-                        </a>
-                      </li>
-                        <li>
                         <a class="dropdown-item" href="module/admin/print/formulir_surat_persetujuan?no=${row.visit_ID}&rm=${row.nomor_rm}" target="_blank">
                           <i class="bi bi-file-earmark-text me-2"></i>Surat Persetujuan Tindakan Medis
                         </a>
@@ -221,7 +221,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                         </a>
                       </li>
                         <li>
-                        <a class="dropdown-item" href="module/admin/print/formulir_instruksi?no=${row.visit_ID}&rm=${row.nomor_rm}" target="_blank">
+                        <a class="dropdown-item" href="module/admin/instruksi?no=${row.visit_ID}&rm=${row.nomor_rm}" target="_blank">
                           <i class="bi bi-file-earmark-text me-2"></i>Perkembangan Pasien & Instruksi Dokter
                         </a>
                       </li>
@@ -231,9 +231,10 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                           <i class="bi bi-file-earmark-text me-2"></i>Resume Medis
                         </a>
                       </li>
-                       <li>
-                        <a class="dropdown-item" href="module/admin/print/formulir_lbp?no=${row.visit_ID}&rm=${row.nomor_rm}" target="_blank">
-                          <i class="bi bi-file-earmark-text me-2"></i>Formulir Lembar Bukti Pelayanan (LBP)
+                       <hr>
+                        <li>
+                        <a class="dropdown-item" href="module/admin/form_ranap?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="bi bi-file-earmark-text me-2"></i>Surat Keterangan Rawat Inap
                         </a>
                       </li>
                   </ul>
