@@ -1,17 +1,16 @@
-<!DOCTYPE html>
-<html lang="id">
+<div class="form-status-kb">
 
-<head>
-   <meta charset="UTF-8">
-   <title>Kartu Status Peserta KB</title>
    <style>
-      body {
-         font-family: Arial, Helvetica, sans-serif;
+      .form-status-kb {
+         width: 210mm;
+         min-height: 297mm;
+         margin: 0 auto;
+         font-family: "Times New Roman", serif;
+         padding: 0 10mm;
          font-size: 14px;
-         margin: 20px;
       }
 
-      .title {
+      .form-status-kb .title {
          text-align: center;
          font-size: 18px;
          font-weight: bold;
@@ -19,25 +18,24 @@
          margin-bottom: 15px;
       }
 
-      table {
+      .form-status-kb table {
          width: 100%;
          border-collapse: collapse;
          margin-bottom: 12px;
       }
 
-      td,
-      th {
+      .form-status-kb td,
+      .form-status-kb th {
          border: 1px solid #000;
          padding: 4px 6px;
          vertical-align: top;
       }
 
-      .no-border td,
-      .no-border th {
+      .form-status-kb .no-border td {
          border: none !important;
       }
 
-      .box {
+      .form-status-kb .box {
          display: inline-block;
          width: 18px;
          height: 18px;
@@ -45,180 +43,175 @@
          margin-right: 3px;
          text-align: center;
          line-height: 18px;
+         font-weight: bold;
          font-size: 13px;
-         font-weight: bold;
       }
 
-      .section-title {
+      .form-status-kb .section-title {
          font-weight: bold;
-         background: #eaeaea;
-         padding: 5px;
+         background: #eee;
          border: 1px solid #000;
-      }
-
-      .small-input {
-         border-bottom: 1px dotted #000;
-         display: inline-block;
-         min-width: 60px;
+         padding: 5px;
       }
    </style>
-</head>
 
-<body>
+   <?php include 'kopsurat.php'; ?>
 
    <div class="title">KARTU STATUS PESERTA KB</div>
 
-   <!-- SECTION I - II -->
+   <!-- Contoh, nanti isi via JS -->
    <table>
       <tr>
          <td width="50%">
-            <strong>I. Nomor Kode Faskes KB / Jejaring</strong><br>
-            <div class="box"></div>
-            <div class="box"></div>
-            <div class="box"></div>
-            <div class="box"></div>
-            <div class="box"></div>
+            <strong>I. Nomor Kode Faskes KB</strong><br>
+            <span id="kb_faskes"></span>
          </td>
          <td width="50%">
             <strong>II. Kode Keluarga Indonesia</strong><br>
-            <div class="box"></div>
-            <div class="box"></div>
-            <div class="box"></div>
-            <div class="box"></div>
-            <div class="box"></div>
-            <div class="box"></div>
-            <div class="box"></div>
-            <div class="box"></div>
-            <div class="box"></div>
+            <span id="kb_keluarga"></span>
          </td>
       </tr>
    </table>
 
-   <!-- SECTION III – VIII -->
    <table>
       <tr>
-         <td width="50%"><strong>III. Nama Peserta KB</strong><br>Silvia Efriani Sinaga</td>
-         <td width="50%"><strong>IV. Tgl Lahir / Umur Istri</strong><br>05 / 05 / 1988</td>
+         <td><strong>III. Nama Peserta KB</strong><br><span id="kb_nama_istri"></span></td>
+         <td><strong>IV. Tgl Lahir / Umur Istri</strong><br><span id="kb_tgllahir"></span></td>
       </tr>
 
       <tr>
-         <td><strong>V. Nama Suami / Istri</strong><br>Edone Josheua Matusaeli</td>
-         <td><strong>VI. Pendidikan Suami dan Istri</strong><br>
-            <div class="box">1</div> Tidak tamat SD
-            <div class="box">2</div> Tamat SD
+         <td><strong>V. Nama Suami</strong><br><span id="kb_nama_suami"></span></td>
+         <td><strong>VI. Pendidikan Suami/Istri</strong><br>
+            Suami: <span id="kb_pendidikan_suami"></span><br>
+            Istri: <span id="kb_pendidikan_istri"></span>
          </td>
       </tr>
 
       <tr>
-         <td><strong>VII. Alamat Peserta KB</strong><br>Pasar 9 Jln Sultan Serdang, Buntu Bedimbar</td>
-         <td><strong>VIII. Pekerjaan Suami dan Istri</strong><br>
-            <div class="box"></div> Petani<br>
-            <div class="box"></div> Swasta
+         <td><strong>VII. Alamat Peserta KB</strong><br><span id="kb_alamat"></span></td>
+         <td><strong>VIII. Pekerjaan Suami/Istri</strong><br>
+            Suami: <span id="kb_pekerjaan_suami"></span><br>
+            Istri: <span id="kb_pekerjaan_istri"></span>
          </td>
       </tr>
    </table>
 
-   <!-- SECTION X – XII -->
    <table>
       <tr>
-         <td><strong>X. Jumlah Anak Hidup</strong><br>Laki-laki: ___ Perempuan: ___</td>
-         <td><strong>XI. Umur anak terakhir yang masih hidup</strong><br>
-            <div class="box"></div>
-            <div class="box"></div> Tahun
+         <td><strong>X. Jumlah Anak Hidup</strong><br>
+            Lk: <span id="kb_anak_lk"></span> — Pr: <span id="kb_anak_pr"></span>
          </td>
-         <td><strong>XII. Alat/Obat/Cara KB terakhir</strong><br>
-            <div class="box"></div> Suntikan 1 Bulanan
-         </td>
+         <td><strong>XI. Umur Anak Terakhir</strong><br><span id="kb_umur_last"></span> Tahun</td>
+         <td><strong>XII. KB Terakhir</strong><br><span id="kb_terakhir"></span></td>
       </tr>
    </table>
 
-   <!-- SECTION XIV - Pemeriksaan -->
    <div class="section-title">XIV. PENAPISAN (SKRINING)</div>
 
    <table>
       <tr>
-         <td width="50%">
-            <strong>1. Haid terakhir tanggal:</strong><br>
-            <div class="box"></div> / <div class="box"></div> / <div class="box"></div>
-         </td>
-         <td width="50%">
-            <strong>2. Hamil / Diduga Hamil</strong><br>
-            <div class="box"></div> Ya &nbsp;&nbsp;
-            <div class="box"></div> Tidak
-         </td>
+         <td><strong>1. Haid Terakhir</strong><br><span id="kb_haid"></span></td>
+         <td><strong>2. Hamil?</strong><br><span id="kb_hamil"></span></td>
       </tr>
 
       <tr>
-         <td><strong>3. Jumlah GPA</strong><br>
-            G:<div class="box"></div> P:<div class="box"></div> A:<div class="box"></div>
+         <td><strong>3. GPA</strong><br>
+            G: <span id="kb_g"></span>
+            P: <span id="kb_p"></span>
+            A: <span id="kb_a"></span>
          </td>
-         <td><strong>4. Menyusui</strong><br>
-            <div class="box"></div> Ya &nbsp;&nbsp; <div class="box"></div> Tidak
-         </td>
+         <td><strong>4. Menyusui</strong><br><span id="kb_menyusui"></span></td>
       </tr>
 
       <tr>
-         <td><strong>5. Riwayat Penyakit Sebelumnya</strong><br>
-            <div class="box"></div> Sakit Kuning <br>
-            <div class="box"></div> Penyakit lainnya <br>
-            <div class="box"></div> Pendarahan <br>
-         </td>
-         <td><strong>6. Keadaan Umum</strong><br>
-            <div class="box"></div> Baik
-            <div class="box"></div> Sedang
-            <div class="box"></div> Kurang
-         </td>
+         <td><strong>5. Riwayat Penyakit</strong><br><span id="kb_sakit"></span></td>
+         <td><strong>6. Keadaan Umum</strong><br><span id="kb_keadaan"></span></td>
       </tr>
 
       <tr>
-         <td><strong>7. Berat Badan</strong><br> ______ Kg</td>
-         <td><strong>8. Tekanan Darah</strong><br> ______ / ______</td>
+         <td><strong>7. Berat Badan</strong><br><span id="kb_bb"></span> Kg</td>
+         <td><strong>8. Tekanan Darah</strong><br><span id="kb_td"></span></td>
       </tr>
 
       <tr>
-         <td colspan="2"><strong>9–12. Pemeriksaan Tambahan</strong><br>
-            <div class="box"></div> Tidak
-            <div class="box"></div> Ya
-         </td>
+         <td colspan="2"><strong>9–12. Pemeriksaan Tambahan</strong><br><span id="kb_periksa_tamb"></span></td>
       </tr>
    </table>
 
-   <!-- Section XV -->
-   <div class="section-title">XV. Alat/Obat/Cara Kontrasepsi yang dipilih</div>
+   <div class="section-title">XV. Metode KB yang dipilih</div>
    <table>
       <tr>
-         <td>
-            <div class="box"></div> Suntikan 1 Bulan
-         </td>
-         <td>
-            <div class="box"></div> Implant
-         </td>
-         <td>
-            <div class="box"></div> Pil
-         </td>
-         <td>
-            <div class="box"></div> Kondom
-         </td>
+         <td><span id="kb_pilihan"></span></td>
       </tr>
    </table>
 
-   <!-- Section XVI – XIX -->
    <table>
       <tr>
-         <td><strong>XVI. Tanggal Dilayani</strong><br>
-            <div class="box"></div> / <div class="box"></div> / <div class="box"></div>
-         </td>
-         <td><strong>XVII. Tanggal dicabut</strong><br>
-            <div class="box"></div> / <div class="box"></div> / <div class="box"></div>
-         </td>
+         <td><strong>XVI. Tanggal Dilayani</strong><br><span id="kb_tgl_layan"></span></td>
+         <td><strong>XVII. Tanggal Dicabut</strong><br><span id="kb_tgl_cabut"></span></td>
       </tr>
       <tr>
-         <td colspan="2"><strong>XIX. Penanggung Jawab Pelayanan KB</strong><br>
-            Dokter/Bidan: ___________________
-         </td>
+         <td colspan="2"><strong>XIX. Penanggung Jawab</strong><br><span id="kb_pj"></span></td>
       </tr>
    </table>
 
-</body>
+</div>
+<script>
+   document.addEventListener("DOMContentLoaded", function() {
+      const url = new URLSearchParams(window.location.search);
+      const no = url.get("no");
+      const rm = url.get("rm");
 
-</html>
+      fetch(`getkb.php?no=${no}&rm=${rm}`)
+         .then(res => res.json())
+         .then(resp => {
+
+            if (!resp || resp.status !== "success") return;
+
+            const d = resp.data;
+
+            const set = (id, val) => document.getElementById(id).innerText = val ?? "-";
+
+            set("kb_faskes", d.faskes_kode);
+            set("kb_keluarga", d.kode_keluarga);
+            set("kb_nama_istri", d.nama_istri);
+            set("kb_tgllahir", d.tgl_lahir_istri);
+            set("kb_nama_suami", d.nama_suami);
+
+            set("kb_pendidikan_suami", d.pendidikan_suami);
+            set("kb_pendidikan_istri", d.pendidikan_istri);
+
+            set("kb_alamat", d.alamat);
+            set("kb_pekerjaan_suami", d.pekerjaan_suami);
+            set("kb_pekerjaan_istri", d.pekerjaan_istri);
+
+            set("kb_anak_lk", d.anak_lk);
+            set("kb_anak_pr", d.anak_pr);
+            set("kb_umur_last", d.umur_anak_terakhir);
+
+            set("kb_terakhir", d.kb_terakhir);
+
+            set("kb_haid", d.haid_terakhir);
+            set("kb_hamil", d.hamil);
+
+            set("kb_g", d.gpa_g);
+            set("kb_p", d.gpa_p);
+            set("kb_a", d.gpa_a);
+
+            set("kb_menyusui", d.menyusui);
+            set("kb_sakit", d.riwayat_sakit);
+            set("kb_keadaan", d.keadaan_umum);
+            set("kb_bb", d.berat_badan);
+            set("kb_td", d.tekanan_darah);
+
+            set("kb_periksa_tamb", d.pemeriksaan_tambahan);
+
+            set("kb_pilihan", d.metode_pilihan);
+
+            set("kb_tgl_layan", d.tgl_dilayani);
+            set("kb_tgl_cabut", d.tgl_dicabut);
+
+            set("kb_pj", d.penanggung_jawab);
+         });
+   });
+</script>

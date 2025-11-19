@@ -1,6 +1,9 @@
 <?php
+$visit = $_GET['no'] ?? '';
+$rm    = $_GET['rm'] ?? '';
 
 $files = [
+   "formulir_sep.php",
    "formulir_cppt.php",
    "formulir_inout_ranap.php",
    "formulir_instruksi.php",
@@ -32,17 +35,11 @@ echo "<!DOCTYPE html>
 <html>
 <head>
 <meta charset='UTF-8'>
+<link rel='shortcut icon' type='image/png' href='../../../assets/images/logos/icon_medisafe.png' />
 <style>
-
-.wrapper {
-   page-break-after: always;
-   page-break-inside: avoid;
-}
-
-/* Tinggi IFRAME tergantung orientasi */
-.portrait { height: 1350px; border:0; width:100%; }
-.landscape { height: 950px; border:0; width:100%; }
-
+@page { margin: 0; size: A4; }
+body { margin:0; padding:0; }
+.page-break { page-break-after: always; }
 </style>
 </head>
 <body>
@@ -55,16 +52,9 @@ foreach ($files as $file) {
       continue;
    }
 
-   // baca isi file untuk deteksi landscape
-   $content = file_get_contents($file);
-   $isLandscape = preg_match('/landscape/i', $content);
-   $class = $isLandscape ? "landscape" : "portrait";
-
-   echo "
-      <div class='wrapper'>
-         <iframe class='$class' src='$file'></iframe>
-      </div>
-   ";
+   echo "<div class='page-break'>";
+   include $file;  // <-- INI KUNCI TANPA IFRAME
+   echo "</div>";
 }
 
 echo "</body></html>";

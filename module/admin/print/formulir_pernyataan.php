@@ -1,181 +1,117 @@
-<!DOCTYPE html>
-<html lang="id">
+<?php
+// Tidak butuh connect.php di sini karena hanya load lewat JS (getpasien.php)
+?>
+<!-- ================== STYLE KHUSUS FORM INI ================== -->
+<style>
+   .form-pernyataan {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      font-family: "Times New Roman", Arial, sans-serif;
+   }
 
-<head>
-   <meta charset="UTF-8">
-   <title>Formulir Pernyataan Peserta</title>
+   .form-pernyataan .kop {
+      text-align: center;
+      margin-bottom: 10px;
+      position: relative;
+   }
 
-   <style>
-      @page {
-         size: A4 portrait;
-         margin: 15mm;
-      }
+   .form-pernyataan h3 {
+      text-align: center;
+      margin-top: 25px;
+      font-size: 18px;
+      text-decoration: underline;
+   }
 
-      body {
-         font-family: "Times New Roman", Arial, sans-serif;
-         margin: 0;
-         padding: 0;
-      }
+   .form-pernyataan .row {
+      margin: 10px 0;
+      font-size: 16px;
+   }
 
-      .page {
-         width: 210mm;
-         min-height: 297mm;
-         margin: 0 auto;
-      }
+   .form-pernyataan .label {
+      width: 180px;
+      display: inline-block;
+      font-weight: bold;
+   }
 
-      .kop {
-         text-align: center;
-         margin-bottom: 10px;
-         position: relative;
-      }
+   .form-pernyataan .dots {
+      border-bottom: 1px dotted #000;
+      display: inline-block;
+      width: 320px;
+      height: 16px;
+   }
 
-      .kop img.logo {
-         width: 80px;
-         position: absolute;
-         top: 0;
-      }
+   .form-pernyataan .text-area {
+      margin-top: 15px;
+      font-size: 16px;
+      text-align: justify;
+      line-height: 1.4;
+   }
 
-      .kop .left {
-         left: 10px;
-      }
+   .form-pernyataan .ttd {
+      margin-top: 50px;
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+   }
 
-      .kop .right {
-         right: 10px;
-      }
+   .form-pernyataan .ttd-box {
+      width: 260px;
+      text-align: center;
+      font-size: 16px;
+   }
 
-      .kop .title1 {
-         font-size: 32px;
-         font-weight: bold;
-         margin-top: 5px;
-      }
+   .form-pernyataan .sign-line {
+      margin-top: 60px;
+      border-bottom: 1px solid #000;
+      height: 0;
+      width: 100%;
+   }
+</style>
 
-      .kop .title2 {
-         font-size: 34px;
-         font-weight: bold;
-         margin-top: -10px;
-      }
 
-      .address {
-         font-size: 13px;
-         margin-top: -5px;
-      }
-
-      h3 {
-         text-align: center;
-         margin-top: 25px;
-         font-size: 18px;
-         text-decoration: underline;
-      }
-
-      .row {
-         margin: 10px 0;
-         font-size: 16px;
-      }
-
-      .label {
-         width: 180px;
-         display: inline-block;
-      }
-
-      .dots {
-         border-bottom: 1px dotted #000;
-         display: inline-block;
-         width: 320px;
-         height: 16px;
-      }
-
-      .text-area {
-         margin-top: 15px;
-         font-size: 16px;
-         text-align: justify;
-         line-height: 1.4;
-      }
-
-      .ttd {
-         margin-top: 50px;
-         width: 100%;
-         display: flex;
-         justify-content: flex-end;
-      }
-
-      .ttd-box {
-         width: 260px;
-         text-align: center;
-         font-size: 16px;
-      }
-
-      .sign-line {
-         margin-top: 60px;
-         border-bottom: 1px solid #000;
-         height: 0;
-         width: 100%;
-      }
-   </style>
-</head>
-
-<body>
+<!-- ================== FORM ================== -->
+<div class="form-pernyataan">
 
    <div class="page">
 
-      <!-- =================== KOP SURAT =================== -->
-      <div class="kop">
-         <img src="logo_kiri.png" class="logo left">
-         <img src="logo_kanan.png" class="logo right">
+      <!-- Kop Surat -->
+      <?php include 'kopsurat.php'; ?>
 
-         <div class="title1">KLINIK</div>
-         <div class="title2">TUTUN SEHATI</div>
-
-         <div class="address">
-            Jl. Pasar Baru Km. 17 Tanjung Morawa A No. 7 Telp. 061-7945676, HP 082165281225<br>
-            Email: tutunsehati@yahoo.com
-         </div>
-      </div>
-
-      <!-- =================== JUDUL =================== -->
       <h3>FORMULIR PERNYATAAN PESERTA</h3>
-
-      <!-- =================== ISI DATA =================== -->
-      <div class="row">
-         Saya yang bertanda tangan dibawah ini :
-      </div>
 
       <div class="row">
          <span class="label">Nama</span>
-         <span class="dots"></span>
+         <span class="dots" id="fp_nama"></span>
       </div>
 
       <div class="row">
          <span class="label">Tempat/Tanggal Lahir</span>
-         <span class="dots"></span>
+         <span class="dots" id="fp_ttl"></span>
       </div>
 
       <div class="row">
          <span class="label">Jenis Kelamin</span>
-         <span class="dots"></span>
+         <span class="dots" id="fp_jk"></span>
       </div>
 
       <div class="row">
-         <span class="label">NIK/No. Kartu BPJS</span>
-         <span class="dots"></span>
+         <span class="label">NIK / No BPJS</span>
+         <span class="dots" id="fp_nik"></span>
       </div>
 
       <div class="row">
-         <span class="label">Nomor Telepon</span>
-         <span class="dots"></span>
+         <span class="label">No. Telepon</span>
+         <span class="dots" id="fp_phone"></span>
       </div>
 
-      <!-- =================== PARAGRAF =================== -->
       <div class="text-area">
-         Dengan Sadar, terkait pemanfaatan jaminan pelayanan kesehatan BPJS Kesehatan, dengan ini menyatakan :
-         <br><br>
-         “Kesesuaian atas data medis (Rekam Medis) diri saya untuk dipergunakan oleh Dokter / Rumah Sakit / BPJS Kesehatan sesuai dengan kepentingan."
+         Dengan sadar saya menyatakan bahwa data medis saya dapat digunakan sesuai kebutuhan pelayanan BPJS Kesehatan.
       </div>
 
-      <!-- =================== TANDA TANGAN =================== -->
       <div class="ttd">
          <div class="ttd-box">
-            <div>Tj. Morawa, .......................</div>
-            <br>
+            Tj. Morawa, .................<br><br>
             Yang Membuat Pernyataan<br><br><br><br>
             <div class="sign-line"></div>
          </div>
@@ -183,6 +119,37 @@
 
    </div>
 
-</body>
+</div>
 
-</html>
+
+<!-- ================== SCRIPT GET PASIEN ================== -->
+<script>
+   document.addEventListener("DOMContentLoaded", function() {
+
+      const url = new URLSearchParams(window.location.search);
+      const no = url.get("no");
+      const rm = url.get("rm");
+
+      if (!no || !rm) return;
+
+      fetch(`getpasien.php?no=${no}&rm=${rm}`)
+         .then(res => res.json())
+         .then(data => {
+
+            if (!data) return;
+
+            // Format TTL
+            let ttl = "";
+            if (data.patient_place && data.patient_datebirth) {
+               ttl = data.patient_place + " / " + data.patient_datebirth;
+            }
+
+            // Isi field
+            document.getElementById("fp_nama").innerText = data.patient_name ?? "";
+            document.getElementById("fp_ttl").innerText = ttl;
+            document.getElementById("fp_jk").innerText = data.patient_gender ?? "";
+            document.getElementById("fp_nik").innerText = data.patient_nik ?? "";
+            document.getElementById("fp_phone").innerText = data.patient_phone ?? "";
+         });
+   });
+</script>

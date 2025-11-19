@@ -1,14 +1,7 @@
-<!DOCTYPE html>
-<html lang="id">
-
-<head>
-   <meta charset="UTF-8">
-   <title>Surat Keterangan Lahir</title>
-
+<div class="form-skl">
    <style>
       @page {
          size: 216mm 356mm;
-         /* LEGAL/F4 */
          margin: 15mm;
       }
 
@@ -20,33 +13,10 @@
          margin: 0;
       }
 
-      .kop {
-         text-align: center;
-         margin-bottom: 8px;
-      }
-
-      .kop h1 {
-         font-size: 28px;
-         font-weight: bold;
-         margin: 0;
-      }
-
-      .kop .alamat {
-         font-size: 11pt;
-         margin-top: 3px;
-         line-height: 1.3;
-      }
-
-      hr {
-         border: none;
-         border-top: 2px solid #000;
-         margin: 8px 0 15px 0;
-      }
-
       .title {
          text-align: center;
          font-weight: bold;
-         font-size: 16pt;
+         font-size: 18pt;
          text-decoration: underline;
          margin-bottom: 5px;
       }
@@ -62,9 +32,8 @@
       }
 
       table.info td {
-         padding: 2px 4px;
+         padding: 3px 4px;
          vertical-align: top;
-         font-size: 12pt;
       }
 
       .indent {
@@ -73,23 +42,48 @@
          margin-bottom: 10px;
       }
 
-      .signature {
+      /* SIGNATURE AREA */
+      .signature-wrapper {
          width: 100%;
-         margin-top: 25px;
+         margin-top: 35px;
          display: flex;
-         justify-content: flex-end;
+         justify-content: space-between;
       }
 
-      .signature-box {
+      .signature-left {
          width: 40%;
          text-align: center;
-         font-size: 12pt;
       }
 
+      .signature-right {
+         width: 40%;
+         text-align: center;
+      }
+
+      .signature-img {
+         width: 160px;
+         height: 80px;
+         margin: 5px auto;
+         background-size: contain;
+         background-repeat: no-repeat;
+         background-position: center;
+      }
+
+      .qr-box {
+         width: 120px;
+         height: 120px;
+         margin: 5px auto;
+         border: 1px solid #000;
+         background-size: cover;
+         background-repeat: no-repeat;
+         background-position: center;
+      }
+
+      /* CAP KAKI */
       .footprint-container {
          display: flex;
          justify-content: space-between;
-         margin-top: 25px;
+         margin-top: 20px;
       }
 
       .footprint-box {
@@ -99,97 +93,151 @@
          text-align: center;
       }
 
-      .box-label {
-         margin-bottom: 5px;
-         font-weight: bold;
-      }
-
       .footprint-img {
          width: 100%;
-         height: 220px;
+         height: 200px;
          border: 1px solid #000;
+         background-size: contain;
+         background-repeat: no-repeat;
+         background-position: center;
       }
    </style>
-</head>
 
-<body>
-
-   <div class="kop">
-      <h1>KLINIK TUTUN SEHATI</h1>
-      <div class="alamat">
-         Jl. Medan - L. Pakam/Pasar Baru Gg. Serasi No. 2 Tanjung Morawa<br>
-         Telp: 061 7945676 - 0812 6322 6990
-      </div>
-   </div>
-
-   <hr>
+   <?php require 'kopsurat.php'; ?>
 
    <div class="title">SURAT KETERANGAN LAHIR</div>
    <div class="nomor">No : ……/SKL/KTS/…/…/20…</div>
 
    <p class="indent">
-      Yang bertanda tangan dibawah ini, Bidan <b>KLINIK TUTUN SEHATI</b> menyatakan dan menerangkan bahwa pada tanggal
-      ...................................... jam .................. WIB, Pasien kami :
+      Yang bertanda tangan dibawah ini, Bidan <b>KLINIK TUTUN SEHATI</b> menyatakan bahwa pada tanggal
+      <span id="tgl_lahir">..................................</span> jam
+      <span id="jam_lahir">..................</span> WIB, Pasien kami :
    </p>
 
    <table class="info">
       <tr>
          <td>1 Nama</td>
-         <td>: ......................................................................................</td>
+         <td>: <span id="ibu_nama"></span></td>
       </tr>
       <tr>
          <td>2 Umur</td>
-         <td>: ......................................................................................</td>
+         <td>: <span id="ibu_umur"></span></td>
       </tr>
       <tr>
          <td>3 Nama Suami</td>
-         <td>: ......................................................................................</td>
+         <td>: <span id="suami_nama"></span></td>
       </tr>
       <tr>
          <td>4 Agama</td>
-         <td>: ......................................................................................</td>
+         <td>: <span id="ibu_agama"></span></td>
       </tr>
       <tr>
          <td>5 Pekerjaan</td>
-         <td>: ......................................................................................</td>
+         <td>: <span id="ibu_pekerjaan"></span></td>
       </tr>
       <tr>
          <td>6 Alamat</td>
-         <td>: ......................................................................................</td>
+         <td>: <span id="ibu_alamat"></span></td>
       </tr>
    </table>
 
    <p class="indent">
-      Telah melahirkan anak <b>......</b> pada hari <b>................................</b>,
-      <b>Laki-laki / Perempuan*</b>, dengan berat badan <b>........ Kg</b>, panjang badan <b>........ cm</b>,
-      diberi nama : ............................................................................................
+      Telah melahirkan anak <b><span id="anak_ke"></span></b> pada hari
+      <b><span id="hari_lahir"></span></b>,
+      <b><span id="jk"></span></b>,
+      dengan berat badan <b><span id="bb"></span> Kg</b>,
+      panjang badan <b><span id="pb"></span> cm</b>,
+      diberi nama : <b><span id="nama_bayi"></span></b>.
    </p>
 
    <p class="indent">
-      Demikianlah Surat Keterangan ini kami buat dengan sebenarnya untuk dapat dipergunakan sebagaimana mestinya.
+      Demikianlah Surat Keterangan ini dibuat untuk digunakan sebagaimana mestinya.
    </p>
 
-   <div class="signature">
-      <div class="signature-box">
-         Dibuat di : Tj. Morawa<br>
-         Pada tanggal : ..................... 20.....<br>
-         Yang menerangkan:<br><br><br><br>
+   <!-- SIGNATURE AREA -->
+   <div class="signature-wrapper">
+
+      <div class="signature-left">
+         <b>QR Verifikasi</b><br>
+         <div id="qr_code" class="qr-box"></div>
+      </div>
+
+      <div class="signature-right">
+         Tj. Morawa, <span id="tgl_surat"></span><br>
+         Yang menerangkan:<br><br>
+         <div id="ttd_bidan" class="signature-img"></div>
          <b>Hj. SALMIAH, AM.Keb</b>
       </div>
+
    </div>
 
+   <!-- FOOTPRINT -->
    <div class="footprint-container">
       <div class="footprint-box">
          <div class="box-label">Cap Kaki Kiri</div>
-         <div class="footprint-img"></div>
+         <div id="cap_kiri" class="footprint-img"></div>
       </div>
 
       <div class="footprint-box">
          <div class="box-label">Cap Kaki Kanan</div>
-         <div class="footprint-img"></div>
+         <div id="cap_kanan" class="footprint-img"></div>
       </div>
    </div>
 
-</body>
+</div>
 
-</html>
+<script>
+   document.addEventListener("DOMContentLoaded", () => {
+
+      const no = new URLSearchParams(window.location.search).get("no");
+      const rm = new URLSearchParams(window.location.search).get("rm");
+      if (!no || !rm) return;
+
+      fetch("get_skl.php?no=" + no + "&rm=" + rm)
+         .then(r => r.json())
+         .then(res => {
+
+            if (res.status !== "success") return;
+
+            const d = res.data;
+            const set = (id, val) => {
+               let el = document.getElementById(id);
+               if (el) el.textContent = val ?? "";
+            };
+
+            // DATA IBU
+            set("ibu_nama", d.nama_ibu);
+            set("ibu_umur", d.umur_ibu);
+            set("suami_nama", d.nama_suami);
+            set("ibu_agama", d.agama);
+            set("ibu_pekerjaan", d.pekerjaan);
+            set("ibu_alamat", d.alamat);
+
+            // DATA KELAHIRAN
+            set("hari_lahir", d.hari_lahir);
+            set("tgl_lahir", d.tanggal_lahir);
+            set("jam_lahir", d.jam_lahir);
+            set("jk", d.jenis_kelamin === "L" ? "Laki-laki" : "Perempuan");
+            set("bb", d.berat_badan);
+            set("pb", d.panjang_badan);
+            set("nama_bayi", d.nama_bayi);
+            set("anak_ke", "Pertama");
+            set("tgl_surat", d.tanggal_lahir);
+
+            // CAP KAKI
+            if (d.cap_kiri)
+               document.getElementById("cap_kiri").style.backgroundImage = `url('${d.cap_kiri}')`;
+
+            if (d.cap_kanan)
+               document.getElementById("cap_kanan").style.backgroundImage = `url('${d.cap_kanan}')`;
+
+            // TTD BIDAN
+            if (d.ttd_bidan)
+               document.getElementById("ttd_bidan").style.backgroundImage = `url('${d.ttd_bidan}')`;
+
+            // QR CODE
+            if (d.qr_verifikasi)
+               document.getElementById("qr_code").style.backgroundImage = `url('${d.qr_verifikasi}')`;
+         });
+   });
+</script>

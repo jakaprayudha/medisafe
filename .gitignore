@@ -1,11 +1,5 @@
 /database/
-/uploads/dokumen/
-/uploads/faktur/
-/uploads/foto/
-/uploads/lainnya/
-/uploads/rme/
-/uploads/ttd/
-/uploads/patient/
+/uploads/
 .htaccess
 /logs
 .env
