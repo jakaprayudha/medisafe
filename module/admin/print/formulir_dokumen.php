@@ -228,10 +228,10 @@
                   <div class='dokmulti-subtitle'>${d.jenis_dokumen.replace(/_/g, " ")}</div>
 
                   <table class='dokmulti-table'>
-                     <tr><td width='30%'>Nama Lengkap</td><td>: <span class='dokmulti-line'>${d.nama_lengkap ?? "-"}</span></td></tr>
+                     <tr><td width='30%'>Nama Lengkap</td><td>: <span class='dokmulti-line'>${d.patient_name ?? "-"}</span></td></tr>
                      <tr><td>Nomor Dokumen</td><td>: <span class='dokmulti-line'>${d.nomor_dokumen ?? "-"}</span></td></tr>
-                     <tr><td>Tempat / Tanggal Lahir</td><td>: <span class='dokmulti-line'>${(d.tempat_lahir ?? "")}, ${(d.tanggal_lahir ?? "")}</span></td></tr>
-                     <tr><td>Alamat</td><td>: <span class='dokmulti-line' style='width:400px;'>${d.alamat ?? "-"}</span></td></tr>
+                     <tr><td>Tempat / Tanggal Lahir</td><td>: <span class='dokmulti-line'>${(d.patient_place ?? "")}, ${(d.patient_datebirth ?? "")}</span></td></tr>
+                     <tr><td>Alamat</td><td>: <span class='dokmulti-line' style='width:400px;'>${d.patient_address ?? "-"}</span></td></tr>
                      <tr><td>Tanggal Upload</td><td>: <span class='dokmulti-line'>${d.tgl_upload ?? "-"}</span></td></tr>
                   </table>
 

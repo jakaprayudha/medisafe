@@ -6,8 +6,8 @@ $id = $_GET['rm'] ?? 0;
 $no = $_GET['no'] ?? 0;
 
 // Ambil semua dokumen berdasarkan id_patient
-$q = mysqli_query($koneksi, "SELECT * FROM pasien_dokumen 
-   WHERE nomor_rm = '$id' AND visit_ID='$no'");
+$q = mysqli_query($koneksi, "SELECT * FROM pasien_dokumen pd INNER JOIN pasien_visit pv ON pd.visit_ID = pv.visit_ID INNER JOIN ms_patient mp ON pd.nomor_rm = mp.nomor_rm
+   WHERE mp.nomor_rm = '$id' AND pv.visit_ID='$no'");
 
 if (!$q) {
    echo json_encode([
