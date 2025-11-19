@@ -12,6 +12,13 @@
          margin: 0;
       }
 
+      .dokmulti-photo-date {
+         text-align: center;
+         font-size: 10pt;
+         margin-top: 4px;
+         color: #333;
+      }
+
       .dokmulti-page {
          border: 1px solid #000;
          padding: 18px;
@@ -176,6 +183,7 @@
 
       const url = new URLSearchParams(window.location.search);
       const rm = url.get("rm");
+      const no = url.get("no");
 
       if (!rm) {
          alert("RM tidak ditemukan!");
@@ -185,7 +193,7 @@
       const baseURL = window.location.origin + "/medisafe/";
       const container = document.getElementById("dokmulti_container");
 
-      fetch("get_dokumen.php?rm=" + rm)
+      fetch("get_dokumen.php?rm=" + rm + "&no=" + no)
          .then(r => r.json())
          .then(res => {
 
@@ -271,15 +279,16 @@
                   encodeURIComponent(verifyURL);
 
                let slice = perawatan.slice(i * perPage, i * perPage + perPage);
-
                let gridHTML = slice
                   .map(p => `
-                     <div class="dokmulti-grid-item">
-                        <img src="${baseURL + p.foto_path}">
-                     </div>
-                  `)
+      <div class="dokmulti-grid-item">
+         <div style="width:100%;height:100%;display:flex;justify-content:center;align-items:center;overflow:hidden;">
+            <img src="${baseURL + p.foto_path}" style="width:100%;height:100%;object-fit:cover;">
+         </div>
+         <div class="dokmulti-photo-date">Tanggal: ${p.tgl_upload ?? "-"}</div>
+      </div>
+   `)
                   .join("");
-
                pPage.innerHTML = `
                   <div class="dokmulti-watermark">FOTO PERAWATAN</div>
                   <img class="dokmulti-qr-img" src="${qrURL}">

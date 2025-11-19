@@ -3,12 +3,11 @@ header("Content-Type: application/json");
 require '../../../database/connect.php';
 
 $id = $_GET['rm'] ?? 0;
+$no = $_GET['no'] ?? 0;
 
 // Ambil semua dokumen berdasarkan id_patient
-$q = mysqli_query($koneksi, "
-   SELECT * FROM dokumen_kependudukan 
-   WHERE id_patient = '$id'
-");
+$q = mysqli_query($koneksi, "SELECT * FROM pasien_dokumen 
+   WHERE nomor_rm = '$id' AND visit_ID='$no'");
 
 if (!$q) {
    echo json_encode([
