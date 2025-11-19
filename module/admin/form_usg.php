@@ -1,5 +1,5 @@
 <?php
-$title = 'Foto EKG';
+$title = 'Foto USG';
 require '../../database/connect.php';
 require '../../controller/view.php';
 $no = $_GET['no'];
@@ -50,10 +50,10 @@ $datapatient = mysqli_fetch_array($patient);
               <div class="card w-100">
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Foto Elektrokardiogram (EKG)</h5>
+                    <h5 class="card-title fw-semibold">Foto Ultrasonografi (USG)</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
-                      <a href="module/admin/print/formulir_ekg?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                      <a href="module/admin/print/formulir_usg?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
                         <button class="btn btn-outline-primary"><i class="fas fa-print"></i> Cetak</button>
                       </a>
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
@@ -64,8 +64,10 @@ $datapatient = mysqli_fetch_array($patient);
                       <thead>
                         <tr>
                           <th class="text-dark fw-normal">Tanggal Pemeriksaan</th>
-                          <th>EKG 1</th>
-                          <th>EKG 2</th>
+                          <th>Usia Kandungan</th>
+                          <th>USG 1</th>
+                          <th>USG 2</th>
+                          <th>USG 3</th>
                           <th>Interpretasi</th>
                           <th>Dokter</th>
                           <th class="text-center">Actions</th>
@@ -97,7 +99,7 @@ $datapatient = mysqli_fetch_array($patient);
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <input type="hidden" name="id_ekg" id="id_ekg">
+        <input type="hidden" name="id_usg" id="id_usg">
         <input type="hidden" name="nomor_rm" value="<?= $_GET['rm'] ?>">
         <input type="hidden" name="visit_ID" value="<?= $_GET['no'] ?>">
 
@@ -112,13 +114,22 @@ $datapatient = mysqli_fetch_array($patient);
           </div>
           <div class="col-12">
             <div class="mb-3">
-              <label for="pilih_ekg" class="form-label">
-                Pilih EKG <span class="text-danger">*</span>
+              <label for="pilih_usg" class="form-label">
+                Pilih USG <span class="text-danger">*</span>
               </label>
-              <select name="pilih_ekg" id="pilih_ekg" class="form-select" required>
-                <option value="1">EKG 1</option>
-                <option value="2">EKG 2</option>
+              <select name="pilih_usg" id="pilih_usg" class="form-select" required>
+                <option value="1">USG 1</option>
+                <option value="2">USG 2</option>
+                <option value="3">USG 3</option>
               </select>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="mb-3">
+              <label for="usia_kandungan" class="form-label">
+                Usia Kandungan <span class="text-danger">*</span>
+              </label>
+              <input type="text" name="usia_kandungan" class="form-control" id="usia_kandungan" required>
             </div>
           </div>
           <div class="col-12">
@@ -157,7 +168,7 @@ $datapatient = mysqli_fetch_array($patient);
 $id_patient = $datapatient['id_patient'];
 ?>
 <script>
-  const apiUrl = 'controller/ranap/ekgController?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>';
+  const apiUrl = 'controller/ranap/usgController?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>';
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
@@ -181,17 +192,20 @@ $id_patient = $datapatient['id_patient'];
             actions: `
                 <div class="text-center">
                     <div class="btn-group btn-group-sm" role="group">
-                        <a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_ekg}">
+                        <a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_usg}">
                             <i class="fas fa-trash"></i>
                         </a>
                     </div>
                 </div>
               `,
             tanggal: row.tanggal_pemeriksaan ?? "-",
-            ekg1: row.ekg1 ?
-              `<img src="${row.ekg1}" style="max-width:80px">` : "-",
-            ekg2: row.ekg2 ?
-              `<img src="${row.ekg2}" style="max-width:80px">` : "-",
+            usia_kandungan: row.usia_kandungan ?? "-",
+            usg1: row.usg1 ?
+              `<img src="${row.usg1}" style="max-width:80px">` : "-",
+            usg2: row.usg2 ?
+              `<img src="${row.usg2}" style="max-width:80px">` : "-",
+            usg3: row.usg3 ?
+              `<img src="${row.usg2}" style="max-width:80px">` : "-",
             interpretasi: row.interpretasi ?? "-",
             dokter: row.dokter ?? "-",
           }));
@@ -202,11 +216,19 @@ $id_patient = $datapatient['id_patient'];
           className: "text-wrap"
         },
         {
-          data: "ekg1",
+          data: "usia_kandungan",
           className: "text-wrap"
         },
         {
-          data: "ekg2",
+          data: "usg1",
+          className: "text-wrap"
+        },
+        {
+          data: "usg2",
+          className: "text-wrap"
+        },
+        {
+          data: "usg3",
           className: "text-wrap"
         },
         {
@@ -233,7 +255,7 @@ $id_patient = $datapatient['id_patient'];
     // 🔹 Tambah
     $('#btnTambah').on('click', function() {
       $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
-      $('#id_ekg').val('');
+      $('#id_usg').val('');
       $('#programModal .modal-title').text('Tambah Data');
       $('#programModal').modal('show');
     });
@@ -243,7 +265,7 @@ $id_patient = $datapatient['id_patient'];
       e.preventDefault();
 
       let formData = new FormData(this); // WAJIB FORM DATA
-      let id = $('#id_ekg').val();
+      let id = $('#id_usg').val();
 
       fetch(apiUrl + (id ? `&id=${id}` : ''), {
           method: id ? 'POST' : 'POST', // pakai POST untuk upload

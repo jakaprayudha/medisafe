@@ -195,6 +195,11 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                           <i class="bi bi-file-earmark-text me-2"></i>Foto Elektrokardiogram (EKG) 
                         </a>
                       </li>
+                        <li>
+                        <a class="dropdown-item" href="module/admin/form_usg?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="bi bi-file-earmark-text me-2"></i>Foto Ultrasonografi (USG) 
+                        </a>
+                      </li>
                          <li>
                         <a class="dropdown-item" href="module/admin/cppt?no=${row.visit_ID}&rm=${row.nomor_rm}" >
                           <i class="bi bi-file-earmark-text me-2"></i>CPPT

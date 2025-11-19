@@ -10,10 +10,9 @@ if (!$no || !$rm) {
    exit;
 }
 
-$q = mysqli_query($koneksi, "
-    SELECT *
-    FROM usg_results
-    WHERE visit_id = '$no' AND rm = '$rm'
+$q = mysqli_query($koneksi, "SELECT *
+    FROM usg_results usg INNER JOIN pasien_visit pv ON usg.visit_ID = pv.visit_ID INNER JOIN ms_patient mp ON usg.nomor_rm = mp.nomor_rm
+    WHERE usg.visit_ID = '$no' AND mp.nomor_rm = '$rm'
     LIMIT 1
 ");
 

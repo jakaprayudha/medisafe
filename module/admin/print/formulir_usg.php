@@ -165,9 +165,26 @@
       </tr>
    </table>
 
+
    <!-- FOTO USG -->
-   <div class="usg-box">
+   <div class="usg-box" id="box_usg1">
       <img id="usg1_img" class="usg-img">
+   </div>
+
+   <div class="usg-box" id="box_usg2">
+      <img id="usg2_img" class="usg-img">
+   </div>
+
+   <div class="usg-box" id="box_usg3">
+      <img id="usg3_img" class="usg-img">
+   </div>
+
+   <!-- INTERPRETASI -->
+   <div style="margin-top:20px;">
+      <b>Interpretasi / Hasil Bacaan Dokter:</b>
+      <div id="usg_interpretasi"
+         style="border:1px solid #000; padding:10px; min-height:80px; white-space:pre-line; margin-top:5px;">
+      </div>
    </div>
 
    <!-- FOOTER / TTD -->
@@ -205,14 +222,32 @@
             };
 
             // IDENTITAS
-            set("usg_nama", d.nama_pasien);
-            set("usg_rm", d.rm);
+            set("usg_nama", d.patient_name);
+            set("usg_rm", d.nomor_rm);
             set("usg_usia", d.usia_kandungan);
             set("usg_tanggal", d.tanggal_pemeriksaan);
 
-            // GAMBAR USG
-            if (d.usg1) document.getElementById("usg1_img").src = base + d.usg1;
+            // FOTO USG 1
+            if (d.usg1) {
+               document.getElementById("usg1_img").src = base + d.usg1;
+            } else {
+               document.getElementById("box_usg1").style.display = "none";
+            }
 
+            // FOTO USG 2
+            if (d.usg2) {
+               document.getElementById("usg2_img").src = base + d.usg2;
+            } else {
+               document.getElementById("box_usg2").style.display = "none";
+            }
+
+            // FOTO USG 3
+            if (d.usg3) {
+               document.getElementById("usg3_img").src = base + d.usg3;
+            } else {
+               document.getElementById("box_usg3").style.display = "none";
+            }
+            document.getElementById("usg_interpretasi").textContent = d.interpretasi ?? "";
             // TTD
             if (d.ttd_dokter) document.getElementById("usg_ttd").src = base + d.ttd_dokter;
 
