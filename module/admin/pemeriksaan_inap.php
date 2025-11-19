@@ -225,9 +225,8 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                           <i class="bi bi-file-earmark-text me-2"></i>Perkembangan Pasien & Instruksi Dokter
                         </a>
                       </li>
-                    
                         <li>
-                        <a class="dropdown-item" href="module/admin/print/formulir_resume?no=${row.visit_ID}&rm=${row.nomor_rm}" target="_blank">
+                        <a class="dropdown-item" href="module/admin/resume_medis?no=${row.visit_ID}&rm=${row.nomor_rm}">
                           <i class="bi bi-file-earmark-text me-2"></i>Resume Medis
                         </a>
                       </li>

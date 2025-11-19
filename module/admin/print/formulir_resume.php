@@ -6,14 +6,14 @@
          margin: 1.2cm;
       }
 
-      .form-resume {
+      .rmprint-wrapper {
          font-family: "Times New Roman", serif;
          font-size: 11pt;
          color: #000;
          width: 100%;
       }
 
-      .form-resume .title {
+      .rmprint-title {
          text-align: center;
          font-weight: bold;
          text-transform: uppercase;
@@ -21,27 +21,27 @@
          font-size: 16pt;
       }
 
-      .form-resume table {
+      .rmprint-table {
          width: 100%;
          border-collapse: collapse;
          margin-bottom: 6px;
       }
 
-      .form-resume td {
+      .rmprint-td {
          padding: 3px 4px;
          vertical-align: top;
       }
 
-      .form-resume .underline {
+      .rmprint-underline {
          border-bottom: 1px dotted #555;
          height: 16px;
       }
 
-      .form-resume .section {
+      .rmprint-section {
          margin-top: 10px;
       }
 
-      .form-resume .section-title {
+      .rmprint-section-title {
          font-weight: bold;
          text-transform: uppercase;
          font-size: 11.5pt;
@@ -50,32 +50,33 @@
          padding-bottom: 2px;
       }
 
-      .form-resume .box {
+      .rmprint-box {
          border: 1px solid #000;
          padding: 5px;
          min-height: 60px;
+         white-space: pre-line;
       }
 
-      .form-resume .signature {
+      .rmprint-signature {
          margin-top: 20px;
          display: flex;
          justify-content: space-between;
       }
 
-      .form-resume .signature .col {
+      .rmprint-sign-col {
          width: 48%;
          text-align: center;
          font-size: 11pt;
       }
 
-      .form-resume .sign-line {
+      .rmprint-sign-line {
          margin-top: 50px;
          border-top: 1px solid #000;
          padding-top: 3px;
       }
 
       @media print {
-         .no-print {
+         .rmprint-noprint {
             display: none;
          }
       }
@@ -83,81 +84,82 @@
 
    <?php include 'kopsurat.php'; ?>
 
-   <div class="form-resume">
-      <div class="title">RESUME MEDIS</div>
+   <div class="rmprint-wrapper">
+      <div class="rmprint-title">RESUME MEDIS</div>
 
       <!-- IDENTITAS PASIEN -->
-      <table>
+      <table class="rmprint-table">
          <tr>
-            <td width="20%">Nama Pasien</td>
-            <td class="underline" width="30%" id="r_nama"></td>
-            <td width="20%">No. Rekam Medis</td>
-            <td class="underline" width="30%" id="r_rm"></td>
+            <td class="rmprint-td" width="20%">Nama Pasien</td>
+            <td class="rmprint-underline rmprint-td" width="30%" id="r_nama"></td>
+            <td class="rmprint-td" width="20%">No. Rekam Medis</td>
+            <td class="rmprint-underline rmprint-td" width="30%" id="r_rm"></td>
          </tr>
 
          <tr>
-            <td>Umur</td>
-            <td class="underline" id="r_umur"></td>
-            <td>Jenis Kelamin</td>
-            <td class="underline" id="r_jk"></td>
+            <td class="rmprint-td">Umur</td>
+            <td class="rmprint-underline rmprint-td" id="r_umur"></td>
+            <td class="rmprint-td">Jenis Kelamin</td>
+            <td class="rmprint-underline rmprint-td" id="r_jk"></td>
          </tr>
 
          <tr>
-            <td>Alamat</td>
-            <td class="underline" colspan="3" id="r_alamat"></td>
+            <td class="rmprint-td">Alamat</td>
+            <td class="rmprint-underline rmprint-td" colspan="3" id="r_alamat"></td>
          </tr>
 
          <tr>
-            <td>Ruang / Kelas</td>
-            <td class="underline" id="r_ruang"></td>
-            <td>Tanggal Masuk</td>
-            <td class="underline" id="r_masuk"></td>
+            <td class="rmprint-td">Ruang / Kelas</td>
+            <td class="rmprint-underline rmprint-td" id="r_ruang"></td>
+            <td class="rmprint-td">Tanggal Masuk</td>
+            <td class="rmprint-underline rmprint-td" id="r_masuk"></td>
          </tr>
 
          <tr>
-            <td>Tanggal Keluar</td>
-            <td class="underline" id="r_keluar"></td>
-            <td>DPJP</td>
-            <td class="underline" id="r_dpjp"></td>
+            <td class="rmprint-td">Tanggal Keluar</td>
+            <td class="rmprint-underline rmprint-td" id="r_keluar"></td>
+            <td class="rmprint-td">DPJP</td>
+            <td class="rmprint-underline rmprint-td" id="r_dpjp"></td>
          </tr>
       </table>
 
-      <!-- CONTENT BOXES -->
-      <div class="section">
-         <div class="section-title">Diagnosa</div>
-         <div class="box" id="r_diagnosa"></div>
+      <!-- CONTENT SECTIONS -->
+      <div class="rmprint-section">
+         <div class="rmprint-section-title">Diagnosa</div>
+         <div class="rmprint-box" id="r_diagnosa"></div>
       </div>
 
-      <div class="section">
-         <div class="section-title">Tindakan / Terapi</div>
-         <div class="box" id="r_tindakan"></div>
+      <div class="rmprint-section">
+         <div class="rmprint-section-title">Tindakan / Terapi</div>
+         <div class="rmprint-box" id="r_tindakan"></div>
       </div>
 
-      <div class="section">
-         <div class="section-title">Hasil Pemeriksaan Penunjang</div>
-         <div class="box" id="r_penunjang"></div>
+      <div class="rmprint-section">
+         <div class="rmprint-section-title">Hasil Pemeriksaan Penunjang</div>
+         <div class="rmprint-box" id="r_penunjang"></div>
       </div>
 
-      <div class="section">
-         <div class="section-title">Obat yang Diberikan</div>
-         <div class="box" id="r_obat"></div>
+      <div class="rmprint-section">
+         <div class="rmprint-section-title">Obat yang Diberikan</div>
+         <div class="rmprint-box" id="r_obat"></div>
       </div>
 
-      <div class="section">
-         <div class="section-title">Instruksi / Anjuran Lanjutan</div>
-         <div class="box" id="r_instruksi"></div>
+      <div class="rmprint-section">
+         <div class="rmprint-section-title">Instruksi / Anjuran Lanjutan</div>
+         <div class="rmprint-box" id="r_instruksi"></div>
       </div>
 
-      <div class="signature">
-         <div class="col">
-            <div class="sign-line" id="r_perawat">Petugas / Perawat</div>
+      <!-- SIGNATURE -->
+      <div class="rmprint-signature">
+         <div class="rmprint-sign-col">
+            <div class="rmprint-sign-line" id="r_perawat">Petugas / Perawat</div>
          </div>
-         <div class="col">
-            <div class="sign-line" id="r_dokter">Dokter Penanggung Jawab</div>
+         <div class="rmprint-sign-col">
+            <div class="rmprint-sign-line" id="r_dokter">Dokter Penanggung Jawab</div>
          </div>
       </div>
 
-      <div class="no-print">
+      <div class="rmprint-noprint">
          <button onclick="window.print()">🖨 Cetak Form</button>
       </div>
    </div>
@@ -172,7 +174,7 @@
       const rm = p.get("rm");
       if (!no || !rm) return;
 
-      // ===== LOAD PASIEN =====
+      // === LOAD DATA PASIEN ===
       fetch(`getpasien.php?no=${no}&rm=${rm}`)
          .then(r => r.json())
          .then(d => {
@@ -190,12 +192,12 @@
             r_umur.innerText = umur;
             r_alamat.innerText = d.patient_address;
             r_ruang.innerText = d.source_hub || "-";
-            r_masuk.innerText = d.tanggal_masuk || "-";
-            r_keluar.innerText = d.tanggal_keluar || "-";
-            r_dpjp.innerText = d.dpjp || "-";
+            r_masuk.innerText = d.visit_date || "-";
+            r_keluar.innerText = d.visit_out || "-";
+            r_dpjp.innerText = d.doctor_name || "-";
          });
 
-      // ===== LOAD RESUME =====
+      // === LOAD RESUME ===
       fetch(`getresume.php?visit=${no}&rm=${rm}`)
          .then(r => r.json())
          .then(res => {
