@@ -2,9 +2,9 @@
 include "../../database/connect.php";
 
 $rm = $_GET['rm'];
-$visit = $_GET['visit'];
+$visit = $_GET['no'];
 
-$q = mysqli_query($koneksi, "SELECT foto_path FROM capture_patient WHERE rm='$rm' AND visit='$visit'");
+$q = mysqli_query($koneksi, "SELECT foto_path FROM pasien_dokumen WHERE nomor_rm='$rm' AND visit_ID='$visit' AND jenis_dokumen='FOTO_PASIEN'");
 $r = mysqli_fetch_assoc($q);
 
 echo json_encode([

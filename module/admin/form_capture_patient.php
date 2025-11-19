@@ -332,7 +332,7 @@ $dataresume = $query->fetch_assoc();
 
           // Tampilkan foto tanpa reload
           if (res.foto) {
-            document.getElementById("fotoPasien").src = "uploads/foto/" + res.foto;
+            document.getElementById("fotoPasien").src = res.foto;
             document.getElementById("fotoPasien").style.display = "block";
           }
 
@@ -355,11 +355,11 @@ $dataresume = $query->fetch_assoc();
     const rm = document.querySelector("input[name='nomor_rm']").value;
     const visit = document.querySelector("input[name='nomor_visit']").value;
 
-    fetch(`controller/visit/getFoto.php?rm=${rm}&visit=${visit}`)
+    fetch(`controller/visit/getFoto.php?rm=${rm}&no=${visit}`)
       .then(r => r.json())
       .then(res => {
         if (res.foto) {
-          document.getElementById("fotoPasien").src = "uploads/foto/" + res.foto;
+          document.getElementById("fotoPasien").src = res.foto;
           document.getElementById("fotoPasien").style.display = "block";
         }
       });
