@@ -208,6 +208,51 @@
             let currentPage = 1;
 
             // ==========================================================
+            // 2) FOTO PERAWATAN — MULTI PAGE 2 KOLOM x 2 BARIS
+            // ==========================================================
+            const perawatan = list.filter(x => x.jenis_dokumen === "FOTO_PERAWATAN");
+
+            let perPage = 4;
+            let pages = Math.ceil(perawatan.length / perPage);
+
+            for (let i = 0; i < pages; i++) {
+
+               let pPage = document.createElement("div");
+               pPage.className = "dokmulti-page";
+
+               let verifyURL = baseURL + "verify_dokumen_perawatan.php?rm=" + rm;
+               let qrURL =
+                  "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" +
+                  encodeURIComponent(verifyURL);
+
+               let slice = perawatan.slice(i * perPage, i * perPage + perPage);
+               let gridHTML = slice
+                  .map(p => `
+                     <div class="dokmulti-grid-item">
+                        <div style="width:100%;height:100%;display:flex;justify-content:center;align-items:center;overflow:hidden;">
+                           <img src="${baseURL + p.foto_path}" style="width:100%;height:100%;object-fit:cover;">
+                        </div>
+                        <div class="dokmulti-photo-date">Tanggal: ${p.tgl_upload ?? "-"}</div>
+                     </div>
+                  `)
+                  .join("");
+               pPage.innerHTML = `
+                  <div class="dokmulti-watermark">FOTO PERAWATAN</div>
+                  <img class="dokmulti-qr-img" src="${qrURL}">
+
+                  <div class='dokmulti-title'>DOKUMENTASI PERAWATAN</div>
+                  <div class='dokmulti-subtitle'>Semua Foto Dalam Perawatan</div>
+
+                  <div class="dokmulti-grid">${gridHTML}</div>
+
+                  <div class="dokmulti-page-number">Page ${currentPage} / ${totalPages}</div>
+               `;
+
+               container.appendChild(pPage);
+               currentPage++;
+            }
+
+            // ==========================================================
             // 1) CETAK DOKUMEN BIASA
             // ==========================================================
             list.filter(d => d.jenis_dokumen !== "FOTO_PERAWATAN").forEach((d) => {
@@ -260,50 +305,7 @@
                currentPage++;
             });
 
-            // ==========================================================
-            // 2) FOTO PERAWATAN — MULTI PAGE 2 KOLOM x 2 BARIS
-            // ==========================================================
-            const perawatan = list.filter(x => x.jenis_dokumen === "FOTO_PERAWATAN");
 
-            let perPage = 4;
-            let pages = Math.ceil(perawatan.length / perPage);
-
-            for (let i = 0; i < pages; i++) {
-
-               let pPage = document.createElement("div");
-               pPage.className = "dokmulti-page";
-
-               let verifyURL = baseURL + "verify_dokumen_perawatan.php?rm=" + rm;
-               let qrURL =
-                  "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" +
-                  encodeURIComponent(verifyURL);
-
-               let slice = perawatan.slice(i * perPage, i * perPage + perPage);
-               let gridHTML = slice
-                  .map(p => `
-      <div class="dokmulti-grid-item">
-         <div style="width:100%;height:100%;display:flex;justify-content:center;align-items:center;overflow:hidden;">
-            <img src="${baseURL + p.foto_path}" style="width:100%;height:100%;object-fit:cover;">
-         </div>
-         <div class="dokmulti-photo-date">Tanggal: ${p.tgl_upload ?? "-"}</div>
-      </div>
-   `)
-                  .join("");
-               pPage.innerHTML = `
-                  <div class="dokmulti-watermark">FOTO PERAWATAN</div>
-                  <img class="dokmulti-qr-img" src="${qrURL}">
-
-                  <div class='dokmulti-title'>DOKUMENTASI PERAWATAN</div>
-                  <div class='dokmulti-subtitle'>Semua Foto Dalam Perawatan</div>
-
-                  <div class="dokmulti-grid">${gridHTML}</div>
-
-                  <div class="dokmulti-page-number">Page ${currentPage} / ${totalPages}</div>
-               `;
-
-               container.appendChild(pPage);
-               currentPage++;
-            }
 
          });
 

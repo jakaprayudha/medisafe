@@ -67,10 +67,10 @@ $datafaskes = mysqli_fetch_array($checkfaskes);
 
 <div class="kopsurat-wrapper">
 
-   <img src="https://ipqi.org/wp-content/uploads/2018/09/bakti-husada.png"
+   <img src="../../../assets/images/logos/logodeliserdang.png"
       class="kopsurat-left">
 
-   <img src="../../../assets/images/logos/medisafe_logo.png"
+   <img src="../../../assets/images/logos/logotutun.png"
       class="kopsurat-right">
 
    <div class="kopsurat-center">

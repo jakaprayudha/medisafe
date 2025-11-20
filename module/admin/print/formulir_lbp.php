@@ -91,7 +91,7 @@
    </style>
    <?php include 'kopsurat.php'; ?>
    <div class="lbp-header">
-      <img src="https://seeklogo.com/images/B/bpjs-kesehatan-logo-496D1735E1-seeklogo.com.png" alt="BPJS Logo">
+      <img src="../../../assets/images/logos/logobpjs.png" alt="BPJS Logo">
       <div class="lbp-title">LEMbar Bukti Pelayanan (LBP)</div>
       <div class="lbp-title">KLAIM RITP</div>
       <div class="lbp-title">BPJS Kesehatan Cabang Lubuk Pakam</div>
