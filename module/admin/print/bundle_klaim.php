@@ -10,7 +10,7 @@ $files = [
    "formulir_keterangan_ranap.php",
    "formulir_surat_persetujuan.php",
    "formulir_inout_ranap.php",
-   "formulir_history_treatment.php",
+   // "formulir_history_treatment.php",
    "formulir_instruksi.php",
    "formulir_cpo.php",
    "formulir_cppt.php",

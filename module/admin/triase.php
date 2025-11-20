@@ -190,64 +190,140 @@ $rm = $_GET['rm'];
                         nyeri_value.value = nyeri.value;
                       </script>
 
-                      <h5 class="mt-3">Kategori Triase</h5>
+                      <h5 class="mt-3">Kategori Triase (SAAN Non Psikiatri)</h5>
                       <select id="triase" class="form-select mb-3">
-                        <option value="">-- Pilih --</option>
-                        <option value="Merah">🔴 Merah – Gawat Darurat</option>
-                        <option value="Kuning">🟡 Kuning – Darurat</option>
-                        <option value="Hijau">🟢 Hijau – Tidak darurat</option>
-                        <option value="Hitam">⚫ Hitam – Meninggal</option>
+                        <option value="">-- Pilih ATS --</option>
+                        <option value="ATS 1">🔴 ATS 1 - Resusitasi</option>
+                        <option value="ATS 2">🟡 ATS 2 - Emergensi</option>
+                        <option value="ATS 3">🟢 ATS 3 - Urgensi</option>
+                        <option value="ATS 4">⚪ ATS 4 - Non-Urgen</option>
                       </select>
 
-                      <!-- MERAH -->
-                      <div id="box-merah" class="triase-box border rounded p-2 mb-3" style="display:none;">
-                        <h6 class="text-danger fw-bold">🔴 Triase Merah</h6>
-                        <div class="form-check"><input class="form-check-input merah" type="checkbox" value="Henti napas/jantung"> Henti napas/jantung</div>
-                        <div class="form-check"><input class="form-check-input merah" type="checkbox" value="GCS ≤ 8"> GCS ≤ 8</div>
-                        <div class="form-check"><input class="form-check-input merah" type="checkbox" value="Syok (TD < 90)"> Syok (TD < 90)</div>
-                            <div class="form-check"><input class="form-check-input merah" type="checkbox" value="Perdarahan masif"> Perdarahan masif</div>
+                      <!-- ============================= -->
+                      <!-- ATS 1 -->
+                      <!-- ============================= -->
+                      <div id="box-ats1" class="triase-box border rounded p-2 mb-3" style="display:none;">
+                        <h6 class="fw-bold text-danger">🔴 ATS 1 (Resusitasi)</h6>
+
+                        <label class="fw-bold mt-2">A. Airway</label>
+                        <div class="form-check"><input class="form-check-input ats1" type="checkbox" value="Sumbatan jalan nafas"> Sumbatan Jalan Nafas</div>
+
+                        <label class="fw-bold mt-2">B. Breathing</label>
+                        <div class="form-check"><input class="form-check-input ats1" type="checkbox" value="Henti Nafas"> Henti Nafas</div>
+
+                        <label class="fw-bold mt-2">C. Circulation</label>
+                        <div class="form-check"><input class="form-check-input ats1" type="checkbox" value="Henti Jantung"> Henti Jantung</div>
+
+                        <label class="fw-bold mt-2">D. Disability</label>
+                        <div class="form-check"><input class="form-check-input ats1" type="checkbox" value="Nyeri berat tidak respon obat"> Nyeri berat yang tidak respon obat</div>
+
+                        <label class="fw-bold mt-2">E. Exposure</label>
+                        <div class="form-check"><input class="form-check-input ats1" type="checkbox" value="Kejang berkelanjutan"> Kejang berkelanjutan</div>
+
+                        <label class="fw-bold mt-2">F. Psikiatri</label>
+                        <div class="form-check"><input class="form-check-input ats1" type="checkbox" value="Gangguan perilaku mengancam jiwa"> Gangguan perilaku berat mengancam diri & orang lain</div>
+                      </div>
+
+
+
+                      <!-- ============================= -->
+                      <!-- ATS 2 -->
+                      <!-- ============================= -->
+                      <div id="box-ats2" class="triase-box border rounded p-2 mb-3" style="display:none;">
+                        <h6 class="fw-bold text-warning">🟡 ATS 2 (Emergensi)</h6>
+
+                        <label class="fw-bold mt-2">A. Airway</label>
+                        <div class="form-check"><input class="form-check-input ats2" type="checkbox" value="Tidak ada sumbatan"> Tidak ada sumbatan</div>
+
+                        <label class="fw-bold mt-2">B. Breathing</label>
+                        <div class="form-check"><input class="form-check-input ats2" type="checkbox" value="RR < 10 / Distress berat"> RR < 10 x/menit, distress napas berat</div>
+
+                            <label class="fw-bold mt-2">C. Circulation</label>
+                            <div class="form-check"><input class="form-check-input ats2" type="checkbox" value="Sistolik < 80"> Sistolik < 80 mmHg</div>
+
+                                <label class="fw-bold mt-2">D. Disability</label>
+                                <div class="form-check"><input class="form-check-input ats2" type="checkbox" value="Nyeri sedang"> Nyeri sedang</div>
+
+                                <label class="fw-bold mt-2">E. Exposure</label>
+                                <div class="form-check"><input class="form-check-input ats2" type="checkbox" value="Nyeri dada tipikal"> Nyeri dada tipikal</div>
+                                <div class="form-check"><input class="form-check-input ats2" type="checkbox" value="Defisit neurologis"> Defisit Neurologis</div>
+
+                                <label class="fw-bold mt-2">F. Psikiatri</label>
+                                <div class="form-check"><input class="form-check-input ats2" type="checkbox" value="Datang dengan restrain"> Datang dengan restrain</div>
+                            </div>
+
+
+
+                            <!-- ============================= -->
+                            <!-- ATS 3 -->
+                            <!-- ============================= -->
+                            <div id="box-ats3" class="triase-box border rounded p-2 mb-3" style="display:none;">
+                              <h6 class="fw-bold text-success">🟢 ATS 3 (Urgensi)</h6>
+
+                              <label class="fw-bold mt-2">A. Airway</label>
+                              <div class="form-check"><input class="form-check-input ats3" type="checkbox" value="Tidak ada sumbatan"> Tidak ada sumbatan</div>
+
+                              <label class="fw-bold mt-2">B. Breathing</label>
+                              <div class="form-check"><input class="form-check-input ats3" type="checkbox" value="Takipnea / distress sedang"> Takipnea / distress sedang</div>
+
+                              <label class="fw-bold mt-2">C. Circulation</label>
+                              <div class="form-check"><input class="form-check-input ats3" type="checkbox" value="Gangguan sirkulasi"> Gangguan sirkulasi (akral dingin, nadi <50 atau>150)</div>
+
+                              <label class="fw-bold mt-2">D. Disability</label>
+                              <div class="form-check"><input class="form-check-input ats3" type="checkbox" value="Cedera kepala ringan"> Cedera kepala ringan</div>
+
+                              <label class="fw-bold mt-2">E. Exposure</label>
+                              <div class="form-check"><input class="form-check-input ats3" type="checkbox" value="Nyeri hebat"> Nyeri hebat</div>
+                              <div class="form-check"><input class="form-check-input ats3" type="checkbox" value="Multiple trauma"> Multiple trauma</div>
+
+                              <label class="fw-bold mt-2">F. Psikiatri</label>
+                              <div class="form-check"><input class="form-check-input ats3" type="checkbox" value="Agresif fisik"> Agresif secara fisik</div>
+                              <div class="form-check"><input class="form-check-input ats3" type="checkbox" value="Ancaman bunuh diri"> Ancaman bunuh diri</div>
+                            </div>
+
+
+
+                            <!-- ============================= -->
+                            <!-- ATS 4 -->
+                            <!-- ============================= -->
+                            <div id="box-ats4" class="triase-box border rounded p-2 mb-3" style="display:none;">
+                              <h6 class="fw-bold text-dark">⚪ ATS 4 (Non Urgen)</h6>
+
+                              <label class="fw-bold mt-2">A. Airway</label>
+                              <div class="form-check"><input class="form-check-input ats4" type="checkbox" value="Tidak ada sumbatan"> Tidak ada sumbatan</div>
+
+                              <label class="fw-bold mt-2">B. Breathing</label>
+                              <div class="form-check"><input class="form-check-input ats4" type="checkbox" value="Dipsnea ringan"> Dispnea ringan</div>
+
+                              <label class="fw-bold mt-2">C. Circulation</label>
+                              <div class="form-check"><input class="form-check-input ats4" type="checkbox" value="Muntah diare dehidrasi ringan"> Muntah / diare tanda dehidrasi</div>
+
+                              <label class="fw-bold mt-2">E. Exposure</label>
+                              <div class="form-check"><input class="form-check-input ats4" type="checkbox" value="Luka kecil"> Luka kecil</div>
+
+                              <label class="fw-bold mt-2">F. Psikiatri</label>
+                              <div class="form-check"><input class="form-check-input ats4" type="checkbox" value="Keluhan minor"> Keluhan minor</div>
+                            </div>
+
+                            <input type="hidden" id="referensi_triase">
+
+                            <div class="mb-3">
+                              <label class="form-label">Catatan Tambahan</label>
+                              <textarea id="catatan" rows="3" class="form-control"></textarea>
+                            </div>
                         </div>
 
-                        <!-- KUNING -->
-                        <div id="box-kuning" class="triase-box border rounded p-2 mb-3" style="display:none;">
-                          <h6 class="text-warning fw-bold">🟡 Triase Kuning</h6>
-                          <div class="form-check"><input class="form-check-input kuning" type="checkbox" value="Sesak sedang"> Sesak sedang</div>
-                          <div class="form-check"><input class="form-check-input kuning" type="checkbox" value="Suhu > 39°C"> Suhu > 39°C</div>
-                          <div class="form-check"><input class="form-check-input kuning" type="checkbox" value="Nyeri sedang"> Nyeri sedang</div>
-                        </div>
-
-                        <!-- HIJAU -->
-                        <div id="box-hijau" class="triase-box border rounded p-2 mb-3" style="display:none;">
-                          <h6 class="text-success fw-bold">🟢 Triase Hijau</h6>
-                          <div class="form-check"><input class="form-check-input hijau" type="checkbox" value="Keluhan ringan"> Keluhan ringan</div>
-                          <div class="form-check"><input class="form-check-input hijau" type="checkbox" value="Nyeri ringan"> Nyeri ringan</div>
-                        </div>
-
-                        <!-- HITAM -->
-                        <div id="box-hitam" class="triase-box border rounded p-2 mb-3" style="display:none;">
-                          <h6 class="fw-bold">⚫ Triase Hitam</h6>
-                          <div class="form-check"><input class="form-check-input hitam" type="checkbox" value="Meninggal di tempat"> Meninggal di tempat</div>
-                          <div class="form-check"><input class="form-check-input hitam" type="checkbox" value="Tidak ada tanda kehidupan"> Tidak ada tanda kehidupan</div>
-                        </div>
-
-                        <input type="hidden" id="referensi_triase">
-
-                        <div class="mb-3">
-                          <label class="form-label">Catatan Tambahan</label>
-                          <textarea id="catatan" rows="3" class="form-control"></textarea>
+                        <div class="text-end mt-3">
+                          <a href="module/admin/print/formulir_triase?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                            <button class="btn btn-outline-primary">
+                              <iconify-icon icon="mdi:printer-outline"></iconify-icon> Cetak
+                            </button>
+                          </a>
+                          <button id="openModal" class="btn btn-primary">
+                            <iconify-icon icon="mdi:content-save-outline"></iconify-icon> Simpan
+                          </button>
                         </div>
                       </div>
-                    </div>
-
-                    <div class="text-end mt-3">
-                      <a href="module/admin/print/formulir_triase?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
-                        <button class="btn btn-outline-primary">
-                          <iconify-icon icon="mdi:printer-outline"></iconify-icon> Cetak
-                        </button>
-                      </a>
-                      <button id="openModal" class="btn btn-primary">
-                        <iconify-icon icon="mdi:content-save-outline"></iconify-icon> Simpan
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -255,65 +331,71 @@ $rm = $_GET['rm'];
             </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <?php
-    require 'library.php';
-    ?>
+        <?php
+        require 'library.php';
+        ?>
 </body>
 
+
 <script>
+  /* ==========================================
+   SHOW / HIDE BOX TRIASE (ATS)
+========================================== */
   document.getElementById("triase").addEventListener("change", function() {
 
-    // sembunyikan semua dulu
     document.querySelectorAll(".triase-box").forEach(box => box.style.display = "none");
 
-    let kategori = this.value;
+    let kategori = this.value; // "ATS 1"
+    let idBox = "box-" + kategori.replace(" ", "").toLowerCase(); // box-ats1
 
-    if (kategori === "Merah") {
-      document.getElementById("box-merah").style.display = "block";
-    } else if (kategori === "Kuning") {
-      document.getElementById("box-kuning").style.display = "block";
-    } else if (kategori === "Hijau") {
-      document.getElementById("box-hijau").style.display = "block";
-    } else if (kategori === "Hitam") {
-      document.getElementById("box-hitam").style.display = "block";
-    }
+    let box = document.getElementById(idBox);
+    if (box) box.style.display = "block";
   });
-</script>
-<script>
+
+
+  /* ==========================================
+     AMBIL CHECKLIST (SAAT SIMPAN)
+  ========================================== */
   function ambilChecklist() {
     let kategori = document.getElementById("triase").value;
+    if (!kategori) return "";
+
+    let className = kategori.replace(" ", "").toLowerCase(); // ats1 / ats2 / ats3 / ats4
     let list = [];
 
-    document.querySelectorAll("." + kategori.toLowerCase() + ":checked").forEach(el => {
+    document.querySelectorAll("." + className + ":checked").forEach(el => {
       list.push(el.value);
     });
 
     document.getElementById("referensi_triase").value = list.join(" | ");
   }
 
-  function applyChecklist(ref, kategori) {
-    if (!ref) return;
 
-    // Pisahkan string referensi menjadi array
-    let items = ref.split(" | ").map(i => i.trim());
+  /* ==========================================
+     APPLY CHECKLIST (SAAT EDIT)
+  ========================================== */
+  function applyChecklist(refString, kategori) {
 
-    // Aktifkan box kategori triase
+    if (!refString || !kategori) return;
+
+    let items = refString.split(" | ").map(i => i.trim());
+
+    // Set kategori triase
     document.getElementById("triase").value = kategori;
+
+    // Trigger show/hide box
     document.getElementById("triase").dispatchEvent(new Event("change"));
 
-    // Centang checkbox yang sesuai
+    let className = kategori.replace(" ", "").toLowerCase();
+
+    // Centang checkbox berdasarkan referensi
     items.forEach(val => {
-      document.querySelectorAll("." + kategori.toLowerCase()).forEach(cb => {
-        if (cb.value.trim() === val) {
-          cb.checked = true;
-        }
+      document.querySelectorAll("." + className).forEach(cb => {
+        if (cb.value.trim() === val) cb.checked = true;
       });
     });
   }
-
   document.addEventListener("DOMContentLoaded", () => {
 
     const url = new URLSearchParams(window.location.search);
