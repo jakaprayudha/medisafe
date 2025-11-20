@@ -4,6 +4,7 @@ $rm    = $_GET['rm'] ?? '';
 
 $files = [
    "formulir_sep.php",
+   "formulir_triase.php",
    "formulir_cppt.php",
    "formulir_inout_ranap.php",
    "formulir_instruksi.php",
