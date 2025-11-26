@@ -7,6 +7,7 @@ $files = [
    "formulir_triase.php",
    "formulir_ekg.php",
    "formulir_pernyataan.php",
+   "formulir_pengantar_ranap.php",
    "formulir_keterangan_ranap.php",
    "formulir_surat_persetujuan.php",
    "formulir_inout_ranap.php",
