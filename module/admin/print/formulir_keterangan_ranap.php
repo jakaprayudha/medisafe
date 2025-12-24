@@ -106,7 +106,6 @@
 
    <script>
       document.addEventListener("DOMContentLoaded", function() {
-
          const url = new URLSearchParams(window.location.search);
          const no = url.get("no");
          const rm = url.get("rm");
@@ -116,20 +115,24 @@
          fetch(`getpasien.php?no=${no}&rm=${rm}`)
             .then(res => res.json())
             .then(data => {
-
                if (!data) return;
 
-               document.getElementById("rinap_nama").innerText = data.patient_name;
+               // Nama, alamat, bpjs
+               document.getElementById("patient_name").innerText = data.patient_name;
                document.getElementById("rinap_alamat").innerText = data.patient_address;
-               document.getElementById("rinap_bpjs").innerText = data.patient_bpjs || "-";
-               document.getElementById("rinap_diagnosa").innerText = data.visit_notes || "-";
+               document.getElementById("rinap_bpjs").innerText = data.patient_bpjs ? data.patient_bpjs : "-";
 
-               let masuk = data.visit_date;
-               let keluar = data.visit_out ?? "-";
-               document.getElementById("rinap_tgl_rawat").innerText = masuk + " s/d " + keluar;
+               // Diagnosa
+               document.getElementById("rinap_diagnosa").innerText = data.visit_notes ? data.visit_notes : "-";
 
-               document.getElementById("rinap_dokter").innerText = data.doctor_name ?? "-";
-               document.getElementById("rinap_dokter2").innerText = data.doctor_name ?? "-";
+               // Tanggal rawat
+               let masuk = data.visit_date ? data.visit_date : "-";
+               let keluar = data.visit_out ? data.visit_out : "-";
+               document.getElementById("rinap_tgl_rawat").innerText = `${masuk} s/d ${keluar}`;
+
+               // Dokter
+               document.getElementById("rinap_dokter").innerText = data.doctor_name ? data.doctor_name : "-";
+               document.getElementById("rinap_dokter2").innerText = data.doctor_name ? data.doctor_name : "-";
             });
       });
    </script>
@@ -148,7 +151,7 @@
          <table class="rinap-data">
             <tr>
                <td>Nama</td>
-               <td>: dr. Herison Sinaga</td>
+               <td>: dr. Henson Sinaga</td>
             </tr>
             <tr>
                <td>Jabatan</td>
@@ -161,7 +164,7 @@
          <table class="rinap-data">
             <tr>
                <td>Nama</td>
-               <td>: <span id="rinap_nama"></span></td>
+               <td>: <span id="patient_name"></span></td>
             </tr>
             <tr>
                <td>Alamat</td>
@@ -182,15 +185,15 @@
             </tr>
             <tr>
                <td>Tanggal</td>
-               <td>: <span id="rinap_tgl_rawat"></span></td>
+               <td>: <span id="rinap_tgl_rawat">04-12-205 s/d 07-12-2025</span></td>
             </tr>
             <tr>
                <td>Diagnosa</td>
-               <td>: <span id="rinap_diagnosa"></span></td>
+               <td>: <span id="rinap_diagnosa">Vertigo + Dysepsia Syndroms</span></td>
             </tr>
             <tr>
                <td>Dokter Merawat</td>
-               <td>: <span id="rinap_dokter"></span></td>
+               <td>: <span id="rinap_dokter">dr. Mirta</span></td>
             </tr>
          </table>
 
@@ -204,17 +207,17 @@
 
          <div class="rinap-kolom-ttd">
             <p>PESERTA / KELUARGA</p>
-            <div class="rinap-ttd-box">( .................... )</div>
+            <div class="rinap-ttd-box">Andika</div>
          </div>
 
          <div class="rinap-kolom-ttd">
             <p>DOKTER MERAWAT</p>
-            <div class="rinap-ttd-box"><span id="rinap_dokter2"></span></div>
+            <div class="rinap-ttd-box"><span id="rinap_dokter2">Dr. Mirta</span></div>
          </div>
 
          <div class="rinap-kolom-ttd">
             <p>DOKTER PENANGGUNG JAWAB</p>
-            <div class="rinap-ttd-box">dr. Herison Sinaga</div>
+            <div class="rinap-ttd-box">dr. Henson Sinaga</div>
          </div>
 
       </div>

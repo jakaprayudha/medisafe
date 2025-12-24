@@ -55,13 +55,13 @@
          text-align: center;
       }
 
-      /* Jadwal kosong = warna merah */
+      /* Jadwal kosong */
       .empty {
          color: red;
          font-weight: bold;
       }
 
-      /* ================= FOOTER: QR + TTD ================= */
+      /* ================= FOOTER ================= */
       .footer-cpo {
          width: 100%;
          display: flex;
@@ -106,13 +106,19 @@
          font-size: 10pt;
          margin-top: 2px;
       }
+
+      @media print {
+         button {
+            display: none;
+         }
+      }
    </style>
 
-   <?php require 'kopsurat.php' ?>
+   <?php require 'kopsurat.php'; ?>
 
    <div class="title">CATATAN PEMBERIAN OBAT</div>
 
-   <!-- ================== INFO PASIEN ================== -->
+   <!-- ================= INFO PASIEN ================= -->
    <table class="info">
       <tr>
          <td width="20%">NAMA PASIEN</td>
@@ -128,142 +134,134 @@
       </tr>
       <tr>
          <td>DIAGNOSA</td>
-         <td>: <span id="cpo_diagnosa"></span></td>
-         <td></td>
-         <td></td>
+         <td colspan="3">: <span id="cpo_diagnosa"></span></td>
       </tr>
    </table>
 
-   <!-- ================== TABEL OBAT ================== -->
-   <table class="data" id="cpo_table">
+   <!-- ================= TABEL OBAT ================= -->
+   <table class="data">
       <thead>
          <tr>
-            <th width="70px">Tanggal</th>
-            <th width="200px">Nama Obat Oral<br>dan Injeksi</th>
-            <th width="70px">Dosis</th>
-            <th width="90px">Signature</th>
-            <th colspan="4" class="center">Jadwal dan Jam Pemberian Obat</th>
-            <th width="80px">Paraf<br>Keluarga</th>
-            <th width="80px">Paraf<br>Petugas</th>
+            <th width="70">Tanggal</th>
+            <th width="200">Nama Obat Oral<br>dan Injeksi</th>
+            <th width="70">Dosis</th>
+            <th width="90">Signature</th>
+            <th colspan="4" class="center">Jadwal & Jam Pemberian</th>
+            <th width="80">Paraf<br>Keluarga</th>
+            <th width="80">Paraf<br>Petugas</th>
          </tr>
-
          <tr class="small-header">
             <th></th>
             <th></th>
             <th></th>
             <th></th>
-            <th width="60px">Pagi</th>
-            <th width="60px">Siang</th>
-            <th width="60px">Sore</th>
-            <th width="60px">Malam</th>
+            <th>Pagi</th>
+            <th>Siang</th>
+            <th>Sore</th>
+            <th>Malam</th>
             <th></th>
             <th></th>
          </tr>
       </thead>
-
       <tbody id="cpo_body"></tbody>
    </table>
 
-   <!-- ================== FOOTER ================== -->
+   <!-- ================= FOOTER ================= -->
    <div class="footer-cpo">
-
-      <!-- QR AREA -->
       <div class="qr-sec">
          <div id="cpo_qr"></div>
          <div class="qr-text">Scan untuk verifikasi</div>
       </div>
 
-      <!-- TTD PETUGAS -->
       <div class="ttd-sec">
          <div style="height:60px;">Pengisi Data</div>
-
          <div class="ttd-line"></div>
-
          <div class="ttd-name" id="cpo_petugas"></div>
          <div class="ttd-role">Petugas Ruangan</div>
       </div>
-
    </div>
 
+   <button onclick="window.print()">🖨 Cetak</button>
 </div>
 
 <script>
    document.addEventListener("DOMContentLoaded", () => {
 
-      const url = new URLSearchParams(window.location.search);
-      const no = url.get("no");
-      const rm = url.get("rm");
-
+      const params = new URLSearchParams(window.location.search);
+      const no = params.get("no");
+      const rm = params.get("rm");
       if (!no || !rm) return;
 
-      fetch("getcpo.php?no=" + no + "&rm=" + rm)
+      fetch(`getcpo.php?no=${no}&rm=${rm}`)
          .then(r => r.json())
          .then(res => {
-
             if (res.status !== "success") return;
 
             const data = res.data;
 
-            // ================= HEADER PASIEN =================
+            /* ===== HEADER ===== */
             if (data.length > 0) {
                const d = data[0];
-               document.getElementById("cpo_nama").innerText = d.nama_pasien;
-               document.getElementById("cpo_rm").innerText = d.nomor_rm;
-               document.getElementById("cpo_tgllahir").innerText = d.tgl_lahir;
-               document.getElementById("cpo_ruangan").innerText = d.ruangan;
-               document.getElementById("cpo_diagnosa").innerText = d.diagnosa;
-               document.getElementById("cpo_petugas").innerText = d.petugas;
+               cpo_nama.innerText = d.nama_pasien;
+               cpo_rm.innerText = d.nomor_rm;
+               cpo_tgllahir.innerText = d.tgl_lahir;
+               cpo_ruangan.innerText = d.ruangan;
+               cpo_diagnosa.innerText = d.diagnosa;
+               cpo_petugas.innerText = d.petugas;
             }
 
-            // ================= GENERATE ROWS =================
+            /* ===== GROUP BY TANGGAL ===== */
+            const grouped = {};
+            data.forEach(item => {
+               if (!grouped[item.tanggal]) grouped[item.tanggal] = [];
+               grouped[item.tanggal].push(item);
+            });
+
             const tbody = document.getElementById("cpo_body");
             tbody.innerHTML = "";
 
-            data.forEach(obat => {
-               const tr = document.createElement("tr");
+            const makeTd = (text, center = false, empty = false) => {
+               const td = document.createElement("td");
+               td.innerText = text || "";
+               if (center) td.classList.add("center");
+               if (empty && (!text || text.trim() === "")) td.classList.add("empty");
+               return td;
+            };
 
-               const makeTd = (content, center = false, highlight = false) => {
-                  const td = document.createElement("td");
-                  td.innerText = content || "";
-                  if (center) td.classList.add("center");
-                  if (highlight && (!content || content.trim() === ""))
-                     td.classList.add("empty");
-                  return td;
-               };
+            Object.keys(grouped).forEach(tanggal => {
+               const items = grouped[tanggal];
 
-               tr.appendChild(makeTd(obat.tanggal));
-               tr.appendChild(makeTd(obat.nama_obat));
-               tr.appendChild(makeTd(obat.dosis));
-               tr.appendChild(makeTd(obat.signature));
+               items.forEach((obat, i) => {
+                  const tr = document.createElement("tr");
 
-               tr.appendChild(makeTd(obat.jam_pagi, true, true));
-               tr.appendChild(makeTd(obat.jam_siang, true, true));
-               tr.appendChild(makeTd(obat.jam_sore, true, true));
-               tr.appendChild(makeTd(obat.jam_malam, true, true));
+                  if (i === 0) {
+                     const tdTanggal = makeTd(tanggal, true);
+                     tdTanggal.rowSpan = items.length;
+                     tr.appendChild(tdTanggal);
+                  }
 
-               tr.appendChild(makeTd(obat.paraf_keluarga));
-               tr.appendChild(makeTd(obat.paraf_petugas));
+                  tr.appendChild(makeTd(obat.nama_obat));
+                  tr.appendChild(makeTd(obat.dosis));
+                  tr.appendChild(makeTd(obat.signature));
 
-               tbody.appendChild(tr);
+                  tr.appendChild(makeTd(obat.jam_pagi, true, true));
+                  tr.appendChild(makeTd(obat.jam_siang, true, true));
+                  tr.appendChild(makeTd(obat.jam_sore, true, true));
+                  tr.appendChild(makeTd(obat.jam_malam, true, true));
+
+                  tr.appendChild(makeTd(obat.paraf_keluarga));
+                  tr.appendChild(makeTd(obat.paraf_petugas));
+
+                  tbody.appendChild(tr);
+               });
             });
 
-            // ================= QR CODE =================
-            const verifyUrl = window.location.origin +
-               "/verify_cpo.php?no=" + encodeURIComponent(no) +
-               "&rm=" + encodeURIComponent(rm);
+            /* ===== QR CODE ===== */
+            const verifyUrl =
+               `${location.origin}/verify_cpo.php?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}`;
 
-            const qrContainer = document.getElementById("cpo_qr");
-
-            const qrImg = document.createElement("img");
-            qrImg.src =
-               "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" +
-               encodeURIComponent(verifyUrl);
-
-            qrImg.alt = "QR Verifikasi CPO";
-            qrContainer.innerHTML = "";
-            qrContainer.appendChild(qrImg);
-
+            cpo_qr.innerHTML =
+               `<img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(verifyUrl)}">`;
          });
-
    });
 </script>

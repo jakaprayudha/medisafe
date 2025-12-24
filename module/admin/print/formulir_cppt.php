@@ -79,8 +79,8 @@
       <table>
          <tr class="center" style="font-weight:bold;">
             <th width="15%">Tanggal/Jam</th>
-            <th width="45%">Diagnosa Keperawatan</th>
-            <th width="25%">Perkembangan</th>
+            <th width="45%">Perkembangan</th>
+            <th width="25%">Diagnosa Keperawatan</th>
             <th width="15%">Paraf/Nama</th>
          </tr>
          <tbody id="cppt_body">

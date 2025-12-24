@@ -106,14 +106,15 @@
       </div>
 
       <div class="text-area">
-         Dengan sadar saya menyatakan bahwa data medis saya dapat digunakan sesuai kebutuhan pelayanan BPJS Kesehatan.
+         Dengan sadar saya menyatakan bahwa data medis saya dapat digunakan sesuai kebutuhan pelayanan BPJS Kesehatan. dengan ini menyatakan : <br>
+         "Kesediaan atas data medis (Rekam Medis) diri saya untuk dipergunakan oleh Dokter/Faskes BPJS Kesehatan Sesuai dengan kepentingan". <br>
       </div>
 
       <div class="ttd">
          <div class="ttd-box">
-            Tj. Morawa, .................<br><br>
+            Tj. Morawa, 04 Desember 2025<br><br>
             Yang Membuat Pernyataan<br><br><br><br>
-            <div class="sign-line"></div>
+            <div class="sign-line">Andika</div>
          </div>
       </div>
 

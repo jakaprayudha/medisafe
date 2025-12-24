@@ -43,7 +43,11 @@
       }
 
       .perjalanan-big-cell {
-         height: 650px;
+         min-height: 650px;
+      }
+
+      .perjalanan-small-cell {
+         min-height: 40px;
       }
 
       .no-print {
@@ -73,7 +77,7 @@
          <td>Umur : <span id="p_usia"></span></td>
          <td>JK: <span id="p_gender"></span></td>
          <td>Tanggal : <span id="p_tanggal_visit"></span></td>
-         <td>Kelas : <span id="p_kelas_visit"></span></td>
+         <td>Kelas : <span id="p_kelas_visit">Umum</span></td>
       </tr>
    </table>
 

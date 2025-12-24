@@ -288,7 +288,7 @@
                      <div class='dokmulti-sign-box'>
                         Pemegang Dokumen<br>
                         <img class="dokmulti-sign-img" src="${baseURL}uploads/ttd/ttd_user.png">
-                        <div class='dokmulti-sign-line'>${d.nama_lengkap}</div>
+                        <div class='dokmulti-sign-line'>${d.patient_name}</div>
                      </div>
 
                      <div class='dokmulti-sign-box'>

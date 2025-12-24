@@ -81,22 +81,21 @@
       <table class="data">
          <tr>
             <td>Nama</td>
-            <td>: <span id="sp_nama_penyetuju"></span></td>
+            <td>: <span id="">Andika</span></td>
          </tr>
          <tr>
             <td>Umur</td>
-            <td>: <span id="sp_usia_penyetuju"></span></td>
+            <td>: <span id="sp_usia_penyetuju">22 Tahun</span></td>
          </tr>
          <tr>
             <td>Jenis Kelamin</td>
-            <td>: <span id="sp_jk_penyetuju"></span></td>
+            <td>: <span id="sp_jk_penyetuju">Laki Laki</span></td>
          </tr>
       </table>
 
       <p>
-         Dengan ini menyatakan telah memberikan persetujuan tindakan medis berupa
+         Dengan ini menyatakan sesungguhnya telah memberikan persetujuan untuk dilakukan tindakan medis berupa <strong>Opname dan Pengobatan</strong>, terhadap diri saya (istri), dengan
          <b><span id="sp_tindakan"></span></b>
-         terhadap anggota keluarga pasien berikut:
       </p>
 
       <!-- DATA PASIEN -->
@@ -115,7 +114,7 @@
          </tr>
          <tr>
             <td>No. BPJS</td>
-            <td>: <span id="sp_bpjs"></span></td>
+            <td>: <span id=""></span>0002873938017</td>
          </tr>
       </table>
 
@@ -127,28 +126,28 @@
       </ol>
 
       <p>
-         Demikian surat persetujuan tindakan medis ini saya buat tanpa paksaan dari pihak manapun.
+         Demikian pernyataan persetujuan tindakan medis ini saya buat dengan penuh kesadaran dan tanpa paksaan
       </p>
 
    </div>
 
-   <p class="tanggal">Tanjung Morawa, <span id="sp_tanggal"></span></p>
+   <p class="tanggal">Tanjung Morawa, <span id="sp_tanggal">04 Desember 2025</span></p>
 
    <div class="ttd-wrapper">
 
       <div class="kolom-ttd">
          <p>Saksi</p>
-         <div class="ttd-box">( ................................ )</div>
+         <div class="ttd-box">Fitri</div>
       </div>
 
       <div class="kolom-ttd">
          <p>Dokter yang Merawat</p>
-         <div class="ttd-box"><span id="sp_dokter"></span></div>
+         <div class="ttd-box"><span id="">dr. Mirta</span></div>
       </div>
 
       <div class="kolom-ttd">
          <p>Yang Membuat Pernyataan</p>
-         <div class="ttd-box"><span id="sp_nama_penyetuju_ttd"></span></div>
+         <div class="ttd-box"><span id="sp_nama_penyetuju_ttd">Andika</span></div>
       </div>
 
    </div>
