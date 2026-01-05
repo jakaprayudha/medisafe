@@ -1,6 +1,12 @@
 <?php
+require '../../../database/connect.php';
 $visit = $_GET['no'] ?? '';
 $rm    = $_GET['rm'] ?? '';
+
+$checkekg = mysqli_query($koneksi, "SELECT id_ekg FROM ekg_results WHERE visit_ID='$visit' AND nomor_rm='$rm' ORDER BY id_ekg DESC LIMIT 1");
+$dataekg = mysqli_fetch_array($checkekg);
+$checktriase = mysqli_query($koneksi, "SELECT * FROM pasien_triase WHERE visit_ID='$visit' AND nomor_rm='$rm' ORDER BY id_triase DESC LIMIT 1");
+$datatriase = mysqli_fetch_array($checktriase);
 
 $files = [
    "formulir_dokumen.php",
@@ -31,9 +37,20 @@ $files = [
    // "formulir_skrining_hipotiroid.php",
    // "formulir_skl.php",
    // "formulir_usg.php",
-
-
 ];
+
+
+// JIKA TIDAK ADA DATA EKG → HAPUS FILE EKG
+if (!$dataekg) {
+   $files = array_filter($files, function ($file) {
+      return $file !== "formulir_ekg.php";
+   });
+}
+if (!$datatriase) {
+   $files = array_filter($files, function ($file) {
+      return $file !== "formulir_triase.php";
+   });
+}
 
 echo "<!DOCTYPE html>
 <html>
