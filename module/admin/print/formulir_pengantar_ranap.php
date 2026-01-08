@@ -1,4 +1,5 @@
 <body class="rinap-body">
+
    <style>
       @page {
          size: A4;
@@ -12,12 +13,14 @@
          background: white;
       }
 
+      /* ===== CONTAINER ===== */
       .rinap-container {
          width: 100%;
          max-width: 750px;
          margin: auto;
       }
 
+      /* ===== HEADER ===== */
       .rinap-header {
          text-align: center;
          margin-bottom: 10px;
@@ -33,7 +36,6 @@
          font-size: 26px;
          margin: 0;
          font-weight: bold;
-         letter-spacing: 1px;
       }
 
       .rinap-header .rinap-alamat {
@@ -48,6 +50,7 @@
          border-top: 2px solid #000;
       }
 
+      /* ===== JUDUL ===== */
       .rinap-judul {
          text-align: center;
          margin-top: 15px;
@@ -55,12 +58,7 @@
          font-size: 20px;
       }
 
-      .rinap-nomor {
-         text-align: center;
-         margin-top: -5px;
-         font-size: 14px;
-      }
-
+      /* ===== ISI ===== */
       .rinap-section {
          margin-top: 20px;
          font-size: 15px;
@@ -70,28 +68,42 @@
          margin-left: 20px;
          margin-bottom: 15px;
          font-size: 15px;
+         border-collapse: collapse;
+      }
+
+      /* HILANGKAN GARIS TABEL */
+      .rinap-data,
+      .rinap-data tr,
+      .rinap-data td {
+         border: none !important;
       }
 
       .rinap-data td {
-         padding: 2px 5px;
+         padding: 4px 6px;
          vertical-align: top;
       }
 
+      /* RAPATKAN KOLOM LABEL */
+      .rinap-data td:first-child {
+         width: 140px;
+      }
+
+      /* ===== PENUTUP ===== */
       .rinap-penutup {
          margin-top: 15px;
          text-align: justify;
          font-size: 15px;
       }
 
+      /* ===== TTD ===== */
       .rinap-ttd-wrapper {
          width: 100%;
-         display: flex;
-         justify-content: space-between;
          margin-top: 60px;
       }
 
-      .rinap-kolom-ttd {
-         width: 30%;
+      .rinap-ttd-kanan {
+         width: 35%;
+         margin-left: auto;
          text-align: center;
          font-size: 15px;
       }
@@ -100,7 +112,6 @@
          margin-top: 70px;
          border-top: 1px solid #000;
          padding-top: 5px;
-         font-size: 15px;
       }
    </style>
 
@@ -119,30 +130,28 @@
 
                if (!data) return;
 
-               document.getElementById("rinap_nama").innerText = data.patient_name;
-               document.getElementById("rinap_alamat").innerText = data.patient_address;
-               document.getElementById("rinap_bpjs").innerText = data.patient_bpjs || "-";
-               document.getElementById("rinap_diagnosa").innerText = data.visit_notes || "-";
-
-               let masuk = data.visit_date;
-               let keluar = data.visit_out ?? "-";
-               document.getElementById("rinap_tgl_rawat").innerText = masuk + " s/d " + keluar;
-
-               document.getElementById("rinap_dokter").innerText = data.doctor_name ?? "-";
-               document.getElementById("rinap_dokter2").innerText = data.doctor_name ?? "-";
+               document.getElementById("rinap_nama").innerText = data.patient_name || "-";
+               document.getElementById("rinap_dokter").innerText = data.doctor_name || "-";
+               document.getElementById("rinap_dokter2").innerText = data.doctor_name || "-";
             });
       });
    </script>
 
+   <!-- ================== SURAT ================== -->
    <div class="rinap-container">
 
       <?php include 'kopsurat.php'; ?>
 
       <h3 class="rinap-judul">SURAT PENGANTAR DIRAWAT</h3>
-      <div class="rinap-section">
 
-         <p>Kepada Yth : <br> Dokter DPJP : <span id="rinap_dokter"></span> </p>
+      <div class="rinap-section">
+         <p>
+            Kepada Yth : <br>
+            Dokter DPJP : <span id="rinap_dokter"></span>
+         </p>
+
          <p>Mohon Dirawat</p>
+
          <table class="rinap-data">
             <tr>
                <td>Nama</td>
@@ -150,23 +159,23 @@
             </tr>
             <tr>
                <td>Umur</td>
-               <td>: <span id="sp_usia_penyetuju"></span></td>
+               <td>: 29 Tahun</td>
             </tr>
             <tr>
                <td>Diagnosa</td>
-               <td>: <span id="rinap_diagnosa"></span></td>
+               <td>: Febris + HEG</td>
             </tr>
             <tr>
                <td>Indikasi Dirawat</td>
-               <td>: <span id="indikasi">Sesak napas sudah dialami sejak 4 hari sesak dipengerahui oleh batik, diajak komunikasi bicara lancar, nyeri dada + neyeri ulu hati + mual + muntah + BAK + BAB demam sudah 4 hari</span></td>
+               <td>: Nyeri perut (+), pusing (+)</td>
             </tr>
             <tr>
                <td>Dirawat</td>
-               <td>: <span id="rinap_tgl_rawat"></span></td>
+               <td>: Kamar 01 B</td>
             </tr>
             <tr>
                <td>Terapi</td>
-               <td>: <span id="terapi">O2 4 Hari IVFD Nacl0</span></td>
+               <td>: IVFD RL 20 gtt/i</td>
             </tr>
          </table>
 
@@ -174,18 +183,17 @@
             Demikian pernyataan ini dibuat dengan sebenarnya untuk dipergunakan dalam pengajuan klaim biaya rawat inap.
          </p>
 
-      </div>
-
-      <div class="rinap-ttd-wrapper">
-
-         <div class="rinap-kolom-ttd">
-            <p>DOKTER MERAWAT</p>
-            <div class="rinap-ttd-box"><span id="rinap_dokter2"></span></div>
+         <!-- ===== TTD (DALAM CONTAINER) ===== -->
+         <div class="rinap-ttd-wrapper">
+            <div class="rinap-ttd-kanan">
+               <p>DOKTER MERAWAT</p>
+               <div class="rinap-ttd-box">
+                  <span id="rinap_dokter2"></span>
+               </div>
+            </div>
          </div>
 
-
       </div>
-
    </div>
 
 </body>

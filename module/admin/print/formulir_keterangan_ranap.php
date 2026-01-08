@@ -142,7 +142,7 @@
       <?php include 'kopsurat.php'; ?>
 
       <h3 class="rinap-judul">KETERANGAN RAWAT INAP</h3>
-      <p class="rinap-nomor">NOMOR : 01 / RITP / TS / I / 2015</p>
+      <p class="rinap-nomor">NOMOR : 02 / RITP / TS / XI / 2025</p>
 
       <div class="rinap-section">
 
@@ -185,15 +185,15 @@
             </tr>
             <tr>
                <td>Tanggal</td>
-               <td>: <span id="rinap_tgl_rawat">04-12-205 s/d 07-12-2025</span></td>
+               <td>: <span id="rinap_tgl_rawat"></span>01-11-2025</td>
             </tr>
             <tr>
                <td>Diagnosa</td>
-               <td>: <span id="rinap_diagnosa">Vertigo + Dysepsia Syndroms</span></td>
+               <td>: <span id="rinap_diagnosa">Febis + HEG</span></td>
             </tr>
             <tr>
                <td>Dokter Merawat</td>
-               <td>: <span id="rinap_dokter">dr. Mirta</span></td>
+               <td>: <span id="rinap_dokter"></span></td>
             </tr>
          </table>
 
@@ -207,16 +207,19 @@
 
          <div class="rinap-kolom-ttd">
             <p>PESERTA / KELUARGA</p>
-            <div class="rinap-ttd-box">Andika</div>
+            <img src="../../../uploads/ttd/regina.png" alt="">
+            <div class="rinap-ttd-box">Regina Pardede</div>
          </div>
 
          <div class="rinap-kolom-ttd">
             <p>DOKTER MERAWAT</p>
-            <div class="rinap-ttd-box"><span id="rinap_dokter2">Dr. Mirta</span></div>
+            <img src="../../../uploads/ttd/drdevi.png" alt="">
+            <div class="rinap-ttd-box"><span id="rinap_dokter2"></span></div>
          </div>
 
          <div class="rinap-kolom-ttd">
             <p>DOKTER PENANGGUNG JAWAB</p>
+            <img src="../../../uploads/ttd/henson.png" style="height:125px;" alt="">
             <div class="rinap-ttd-box">dr. Henson Sinaga</div>
          </div>
 

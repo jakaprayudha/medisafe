@@ -130,7 +130,7 @@
          .then(res => res.json())
          .then(resp => {
 
-            console.log("CPPT DATA:", resp);
+            // console.log("CPPT DATA:", resp);
 
             if (!resp || resp.status !== "success") return;
 

@@ -109,8 +109,8 @@
    <div class="lbp-sign-area">
       <div>Dokter yang merawat</div>
       <div class="lbp-doc-sign">
-         <div style="height:60px;">(ttd)</div>
-         <div class="lbp-doc-line">dr. .......................</div>
+         <img src="../../../uploads/ttd/drdevi.png" alt="">
+         <div class="lbp-doc-line">dr. Devi Eka Pertiwi</div>
       </div>
    </div>
 

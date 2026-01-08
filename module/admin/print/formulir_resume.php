@@ -152,9 +152,11 @@
       <!-- SIGNATURE -->
       <div class="rmprint-signature">
          <div class="rmprint-sign-col">
+            <img src="../../../uploads/ttd/farmasi.png" style="height:125px;" alt="">
             <div class="rmprint-sign-line" id="r_perawat">Petugas / Perawat</div>
          </div>
          <div class="rmprint-sign-col">
+            <img src="../../../uploads/ttd/drdevi.png" style="height:125px;" alt="">
             <div class="rmprint-sign-line" id="r_dokter">Dokter Penanggung Jawab</div>
          </div>
       </div>

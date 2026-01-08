@@ -112,9 +112,11 @@
 
       <div class="ttd">
          <div class="ttd-box">
-            Tj. Morawa, 04 Desember 2025<br><br>
+            Tj. Morawa, 29 Oktober 2025<br><br>
             Yang Membuat Pernyataan<br><br><br><br>
-            <div class="sign-line" id="fp_nama"></div>
+            <img src="../../../uploads/ttd/ttdregina.png" alt="">
+            <p>Regina Pardede </p>
+            <!-- <div class="sign-line" id="fp_nama"></div> -->
          </div>
       </div>
 

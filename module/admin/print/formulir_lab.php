@@ -268,6 +268,7 @@
 
       <div class="labprint-ttd-sec">
          <div style="height:60px;">Pengisi Data</div>
+         <img src="../../../uploads/ttd/lab.png" alt="">
          <div class="labprint-ttd-line"></div>
          <div class="labprint-ttd-name" id="lab_petugas"></div>
          <div class="labprint-ttd-role">Petugas Laboratorium</div>

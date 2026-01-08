@@ -175,9 +175,11 @@
 
       <div class="ttd-sec">
          <div style="height:60px;">Pengisi Data</div>
+         <img src="../../../uploads/ttd/farmasi.png" alt="">
          <div class="ttd-line"></div>
-         <div class="ttd-name" id="cpo_petugas"></div>
-         <div class="ttd-role">Petugas Ruangan</div>
+         <p>Darma</p>
+         <!-- <div class="ttd-name" id="cpo_petugas"></div> -->
+         <div class="ttd-role">Ka. Petugas Ruangan</div>
       </div>
    </div>
 
@@ -207,7 +209,6 @@
                cpo_tgllahir.innerText = d.tgl_lahir;
                cpo_ruangan.innerText = d.ruangan;
                cpo_diagnosa.innerText = d.diagnosa;
-               cpo_petugas.innerText = d.petugas;
             }
 
             /* ===== GROUP BY TANGGAL ===== */

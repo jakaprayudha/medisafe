@@ -81,20 +81,20 @@
       <table class="data">
          <tr>
             <td>Nama</td>
-            <td>: <span id="">Andika</span></td>
+            <td>: <span id="">Regina Pardede</span></td>
          </tr>
          <tr>
             <td>Umur</td>
-            <td>: <span id="sp_usia_penyetuju">22 Tahun</span></td>
+            <td>: <span id="sp_usia_penyetuju">56 Tahun</span></td>
          </tr>
          <tr>
             <td>Jenis Kelamin</td>
-            <td>: <span id="sp_jk_penyetuju">Laki Laki</span></td>
+            <td>: <span id="sp_jk_penyetuju">Perempuan</span></td>
          </tr>
       </table>
 
       <p>
-         Dengan ini menyatakan sesungguhnya telah memberikan persetujuan untuk dilakukan tindakan medis berupa <strong>Opname dan Pengobatan</strong>, terhadap diri saya (istri), dengan
+         Dengan ini menyatakan sesungguhnya telah memberikan persetujuan untuk dilakukan tindakan medis berupa <strong>Opname dan Pengobatan</strong>, terhadap diri saya (Anak), dengan
          <b><span id="sp_tindakan"></span></b>
       </p>
 
@@ -114,7 +114,7 @@
          </tr>
          <tr>
             <td>No. BPJS</td>
-            <td>: <span id=""></span>0002873938017</td>
+            <td>: <span id=""></span>0001836618682</td>
          </tr>
       </table>
 
@@ -131,23 +131,27 @@
 
    </div>
 
-   <p class="tanggal">Tanjung Morawa, <span id="sp_tanggal">04 Desember 2025</span></p>
+   <p class="tanggal">Tanjung Morawa, <span id="sp_tanggal">29 Oktober 2025</span></p>
 
    <div class="ttd-wrapper">
 
       <div class="kolom-ttd">
          <p>Saksi</p>
+         <img src="../../../uploads/ttd/fitri.png" style="height:100px;" alt="">
          <div class="ttd-box">Fitri</div>
+
       </div>
 
       <div class="kolom-ttd">
          <p>Dokter yang Merawat</p>
-         <div class="ttd-box"><span id="">dr. Mirta</span></div>
+         <img src="../../../uploads/ttd/drdevi.png" style="height:100px;" alt="">
+         <div class="ttd-box"><span id="">dr. Devi Eka Pratiwi</span></div>
       </div>
 
       <div class="kolom-ttd">
          <p>Yang Membuat Pernyataan</p>
-         <div class="ttd-box"><span id="sp_nama_penyetuju_ttd">Andika</span></div>
+         <img src="../../../uploads/ttd/regina.png" style="height:100px;" alt="">
+         <div class="ttd-box"><span id="sp_nama_penyetuju_ttd">Regina Pardede</span></div>
       </div>
 
    </div>
