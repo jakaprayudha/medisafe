@@ -24,6 +24,8 @@ $role = $_SESSION['roles']; // ambil dari session login
        require 'menu/menu-farmasi.php';
     }else if($role == 'kasir'){
          require 'menu/menu-kasir.php';
+    }else{
+       require 'menu/menu-admin.php';
     }
     ?>
    </div>
