@@ -42,6 +42,17 @@ $role = $_SESSION['roles']; // ambil dari session login
                   <span class="hide-menu">Poliklinik</span>
                </a>
             </li>
+              <li class="sidebar-item">
+               <a class="sidebar-link <?php if ($title == 'Display') {
+                                          echo 'active';
+                                       } ?>"
+                  href="module/admin/display"
+                  aria-expanded="false">
+               <iconify-icon icon="mdi:monitor"></iconify-icon>
+                  <span class="hide-menu">Display</span>
+               </a>
+            </li>
+            
             <li class="sidebar-item">
                <a class="sidebar-link <?php if ($title == 'Jenis Bayar') {
                                           echo 'active';
