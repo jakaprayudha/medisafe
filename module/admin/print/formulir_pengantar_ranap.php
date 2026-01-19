@@ -142,7 +142,7 @@
 
       <?php include 'kopsurat.php'; ?>
 
-      <h3 class="rinap-judul">SURAT PENGANTAR DIRAWAT</h3>
+      <h3 class="rinap-judul">SURAT PERINTAH RAWAT INAP</h3>
 
       <div class="rinap-section">
          <p>
@@ -163,11 +163,13 @@
             </tr>
             <tr>
                <td>Diagnosa</td>
-               <td>: Febris + HEG</td>
+               <td>: R50.9 Fever, unspecified + O21 Excessive vomiting in pregnancy
+               </td>
             </tr>
             <tr>
                <td>Indikasi Dirawat</td>
-               <td>: Nyeri perut (+), pusing (+)</td>
+               <td>: OS MENGELUHKAN DEMAM(+) LEMAS(+) PUSING(+)OYONG(+) MUAL(+) DAN MUNTAH(+)
+               </td>
             </tr>
             <tr>
                <td>Dirawat</td>
@@ -175,7 +177,7 @@
             </tr>
             <tr>
                <td>Terapi</td>
-               <td>: IVFD RL 20 gtt/i</td>
+               <td>: IVFD RL 20 gtt/i, Injeksi Ranitidine 1amp/12jam, Drip Cyano 3cc (ekstra), Paracetamol 3x1, Cetirizine 1x1, Etabion 1x1</td>
             </tr>
          </table>
 
@@ -187,6 +189,7 @@
          <div class="rinap-ttd-wrapper">
             <div class="rinap-ttd-kanan">
                <p>DOKTER MERAWAT</p>
+               <img src="../../../uploads/ttd/drdevi.png" alt="">
                <div class="rinap-ttd-box">
                   <span id="rinap_dokter2"></span>
                </div>

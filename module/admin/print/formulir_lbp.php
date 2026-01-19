@@ -139,7 +139,13 @@
                <tr>
                   <td>${new Date(row.tgl_pelayanan).toLocaleDateString("id-ID",{day:"2-digit",month:"2-digit"})}</td>
                   <td>${row.uraian.replace(/\n/g,"<br>")}</td>
-                  <td>✒️</td>
+                 <td style="text-align:center;">
+                     <img 
+                        src="../../../uploads/ttd/regina.png" 
+                        alt="Tanda Tangan" 
+                        style="height:40px; object-fit:contain;"
+                     >
+                  </td>
                </tr>
             `;
             });

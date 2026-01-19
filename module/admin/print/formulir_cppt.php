@@ -138,6 +138,22 @@
             let html = "";
 
             rows.forEach(cppt => {
+
+               let ttd = "";
+
+               if (cppt.cppt_profesi) {
+                  const profesi = cppt.cppt_profesi.toLowerCase();
+
+                  if (profesi.includes("perawat")) {
+                     ttd = `<img src="../../../uploads/ttd/farmasi.png" 
+                           alt="Paraf Perawat"
+                           style="height:40px; object-fit:contain;">`;
+                  } else if (profesi.includes("dokter")) {
+                     ttd = `<img src="../../../uploads/ttd/drdevi.png" 
+                           alt="Paraf Dokter"
+                           style="height:40px; object-fit:contain;">`;
+                  }
+               }
                html += `
                         <tr>
                            <td>${cppt.cppt_date} / ${cppt.cppt_time}</td>
@@ -148,7 +164,11 @@
                               <b>P:</b> ${cppt.planning}
                            </td>
                            <td>${cppt.instruction}</td>
-                           <td>${cppt.users_entry} <br> (${cppt.cppt_profesi})</td>
+                         <td style="text-align:center;">
+                           ${ttd}<br>
+                           ${cppt.users_entry}<br>
+                           <small>(${cppt.cppt_profesi})</small>
+                        </td>
                         </tr>
                      `;
             });

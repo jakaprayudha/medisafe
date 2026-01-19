@@ -368,6 +368,14 @@
       </table>
 
       <!-- CATATAN -->
+      <div class="section-title">Planning</div>
+      <table>
+         <tr>
+            <td>Perawatan lanjutan : <strong>Rawat Inap</strong></td>
+         </tr>
+      </table>
+
+      <!-- CATATAN -->
       <div class="section-title">Catatan Tambahan</div>
       <table>
          <tr>

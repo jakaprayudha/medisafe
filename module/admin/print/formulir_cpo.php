@@ -221,6 +221,7 @@
             const tbody = document.getElementById("cpo_body");
             tbody.innerHTML = "";
 
+            /* ===== TEXT TD ===== */
             const makeTd = (text, center = false, empty = false) => {
                const td = document.createElement("td");
                td.innerText = text || "";
@@ -229,6 +230,33 @@
                return td;
             };
 
+            /* ===== IMAGE TD (PARAF KELUARGA & PETUGAS) ===== */
+            const makeImgTd = (filename, altText = "Paraf") => {
+               const td = document.createElement("td");
+
+               if (!filename) {
+                  td.classList.add("empty");
+                  return td;
+               }
+
+               const img = document.createElement("img");
+               img.src = `../../../uploads/ttd/${filename}`;
+               img.alt = altText;
+               img.style.height = "40px";
+               img.style.objectFit = "contain";
+
+               img.onerror = () => {
+                  img.style.display = "none";
+                  td.classList.add("empty");
+               };
+
+               td.style.textAlign = "center";
+               td.appendChild(img);
+
+               return td;
+            };
+
+            /* ===== RENDER TABLE ===== */
             Object.keys(grouped).forEach(tanggal => {
                const items = grouped[tanggal];
 
@@ -250,8 +278,8 @@
                   tr.appendChild(makeTd(obat.jam_sore, true, true));
                   tr.appendChild(makeTd(obat.jam_malam, true, true));
 
-                  tr.appendChild(makeTd(obat.paraf_keluarga));
-                  tr.appendChild(makeTd(obat.paraf_petugas));
+                  tr.appendChild(makeImgTd(obat.paraf_keluarga, "Paraf Keluarga"));
+                  tr.appendChild(makeImgTd(obat.paraf_petugas, "Paraf Petugas"));
 
                   tbody.appendChild(tr);
                });
