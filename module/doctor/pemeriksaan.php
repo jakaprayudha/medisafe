@@ -77,11 +77,13 @@ $apiUrl = getenv('API_URL');
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                           <th class="text-dark fw-normal">Registrasi</th>
                           <th>Antrian</th>
+                          <th>Layanan</th>
                           <th scope="col" class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">TTL</th>
                           <th class="text-dark fw-normal">Dokter</th>
+                          <th>Jenis Bayar</th>
                           <th class="text-dark fw-normal">Poliklinik</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
 
@@ -134,6 +136,22 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
           return json.data.map(function(row, index) {
             // pilih file tujuan sesuai rme_type
             let pemeriksaanFile = (rmeType == 1) ? 'pemeriksaan_a' : 'pemeriksaan_b';
+             // ✅ Kondisi tampil tombol panggil
+            let callButton = '';  
+            if (row.source_hub === 'Poliklinik') {
+            callButton = `
+              <button class="btn btn-sm btn-warning"
+                data-bs-toggle="tooltip"
+                title="Panggil Pasien"
+                onclick="callPatient(
+                  '${row.visit_antrian}',
+                  '${row.patient_name}',
+                  '${row.poli_name}'
+                )">
+                <i class="ti ti-volume"></i>
+              </button>
+            `;
+          }
             return {
               "actions": `
                   <div class="text-center">
@@ -146,26 +164,18 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                     <i class="ti ti-stethoscope"></i>
                   </a>
 
-                  <!-- Panggil -->
-                  <button class="btn btn-sm btn-warning"
-                    data-bs-toggle="tooltip"
-                    title="Panggil Pasien"
-                    onclick="callPatient(
-                      '${row.visit_antrian}',
-                      '${row.patient_name}',
-                      '${row.poli_name}'
-                    )">
-                    <i class="ti ti-volume"></i>
-                  </button>
+                  ${callButton}
                   </div>
               `,
               "tanggal": row.visit_date + ' ' + row.visit_time,
               "antrian": row.visit_antrian,
+              "source_hub": row.source_hub,
               "nomor_rm": row.nomor_rm,
               "nama_pasien": row.patient_name,
               "gender": row.patient_gender,
               "ttl": row.patient_datebirth + '/' + row.patient_place,
               "dokter": row.doctor_name,
+              "jenis_bayar": row.provider_name,
               "layanan": row.poli_name,
               "status_visit": `
                 <span class="badge ${row.status_dilayani == 1 ? 'bg-success' : 'bg-danger'} d-block text-center">
@@ -185,6 +195,9 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
           "data": "antrian"
         },
         {
+          "data": "source_hub"
+        },
+        {
           "data": "nomor_rm"
         },
         {
@@ -198,6 +211,9 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
         },
         {
           "data": "dokter"
+        },
+        {
+          "data": "jenis_bayar"
         },
         {
           "data": "layanan"
