@@ -127,33 +127,9 @@
                 <th>Nama Pasien</th>
                 <th>Keluhan</th>
                 <th>Status</th>
-                <th>Aksi</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>U010</td>
-                <td>Siti Aminah</td>
-                <td>Demam</td>
-                <td><span class="badge bg-warning">Menunggu</span></td>
-                <td>
-                  <button class="btn btn-sm btn-primary">
-                    Periksa
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>U011</td>
-                <td>Budi Santoso</td>
-                <td>Batuk</td>
-                <td><span class="badge bg-info">Diperiksa</span></td>
-                <td>
-                  <button class="btn btn-sm btn-secondary" disabled>
-                    Proses
-                  </button>
-                </td>
-              </tr>
-            </tbody>
+          <tbody></tbody>
           </table>
         </div>
 
@@ -170,17 +146,11 @@
           Jadwal Praktek Saya
         </h6>
 
-        <ul class="list-group list-group-flush">
-          <li class="list-group-item d-flex justify-content-between">
-            Poli Umum
-            <span class="badge bg-success">08:00 - 12:00</span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between">
-            Poli Umum
-            <span class="badge bg-warning">13:00 - 17:00</span>
+        <ul class="list-group list-group-flush" id="doctorSchedule">
+          <li class="list-group-item text-center text-muted">
+            Memuat jadwal...
           </li>
         </ul>
-
       </div>
     </div>
   </div>
@@ -189,19 +159,152 @@
 <!-- ================= CATATAN DOKTER ================= -->
 <div class="row mt-3">
   <div class="col-md-12">
-    <div class="card doctor-card">
+    <div class="card doctor-card border-start border-4 border-info">
       <div class="card-body">
-        <h6 class="section-title mb-2">
-          <iconify-icon icon="mdi:note-text-outline"></iconify-icon>
-          Catatan & Pengingat
-        </h6>
-        <ul class="mb-0">
-          <li>Lengkapi SOAP sebelum menyelesaikan pemeriksaan</li>
-          <li>Pastikan resep dikirim ke farmasi</li>
-          <li>Periksa alergi pasien sebelum input obat</li>
-          <li>Gunakan ICD dengan tepat</li>
+
+        <!-- HEADER -->
+        <div class="d-flex align-items-center mb-3">
+          <div class="icon-box bg-info-subtle text-info me-2" style="width:42px;height:42px;">
+            <iconify-icon icon="mdi:note-text-outline" style="font-size:22px;"></iconify-icon>
+          </div>
+          <h6 class="section-title mb-0">Catatan & Pengingat Dokter</h6>
+        </div>
+
+        <!-- LIST -->
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item d-flex align-items-start">
+            <iconify-icon icon="mdi:clipboard-text-outline"
+              class="text-primary me-2" style="font-size:18px;"></iconify-icon>
+            <span>Lengkapi <strong>SOAP</strong> sebelum menyelesaikan pemeriksaan</span>
+          </li>
+
+          <li class="list-group-item d-flex align-items-start">
+            <iconify-icon icon="mdi:prescription"
+              class="text-success me-2" style="font-size:18px;"></iconify-icon>
+            <span>Pastikan <strong>resep</strong> telah dikirim ke farmasi</span>
+          </li>
+
+          <li class="list-group-item d-flex align-items-start">
+            <iconify-icon icon="mdi:alert-circle-outline"
+              class="text-warning me-2" style="font-size:18px;"></iconify-icon>
+            <span>Periksa <strong>alergi pasien</strong> sebelum input obat</span>
+          </li>
+
+          <li class="list-group-item d-flex align-items-start">
+            <iconify-icon icon="mdi:book-open-page-variant-outline"
+              class="text-info me-2" style="font-size:18px;"></iconify-icon>
+            <span>Gunakan <strong>kode ICD</strong> dengan tepat</span>
+          </li>
         </ul>
+
       </div>
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+   loadDoctorDashboard();
+});
+
+function loadDoctorDashboard() {
+   // Bisa diganti dari session PHP
+  
+const doctorName = <?= json_encode($_SESSION['fullname'] ?? '') ?>;
+   fetch(`controller/dashboard/doctor.php?doctor_name=${encodeURIComponent(doctorName)}`)
+      .then(res => res.json())
+      .then(res => {
+         if (res.status !== 'success') {
+            alert(res.message);
+            return;
+         }
+
+         renderMetric(res.metric);
+         renderQueue(res.queue);
+        renderSchedule(res.schedule);
+      });
+}
+
+/* ================= METRIC ================= */
+function renderMetric(m) {
+   document.querySelectorAll('.doctor-card h3')[0].textContent = m.total;
+   document.querySelectorAll('.doctor-card h3')[1].textContent = m.menunggu;
+   document.querySelectorAll('.doctor-card h3')[2].textContent = m.diperiksa;
+   document.querySelectorAll('.doctor-card h3')[3].textContent = m.selesai;
+}
+
+/* ================= QUEUE TABLE ================= */
+function renderQueue(rows) {
+   const tbody = document.querySelector('tbody');
+   tbody.innerHTML = '';
+
+   if (!rows.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" class="text-center text-muted">
+            Tidak ada antrean
+          </td>
+        </tr>`;
+      return;
+   }
+
+   rows.forEach((r) => {
+      let badge = 'secondary';
+      let label = 'Tidak diketahui';
+
+      // status: 0=menunggu, 1=diperiksa, 2=selesai
+      if (r.visit_status === 0) {
+         badge = 'warning';
+         label = 'Menunggu';
+      }
+      else if (r.visit_status === 1) {
+         badge = 'info';
+         label = 'Diperiksa';
+      }
+      else if (r.visit_status === 2) {
+         badge = 'success';
+         label = 'Selesai';
+      }
+
+      tbody.innerHTML += `
+        <tr>
+          <td>${r.visit_antrian}</td>
+          <td>${r.patient_name}</td>
+          <td>${r.visit_notes ?? '-'}</td>
+          <td>
+            <span class="badge bg-${badge}">
+              ${label}
+            </span>
+          </td>
+        </tr>
+      `;
+   });
+}
+
+function renderSchedule(rows) {
+   const ul = document.getElementById('doctorSchedule');
+   ul.innerHTML = '';
+
+   if (!rows.length) {
+      ul.innerHTML = `
+        <li class="list-group-item text-center text-muted">
+          Tidak ada jadwal praktek
+        </li>`;
+      return;
+   }
+
+   rows.forEach(r => {
+      ul.innerHTML += `
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong>${r.poli_name}</strong><br>
+            <small class="text-muted">${r.day_of_week}</small>
+          </div>
+          <span class="badge bg-success">
+            ${r.start_time} - ${r.end_time}
+          </span>
+        </li>
+      `;
+   });
+}
+</script>
