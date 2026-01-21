@@ -35,6 +35,7 @@ require '../../controller/view.php';
         <div class="card w-100">
           <div class="card-body p-4">
 
+
             <!-- HEADER -->
             <div class="d-flex justify-content-between align-items-center mb-4">
               <h5 class="card-title fw-semibold mb-0">Panggil Antrean Admisi</h5>
@@ -122,15 +123,36 @@ require '../../controller/view.php';
   ?>
 </body>
 </html>
-
 <script>
+/* =========================
+   GLOBAL STATE
+========================= */
+let lastCalled = null;
+let voices = [];
 
-   
+/* =========================
+   LOAD VOICES (WAJIB)
+========================= */
+function loadVoices() {
+   voices = speechSynthesis.getVoices();
+}
+
+// Chrome butuh event ini
+speechSynthesis.onvoiceschanged = loadVoices;
+
+/* =========================
+   INIT
+========================= */
 document.addEventListener("DOMContentLoaded", () => {
-   loadQueue();
+   loadVoices();
 });
-document.getElementById('counterSelect').addEventListener('change', loadQueue);
 
+document.getElementById('counterSelect')
+   .addEventListener('change', loadQueue);
+
+/* =========================
+   LOAD QUEUE
+========================= */
 function loadQueue() {
    const counter = document.getElementById('counterSelect').value;
    if (!counter) return;
@@ -138,17 +160,35 @@ function loadQueue() {
    fetch(`controller/queue/admisi.php?counter=${counter}`)
       .then(res => res.json())
       .then(res => {
-         renderQueueList(res.data);
+         renderQueueList(res.data || []);
          renderCurrent(res.current);
-      });
+      })
+      .catch(err => console.error(err));
 }
 
+/* =========================
+   RENDER CURRENT
+========================= */
 function renderCurrent(data) {
    if (!data) return;
+
+   const counter = document.getElementById('counterSelect').value;
+
    document.getElementById('currentQueue').textContent = data.no_antrian;
    document.getElementById('currentPoli').textContent  = data.poli;
+
+   // 🔊 Bicara hanya jika nomor baru
+   if (data.no_antrian !== lastCalled) {
+      setTimeout(() => {
+         speakQueue(data.no_antrian, counter);
+      }, 500); // jeda sopan
+      lastCalled = data.no_antrian;
+   }
 }
 
+/* =========================
+   RENDER LIST
+========================= */
 function renderQueueList(rows) {
    const tbody = document.getElementById('queueList');
    tbody.innerHTML = '';
@@ -159,7 +199,8 @@ function renderQueueList(rows) {
             <td colspan="5" class="text-center text-muted">
                Tidak ada antrean
             </td>
-         </tr>`;
+         </tr>
+      `;
       return;
    }
 
@@ -176,8 +217,9 @@ function renderQueueList(rows) {
    });
 }
 
-/* ================= ACTION ================= */
-
+/* =========================
+   ACTION BUTTONS
+========================= */
 function callNext() {
    actionQueue('call');
 }
@@ -200,9 +242,40 @@ function actionQueue(type) {
    fetch('controller/queue/admisiCall.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: type, counter: counter })
+      body: JSON.stringify({ action: type, counter })
    })
    .then(res => res.json())
-   .then(() => loadQueue());
+   .then(res => {
+      if (res.status === 'error') {
+         alert(res.message);
+         return;
+      }
+      loadQueue();
+   });
+}
+
+/* =========================
+   TEXT TO SPEECH
+========================= */
+function speakQueue(noAntrian, counter) {
+   if (!('speechSynthesis' in window)) return;
+
+   const text = `Nomor antrean ${noAntrian}, silakan menuju loket ${counter}`;
+   const utterance = new SpeechSynthesisUtterance(text);
+
+   utterance.rate = 0.9;
+   utterance.pitch = 1;
+   utterance.volume = 1;
+
+   // Cari voice Indonesia, fallback aman
+   let voice =
+      voices.find(v => v.lang === 'id-ID') ||
+      voices.find(v => v.lang && v.lang.startsWith('id')) ||
+      voices[0];
+
+   if (voice) utterance.voice = voice;
+
+   speechSynthesis.cancel();
+   speechSynthesis.speak(utterance);
 }
 </script>
