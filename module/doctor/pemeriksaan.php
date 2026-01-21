@@ -143,11 +143,11 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
               <button class="btn btn-sm btn-warning"
                 data-bs-toggle="tooltip"
                 title="Panggil Pasien"
-                onclick="callPatient(
-                  '${row.visit_antrian}',
-                  '${row.patient_name}',
-                  '${row.poli_name}'
-                )">
+              onclick="callPatient(
+              '${row.visit_antrian}',
+              '${row.patient_name}',
+              '${row.poli_name}',
+              '${row.visit_ID}')">
                 <i class="ti ti-volume"></i>
               </button>
             `;
@@ -241,29 +241,48 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 
   });
 
-  function callPatient(noAntrian, namaPasien, poli) {
-   if (!('speechSynthesis' in window)) {
-      alert('Browser tidak mendukung suara');
-      return;
-   }
 
-   // Hentikan suara sebelumnya
-   speechSynthesis.cancel();
+</script>
 
-   const text = `Nomor antrean ${noAntrian}, atas nama ${namaPasien}, silakan menuju poli ${poli}`;
-   const utterance = new SpeechSynthesisUtterance(text);
+<script>
+function callPatient(noAntrian, namaPasien, poli, visitID) {
 
-   utterance.lang = 'id-ID';
-   utterance.rate = 0.9;
-   utterance.pitch = 1;
-   utterance.volume = 1;
+  /* =========================
+     1. SUARA (LANGSUNG - USER GESTURE)
+  ========================= */
+  if ('speechSynthesis' in window) {
 
-   // pilih voice Indonesia jika ada
-   const voices = speechSynthesis.getVoices();
-   const indoVoice = voices.find(v => v.lang === 'id-ID');
-   if (indoVoice) utterance.voice = indoVoice;
+    speechSynthesis.cancel();
 
-   speechSynthesis.speak(utterance);
+    const text = `Nomor antrean ${noAntrian}, atas nama ${namaPasien}, silakan menuju poli ${poli}`;
+    const utterance = new SpeechSynthesisUtterance(text);
+
+    utterance.lang = 'id-ID';
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    const voices = speechSynthesis.getVoices();
+    const indo = voices.find(v => v.lang === 'id-ID');
+    if (indo) utterance.voice = indo;
+
+    speechSynthesis.speak(utterance);
+  }
+
+  /* =========================
+     2. UPDATE DISPLAY (ASYNC)
+  ========================= */
+  fetch('controller/queue/poliCall.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ visit_ID: visitID })
+  })
+  .then(res => res.json())
+  .then(res => {
+    if (res.status !== 'success') {
+      console.warn('Update display gagal');
+    }
+  });
 }
 </script>
 

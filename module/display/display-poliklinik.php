@@ -157,9 +157,14 @@
     <!-- ANTRIAN DIPANGGIL -->
     <div class="card call-card">
       <div class="call-label">NOMOR ANTRIAN DIPANGGIL</div>
-      <div class="call-number">U010</div>
-      <div class="call-counter">POLI UMUM</div>
-      <div class="doctor-name">dr. Ahmad Santoso</div>
+      <div class="call-number">-</div>
+      <div class="call-counter">-</div>
+
+      <!-- ✅ NAMA PASIEN -->
+      <div class="patient-name" style="margin-top:8px;font-size:28px;font-weight:bold;">
+        -
+      </div>
+      <div class="doctor-name">-</div>
     </div>
 
     <!-- DAFTAR ANTRIAN POLI -->
@@ -169,26 +174,17 @@
           <tr>
             <th>Poliklinik</th>
             <th>No Antrian</th>
+            <th>Nama Pasien</th>
             <th>Status</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td>Poli Umum</td>
-            <td>U011</td>
-            <td class="status-wait">Menunggu</td>
-          </tr>
-          <tr>
-            <td>Poli Umum</td>
-            <td>U012</td>
-            <td class="status-wait">Menunggu</td>
-          </tr>
-          <tr>
-            <td>Poli Gigi</td>
-            <td>G006</td>
-            <td class="status-wait">Menunggu</td>
-          </tr>
-        </tbody>
+       <tbody>
+        <tr>
+          <td colspan="3" style="text-align:center; font-weight:bold;">
+            -
+          </td>
+        </tr>
+      </tbody>
       </table>
     </div>
 
@@ -201,6 +197,7 @@
 
   <!-- ===== REALTIME DATE & TIME SCRIPT ===== -->
   <script>
+    
     function updateDateTime() {
       const now = new Date();
 
@@ -228,3 +225,142 @@
 
 </body>
 </html>
+
+<script>
+function loadDisplay() {
+  fetch('../../controller/queue/poliDisplay.php')
+    .then(res => res.json())
+    .then(res => {
+
+      /* ===== DEFAULT VALUE ===== */
+      const defaultText = '-';
+
+      /* ===== ANTRIAN DIPANGGIL ===== */
+      const patientNameEl = document.querySelector('.patient-name');
+      const callNumberEl = document.querySelector('.call-number');
+      const callCounterEl = document.querySelector('.call-counter');
+      const doctorNameEl = document.querySelector('.doctor-name');
+
+      if (res.called && res.called.visit_antrian) {
+        callNumberEl.textContent = res.called.visit_antrian || defaultText;
+        callCounterEl.textContent = res.called.poli_name || defaultText;
+        doctorNameEl.textContent = res.called.doctor_name || defaultText;
+       patientNameEl.textContent = res.called.patient_name || defaultText;
+      } else {
+        callNumberEl.textContent = defaultText;
+        callCounterEl.textContent = defaultText;
+        doctorNameEl.textContent = defaultText;
+         patientNameEl.textContent = defaultText;
+      }
+
+      /* ===== DAFTAR ANTRIAN ===== */
+      const tbody = document.querySelector('.table tbody');
+      tbody.innerHTML = '';
+
+      if (res.waiting && res.waiting.length > 0) {
+        res.waiting.forEach(r => {
+          tbody.innerHTML += `
+            <tr>
+              <td>${r.poli_name || defaultText}</td>
+              <td>${r.visit_antrian || defaultText}</td>
+              <td>${r.patient_name || defaultText}</td>
+              <td class="status-wait">Menunggu</td>
+            </tr>
+          `;
+        });
+      } else {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="3" style="text-align:center; font-weight:bold;">
+              -
+            </td>
+          </tr>
+        `;
+      }
+    })
+    .catch(() => {
+      /* Jika API error */
+      document.querySelector('.call-number').textContent = '-';
+      document.querySelector('.call-counter').textContent = '-';
+      document.querySelector('.doctor-name').textContent = '-';
+
+      document.querySelector('.table tbody').innerHTML = `
+        <tr>
+          <td colspan="3" style="text-align:center; font-weight:bold;">
+            -
+          </td>
+        </tr>
+      `;
+    });
+}
+
+loadDisplay();
+setInterval(loadDisplay, 3000);
+</script><script>
+function loadDisplay() {
+  fetch('../../controller/queue/poliDisplay.php')
+    .then(res => res.json())
+    .then(res => {
+
+      /* ===== DEFAULT VALUE ===== */
+      const defaultText = '-';
+
+      /* ===== ANTRIAN DIPANGGIL ===== */
+      const callNumberEl = document.querySelector('.call-number');
+      const callCounterEl = document.querySelector('.call-counter');
+      const doctorNameEl = document.querySelector('.doctor-name');
+
+      if (res.called && res.called.visit_antrian) {
+        callNumberEl.textContent = res.called.visit_antrian || defaultText;
+        callCounterEl.textContent = res.called.poli_name || defaultText;
+        doctorNameEl.textContent = res.called.doctor_name || defaultText;
+      } else {
+        callNumberEl.textContent = defaultText;
+        callCounterEl.textContent = defaultText;
+        doctorNameEl.textContent = defaultText;
+      }
+
+      /* ===== DAFTAR ANTRIAN ===== */
+      const tbody = document.querySelector('.table tbody');
+      tbody.innerHTML = '';
+
+      if (res.waiting && res.waiting.length > 0) {
+        res.waiting.forEach(r => {
+          tbody.innerHTML += `
+            <tr>
+              <td>${r.poli_name || defaultText}</td>
+              <td>${r.visit_antrian || defaultText}</td>
+              <td>${r.patient_name || defaultText}</td>
+              <td class="status-wait">Menunggu</td>
+            </tr>
+          `;
+        });
+      } else {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="3" style="text-align:center; font-weight:bold;">
+              -
+            </td>
+          </tr>
+        `;
+      }
+    })
+    .catch(() => {
+      /* Jika API error */
+      document.querySelector('.call-number').textContent = '-';
+      document.querySelector('.call-counter').textContent = '-';
+      document.querySelector('.doctor-name').textContent = '-';
+
+      document.querySelector('.table tbody').innerHTML = `
+        <tr>
+          <td colspan="3" style="text-align:center; font-weight:bold;">
+            -
+          </td>
+        </tr>
+      `;
+    });
+}
+
+loadDisplay();
+setInterval(loadDisplay, 3000);
+</script>
