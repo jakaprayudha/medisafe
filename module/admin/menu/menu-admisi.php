@@ -24,7 +24,7 @@
                   href="module/admisi/registrasi-new"
                   aria-expanded="false">
                   <iconify-icon icon="mdi:register-outline"></iconify-icon>
-                  <span class="hide-menu">Pasien Baru</span>
+                  <span class="hide-menu">Data Pasien</span>
                </a>
             </li>
             <li class="sidebar-item">

@@ -1,6 +1,7 @@
 <?php
 $title = 'Registrasi Polilklinik';
 require '../../controller/view.php';
+$source_hub = 'Poliklinik';
 ?>
 <!doctype html>
 <html lang="en">
@@ -167,9 +168,10 @@ require '../../controller/view.php';
 <script>
   $(document).ready(function() {
     var today = new Date().toISOString().split("T")[0];
+    var source_hub = '<?= $source_hub ?>';
     $("#fromDate").val(today);
     $("#toDate").val(today);
-    const apiUrl = 'controller/visit/registrasiController';
+    const apiUrl = 'controller/admisi/registrasiController';
     var table = $('#periodeTable').DataTable({
       processing: true,
       serverSide: false, // 🔹 ubah jadi false
@@ -180,6 +182,7 @@ require '../../controller/view.php';
           // kirim tanggal filter ke backend
           d.fromDate = $('#fromDate').val();
           d.toDate = $('#toDate').val();
+          d.source_hub = source_hub;
         },
         dataSrc: function(json) {
           return json.data.map(function(row) {

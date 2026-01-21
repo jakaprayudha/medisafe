@@ -1,6 +1,7 @@
 <?php
 $title = 'Registrasi UGD';
 require '../../controller/view.php';
+$source_hub = 'UGD';
 ?>
 <!doctype html>
 <html lang="en">
@@ -75,7 +76,6 @@ require '../../controller/view.php';
                       <thead>
                         <tr>
                           <th scope="col" class="text-dark fw-normal">Registrasi</th>
-                          <th>Antrian</th>
                           <th class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
@@ -167,9 +167,10 @@ require '../../controller/view.php';
 <script>
   $(document).ready(function() {
     var today = new Date().toISOString().split("T")[0];
+    var source_hub = '<?= $source_hub ?>';
     $("#fromDate").val(today);
     $("#toDate").val(today);
-    const apiUrl = 'controller/visit/registrasiController';
+    const apiUrl = 'controller/admisi/registrasiController';
     var table = $('#periodeTable').DataTable({
       processing: true,
       serverSide: false, // 🔹 ubah jadi false
@@ -180,6 +181,7 @@ require '../../controller/view.php';
           // kirim tanggal filter ke backend
           d.fromDate = $('#fromDate').val();
           d.toDate = $('#toDate').val();
+           d.source_hub = source_hub;
         },
         dataSrc: function(json) {
           return json.data.map(function(row) {
@@ -204,12 +206,11 @@ require '../../controller/view.php';
 							</div>
                     `,
               "registrasi": row.visit_ID + '<br>' + row.visit_date + ' ' + row.visit_time ?? "-",
-              "antrian": row.visit_antrian ?? "-",
               "nomor_rm": row.nomor_rm ?? "-",
               "nama": row.patient_name ?? "-",
               "gender": row.patient_gender ?? "-",
               "dokter": row.doctor_name ?? "-",
-              "layanan": row.poli_name ?? "-",
+              "layanan": row.source_hub ?? "-",
               "status": row.visit_status === '1' ?
                 '<span class="badge bg-success text-center d-block">Aktif</span>' : '<span class="badge bg-danger text-center d-block">Belum Di Layani</span>'
             };
@@ -218,9 +219,6 @@ require '../../controller/view.php';
       },
       columns: [{
           data: "registrasi"
-        },
-        {
-          data: "antrian"
         },
         {
           data: "nomor_rm"
