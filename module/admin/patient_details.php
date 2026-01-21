@@ -329,9 +329,9 @@ $no = $_GET['no'];
         success: function(res) {
           let data = JSON.parse(res);
           if (data.status === "success") {
-            updateStatus("statusKtp", data.files.patient_ktp, "KTP");
-            updateStatus("statusKk", data.files.patient_kk, "KK");
-            updateStatus("statusBpjs", data.files.patient_bpjs, "BPJS");
+            updateStatus("statusKtp", data.files.patient_ktp_file, "KTP");
+            updateStatus("statusKk", data.files.patient_kk_file, "KK");
+            updateStatus("statusBpjs", data.files.patient_bpjs_file, "BPJS");
             updateStatus("statusFoto", data.files.patient_foto, "Foto");
           }
         }

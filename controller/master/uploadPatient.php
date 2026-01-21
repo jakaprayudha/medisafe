@@ -45,7 +45,7 @@ foreach ($allowedFiles as $field => $prefix) {
 if (!empty($uploadedFiles)) {
    $stmt = $koneksi->prepare("
       UPDATE ms_patient 
-      SET patient_ktp=?, patient_kk=?, patient_bpjs=?, patient_foto=? 
+      SET patient_ktp_file=?, patient_kk_file=?, patient_bpjs_file=?, patient_foto=? 
       WHERE patient_number=?
    ");
    $ktp  = $uploadedFiles['ktp']  ?? null;

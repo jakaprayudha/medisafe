@@ -11,7 +11,7 @@ if (!$patient_number) {
    exit;
 }
 
-$stmt = $koneksi->prepare("SELECT patient_ktp, patient_kk, patient_bpjs, patient_foto 
+$stmt = $koneksi->prepare("SELECT patient_ktp_file, patient_kk_file, patient_bpjs_file, patient_foto 
                            FROM ms_patient 
                            WHERE patient_number=? LIMIT 1");
 $stmt->bind_param("s", $patient_number);
