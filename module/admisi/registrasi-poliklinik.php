@@ -82,6 +82,7 @@ $source_hub = 'Poliklinik';
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">Dokter</th>
                           <th scope="col" class="text-dark fw-normal">Layanan</th>
+                          <th>Jenis Bayar</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                         </tr>
@@ -144,6 +145,18 @@ $source_hub = 'Poliklinik';
           </select>
         </div>
 
+          <div class="mb-3">
+          <label class="form-label required">Jenis Bayar</label>
+          <select name="id_provider" id="id_provider" class="form-select" required>
+            <option value="">PILIH</option>
+            <?php
+            $getprovider = tampildata("SELECT * FROM ms_provider WHERE provider_status='1'");
+            foreach ($getprovider as $provider) :
+            ?>
+              <option value="<?= $provider['id_provider'] ?>"><?= $provider['provider_name'] ?></option>
+            <?php endforeach ?>
+          </select>
+        </div>
 
         <div class="mb-3">
           <label class="form-label required">Layanan</label>
@@ -213,6 +226,7 @@ $source_hub = 'Poliklinik';
               "gender": row.patient_gender ?? "-",
               "dokter": row.doctor_name ?? "-",
               "layanan": row.poli_name ?? "-",
+              "jenis_bayar": row.provider_name ?? "-",
               "status": row.visit_status === '1' ?
                 '<span class="badge bg-success text-center d-block">Aktif</span>' : '<span class="badge bg-danger text-center d-block">Belum Di Layani</span>'
             };
@@ -239,6 +253,9 @@ $source_hub = 'Poliklinik';
         },
         {
           data: "layanan"
+        },
+        {
+          data: "jenis_bayar"
         },
         {
           data: "status"

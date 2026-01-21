@@ -81,6 +81,7 @@ $source_hub = 'Rawat Inap';
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">Dokter</th>
                           <th scope="col" class="text-dark fw-normal">Layanan</th>
+                          <th>Jenis Bayar</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                         </tr>
@@ -211,6 +212,7 @@ $source_hub = 'Rawat Inap';
               "gender": row.patient_gender ?? "-",
               "dokter": row.doctor_name ?? "-",
               "layanan": row.source_hub ?? "-",
+              "jenis_bayar": row.provider_name ?? "-",
               "status": row.visit_status === '1' ?
                 '<span class="badge bg-success text-center d-block">Aktif</span>' : '<span class="badge bg-danger text-center d-block">Belum Di Layani</span>'
             };
@@ -234,6 +236,9 @@ $source_hub = 'Rawat Inap';
         },
         {
           data: "layanan"
+        },
+        {
+          data: "jenis_bayar"
         },
         {
           data: "status"
