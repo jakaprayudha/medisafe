@@ -109,8 +109,9 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 ?>
 <script>
   // Mengambil nilai API_URL dari PHP
-  const apiUrl = 'controller/visit/registrasiController';
+  const apiUrl = 'controller/doctor/registrasiController';
   var today = new Date().toISOString().split("T")[0];
+  const doctorName = <?= json_encode($_SESSION['fullname'] ?? '') ?>;
   $("#fromDate").val(today);
   $("#toDate").val(today);
   const rmeType = '<?php echo $rme_type ?>'; // ambil dari PHP
@@ -126,6 +127,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
           // kirim tanggal filter ke backend
           d.fromDate = $('#fromDate').val();
           d.toDate = $('#toDate').val();
+          d.doctorName = doctorName;
         },
         "dataSrc": function(json) {
           // Format data yang akan ditampilkan dalam tabel
@@ -135,9 +137,26 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
             return {
               "actions": `
                   <div class="text-center">
-                    <a href="module/admin/${pemeriksaanFile}?no=${row.visit_ID}&rm=${row.nomor_rm}">
-                      <button class="btn btn-primary">Pemeriksaan</button>
-                    </a>
+                  <!-- Pemeriksaan -->
+                  <a href="module/admin/${pemeriksaanFile}?no=${row.visit_ID}&rm=${row.nomor_rm}"
+                    class="btn btn-sm btn-primary"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="Pemeriksaan">
+                    <i class="ti ti-stethoscope"></i>
+                  </a>
+
+                  <!-- Panggil -->
+                  <button class="btn btn-sm btn-warning"
+                    data-bs-toggle="tooltip"
+                    title="Panggil Pasien"
+                    onclick="callPatient(
+                      '${row.visit_antrian}',
+                      '${row.patient_name}',
+                      '${row.poli_name}'
+                    )">
+                    <i class="ti ti-volume"></i>
+                  </button>
                   </div>
               `,
               "tanggal": row.visit_date + ' ' + row.visit_time,
@@ -203,7 +222,33 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
     });
 
 
+
   });
+
+  function callPatient(noAntrian, namaPasien, poli) {
+   if (!('speechSynthesis' in window)) {
+      alert('Browser tidak mendukung suara');
+      return;
+   }
+
+   // Hentikan suara sebelumnya
+   speechSynthesis.cancel();
+
+   const text = `Nomor antrean ${noAntrian}, atas nama ${namaPasien}, silakan menuju poli ${poli}`;
+   const utterance = new SpeechSynthesisUtterance(text);
+
+   utterance.lang = 'id-ID';
+   utterance.rate = 0.9;
+   utterance.pitch = 1;
+   utterance.volume = 1;
+
+   // pilih voice Indonesia jika ada
+   const voices = speechSynthesis.getVoices();
+   const indoVoice = voices.find(v => v.lang === 'id-ID');
+   if (indoVoice) utterance.voice = indoVoice;
+
+   speechSynthesis.speak(utterance);
+}
 </script>
 
 </html>
