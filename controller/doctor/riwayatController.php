@@ -35,9 +35,8 @@ function getData()
     // =========================
     // PARAMETER FILTER
     // =========================
-    $fromDate   = $_GET['fromDate']   ?? null;
-    $toDate     = $_GET['toDate']     ?? null;
-    $doctorName = $_GET['doctorName'] ?? null;
+    $fromDate = $_GET['fromDate'] ?? null;
+    $toDate   = $_GET['toDate']   ?? null;
 
     // =========================
     // BASE QUERY
@@ -62,7 +61,7 @@ function getData()
             ON ms_poli.id_poli = pasien_visit.id_poli
         LEFT JOIN visit_pemeriksaan 
             ON visit_pemeriksaan.nomor_visit = pasien_visit.visit_ID
-         LEFT JOIN ms_provider
+        LEFT JOIN ms_provider
             ON ms_provider.id_provider = pasien_visit.id_provider
         WHERE 1=1
     ";
@@ -81,13 +80,6 @@ function getData()
         $types   .= "ss";
     }
 
-    // ✅ Filter dokter (BERDASARKAN NAMA)
-    if (!empty($doctorName)) {
-        $query   .= " AND ms_doctor.doctor_name = ?";
-        $params[] = $doctorName;
-        $types   .= "s";
-    }
-
     // Order
     $query .= " ORDER BY pasien_visit.visit_date ASC";
 
@@ -99,7 +91,7 @@ function getData()
     if (!$stmt) {
         http_response_code(500);
         echo json_encode([
-            'status' => 'error',
+            'status'  => 'error',
             'message' => 'Prepare failed: ' . $koneksi->error
         ]);
         return;

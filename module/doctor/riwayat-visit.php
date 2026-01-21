@@ -1,8 +1,11 @@
 <?php
-session_start();
-$type = $_GET['type'];
-$title = 'List Pasien';
+$title = 'Riwayat Pasien';
 require '../../controller/view.php';
+require '../../utility/env.php';
+// Memuat file .env
+$env = loadEnv();
+// Mengambil nilai API_URL dari environment
+$apiUrl = getenv('API_URL');
 ?>
 <!doctype html>
 <html lang="en">
@@ -36,23 +39,53 @@ require '../../controller/view.php';
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
                 <div class="card-body p-4">
-                  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
-                    <!-- Judul -->
-                    <h5 class="card-title fw-semibold mb-0">Data Pasien</h5>
+                  <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="card-title fw-semibold">Riwayat Visit Pasien</h5>
+                    <!-- 🔽 Filter + Tombol Kembali -->
                     <div class="d-flex align-items-end gap-2 flex-wrap">
+                      <form id="filterForm" class="row g-2 align-items-end">
+                        <div class="col-auto">
+                          <label for="fromDate" class="form-label mb-0">Dari</label>
+                          <input type="date" id="fromDate" name="fromDate" class="form-control">
+                        </div>
+                        <div class="col-auto">
+                          <label for="toDate" class="form-label mb-0">Sampai</label>
+                          <input type="date" id="toDate" name="toDate" class="form-control">
+                        </div>
+                        <div class="col-auto">
+                          <button type="button" id="btnFilter" class="btn btn-dark">
+                            <i class="fas fa-filter"></i> Filter
+                          </button>
+                        </div>
+                        <div class="col-auto">
+                          <button type="button" id="btnReset" class="btn btn-light">
+                            <i class="fas fa-undo"></i> Reset
+                          </button>
+                        </div>
+                      </form>
+
+                      <!-- Tombol kembali -->
+                      <div class="d-flex ms-auto gap-2">
+                      
+                      </div>
                     </div>
                   </div>
                   <div class="table-responsive" data-simplebar>
-                    <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
+                    <table class="table text-nowrap align-middle table-custom mb-0" id="zero_config">
                       <thead>
                         <tr>
-                          <th class="text-dark fw-normal">Nomor RM</th>
-                          <th scope="col" class="text-dark fw-normal">Nama Lengkap</th>
-                          <th scope="col" class="text-dark fw-normal">TTL</th>
-                          <th scope="col" class="text-dark fw-normal">P/L</th>
-                          <th scope="col" class="text-dark fw-normal">Agama</th>
-                          <th scope="col" class="text-dark fw-normal">No.Handphone</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
+                          <th class="text-dark fw-normal">Registrasi</th>
+                          <th>Layanan</th>
+                          <th scope="col" class="text-dark fw-normal">Nomor RM</th>
+                          <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
+                          <th scope="col" class="text-dark fw-normal">P/L</th>
+                          <th scope="col" class="text-dark fw-normal">TTL</th>
+                          <th class="text-dark fw-normal">Dokter</th>
+                          <th>Jenis Bayar</th>
+                          <th class="text-dark fw-normal">Poliklinik</th>
+                          <th scope="col" class="text-dark fw-normal text-center">Status</th>
+
                         </tr>
                       </thead>
                       <tbody></tbody>
@@ -67,167 +100,149 @@ require '../../controller/view.php';
     </div>
   </div>
 
-
-
   <?php
   require '../admin/library.php';
   ?>
 </body>
-
-
-
+<?php
+$setting = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT rme_type FROM setting_clinic LIMIT 1"));
+$rme_type = $setting ? $setting['rme_type'] : 1; // default 1
+?>
 <script>
-  const apiUrl = 'controller/visit/addListController';
+  // Mengambil nilai API_URL dari PHP
+  const apiUrl = 'controller/doctor/riwayatController';
+  var today = new Date().toISOString().split("T")[0];
+  const doctorName = <?= json_encode($_SESSION['fullname'] ?? '') ?>;
+  $("#fromDate").val(today);
+  $("#toDate").val(today);
+  const rmeType = '<?php echo $rme_type ?>'; // ambil dari PHP
   $(document).ready(function() {
-    var table = $('#periodeTable').DataTable({
-      processing: true,
-      serverSide: false, // 🔹 ubah jadi false
-      ajax: {
-        url: apiUrl,
-        type: "GET",
-        dataSrc: function(json) {
-          return json.data.map(function(row) {
+    // Initialize DataTable
+    var table = $('#zero_config').DataTable({
+      "processing": true,
+      "serverSide": true,
+      "ajax": {
+        "url": apiUrl, // Ganti dengan URL API yang sesuai
+        "type": "GET",
+        data: function(d) {
+          // kirim tanggal filter ke backend
+          d.fromDate = $('#fromDate').val();
+          d.toDate = $('#toDate').val();
+          d.doctorName = doctorName;
+        },
+        "dataSrc": function(json) {
+          // Format data yang akan ditampilkan dalam tabel
+          return json.data.map(function(row, index) {
+            // pilih file tujuan sesuai rme_type
+            let pemeriksaanFile = (rmeType == 1) ? 'pemeriksaan_a' : 'pemeriksaan_b';
+             // ✅ Kondisi tampil tombol panggil
             return {
               "actions": `
-                      <div class="text-center">
-								<div class="btn-group btn-group-sm" role="group">
-									<a class="btn btn-primary edit-btn" href="javascript:;" data-id="${row.id_patient}">
-											<i class="fas fa-info-circle"></i>
-									</a>
-								</div>
-							</div>
-                    `,
-              "rm": row.nomor_rm ?? "-",
-              "name": row.patient_name ?? "-",
-              "ttl": row.patient_datebirth + '/' + row.patient_place ?? "-",
-              "gender": row.patient_gender ?? "-",
-              "agama": row.patient_religion ?? "-",
-              "phone": row.patient_phone ?? "-"
+                  <div class="text-center">
+                  <!-- Pemeriksaan -->
+                  <a href="module/admin/${pemeriksaanFile}?no=${row.visit_ID}&rm=${row.nomor_rm}"
+                    class="btn btn-sm btn-primary"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="Pemeriksaan">
+                    <i class="ti ti-stethoscope"></i>
+                  </a>
+                  </div>
+              `,
+              "tanggal": row.visit_date + ' ' + row.visit_time,
+              "source_hub": row.source_hub,
+              "nomor_rm": row.nomor_rm,
+              "nama_pasien": row.patient_name,
+              "gender": row.patient_gender,
+              "ttl": row.patient_datebirth + '/' + row.patient_place,
+              "dokter": row.doctor_name,
+              "jenis_bayar": row.provider_name,
+              "layanan": row.poli_name,
+              "status_visit": `
+                <span class="badge ${row.status_dilayani == 1 ? 'bg-success' : 'bg-danger'} d-block text-center">
+                  ${row.status_dilayani == 1 ? 'Sudah Dilayani' : 'Belum Dilayani'}
+                </span>
+              `
             };
           });
         }
       },
-      columns: [{
-          data: "rm"
+      "columns": [{
+          "data": "actions"
         }, {
-          data: "name"
+          "data": "tanggal"
         },
         {
-          data: "ttl"
+          "data": "source_hub"
         },
         {
-          data: "gender"
+          "data": "nomor_rm"
         },
         {
-          data: "agama"
+          "data": "nama_pasien"
         },
         {
-          data: "phone"
+          "data": "gender"
         },
         {
-          data: "actions",
-          orderable: false,
-          searchable: false
+          "data": "ttl"
         },
-      ],
-      footerCallback: function(row, data, start, end, display) {
-        var api = this.api();
-
-        // Hitung total bobot
-        let total = api
-          .column(3, {
-            page: 'current'
-          })
-          .data()
-          .reduce((a, b) => {
-            return (parseFloat(a) || 0) + (parseFloat(b) || 0);
-          }, 0);
-
-        // Tampilkan di footer
-        $(api.column(3).footer()).html(total.toFixed(2) + " %");
-      }
-    });
-
-    $('#customSearch').on('keyup', function() {
-      table.search(this.value).draw();
-    });
-
-    // 🔹 Tambah
-    $('#btnTambah').on('click', function() {
-      $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
-      $('#id_patient').val('');
-      $('#programModal .modal-title').text('Tambah Data');
-      $('#programModal').modal('show');
-    });
-
-    // 🔹 Submit hanya POST
-    $('#programForm').on('submit', function(e) {
-      e.preventDefault();
-      let formData = new URLSearchParams(new FormData(this));
-
-      fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === 'success') {
-            Swal.fire('Berhasil!', data.message, 'success');
-            $('#programModal').modal('hide');
-            table.ajax.reload(null, false);
-          } else {
-            Swal.fire('Gagal!', data.message, 'error');
-          }
-        });
-    });
-    // 🔹 Edit
-    $(document).on('click', '.edit-btn', function() {
-      let id = $(this).data('id');
-      fetch(apiUrl + `?id=${id}`)
-        .then(res => res.json())
-        .then(resp => {
-          if (resp.status === 'success') {
-            let d = resp.data;
-
-            // isi otomatis berdasarkan name field
-            for (let key in d) {
-              $(`[name="${key}"]`).val(d[key]);
-            }
-
-            $('#programModal .modal-title').text('Registrasi Data');
-            $('#programModal').modal('show');
-          }
-        });
-    });
-
-    // 🔹 Delete
-    $(document).on('click', '.delete-btn', function() {
-      let id = $(this).data('id');
-      Swal.fire({
-        title: 'Hapus Data?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Hapus',
-        cancelButtonText: 'Batal'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          fetch(apiUrl + `?id=${id}`, {
-              method: 'DELETE'
-            })
-            .then(res => res.json())
-            .then(data => {
-              if (data.status === 'success') {
-                Swal.fire('Berhasil!', 'Data dihapus.', 'success');
-                table.ajax.reload(null, false);
-              }
-            });
+        {
+          "data": "dokter"
+        },
+        {
+          "data": "jenis_bayar"
+        },
+        {
+          "data": "layanan"
+        },
+        {
+          "data": "status_visit"
         }
-      });
+
+      ]
     });
+
+    // filter manual
+    $('#btnFilter').on('click', function() {
+      table.ajax.reload();
+    });
+
+    // reset filter ke today
+    $('#btnReset').on('click', function() {
+      $('#fromDate').val(today);
+      $('#toDate').val(today);
+      table.ajax.reload();
+    });
+
+
+
   });
+
+  function callPatient(noAntrian, namaPasien, poli) {
+   if (!('speechSynthesis' in window)) {
+      alert('Browser tidak mendukung suara');
+      return;
+   }
+
+   // Hentikan suara sebelumnya
+   speechSynthesis.cancel();
+
+   const text = `Nomor antrean ${noAntrian}, atas nama ${namaPasien}, silakan menuju poli ${poli}`;
+   const utterance = new SpeechSynthesisUtterance(text);
+
+   utterance.lang = 'id-ID';
+   utterance.rate = 0.9;
+   utterance.pitch = 1;
+   utterance.volume = 1;
+
+   // pilih voice Indonesia jika ada
+   const voices = speechSynthesis.getVoices();
+   const indoVoice = voices.find(v => v.lang === 'id-ID');
+   if (indoVoice) utterance.voice = indoVoice;
+
+   speechSynthesis.speak(utterance);
+}
 </script>
 
 </html>
