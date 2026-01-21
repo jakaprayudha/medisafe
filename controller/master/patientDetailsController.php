@@ -42,6 +42,8 @@ switch ($method) {
          // daftar field yang boleh diupdate
          $allowedFields = [
             'patient_nik',
+            'patient_kk',
+            'patient_bpjs',
             'nomor_rm',
             'patient_datebirth',
             'patient_religion',

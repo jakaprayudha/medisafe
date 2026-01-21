@@ -57,5 +57,25 @@
                   <span class="hide-menu">Rawat Inap</span>
                </a>
             </li>
+             <li class="sidebar-item">
+               <a class="sidebar-link <?php if ($title == 'Counter Admisi') {
+                                          echo 'active';
+                                       } ?>"
+                  href="module/admin/counter-admisi"
+                  aria-expanded="false">
+                  <iconify-icon icon="solar:display-linear"></iconify-icon>
+                  <span class="hide-menu">Antrean</span>
+               </a>
+            </li>
+             <li class="sidebar-item">
+               <a class="sidebar-link <?php if ($title == 'Display Tiket') {
+                                          echo 'active';
+                                       } ?>"
+                  href="module/admisi/counter-ticket" target='_blank'
+                  aria-expanded="false">
+                  <iconify-icon icon="solar:printer-linear"></iconify-icon>
+                  <span class="hide-menu">Ambil Antrean</span>
+               </a>
+            </li>
          </ul>
       </nav>

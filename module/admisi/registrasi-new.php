@@ -59,7 +59,7 @@ require '../../controller/view.php';
                     </table>
                   </div>
                 </div>
-              </div>x
+              </div>
             </div>
           </div>
         </div>

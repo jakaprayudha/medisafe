@@ -1,6 +1,6 @@
 <?php
 require "../../database/connect.php";
-session_start();
+@session_start();
 function tampildata($query)
 {
    global $koneksi;

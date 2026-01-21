@@ -79,6 +79,18 @@ $no = $_GET['no'];
                               <input type="text" class="form-control" name="patient_nik">
                             </div>
                           </div>
+                           <div class="col-6">
+                            <div class="mb-3">
+                              <label class="form-label">Nomor Kartu Keluarga</label>
+                              <input type="text" class="form-control" name="patient_kk">
+                            </div>
+                          </div>
+                           <div class="col-6">
+                            <div class="mb-3">
+                              <label class="form-label">Nomor BPJS</label>
+                              <input type="text" class="form-control" name="patient_bpjs">
+                            </div>
+                          </div>
                           <div class="col">
                             <div class="mb-3">
                               <label class="form-label required">Nama Pasien</label>
