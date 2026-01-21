@@ -37,5 +37,15 @@
                   <span class="hide-menu">Riwayat Pasien</span>
                </a>
             </li>
+             <li class="sidebar-item">
+               <a class="sidebar-link <?php if ($title == 'Display Poliklinik') {
+                                          echo 'active';
+                                       } ?>"
+                  href="module/display/display-poliklinik" target='_blank'
+                  aria-expanded="false">
+                  <iconify-icon icon="solar:printer-linear"></iconify-icon>
+                  <span class="hide-menu">Antrean</span>
+               </a>
+            </li>
          </ul>
       </nav>
