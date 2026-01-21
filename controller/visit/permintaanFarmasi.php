@@ -12,10 +12,15 @@ switch ($method) {
          getData();
       }
       break;
-   case 'PUT':
-      // Update User
-      updateData();
-      break;
+      case 'PUT':
+         parse_str(file_get_contents("php://input"), $_PUT);
+
+         if (isset($_GET['approve'])) {
+            approveData($_PUT);
+         } else {
+            updateData();
+         }
+         break;
 
    case 'DELETE':
       // Delete User
@@ -293,6 +298,49 @@ function deleteData()
       echo json_encode([
          'status' => 'error',
          'message' => 'Gagal menyiapkan query.'
+      ]);
+   }
+}
+
+
+function approveData($data)
+{
+   global $koneksi;
+
+   if (empty($data['id_permintaan_farmasi'])) {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'ID permintaan tidak ditemukan.'
+      ]);
+      return;
+   }
+
+   $id = $data['id_permintaan_farmasi'];
+
+   $query = "UPDATE permintaan_pharmacy 
+             SET status_permintaan = '1'
+             WHERE id_permintaan_farmasi = ?";
+
+   if ($stmt = $koneksi->prepare($query)) {
+      $stmt->bind_param("i", $id);
+
+      if ($stmt->execute()) {
+         echo json_encode([
+            'status' => 'success',
+            'message' => 'Permintaan farmasi berhasil di-approve.'
+         ]);
+      } else {
+         echo json_encode([
+            'status' => 'error',
+            'message' => 'Approve gagal: ' . $stmt->error
+         ]);
+      }
+
+      $stmt->close();
+   } else {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Query gagal disiapkan.'
       ]);
    }
 }

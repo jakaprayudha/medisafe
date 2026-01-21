@@ -263,6 +263,9 @@ if ($data) {
               "actions": `
                       <div class="text-center">
 								<div class="btn-group btn-group-sm" role="group">
+                  <a class="btn btn-success approve-btn" href="javascript:;" data-id="${row.id_permintaan_farmasi}">
+											<i class="fas fa-check-circle"></i>
+									</a>
 									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_permintaan_farmasi}">
 											<i class="fas fa-edit"></i>
 									</a>
@@ -411,6 +414,39 @@ if ($data) {
               if (data.status === 'success') {
                 Swal.fire('Berhasil!', 'Data dihapus.', 'success');
                 table.ajax.reload(null, false);
+              }
+            });
+        }
+      });
+    });
+
+    // 🔹 Approve
+    $(document).on('click', '.approve-btn', function () {
+      let id = $(this).data('id');
+
+      Swal.fire({
+        title: 'Approve Permintaan?',
+        text: 'Permintaan farmasi akan ditandai sebagai selesai.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Approve',
+        cancelButtonText: 'Batal'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(apiUrl + `&approve=1`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `id_permintaan_farmasi=${id}`
+          })
+            .then(res => res.json())
+            .then(resp => {
+              if (resp.status === 'success') {
+                Swal.fire('Berhasil!', resp.message, 'success');
+                table.ajax.reload(null, false);
+              } else {
+                Swal.fire('Gagal!', resp.message, 'error');
               }
             });
         }
