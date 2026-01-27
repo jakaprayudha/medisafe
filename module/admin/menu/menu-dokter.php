@@ -24,7 +24,17 @@
                   href="module/doctor/pemeriksaan"
                   aria-expanded="false">
                   <iconify-icon icon="mdi:register-outline"></iconify-icon>
-                  <span class="hide-menu">Pemeriksaan Medis</span>
+                  <span class="hide-menu">Poliklinik</span>
+               </a>
+            </li>
+              <li class="sidebar-item">
+               <a class="sidebar-link <?php if ($title == 'Pemeriksaan Rawat Inap') {
+                                          echo 'active';
+                                       } ?>"
+                  href="module/doctor/pemeriksaan-rawat-inap"
+                  aria-expanded="false">
+                  <iconify-icon icon="mdi:register-outline"></iconify-icon>
+                  <span class="hide-menu">Rawat Inap</span>
                </a>
             </li>
             <li class="sidebar-item">
