@@ -1,528 +1,340 @@
-<body>
-   <?php include 'kopsurat.php'; ?>
+<?php 
+$title = "FORMULIR TRIASE KEGAWATDARURATAN";
+$subtitle = "Assesmen Medis Awal Pasien IGD";
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title><?= $title ?></title>
 
-   <div class="form-triase">
-      <style>
-         @page {
-            size: A4;
-            margin: 1.5cm;
-         }
+<style>
+@page { size:A4; margin:1.5cm; }
 
-         @media print {
-            * {
-               -webkit-print-color-adjust: exact !important;
-               print-color-adjust: exact !important;
-            }
-         }
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
 
-         body {
-            font-family: "Times New Roman", serif;
-            font-size: 11pt;
-         }
+/* =================================================
+   TRIAGE STYLE (AMAN)
+================================================= */
+body.triase-body {
+  font-family:"Times New Roman",serif;
+  font-size:11pt;
+  margin:0;
+  background:#fff;
+}
 
-         table {
-            width: 100%;
-            border-collapse: collapse;
-         }
+.triase-container {
+  max-width:760px;
+  margin:auto;
+}
 
-         td,
-         th {
-            border: 1px solid #000;
-            padding: 6px;
-            vertical-align: top;
-         }
+.triase-table {
+  width:100%;
+  border-collapse:collapse;
+}
+.triase-table th,
+.triase-table td {
+  border:1px solid #000;
+  padding:6px;
+}
 
-         .title {
-            text-align: center;
-            font-weight: bold;
-            font-size: 16pt;
-            margin-bottom: 15px;
-         }
+.triase-section {
+  margin-top:14px;
+  font-weight:bold;
+}
 
-         .badge-triase {
-            font-weight: bold;
-            padding: 3px 7px;
-            color: #fff;
-            border-radius: 4px;
-         }
+.triase-header td {
+  padding:6px;
+}
 
-         .ats1 {
-            background: #d9534f;
-         }
+/* ATS BADGE */
+.badge-triase {
+  padding:4px 14px;
+  border-radius:14px;
+  font-weight:bold;
+  color:#fff;
+  font-size:12px;
+}
+.ats1{background:#d9534f;}
+.ats2{background:#f0ad4e;color:#000;}
+.ats3{background:#5cb85c;}
+.ats4{background:#000;}
+.ats5{background:#999;}
 
-         .ats2 {
-            background: #f0ad4e;
-         }
+/* PAIN SCALE */
+.pain-scale{display:flex;gap:12px;margin-top:8px;}
+.pain-item{text-align:center;font-size:26px;width:48px;}
+.pain-item span{display:block;font-size:11px;}
+.pain-selected{
+  border:3px solid red;
+  border-radius:10px;
+  padding:4px;
+  background:#ffe5e5;
+}
 
-         .ats3 {
-            background: #5cb85c;
-         }
+/* =================================================
+   IGD ABCDE STYLE (DISCOPE)
+================================================= */
+.igd-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+}
+.igd-table th,
+.igd-table td{
+  border:1px solid #000;
+  padding:6px;
+  vertical-align:top;
+}
+.igd-table th{
+  background:#f2f2f2;
+  text-align:center;
+}
+.igd-check{display:block;margin-bottom:4px;}
 
-         .ats4 {
-            background: #000;
-         }
+.igd-ttd{
+  width:300px;
+  margin-left:auto;
+  margin-top:30px;
+  text-align:center;
+}
 
-         .ats5 {
-            background: #999;
-         }
+/* PRINT */
+@media print{.triase-noprint{display:none;}}
+</style>
+</head>
 
-         .head-ats1 {
-            background: #d9534f;
-            color: #fff;
-            text-align: center;
-         }
+<body class="triase-body">
 
-         .head-ats2 {
-            background: #f0ad4e;
-            color: #000;
-            text-align: center;
-         }
+<div class="triase-container">
 
-         .head-ats3 {
-            background: #5cb85c;
-            color: #fff;
-            text-align: center;
-         }
+<?php require 'kop-surat.php'; ?>
 
-         .head-ats4 {
-            background: #000;
-            color: #fff;
-            text-align: center;
-         }
+<!-- ================= HEADER ================= -->
+<table class="triase-header">
+<tr>
+  <td width="70"><img id="barcode_rm" height="40"></td>
+  <td>
+    Kategori ATS :
+    <span id="tri_kategori_badge" class="badge-triase">-</span>
+  </td>
+</tr>
+</table>
 
-         .section-title {
-            margin-top: 14px;
-            margin-bottom: 5px;
-            font-weight: bold;
-         }
+ <table class="igd-table">
+    <tr>
+      <th>Airway</th>
+      <th>Breathing</th>
+      <th>Circulation</th>
+      <th>Disability</th>
+      <th>Vital Sign</th>
+    </tr>
+    <tr>
+      <td>
+        <label class="igd-check"><input type="checkbox" checked> Bebas</label>
+        <label class="igd-check"><input type="checkbox"> Gargling</label>
+        <label class="igd-check"><input type="checkbox"> Stridor</label>
+        <label class="igd-check"><input type="checkbox"> Terintubasi</label>
+      </td>
+      <td>
+        <label class="igd-check"><input type="checkbox" checked> Spontan</label>
+        <label class="igd-check"><input type="checkbox"> Tachipneu</label>
+        <label class="igd-check"><input type="checkbox"> Dispneu</label>
+        <label class="igd-check"><input type="checkbox"> Apneu</label>
+      </td>
+      <td>
+        Nadi: <b>Kuat</b><br>
+        CRT: <b>&lt; 2 detik</b><br>
+        Turgor: <b>Baik</b>
+      </td>
+      <td>
+        GCS E: 4<br>
+        GCS V: 5<br>
+        GCS M: 6
+      </td>
+      <td>
+        TD: 120/80 mmHg<br>
+        Nadi: 82 x/menit<br>
+        RR: 20 x/menit<br>
+        Suhu: 36.7 °C
+      </td>
+    </tr>
+  </table>
 
-         .signature-box,
-         .qr-box {
-            margin-top: 20px;
-            text-align: center;
-         }
+    <table class="igd-table">
+    <tr>
+      <th style="width:20%">ANAMNESIS</th>
+      <td>
+        <label><input type="checkbox" checked> Auto Anamnesa</label>
+        <label><input type="checkbox"> Allo Anamnesa</label>
+      </td>
+    </tr>
+  </table>
 
-         .signature-img {
-            width: 140px;
-         }
+   <table class="igd-table igd-table-noborder">
+    <tr>
+      <td style="width:25%">Keluhan Utama</td>
+      <td id="tri_keluhan">: </td>
+    </tr>
+    <tr>
+      <td>Riwayat Penyakit Sekarang</td>
+      <td>Pusing dan demam</td>
+    </tr>
+    <tr>
+      <td>Riwayat Penyakit Dahulu</td>
+      <td>Hipertensi</td>
+    </tr>
+    <tr>
+      <td>Riwayat Pengobatan</td>
+      <td>Paracetamol, Cetirizine</td>
+    </tr>
+    <tr>
+      <td>Riwayat Alergi</td>
+      <td>Tidak ada</td>
+    </tr>
+  </table>
 
-         @media print {
-            .no-print {
-               display: none;
-            }
-         }
+<!-- ================= TRIASE ================= -->
+  <table class="igd-table">
+    <tr>
+      <th colspan="3">DIAGNOSA</th>
+    </tr>
+    <tr>
+      <td style="width:20%">Diagnosa Kerja</td>
+      <td>:</td>
+      <td>R50.9 Fever, unspecified</td>
+    </tr>
+    <tr>
+      <td>Diagnosa Banding</td>
+      <td>:</td>
+      <td>O21 Excessive vomiting</td>
+    </tr>
+  </table>
 
-         .ats-label {
-            font-weight: bold;
-            background: #f5f5f5;
-            width: 18%;
-         }
+<div class="triase-section">Vital Sign</div>
+<table class="triase-table">
+<tr><th>TD</th><th>Nadi</th><th>RR</th><th>Suhu</th><th>SpO₂</th></tr>
+<tr>
+<td id="tri_td"></td>
+<td id="tri_nadi"></td>
+<td id="tri_rr"></td>
+<td id="tri_suhu"></td>
+<td id="tri_spo2"></td>
+</tr>
+</table>
 
-         .cb-cell label {
-            display: block;
-            margin-bottom: 2px;
-         }
+<div class="triase-section">GCS</div>
+<table class="triase-table">
+<tr><th>E</th><th>V</th><th>M</th><th>Total</th></tr>
+<tr>
+<td id="tri_gcs_e"></td>
+<td id="tri_gcs_v"></td>
+<td id="tri_gcs_m"></td>
+<td><b id="tri_gcs_total"></b></td>
+</tr>
+</table>
 
-         .pain-scale {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-top: 10px;
-         }
+<div class="triase-section">Skala Nyeri</div>
+<div id="painScale" class="pain-scale"></div>
+<table class="triase-table">
+<tr><td>Nilai Nyeri : <b id="tri_nyeri"></b> / 10</td></tr>
+</table>
 
-         .pain-item {
-            text-align: center;
-            font-size: 28px;
-            /* <<< ukuran emoji besar */
-            width: 55px;
-         }
+<!-- =====================================================
+     IGD – ABCDE (DIGABUNG DARI FORM IGD)
+===================================================== -->
+  <table class="igd-table">
+    <tr>
+      <th style="width:20%">TERAPI</th>
+      <td>:</td>
+      <td>IVFD RL, Injeksi Ranitidine, Paracetamol, Cetirizine</td>
+    </tr>
+  </table>
 
-         .pain-item span {
-            display: block;
-            font-size: 12px;
-            margin-top: 3px;
-         }
 
-         .pain-selected {
-            border: 3px solid red;
-            border-radius: 10px;
-            padding: 5px;
-            background: #ffe5e5;
-         }
-      </style>
+  <table class="igd-table">
+    <tr>
+      <th style="width:20%">Perawatan Lanjutan</th>
+      <td>
+        <label><input type="checkbox" checked> Rawat Inap</label>
+        <label><input type="checkbox"> Rawat Intensive</label>
+      </td>
+    </tr>
+  </table>
+<div class="triase-section">Catatan Tambahan</div>
+<table class="triase-table">
+<tr><td id="tri_catatan"></td></tr>
+</table>
 
-      <div class="title">FORMULIR TRIASE KEGAWATDARURATAN</div>
 
-      <!-- HEADER PASIEN -->
-      <table>
-         <tr>
-            <td>Nama Pasien: <b><span id="tri_nama"></span></b></td>
-            <td>No RM: <b><span id="tri_rm"></span></b></td>
-            <td rowspan="2" style="text-align:center;">
-               <img id="barcode_rm" src="" height="40">
-            </td>
-         </tr>
-         <tr>
-            <td>Jenis Kelamin: <b><span id="tri_jk"></span></b></td>
-            <td>Usia: <b><span id="tri_usia"></span></b></td>
-         </tr>
-      </table>
 
-      <table>
-         <tr>
-            <td>Dokter Pemeriksa: <b><span id="tri_dokter"></span></b></td>
-            <td>Kategori ATS:
-               <span id="tri_kategori_badge" class="badge-triase">-</span>
-            </td>
-         </tr>
-      </table>
+<div class="igd-ttd">
+  Dokter<br><br>
+  <img src="../../../uploads/ttd/drdevi.png" height="90"><br>
+  <b id="nama_petugas"></b>
+</div>
 
-      <!-- DATA KELUHAN -->
-      <div class="section-title">Keluhan Utama</div>
-      <table>
-         <tr>
-            <td id="tri_keluhan"></td>
-         </tr>
-      </table>
+<div class="triase-noprint" style="text-align:center;margin-top:10px">
+<button onclick="window.print()">🖨 Cetak</button>
+</div>
 
-      <!-- VITAL SIGN -->
-      <div class="section-title">Pemeriksaan Vital Sign</div>
-      <table>
-         <tr>
-            <th>Tekanan Darah</th>
-            <th>Nadi</th>
-            <th>RR</th>
-            <th>Suhu</th>
-            <th>SpO₂</th>
-         </tr>
-         <tr>
-            <td id="tri_td"></td>
-            <td id="tri_nadi"></td>
-            <td id="tri_rr"></td>
-            <td id="tri_suhu"></td>
-            <td id="tri_spo2"></td>
-         </tr>
-      </table>
-
-      <!-- GCS -->
-      <div class="section-title">GCS</div>
-      <table>
-         <tr>
-            <th>Mata (E)</th>
-            <th>Verbal (V)</th>
-            <th>Motorik (M)</th>
-            <th>Total</th>
-         </tr>
-         <tr>
-            <td id="tri_gcs_e"></td>
-            <td id="tri_gcs_v"></td>
-            <td id="tri_gcs_m"></td>
-            <td><b id="tri_gcs_total"></b></td>
-         </tr>
-      </table>
-
-      <!-- SKALA NYERI -->
-      <div class="section-title">Skala Nyeri</div>
-
-      <div id="painScale" class="pain-scale">
-         <!-- Akan diisi otomatis lewat JS -->
-      </div>
-
-      <table style="margin-top: 10px;">
-         <tr>
-            <td><b>Nilai Nyeri:</b> <span id="tri_nyeri"></span> / 10</td>
-         </tr>
-      </table>
-
-      <!-- BLOK ATS NON PSIKIATRI -->
-      <div class="section-title">Australasian Triage Scale (ATS) – Pemeriksaan Non Psikiatri</div>
-
-      <table>
-         <tr>
-            <th style="background:#e9e9e9; text-align:center;">Pemeriksaan</th>
-            <th class="head-ats1">ATS 1</th>
-            <th class="head-ats2">ATS 2</th>
-            <th class="head-ats3">ATS 3</th>
-            <th class="head-ats4">ATS 4</th>
-         </tr>
-
-         <!-- A. Airway -->
-         <tr>
-            <td class="ats-label">A. Airway</td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Sumbatan jalan nafas"> Sumbatan Jalan Nafas</label>
-            </td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Tidak ada sumbatan ATS2"> Tidak ada sumbatan</label>
-            </td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Tidak ada sumbatan ATS3"> Tidak ada sumbatan</label>
-            </td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Doa (Tanda kehidupan, tanda ada denyut nadi, RC, EKG Flat)"> Doa (Tanda kehidupan, tanda ada denyut nadi, RC, EKG Flat)</label>
-            </td>
-         </tr>
-
-         <!-- B. Breathing -->
-         <tr>
-            <td class="ats-label">B. Breathing</td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Henti Nafas"> Henti Nafas</label>
-            </td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="RR < 10 / Distress pernafasan berat"> RR &lt; 10 x/menit, distress pernafasan berat</label>
-            </td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Takipnea Distress pernafasan sedang"> Takipnea, distress pernafasan sedang</label>
-            </td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Dipsnea"> Dispnea</label>
-            </td>
-         </tr>
-
-         <!-- C. Circulation -->
-         <tr>
-            <td class="ats-label">C. Circulation</td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Henti Jantung"> Henti Jantung</label>
-            </td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Sistolik < 80 MmHg"> Sistolik &lt; 80 mmHg</label>
-            </td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Gangguan sirkulasi (Akral dingin, Nadi < 50 atau> 150, Banyak kehilangan darah, denggan dengan latargi)"> Gangguan sirkulasi (akral dingin, Nadi &lt;50 atau &gt;150, perdarahan, letargi)</label>
-            </td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Muntah atau diare tanda dehidrasi"> Muntah/diare tanda dehidrasi</label>
-            </td>
-         </tr>
-
-         <!-- D. Disability -->
-         <tr>
-            <td class="ats-label">D. Disability</td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Nyeri berat yang tidak respon dengan obat"> Nyeri berat yang tidak respon dengan obat</label>
-            </td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Nyeri Sedang"> Nyeri sedang</label>
-            </td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Cedera kepala ringan"> Cedera kepala ringan</label>
-            </td>
-            <td class="cb-cell">-</td>
-         </tr>
-
-         <!-- E. Exposure -->
-         <tr>
-            <td class="ats-label">E. Exposure</td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Kejang Berkelanjutan"> Kejang berkelanjutan</label>
-            </td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Nyeri dada tipikal"> Nyeri dada tipikal</label>
-               <label><input type="checkbox" class="cb-ats" value="Nyeri hebat"> Nyeri hebat</label>
-               <label><input type="checkbox" class="cb-ats" value="Deficit Neurologis (hemiparesa, dispasia)"> Defisit neurologis (hemiparesa, dispasia)</label>
-            </td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Riwayat kejang"> Riwayat kejang</label>
-               <label><input type="checkbox" class="cb-ats" value="Riwayat pingsan"> Riwayat pingsan</label>
-               <label><input type="checkbox" class="cb-ats" value="Deformitas laserasi"> Deformitas/laserasi</label>
-            </td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Luka keci (luka lecet, luka robek kecil)"> Luka kecil (lecet/robek kecil)</label>
-               <label><input type="checkbox" class="cb-ats" value="Kunjungan ulang untuk ganti verban evaluasi jahitan"> Kunjungan ulang ganti verban/evaluasi jahitan</label>
-            </td>
-         </tr>
-
-         <!-- F. Psikiatri/Psikologi -->
-         <tr>
-            <td class="ats-label">F. Psikiatri / Psikologi</td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Gangguan perilaku berat yang mengancam diri pasien dan orang lain"> Gangguan perilaku berat mengancam diri & orang lain</label>
-               <label><input type="checkbox" class="cb-ats" value="Membawa Senjata Tajam"> Membawa senjata tajam</label>
-               <label><input type="checkbox" class="cb-ats" value="Merusak diri sendiri"> Merusak diri sendiri</label>
-            </td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Datang dengan Renstrain"> Datang dengan restrain</label>
-               <label><input type="checkbox" class="cb-ats" value="Perilaku kejam"> Perilaku kejam</label>
-            </td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Agresif secara fisik dan ringan"> Agresif fisik ringan</label>
-               <label><input type="checkbox" class="cb-ats" value="Agresif secara fisik dan lisan"> Agresif fisik dan lisan</label>
-               <label><input type="checkbox" class="cb-ats" value="Mengancam / membahayakan keselamatan diri sendiri maupun orang lain"> Mengancam/membahayakan diri/orang lain</label>
-            </td>
-            <td class="cb-cell">
-               <label><input type="checkbox" class="cb-ats" value="Keluhan minor yang saat berkunjung masih dirasakan"> Keluhan minor</label>
-            </td>
-         </tr>
-      </table>
-
-      <!-- OPSIONAL: teks referensi asli -->
-      <table style="margin-top:5px;">
-         <tr>
-            <td style="font-size:9pt;">
-               <b>Ringkasan Referensi Terpilih:</b>
-               <span id="tri_referensi_text"></span>
-            </td>
-         </tr>
-      </table>
-
-      <!-- CATATAN -->
-      <div class="section-title">Planning</div>
-      <table>
-         <tr>
-            <td>Perawatan lanjutan : <strong>Rawat Inap</strong></td>
-         </tr>
-      </table>
-
-      <!-- CATATAN -->
-      <div class="section-title">Catatan Tambahan</div>
-      <table>
-         <tr>
-            <td id="tri_catatan"></td>
-         </tr>
-      </table>
-
-      <!-- QR PETUGAS -->
-      <div class="qr-box">
-         <h4>QR Petugas Pemeriksa</h4>
-         <img id="qr_petugas" width="150">
-      </div>
-
-      <!-- TTD -->
-      <div class="signature-box">
-         <h4>Tanda Tangan Pemeriksa</h4>
-         <img id="ttd_petugas" class="signature-img">
-         <div><b id="nama_petugas"></b></div>
-      </div>
-
-      <div class="no-print">
-         <button onclick="window.print()">🖨 Cetak Halaman</button>
-      </div>
-
-   </div>
-</body>
+</div>
 
 <script>
-   function renderPainScale(level) {
+function renderPainScale(level){
+  const faces=["😀","🙂","🙂","😐","😐","😩","😫","😣","😭","😭","😭"];
+  let html="";
+  for(let i=0;i<=10;i++){
+    html+=`<div class="pain-item ${i==level?'pain-selected':''}">
+      ${faces[i]}<span>${i}</span></div>`;
+  }
+  painScale.innerHTML=html;
+}
 
-      const painFaces = [
-         "😀", "🙂", "🙂", "😐", "😐", "😩", "😫", "😣", "😭", "😭", "😭"
-      ];
+document.addEventListener("DOMContentLoaded",()=>{
+  const p=new URLSearchParams(location.search);
 
-      const painText = [
-         "Tidak Nyeri",
-         "Nyeri Ringan",
-         "Nyeri Ringan",
-         "Nyeri Sedang",
-         "Nyeri Sedang",
-         "Nyeri Berat",
-         "Nyeri Sangat Berat",
-         "Nyeri Sangat Berat",
-         "Nyeri Tak Tertahankan",
-         "Nyeri Tak Tertahankan",
-         "Nyeri Tak Tertahankan"
-      ];
+  fetch(`../../../controller/ranap/getFormTriase.php?no=${p.get("no")}&rm=${p.get("rm")}`)
+  .then(r=>r.json()).then(res=>{
+    const t=res.triase||{}, ps=res.pasien||{};
 
-      let html = "";
+    tri_keluhan.innerText=t.keluhan_utama||"-";
+    tri_td.innerText=t.tekanan_darah||"-";
+    tri_nadi.innerText=t.nadi||"-";
+    tri_rr.innerText=t.rr||"-";
+    tri_suhu.innerText=t.suhu||"-";
+    tri_spo2.innerText=t.spo2||"-";
 
-      for (let i = 0; i <= 10; i++) {
-         html += `
-         <div class="pain-item ${i == level ? "pain-selected" : ""}">
-            ${painFaces[i]}
-            <span>${i}</span>
-         </div>
-      `;
-      }
+    tri_gcs_e.innerText=t.gcs_e||"-";
+    tri_gcs_v.innerText=t.gcs_v||"-";
+    tri_gcs_m.innerText=t.gcs_m||"-";
+    tri_gcs_total.innerText=t.gcs_total||"-";
 
-      document.getElementById("painScale").innerHTML = html;
-   }
-   document.addEventListener("DOMContentLoaded", () => {
+    tri_nyeri.innerText=t.skala_nyeri||"0";
+    renderPainScale(parseInt(t.skala_nyeri||0));
 
-      const params = new URLSearchParams(window.location.search);
-      const no = params.get("no");
-      const rm = params.get("rm");
+    tri_catatan.innerText=t.catatan||"-";
+    nama_petugas.innerText=ps.doctor_name||"-";
 
-      if (!no || !rm) return;
+    barcode_rm.src=
+      `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(ps.nomor_rm||"")}&code=Code128`;
 
-      fetch(`../../../controller/ranap/getFormTriase.php?no=${no}&rm=${rm}`)
-         .then(r => r.json())
-         .then(res => {
-
-            const p = res.pasien || {};
-            const t = res.triase || {};
-
-            // IDENTITAS
-            document.getElementById("tri_nama").innerText = p.nama_pasien || "";
-            document.getElementById("tri_rm").innerText = p.nomor_rm || rm;
-            document.getElementById("tri_jk").innerText = p.jk || "";
-            document.getElementById("tri_usia").innerText = p.usia || "";
-            document.getElementById("tri_dokter").innerText = p.doctor_name || "";
-
-            // KATEGORI ATS → Badge warna
-            const badge = document.getElementById("tri_kategori_badge");
-            badge.innerText = t.triase || "-";
-            const kelas = (t.triase || "").replace(" ", "").toLowerCase(); // "ATS 1" -> "ats1"
-            if (kelas) badge.classList.add(kelas);
-
-            // KELUHAN
-            document.getElementById("tri_keluhan").innerText = t.keluhan_utama || "";
-
-            // VITAL SIGN
-            document.getElementById("tri_td").innerText = t.tekanan_darah || "";
-            document.getElementById("tri_nadi").innerText = t.nadi || "";
-            document.getElementById("tri_rr").innerText = t.rr || "";
-            document.getElementById("tri_suhu").innerText = t.suhu || "";
-            document.getElementById("tri_spo2").innerText = t.spo2 || "";
-
-            // GCS
-            document.getElementById("tri_gcs_e").innerText = t.gcs_e || "";
-            document.getElementById("tri_gcs_v").innerText = t.gcs_v || "";
-            document.getElementById("tri_gcs_m").innerText = t.gcs_m || "";
-            document.getElementById("tri_gcs_total").innerText = t.gcs_total || "";
-
-            // NYERI
-            document.getElementById("tri_nyeri").innerText = t.skala_nyeri || "";
-            renderPainScale(parseInt(t.skala_nyeri || 0));
-
-            // REFERENSI (teks asli)
-            document.getElementById("tri_referensi_text").innerText = t.referensi_triase || "";
-
-            // CATATAN
-            document.getElementById("tri_catatan").innerText = t.catatan || "";
-
-            // BARCODE
-            document.getElementById("barcode_rm").src =
-               `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(p.nomor_rm || rm)}&code=Code128`;
-
-            // QR PETUGAS
-            if (p.doctor_name) {
-               document.getElementById("qr_petugas").src =
-                  `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(p.doctor_name)}`;
-            }
-
-            // TTD DIGITAL (jika tersedia)
-            if (p.ttd_path) {
-               document.getElementById("ttd_petugas").src = "../../../uploads/signature/" + p.ttd_path;
-            } else {
-               document.getElementById("ttd_petugas").style.display = "none";
-            }
-
-            document.getElementById("nama_petugas").innerText = p.doctor_name || "-";
-
-            // ============================
-            //  AUTO CENTANG ATS CHECKBOX
-            // ============================
-            const ref = (t.referensi_triase || "")
-               .split("|")
-               .map(v => v.trim())
-               .filter(v => v.length > 0);
-
-            document.querySelectorAll(".cb-ats").forEach(cb => {
-               if (ref.includes(cb.value)) {
-                  cb.checked = true;
-               }
-            });
-         });
-   });
+    /* ATS BADGE */
+    const badge=document.getElementById("tri_kategori_badge");
+    const ats=parseInt(t.kategori_ats||0);
+    badge.className="badge-triase";
+    if(ats>=1 && ats<=5){
+      badge.innerText="ATS "+ats;
+      badge.classList.add("ats"+ats);
+    }
+  });
+});
 </script>
+
+</body>
+</html>

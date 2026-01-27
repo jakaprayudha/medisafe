@@ -1,365 +1,269 @@
-<div class="labprint-wrapper">
+<body class="cpo-body">
 
-   <style>
-      @page {
-         size: A4;
-         margin: 15mm;
-      }
+<div class="cpo-container">
 
-      body.labprint-body {
-         font-family: "Times New Roman", serif;
-         font-size: 11pt;
-         color: #000;
-      }
+<style>
+@page {
+  size: A4;
+  margin: 15mm 20mm;
+}
 
-      /* TITLE */
-      .labprint-title {
-         text-align: center;
-         font-size: 16px;
-         font-weight: bold;
-         margin-top: 10px;
-         text-transform: uppercase;
-      }
+/* =========================
+   BODY KHUSUS LAB (CPO STYLE)
+========================= */
+body.cpo-body {
+  font-family: "Times New Roman", serif;
+  font-size: 11pt;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  color: #000;
+}
 
-      /* INFO TABLE */
-      .labprint-info-table {
-         width: 100%;
-         margin-top: 10px;
-         font-size: 11pt;
-      }
+/* =========================
+   CONTAINER
+========================= */
+.cpo-container {
+  width: 100%;
+  max-width: 760px;
+  margin: auto;
+}
 
-      .labprint-info-table td {
-         padding: 4px 2px;
-      }
+/* =========================
+   TITLE
+========================= */
+.cpo-title {
+  text-align: center;
+  font-size: 14pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin: 10px 0 15px;
+}
 
-      /* LAB TABLE */
-      table.labprint-table {
-         width: 100%;
-         border-collapse: collapse;
-         margin-top: 10px;
-      }
+/* =========================
+   INFO PASIEN
+========================= */
+.cpo-info td {
+  border: none !important;
+  padding: 3px 6px;
+  font-size: 11pt;
+}
 
-      .labprint-table th,
-      .labprint-table td {
-         border: 1px solid #000;
-         padding: 5px 6px;
-         font-size: 11pt;
-      }
+/* =========================
+   TABLE GENERAL
+========================= */
+.cpo-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
 
-      .labprint-table th {
-         text-align: center;
-         font-weight: bold;
-      }
+.cpo-table th,
+.cpo-table td {
+  border: 1px solid #000;
+  padding: 6px;
+  vertical-align: top;
+  font-size: 11pt;
+}
 
-      .labprint-section-header {
-         font-weight: bold;
-         background: #f4f4f4;
-      }
+.cpo-table th {
+  background: #f2f2f2;
+  font-weight: bold;
+  text-align: center;
+}
 
-      /* NILAI ABNORMAL */
-      .labprint-abnormal {
-         color: #c00;
-         font-weight: bold;
-      }
+/* =========================
+   SECTION HEADER
+========================= */
+.cpo-section {
+  background: #f4f4f4;
+  font-weight: bold;
+}
 
-      /* FOOTER FLEX */
-      .labprint-footer {
-         width: 100%;
-         display: flex;
-         justify-content: space-between;
-         margin-top: 40px;
-         padding-top: 10px;
-      }
+/* =========================
+   ABNORMAL
+========================= */
+.cpo-abnormal {
+  color: #c00;
+  font-weight: bold;
+}
 
-      /* QR AREA */
-      .labprint-qr-sec {
-         text-align: center;
-         width: 140px;
-      }
+/* =========================
+   HELPER
+========================= */
+.cpo-center { text-align: center; }
+.cpo-right  { text-align: right; }
 
-      .labprint-qr-sec img {
-         width: 120px;
-         height: 120px;
-         margin-bottom: 5px;
-      }
+/* =========================
+   FOOTER
+========================= */
+.cpo-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 35px;
+  align-items: flex-end;
+}
 
-      .labprint-qr-text {
-         font-size: 10pt;
-      }
+.cpo-qr {
+  text-align: center;
+  width: 140px;
+  font-size: 9pt;
+}
 
-      /* TTD AREA */
-      .labprint-ttd-sec {
-         text-align: center;
-         width: 250px;
-         margin-right: 30px;
-      }
+.cpo-qr img {
+  width: 120px;
+  height: 120px;
+}
 
-      .labprint-ttd-line {
-         margin: 60px auto 5px auto;
-         border-bottom: 1px solid #000;
-         width: 180px;
-      }
+.cpo-ttd {
+  width: 220px;
+  text-align: center;
+  font-size: 10pt;
+}
 
-      .labprint-ttd-name {
-         font-weight: bold;
-         font-size: 11pt;
-      }
+.cpo-ttd img {
+  width: 80px;
+  margin: 5px 0;
+}
 
-      .labprint-ttd-role {
-         font-size: 10pt;
-         margin-top: 2px;
-      }
+.cpo-ttd-line {
+  border-top: 1px solid #000;
+  margin-top: 5px;
+  padding-top: 3px;
+  font-weight: bold;
+}
 
-      @media print {
-         .no-print {
-            display: none;
-         }
-      }
-   </style>
+/* =========================
+   PRINT
+========================= */
+@media print {
+  .cpo-noprint {
+    display: none !important;
+  }
+}
+</style>
 
-   <?php require 'kopsurat.php' ?>
+<?php require 'kopsurat.php'; ?>
 
-   <div class="labprint-title">HASIL LABORATORIUM</div>
+<div class="cpo-title">HASIL LABORATORIUM</div>
 
-   <!-- ================= DATA PASIEN ================= -->
-   <table class="labprint-info-table">
-      <tr>
-         <td width="160px">Nama</td>
-         <td>: <span id="lab_nama"></span></td>
-         <td width="180px">Tanggal Pemeriksaan</td>
-         <td>: <span id="lab_tgl_periksa"></span></td>
-      </tr>
+<!-- ================= INFO PASIEN ================= -->
+<table class="cpo-table cpo-info">
+  <tr>
+    <td width="18%">Nama</td>
+    <td width="32%">: <span id="lab_nama"></span></td>
+    <td width="20%">Tgl Pemeriksaan</td>
+    <td width="30%">: <span id="lab_tgl_periksa"></span></td>
+  </tr>
+  <tr>
+    <td>Tgl Lahir</td>
+    <td>: <span id="lab_tgllahir"></span> (<span id="lab_umur"></span> th)</td>
+    <td>Jenis Kelamin</td>
+    <td>: <span id="lab_jk"></span></td>
+  </tr>
+  <tr>
+    <td>Alamat</td>
+    <td colspan="3">: <span id="lab_alamat"></span></td>
+  </tr>
+</table>
 
-      <tr>
-         <td>Tanggal Lahir</td>
-         <td>: <span id="lab_tgllahir"></span> (<span id="lab_umur"></span> thn)</td>
-      </tr>
+<!-- ================= TABEL LAB ================= -->
+<table class="cpo-table">
+  <thead>
+    <tr>
+      <th>PEMERIKSAAN</th>
+      <th width="120">HASIL</th>
+      <th width="180">NILAI NORMAL</th>
+    </tr>
+  </thead>
 
-      <tr>
-         <td>Alamat</td>
-         <td>: <span id="lab_alamat"></span></td>
-      </tr>
+  <tbody>
+    <tr class="cpo-section">
+      <td colspan="3">Hematologi</td>
+    </tr>
+    <tr><td>Hemoglobin (Hb)</td><td id="lab_hb"></td><td>11.0 – 17.5 g/dL</td></tr>
+    <tr><td>Leukosit (WBC)</td><td id="lab_wbc"></td><td>4.0 – 10.1 ×10³/μL</td></tr>
+    <tr><td>Eritrosit (RBC)</td><td id="lab_rbc"></td><td>3.5 – 5.5 ×10¹²/L</td></tr>
+    <tr><td>Trombosit (PLT)</td><td id="lab_plt"></td><td>100 – 300 ×10³/μL</td></tr>
+    <tr><td>Hematokrit (HCT)</td><td id="lab_hct"></td><td>37 – 50 %</td></tr>
+    <tr><td>MCV</td><td id="lab_mcv"></td><td>82 – 95 fL</td></tr>
+    <tr><td>MCH</td><td id="lab_mch"></td><td>27 – 31 pg</td></tr>
+    <tr><td>MCHC</td><td id="lab_mchc"></td><td>32 – 36 g/dL</td></tr>
+    <tr><td>LYM</td><td id="lab_lym"></td><td>23.4 – 40 %</td></tr>
 
-      <tr>
-         <td>Jenis Kelamin</td>
-         <td>: <span id="lab_jk"></span></td>
-      </tr>
-   </table>
+    <tr class="cpo-section">
+      <td colspan="3">Widal / Salmonella</td>
+    </tr>
+    <tr><td>Salmonella Typhi (O)</td><td id="lab_sto"></td><td>≤ 1/40</td></tr>
+    <tr><td>Salmonella Paratyphi A – O</td><td id="lab_spa_o"></td><td>≤ 1/40</td></tr>
+    <tr><td>Salmonella Paratyphi B – O</td><td id="lab_spb_o"></td><td>≤ 1/40</td></tr>
+    <tr><td>Salmonella Paratyphi C – O</td><td id="lab_spc_o"></td><td>≤ 1/40</td></tr>
+    <tr><td>Salmonella Typhi (H)</td><td id="lab_sth"></td><td>≤ 1/40</td></tr>
+    <tr><td>Salmonella Paratyphi A – H</td><td id="lab_spa_h"></td><td>≤ 1/40</td></tr>
+    <tr><td>Salmonella Paratyphi B – H</td><td id="lab_spb_h"></td><td>≤ 1/40</td></tr>
+    <tr><td>Salmonella Paratyphi C – H</td><td id="lab_spc_h"></td><td>≤ 1/40</td></tr>
+  </tbody>
+</table>
 
-   <!-- ================= TABEL LAB ================= -->
-   <table class="labprint-table">
-      <tr>
-         <th>PEMERIKSAAN</th>
-         <th>HASIL</th>
-         <th>NILAI NORMAL</th>
-      </tr>
+<!-- ================= FOOTER ================= -->
+<div class="cpo-footer">
+  <div class="cpo-qr">
+    <div id="lab_qr"></div>
+    Scan untuk verifikasi hasil
+  </div>
 
-      <tr class="labprint-section-header">
-         <td colspan="3">Hematologi</td>
-      </tr>
+  <div class="cpo-ttd">
+    Pengisi Data<br>
+    <img src="../../../uploads/ttd/lab.png" alt="TTD">
+    <div class="cpo-ttd-line" id="lab_petugas"></div>
+    Petugas Laboratorium
+  </div>
+</div>
 
-      <tr>
-         <td>Hemoglobin (Hb)</td>
-         <td id="lab_hb"></td>
-         <td>11.0 - 17.5 g/dL</td>
-      </tr>
-
-      <tr>
-         <td>Leukosit (WBC)</td>
-         <td id="lab_wbc"></td>
-         <td>4.0 - 10.1 ×10³ /μL</td>
-      </tr>
-
-      <tr>
-         <td>Eritrosit (RBC)</td>
-         <td id="lab_rbc"></td>
-         <td>3.5 - 5.5 ×10¹² /L</td>
-      </tr>
-
-      <tr>
-         <td>Trombosit (PLT)</td>
-         <td id="lab_plt"></td>
-         <td>100 - 300 ×10³ /μL</td>
-      </tr>
-
-      <tr>
-         <td>Hematokrit (HCT)</td>
-         <td id="lab_hct"></td>
-         <td>37 - 50 %</td>
-      </tr>
-
-      <tr>
-         <td>MCV</td>
-         <td id="lab_mcv"></td>
-         <td>82 - 95 fL</td>
-      </tr>
-
-      <tr>
-         <td>MCH</td>
-         <td id="lab_mch"></td>
-         <td>27 - 31 pg</td>
-      </tr>
-
-      <tr>
-         <td>MCHC</td>
-         <td id="lab_mchc"></td>
-         <td>32 - 36 g/dL</td>
-      </tr>
-
-      <tr>
-         <td>LYM</td>
-         <td id="lab_lym"></td>
-         <td>23.4 - 40 %</td>
-      </tr>
-
-      <tr class="labprint-section-header">
-         <td colspan="3">Widal / Salmonella</td>
-      </tr>
-
-      <tr>
-         <td>Salmonella Typhi (O)</td>
-         <td id="lab_sto"></td>
-         <td>≤ 1/40</td>
-      </tr>
-      <tr>
-         <td>Salmonella Paratyphi A – O</td>
-         <td id="lab_spa_o"></td>
-         <td>≤ 1/40</td>
-      </tr>
-      <tr>
-         <td>Salmonella Paratyphi B – O</td>
-         <td id="lab_spb_o"></td>
-         <td>≤ 1/40</td>
-      </tr>
-      <tr>
-         <td>Salmonella Paratyphi C – O</td>
-         <td id="lab_spc_o"></td>
-         <td>≤ 1/40</td>
-      </tr>
-      <tr>
-         <td>Salmonella Typhi (H)</td>
-         <td id="lab_sth"></td>
-         <td>≤ 1/40</td>
-      </tr>
-      <tr>
-         <td>Salmonella Paratyphi A – H</td>
-         <td id="lab_spa_h"></td>
-         <td>≤ 1/40</td>
-      </tr>
-      <tr>
-         <td>Salmonella Paratyphi B – H</td>
-         <td id="lab_spb_h"></td>
-         <td>≤ 1/40</td>
-      </tr>
-      <tr>
-         <td>Salmonella Paratyphi C – H</td>
-         <td id="lab_spc_h"></td>
-         <td>≤ 1/40</td>
-      </tr>
-   </table>
-
-   <!-- ================= FOOTER ================= -->
-   <div class="labprint-footer">
-
-      <div class="labprint-qr-sec">
-         <div id="lab_qr"></div>
-         <div class="labprint-qr-text">Scan untuk verifikasi hasil</div>
-      </div>
-
-      <div class="labprint-ttd-sec">
-         <div style="height:60px;">Pengisi Data</div>
-         <img src="../../../uploads/ttd/lab.png" alt="">
-         <div class="labprint-ttd-line"></div>
-         <div class="labprint-ttd-name" id="lab_petugas"></div>
-         <div class="labprint-ttd-role">Petugas Laboratorium</div>
-      </div>
-
-   </div>
 </div>
 
 <script>
-   document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {
+  const p = new URLSearchParams(window.location.search);
+  const no = p.get("no");
+  const rm = p.get("rm");
+  if (!no || !rm) return;
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const no = urlParams.get("no");
-      const rm = urlParams.get("rm");
+  fetch(`getlab.php?no=${no}&rm=${rm}`)
+    .then(r => r.json())
+    .then(res => {
+      if (res.status !== "success") return;
+      const d = res.data || {};
+      const set = (id, v) => document.getElementById(id).innerText = v ?? "";
 
-      if (!no || !rm) return;
+      ["nama","tgl_periksa","tgllahir","umur","alamat","jk",
+       "hb","wbc","rbc","plt","hct","mcv","mch","mchc","lym",
+       "sto","spa_o","spb_o","spc_o","sth","spa_h","spb_h","spc_h"
+      ].forEach(k => set("lab_"+k, d[k]));
 
-      fetch("getlab.php?no=" + no + "&rm=" + rm)
-         .then(r => r.json())
-         .then(res => {
+      set("lab_petugas", d.petugas);
 
-            if (res.status !== "success") return;
+      const url = `${location.origin}/verify_lab.php?no=${no}&rm=${rm}`;
+      lab_qr.innerHTML =
+        `<img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(url)}">`;
 
-            const d = res.data || {};
+      const abnormal = (id, lo, hi) => {
+        const el = document.getElementById(id);
+        const v = parseFloat((el.innerText||"").replace(",","."));
+        if (!isNaN(v) && (v<lo || v>hi)) el.classList.add("cpo-abnormal");
+      };
 
-            const set = (id, val) => {
-               const el = document.getElementById(id);
-               if (el) el.innerText = val ?? "";
-            };
-
-            // DATA PASIEN
-            set("lab_nama", d.nama_pasien);
-            set("lab_tgl_periksa", d.tgl_pemeriksaan);
-            set("lab_tgllahir", d.tgl_lahir);
-            set("lab_umur", d.umur);
-            set("lab_alamat", d.alamat);
-            set("lab_jk", d.jk);
-
-            // HEMATOLOGI
-            set("lab_hb", d.hb);
-            set("lab_wbc", d.wbc);
-            set("lab_rbc", d.rbc);
-            set("lab_plt", d.plt);
-            set("lab_hct", d.hct);
-            set("lab_mcv", d.mcv);
-            set("lab_mch", d.mch);
-            set("lab_mchc", d.mchc);
-            set("lab_lym", d.lym);
-
-            // WIDAL
-            set("lab_sto", d.sto);
-            set("lab_spa_o", d.spa_o);
-            set("lab_spb_o", d.spb_o);
-            set("lab_spc_o", d.spc_o);
-            set("lab_sth", d.sth);
-            set("lab_spa_h", d.spa_h);
-            set("lab_spb_h", d.spb_h);
-            set("lab_spc_h", d.spc_h);
-
-            // PETUGAS
-            set("lab_petugas", d.petugas);
-
-            // QR
-            const verifyUrl = window.location.origin +
-               "/verify_lab.php?no=" + encodeURIComponent(no) +
-               "&rm=" + encodeURIComponent(rm);
-
-            const qrContainer = document.getElementById("lab_qr");
-            if (qrContainer) {
-               qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(verifyUrl)}">`;
-            }
-
-            // ABNORMAL COLORING
-            const abnormal = (id, low, high) => {
-               const el = document.getElementById(id);
-               if (!el) return;
-               let v = parseFloat((el.innerText || "").replace(",", "."));
-               if (!isNaN(v) && (v < low || v > high)) el.classList.add("labprint-abnormal");
-            };
-
-            abnormal("lab_hb", 11.0, 17.5);
-            abnormal("lab_wbc", 4.0, 10.1);
-            abnormal("lab_rbc", 3.5, 5.5);
-            abnormal("lab_plt", 100, 300);
-            abnormal("lab_hct", 37, 50);
-            abnormal("lab_mcv", 82, 95);
-            abnormal("lab_mch", 27, 31);
-            abnormal("lab_mchc", 32, 36);
-            abnormal("lab_lym", 23.4, 40);
-
-         });
-
-   });
+      abnormal("lab_hb",11,17.5);
+      abnormal("lab_wbc",4,10.1);
+      abnormal("lab_rbc",3.5,5.5);
+      abnormal("lab_plt",100,300);
+      abnormal("lab_hct",37,50);
+      abnormal("lab_mcv",82,95);
+      abnormal("lab_mch",27,31);
+      abnormal("lab_mchc",32,36);
+      abnormal("lab_lym",23.4,40);
+    });
+});
 </script>
+
+</body>

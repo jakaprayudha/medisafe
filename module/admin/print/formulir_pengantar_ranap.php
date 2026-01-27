@@ -97,22 +97,36 @@
 
       /* ===== TTD ===== */
       .rinap-ttd-wrapper {
-         width: 100%;
-         margin-top: 60px;
-      }
+  width: 100%;
+  margin-top: 40px;
+}
 
-      .rinap-ttd-kanan {
-         width: 35%;
-         margin-left: auto;
-         text-align: center;
-         font-size: 15px;
-      }
+.rinap-ttd-kanan {
+  width: 220px;
+  margin-left: auto;     /* KUNCI: tetap di kanan */
+  text-align: center;
+}
 
-      .rinap-ttd-box {
-         margin-top: 70px;
-         border-top: 1px solid #000;
-         padding-top: 5px;
-      }
+.rinap-ttd-title {
+  font-size: 11pt;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.rinap-ttd-img {
+  width: 90px;          /* TTD diperkecil */
+  height: auto;
+  margin: 4px auto;
+  display: block;
+}
+
+.rinap-ttd-box {
+  border-top: 1px solid #000;
+  margin-top: 6px;
+  padding-top: 4px;
+  font-size: 10pt;
+  font-weight: bold;
+}
    </style>
 
    <script>
@@ -186,15 +200,18 @@
          </p>
 
          <!-- ===== TTD (DALAM CONTAINER) ===== -->
-         <div class="rinap-ttd-wrapper">
-            <div class="rinap-ttd-kanan">
-               <p>DOKTER MERAWAT</p>
-               <img src="../../../uploads/ttd/drdevi.png" alt="">
-               <div class="rinap-ttd-box">
-                  <span id="rinap_dokter2"></span>
-               </div>
-            </div>
-         </div>
+        <div class="rinap-ttd-wrapper">
+  <div class="rinap-ttd-kanan">
+    <p class="rinap-ttd-title">DOKTER MERAWAT</p>
+    <img src="../../../uploads/ttd/drdevi.png"
+         class="rinap-ttd-img"
+         alt="TTD Dokter">
+
+    <div class="rinap-ttd-box">
+      <span id="rinap_dokter2"></span>
+    </div>
+  </div>
+</div>
 
       </div>
    </div>

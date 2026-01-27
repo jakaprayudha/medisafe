@@ -13,12 +13,7 @@ $datatriase = mysqli_fetch_array($checktriase);
 $files = [
    "formulir_dokumen.php",
    "formulir_triase.php",
-   "formulir_assement_igd.php",
-   "formulir_ekg.php",
-   "formulir_pernyataan.php",
    "formulir_pengantar_ranap.php",
-   "formulir_keterangan_ranap.php",
-   "formulir_surat_persetujuan.php",
    "formulir_inout_ranap.php",
    "formulir_cpo.php",
    "formulir_cppt.php",

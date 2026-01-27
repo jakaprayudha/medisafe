@@ -1,180 +1,176 @@
-<body>
-   <?php include 'kopsurat.php'; ?>
-   <div class="form-cppt">
-      <style>
-         @page {
-            size: A4;
-            margin: 1.5cm;
-         }
+<?php 
+$title = "Catatan Perkembangan Pasien Terintegrasi (CPPT)";
+$subtitle = "";
+?>
 
-         body {
-            font-family: "Times New Roman", serif;
-            font-size: 10pt;
-            color: #000;
-         }
+<body class="cpo-body">
 
-         .title {
-            text-align: center;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-            line-height: 1.4;
-         }
+<div class="cpo-container">
 
-         table {
-            width: 100%;
-            border-collapse: collapse;
-            border: 1px solid #000;
-         }
+<style>
+@page {
+  size: A4;
+  margin: 15mm 20mm;
+}
 
-         td,
-         th {
-            border: 1px solid #000;
-            padding: 4px 6px;
-            vertical-align: top;
-            font-size: 10pt;
-         }
+/* =========================
+   BODY KHUSUS (PAKAI STYLE CPO)
+========================= */
+body.cpo-body {
+  font-family: "Times New Roman", serif;
+  font-size: 11pt;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  color: #000;
+}
 
-         .header td {
-            height: 22px;
-         }
+/* =========================
+   CONTAINER (LEBAR SAMA CPO)
+========================= */
+.cpo-container {
+  width: 100%;
+  max-width: 760px;
+  margin: auto;
+}
 
-         .center {
-            text-align: center;
-         }
+/* =========================
+   TITLE
+========================= */
+.cpo-title {
+  text-align: center;
+  font-size: 14pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin: 10px 0 15px;
+}
 
-         @media print {
-            .no-print {
-               display: none;
-            }
-         }
+/* =========================
+   TABLE GENERAL (CPO STYLE)
+========================= */
+.cpo-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+}
 
-         .no-print {
-            margin-top: 10px;
-            text-align: center;
-         }
-      </style>
+.cpo-table th,
+.cpo-table td {
+  border: 1px solid #000;
+  padding: 6px;
+  vertical-align: top;
+  font-size: 10pt;
+}
 
+.cpo-table th {
+  background: #f2f2f2;
+  font-weight: bold;
+  text-align: center;
+}
 
-      <div class="title">
-         CATATAN PERKEMBANGAN PASIEN TERINTEGRASI (CPPT)
-      </div>
+/* =========================
+   HELPER
+========================= */
+.cpo-center { text-align: center; }
+.cpo-right  { text-align: right; }
 
-      <!-- ================= HEADER PASIEN ================= -->
-      <table>
-         <tr class="header">
-            <td>Nama : <span id="p_nama_cppt"></span></td>
-            <td>No. RM : <span id="p_rm_cppt"></span></td>
-            <td>Ruang : <span id="p_ruang_cppt"></span></td>
-         </tr>
-         <tr class="header">
-            <td>Umur : <span id="p_umur_cppt"></span></td>
-            <td>JK : <span id="p_jk_cppt"></span></td>
-            <td>Tanggal : <span id="p_tanggal_cppt"></span></td>
-            <td>Kelas : <span id="p_cppt"></span></td>
-         </tr>
-      </table>
+/* =========================
+   TTD
+========================= */
+.cpo-ttd img {
+  height: 35px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 4px;
+}
 
-      <!-- ================= TABEL CPPT ================= -->
-      <table>
-         <tr class="center" style="font-weight:bold;">
-            <th width="15%">Tanggal/Jam</th>
-            <th width="45%">Perkembangan</th>
-            <th width="25%">Diagnosa Keperawatan</th>
-            <th width="15%">Paraf/Nama</th>
-         </tr>
-         <tbody id="cppt_body">
-            <!-- CPPT akan muncul di sini -->
-         </tbody>
-      </table>
+/* =========================
+   PRINT
+========================= */
+@media print {
+  .cpo-noprint {
+    display: none !important;
+  }
+}
+</style>
 
-      <div class="no-print">
-         <button onclick="window.print()">🖨 Cetak Halaman</button>
-      </div>
-   </div>
+<?php include 'kop-surat.php'; ?>
+
+<div class="cpo-title">
+  <?= strtoupper($title) ?>
+</div>
+
+<!-- ================= TABEL CPPT ================= -->
+<table class="cpo-table">
+  <thead>
+    <tr>
+      <th width="15%">Tanggal / Jam</th>
+      <th width="45%">Perkembangan (SOAP)</th>
+      <th width="25%">Diagnosa / Instruksi</th>
+      <th width="15%">Paraf / Nama</th>
+    </tr>
+  </thead>
+  <tbody id="cppt_body">
+    <!-- DATA CPPT -->
+  </tbody>
+</table>
+
+<div class="cpo-noprint" style="text-align:center;margin-top:12px">
+  <button onclick="window.print()">🖨 Cetak Halaman</button>
+</div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const no = urlParams.get("no");
+  const rm = urlParams.get("rm");
+  if (!no || !rm) return;
+
+  fetch(`getcppt.php?visit=${no}&rm=${rm}`)
+    .then(res => res.json())
+    .then(resp => {
+      if (!resp || resp.status !== "success") return;
+
+      let html = "";
+
+      resp.data.forEach(cppt => {
+        let ttd = "";
+
+        if (cppt.cppt_profesi) {
+          const profesi = cppt.cppt_profesi.toLowerCase();
+          if (profesi.includes("perawat")) {
+            ttd = `<img src="../../../uploads/ttd/farmasi.png" alt="TTD Perawat">`;
+          } else if (profesi.includes("dokter")) {
+            ttd = `<img src="../../../uploads/ttd/drdevi.png" alt="TTD Dokter">`;
+          }
+        }
+
+        html += `
+          <tr>
+            <td class="cpo-center">
+              ${cppt.cppt_date}<br>${cppt.cppt_time}
+            </td>
+            <td>
+              <b>S:</b> ${cppt.subjective || "-"}<br>
+              <b>O:</b> ${cppt.objective || "-"}<br>
+              <b>A:</b> ${cppt.analysis || "-"}<br>
+              <b>P:</b> ${cppt.planning || "-"}
+            </td>
+            <td>${cppt.instruction || "-"}</td>
+            <td class="cpo-center cpo-ttd">
+              ${ttd}
+              <b>${cppt.users_entry || "-"}</b><br>
+              <small>(${cppt.cppt_profesi || "-"})</small>
+            </td>
+          </tr>
+        `;
+      });
+
+      document.getElementById("cppt_body").innerHTML = html;
+    });
+});
+</script>
 
 </body>
-<script>
-   document.addEventListener("DOMContentLoaded", function() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const no = urlParams.get("no");
-      const rm = urlParams.get("rm");
-
-      if (!no || !rm) return;
-
-      // ======================
-      // 1. LOAD DATA PASIEN
-      // ======================
-      fetch(`getpasien.php?no=${no}&rm=${rm}`)
-         .then(res => res.json())
-         .then(data => {
-            if (!data) return;
-
-            const birth = new Date(data.patient_datebirth);
-            const today = new Date();
-            let age = today.getFullYear() - birth.getFullYear();
-
-            document.getElementById("p_nama_cppt").innerText = data.patient_name;
-            document.getElementById("p_rm_cppt").innerText = data.nomor_rm;
-            document.getElementById("p_ruang_cppt").innerText = data.source_hub || "-";
-            document.getElementById("p_umur_cppt").innerText = age + " tahun";
-            document.getElementById("p_jk_cppt").innerText = data.patient_gender;
-            document.getElementById("p_tanggal_cppt").innerText = today.toISOString().substring(0, 10);
-            document.getElementById("p_cppt").innerText = data.patient_status == "1" ? "Reguler" : "-";
-         });
-
-      // ======================
-      // 2. LOAD DATA CPPT
-      // ======================
-      fetch(`getcppt.php?visit=${no}&rm=${rm}`)
-         .then(res => res.json())
-         .then(resp => {
-
-            // console.log("CPPT DATA:", resp);
-
-            if (!resp || resp.status !== "success") return;
-
-            const rows = resp.data;
-            let html = "";
-
-            rows.forEach(cppt => {
-
-               let ttd = "";
-
-               if (cppt.cppt_profesi) {
-                  const profesi = cppt.cppt_profesi.toLowerCase();
-
-                  if (profesi.includes("perawat")) {
-                     ttd = `<img src="../../../uploads/ttd/farmasi.png" 
-                           alt="Paraf Perawat"
-                           style="height:40px; object-fit:contain;">`;
-                  } else if (profesi.includes("dokter")) {
-                     ttd = `<img src="../../../uploads/ttd/drdevi.png" 
-                           alt="Paraf Dokter"
-                           style="height:40px; object-fit:contain;">`;
-                  }
-               }
-               html += `
-                        <tr>
-                           <td>${cppt.cppt_date} / ${cppt.cppt_time}</td>
-                           <td>
-                              <b>S:</b> ${cppt.subjective}<br>
-                              <b>O:</b> ${cppt.objective}<br>
-                              <b>A:</b> ${cppt.analysis}<br>
-                              <b>P:</b> ${cppt.planning}
-                           </td>
-                           <td>${cppt.instruction}</td>
-                         <td style="text-align:center;">
-                           ${ttd}<br>
-                           ${cppt.users_entry}<br>
-                           <small>(${cppt.cppt_profesi})</small>
-                        </td>
-                        </tr>
-                     `;
-            });
-
-            document.getElementById("cppt_body").innerHTML = html;
-         });
-
-   });
-</script>

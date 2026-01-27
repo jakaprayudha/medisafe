@@ -1,296 +1,250 @@
-<div class="form-cpo">
+<?php 
+$title = "Formulir Catatan Pemberian Obat (CPO)";
+$subtitle = "";
+?>
 
-   <style>
-      @page {
-         size: A4;
-         margin: 15mm;
-      }
+<body class="cpo-body">
 
-      body {
-         font-family: "Times New Roman", serif;
-         font-size: 12pt;
-         color: #000;
-      }
+<div class="cpo-container">
 
-      .title {
-         margin-top: 10px;
-         text-align: center;
-         font-weight: bold;
-         font-size: 18pt;
-         text-decoration: underline;
-      }
+<style>
+@page {
+  size: A4;
+  margin: 15mm 20mm;
+}
 
-      /* ================= INFO PASIEN ================= */
-      table.info {
-         width: 100%;
-         margin-top: 15px;
-         font-size: 12pt;
-      }
+/* =========================
+   BODY KHUSUS CPO
+========================= */
+body.cpo-body {
+  font-family: "Times New Roman", serif;
+  font-size: 11pt;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  color: #000;
+}
 
-      table.info td {
-         padding: 3px 0;
-      }
+/* =========================
+   CONTAINER
+========================= */
+.cpo-container {
+  width: 100%;
+  max-width: 760px;
+  margin: auto;
+}
 
-      /* ================= TABEL OBAT ================= */
-      table.data {
-         width: 100%;
-         border-collapse: collapse;
-         margin-top: 15px;
-         font-size: 11pt;
-      }
+/* =========================
+   TITLE
+========================= */
+.cpo-title {
+  text-align: center;
+  font-size: 16pt;
+  font-weight: bold;
+  text-decoration: underline;
+  margin: 10px 0 15px;
+}
 
-      table.data th,
-      table.data td {
-         border: 1px solid #000;
-         padding: 4px 5px;
-         vertical-align: top;
-      }
+/* =========================
+   TABLE GENERAL
+========================= */
+.cpo-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
 
-      .center {
-         text-align: center;
-      }
+.cpo-table th,
+.cpo-table td {
+  border: 1px solid #000;
+  padding: 5px 6px;
+  vertical-align: top;
+}
 
-      .small-header {
-         font-size: 10pt;
-         text-align: center;
-      }
+.cpo-table th {
+  background: #f2f2f2;
+  font-weight: bold;
+  text-align: center;
+  font-size: 10pt;
+}
 
-      /* Jadwal kosong */
-      .empty {
-         color: red;
-         font-weight: bold;
-      }
+/* =========================
+   INFO PASIEN
+========================= */
+.cpo-info td {
+  border: none !important;
+  padding: 3px 6px;
+  font-size: 11pt;
+}
 
-      /* ================= FOOTER ================= */
-      .footer-cpo {
-         width: 100%;
-         display: flex;
-         justify-content: space-between;
-         margin-top: 40px;
-         padding-top: 10px;
-      }
+/* =========================
+   HELPER
+========================= */
+.cpo-center { text-align: center; }
+.cpo-right  { text-align: right; }
+.cpo-empty  { color: red; font-weight: bold; }
 
-      .qr-sec {
-         text-align: center;
-         width: 140px;
-      }
+/* =========================
+   FOOTER
+========================= */
+.cpo-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 35px;
+  align-items: flex-end;
+}
 
-      .qr-sec img {
-         width: 120px;
-         height: 120px;
-         margin-bottom: 5px;
-      }
+.cpo-qr {
+  text-align: center;
+  width: 140px;
+  font-size: 9pt;
+}
 
-      .qr-text {
-         font-size: 10pt;
-      }
+.cpo-qr img {
+  width: 120px;
+  height: 120px;
+}
 
-      .ttd-sec {
-         text-align: center;
-         width: 250px;
-         margin-right: 30px;
-      }
+.cpo-ttd {
+  width: 220px;
+  text-align: center;
+  font-size: 10pt;
+}
 
-      .ttd-line {
-         margin: 60px auto 5px auto;
-         border-bottom: 1px solid #000;
-         width: 180px;
-      }
+.cpo-ttd img {
+  width: 80px;
+  margin: 5px 0;
+}
 
-      .ttd-name {
-         font-weight: bold;
-         font-size: 11pt;
-      }
+.cpo-ttd-line {
+  border-top: 1px solid #000;
+  margin-top: 5px;
+  padding-top: 3px;
+  font-weight: bold;
+}
 
-      .ttd-role {
-         font-size: 10pt;
-         margin-top: 2px;
-      }
+/* =========================
+   PRINT
+========================= */
+@media print {
+  .cpo-noprint {
+    display: none !important;
+  }
+}
+</style>
 
-      @media print {
-         button {
-            display: none;
-         }
-      }
-   </style>
+<?php require 'kop-surat.php'; ?>
 
-   <?php require 'kopsurat.php'; ?>
+<!-- ================= INFO PASIEN ================= -->
+<table class="cpo-table cpo-info">
+  <tr>
+    <td width="15%">Ruangan</td>
+    <td width="35%">: <span id="cpo_ruangan"></span></td>
+    <td width="15%">Diagnosa</td>
+    <td width="35%">: <span id="cpo_diagnosa"></span></td>
+  </tr>
+</table>
 
-   <div class="title">CATATAN PEMBERIAN OBAT</div>
+<!-- ================= TABLE OBAT ================= -->
+<table class="cpo-table">
+<thead>
+<tr>
+  <th width="70">Tanggal</th>
+  <th>Nama Obat / Injeksi</th>
+  <th width="70">Dosis</th>
+  <th width="80">Sign</th>
+  <th colspan="4">Jam Pemberian</th>
+  <th width="70">Paraf<br>Keluarga</th>
+  <th width="70">Paraf<br>Petugas</th>
+</tr>
+<tr>
+  <th></th><th></th><th></th><th></th>
+  <th>Pagi</th><th>Siang</th><th>Sore</th><th>Malam</th>
+  <th></th><th></th>
+</tr>
+</thead>
+<tbody id="cpo_body"></tbody>
+</table>
 
-   <!-- ================= INFO PASIEN ================= -->
-   <table class="info">
-      <tr>
-         <td width="20%">NAMA PASIEN</td>
-         <td>: <span id="cpo_nama"></span></td>
-         <td width="20%">NOMOR RM</td>
-         <td>: <span id="cpo_rm"></span></td>
-      </tr>
-      <tr>
-         <td>TANGGAL LAHIR</td>
-         <td>: <span id="cpo_tgllahir"></span></td>
-         <td>RUANGAN</td>
-         <td>: <span id="cpo_ruangan"></span></td>
-      </tr>
-      <tr>
-         <td>DIAGNOSA</td>
-         <td colspan="3">: <span id="cpo_diagnosa"></span></td>
-      </tr>
-   </table>
+<!-- ================= FOOTER ================= -->
+<div class="cpo-footer">
+  <div class="cpo-qr">
+    <div id="cpo_qr"></div>
+    Scan untuk verifikasi
+  </div>
 
-   <!-- ================= TABEL OBAT ================= -->
-   <table class="data">
-      <thead>
-         <tr>
-            <th width="70">Tanggal</th>
-            <th width="200">Nama Obat Oral<br>dan Injeksi</th>
-            <th width="70">Dosis</th>
-            <th width="90">Signature</th>
-            <th colspan="4" class="center">Jadwal & Jam Pemberian</th>
-            <th width="80">Paraf<br>Keluarga</th>
-            <th width="80">Paraf<br>Petugas</th>
-         </tr>
-         <tr class="small-header">
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th>Pagi</th>
-            <th>Siang</th>
-            <th>Sore</th>
-            <th>Malam</th>
-            <th></th>
-            <th></th>
-         </tr>
-      </thead>
-      <tbody id="cpo_body"></tbody>
-   </table>
+  <div class="cpo-ttd">
+    Pengisi Data<br>
+    <img src="../../../uploads/ttd/farmasi.png" alt="TTD">
+    <div class="cpo-ttd-line">Petugas Farmasi</div>
+  </div>
+</div>
 
-   <!-- ================= FOOTER ================= -->
-   <div class="footer-cpo">
-      <div class="qr-sec">
-         <div id="cpo_qr"></div>
-         <div class="qr-text">Scan untuk verifikasi</div>
-      </div>
+<div class="cpo-noprint" style="text-align:center;margin-top:15px">
+  <button onclick="window.print()">🖨 Cetak</button>
+</div>
 
-      <div class="ttd-sec">
-         <div style="height:60px;">Pengisi Data</div>
-         <img src="../../../uploads/ttd/farmasi.png" alt="">
-         <div class="ttd-line"></div>
-         <p>Darma</p>
-         <!-- <div class="ttd-name" id="cpo_petugas"></div> -->
-         <div class="ttd-role">Ka. Petugas Ruangan</div>
-      </div>
-   </div>
-
-   <button onclick="window.print()">🖨 Cetak</button>
 </div>
 
 <script>
-   document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const no = params.get("no");
+  const rm = params.get("rm");
+  if (!no || !rm) return;
 
-      const params = new URLSearchParams(window.location.search);
-      const no = params.get("no");
-      const rm = params.get("rm");
-      if (!no || !rm) return;
+  fetch(`getcpo.php?no=${no}&rm=${rm}`)
+    .then(r => r.json())
+    .then(res => {
+      if (res.status !== "success") return;
 
-      fetch(`getcpo.php?no=${no}&rm=${rm}`)
-         .then(r => r.json())
-         .then(res => {
-            if (res.status !== "success") return;
+      const data = res.data;
+      if (data.length > 0) {
+        cpo_ruangan.innerText = data[0].ruangan || "-";
+        cpo_diagnosa.innerText = data[0].diagnosa || "-";
+      }
 
-            const data = res.data;
+      const tbody = document.getElementById("cpo_body");
+      tbody.innerHTML = "";
 
-            /* ===== HEADER ===== */
-            if (data.length > 0) {
-               const d = data[0];
-               cpo_nama.innerText = d.nama_pasien;
-               cpo_rm.innerText = d.nomor_rm;
-               cpo_tgllahir.innerText = d.tgl_lahir;
-               cpo_ruangan.innerText = d.ruangan;
-               cpo_diagnosa.innerText = d.diagnosa;
-            }
+      const grouped = {};
+      data.forEach(i => {
+        if (!grouped[i.tanggal]) grouped[i.tanggal] = [];
+        grouped[i.tanggal].push(i);
+      });
 
-            /* ===== GROUP BY TANGGAL ===== */
-            const grouped = {};
-            data.forEach(item => {
-               if (!grouped[item.tanggal]) grouped[item.tanggal] = [];
-               grouped[item.tanggal].push(item);
-            });
+      Object.keys(grouped).forEach(tgl => {
+        grouped[tgl].forEach((o, idx) => {
+          const tr = document.createElement("tr");
 
-            const tbody = document.getElementById("cpo_body");
-            tbody.innerHTML = "";
+          if (idx === 0) {
+            const td = document.createElement("td");
+            td.rowSpan = grouped[tgl].length;
+            td.textContent = tgl;
+            td.className = "cpo-center";
+            tr.appendChild(td);
+          }
 
-            /* ===== TEXT TD ===== */
-            const makeTd = (text, center = false, empty = false) => {
-               const td = document.createElement("td");
-               td.innerText = text || "";
-               if (center) td.classList.add("center");
-               if (empty && (!text || text.trim() === "")) td.classList.add("empty");
-               return td;
-            };
+          tr.innerHTML += `
+            <td>${o.nama_obat || ""}</td>
+            <td class="cpo-center">${o.dosis || ""}</td>
+            <td class="cpo-center">${o.signature || ""}</td>
+            <td class="cpo-center">${o.jam_pagi || ""}</td>
+            <td class="cpo-center">${o.jam_siang || ""}</td>
+            <td class="cpo-center">${o.jam_sore || ""}</td>
+            <td class="cpo-center">${o.jam_malam || ""}</td>
+            <td class="cpo-center">${o.paraf_keluarga ? `<img src="../../../uploads/ttd/${o.paraf_keluarga}" height="35">` : ""}</td>
+            <td class="cpo-center">${o.paraf_petugas ? `<img src="../../../uploads/ttd/${o.paraf_petugas}" height="35">` : ""}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
 
-            /* ===== IMAGE TD (PARAF KELUARGA & PETUGAS) ===== */
-            const makeImgTd = (filename, altText = "Paraf") => {
-               const td = document.createElement("td");
-
-               if (!filename) {
-                  td.classList.add("empty");
-                  return td;
-               }
-
-               const img = document.createElement("img");
-               img.src = `../../../uploads/ttd/${filename}`;
-               img.alt = altText;
-               img.style.height = "40px";
-               img.style.objectFit = "contain";
-
-               img.onerror = () => {
-                  img.style.display = "none";
-                  td.classList.add("empty");
-               };
-
-               td.style.textAlign = "center";
-               td.appendChild(img);
-
-               return td;
-            };
-
-            /* ===== RENDER TABLE ===== */
-            Object.keys(grouped).forEach(tanggal => {
-               const items = grouped[tanggal];
-
-               items.forEach((obat, i) => {
-                  const tr = document.createElement("tr");
-
-                  if (i === 0) {
-                     const tdTanggal = makeTd(tanggal, true);
-                     tdTanggal.rowSpan = items.length;
-                     tr.appendChild(tdTanggal);
-                  }
-
-                  tr.appendChild(makeTd(obat.nama_obat));
-                  tr.appendChild(makeTd(obat.dosis));
-                  tr.appendChild(makeTd(obat.signature));
-
-                  tr.appendChild(makeTd(obat.jam_pagi, true, true));
-                  tr.appendChild(makeTd(obat.jam_siang, true, true));
-                  tr.appendChild(makeTd(obat.jam_sore, true, true));
-                  tr.appendChild(makeTd(obat.jam_malam, true, true));
-
-                  tr.appendChild(makeImgTd(obat.paraf_keluarga, "Paraf Keluarga"));
-                  tr.appendChild(makeImgTd(obat.paraf_petugas, "Paraf Petugas"));
-
-                  tbody.appendChild(tr);
-               });
-            });
-
-            /* ===== QR CODE ===== */
-            const verifyUrl =
-               `${location.origin}/verify_cpo.php?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}`;
-
-            cpo_qr.innerHTML =
-               `<img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(verifyUrl)}">`;
-         });
-   });
+      const verifyUrl = `${location.origin}/verify_cpo.php?no=${no}&rm=${rm}`;
+      cpo_qr.innerHTML =
+        `<img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(verifyUrl)}">`;
+    });
+});
 </script>
+
+</body>
