@@ -110,104 +110,73 @@ $subtitle = "";
 
       <tr>
          <td class="resume-label">Diagnosa Masuk</td>
-         <td colspan="3">
-            LBP ec spondylosis dd / HNP + HT susp parotitis (L)
+         <td colspan="3" id="rs_diagnosa_masuk">
+
          </td>
       </tr>
 
       <tr>
          <td class="resume-label">Indikasi Rawat Inap</td>
-         <td colspan="3">Lemas</td>
+         <td colspan="3" id="rs_indikasi"></td>
       </tr>
 
       <tr>
          <td class="resume-label">Pemeriksaan Fisik</td>
-         <td colspan="3">
-            Tanggal & jam : 2025-12-31 12:05<br>
-            Kesadaran : Compos mentis<br>
-            Tekanan darah : 178 / 106 mmHg<br>
-            Nadi : 123 x/menit<br>
-            RR : 20 x/menit<br>
-            Suhu : 36.1 °C<br>
-            Skala nyeri : 8 – 9
+         <td colspan="3" id="rs_fisik">
          </td>
       </tr>
 
       <tr>
          <td class="resume-label">Diagnosa Utama</td>
-         <td colspan="3">
-            Cerebral infarction due to thrombosis of cerebral arteries
+         <td colspan="3" id="rs_diagnosa_utama">
+
          </td>
       </tr>
 
       <tr>
          <td class="resume-label">Diagnosa Sekunder</td>
-         <td colspan="3">
-            1. Spondylosis
+         <td colspan="3" id="rs_diagnosa_sekunder">
          </td>
       </tr>
 
       <tr>
          <td class="resume-label">Terapi Selama di Rumah Sakit</td>
-         <td colspan="3" style="white-space:pre-line">
-            ABBOCATH No.22
-            Alkohol swab
-            Amitriptyline 25 mg
-            Amlodipine 10 mg
-            Atorvastatin 20 mg
-            Betahistine 6 mg
-            Candesartan 8 mg
-            Eperisone HCl 50 mg
-            Gabapentin 300 mg
-            Ketorolac 30 mg inj
-            Mecobalamin 500 mcg
-            Ringer laktat 500 ml
-            Tindakan : pasang infus
+         <td colspan="3" style="white-space:pre-line" id="rs_terapi_rs">
          </td>
       </tr>
 
       <tr>
          <td class="resume-label">Alergi Obat</td>
-         <td colspan="3">Tidak ada</td>
+         <td colspan="3" id="rs_alergi"></td>
       </tr>
 
       <tr>
          <td class="resume-label">Terapi Pulang</td>
-         <td colspan="3" style="white-space:pre-line">
-            Natrium diklofenak 50 mg 2x1
-            Gabapentin 100 mg 2x1
-            Eperisone 50 mg 2x1
-            Mecobalamin 500 mg 2x1
-            Amitriptyline 25 mg 1x1 malam
-            Amlodipine 10 mg 1x1 pagi
-            Candesartan 8 mg 1x1 malam
-            Paracetamol 3x1
-            Betahistine 6 mg 3x1
-            Aspilet 80 mg 1x1
+         <td colspan="3" style="white-space:pre-line" id="rs_terapi_pulang">
+
          </td>
       </tr>
 
       <tr>
          <td class="resume-label">Kondisi Pasien Saat Pulang</td>
-         <td colspan="3">Membaik</td>
+         <td colspan="3" id="rs_kondisi_pulang"></td>
       </tr>
 
       <tr>
          <td class="resume-label">Cara Keluar RS</td>
-         <td colspan="3">Izin Dokter</td>
+         <td colspan="3" id="rs_cara_keluar">Izin Dokter</td>
       </tr>
 
       <tr>
          <td class="resume-label">Rencana Tindak Lanjut</td>
-         <td colspan="3">
-            Kontrol ulang ke poliklinik – 09-01-2026
+         <td colspan="3" id="rs_rencana">
          </td>
       </tr>
 
    </table>
 
    <div class="resume-sign-area">
-      Lubuk Pakam, 05-01-2026<br>
+      Tanjung Morawa, 11-12-2025<br>
       Dokter yang Merawat
       <div class="resume-doc-sign">
          <div class="resume-doc-line" id="doctor_name">
@@ -270,6 +239,88 @@ $subtitle = "";
 
          })
          .catch(err => console.error(err));
+
+   });
+</script>
+
+<script>
+   document.addEventListener("DOMContentLoaded", function() {
+
+      const params = new URLSearchParams(window.location.search);
+      const no = params.get("no");
+      const rm = params.get("rm");
+
+      if (!no || !rm) return;
+
+      /* =============================
+         DATA PASIEN
+      ============================= */
+
+      fetch(`getpasien.php?no=${no}&rm=${rm}`)
+         .then(r => r.json())
+         .then(d => {
+
+            if (!d) return;
+
+            document.getElementById("rm_name").textContent = d.patient_name ?? "";
+            document.getElementById("rm_no_rm").textContent = d.nomor_rm ?? "";
+            document.getElementById("rm_jk").textContent = d.patient_gender ?? "";
+            document.getElementById("rm_tgl_lahir").textContent = d.patient_datebirth ?? "";
+
+            document.getElementById("rm_tgl_masuk").textContent =
+               d.visit_date && d.visit_time ?
+               `${d.visit_date} ${d.visit_time}` :
+               (d.visit_date ?? "");
+
+            document.getElementById("rm_tgl_keluar").textContent = d.visit_out ?? "";
+            document.getElementById("rm_ruang").textContent = d.source_hub ?? "";
+            document.getElementById("rm_kelas").textContent = "";
+            document.getElementById("rm_cara_bayar").textContent = d.patient_bpjs ? "BPJS" : "";
+            document.getElementById("rm_dpjp").textContent = d.doctor_name ?? "";
+            document.getElementById("doctor_name").textContent = d.doctor_name ?? "";
+
+         });
+
+      /* =============================
+         DATA RESUME MEDIS
+      ============================= */
+
+      fetch(`getresume.php?no=${no}&rm=${rm}`)
+         .then(r => r.json())
+         .then(resp => {
+
+            if (!resp || resp.status !== "success") return;
+
+            const r = resp.data;
+
+            document.getElementById("rs_diagnosa_utama").textContent =
+               r.diagnosa ?? "";
+
+            document.getElementById("rs_indikasi").textContent =
+               r.indikasi_dirawat ?? "";
+
+            document.getElementById("rs_fisik").textContent =
+               r.pemeriksaan_fisik ?? "";
+
+            document.getElementById("rs_diagnosa_sekunder").textContent =
+               r.diagnosa_sekunder ?? "";
+
+            document.getElementById("rs_terapi_rs").textContent =
+               r.terapi_rs ?? "";
+
+            document.getElementById("rs_terapi_pulang").textContent =
+               r.terapi_pulang ?? "";
+
+            document.getElementById("rs_kondisi_pulang").textContent =
+               r.kondisi_pulang ?? "";
+
+            document.getElementById("rs_cara_keluar").textContent =
+               r.cara_keluar_rs ?? "";
+
+            document.getElementById("rs_rencana").textContent =
+               r.rencana_tindak_lanjut ?? "";
+
+         });
 
    });
 </script>

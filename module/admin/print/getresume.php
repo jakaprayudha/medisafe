@@ -1,13 +1,13 @@
 <?php
 require '../../../database/connect.php';
 
-$visit = $_GET['visit'] ?? '';
+$no = $_GET['no'] ?? '';
 $rm    = $_GET['rm'] ?? '';
 
 $q = $koneksi->query("
    SELECT *
    FROM resume_medis
-   WHERE visit_ID = '$visit' AND nomor_rm = '$rm'
+   WHERE visit_ID = '$no' AND nomor_rm = '$rm'
    LIMIT 1
 ");
 
