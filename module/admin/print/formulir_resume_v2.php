@@ -176,13 +176,24 @@ $subtitle = "";
    </table>
 
    <div class="resume-sign-area">
-      Tanjung Morawa, 11-12-2025<br>
-      Dokter yang Merawat
-      <div class="resume-doc-sign">
-         <div class="resume-doc-line" id="doctor_name">
 
-         </div>
+      <div class="resume-sign-city">
+         Tanjung Morawa, 11-12-2025
       </div>
+
+      <div class="resume-sign-title">
+         Dokter yang Merawat
+      </div>
+
+      <div class="resume-doc-sign">
+         <img
+            src="../../../uploads/ttd/drdevi.png"
+            class="resume-sign-img"
+            alt="TTD Dokter">
+
+         <div class="resume-doc-line" id="doctor_name"></div>
+      </div>
+
    </div>
 
 </div>
