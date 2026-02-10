@@ -188,7 +188,7 @@ $subtitle = "";
       <div class="resume-doc-sign">
          <img
             src="../../../uploads/ttd/drdevi.png"
-            class="resume-sign-img"
+            class="resume-sign-img" width="50px"
             alt="TTD Dokter">
 
          <div class="resume-doc-line" id="doctor_name"></div>
