@@ -1,5 +1,5 @@
 <?php
-include '../../database/connect.php';
+include '../database/connect.php';
 $method = $_SERVER['REQUEST_METHOD'];
 switch ($method) {
    case 'POST':
