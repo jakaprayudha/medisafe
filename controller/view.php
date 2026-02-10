@@ -1,5 +1,5 @@
 <?php
-require "database/connect.php";
+require "../../database/connect.php";
 @session_start();
 function tampildata($query)
 {
