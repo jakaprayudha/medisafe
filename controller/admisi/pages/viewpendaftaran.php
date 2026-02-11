@@ -46,10 +46,7 @@
 
                             <div class="col-md-6">
                                 <label class="form-label">Jenis Kunjungan <span class="text-danger">*</span></label>
-                                <select class="form-select" name="kunjSakit" id="kunjSakit">
-                                    <option value="true">Kunjungan Sakit</option>
-                                    <option value="false">Kunjungan Sehat</option>
-                                </select>
+                                <select class="form-select" name="kunjSakit" id="kunjSakit"></select>
                             </div>
 
                             <div class="col-md-6">
@@ -65,12 +62,12 @@
                             <div class="col-md-6">
                                 <label class="form-label">Tanggal Kunjungan <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control"
-                                    name="tglDaftar" id="tanggal" value="<?= $tanggal ?>">
+                                    name="tglDaftar" id="tanggalKunjung" value="<?= $tanggal ?>">
                             </div>
 
                             <div class="col-12">
                                 <label class="form-label">Keluhan <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="keluhan" name="keluhan" rows="3"></textarea>
+                                <textarea class="form-control" id="keluhan" name="keluhan" rows="3" placeholder="Tulisa Keluhan..."></textarea>
                             </div>
                         </div>
 
@@ -82,7 +79,7 @@
                             <div class="col-md-4">
                                 <label class="form-label">Tinggi Badan</label>
                                 <div class="input-group">
-                                    <input type="number" class="form-control" name="tinggiBadan" id="tinggiBadan" value="0">
+                                    <input type="number" class="form-control" name="tinggiBadan" id="tinggiBadan" value="0" max="300">
                                     <span class="input-group-text">cm</span>
                                 </div>
                             </div>

@@ -6,7 +6,6 @@ header('Content-Type: application/json');
 $tipe = $_GET['tipe'];
 $nomor_kartu = $_GET['nokartu'];
 $result = bpjsGet('/peserta/' . $tipe . '/' . $nomor_kartu);
-// $result = testingBPJS_GET("http://localhost/medisafe/controller/admisi/api/getpeserta.php");
 if ($result['code'] != "200") {
     $msg = $result['message'];
     if ($msg == null) {

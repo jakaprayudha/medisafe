@@ -11,7 +11,22 @@ require '../../controller/view.php';
     require '../../assets/template/head.php';
     ?>
 </head>
+<style>
+    .select2-container .select2-selection--single {
+    height: calc(2.25rem + 2px);
+    display: flex;
+    align-items: center;
+}
 
+.select2-selection__rendered {
+    line-height: normal !important;
+}
+
+.select2-selection__arrow {
+    height: 100% !important;
+}
+
+</style>
 <body>
     <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
         data-sidebar-position="fixed" data-header-position="fixed">

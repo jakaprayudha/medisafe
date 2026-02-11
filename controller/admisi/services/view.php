@@ -1,6 +1,5 @@
 <?php
-// require_once "../../db/connect.php";
-require_once __DIR__ . '/../../database/connect.php';
+require_once __DIR__ . '/../../../database/connect.php';
 session_start();
 $sql = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM `setting_pcare` WHERE id = 1"));
 $base_url = $sql['base_url'];

@@ -68,3 +68,12 @@ APP.tanggal_baru_tbt = (tanggal) => {
 APP.getDatainput = (id) => {
     return $(id).val();
 }
+APP.resetSelect = function (id) {
+    $(id).val(null).empty().trigger("change");
+};
+APP.addValueInput = function (id, data) {
+    $(id).val(data);
+};
+APP.addValueSelect = function (id, iddata, data) {
+    $(id).empty().append(new Option(data, iddata, true, true));
+};

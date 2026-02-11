@@ -60,31 +60,105 @@ $(function () {
         }
     });
     APP.initLoadfunction = function () {
-        $('#kodepoli').select2();
-        var kunjungan = $('#kunjungan');
-        kunjungan.empty();
-        kunjungan.append($('<option></option>').attr('value', '10').text('Rawat Jalan'));
-        kunjungan.append($('<option></option>').attr('value', '20').text('Rawat Inap'));
-        kunjungan.append($('<option></option>').attr('value', '50').text('Promotif Preventif'));
-        APP.updatePoliOptions($('#kunjSakit').val());
+        flatpickr("#tanggalKunjung", {
+            dateFormat: "Y-m-d",
+            altFormat: "F j, Y",
+            defaultDate: "today",
+            minDate: "today"
+        });
+        APP.updatePoliOptions = function (poliSakit) {
+            poliSakit = (poliSakit === true || poliSakit === 'true');
+            var select = $('#kodepoli');
+            select.empty();
+            select.prop('disabled', true);
+            select.html('<option value="">Mencari data...</option>');
+            select.val('').trigger('change');
+            $.ajax({
+                url: 'controller/admisi/services/getPoli.php',
+                type: 'POST',
+                dataType: 'json',
+                success: function (response) {
+                    if (!response.success) {
+                        console.log('Gagal load poli');
+                        return;
+                    }
+                    select.empty();
+                    $.each(response.data, function (index, item) {
+                        if (item.poliSakit == poliSakit) {
+                            select.append(
+                                new Option(item.nmPoli, item.kdPoli, false, false)
+                            );
+                        }
+                    });
+                    select.prop('disabled', false);
+                    select.trigger('change');
+                },
+                error: function (xhr, status, error) {
+                    console.log(xhr.responseText);
+                }
+            });
+        }
+        const knjsakit = [
+            {
+                id: "10",
+                text: "Rawat Jalan",
+            },
+            {
+                id: "20",
+                text: "Rawat Inap"
+            },
+            {
+                id: "50",
+                text: "Promotif Preventif"
+            }
+        ]
+        $("#kunjungan").select2({
+            width: "100%",
+        });
+        $('#kodepoli').select2({
+            width: '100%',
+            language: {
+                noResults: function () {
+                    return "Poli tidak ditemukan";
+                }
+            }
+        });
+
+        $('#kunjSakit').select2({
+            width: "100%",
+            placeholder: "Jenis Kunjungan",
+            allowClear: false,
+            data: [
+                {
+                    id: "true",
+                    text: "Kunjungan Sakit"
+                },
+                {
+                    id: "false",
+                    text: "Kunjungan Sehat"
+                }
+            ]
+        })
+        APP.jnsKunjungvalue = function () {
+            var selectedValue = $('#kunjSakit').val();
+            APP.resetSelect('#kunjungan');
+            APP.updatePoliOptions(selectedValue);
+            if (selectedValue == 'true') {
+                knjsakit.forEach((item) => {
+                    $('#kunjungan').append(new Option(item.text, item.id, false, false));
+                });
+                $("#kunjungan").val("10").trigger("change");
+            } else {
+                APP.addValueSelect('#kunjungan', '10', 'Rawat Jalan');
+            }
+        }
+        APP.jnsKunjungvalue();
         $('#create').click(function () {
             APP.load_btn_aktif('#create');
             APP.createpeserta();
         });
         $('#kunjSakit').change(function () {
-            var selectedValue = $(this).val();
-            APP.updatePoliOptions(selectedValue);
-            if (this.value == 'true') {
-                kunjungan.empty();
-                kunjungan.append($('<option></option>').attr('value', '10').text('Rawat Jalan'));
-                kunjungan.append($('<option></option>').attr('value', '20').text('Rawat Inap'));
-                kunjungan.append($('<option></option>').attr('value', '50').text('Promotif Preventif'));
-                $('#textpoli').text('Poli tujuan');
-            } else {
-                kunjungan.empty();
-                kunjungan.append($('<option></option>').attr('value', '10').text('Rawat Jalan'));
-                $('#textpoli').text('Kegiatan');
-            }
+            APP.jnsKunjungvalue();
         });
     }
     APP.createpeserta = function () {
@@ -93,13 +167,13 @@ $(function () {
             type: "POST",
             data: data,
             dataType: "json",
-            url: 'pcare/proses_pendaftaran.php',
+            url: 'controller/admisi/services/insertPendaftaran.php',
             success: function (response) {
                 if (response.success) {
                     Swal.fire({
                         icon: 'success',
                         title: 'Berhasil',
-                        text: "Nomor Antrian: " + response.antrian,
+                        text: response.message,
                         confirmButtonColor: '#3085d6',
                         cancelButtonColor: '#d33',
                         confirmButtonText: 'Ok'
@@ -118,30 +192,11 @@ $(function () {
             },
             error: function (xhr, status, error) {
                 alert('Terjadi kesalahan saat melakukan AJAX request: ' + error);
-                load_btn_non('#create', "Create");
+                APP.load_btn_non('#create', "Create");
             },
             complete: function () {
-                load_btn_non('#create', "Create");
+                APP.load_btn_non('#create', "Create");
             }
         })
-    }
-    APP.updatePoliOptions = function (poliSakit) {
-        $.ajax({
-            url: 'controller/admisi/services/get_api.php',
-            type: 'POST',
-            dataType: 'json',
-            success: function (response) {
-                var select = $('#kodepoli');
-                select.empty();
-                $.each(response.list, function (index, item) {
-                    if (item['poliSakit'].toString() == poliSakit) {
-                        select.append($('<option></option>').attr('value', item['kdPoli']).text(item['nmPoli']));
-                    }
-                });
-            },
-            error: function (xhr, status, error) {
-                console.log(xhr.responseText);
-            }
-        });
     }
 })
