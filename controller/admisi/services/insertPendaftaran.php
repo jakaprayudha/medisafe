@@ -2,9 +2,11 @@
 require_once __DIR__ . '/view.php';
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/servicebpjs.php';
+header('Content-Type: application/json');
 
 $kdProviderPeserta = $_POST['kdProviderPeserta'];
-$tglDaftar = date("d-m-Y", strtotime($_POST['tglDaftar']));
+$tglDaftarDB = $_POST['tglDaftar'];
+$tglDaftar = date("d-m-Y", strtotime($tglDaftarDB));
 $noKartu = $_POST['noKartu'];
 $kdPoli = $_POST['kdPoli'];
 $keluhan = isset($_POST['keluhan']) && !empty($_POST['keluhan']) ? $_POST['keluhan'] : null;
@@ -17,6 +19,7 @@ $respRate = (int) $_POST['respRate'];
 $lingkarPerut = (int) $_POST['lingkarPerut'];
 $heartRate = (int) $_POST['heartRate'];
 $kdTkp = $_POST['kdTkp'];
+$nmPoli = $_POST['nmPoli'];
 
 $payload = [
     "kdProviderPeserta" => $kdProviderPeserta,
@@ -37,8 +40,9 @@ $payload = [
 ];
 // echo json_encode($payload, JSON_PRETTY_PRINT);die();
 $result = bpjsPost("/pendaftaran", $payload);
+// echo json_encode($result);die();
 // $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
-if ($result['code'] != '201') {
+if ($result['code'] != '200') {
     $msg = $result['message'];
     if ($msg == null) {
         $msg = "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
@@ -57,13 +61,13 @@ if ($result['code'] != '201') {
     $respRate     = (int)$respRate;
     $lingkarPerut = (int)$lingkarPerut;
     $heartRate    = (int)$heartRate;
-    $tglDaftarDB = date('Y-m-d', strtotime(str_replace('-', '/', $tglDaftar)));
-    $stmt = $koneksi->prepare("INSERT INTO `pcare_pendaftaran` (`tanggal_daftar`, `noKartu`, `kdPoli`, `keluhan`, `kunjSakit`, `sistole`, `diastole`, `beratBadan`, `tinggiBadan`, `respRate`, `lingkarPerut`, `heartRate`, `rujukBalik`, `kdTkp`, `noUrut`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+    $stmt = $koneksi->prepare("INSERT INTO `pcare_pendaftaran` (`tanggal_daftar`, `noKartu`, `kdPoli`, `nmPoli`, `keluhan`, `kunjSakit`, `sistole`, `diastole`, `beratBadan`, `tinggiBadan`, `respRate`, `lingkarPerut`, `heartRate`, `rujukBalik`, `kdTkp`, `noUrut`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     $stmt->bind_param(
-        "sssssiiiiiiisss",
+        "ssssssiiiiiiisss",
         $tglDaftarDB,
         $noKartu,
         $kdPoli,
+        $nmPoli,
         $keluhan,
         $kunjSakit,
         $sistole,
@@ -91,5 +95,4 @@ if ($result['code'] != '201') {
         ];
     }
 }
-header('Content-Type: application/json');
 echo json_encode($response);

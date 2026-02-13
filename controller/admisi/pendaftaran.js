@@ -85,9 +85,7 @@ $(function () {
                     select.empty();
                     $.each(response.data, function (index, item) {
                         if (item.poliSakit == poliSakit) {
-                            select.append(
-                                new Option(item.nmPoli, item.kdPoli, false, false)
-                            );
+                            select.append(new Option(item.nmPoli, item.kdPoli, false, false));
                         }
                     });
                     select.prop('disabled', false);
@@ -98,6 +96,10 @@ $(function () {
                 }
             });
         }
+        $("#kodepoli").on("change", function () {
+            let nmPoli = $("#kodepoli option:selected").text();
+            $("#nmPoli").val(nmPoli);
+        });
         const knjsakit = [
             {
                 id: "10",

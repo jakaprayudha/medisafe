@@ -3,42 +3,32 @@
 require_once __DIR__ . '/view.php';
 require_once __DIR__ . '/../../../vendor/autoload.php';
 
-function getheaderGET(){
+function getheader($containType = "application/json; charset=utf-8")
+{
     global $consid, $tStamp, $encodedSignature, $userkey, $encodedAuthorization;
     $headers = array(
-        "X-cons-id:" . $consid,
+        "X-cons-id: " . $consid,
         "X-timestamp: " . $tStamp,
         "X-signature: " . $encodedSignature,
         "X-authorization: Basic " . $encodedAuthorization,
         'user_key: ' . $userkey,
-        "Content-Type: application/json; charset=utf-8"
+        "Content-Type: " . $containType
     );
     return $headers;
 }
-function getheaderPOST(){
-    global $consid, $tStamp, $encodedSignature, $userkey, $encodedAuthorization;
-    $headers = array(
-        "X-cons-id:" . $consid,
-        "X-timestamp: " . $tStamp,
-        "X-signature: " . $encodedSignature,
-        "X-authorization: Basic " . $encodedAuthorization,
-        'user_key: ' . $userkey,
-        "Content-Type: text/plain"
-    );
-    return $headers;
-}
+
 
 function bpjsGet($endpoint)
 {
     global $base_url, $service, $consid, $secretKey, $tStamp;
 
     $url = rtrim($base_url, '/') . '/' . trim($service, '/') . '/' . ltrim($endpoint, '/');
-    // echo $url;
+    // echo trim($url);die();
     $ch = curl_init();
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,
         CURLOPT_CUSTOMREQUEST => 'GET',
-        CURLOPT_HTTPHEADER => getheaderGET(),
+        CURLOPT_HTTPHEADER => getheader(),
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT => 10,
         CURLOPT_SSL_VERIFYPEER => false
@@ -47,8 +37,7 @@ function bpjsGet($endpoint)
     $response = curl_exec($ch);
     $err = curl_error($ch);
     curl_close($ch);
-    // var_dump($response);
-    // die();
+    // echo($response);die();
     if (!$response) {
         return bpjsError("Tidak ada response dari server BPJS");
     }
@@ -60,10 +49,11 @@ function bpjsPost($endpoint, array $payload, $method = "POST")
 {
     global $base_url, $service, $consid, $secretKey, $tStamp;
     $url = rtrim($base_url, '/') . '/' . trim($service, '/') . '/' . ltrim($endpoint, '/');
+    $containType = "text/plain";
     $ch = curl_init();
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,
-        CURLOPT_HTTPHEADER => getheaderPOST(),
+        CURLOPT_HTTPHEADER => getheader($containType),
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT => 20,
         CURLOPT_SSL_VERIFYPEER => false,
@@ -82,6 +72,36 @@ function bpjsPost($endpoint, array $payload, $method = "POST")
     return bpjsDecryptResponse($response, $consid, $secretKey, $tStamp);
 }
 
+function bpjsDelete($endpoint){
+    global $base_url, $service, $consid, $secretKey, $tStamp;
+
+    $url = rtrim($base_url, '/') . '/' . trim($service, '/') . '/' . ltrim($endpoint, '/');
+    // echo trim($url);die();
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $url,
+        CURLOPT_CUSTOMREQUEST => "DELETE",
+        CURLOPT_HTTPHEADER => getheader("application/json; charset=utf-8"),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 20,
+        CURLOPT_SSL_VERIFYPEER => false
+    ]);
+
+    $response = curl_exec($ch);
+    $err = curl_error($ch);
+    curl_close($ch);
+    // echo $response;die();
+    if ($err) {
+        return bpjsError("CURL Error: " . $err);
+    }
+
+    if (!$response) {
+        return bpjsError("Tidak ada response dari server BPJS");
+    }
+
+    return bpjsDecryptResponse($response, $consid, $secretKey, $tStamp);
+}
+
 function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp)
 {
     $json = json_decode($response, true);
@@ -90,7 +110,7 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp)
         return bpjsError("Format response tidak valid");
     }
 
-    if ($json['metaData']['code'] != "200") {
+    if (!in_array($json['metaData']['code'], ["200", "201"])) {
         return [
             'success' => false,
             'code' => $json['metaData']['code'],

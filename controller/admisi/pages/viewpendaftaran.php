@@ -57,6 +57,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Poli Tujuan <span class="text-danger">*</span></label>
                                 <select class="form-select" id="kodepoli" name="kdPoli"></select>
+                                <input type="hidden" name="nmPoli" id="nmPoli">
                             </div>
 
                             <div class="col-md-6">

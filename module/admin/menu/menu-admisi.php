@@ -81,13 +81,19 @@
            <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
            <span class="hide-menu">Primary Care (Pcare)</span>
         </li>
-        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Display Tiket') {echo 'active';} ?>"
+        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Pendaftaran') {echo 'active';} ?>"
               href="module/admisi/pendaftaran"
               aria-expanded="false">
               <iconify-icon icon="solar:file-broken"></iconify-icon>
               <span class="hide-menu">Pendaftaran</span>
            </a>
-
+        </li>
+        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'List Pendaftaran') {echo 'active';} ?>"
+              href="module/admisi/listpasiendaftar"
+              aria-expanded="false">
+              <iconify-icon icon="solar:book-bookmark-line-duotone"></iconify-icon>
+              <span class="hide-menu">List Pasien Terdaftar</span>
+           </a>
         </li>
      </ul>
   </nav>
