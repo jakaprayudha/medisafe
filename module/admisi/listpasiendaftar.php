@@ -12,6 +12,28 @@ require '../../controller/view.php';
     ?>
 </head>
 <style>
+    .card {
+        transition: 0.3s ease;
+    }
+
+    .table thead th {
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .table tbody tr {
+        transition: 0.2s ease;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f1f5ff;
+    }
+
+    #datapasien tbody td {
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
+
     .select2-container .select2-selection--single {
         height: calc(2.25rem + 2px);
         display: flex;
@@ -35,82 +57,60 @@ require '../../controller/view.php';
             <?php require '../admin/navbar.php' ?>
             <div class="body-wrapper-inner">
                 <div class="container-fluid">
-                    <div class="container-fluid py-4">
-                        <div class="card border-0 shadow-sm rounded-3">
-
-                            <!-- Header -->
-                            <div class="card-header bg-white border-bottom py-3">
-                                <div class="row align-items-center g-3">
-
-                                    <!-- Judul -->
-                                    <div class="col-md-6">
-                                        <h5 class="fw-bold mb-0 text-dark">
-                                            <i class="bi bi-clipboard-data text-primary me-2"></i>
-                                            Data Pendaftaran Pasien
-                                        </h5>
-                                        <small class="text-muted">
-                                            Monitoring pendaftaran pasien berdasarkan tanggal
-                                        </small>
-                                    </div>
-
-                                    <!-- Filter Tanggal -->
-                                    <div class="col-md-3 ms-auto">
-                                        <label class="form-label small fw-semibold mb-1 text-muted">
-                                            <i class="bi bi-calendar-event me-1 text-primary"></i>
-                                            Filter Tanggal
-                                        </label>
-                                        <input type="date"
-                                            class="form-control shadow-sm"
-                                            id="tanggal"
-                                            value="<?= date('Y-m-d') ?>">
-                                    </div>
-
+                    <div class="card border-0 shadow-lg rounded-4">
+                        <div class="card-header bg-white border-0 py-4 px-4">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h4 class="fw-bold mb-1 text-dark">
+                                        <i class="bi bi-people-fill text-primary me-2"></i>
+                                        Data Pendaftaran Pasien
+                                    </h4>
+                                    <p class="text-muted mb-0">
+                                        Monitoring dan manajemen kunjungan pasien
+                                    </p>
                                 </div>
-                            </div>
-
-                            <!-- Body -->
-                            <div class="card-body">
-
-                                <!-- Search + Info Row -->
-                                <div class="row mb-3 align-items-center">
-                                    <div class="col-md-4">
-                                        <div class="input-group shadow-sm">
-                                            <span class="input-group-text bg-white">
-                                                <i class="bi bi-search text-muted"></i>
-                                            </span>
+                                <div class="col-md-6">
+                                    <div class="d-flex justify-content-end gap-3 flex-wrap">
+                                        <div style="min-width:220px;">
+                                            <label class="form-label fw-semibold mb-1">
+                                                Tanggal Pelayanan
+                                            </label>
+                                            <input type="date"
+                                                class="form-control shadow-sm"
+                                                id="tanggal">
+                                        </div>
+                                        <div style="min-width:250px;">
+                                            <label class="form-label fw-semibold mb-1">
+                                                Pencarian
+                                            </label>
                                             <input type="text"
                                                 id="searchLocal"
-                                                class="form-control"
-                                                placeholder="Cari No. Urut, Nama, Poli...">
+                                                class="form-control shadow-sm"
+                                                placeholder="Cari nama / no kartu...">
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- Table -->
-                                <div class="table-responsive">
-                                    <table id="datapasien"
-                                        class="table table-hover table-bordered align-middle table-sm w-100 mb-0">
-
-                                        <thead class="table-light text-center">
-                                            <tr>
-                                                <th style="width:5%">No</th>
-                                                <th>No. Urut</th>
-                                                <th>No. Kartu</th>
-                                                <th>Nama Pasien</th>
-                                                <th>Kelamin</th>
-                                                <th>Poli</th>
-                                                <th style="width:10%">Action</th>
-                                            </tr>
-                                        </thead>
-
-                                        <tbody></tbody>
-
-                                    </table>
-                                </div>
-
                             </div>
                         </div>
-
+                        <!-- BODY -->
+                        <div class="card-body px-4 pb-4">
+                            <div class="table-responsive">
+                                <table id="datapasien"
+                                    class="table table-hover align-middle w-100">
+                                    <thead class="table-light text-center">
+                                        <tr>
+                                            <th style="width:5%">No</th>
+                                            <th>No. Urut</th>
+                                            <th>No. Kartu</th>
+                                            <th>Nama Pasien</th>
+                                            <th>Poli</th>
+                                            <th style="width:15%">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

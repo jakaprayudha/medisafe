@@ -27,17 +27,19 @@ $(function () {
                 }
             },
             { data: 'noUrut' },
-            { data: 'noKartu' },
-            { data: 'nama' },
-            { data: 'kelamin' },
-            { data: 'poli' },
+            { data: 'peserta.noKartu' },
+            { data: 'peserta.nama' },
+            { data: 'poli.nmPoli' },
             {
                 data: null,
                 render: function (data, type, row) {
                     return `
                         <div class="d-flex justify-content-center gap-1">
-                            <button class="btn btn-sm btn-outline-danger btn-batal" data-nokartu="${row.noKartu}" data-tanggal="${row.tanggal_daftar}" data-nourut="${row.noUrut}" data-kdpoli="${row.kdpoli}">
+                            <button class="btn btn-sm btn-outline-danger btn-batal">
                                 Batal
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary btn-kunjungan">
+                                Kunjungan
                             </button>
                         </div>
                     `;
@@ -95,14 +97,13 @@ $(function () {
     })
     $('#searchLocal').on('keyup', function () {
         var value = this.value.toLowerCase();
-
         table.rows().every(function () {
             var data = this.data();
             var found =
                 (data.noUrut || '').toLowerCase().includes(value) ||
-                (data.noKartu || '').toLowerCase().includes(value) ||
-                (data.nama || '').toLowerCase().includes(value) ||
-                (data.poli || '').toLowerCase().includes(value);
+                (data.peserta?.noKartu || '').toLowerCase().includes(value) ||
+                (data.peserta?.nama || '').toLowerCase().includes(value) ||
+                (data.poli?.nmPoli || '').toLowerCase().includes(value);
 
             if (found) {
                 $(this.node()).show();
@@ -111,4 +112,9 @@ $(function () {
             }
         });
     });
+    $(document).on('click', '.btn-kunjungan', function () {
+        let data = table.row($(this).closest('tr')).data();
+        sessionStorage.setItem('dataPasien', JSON.stringify(data));
+        window.location.href = 'module/admisi/listkunjungan.php';
+    })
 })

@@ -16,8 +16,6 @@ function getheader($containType = "application/json; charset=utf-8")
     );
     return $headers;
 }
-
-
 function bpjsGet($endpoint)
 {
     global $base_url, $service, $consid, $secretKey, $tStamp;
@@ -44,7 +42,6 @@ function bpjsGet($endpoint)
 
     return bpjsDecryptResponse($response, $consid, $secretKey, $tStamp);
 }
-
 function bpjsPost($endpoint, array $payload, $method = "POST")
 {
     global $base_url, $service, $consid, $secretKey, $tStamp;

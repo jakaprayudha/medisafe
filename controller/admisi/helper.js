@@ -77,3 +77,89 @@ APP.addValueInput = function (id, data) {
 APP.addValueSelect = function (id, iddata, data) {
     $(id).empty().append(new Option(data, iddata, true, true));
 };
+APP.ambil_data = async function (id, url, nama, kode, status) {
+    try {
+        $(id).html('<option>Loading...</option>');
+        let response = await $.ajax({
+            url: 'controller/admisi/services/getApi.php',
+            type: 'POST',
+            data: { url: url },
+            dataType: 'json'
+        });
+        $(id).empty();
+        if (status) {
+            $(id).append('<option value="">- Pilih -</option>');
+        }
+        response.list.forEach(item => {
+            $(id).append(
+                `<option value="${item[nama]}">${item[kode]}</option>`
+            );
+        });
+    } catch (err) {
+        console.error(err);
+        $(id).html('<option>Error loading data</option>');
+    }
+};
+APP.initDiagnosa = function (selector) {
+    $(selector).select2({
+        placeholder: "Ketik Diagnosa...",
+        width: "100%",
+        minimumInputLength: 3,
+        ajax: {
+            url: "controller/admisi/services/getDiagnosa.php",
+            dataType: "json",
+            delay: 250,
+            data: function (params) {
+                return { q: params.term };
+            },
+            processResults: function (data) {
+                let items = data.data || [];
+                return {
+                    results: items.map(item => ({
+                        id: item.kdDiag,
+                        text: item.nmDiag,
+                    })),
+                };
+            },
+            cache: true,
+        },
+        language: {
+            searching: () => "Mencari diagnosa...",
+            noResults: () => "Diagnosa Tidak Ditemukan...",
+            inputTooShort: function (args) {
+                const remaining = args.minimum - args.input.length;
+                return `Ketik minimal ${remaining} karakter`;
+            },
+        }
+    });
+
+    // auto focus
+    $(selector).on('select2:open', function () {
+        setTimeout(function () {
+            document.querySelector('.select2-container--open .select2-search__field').focus();
+        }, 0);
+    });
+}
+APP.hideSmoot = function (selector, duration = 300) {
+    $(selector).each(function () {
+        const $el = $(this);
+
+        if (!$el.hasClass('d-none')) {
+            $el.stop(true, true).fadeOut(duration, function () {
+                $el.addClass('d-none');
+            });
+        }
+    });
+}
+APP.showSmoot = function (selector, duration = 500) {
+    $(selector).each(function () {
+        const $el = $(this);
+
+        if ($el.hasClass('d-none')) {
+            $el.removeClass('d-none')
+                .hide()
+                .stop(true, true)
+                .fadeIn(duration);
+        }
+    });
+}

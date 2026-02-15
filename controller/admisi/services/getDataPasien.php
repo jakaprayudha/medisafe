@@ -40,24 +40,11 @@ if ($status) {
     $tanggalBPJS = date("d-m-Y", strtotime($tanggalInput));
     $result = bpjsGet('/pendaftaran/tglDaftar/' . $tanggalBPJS . '/' . $start . '/' . $limit);
     $total = $result['data']['count'] ?? 0;
-    foreach ($result['data']['list'] as $row) {
-        $data[] = [
-            "noUrut"        => $row['noUrut'] ?? '',
-            "tanggal_daftar" => $row['tglDaftar'] ?? '',
-            "noKartu"       => $row['peserta']['noKartu'] ?? '',
-            "nama"          => $row['peserta']['nama'] ?? '',
-            "kelamin"       => $row['peserta']['sex'] = 'P' ? "Perempuan" : "laki-laki",
-            "poli"          => $row['poli']['nmPoli'] ?? '',
-            "kdpoli"        => $row['poli']['kdPoli'] ?? '',
-            "status"        => $row['status'] ?? '',
-            "sumber"        => $row['tkp']['nmTkp'] ?? ''
-        ];
-    }
 }
-// echo json_encode($row, JSON_PRETTY_PRINT);die();
+// echo json_encode($result['data']['list'], JSON_PRETTY_PRINT);die();
 echo json_encode([
     "draw" => $draw,
     "recordsTotal" => $total,
     "recordsFiltered" => $total,
-    "data" => $data
+    "data" => $result['data']['list']
 ]);

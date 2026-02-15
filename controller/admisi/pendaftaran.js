@@ -125,7 +125,6 @@ $(function () {
                 }
             }
         });
-
         $('#kunjSakit').select2({
             width: "100%",
             placeholder: "Jenis Kunjungan",
