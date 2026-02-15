@@ -47,6 +47,7 @@ function bpjsPost($endpoint, array $payload, $method = "POST")
     global $base_url, $service, $consid, $secretKey, $tStamp;
     $url = rtrim($base_url, '/') . '/' . trim($service, '/') . '/' . ltrim($endpoint, '/');
     $containType = "text/plain";
+    // echo trim($url);die();
     $ch = curl_init();
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,

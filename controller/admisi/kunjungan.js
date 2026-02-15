@@ -79,13 +79,15 @@ $(function () {
                 width: '100%'
             });
             $('#loading').show();
-            // await APP.ambil_data('#alergiMakan', 'alergi/jenis/01', 'kdAlergi', 'nmAlergi', false);
-            // await APP.ambil_data('#alergiUdara', 'alergi/jenis/02', 'kdAlergi', 'nmAlergi', false);
-            // await APP.ambil_data('#alergiObat', 'alergi/jenis/03', 'kdAlergi', 'nmAlergi', false);
-            // await APP.ambil_data('#kdPrognosa', 'prognosa', 'kdPrognosa', 'nmPrognosa', true);
-            // await APP.ambil_data('#kdSadar', 'kesadaran', 'kdSadar', 'nmSadar', false);
-            // await APP.ambil_data('#kdDokter', 'dokter/0/15', 'kdDokter', 'nmDokter', false);
+            await APP.ambil_data('#alergiMakan', 'alergi/jenis/01', 'kdAlergi', 'nmAlergi', false);
+            await APP.ambil_data('#alergiUdara', 'alergi/jenis/02', 'kdAlergi', 'nmAlergi', false);
+            await APP.ambil_data('#alergiObat', 'alergi/jenis/03', 'kdAlergi', 'nmAlergi', false);
+            await APP.ambil_data('#kdPrognosa', 'prognosa', 'kdPrognosa', 'nmPrognosa', true);
+            await APP.ambil_data('#kdSadar', 'kesadaran', 'kdSadar', 'nmSadar', false);
+            await APP.ambil_data('#kdDokter', 'dokter/0/15', 'kdDokter', 'nmDokter', false);
             await APP.ambil_data('#kdStatusPulang', 'statuspulang/rawatInap/false', 'kdStatusPulang', 'nmStatusPulang', true);
+
+            // Testing
             // APP.ambil_data('#kdStatusPulang', '/spesialis/sarana', 'kdSarana', 'nmSarana', false);
         } catch (err) {
             console.error('Gagal load data:', err);
@@ -107,9 +109,9 @@ $(function () {
             APP.hideSmoot('#rujukhorizontal')
             APP.hideSmoot('#formrujukanvertikal');
             $('input[name="kdStatusPulang"]').prop('checked', false);
+            APP.addValueInput('#typeRujukan', 'normal');
         }
     })
-
     $('input[name="kdStatusPulang"]').on('change', function () {
         let status = $(this).val();
         $('#kdKategori').val('');
@@ -128,7 +130,10 @@ $(function () {
             APP.showSmoot('#subspesialis');
             APP.showSmoot('#sarana');
             APP.ambil_data('#kdSarana', '/spesialis/sarana', 'kdSarana', 'nmSarana', false);
+            APP.hideSmoot('#alasanrujuk');
+            APP.addValueInput('#typeRujukan', 'spesialis');
         } else {
+            APP.addValueInput('#typeRujukan', 'khusus');
             $('#kdSarana').val(null).trigger('change');
             $('#kdsubspesialis').val(null).trigger('change');
             APP.ambil_data('#kdKategori', '/spesialis/khusus', 'kdKhusus', 'nmKhusus', false);
@@ -136,6 +141,7 @@ $(function () {
             APP.hideSmoot('#subspesialis');
             changeCol($('#kdKategori'), 'col-5');
             changeCol($('#tglRujukan'), 'col-5');
+            APP.showSmoot('#alasanrujuk');
         }
     });
     $('#kdKategori').on('change', function () {
@@ -145,12 +151,14 @@ $(function () {
     $('#simpanEntry').on('click', function () {
         const data = $('#isiform').serialize();
         const btn = $(this);
-        APP.load_btn_aktif(btn);
         $.ajax({
             url: "controller/admisi/services/prosesinsertkunjungan.php",
             type: "POST",
             data: data,
             dataType: 'json',
+            beforeSend: function () {
+                APP.load_btn_aktif(btn);
+            },
             success: function (res) {
                 if (res.success) {
                     Swal.fire({
@@ -164,9 +172,12 @@ $(function () {
                         text: res.message,
                     });
                 }
+            },
+            complete: function () {
+                APP.load_btn_non(btn, 'Save');
             }
         })
-        APP.load_btn_non(btn, 'Save');
+
     })
 
     $('#btnCariFaskes').on('click', function () {

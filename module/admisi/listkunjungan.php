@@ -523,6 +523,7 @@ date_default_timezone_set('Asia/Jakarta');
                                     <hr>
                                     <p>Rujukan Horizontal</p>
                                 </div>
+                                <input type="hidden" name="typeRujukan" id="typeRujukan" value="normal">
                                 <div class="col-12 d-none" id="formrujukanvertikal">
                                     <!-- Kategori -->
                                     <div class="row mb-3">
@@ -541,7 +542,7 @@ date_default_timezone_set('Asia/Jakarta');
                                         <div class="col-2 d-none" id="subspesialis">
                                             <select class="form-select"
                                                 id="kdsubspesialis"
-                                                name="kdsubspesialis">
+                                                name="kdSubSpesialis1">
                                             </select>
                                         </div>
                                         <div class="col-3 d-none" id="sarana">
@@ -565,7 +566,7 @@ date_default_timezone_set('Asia/Jakarta');
                                         </div>
                                     </div>
                                     <!-- Alasan -->
-                                    <div class="row mb-3">
+                                    <div class="row mb-3 d-none" id="alasanrujuk">
                                         <div class="col-2">
                                             <label for="alasanRujukan" class="col-form-label">
                                                 Alasan <span class="text-danger">*</span>
@@ -586,8 +587,8 @@ date_default_timezone_set('Asia/Jakarta');
                                                 <label for="" class="col-form-label col-form-label-sm">Faskes<span class="text-danger">*</span></label>
                                             </div>
                                             <div class="col-10">
-                                                <input type="text" id="nmfaskes" name="nmfaskes" class="form-control" placeholder="Fasilitas Kesehatan" readonly>
-                                                <input type="hidden" name="kdfaskes">
+                                                <input type="text" id="nmfaskes" name="nmfaskes" class="form-control" readonly>
+                                                <input type="hidden" name="kdppk" id="kdfaskes">
                                             </div>
                                         </div>
                                     </div>

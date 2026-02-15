@@ -3,12 +3,12 @@ header('Content-Type: application/json');
 
 $response = [
     "metaData" => [
-        "code" => 201,
+        "code" => 200,
         "message" => "CREATED"
     ],
     "response" => [
-        "field" => "noUrut",
-        "message" => "A1"
+        "field" => "noKunjungan",
+        "message" => "0114U1630316Y000001"
     ]
 ];
 
