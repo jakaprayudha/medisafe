@@ -27,22 +27,34 @@ $(function () {
                 }
             },
             { data: 'noUrut' },
-            { data: 'peserta.noKartu' },
-            { data: 'peserta.nama' },
-            { data: 'poli.nmPoli' },
+            { data: 'noKartu' },
+            { data: 'patient_name' },
+            { data: 'nmPoli' },
+            {
+                data: 'status_kunjungan',
+                render: function (data, type, row) {
+                    if (data == 1) {
+                        return `<span class="badge bg-success">Sudah Dilayani</span>`;
+                    } else {
+                        return `<span class="badge bg-danger">Belum Dilayani</span>`;
+                    }
+                }
+            },
             {
                 data: null,
                 render: function (data, type, row) {
-                    return `
-                        <div class="d-flex justify-content-center gap-1">
+                    let btn = "";
+                    if (row.status_kunjungan == '0') {
+                        btn = `<div class="d-flex justify-content-center gap-1">
                             <button class="btn btn-sm btn-outline-danger btn-batal">
                                 Batal
                             </button>
                             <button class="btn btn-sm btn-outline-primary btn-kunjungan">
                                 Kunjungan
                             </button>
-                        </div>
-                    `;
+                        </div>`;
+                    }
+                    return btn;
                 }
             }
         ],
@@ -59,10 +71,12 @@ $(function () {
         table.ajax.reload();
     });
     $(document).on('click', '.btn-batal', function () {
-        const nokartu = $(this).data('nokartu');
-        const tanggal = $(this).data('tanggal');
-        const noUrut = $(this).data('nourut');
-        const kdpoli = $(this).data('kdpoli');
+        let data = table.row($(this).closest('tr')).data();
+        console.log(data);
+        const nokartu = data.peserta.noKartu;
+        const tanggal = data.tglDaftar;
+        const noUrut = data.noUrut;
+        const kdpoli = data.poli.kdPoli;
         $.ajax({
             url: 'controller/admisi/services/deletePendaftaran.php',
             type: "GET",

@@ -70,6 +70,8 @@ date_default_timezone_set('Asia/Jakarta');
                     <form id="isiform">
                         <input type="hidden" name="noKartu" id="noKartu">
                         <input type="hidden" name="kdPoli" id="kode_poli">
+                        <input type="hidden" name="nmPoli" id="nama_poli">
+                        <input type="hidden" name="noKunjungan" id="noKunjungan">
                         <div class="card">
                             <h5 class="card-header p-3">Kunjungan</h5>
                             <div class="card-body" style="padding-top:10px; padding-bottom: 10px;">
@@ -80,13 +82,13 @@ date_default_timezone_set('Asia/Jakarta');
                                                 <label for="jeniskunjung" class="col-form-label col-form-label-sm">Jenis Kunjungan<span class="text-danger">*</span></label>
                                             </div>
                                             <div class="col-4">
-                                                <select class="form-select" name="kunjungan" id="kunjungan"></select>
+                                                <select class="form-select" name="kunjungan" id="kunjungan" readonly></select>
                                             </div>
                                             <div class="col-2">
                                                 <label for="jeniskunjung" class="col-form-label col-form-label-sm">Perawatan<span class="text-danger">*</span></label>
                                             </div>
                                             <div class="col-4">
-                                                <select class="form-select" name="rujukan" id="rujukan">
+                                                <select class="form-select" name="rujukan" id="rujukan" readonly>
                                                 </select>
                                             </div>
                                         </div>
@@ -120,7 +122,7 @@ date_default_timezone_set('Asia/Jakarta');
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-12">
+                                    <div class="col-12" id="formAnamnesa">
                                         <div class="row">
                                             <div class="col-2">
                                                 <label for="" class="col-form-label col-form-label-sm">Anamnesa<span class="text-danger">*</span></label>
@@ -132,7 +134,7 @@ date_default_timezone_set('Asia/Jakarta');
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-12">
+                                    <div class="col-12" id="formalergi">
                                         <div class="row">
                                             <div class="col-2">
                                                 <label for="" class="col-form-label col-form-label-sm">Alergi Makan<span class="text-danger">*</span></label>
@@ -148,7 +150,7 @@ date_default_timezone_set('Asia/Jakarta');
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-12">
+                                    <div class="col-12" id="formpronosa">
                                         <div class="row">
                                             <div class="col-2">
                                                 <label for="" class="col-form-label col-form-label-sm">Prognosa<span class="text-danger">*</span></label>
@@ -171,7 +173,7 @@ date_default_timezone_set('Asia/Jakarta');
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-12">
+                                    <div class="col-12" id="formnonobat">
                                         <div class="row">
                                             <div class="col-2">
                                                 <label for="" class="col-form-label col-form-label-sm">Terapi Non Obat<span class="text-danger">*</span></label>
@@ -183,7 +185,7 @@ date_default_timezone_set('Asia/Jakarta');
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-12">
+                                    <div class="col-12" id="formbmhp">
                                         <div class="row">
                                             <div class="col-2">
                                                 <label for="" class="col-form-label col-form-label-sm">BMPH<span class="text-danger">*</span></label>
@@ -203,18 +205,21 @@ date_default_timezone_set('Asia/Jakarta');
                                                         Diagnosa Utama <span class="text-danger">*</span>
                                                     </label>
                                                     <select id="diag1" name="diag1" class="form-select" required></select>
+                                                    <input type="hidden" id="nmDiag1" name="nmDiag1">
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="form-label">
                                                         Diagnosa Sekunder 1
                                                     </label>
                                                     <select id="diag2" name="diag2" class="form-select"></select>
+                                                    <input type="hidden" id="nmDiag2" name="nmDiag2">
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="form-label">
                                                         Diagnosa Sekunder 2
                                                     </label>
                                                     <select id="diag3" name="diag3" class="form-select"></select>
+                                                    <input type="hidden" id="nmDiag3" name="nmDiag3">
                                                 </div>
                                             </div>
                                         </div>

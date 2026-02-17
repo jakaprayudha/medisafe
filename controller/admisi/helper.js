@@ -100,7 +100,7 @@ APP.ambil_data = async function (id, url, nama, kode, status) {
         $(id).html('<option>Error loading data</option>');
     }
 };
-APP.initDiagnosa = function (selector) {
+APP.initDiagnosa = function (selector, hiddenNameSelector) {
     $(selector).select2({
         placeholder: "Ketik Diagnosa...",
         width: "100%",
@@ -118,6 +118,7 @@ APP.initDiagnosa = function (selector) {
                     results: items.map(item => ({
                         id: item.kdDiag,
                         text: item.nmDiag,
+                        nmDiag: item.nmDiag
                     })),
                 };
             },
@@ -138,6 +139,13 @@ APP.initDiagnosa = function (selector) {
         setTimeout(function () {
             document.querySelector('.select2-container--open .select2-search__field').focus();
         }, 0);
+    });
+    $(selector).on('select2:select', function (e) {
+        let data = e.params.data;
+        $(hiddenNameSelector).val(data.text);
+    });
+    $(selector).on('select2:clear', function () {
+        $(hiddenNameSelector).val('');
     });
 }
 APP.hideSmoot = function (selector, duration = 300) {

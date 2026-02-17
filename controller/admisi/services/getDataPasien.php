@@ -2,8 +2,9 @@
 require_once __DIR__ . '/view.php';
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/servicebpjs.php';
+header('Content-Type: application/json');
 
-$status  = false;
+$status  = true;
 $tanggalInput = $_POST['tanggal'] ?? date('Y-m-d');
 $data = [];
 $start  = intval($_POST['start'] ?? 0);
@@ -11,30 +12,18 @@ $limit  = intval($_POST['length'] ?? 10);
 $draw   = intval($_POST['draw'] ?? 1);
 $total = 0;
 if ($status) {
-
     $tanggalDB = date('Y-m-d', strtotime($tanggalInput));
-
-    $result = mysqli_query(
-        $koneksi,
-        "SELECT pp.*,p.nomor_rm,p.patient_name,p.patient_gender 
-         FROM pcare_pendaftaran as pp 
-         INNER JOIN ms_patient as p 
-            ON pp.noKartu = p.patient_bpjs 
-         WHERE pp.tanggal_daftar = '$tanggalDB'"
-    );
+    $result = mysqli_query($koneksi, "SELECT 
+    pp.*, 
+    p.nomor_rm, 
+    p.patient_name, 
+    p.patient_gender,
+    CASE WHEN pk.noKunjungan IS NOT NULL THEN TRUE ELSE FALSE END AS status_kunjungan FROM pcare_pendaftaran AS pp INNER JOIN ms_patient AS p ON pp.noKartu = p.patient_bpjs LEFT JOIN pcare_kunjungan AS pk ON pk.noKartu = pp.noKartu AND pk.tglDaftar = pp.tanggal_daftar WHERE pp.tanggal_daftar = '$tanggalDB'");
 
     while ($row = mysqli_fetch_assoc($result)) {
-        $data[] = [
-            "tanggal_daftar" => $row['tanggal_daftar'],
-            "noUrut" => $row['noUrut'],
-            "noKartu" => $row['noKartu'],
-            "nama" => $row['patient_name'],
-            "kelamin" => $row['patient_gender'],
-            "poli" => $row['nmPoli'],
-            "kdpoli" => $row['kdPoli'],
-            "sumber" => $row['sumber'],
-        ];
+        $data[] = $row;
     }
+    $total = count($data);
 } else {
 
     $tanggalBPJS = date("d-m-Y", strtotime($tanggalInput));
@@ -46,5 +35,6 @@ echo json_encode([
     "draw" => $draw,
     "recordsTotal" => $total,
     "recordsFiltered" => $total,
-    "data" => $result['data']['list']
+    // "data" => $result['data']['list']
+    "data" => $data
 ]);

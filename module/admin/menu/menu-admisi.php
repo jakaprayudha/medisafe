@@ -95,5 +95,12 @@
               <span class="hide-menu">List Pasien Terdaftar</span>
            </a>
         </li>
+        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'List Kunjungan') {echo 'active';} ?>"
+              href="module/admisi/listdatakunjungan"
+              aria-expanded="false">
+              <iconify-icon icon="solar:checklist-bold-duotone"></iconify-icon>
+              <span class="hide-menu">List Kunjungan</span>
+           </a>
+        </li>
      </ul>
   </nav>

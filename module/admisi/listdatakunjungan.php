@@ -1,5 +1,5 @@
 <?php
-$title = 'Pasien Terdaftar';
+$title = 'Pasien Kunjungan';
 require '../../controller/view.php';
 ?>
 <!doctype html>
@@ -63,30 +63,29 @@ require '../../controller/view.php';
                                 <div class="col-md-6">
                                     <h4 class="fw-bold mb-1 text-dark">
                                         <i class="bi bi-people-fill text-primary me-2"></i>
-                                        Data Pendaftaran Pasien
+                                        Data Kunjungan Pasien
                                     </h4>
                                     <p class="text-muted mb-0">
-                                        Monitoring dan manajemen kunjungan pasien
+                                        Data kunjungan pasien
                                     </p>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="d-flex justify-content-end gap-3 flex-wrap">
-                                        <div style="min-width:220px;">
-                                            <label class="form-label fw-semibold mb-1">
-                                                Tanggal Pelayanan
-                                            </label>
-                                            <input type="date"
-                                                class="form-control shadow-sm"
-                                                id="tanggal">
-                                        </div>
+                                    <div class="d-flex justify-content-end gap-3 flex-wrap align-items-end">
                                         <div style="min-width:250px;">
                                             <label class="form-label fw-semibold mb-1">
-                                                Pencarian
+                                                Nomor Kartu
                                             </label>
                                             <input type="text"
-                                                id="searchLocal"
+                                                id="noKartuSearch"
                                                 class="form-control shadow-sm"
-                                                placeholder="Cari nama / no kartu...">
+                                                placeholder="Masukkan nomor kartu BPJS">
+                                        </div>
+                                        <div>
+                                            <button type="button"
+                                                id="btnCariPasien"
+                                                class="btn btn-primary shadow-sm">
+                                                <i class="bi bi-search me-1"></i> Cari
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -97,18 +96,23 @@ require '../../controller/view.php';
                             <div class="table-responsive">
                                 <table id="datapasien"
                                     class="table table-hover align-middle w-100">
-                                    <thead class="table-light text-center">
+                                    <thead class="table-light">
                                         <tr>
                                             <th style="width:5%">No</th>
-                                            <th>No. Urut</th>
-                                            <th>No. Kartu</th>
+                                            <th>Tgl. Kunjungan</th>
+                                            <th>No. Kunjung</th>
                                             <th>Nama Pasien</th>
-                                            <th>Poli</th>
-                                            <th>Status</th>
-                                            <th style="width:15%">Action</th>
+                                            <th>Poli/Kegiatan</th>
+                                            <th>Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody></tbody>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">
+                                                Cari Data Dengan No Kartu Pasien
+                                            </td>
+                                        </tr>
+                                    </tbody>
                                 </table>
                             </div>
                         </div>
@@ -122,7 +126,7 @@ require '../../controller/view.php';
     require '../admin/library.php';
     ?>
     <script src="controller/admisi/helper.js"></script>
-    <script src="controller/admisi/listpendaftaran.js"></script>
+    <script src="controller/admisi/listkunjungan.js"></script>
 </body>
 
 </html>
