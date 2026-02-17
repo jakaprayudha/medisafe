@@ -171,3 +171,7 @@ APP.showSmoot = function (selector, duration = 500) {
         }
     });
 }
+APP.openModal = function (id) {
+    const modal = new bootstrap.Modal(id);
+    modal.show();
+}

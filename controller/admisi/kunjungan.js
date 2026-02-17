@@ -191,8 +191,8 @@ $(function () {
         defaultDate: "today",
     });
     let dataPasien = JSON.parse(sessionStorage.getItem('dataPasien'));
-    // console.log(dataPasien);
-    let statusEdit = dataPasien?.noKunjungan != "" && dataPasien?.noKunjungan !== null ? true : false;
+    console.log(dataPasien);
+    let statusEdit = dataPasien?.noKunjungan != "" && dataPasien?.noKunjungan != null ? true : false;
     loadFormData();
     APP.addValueInput('#keluhan', dataPasien.keluhan);
     APP.addValueInput('#tinggiBadan', dataPasien.tinggiBadan);
@@ -204,8 +204,8 @@ $(function () {
     APP.addValueInput('#heartRate', dataPasien.heartRate);
     APP.addValueInput('#noKartu', dataPasien.noKartu);
     APP.addValueInput('#kode_poli', dataPasien.kdPoli);
-    APP.addValueInput('#nama_poli', dataPasien.nmpoli);
-    $('#tglDaftar').prop("readonly", true);
+    APP.addValueInput('#nama_poli', dataPasien.nmPoli);
+    APP.addValueInput('#tglDaftar', dataPasien.tanggal_daftar);
     $('#rujukan').val(dataPasien.kdTkp);
     $('#kunjungan').val(dataPasien.kunjSakit);
     if (dataPasien.kdTkp == "20") {

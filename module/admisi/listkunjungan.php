@@ -101,7 +101,7 @@ date_default_timezone_set('Asia/Jakarta');
                                             <div class="col-10">
                                                 <div class="row">
                                                     <div class="col-6">
-                                                        <input type="date" required="" name="tglDaftar" id="tglDaftar" class="form-control">
+                                                        <input type="date" required="" name="tglDaftar" id="tglDaftar" class="form-control" readonly>
                                                     </div>
                                                     <div class="col-6">
                                                         <input type="time" required="" value="<?= date('H:i:s') ?>" id="timeKunjungan" class="form-control">
