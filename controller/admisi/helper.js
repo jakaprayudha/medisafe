@@ -1,6 +1,10 @@
 window.APP = window.APP || {};
 APP.state = {};
-
+const today = new Date();
+const dd = String(today.getDate()).padStart(2, '0');
+const mm = String(today.getMonth() + 1).padStart(2, '0');
+const yyyy = today.getFullYear();
+const tanggalJS = `${dd}-${mm}-${yyyy}`;
 APP.load_btn_aktif = function (id) {
     $(id).prop('disabled', true).html(`
         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>

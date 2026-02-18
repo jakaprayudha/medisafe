@@ -95,7 +95,6 @@ require '../../controller/view.php';
                                             <th style="width:5%">No</th>
                                             <th>Pelayanan</th>
                                             <th>Clup Prolanis</th>
-                                            <th>Alamat</th>
                                             <th>Kegiatan</th>
                                             <th>Materi</th>
                                             <th>Nama Ketua</th>
@@ -185,6 +184,55 @@ require '../../controller/view.php';
                     <button type="button" id="btnInsertKegiatan"
                         class="btn btn-primary px-4 rounded-3 shadow-sm">
                         Simpan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalAddPesertaKelompok" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <div>
+                        <h4 class="fw-bold mb-1">Tambah Peserta Kelompok</h4>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <hr class="mx-4">
+                <div class="modal-body px-4">
+                    <div class="card-body px-4 pb-4">
+                        <div class="table-responsive">
+                            <table id="dataPesertaKelompok"
+                                class="table table-hover align-middle w-100">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width:5%">No</th>
+                                        <th>Nomor Kartu</th>
+                                        <th>Nama Peserta</th>
+                                        <th>Tgl. Lahir</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="9" class="text-center py-5">
+                                            <div class="d-flex flex-column align-items-center">
+                                                <div class="spinner-border text-primary mb-3" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <strong>Memuat data...</strong>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-4">
+                    <button class="btn btn-light px-4 rounded-3" data-bs-dismiss="modal">
+                        Tutup
                     </button>
                 </div>
             </div>

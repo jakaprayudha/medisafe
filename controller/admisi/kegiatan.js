@@ -72,18 +72,19 @@ $(function () {
             },
             { data: 'tglPelayanan', defaultContent: '-' },
             { data: 'clubProl.jnsKelompok.nmProgram', defaultContent: '-' },
-            { data: 'clubProl.alamat', defaultContent: '-' },
             { data: 'kegiatan.nama', defaultContent: '-' },
             { data: 'materi', defaultContent: '-' },
             { data: 'clubProl.ketua_nama', defaultContent: '-' },
             { data: 'clubProl.ketua_noHP', defaultContent: '-' },
-
             {
                 data: null,
                 render: function (data, type, row) {
                     return `<div class="d-flex justify-content-center gap-1">
                             <button class="btn btn-sm btn-danger btn-hapus" data-id="${row.eduId}">
                                 Hapus
+                            </button>
+                            <button class="btn btn-sm btn-primary btn-peserta" data-id="${row.eduId}">
+                                Peserta
                             </button>
                         </div>`;
                 }
@@ -243,4 +244,104 @@ $(function () {
             }
         });
     })
+    let tablePeserta;
+    let currentKelompokId = null;
+
+    $('#modalAddPesertaKelompok').on('shown.bs.modal', function () {
+        if (!currentKelompokId) return;
+        if (!$.fn.DataTable.isDataTable('#dataPesertaKelompok')) {
+            tablePeserta = $('#dataPesertaKelompok').DataTable({
+                processing: true,
+                searching: true,
+                paging: true,
+                ajax: {
+                    url: 'controller/admisi/services/listAddpstklp.php',
+                    type: 'GET',
+                    data: function (d) {
+                        d.tgl = tanggalJS;
+                        d.idKelompok = currentKelompokId;
+                    },
+                    dataSrc: function (json) {
+                        return json.list ?? [];
+                    }
+                },
+                columns: [
+                    {
+                        data: null,
+                        render: (data, type, row, meta) => meta.row + 1
+                    },
+                    { data: 'noKartu', defaultContent: '-' },
+                    { data: 'patient_name', defaultContent: '-' },
+                    { data: 'patient_datebirth', defaultContent: '-' },
+                    {
+                        data: 'idKlp',
+                        render: function (data, type, row) {
+                            if (data == null) {
+                                return `
+                            <button class="btn btn-sm btn-success btn-tambah"
+                                data-nokartu="${row.noKartu}"
+                                data-idklp="${currentKelompokId}">
+                                <i class="bi bi-plus-square-fill"></i>
+                            </button>`;
+                            }
+
+                            return ``;
+                        }
+                    }
+                ],
+                language: {
+                    processing: "Memuat data...",
+                    zeroRecords: "Data tidak ditemukan"
+                }
+            });
+        } else {
+            tablePeserta.ajax.reload(null, false);
+        }
+        tablePeserta.columns.adjust();
+    });
+    $(document).on('click', '.btn-peserta', function () {
+        const btn = $(this);
+        currentKelompokId = $(this).data('id');
+        APP.load_btn_aktif(btn);
+        $('#modalAddPesertaKelompok').modal('show');
+        APP.load_btn_non(btn, 'Peserta');
+    });
+
+    $(document).on('click', '.btn-tambah', function () {
+        const btn = $(this);
+        const noKartu = btn.data('nokartu');
+        const idKlp = btn.data('idklp');
+        $.ajax({
+            url: 'controller/admisi/services/insertPesertaKelompok.php',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                pesertaId: noKartu,
+                idKlp: idKlp,
+                tgl: tanggalJS
+            },
+            beforeSend: function () {
+                APP.load_btn_aktif(btn);
+            },
+            success: function (res) {
+                if (res.success) {
+                    btn.removeClass('btn-success')
+                        .addClass('btn-secondary')
+                        .prop('disabled', true)
+                        .text('Sudah ditambahkan');
+                    tablePeserta.ajax.reload(null, false);
+                } else {
+                    Swal.fire({
+                        title: "Error",
+                        text: res.message,
+                        icon: "error"
+                    });
+                }
+            },
+            complete: function () {
+                APP.load_btn_non(btn, `<i class="bi bi-plus-square-fill"></i>`);
+            }
+        });
+    });
+
 })
