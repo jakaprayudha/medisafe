@@ -79,34 +79,53 @@
         </li>
         <li class="nav-small-cap">
            <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
-           <span class="hide-menu">Primary Care (Pcare)</span>
+           <span class="hide-menu">Daftar/Layanan (Pcare)</span>
         </li>
-        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Pendaftaran') {echo 'active';} ?>"
+        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Pendaftaran') {
+                                                            echo 'active';
+                                                         } ?>"
               href="module/admisi/pendaftaran"
               aria-expanded="false">
               <iconify-icon icon="solar:file-broken"></iconify-icon>
               <span class="hide-menu">Pendaftaran</span>
            </a>
         </li>
-        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'List Pendaftaran') {echo 'active';} ?>"
+        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'List Pendaftaran') {
+                                                            echo 'active';
+                                                         } ?>"
               href="module/admisi/listpasiendaftar"
               aria-expanded="false">
               <iconify-icon icon="solar:book-bookmark-line-duotone"></iconify-icon>
               <span class="hide-menu">List Pasien Terdaftar</span>
            </a>
         </li>
-        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'List Kunjungan') {echo 'active';} ?>"
+        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'List Kunjungan') {
+                                                            echo 'active';
+                                                         } ?>"
               href="module/admisi/listdatakunjungan"
               aria-expanded="false">
               <iconify-icon icon="solar:checklist-bold-duotone"></iconify-icon>
               <span class="hide-menu">List Kunjungan</span>
            </a>
         </li>
-        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Cari Rujukan') {echo 'active';} ?>"
+        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Cari Rujukan') {
+                                                            echo 'active';
+                                                         } ?>"
               href="module/admisi/carirujukan"
               aria-expanded="false">
               <iconify-icon icon="oui:app-search-profiler"></iconify-icon>
               <span class="hide-menu">Cari Rujukan</span>
+           </a>
+        </li>
+        <li class="nav-small-cap">
+           <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
+           <span class="hide-menu">Kegiatan Kelompok (Pcare)</span>
+        </li>
+        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Kegiatan Kelompok') {echo 'active';} ?>"
+              href="module/admisi/addkegiatankelompok"
+              aria-expanded="false">
+              <iconify-icon icon="solar:widget-add-broken"></iconify-icon>
+              <span class="hide-menu">Kegiatan</span>
            </a>
         </li>
      </ul>
