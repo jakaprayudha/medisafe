@@ -82,7 +82,7 @@ $(function () {
                 data: null,
                 render: function (data, type, row) {
                     return `<div class="d-flex justify-content-center gap-1">
-                            <button class="btn btn-sm btn-danger btn-batal">
+                            <button class="btn btn-sm btn-danger btn-hapus" data-id="${row.eduId}">
                                 Hapus
                             </button>
                         </div>`;
@@ -201,5 +201,46 @@ $(function () {
             $('#idClpprolanis').prop('disabled', true);
         }
     });
-
+    $(document).on('click', '.btn-hapus', function () {
+        const btn = $(this);
+        const id_kelompok = $(this).data('id');;
+        Swal.fire({
+            title: "Apakah Kamu Yakin",
+            text: "Menghapus Kegiatan ini?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Ya. Hapus"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "controller/admisi/services/deleteKelompok.php",
+                    type: "POST",
+                    data: { id: id_kelompok },
+                    dataType: "json",
+                    befodeSend: function () {
+                        APP.load_btn_aktif(btn);
+                    },
+                    complete: function () {
+                        APP.load_btn_non(btn, "Hapus");
+                    },
+                    success: function (res) {
+                        if (res.success) {
+                            Swal.fire({
+                                title: res.message,
+                                icon: "success"
+                            });
+                            table.ajax.reload();
+                        } else {
+                            Swal.fire({
+                                title: res.message,
+                                icon: "error"
+                            });
+                        }
+                    }
+                })
+            }
+        });
+    })
 })

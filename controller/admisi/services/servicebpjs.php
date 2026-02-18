@@ -69,7 +69,6 @@ function bpjsPost($endpoint, array $payload, $method = "POST")
 
     return bpjsDecryptResponse($response, $consid, $secretKey, $tStamp);
 }
-
 function bpjsDelete($endpoint)
 {
     global $base_url, $service, $consid, $secretKey, $tStamp;
@@ -110,9 +109,7 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp)
     }
 
     if (!in_array($json['metaData']['code'], ["200", "201"])) {
-
         $groupedErrors = [];
-
         if (isset($json['response']) && is_array($json['response'])) {
             foreach ($json['response'] as $err) {
                 $field = $err['field'] ?? 'Unknown Field';

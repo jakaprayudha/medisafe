@@ -6,5 +6,5 @@ header('Content-Type: application/json');
 $tgl = $_GET['tanggal'];
 $result = bpjsGet('/kelompok/kegiatan/' . $tgl);
 echo json_encode([
-    "data" => $result['data']['list']
+    "data" => $result['data']['list'] ?? []
 ]);
