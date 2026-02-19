@@ -6,10 +6,7 @@ $response = [
         "code" => 200,
         "message" => "CREATED"
     ],
-    "response" => [
-        "field" => "eduId",
-        "message" => "16030000009"
-    ]
+    "response" => null
 ];
 
 

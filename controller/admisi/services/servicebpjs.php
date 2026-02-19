@@ -108,75 +108,62 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp)
         return bpjsError("Format response tidak valid");
     }
 
-    // ===== HANDLE ERROR =====
-    if (!in_array($json['metaData']['code'], ["200", "201"])) {
+    $code = (string) $json['metaData']['code'];
+
+    // ================= ERROR HANDLING =================
+    if (!in_array($code, ["200", "201"])) {
+
+        $errorMessage = 'Terjadi kesalahan';
 
         // 1️⃣ RESPONSE STRING
         if (isset($json['response']) && is_string($json['response'])) {
-            return [
-                'success' => false,
-                'code' => $json['metaData']['code'],
-                'message' => $json['metaData']['message'],
-                'errors' => $json['response'],
-                'data' => null
-            ];
+            $errorMessage = $json['response'];
         }
 
-        // 2️⃣ RESPONSE ARRAY (FIELD ERROR)
-        if (isset($json['response']) && is_array($json['response'])) {
-            $groupedErrors = [];
+        // 2️⃣ RESPONSE ARRAY (BISA LEBIH DARI 1)
+        elseif (isset($json['response']) && is_array($json['response'])) {
+
+            $messages = [];
 
             foreach ($json['response'] as $err) {
-                $field = $err['field'] ?? 'Unknown Field';
-                $message = $err['message'] ?? 'Kesalahan tidak diketahui';
+                $field = $err['field'] ?? '';
+                $msg   = $err['message'] ?? 'Kesalahan tidak diketahui';
 
-                $label = ucfirst(
-                    preg_replace('/([a-z])([A-Z])/', '$1 $2', $field)
-                );
-
-                $groupedErrors[$label][] = $message;
-            }
-
-            $finalMessage = "Terjadi Kesalahan:\n\n";
-            foreach ($groupedErrors as $field => $messages) {
-                $finalMessage .= "• {$field}\n";
-                foreach ($messages as $msg) {
-                    $finalMessage .= "  - {$msg}\n";
+                if ($field) {
+                    $label = ucfirst(
+                        preg_replace('/([a-z])([A-Z])/', '$1 $2', $field)
+                    );
+                    $messages[] = "{$label}: {$msg}";
+                } else {
+                    $messages[] = $msg;
                 }
-                $finalMessage .= "\n";
             }
 
-            return [
-                'success' => false,
-                'code' => $json['metaData']['code'],
-                'message' => $json['metaData']['message'],
-                'errors' => trim($finalMessage),
-                'data' => null
-            ];
+            $errorMessage = implode("\n", $messages);
         }
 
-        // 3️⃣ FALLBACK
         return [
             'success' => false,
-            'code' => $json['metaData']['code'],
-            'message' => $json['metaData']['message'],
-            'errors' => 'Terjadi kesalahan yang tidak diketahui',
-            'data' => null
+            'code'    => $code,
+            'message' => $errorMessage, // ⬅️ BUKAN dari metaData
+            'data'    => null
         ];
     }
 
-    // ===== SUCCESS =====
+    // ================= SUCCESS =================
     $key = $consid . $secretKey . $tStamp;
+
     $decrypted = stringDecrypt($key, $json['response']);
     $decompressed = \LZCompressor\LZString::decompressFromEncodedURIComponent($decrypted);
 
     return [
         'success' => true,
-        'code' => '200',
+        'code'    => '200',
         'message' => 'OK',
-        'data' => json_decode($decompressed, true)
+        'data'    => json_decode($decompressed, true)
     ];
 }
+
 
 
 function stringDecrypt($key, $dtdecrypt)

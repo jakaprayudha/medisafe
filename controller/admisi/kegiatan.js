@@ -83,7 +83,10 @@ $(function () {
                             <button class="btn btn-sm btn-danger btn-hapus" data-id="${row.eduId}">
                                 Hapus
                             </button>
-                            <button class="btn btn-sm btn-primary btn-peserta" data-id="${row.eduId}">
+                            <button class="btn btn-sm btn-primary btn-Tbhpeserta" data-id="${row.eduId}">
+                                Tambah
+                            </button>
+                            <button class="btn btn-sm btn-info btn-peserta" data-id="${row.eduId}">
                                 Peserta
                             </button>
                         </div>`;
@@ -246,7 +249,6 @@ $(function () {
     })
     let tablePeserta;
     let currentKelompokId = null;
-
     $('#modalAddPesertaKelompok').on('shown.bs.modal', function () {
         if (!currentKelompokId) return;
         if (!$.fn.DataTable.isDataTable('#dataPesertaKelompok')) {
@@ -299,14 +301,74 @@ $(function () {
         }
         tablePeserta.columns.adjust();
     });
-    $(document).on('click', '.btn-peserta', function () {
+    $(document).on('click', '.btn-Tbhpeserta', function () {
         const btn = $(this);
         currentKelompokId = $(this).data('id');
         APP.load_btn_aktif(btn);
         $('#modalAddPesertaKelompok').modal('show');
-        APP.load_btn_non(btn, 'Peserta');
+        APP.load_btn_non(btn, 'Tambah');
     });
-
+    $(document).on('click', '.btn-peserta', function () {
+        $('#modalListPesertaKelompok').modal('show');
+        const btn = $(this);
+        currentKelompokId = $(this).data('id');
+        $.ajax({
+            url: 'controller/admisi/services/listpstklp.php',
+            type: 'GET',
+            dataType: 'json',
+            data: { id: currentKelompokId },
+            beforeSend: function () {
+                APP.load_btn_aktif(btn);
+                $('#tbodyPeserta').html(`
+                <tr>
+                    <td colspan="9" class="text-center py-5">
+                        <div class="d-flex flex-column align-items-center">
+                            <div class="spinner-border text-primary mb-3"></div>
+                            <strong>Memuat data...</strong>
+                        </div>
+                    </td>
+                </tr>
+            `);
+            },
+            complete: function () {
+                APP.load_btn_non(btn, 'Peserta');
+            },
+            success: function (res) {
+                let html = '';
+                if (res.list.length > 0) {
+                    $.each(res.list, function (i, row) {
+                        html += `
+                        <tr>
+                            <td>${i + 1}</td>
+                            <td>${row.noKartu}</td>
+                            <td>${row.patient_name}</td>
+                            <td>${row.patient_datebirth}</td>
+                            <td class="text-center">
+                                <button 
+                                    type="button"
+                                    class="btn btn-sm btn-outline-danger btn-Kick"
+                                    data-id="${row.currentKelompokId}"
+                                    data-nama="${row.noKartu}"
+                                    title="Keluarkan dari kelompok">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    });
+                } else {
+                    html = `
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            Data tidak ditemukan
+                        </td>
+                    </tr>
+                `;
+                }
+                $('#tbodyPeserta').html(html);
+            }
+        })
+    })
     $(document).on('click', '.btn-tambah', function () {
         const btn = $(this);
         const noKartu = btn.data('nokartu');
@@ -343,5 +405,4 @@ $(function () {
             }
         });
     });
-
 })

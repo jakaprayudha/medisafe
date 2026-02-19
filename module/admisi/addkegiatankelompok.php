@@ -238,6 +238,44 @@ require '../../controller/view.php';
             </div>
         </div>
     </div>
+    <div class="modal fade" id="modalListPesertaKelompok" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <div>
+                        <h4 class="fw-bold mb-1">Peserta Kelompok</h4>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <hr class="mx-4">
+                <div class="modal-body px-4">
+                    <div class="card-body px-4 pb-4">
+                        <div class="table-responsive">
+                            <table id="PesertaKelompok"
+                                class="table table-hover align-middle w-100">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width:5%">No</th>
+                                        <th>Nomor Kartu</th>
+                                        <th>Nama Peserta</th>
+                                        <th>Tgl. Lahir</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyPeserta">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-4">
+                    <button class="btn btn-light px-4 rounded-3" data-bs-dismiss="modal">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     <?php
     require '../admin/library.php';
     ?>
