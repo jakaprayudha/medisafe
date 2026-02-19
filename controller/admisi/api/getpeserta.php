@@ -6,7 +6,10 @@ $response = [
         "code" => 200,
         "message" => "CREATED"
     ],
-    "response" => null
+    "response" => [
+        "field"=> "noKunjungan",
+	    "message"=> "0114U1630316Y000001"
+    ]
 ];
 
 

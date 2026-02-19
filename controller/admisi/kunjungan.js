@@ -344,6 +344,9 @@ $(function () {
                     Swal.fire({
                         icon: "success",
                         title: res.message,
+                        confirmButtonText: "OK"
+                    }).then(function () {
+                        window.location.assign("module/admisi/listdatakunjungan.php");
                     });
                 } else {
                     Swal.fire({

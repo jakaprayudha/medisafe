@@ -11,8 +11,76 @@ $(function () {
         }
     })
     $('#btnCariPasien').on('click', function () {
-        const noKartu = $('#noKartuSearch').val();
+        loadTable();
+    })
+    $(document).on('click', '.btn-edit', function () {
+        const data = $(this).data('item');
+        const nokunjung = data.noKunjungan;
+        Swal.fire({
+            title: "Konformasi",
+            text: "Edit Kunjungan: " + nokunjung + "?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Ya"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                sessionStorage.setItem('dataPasien', JSON.stringify(data));
+                window.location.href = 'module/admisi/listkunjungan.php';
+            }
+        });
+    })
+    $(document).on('click', '.btn-delete', function () {
         const btn = $(this);
+        const no = btn.data('nokunjung');
+        const tgl = btn.data('tgl');
+        const poli = btn.data('poli');
+        const kartu = btn.data('kartu');
+        Swal.fire({
+            title: "Apakah Kamu Yakin?",
+            text: "Menghapus Kunjungan",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Ya, Hapus"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "controller/admisi/services/deleteKunjungan.php",
+                    type: "POST",
+                    dataType: "json",
+                    data: { nomor: no, tanggal: tgl, poli: poli, kartu: kartu },
+                    beforeSend: function () {
+                        APP.load_btn_aktif(btn);
+                    },
+                    complete: function () {
+                        APP.load_btn_non(btn, `<i class="bi bi-file-earmark-x"></i>`);
+                    },
+                    success: function (res) {
+                        if (res.success) {
+                            Swal.fire({
+                                title: "Sucess",
+                                text: res.message,
+                                icon: "success"
+                            });
+                            loadTable();
+                        } else {
+                            Swal.fire({
+                                title: "Warning",
+                                text: res.message,
+                                icon: "success"
+                            });
+                        }
+                    }
+                })
+            }
+        });
+    })
+    function loadTable() {
+        const noKartu = $('#noKartuSearch').val();
+        const btn = $('#btnCariPasien');
         $.ajax({
             url: 'controller/admisi/services/getDataKunjungan.php',
             type: "GET",
@@ -44,12 +112,12 @@ $(function () {
                             <td>${item.noKunjungan}</td>
                             <td>${item.tglDaftar}</td>
                             <td>${item.patient_name}</td>
-                            <td>${item.nmpoli}</td>
+                            <td>${item.nmPoli}</td>
                             <td>
                                 <button class="btn btn-sm btn-secondary btn-edit" data-item='${JSON.stringify(item)}'>
                                     <i class="bi bi-pencil-square"></i>
                                 </button>
-                                <button class="btn btn-sm btn-danger btn-delete">
+                                <button class="btn btn-sm btn-danger btn-delete" data-nokunjung="${item.noKunjungan}" data-tgl="${item.tglDaftar}" data-poli="${item.kdPoli}" data-kartu="${item.noKartu}"}>
                                     <i class="bi bi-file-earmark-x"></i>
                                 </button>
                             </td>
@@ -62,23 +130,5 @@ $(function () {
                 APP.load_btn_non(btn, `<i class="bi bi-search me-1"></i> Cari`);
             }
         })
-    })
-    $(document).on('click', '.btn-edit', function () {
-        const data = $(this).data('item');
-        const nokunjung = data.noKunjungan;
-        Swal.fire({
-            title: "Konformasi",
-            text: "Edit Kunjungan: " + nokunjung + "?",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            confirmButtonText: "Ya"
-        }).then((result) => {
-            if (result.isConfirmed) {
-                sessionStorage.setItem('dataPasien', JSON.stringify(data));
-                window.location.href = 'module/admisi/listkunjungan.php';
-            }
-        });
-    })
+    }
 });

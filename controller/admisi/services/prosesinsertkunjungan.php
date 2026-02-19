@@ -5,7 +5,6 @@ require_once __DIR__ . '/servicebpjs.php';
 header('Content-Type: application/json');
 
 $noKunjungan = $_POST['noKunjungan'] ?? null;
-// $noKunjungan = "0032B0370226Y0edfsdf";
 $noKartu = $_POST['noKartu'];
 $DBtglDatar = $_POST['tglDaftar'];
 $DBtglEstRujuk = $_POST['tglRujukan'];
@@ -121,8 +120,9 @@ if ($noKunjungan != null) {
 // echo json_encode($payload, JSON_PRETTY_PRINT);die();
 $result = bpjsPost("/kunjungan", $payload, $method);
 // $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
+// echo json_encode($result, JSON_PRETTY_PRINT);die();
 if ($result['code'] != "200") {
-    $msg = $result['errors'];
+    $msg = $result['message'];
     if ($msg == null) {
         $msg = "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
     }
@@ -133,7 +133,7 @@ if ($result['code'] != "200") {
 } else {
     if ($method == "POST") {
         $message = 'Berhasil Membuat Rujukan';
-        $noKunjungan = $result['data']['message'];
+        $noKunjungan = $result['data'][0]['message'];
         $stmt = $koneksi->prepare("INSERT INTO pcare_kunjungan (
         noKunjungan, noKartu, tglDaftar, kdPoli,nmPoli, keluhan, kdSadar,
         sistole, diastole, beratBadan, tinggiBadan, respRate, heartRate,
@@ -299,7 +299,8 @@ if ($result['code'] != "200") {
         $response = [
             'success'  => true,
             'message'  => $message,
-            'result' => $result
+            'result' => $result,
+            'noKunjung' => $noKunjungan
         ];
     } else {
         $response = [

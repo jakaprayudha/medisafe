@@ -18,7 +18,19 @@ if ($status) {
     p.nomor_rm, 
     p.patient_name, 
     p.patient_gender,
-    CASE WHEN pk.noKunjungan IS NOT NULL THEN TRUE ELSE FALSE END AS status_kunjungan FROM pcare_pendaftaran AS pp INNER JOIN ms_patient AS p ON pp.noKartu = p.patient_bpjs LEFT JOIN pcare_kunjungan AS pk ON pk.noKartu = pp.noKartu AND pk.tglDaftar = pp.tanggal_daftar WHERE pp.tanggal_daftar = '$tanggalDB'");
+    CASE 
+        WHEN pk.noKunjungan IS NOT NULL THEN TRUE 
+        ELSE FALSE 
+    END AS status_kunjungan
+FROM pcare_pendaftaran AS pp
+INNER JOIN ms_patient AS p 
+    ON pp.noKartu = p.patient_bpjs
+LEFT JOIN pcare_kunjungan AS pk 
+    ON pk.noKartu   = pp.noKartu
+   AND pk.tglDaftar = pp.tanggal_daftar
+   AND pk.kdPoli    = pp.kdPoli
+WHERE pp.tanggal_daftar = '$tanggalDB'
+");
 
     while ($row = mysqli_fetch_assoc($result)) {
         $data[] = $row;
