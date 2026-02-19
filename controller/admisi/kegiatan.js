@@ -11,6 +11,8 @@ $(function () {
         altFormat: "F j, Y",
         altInput: true,
         defaultDate: "today",
+        maxDate: "today",
+        minDate: "today",
     });
     $('#idKegiatan').select2({
         width: "100%",
@@ -134,7 +136,8 @@ $(function () {
             success: function (res) {
                 if (res.success) {
                     Swal.fire({
-                        title: res.message,
+                        title: 'Success',
+                        text: res.message,
                         icon: "success"
                     });
                     table.ajax.reload();
@@ -143,7 +146,8 @@ $(function () {
                     $('#modalKegiatan').modal('hide');
                 } else {
                     Swal.fire({
-                        title: res.message,
+                        title: 'Warning',
+                        text: res.message,
                         icon: "error"
                     });
                 }
@@ -347,8 +351,9 @@ $(function () {
                                 <button 
                                     type="button"
                                     class="btn btn-sm btn-outline-danger btn-Kick"
-                                    data-id="${row.currentKelompokId}"
-                                    data-nama="${row.noKartu}"
+                                    data-id="${currentKelompokId}"
+                                    data-nomor="${row.noKartu}"
+                                    data-tgl="${row.tanggal_daftar}"
                                     title="Keluarkan dari kelompok">
                                     <i class="bi bi-box-arrow-right"></i>
                                 </button>
@@ -405,4 +410,50 @@ $(function () {
             }
         });
     });
+    $(document).on('click', '.btn-Kick', function () {
+        const btn = $(this);
+        const idKlp = btn.data('id');
+        const noKartu = btn.data('nomor');
+        const tgl = btn.data('tgl');
+        Swal.fire({
+            title: "Apakah Kamu Yakin?",
+            text: "Mengeluarkan peserta dari kelompok ini?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Ya, Keluarkan"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: 'controller/admisi/services/kickPeserta.php',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: { id: idKlp, no: noKartu, tgl:tgl},
+                    beforeSend: function () {
+                        APP.load_btn_aktif(btn);
+                    },
+                    complete: function () {
+                        APP.load_btn_non(btn, `<i class="bi bi-box-arrow-right"></i>`);
+                    },
+                    success: function (res) {
+                        if (res.success) {
+                            Swal.fire({
+                                title: "Success",
+                                text: res.message,
+                                icon: "success"
+                            });
+                            $('#modalListPesertaKelompok').modal('hide');
+                        } else {
+                            Swal.fire({
+                                title: "Warning",
+                                text: res.message,
+                                icon: "error"
+                            });
+                        }
+                    }
+                })
+            }
+        });
+    })
 })

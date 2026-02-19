@@ -66,7 +66,6 @@ require '../../controller/view.php';
                                         Data Kegiatan Kelompok
                                     </h4>
                                     <p class="text-muted mb-0">
-                                        <!-- Data Kegiatan Kelompok -->
                                     </p>
                                 </div>
                                 <div class="col-md-6">
@@ -189,7 +188,6 @@ require '../../controller/view.php';
             </div>
         </div>
     </div>
-
     <div class="modal fade" id="modalAddPesertaKelompok" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
