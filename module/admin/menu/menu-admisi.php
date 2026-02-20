@@ -124,5 +124,12 @@
               <span class="hide-menu">Kegiatan</span>
            </a>
         </li>
+        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'mcu') {echo 'active';} ?>"
+              href="module/admisi/listmcu"
+              aria-expanded="false">
+              <iconify-icon icon="material-symbols:pulse-alert-outline"></iconify-icon>
+              <span class="hide-menu">MCU</span>
+           </a>
+        </li>
      </ul>
   </nav>

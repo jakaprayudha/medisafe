@@ -70,7 +70,7 @@ $(function () {
                             Swal.fire({
                                 title: "Warning",
                                 text: res.message,
-                                icon: "success"
+                                icon: "error"
                             });
                         }
                     }
