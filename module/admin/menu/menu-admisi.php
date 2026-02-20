@@ -117,10 +117,6 @@
               <span class="hide-menu">Cari Rujukan</span>
            </a>
         </li>
-        <li class="nav-small-cap">
-           <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
-           <span class="hide-menu">Kegiatan Kelompok (Pcare)</span>
-        </li>
         <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Kegiatan Kelompok') {echo 'active';} ?>"
               href="module/admisi/addkegiatankelompok"
               aria-expanded="false">

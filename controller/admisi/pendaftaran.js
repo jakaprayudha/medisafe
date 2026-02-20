@@ -180,7 +180,7 @@ $(function () {
                         confirmButtonText: 'Ok'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            location.reload();
+                            window.location.assign("module/admisi/listpasiendaftar.php");
                         }
                     })
                 } else {

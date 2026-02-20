@@ -7,8 +7,8 @@ $response = [
         "message" => "CREATED"
     ],
     "response" => [
-        "field"=> "noKunjungan",
-	    "message"=> "0114U1630316Y000001"
+        "field"=> "kdMCU",
+	    "message"=> "33"
     ]
 ];
 

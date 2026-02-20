@@ -56,7 +56,7 @@ require '../../controller/view.php';
                                             <input type="text"
                                                 id="nomor"
                                                 class="form-control"
-                                                placeholder="Contoh: 000***" value="0032B0370226Y000001">
+                                                placeholder="Contoh: 000***">
                                         </div>
                                         <div class="col-md-2">
                                             <button type="button"

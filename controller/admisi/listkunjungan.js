@@ -78,6 +78,11 @@ $(function () {
             }
         });
     })
+    $(document).on('click', '.btn-mcu', function () {
+        const data = $(this).data('item');
+        sessionStorage.setItem('dataKunjungan', JSON.stringify(data));
+        window.location.href = 'module/admisi/formmcu.php';
+    })
     function loadTable() {
         const noKartu = $('#noKartuSearch').val();
         const btn = $('#btnCariPasien');
@@ -94,37 +99,67 @@ $(function () {
             success: function (res) {
                 let data = Array.isArray(res.list) ? res.list : [res.list];
                 let tbody = $('#datapasien tbody');
+
                 tbody.empty();
+
                 if (!data || data.length === 0) {
                     tbody.append(`
-                    <tr>
-                        <td colspan="6" class="text-center text-muted">
-                            Data tidak ditemukan
-                        </td>
-                    </tr>
-                `);
+            <tr>
+                <td colspan="6" class="text-center text-muted">
+                    Data tidak ditemukan
+                </td>
+            </tr>
+        `);
                     return;
                 }
+
                 $.each(data, function (index, item) {
                     let row = `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${item.noKunjungan}</td>
-                            <td>${item.tglDaftar}</td>
-                            <td>${item.patient_name}</td>
-                            <td>${item.nmPoli}</td>
-                            <td>
-                                <button class="btn btn-sm btn-secondary btn-edit" data-item='${JSON.stringify(item)}'>
-                                    <i class="bi bi-pencil-square"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger btn-delete" data-nokunjung="${item.noKunjungan}" data-tgl="${item.tglDaftar}" data-poli="${item.kdPoli}" data-kartu="${item.noKartu}"}>
-                                    <i class="bi bi-file-earmark-x"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
+            <tr>
+                <td>${index + 1}</td>
+                <td>${item.noKunjungan}</td>
+                <td>${item.tglDaftar}</td>
+                <td>${item.patient_name}</td>
+                <td>${item.nmPoli}</td>
+                <td class="text-center">
+                    <button
+                        type="button"
+                        class="btn btn-secondary btn-edit"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="left"
+                        title="Edit data"
+                        data-item='${JSON.stringify(item)}'>
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-danger btn-delete"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="Hapus Kunjungan"
+                        data-nokunjung="${item.noKunjungan}"
+                        data-tgl="${item.tglDaftar}"
+                        data-poli="${item.kdPoli}"
+                        data-kartu="${item.noKartu}">
+                        <i class="bi bi-file-earmark-x"></i>
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-primary btn-mcu"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="right"
+                        title="MCU"
+                        data-item='${JSON.stringify(item)}'>
+                        <i class="bi bi-heart-pulse"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
                     tbody.append(row);
                 });
+                $('[data-bs-toggle="tooltip"]').tooltip();
             },
             complete: function () {
                 APP.load_btn_non(btn, `<i class="bi bi-search me-1"></i> Cari`);
