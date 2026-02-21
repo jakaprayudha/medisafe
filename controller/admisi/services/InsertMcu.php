@@ -77,8 +77,14 @@ $payload = [
     "pemeriksaanLain" => $pemeriksaanLain,
     "keterangan" => $keterangan
 ];
+$statusEdit = false;
+$method = "POST";
+if ($kdMCU > 0) {
+    $statusEdit = true;
+    $method = "PUT";
+}
 // echo json_encode($payload, JSON_PRETTY_PRINT);die();
-$result = bpjsPost('/MCU', $payload);
+$result = bpjsPost('/MCU', $payload, $method);
 // $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
 if ($result['code'] != '200') {
     $msg = $result['message'];
@@ -90,78 +96,161 @@ if ($result['code'] != '200') {
         'message' => $msg,
     ];
 } else {
-    $kdMCU = $result['data']['message'];
-    $stmt = $koneksi->prepare("INSERT INTO pcare_mcu (
-    kdMCU, noKunjungan, kdProvider, tglPelayanan,
-    tekananDarahSistole, tekananDarahDiastole,
-    radiologiFoto,
-    darahRutinHemo, darahRutinLeu, darahRutinErit,
-    darahRutinLaju, darahRutinHema, darahRutinTrom,
-    lemakDarahHDL, lemakDarahLDL, lemakDarahChol, lemakDarahTrigli,
-    gulaDarahSewaktu, gulaDarahPuasa, gulaDarahPostPrandial, gulaDarahHbA1c,
-    fungsiHatiSGOT, fungsiHatiSGPT, fungsiHatiGamma, fungsiHatiProtKual, fungsiHatiAlbumin,
-    fungsiGinjalCrea, fungsiGinjalUreum, fungsiGinjalAsam,
-    fungsiJantungABI, fungsiJantungEKG, fungsiJantungEcho,
-    funduskopi, pemeriksaanLain, keterangan
-) VALUES (
-    ?,?,?,?,?,
-    ?,?,?,?,?,
-    ?,?,?,?,?,
-    ?,?,?,?,?,
-    ?,?,?,?,?,
-    ?,?,?,?,?,
-    ?,?,?,?,?    
-)");
-    $stmt->bind_param(
-        "sssssssssssssssssssssssssssssssssss",
-        $kdMCU,
-        $noKunjungan,
-        $kdProvider,
-        $DBtglPelayanan,
-        $tekananDarahSistole,
-        $tekananDarahDiastole,
-        $radiologiFoto,
-        $darahRutinHemo,
-        $darahRutinLeu,
-        $darahRutinErit,
-        $darahRutinLaju,
-        $darahRutinHema,
-        $darahRutinTrom,
-        $lemakDarahHDL,
-        $lemakDarahLDL,
-        $lemakDarahChol,
-        $lemakDarahTrigli,
-        $gulaDarahSewaktu,
-        $gulaDarahPuasa,
-        $gulaDarahPostPrandial,
-        $gulaDarahHbA1c,
-        $fungsiHatiSGOT,
-        $fungsiHatiSGPT,
-        $fungsiHatiGamma,
-        $fungsiHatiProtKual,
-        $fungsiHatiAlbumin,
-        $fungsiGinjalCrea,
-        $fungsiGinjalUreum,
-        $fungsiGinjalAsam,
-        $fungsiJantungABI,
-        $fungsiJantungEKG,
-        $fungsiJantungEcho,
-        $funduskopi,
-        $pemeriksaanLain,
-        $keterangan
-    );
-    $hasil = $stmt->execute();
+    if ($statusEdit) {
+        $message = "Medical Check Up Berhasil Update";
+        $stmt = $koneksi->prepare("UPDATE pcare_mcu SET
+        noKunjungan             = ?,
+        kdProvider              = ?,
+        tglPelayanan            = ?,
+        tekananDarahSistole     = ?,
+        tekananDarahDiastole    = ?,
+        radiologiFoto           = ?,
+        darahRutinHemo          = ?,
+        darahRutinLeu           = ?,
+        darahRutinErit          = ?,
+        darahRutinLaju          = ?,
+        darahRutinHema          = ?,
+        darahRutinTrom          = ?,
+        lemakDarahHDL           = ?,
+        lemakDarahLDL           = ?,
+        lemakDarahChol          = ?,
+        lemakDarahTrigli        = ?,
+        gulaDarahSewaktu        = ?,
+        gulaDarahPuasa          = ?,
+        gulaDarahPostPrandial   = ?,
+        gulaDarahHbA1c          = ?,
+        fungsiHatiSGOT          = ?,
+        fungsiHatiSGPT          = ?,
+        fungsiHatiGamma         = ?,
+        fungsiHatiProtKual      = ?,
+        fungsiHatiAlbumin       = ?,
+        fungsiGinjalCrea        = ?,
+        fungsiGinjalUreum       = ?,
+        fungsiGinjalAsam        = ?,
+        fungsiJantungABI        = ?,
+        fungsiJantungEKG        = ?,
+        fungsiJantungEcho       = ?,
+        funduskopi              = ?,
+        pemeriksaanLain         = ?,
+        keterangan              = ?,
+        updated_at              = NOW()
+            WHERE kdMCU = ?
+        ");
+        $stmt->bind_param(
+            "ssssssssssssssssssssssssssssssssssi",
+            $noKunjungan,
+            $kdProvider,
+            $DBtglPelayanan,
+            $tekananDarahSistole,
+            $tekananDarahDiastole,
+            $radiologiFoto,
+            $darahRutinHemo,
+            $darahRutinLeu,
+            $darahRutinErit,
+            $darahRutinLaju,
+            $darahRutinHema,
+            $darahRutinTrom,
+            $lemakDarahHDL,
+            $lemakDarahLDL,
+            $lemakDarahChol,
+            $lemakDarahTrigli,
+            $gulaDarahSewaktu,
+            $gulaDarahPuasa,
+            $gulaDarahPostPrandial,
+            $gulaDarahHbA1c,
+            $fungsiHatiSGOT,
+            $fungsiHatiSGPT,
+            $fungsiHatiGamma,
+            $fungsiHatiProtKual,
+            $fungsiHatiAlbumin,
+            $fungsiGinjalCrea,
+            $fungsiGinjalUreum,
+            $fungsiGinjalAsam,
+            $fungsiJantungABI,
+            $fungsiJantungEKG,
+            $fungsiJantungEcho,
+            $funduskopi,
+            $pemeriksaanLain,
+            $keterangan,
+            $kdMCU
+        );
+        $hasil = $stmt->execute();
+    } else {
+        $message = "Medical Check Up Berhasil Dibuat";
+        $kdMCU = $result['data']['message'];
+        $stmt = $koneksi->prepare("INSERT INTO pcare_mcu (
+            kdMCU, noKunjungan, kdProvider, tglPelayanan,
+            tekananDarahSistole, tekananDarahDiastole,
+            radiologiFoto,
+            darahRutinHemo, darahRutinLeu, darahRutinErit,
+            darahRutinLaju, darahRutinHema, darahRutinTrom,
+            lemakDarahHDL, lemakDarahLDL, lemakDarahChol, lemakDarahTrigli,
+            gulaDarahSewaktu, gulaDarahPuasa, gulaDarahPostPrandial, gulaDarahHbA1c,
+            fungsiHatiSGOT, fungsiHatiSGPT, fungsiHatiGamma, fungsiHatiProtKual, fungsiHatiAlbumin,
+            fungsiGinjalCrea, fungsiGinjalUreum, fungsiGinjalAsam,
+            fungsiJantungABI, fungsiJantungEKG, fungsiJantungEcho,
+            funduskopi, pemeriksaanLain, keterangan
+        ) VALUES (
+            ?,?,?,?,?,
+            ?,?,?,?,?,
+            ?,?,?,?,?,
+            ?,?,?,?,?,
+            ?,?,?,?,?,
+            ?,?,?,?,?,
+            ?,?,?,?,?    
+        )");
+        $stmt->bind_param(
+            "sssssssssssssssssssssssssssssssssss",
+            $kdMCU,
+            $noKunjungan,
+            $kdProvider,
+            $DBtglPelayanan,
+            $tekananDarahSistole,
+            $tekananDarahDiastole,
+            $radiologiFoto,
+            $darahRutinHemo,
+            $darahRutinLeu,
+            $darahRutinErit,
+            $darahRutinLaju,
+            $darahRutinHema,
+            $darahRutinTrom,
+            $lemakDarahHDL,
+            $lemakDarahLDL,
+            $lemakDarahChol,
+            $lemakDarahTrigli,
+            $gulaDarahSewaktu,
+            $gulaDarahPuasa,
+            $gulaDarahPostPrandial,
+            $gulaDarahHbA1c,
+            $fungsiHatiSGOT,
+            $fungsiHatiSGPT,
+            $fungsiHatiGamma,
+            $fungsiHatiProtKual,
+            $fungsiHatiAlbumin,
+            $fungsiGinjalCrea,
+            $fungsiGinjalUreum,
+            $fungsiGinjalAsam,
+            $fungsiJantungABI,
+            $fungsiJantungEKG,
+            $fungsiJantungEcho,
+            $funduskopi,
+            $pemeriksaanLain,
+            $keterangan
+        );
+        $hasil = $stmt->execute();
+    }
+
     $stmt->close();
     if ($hasil) {
         $response = [
             'success'  => true,
-            'message'  => "Berhasil Membuat MCU",
+            'message'  => $message,
             'kodeMCU'  => $kdMCU
         ];
     } else {
         $response = [
             'success' => false,
-            'message' => "Gagal Membuat MCU",
+            'message' => "Gagal Proses Medical Check Up",
         ];
     }
 }

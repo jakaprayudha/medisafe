@@ -38,6 +38,9 @@ $(function () {
                             <button class="btn btn-sm btn-danger btn-batal" data-noknj="${row.noKunjungan}" data-nomcu="${row.kdMCU}">
                                 Hapus
                             </button>
+                            <button class="btn btn-sm btn-primary btn-edit" data-item="${JSON.stringify(data)}">
+                                Edit
+                            </button>
                         </div>`
                 }
             }
@@ -98,5 +101,13 @@ $(function () {
                 })
             }
         });
+    })
+    $(document).on('click', '.btn-edit', function () {
+        const rowData = $('#datamcu').DataTable()
+            .row($(this).closest('tr'))
+            .data();
+
+        sessionStorage.setItem('dataMcu', JSON.stringify(rowData));
+        window.location.href = 'module/admisi/formmcu.php';
     })
 })

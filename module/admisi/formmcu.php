@@ -117,7 +117,7 @@ date_default_timezone_set('Asia/Jakarta');
                         <input type="hidden" name="tglPelayanan">
                         <div class="col-12">
                             <div class="row">
-                                <div class="col-2">
+                                <div class="col-3">
                                     <div class="mcu-panel">
                                         <div class="mcu-panel-title">
                                             <i class="bi bi-activity"></i> Tekanan Darah
@@ -134,7 +134,7 @@ date_default_timezone_set('Asia/Jakarta');
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-10">
+                                <div class="col-9">
                                     <div class="mcu-panel">
                                         <div class="mcu-panel-title">
                                             <i class="bi bi-droplet"></i> Pemeriksaan Darah Rutin
@@ -311,7 +311,7 @@ date_default_timezone_set('Asia/Jakarta');
                                         <div class="mcu-panel-title">
                                             <i class="bi bi-search"></i> Pemeriksaan Lain
                                         </div>
-                                        <textarea name="pemeriksaanLain" rows="3" class="form-control"></textarea>
+                                        <textarea name="pemeriksaanLain" id="pemeriksaanLain" rows="3" class="form-control"></textarea>
                                     </div>
                                 </div>
                                 <div class="col-6">
@@ -319,7 +319,7 @@ date_default_timezone_set('Asia/Jakarta');
                                         <div class="mcu-panel-title">
                                             <i class="bi bi-chat-text"></i> Keterangan
                                         </div>
-                                        <textarea name="keterangan" rows="3" class="form-control"></textarea>
+                                        <textarea name="keterangan" id="keterangan" rows="3" class="form-control"></textarea>
                                     </div>
                                 </div>
                             </div>
