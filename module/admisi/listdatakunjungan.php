@@ -122,7 +122,7 @@ require '../../controller/view.php';
         </div>
     </div>
     <!-- List Tindakan -->
-    <div class="modal fade" id="modalTindakanList" tabindex="-1">
+    <div class="modal fade" id="modalTindakanList" tabindex="-1"  data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
@@ -151,7 +151,7 @@ require '../../controller/view.php';
     </div>
 
     <!-- Tambah Tindakan -->
-    <div class="modal fade" id="modalTambahTindakan" tabindex="-1">
+    <div class="modal fade" id="modalTambahTindakan" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-md modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -176,7 +176,7 @@ require '../../controller/view.php';
                         </div>
                         <div class="mb-2">
                             <label class="form-label">Keterangan</label>
-                            <textarea class="form-control" name="keterangan"></textarea>
+                            <textarea class="form-control" name="keterangan" id="keterangan"></textarea>
                         </div>
                         <div class="mb-2">
                             <label class="form-label">Hasil</label>

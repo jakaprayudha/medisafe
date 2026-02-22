@@ -109,8 +109,6 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp)
     }
 
     $code = (string) $json['metaData']['code'];
-
-    // ================= ERROR HANDLING =================
     if (!in_array($code, ["200", "201"])) {
 
         $errorMessage = 'Terjadi kesalahan';
@@ -145,7 +143,8 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp)
         return [
             'success' => false,
             'code'    => $code,
-            'message' => $errorMessage, // ⬅️ BUKAN dari metaData
+            'message' => $errorMessage,
+            'metadata' => $json['metaData']['message'],
             'data'    => null
         ];
     }
