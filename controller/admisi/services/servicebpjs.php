@@ -100,33 +100,22 @@ function bpjsDelete($endpoint)
     return bpjsDecryptResponse($response, $consid, $secretKey, $tStamp);
 }
 
-function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp)
+function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp, $decrypt = true)
 {
     $json = json_decode($response, true);
-
     if (!$json || !isset($json['metaData'])) {
         return bpjsError("Format response tidak valid");
     }
-
     $code = (string) $json['metaData']['code'];
     if (!in_array($code, ["200", "201"])) {
-
         $errorMessage = 'Terjadi kesalahan';
-
-        // 1️⃣ RESPONSE STRING
         if (isset($json['response']) && is_string($json['response'])) {
             $errorMessage = $json['response'];
-        }
-
-        // 2️⃣ RESPONSE ARRAY (BISA LEBIH DARI 1)
-        elseif (isset($json['response']) && is_array($json['response'])) {
-
+        } elseif (isset($json['response']) && is_array($json['response'])) {
             $messages = [];
-
             foreach ($json['response'] as $err) {
                 $field = $err['field'] ?? '';
                 $msg   = $err['message'] ?? 'Kesalahan tidak diketahui';
-
                 if ($field) {
                     $label = ucfirst(
                         preg_replace('/([a-z])([A-Z])/', '$1 $2', $field)
@@ -136,10 +125,8 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp)
                     $messages[] = $msg;
                 }
             }
-
             $errorMessage = implode("\n", $messages);
         }
-
         return [
             'success' => false,
             'code'    => $code,
@@ -148,22 +135,29 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp)
             'data'    => null
         ];
     }
-
-    // ================= SUCCESS =================
     $key = $consid . $secretKey . $tStamp;
-
-    $decrypted = stringDecrypt($key, $json['response']);
-    $decompressed = \LZCompressor\LZString::decompressFromEncodedURIComponent($decrypted);
-
+    $rawResponse = $json['response'];
+    $data = null;
+    if (is_string($rawResponse)) {
+        if (strlen($rawResponse) > 100) {
+            $decrypted = stringDecrypt($key, $rawResponse);
+            $decompressed = \LZCompressor\LZString::decompressFromEncodedURIComponent($decrypted);
+            $data = json_decode($decompressed, true);
+        } else {
+            $data = json_decode($rawResponse, true);
+        }
+    } elseif (is_array($rawResponse)) {
+        $data = $rawResponse;
+    } else {
+        $data = $rawResponse;
+    }
     return [
         'success' => true,
         'code'    => '200',
         'message' => 'OK',
-        'data'    => json_decode($decompressed, true)
+        'data'    => $data
     ];
 }
-
-
 
 function stringDecrypt($key, $dtdecrypt)
 {
