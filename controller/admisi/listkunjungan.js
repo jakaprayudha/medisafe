@@ -425,4 +425,201 @@ $(function () {
         };
         $('#modalTambahTindakan').modal('show');
     })
+    $(document).on('click', '.btn-obat', function () {
+        const btn = $(this);
+        noKnjtindakan = btn.data('nokunjung');
+        $('#modalListObat').modal('show');
+    })
+    $('#modalListObat').on('shown.bs.modal', function () {
+        if (!$.fn.DataTable.isDataTable('#tableListObat')) {
+            tableObat = $('#tableListObat').DataTable({
+                processing: true,
+                ajax: {
+                    url: 'controller/admisi/services/getDataObat.php',
+                    type: 'GET',
+                    data: function (d) {
+                        d.no_kunjungan = noKnjtindakan;
+                    },
+                    dataSrc: ''
+                },
+                columns: [
+                    { data: 'nmObat' },
+                    {
+                        data: null,
+                        title: 'Signa',
+                        render: function (data, type, row) {
+                            return row.signa1 + " x " + row.signa2;
+                        }
+                    },
+                    { data: 'jmlObat' },
+                    { data: 'jmlPermintaan' },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: 'text-center',
+                        render: function (data) {
+                            return `
+                            <button class="btn btn-sm btn-danger btn-hapus-obat"
+                                data-kdobat="${data.kdObatSK}"
+                                data-nomor="${data.noKunjungan}"
+                                data-nama="${data.nmObat}">
+                                Hapus
+                            </button>
+                        `;
+                        }
+                    }
+                ],
+                pageLength: 10,
+                language: {
+                    search: "Pencarian:",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    zeroRecords: "Data Obat tidak ditemukan",
+                    infoEmpty: "Tidak ada data tersedia"
+                }
+            });
+        } else {
+            tableObat.ajax.reload();
+        }
+    });
+    $('#btnTambahObat').on('click', function () {
+        APP.addValueInput('#noKunjunganobat', noKnjtindakan);
+        $('#modalTambahObat').modal('show');
+    })
+    $('#btnSimpanObat').on('click', function () {
+        let data = $('#formTambahObat').serialize();
+        const btn = $(this);
+        $.ajax({
+            url: "controller/admisi/services/insertObat.php",
+            type: "POST",
+            data: data,
+            dataType: 'json',
+            beforeSend: function () {
+                APP.load_btn_aktif(btn);
+            },
+            complete: function () {
+                APP.load_btn_non(btn, 'Simpan');
+            },
+            success: function (res) {
+                if (res.success) {
+                    Swal.fire({
+                        title: "Success",
+                        text: res.message,
+                        icon: "success"
+                    }).then(() => {
+                        $('#modalTambahObat').modal('hide');
+                        if ($.fn.DataTable.isDataTable('#tableListObat')) {
+                            tableObat.ajax.reload(null, false);
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        title: "Warning",
+                        text: res.message,
+                        icon: "error",
+                    });
+                }
+            }
+        })
+    })
+    $('#kdObat').select2({
+        dropdownParent: $('#modalTambahObat'),
+        placeholder: 'Cari obat...',
+        minimumInputLength: 3,
+        language: {
+            inputTooShort: function (args) {
+                const sisa = args.minimum - args.input.length;
+                return 'Ketik minimal ' + args.minimum + ' karakter (' + sisa + ' lagi)';
+            },
+            searching: function () {
+                return 'Sedang mencari obat...';
+            },
+            noResults: function () {
+                return 'Obat tidak ditemukan';
+            }
+        },
+        ajax: {
+            url: 'controller/admisi/services/getObat.php',
+            dataType: 'json',
+            delay: 300,
+            data: function (params) {
+                return {
+                    keyword: params.term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.data.map(item => ({
+                        id: item.kdObat,
+                        text: item.nmObat,
+                        nmObat: item.nmObat
+                    }))
+                };
+            },
+            cache: true
+        }
+    });
+    $('#kdObat').on('select2:select', function (e) {
+        const data = e.params.data;
+        $('input[name="nmObat"]').val(data.nmObat);
+    });
+    $('#kdObat').on('select2:open', function () {
+        setTimeout(function () {
+            document.querySelector('.select2-container--open .select2-search__field')?.focus();
+        }, 0);
+    });
+    $('#modalTambahObat').on('hidden.bs.modal', function () {
+        $('#formTambahObat')[0].reset();
+        $('#kdObat').val(null).trigger('change');
+        $('input[name="nmObat"]').val('');
+        $('input[name="kdObatSK"]').val(0);
+    });
+    $(document).on('click', '.btn-hapus-obat', function () {
+        const btn = $(this);
+        const id = btn.data('kdobat');
+        const nomor = btn.data('nomor');
+        const nama = btn.data('nama');
+        Swal.fire({
+            title: "Apakah Kamu Yakin?",
+            text: "Menghapus Obat " + nama + "?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Ya, Hapus",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "controller/admisi/services/deleteObat.php",
+                    type: "POST",
+                    dataType: "json",
+                    data: { no: nomor, kode: id },
+                    beforeSend: function () {
+                        APP.load_btn_aktif(btn);
+                    },
+                    complete: function () {
+                        APP.load_btn_non(btn, "Hapus");
+                    },
+                    success: function (res) {
+                        if (res.success) {
+                            Swal.fire({
+                                title: "Sucess",
+                                text: res.message,
+                                icon: "success",
+                            });
+                            if ($.fn.DataTable.isDataTable('#tableListObat')) {
+                                tableObat.ajax.reload(null, false);
+                            }
+                        } else {
+                            Swal.fire({
+                                title: "Warning",
+                                text: res.message,
+                                icon: "error",
+                            });
+                        }
+                    },
+                });
+            }
+        });
+    })
 });

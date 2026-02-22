@@ -122,7 +122,7 @@ require '../../controller/view.php';
         </div>
     </div>
     <!-- List Tindakan -->
-    <div class="modal fade" id="modalTindakanList" tabindex="-1"  data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade" id="modalTindakanList" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
@@ -191,6 +191,137 @@ require '../../controller/view.php';
             </div>
         </div>
     </div>
+
+    <!-- List Obat -->
+    <div class="modal fade" id="modalListObat" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Daftar Obat</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-end mb-2">
+                        <button class="btn btn-primary btn-sm" id="btnTambahObat">
+                            + Tambah Obat
+                        </button>
+                    </div>
+                    <table id="tableListObat" class="table table-striped table-bordered w-100">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Nama Obat</th>
+                                <th>Signa</th>
+                                <th>Jumlah</th>
+                                <th>Jumlah Permintaan</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Obat -->
+    <div class="modal fade" id="modalTambahObat" tabindex="-1"
+        data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-semibold">Tambah Obat</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formTambahObat">
+                        <input type="hidden" name="kdObatSK">
+                        <input type="hidden" name="kdRacikan">
+                        <input type="hidden" name="nmObat">
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold">No Kunjungan</label>
+                            <input type="text" class="form-control"
+                                name="noKunjungan" id="noKunjunganobat" readonly>
+                        </div>
+                        <div class="d-flex gap-4 mb-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox"
+                                    name="racikan" id="racikan">
+                                <label class="form-check-label">Obat Racikan</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox"
+                                    name="obatDPHO" id="obatDPHO" checked>
+                                <label class="form-check-label">Obat DPHO</label>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold">Obat</label>
+                            <select class="form-select"
+                                name="kdObat" id="kdObat" style="width:100%"></select>
+                            <small class="text-muted fst-italic">
+                                Ketik minimal 3 karakter untuk mencari obat
+                            </small>
+                        </div>
+                        <div class="border rounded p-2 mb-2 bg-light">
+                            <label class="form-label fw-semibold mb-1">
+                                Aturan Pakai (Signa)
+                            </label>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="input-group input-group-sm"
+                                    style="max-width:140px">
+                                    <input type="number"
+                                        class="form-control text-center"
+                                        name="signa1" min="1">
+                                    <span class="input-group-text">×</span>
+                                </div>
+                                <span class="text-muted small">per hari, tiap</span>
+                                <div class="input-group input-group-sm"
+                                    style="max-width:140px">
+                                    <input type="number"
+                                        class="form-control text-center"
+                                        name="signa2" min="1">
+                                    <span class="input-group-text">tablet</span>
+                                </div>
+                            </div>
+                            <small class="text-primary fw-semibold" id="previewSigna"></small>
+                            <small class="text-muted fst-italic d-block">
+                                Contoh: 3 × 1 = 3 kali sehari, 1 tablet tiap minum
+                            </small>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-2">
+                                <label class="form-label fw-semibold">Jumlah Obat</label>
+                                <input type="number" class="form-control"
+                                    name="jmlObat" min="1">
+                            </div>
+                            <div class="col-6 mb-2">
+                                <label class="form-label fw-semibold">Jumlah Permintaan</label>
+                                <input type="number" class="form-control"
+                                    name="jmlPermintaan" min="1">
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold">
+                                Nama Obat Non DPHO
+                            </label>
+                            <input type="text" class="form-control"
+                                name="nmObatNonDPHO"
+                                placeholder="Isi jika non DPHO / racikan">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">
+                        Batal
+                    </button>
+                    <button class="btn btn-success" id="btnSimpanObat">
+                        Simpan
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
 
 
     <?php
