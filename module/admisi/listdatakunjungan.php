@@ -121,6 +121,77 @@ require '../../controller/view.php';
             </div>
         </div>
     </div>
+    <!-- List Tindakan -->
+    <div class="modal fade" id="modalTindakanList" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Daftar Tindakan</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-end mb-2">
+                        <button class="btn btn-primary btn-sm" id="btnTambahTindakan">
+                            + Tambah Tindakan
+                        </button>
+                    </div>
+                    <table id="tableTindakan" class="table table-striped table-bordered w-100">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Tindakan</th>
+                                <th>Keterangan</th>
+                                <th>Hasil</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tambah Tindakan -->
+    <div class="modal fade" id="modalTambahTindakan" tabindex="-1">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tambah Tindakan</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formTambahTindakan">
+                        <input type="hidden" name="kdTindakanSK" value="0">
+                        <div class="mb-2">
+                            <label class="form-label">No Kunjungan</label>
+                            <input type="text" class="form-control" name="noKunjungan" id="noKunjungan" readonly>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Tindakan</label>
+                            <select class="form-select" name="kdTindakan" id="kdTindakan" required></select>
+                            <input type="hidden" name="nmTindakan">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Biaya</label>
+                            <input type="text" class="form-control" name="biaya" readonly>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Keterangan</label>
+                            <textarea class="form-control" name="keterangan"></textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Hasil</label>
+                            <input type="text" class="form-control" name="hasil" placeholder="Isi hasil disini...">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button class="btn btn-success" id="btnSimpanTindakan">Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <?php
     require '../admin/library.php';

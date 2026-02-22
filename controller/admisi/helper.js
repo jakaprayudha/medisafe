@@ -179,3 +179,10 @@ APP.openModal = function (id) {
     const modal = new bootstrap.Modal(id);
     modal.show();
 }
+APP.formatRupiah = function (angka) {
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0
+    }).format(angka);
+}
