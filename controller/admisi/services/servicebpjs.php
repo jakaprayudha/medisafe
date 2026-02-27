@@ -159,6 +159,52 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp, $decrypt =
     ];
 }
 
+// function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp)
+// {
+//     $json = json_decode($response, true);
+//     if (!$json || !isset($json['metaData'])) {
+//         return bpjsError("Format response tidak valid");
+//     }
+//     $code = (string) $json['metaData']['code'];
+//     if (!in_array($code, ["200", "201"])) {
+//         $errorMessage = 'Terjadi kesalahan';
+//         if (isset($json['response']) && is_string($json['response'])) {
+//             $errorMessage = $json['response'];
+//         }
+//         elseif (isset($json['response']) && is_array($json['response'])) {
+//             $messages = [];
+//             foreach ($json['response'] as $err) {
+//                 $field = $err['field'] ?? '';
+//                 $msg   = $err['message'] ?? 'Kesalahan tidak diketahui';
+//                 if ($field) {
+//                     $label = ucfirst(
+//                         preg_replace('/([a-z])([A-Z])/', '$1 $2', $field)
+//                     );
+//                     $messages[] = "{$label}: {$msg}";
+//                 } else {
+//                     $messages[] = $msg;
+//                 }
+//             }
+//             $errorMessage = implode("\n", $messages);
+//         }
+//         return [
+//             'success' => false,
+//             'code'    => $code,
+//             'message' => $errorMessage,
+//             'data'    => null
+//         ];
+//     }
+//     $key = $consid . $secretKey . $tStamp;
+//     $decrypted = stringDecrypt($key, $json['response']);
+//     $decompressed = \LZCompressor\LZString::decompressFromEncodedURIComponent($decrypted);
+//     return [
+//         'success' => true,
+//         'code'    => '200',
+//         'message' => 'OK',
+//         'data'    => json_decode($decompressed, true)
+//     ];
+// }
+
 function stringDecrypt($key, $dtdecrypt)
 {
     $encrypt_method = 'AES-256-CBC';

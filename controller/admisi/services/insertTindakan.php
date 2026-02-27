@@ -27,10 +27,14 @@ if ($kdTindakanSK > 0) {
 }
 // echo json_encode($payload, JSON_PRETTY_PRINT);die();
 $result = bpjsPost('/tindakan', $payload, $method);
+// echo json_encode($result, JSON_PRETTY_PRINT);die();
 if ($result['code'] != '200') {
     $msg = $result['metadata'];
     if ($msg == null) {
         $msg = "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
+    }
+    if($result['code'] == "428"){
+        $msg = "Tindakan yang sama tidak diperbolehkan pada kunjungan yang sama";
     }
     $response = [
         'success' => false,
@@ -48,7 +52,7 @@ if ($result['code'] != '200') {
         $message = "Berhasil Membuat Tindakan";
         $kdTindakanSKBaru = $result['data']['message'];
         $stmt = $koneksi->prepare("INSERT INTO pcare_tindakan(kdTindakanSK, noKunjungan, kdTindakan, nmTindakan, biaya, keterangan, hasil)VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssssss", $kdTkdTindakanSKBaruindakanSK, $noKunjungan, $kdTindakan, $nmtindakan, $biaya, $keterangan, $hasil);
+        $stmt->bind_param("sssssss", $kdTindakanSKBaru, $noKunjungan, $kdTindakan, $nmtindakan, $biaya, $keterangan, $hasil);
         $hasil = $stmt->execute();
         $stmt->close();
     }
@@ -56,7 +60,8 @@ if ($result['code'] != '200') {
         $response = [
             'success'  => true,
             'message'  => $message,
-            'kode' => $kdTindakanSKBaru
+            'kode' => $kdTindakanSKBaru,
+            'result' => $result
         ];
     } else {
         $response = [
