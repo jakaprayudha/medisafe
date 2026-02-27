@@ -104,7 +104,7 @@ APP.ambil_data = async function (id, url, nama, kode, status) {
         $(id).html('<option>Error loading data</option>');
     }
 };
-APP.initDiagnosa = function (selector, hiddenNameSelector) {
+APP.initDiagnosa = function (selector, hiddenNameSelector, idkdspesialis) {
     $(selector).select2({
         placeholder: "Ketik Diagnosa...",
         width: "100%",
@@ -122,7 +122,8 @@ APP.initDiagnosa = function (selector, hiddenNameSelector) {
                     results: items.map(item => ({
                         id: item.kdDiag,
                         text: item.nmDiag,
-                        nmDiag: item.nmDiag
+                        nmDiag: item.nmDiag,
+                        idspesialis: item.nonSpesialis
                     })),
                 };
             },
@@ -147,9 +148,20 @@ APP.initDiagnosa = function (selector, hiddenNameSelector) {
     $(selector).on('select2:select', function (e) {
         let data = e.params.data;
         $(hiddenNameSelector).val(data.text);
+        $(idkdspesialis).val(data.idspesialis);
+        console.log($('#kdStatusPulang').val() + data.idspesialis);
+        if (data.idspesialis == true && $('#kdStatusPulang').val() == '4') {
+            $('#formTacc').removeClass('d-none');
+            // console.log('tacc');
+        } else {
+            $('#formTacc').addClass('d-none');
+            // console.log('non tacc');
+        }
     });
     $(selector).on('select2:clear', function () {
         $(hiddenNameSelector).val('');
+        $(idkdspesialis).val('');
+        $('#formTacc').addClass('d-none');
     });
 }
 APP.hideSmoot = function (selector, duration = 300) {

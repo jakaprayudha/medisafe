@@ -206,6 +206,7 @@ date_default_timezone_set('Asia/Jakarta');
                                                     </label>
                                                     <select id="diag1" name="diag1" class="form-select" required></select>
                                                     <input type="hidden" id="nmDiag1" name="nmDiag1">
+                                                    <input type="hidden" id="kdnonSpesialis1">
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="form-label">
@@ -213,6 +214,7 @@ date_default_timezone_set('Asia/Jakarta');
                                                     </label>
                                                     <select id="diag2" name="diag2" class="form-select"></select>
                                                     <input type="hidden" id="nmDiag2" name="nmDiag2">
+                                                    <input type="hidden" id="kdnonSpesialis2">
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="form-label">
@@ -220,6 +222,7 @@ date_default_timezone_set('Asia/Jakarta');
                                                     </label>
                                                     <select id="diag3" name="diag3" class="form-select"></select>
                                                     <input type="hidden" id="nmDiag3" name="nmDiag3">
+                                                    <input type="hidden" id="kdnonSpesialis3">
                                                 </div>
                                             </div>
                                         </div>
@@ -499,7 +502,7 @@ date_default_timezone_set('Asia/Jakarta');
                                         <div class="col-10">
                                             <div class="row g-2">
                                                 <div class="col-md-6">
-                                                    <input type="radio" class="btn-check" name="kdStatusPulang"
+                                                    <input type="radio" class="btn-check" name="kdStatusRujuk"
                                                         id="rujukSpesialis" value="SP" required>
                                                     <label class="btn btn-outline-primary w-100 text-start p-3"
                                                         for="rujukSpesialis">
@@ -510,7 +513,7 @@ date_default_timezone_set('Asia/Jakarta');
                                                     </label>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <input type="radio" class="btn-check" name="kdStatusPulang"
+                                                    <input type="radio" class="btn-check" name="kdStatusRujuk"
                                                         id="rujukKhusus" value="KH" required>
                                                     <label class="btn btn-outline-success w-100 text-start p-3"
                                                         for="rujukKhusus">
@@ -538,6 +541,9 @@ date_default_timezone_set('Asia/Jakarta');
                                             </label>
                                         </div>
                                         <div class="col-5">
+                                            <label for="kdKategori" class="form-label fw-semibold">
+                                                Spesialis
+                                            </label>
                                             <select class="form-select"
                                                 id="kdKategori"
                                                 name="kdKategori"
@@ -545,18 +551,36 @@ date_default_timezone_set('Asia/Jakarta');
                                             </select>
                                         </div>
                                         <div class="col-2 d-none" id="subspesialis">
+                                            <label for="kdKategori" class="form-label fw-semibold">
+                                                Sub Spesialis
+                                            </label>
                                             <select class="form-select"
                                                 id="kdsubspesialis"
                                                 name="kdSubSpesialis1">
                                             </select>
                                         </div>
                                         <div class="col-3 d-none" id="sarana">
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input"
+                                                    type="checkbox"
+                                                    id="useSarana"
+                                                    value="1">
+                                                <label class="form-check-label fw-semibold" for="useSarana">
+                                                    Sarana
+                                                </label>
+                                            </div>
                                             <select class="form-select"
-                                                id="kdSarana"
-                                                name="kdSarana">
+                                                id="kdSarana">
                                             </select>
+                                            <input type="hidden"
+                                                name="kdSarana"
+                                                id="kdSaranaHidden"
+                                                value="9">
                                         </div>
                                         <div class="col-5">
+                                            <label for="kdKategori" class="form-label fw-semibold">
+                                                Tgl Kunjung
+                                            </label>
                                             <div class="input-group">
                                                 <input type="date"
                                                     class="form-control"
@@ -595,6 +619,52 @@ date_default_timezone_set('Asia/Jakarta');
                                                 <input type="text" id="nmfaskes" name="nmfaskes" class="form-control" readonly>
                                                 <input type="hidden" name="kdppk" id="kdfaskes">
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 d-none" id="formTacc">
+                                    <div class="row mb-3">
+                                        <div class="col-2">
+                                            <label for="kdKategori" class="col-form-label">
+                                                TACC <span class="text-danger">*</span>
+                                            </label>
+                                        </div>
+                                        <div class="col-3">
+                                            <label for="kdTacc" class="form-label fw-semibold">
+                                                TACC
+                                            </label>
+                                            <select class="form-select" id="kdTacc" name="kdTacc">
+                                                <option value="0">- Pilih -</option>
+                                                <option value="-1">Tanpa TACC</option>
+                                                <option value="1">Time</option>
+                                                <option value="2">Age</option>
+                                                <option value="3">Complication</option>
+                                                <option value="4">Comorbidity</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-7">
+                                            <label for="alasanTacc" class="form-label fw-semibold">
+                                                Alasan
+                                            </label>
+                                            <input type="text" class="form-control"
+                                                id="alasanTacc"
+                                                name="alasanTacc">
+                                            </input>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 d-none" id="noLaporanPolisi">
+                                    <div class="row mb-3">
+                                        <div class="col-2">
+                                            <label for="kdKategori" class="col-form-label">
+                                                Nomor LP <span class="text-danger">*</span>
+                                            </label>
+                                        </div>
+                                        <div class="col-10">
+                                            <input type="text" class="form-control" placeholder="Masukan Nomor Laporan Polisi Disini..."
+                                                id="nomorLp"
+                                                name="nomorLp">
+                                            </input>
                                         </div>
                                     </div>
                                 </div>

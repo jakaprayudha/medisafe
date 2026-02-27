@@ -192,8 +192,9 @@ $(function () {
                     let row = `
             <tr>
                 <td>${index + 1}</td>
-                <td>${item.noKunjungan}</td>
                 <td>${item.tglDaftar}</td>
+                <td>${item.noKunjungan}</td>
+                <td>${item.kdTkp == "10" ? 'Rawat Jalan' : item.kdTkp == '20' ? 'Rawat Inap' : 'Promotif Preventif'}</td>
                 <td>${item.patient_name}</td>
                 <td>${item.nmPoli}</td>
                 <td class="text-center">

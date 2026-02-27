@@ -104,6 +104,7 @@ require '../../controller/view.php';
                                             <th>No. Kartu</th>
                                             <th>Nama Pasien</th>
                                             <th>Poli</th>
+                                            <th>Jns Rawat</th>
                                             <th>Status</th>
                                             <th style="width:15%">Action</th>
                                         </tr>

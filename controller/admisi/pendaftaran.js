@@ -35,7 +35,7 @@ $(function () {
                     } else {
                         Swal.fire({
                             title: "Opss..",
-                            text: "Data Tidak Ditemukan",
+                            text: response.message,
                             icon: "error"
                         });
                     }
@@ -64,7 +64,7 @@ $(function () {
             dateFormat: "Y-m-d",
             altFormat: "F j, Y",
             defaultDate: "today",
-            minDate: "today"
+            maxDate: "today"
         });
         APP.updatePoliOptions = function (poliSakit) {
             poliSakit = (poliSakit === true || poliSakit === 'true');

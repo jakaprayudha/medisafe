@@ -19,14 +19,12 @@ $payload = [
     "hasil" => $hasil
 ];
 
-
 $statusEdit = false;
 $method = "POST";
 if ($kdTindakanSK > 0) {
     $statusEdit = true;
     $method = "PUT";
 }
-
 // echo json_encode($payload, JSON_PRETTY_PRINT);die();
 $result = bpjsPost('/tindakan', $payload, $method);
 if ($result['code'] != '200') {

@@ -14,7 +14,7 @@ $(function () {
                 text: "Kunjungan Sehat"
             }
         ]
-    })
+    }).prop('disabled', true);
     $('#rujukan').select2({
         width: "100%",
         allowClear: false,
@@ -32,6 +32,9 @@ $(function () {
                 text: "Promotif Preventif"
             }
         ]
+    }).prop('disabled', true);
+    $('#kdTacc').select2({
+        width: "100%",
     })
     $('#alergiMakan').select2({
         width: "100%",
@@ -179,17 +182,6 @@ $(function () {
             }
         ]
     })
-    flatpickr("#tglPulang", {
-        dateFormat: "Y-m-d",
-        altFormat: "F j, Y",
-        minDate: "today"
-    });
-    flatpickr("#tglRujukan", {
-        dateFormat: "Y-m-d",
-        altFormat: "F j, Y",
-        minDate: "today",
-        defaultDate: "today",
-    });
     let dataPasien = JSON.parse(sessionStorage.getItem('dataPasien'));
     console.log(dataPasien);
     let statusEdit = dataPasien?.noKunjungan != "" && dataPasien?.noKunjungan != null ? true : false;
@@ -206,8 +198,19 @@ $(function () {
     APP.addValueInput('#kode_poli', dataPasien.kdPoli);
     APP.addValueInput('#nama_poli', dataPasien.nmPoli);
     APP.addValueInput('#tglDaftar', dataPasien.tanggal_daftar);
-    $('#rujukan').val(dataPasien.kdTkp);
-    $('#kunjungan').val(dataPasien.kunjSakit);
+    $('#rujukan').val(dataPasien.kdTkp).trigger('change');
+    $('#kunjungan').val(dataPasien.kunjSakit).trigger('change');
+    flatpickr("#tglPulang", {
+        dateFormat: "Y-m-d",
+        altFormat: "F j, Y",
+        maxDate: "today",
+        minDate: statusEdit == true ? dataPasien.tglDaftar : dataPasien.tanggal_daftar
+    });
+    flatpickr("#tglRujukan", {
+        dateFormat: "Y-m-d",
+        altFormat: "F j, Y",
+        minDate: statusEdit == true ? dataPasien.tglDaftar : dataPasien.tanggal_daftar
+    });
     if (dataPasien.kdTkp == "20") {
         $('#formAnamnesa, #formalergi, #formpronosa, #formnonobat, #formbmhp').addClass('d-none');
     }
@@ -245,9 +248,9 @@ $(function () {
 
     //    }
     // })
-    APP.initDiagnosa('#diag1', '#nmDiag1');
-    APP.initDiagnosa('#diag2', '#nmDiag2');
-    APP.initDiagnosa('#diag3', '#nmDiag3');
+    APP.initDiagnosa('#diag1', '#nmDiag1', '#kdnonSpesialis1');
+    APP.initDiagnosa('#diag2', '#nmDiag2', '#kdnonSpesialis2');
+    APP.initDiagnosa('#diag3', '#nmDiag3', '#kdnonSpesialis3');
     async function loadFormData() {
         try {
             $('select').select2({
@@ -257,8 +260,10 @@ $(function () {
             await APP.ambil_data('#kdDokter', 'dokter/0/15', 'kdDokter', 'nmDokter', false);
             if (dataPasien.kdTkp == "20") {
                 await APP.ambil_data('#kdStatusPulang', 'statuspulang/rawatInap/true', 'kdStatusPulang', 'nmStatusPulang', true);
+                checkRujuk()
             } else {
                 await APP.ambil_data('#kdStatusPulang', 'statuspulang/rawatInap/false', 'kdStatusPulang', 'nmStatusPulang', true);
+                checkRujuk()
                 $('#kdPrognosa').val(dataPasien.kdPrognosa).trigger('change');
                 $('#alergiMakan').val("00").trigger('change');
                 $('#alergiUdara').val("00").trigger('change');
@@ -266,6 +271,7 @@ $(function () {
             }
             $('#kdSadar').val(dataPasien.kdSadar).trigger('change');
             $('#kdDokter').val(dataPasien.kdDokter).trigger('change');
+
             $('#kdStatusPulang').val(dataPasien.kdStatusPulang).trigger('change');
             // Testing Limit API Tester
             // APP.ambil_data('#kdStatusPulang', '/spesialis/sarana', 'kdSarana', 'nmSarana', false);
@@ -280,11 +286,24 @@ $(function () {
         if (idstatus == "4") {
             APP.hideSmoot('#rujukhorizontal')
             APP.showSmoot('#rujukvertikal');
+            APP.hideSmoot('#noLaporanPolisi');
+            console.log($('#kdnonSpesialis1').val());
+            chackTacc();
         } else if (idstatus == "6") {
             APP.hideSmoot('#rujukvertikal');
             APP.hideSmoot('#formrujukanvertikal');
             APP.showSmoot('#rujukhorizontal');
-        } else {
+            APP.hideSmoot('#noLaporanPolisi');
+        } else if (idstatus == "1") {
+            APP.hideSmoot('#rujukvertikal');
+            APP.hideSmoot('#rujukhorizontal')
+            APP.hideSmoot('#formrujukanvertikal');
+            $('input[name="kdStatusPulang"]').prop('checked', false);
+            APP.addValueInput('#typeRujukan', 'normal');
+            APP.showSmoot("#noLaporanPolisi");
+        }
+        else {
+            APP.hideSmoot('#noLaporanPolisi');
             APP.hideSmoot('#rujukvertikal');
             APP.hideSmoot('#rujukhorizontal')
             APP.hideSmoot('#formrujukanvertikal');
@@ -292,36 +311,12 @@ $(function () {
             APP.addValueInput('#typeRujukan', 'normal');
         }
     })
-    $('input[name="kdStatusPulang"]').on('change', function () {
+    $('input[name="kdStatusRujuk"]').on('change', function () {
         let status = $(this).val();
-        $('#kdKategori').val('');
-        APP.showSmoot('#formrujukanvertikal');
-        function changeCol(el, newCol) {
-            el.closest('[class*="col-"]')
-                .removeClass(function (index, className) {
-                    return (className.match(/(^|\s)col-\d+/g) || []).join(' ');
-                })
-                .addClass(newCol);
-        }
         if (status == 'SP') {
-            APP.ambil_data('#kdKategori', '/spesialis', 'kdSpesialis', 'nmSpesialis', false);
-            changeCol($('#kdKategori'), 'col-2');
-            changeCol($('#tglRujukan'), 'col-3');
-            APP.showSmoot('#subspesialis');
-            APP.showSmoot('#sarana');
-            APP.ambil_data('#kdSarana', '/spesialis/sarana', 'kdSarana', 'nmSarana', false);
-            APP.hideSmoot('#alasanrujuk');
-            APP.addValueInput('#typeRujukan', 'spesialis');
+            TrigerSP();
         } else {
-            APP.addValueInput('#typeRujukan', 'khusus');
-            $('#kdSarana').val(null).trigger('change');
-            $('#kdsubspesialis').val(null).trigger('change');
-            APP.ambil_data('#kdKategori', '/spesialis/khusus', 'kdKhusus', 'nmKhusus', false);
-            APP.hideSmoot('#sarana');
-            APP.hideSmoot('#subspesialis');
-            changeCol($('#kdKategori'), 'col-5');
-            changeCol($('#tglRujukan'), 'col-5');
-            APP.showSmoot('#alasanrujuk');
+            triggerKH();
         }
     });
     $('#kdKategori').on('change', function () {
@@ -434,5 +429,90 @@ $(function () {
         APP.addValueInput('#kdfaskes', kode);
         $('#modalFaskes').modal('hide');
     });
-
+    $('#kdTacc').on('change', function () {
+        $('#alasanTacc').val('');
+    })
+    function TrigerSP() {
+        APP.showSmoot('#formrujukanvertikal');
+        $('#kdKategori').val('');
+        changeCol($('#kdKategori'), 'col-2');
+        changeCol($('#tglRujukan'), 'col-3');
+        APP.showSmoot('#subspesialis');
+        APP.showSmoot('#sarana');
+        $('#kdSarana').prop('disabled', true);
+        $('#kdSaranaHidden').val('9');
+        $('#useSarana').on('change', function () {
+            if ($('input[name="kdStatusRujuk"]').checked) {
+                $('#kdSarana').prop('disabled', false);
+                APP.ambil_data('#kdSarana', '/spesialis/sarana', 'kdSarana', 'nmSarana', true);
+            } else {
+                $('#kdSarana')
+                    .val('9')
+                    .trigger('change')
+                    .prop('disabled', true);
+                $('#kdSaranaHidden').val('9');
+            }
+        });
+        $('#kdSarana').on('change', function () {
+            $('#kdSaranaHidden').val(this.value);
+        });
+        APP.hideSmoot('#alasanrujuk');
+        APP.addValueInput('#typeRujukan', 'spesialis');
+        if (statusEdit) {
+            loadRujukan();
+            async function loadRujukan() {
+                await APP.ambil_data('#kdKategori', '/spesialis', 'kdSpesialis', 'nmSpesialis', false);
+                $('#kdKategori').val(dataPasien.kdKhusus).trigger('change');
+                $('#kdsubspesialis').val(dataPasien.subSpesialis).trigger('change');
+                $('#kdSarana').val(dataPasien.kdSarana).trigger('change');
+                $('#kdSaranaHidden').val(dataPasien.kdSarana);
+                $('#tglRujukan').val(dataPasien.tglEstRujuk);
+                $('#kdfaskes').val(dataPasien.kdppk);
+                $('#nmfaskes').val(dataPasien.kdppk);
+            }
+        }
+    }
+    function triggerKH() {
+        APP.showSmoot('#formrujukanvertikal');
+        $('#kdKategori').val('');
+        APP.addValueInput('#typeRujukan', 'khusus');
+        $('#kdSarana').val(null).trigger('change');
+        $('#kdsubspesialis').val(null).trigger('change');
+        APP.ambil_data('#kdKategori', '/spesialis/khusus', 'kdKhusus', 'nmKhusus', false);
+        APP.hideSmoot('#sarana');
+        APP.hideSmoot('#subspesialis');
+        changeCol($('#kdKategori'), 'col-5');
+        changeCol($('#tglRujukan'), 'col-5');
+        APP.showSmoot('#alasanrujuk');
+    }
+    function changeCol(el, newCol) {
+        el.closest('[class*="col-"]')
+            .removeClass(function (index, className) {
+                return (className.match(/(^|\s)col-\d+/g) || []).join(' ');
+            })
+            .addClass(newCol);
+    }
+    function checkRujuk() {
+        if (dataPasien.subSpesialis != "") {
+            $('input[name="kdStatusRujuk"][value="SP"]').prop('checked', true).trigger('change');
+            TrigerSP()
+        } else if (dataPasien.kdkhSpesialis != "") {
+            $('input[name="kdStatusRujuk"][value="KH"]').prop('checked', true).trigger('change');
+            triggerKH()
+        }
+    }
+    function chackTacc() {
+        if ($('#kdnonSpesialis1').val() == 'true') {
+            $('#formTacc').removeClass('d-none');
+            // console.log('tacc');
+        } else {
+            $('#formTacc').addClass('d-none');
+            // console.log('non tacc');
+        }
+        if (statusEdit){
+            $('#formTacc').removeClass('d-none');
+            $('#kdTacc').val(dataPasien.kdTacc).trigger('change');
+            $('#alasanTacc').val(dataPasien.alasanTacc);
+        }
+    }
 })

@@ -43,7 +43,7 @@ $result = bpjsPost("/pendaftaran", $payload);
 // echo json_encode($result);die();
 // $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
 if ($result['code'] != '200') {
-    $msg = $result['message'];
+    $msg = $result['metadata'];
     if ($msg == null) {
         $msg = "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
     }
@@ -87,6 +87,7 @@ if ($result['code'] != '200') {
         $response = [
             'success'  => true,
             'message'  => "Berhasil Mendaftar Pasien Dengan No Urut " . $noUrut,
+            'result' => $result
         ];
     } else {
         $response = [

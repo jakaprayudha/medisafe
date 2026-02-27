@@ -4,6 +4,7 @@ $(function () {
         dateFormat: "Y-m-d",
         altFormat: "F j, Y",
         defaultDate: "today",
+        maxDate: 'today'
     });
     var table = $('#datapasien').DataTable({
         processing: true,
@@ -30,6 +31,18 @@ $(function () {
             { data: 'noKartu' },
             { data: 'patient_name' },
             { data: 'nmPoli' },
+            {
+                data: 'kdTkp',
+                render: function (data, type, row) {
+                    if (data == "10") {
+                        return `Rawat Jalan`;
+                    } else if (data == "20") {
+                        return `Rawat Inap`;
+                    } else {
+                        return `Rawat Promotif`;
+                    }
+                }
+            },
             {
                 data: 'status_kunjungan',
                 render: function (data, type, row) {
@@ -72,14 +85,13 @@ $(function () {
     });
     $(document).on('click', '.btn-batal', function () {
         let data = table.row($(this).closest('tr')).data();
-        console.log(data);
-        const nokartu = data.peserta.noKartu;
-        const tanggal = data.tglDaftar;
+        const nokartu = data.noKartu;
+        const tanggal = data.tanggal_daftar;
         const noUrut = data.noUrut;
-        const kdpoli = data.poli.kdPoli;
+        const kdpoli = data.kdPoli;
         $.ajax({
             url: 'controller/admisi/services/deletePendaftaran.php',
-            type: "GET",
+            type: "POST",
             data: {
                 nokartu: nokartu,
                 tanggal: tanggal,

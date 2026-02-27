@@ -101,6 +101,7 @@ require '../../controller/view.php';
                                             <th style="width:5%">No</th>
                                             <th>Tgl. Kunjungan</th>
                                             <th>No. Kunjung</th>
+                                            <th>Jns Kunjung</th>
                                             <th>Nama Pasien</th>
                                             <th>Poli/Kegiatan</th>
                                             <th>Action</th>

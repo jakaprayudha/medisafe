@@ -25,15 +25,15 @@ $lingkarPerut = (int) $_POST['lingkarPerut'];
 $heartRate = (int) $_POST['heartRate'];
 $kdStatusPulang = $_POST['kdStatusPulang'];
 $kdDokter = $_POST['kdDokter'];
-$nmDokter = $_POST['nmDokter'];
+$nmDokter = $_POST['nmDokter'] ?? null;
 $kdPoliRujukInternal = $_POST['kdPoliRujukInternal'] ?? null;
 $kdppk = $_POST['kdppk'] ?? null;
 $kdSubSpesialis1 = $_POST['kdSubSpesialis1'] ?? null;
-$kdspesialiskhusus = $_POST['kdSubSpesialiskhusus'] ?? null;
+// $kdspesialiskhusus = $_POST['kdSubSpesialiskhusus'] ?? null;
 $kdSarana = $_POST['kdSarana'] ?? null;
-$kdkategori = null;
-$kdTacc = "0";
-$alasanTacc = null;
+$kdkategori = $_POST['kdKategori'] ?? null;
+$kdTacc = $_POST['kdTacc'] ?? '0';
+$alasanTacc = $_POST['alasanTacc'] ?? null;
 $anamnesa = $_POST['anamnesa'];
 $alergiMakan = $_POST['alergiMakan'];
 $alergiUdara = $_POST['alergiUdara'];
@@ -46,10 +46,11 @@ $suhu = $_POST['suhu'];
 $diag1 = $_POST['diag1'] ?? null;
 $diag2 = $_POST['diag2'] ?? null;
 $diag3 = $_POST['diag3'] ?? null;
-$nmdiag1 = $_POST['nmdiag1'] ?? null;
-$nmdiag2 = $_POST['nmdiag2'] ?? null;
-$nmdiag3 = $_POST['nmdiag3'] ?? null;
+$nmdiag1 = $_POST['nmDiag1'] ?? null;
+$nmdiag2 = $_POST['nmDiag2'] ?? null;
+$nmdiag3 = $_POST['nmDiag3'] ?? null;
 $catatan = $_POST['catatan'] ?? null;
+$nomorLP = $_POST['nomorLp'] ?? null;
 $typeRujukan = $_POST['typeRujukan'];
 $payload = [
     "noKunjungan" => $noKunjungan,
@@ -106,12 +107,18 @@ switch ($typeRujukan) {
             "tglEstRujuk" => $tglEstRujuk,
             "subSpesialis" => null,
             "khusus" => [
-                "kdKhusus" => $kdKhusus,
+                "kdKhusus" => $kdkategori,
                 "kdSubSpesialis" => null,
                 "catatan" => $catatan
             ]
         ];
         break;
+}
+if ($typeRujukan == 'spesialis') {
+    $kdspesialiskhusus = "";
+} else if ($typeRujukan == 'khusus') {
+    $kdspesialiskhusus = $kdkategori;
+    $kdkategori = null;
 }
 $method = "POST";
 if ($noKunjungan != null) {
@@ -132,29 +139,29 @@ if ($result['code'] != "200") {
     ];
 } else {
     if ($method == "POST") {
-        $message = 'Berhasil Membuat Rujukan';
+        $message = 'Berhasil Membuat Kunjungan';
         $noKunjungan = $result['data'][0]['message'];
         $stmt = $koneksi->prepare("INSERT INTO pcare_kunjungan (
-        noKunjungan, noKartu, tglDaftar, kdPoli,nmPoli, keluhan, kdSadar,
-        sistole, diastole, beratBadan, tinggiBadan, respRate, heartRate,
-        lingkarPerut, kdStatusPulang, tglPulang, kdDokter,nmDokter,
-        kdDiag1, kdDiag2, kdDiag3, nmDiag1, nmDiag2, nmDiag3, kdPoliRujukInternal,
-        tglEstRujuk, kdppk, subSpesialis, kdsarana, kdKhusus, kdkhSpesialis,
-        catatan, kdTacc, alasanTacc, anamnesa,
-        alergiMakan, alergiUdara, alergiObat,
-        kdPrognosa, terapiObat, terapiNonObat,
-        bmhp, suhu
-        ) VALUES (
-        ?,?,?,?,?,?,
-        ?,?,?,?,?,?,
-        ?,?,?,?,?,
-        ?,?,?,?,?,
-        ?,?,?,?,?,
-        ?,?,?,?,?,
-        ?,?,?,?,?,?,?,?,?,?,?)");
+            noKunjungan, noKartu, tglDaftar, kdPoli,nmPoli, keluhan, kdSadar,
+            sistole, diastole, beratBadan, tinggiBadan, respRate, heartRate,
+            lingkarPerut, kdStatusPulang, tglPulang, kdDokter,nmDokter,
+            kdDiag1, kdDiag2, kdDiag3, nmDiag1, nmDiag2, nmDiag3, kdPoliRujukInternal,
+            tglEstRujuk, kdppk, subSpesialis, kdsarana, kdKhusus, kdkhSpesialis,
+            catatan, kdTacc, alasanTacc, anamnesa,
+            alergiMakan, alergiUdara, alergiObat,
+            kdPrognosa, terapiObat, terapiNonObat,
+            bmhp, suhu, noLP
+            ) VALUES (
+            ?,?,?,?,?,?,
+            ?,?,?,?,?,?,
+            ?,?,?,?,?,
+            ?,?,?,?,?,
+            ?,?,?,?,?,
+            ?,?,?,?,?,
+            ?,?,?,?,?,?,?,?,?,?,?,?)");
 
         $stmt->bind_param(
-            "sssssssssssssssssssssssssssssssssssssssssss",
+            "ssssssssssssssssssssssssssssssssssssssssssss",
             $noKunjungan,
             $noKartu,
             $DBtglDatar,
@@ -197,10 +204,11 @@ if ($result['code'] != "200") {
             $terapiObat,
             $terapiNonObat,
             $bmhp,
-            $suhu
+            $suhu,
+            $nomorLP
         );
     } else {
-        $message = "Berhasil Update Rujukan";
+        $message = "Berhasil Update Kunjungan";
         $stmt = $koneksi->prepare("UPDATE pcare_kunjungan SET
             noKartu = ?,
             tglDaftar = ?,
@@ -243,11 +251,12 @@ if ($result['code'] != "200") {
             terapiObat = ?,
             terapiNonObat = ?,
             bmhp = ?,
-            suhu = ?
+            suhu = ?,
+            noLP = ?
         WHERE noKunjungan = ?
         ");
         $stmt->bind_param(
-            "sssssssssssssssssssssssssssssssssssssssssss",
+            "ssssssssssssssssssssssssssssssssssssssssssss",
             $noKartu,
             $DBtglDatar,
             $kdPoli,
@@ -290,6 +299,7 @@ if ($result['code'] != "200") {
             $terapiNonObat,
             $bmhp,
             $suhu,
+            $nomorLP,
             $noKunjungan
         );
     }

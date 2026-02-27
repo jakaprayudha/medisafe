@@ -13,20 +13,20 @@ require '../../controller/view.php';
 </head>
 <style>
     .select2-container .select2-selection--single {
-    height: calc(2.25rem + 2px);
-    display: flex;
-    align-items: center;
-}
+        height: calc(2.25rem + 2px);
+        display: flex;
+        align-items: center;
+    }
 
-.select2-selection__rendered {
-    line-height: normal !important;
-}
+    .select2-selection__rendered {
+        line-height: normal !important;
+    }
 
-.select2-selection__arrow {
-    height: 100% !important;
-}
-
+    .select2-selection__arrow {
+        height: 100% !important;
+    }
 </style>
+
 <body>
     <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
         data-sidebar-position="fixed" data-header-position="fixed">
@@ -58,7 +58,7 @@ require '../../controller/view.php';
                                             <input type="text"
                                                 id="nomor"
                                                 class="form-control"
-                                                placeholder="Contoh: 000***" value="0002037030085">
+                                                placeholder="Contoh: 000***">
                                         </div>
                                         <div class="col-md-2">
                                             <button type="button"

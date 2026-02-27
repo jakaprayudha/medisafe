@@ -21,7 +21,7 @@ function bpjsGet($endpoint)
     global $base_url, $service, $consid, $secretKey, $tStamp;
 
     $url = rtrim($base_url, '/') . '/' . trim($service, '/') . '/' . ltrim($endpoint, '/');
-    // echo trim($url);die();
+    // echo trim($url);
     $ch = curl_init();
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,
@@ -139,7 +139,7 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp, $decrypt =
     $rawResponse = $json['response'];
     $data = null;
     if (is_string($rawResponse)) {
-        if (strlen($rawResponse) > 100) {
+        if (strlen($rawResponse) > 80) {
             $decrypted = stringDecrypt($key, $rawResponse);
             $decompressed = \LZCompressor\LZString::decompressFromEncodedURIComponent($decrypted);
             $data = json_decode($decompressed, true);
