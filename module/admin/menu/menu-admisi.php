@@ -108,15 +108,15 @@
               <span class="hide-menu">List Kunjungan</span>
            </a>
         </li>
-        <!-- <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Cari Rujukan') {
+        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Skrining') {
                                                             echo 'active';
                                                          } ?>"
-              href="module/admisi/carirujukan"
+              href="module/admisi/skrining"
               aria-expanded="false">
-              <iconify-icon icon="oui:app-search-profiler"></iconify-icon>
-              <span class="hide-menu">Cari Rujukan</span>
+              <iconify-icon icon="material-symbols:lab-profile-outline"></iconify-icon>
+              <span class="hide-menu">Skrining</span>
            </a>
-        </li> -->
+        </li>
         <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Kegiatan Kelompok') {echo 'active';} ?>"
               href="module/admisi/addkegiatankelompok"
               aria-expanded="false">
