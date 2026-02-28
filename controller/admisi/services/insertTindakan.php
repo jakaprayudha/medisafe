@@ -36,6 +36,9 @@ if ($result['code'] != '200') {
     if($result['code'] == "428"){
         $msg = "Tindakan yang sama tidak diperbolehkan pada kunjungan yang sama";
     }
+    if($result['code'] == "412"){
+        $msg = $result['message'];
+    }
     $response = [
         'success' => false,
         'message' => $msg,
