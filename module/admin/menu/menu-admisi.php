@@ -108,7 +108,7 @@
               <span class="hide-menu">List Kunjungan</span>
            </a>
         </li>
-        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Cari Rujukan') {
+        <!-- <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Cari Rujukan') {
                                                             echo 'active';
                                                          } ?>"
               href="module/admisi/carirujukan"
@@ -116,7 +116,7 @@
               <iconify-icon icon="oui:app-search-profiler"></iconify-icon>
               <span class="hide-menu">Cari Rujukan</span>
            </a>
-        </li>
+        </li> -->
         <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Kegiatan Kelompok') {echo 'active';} ?>"
               href="module/admisi/addkegiatankelompok"
               aria-expanded="false">
