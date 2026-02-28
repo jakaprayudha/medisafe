@@ -214,6 +214,7 @@ require '../../controller/view.php';
                                 <th>Signa</th>
                                 <th>Jumlah</th>
                                 <th>Jumlah Permintaan</th>
+                                <th>Jenis</th>
                                 <th class="text-center">Action</th>
                             </tr>
                         </thead>
@@ -242,17 +243,29 @@ require '../../controller/view.php';
                             <input type="text" class="form-control"
                                 name="noKunjungan" id="noKunjunganobat" readonly>
                         </div>
-                        <div class="d-flex gap-4 mb-2">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox"
-                                    name="racikan" id="racikan">
-                                <label class="form-check-label">Obat Racikan</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox"
-                                    name="obatDPHO" id="obatDPHO" checked>
-                                <label class="form-check-label">Obat DPHO</label>
-                            </div>
+                        <div class="d-flex gap-3 mb-2">
+                            <input type="radio" class="btn-check"
+                                name="jenisObat"
+                                id="obatRacikan"
+                                value="R"
+                                autocomplete="off">
+
+                            <label class="btn btn-outline-primary px-4"
+                                for="obatRacikan">
+                                Racikan
+                            </label>
+
+                            <input type="radio" class="btn-check"
+                                name="jenisObat"
+                                id="obatDPHO"
+                                value="D"
+                                autocomplete="off"
+                                checked>
+
+                            <label class="btn btn-outline-success px-4"
+                                for="obatDPHO">
+                                Non Racikan
+                            </label>
                         </div>
                         <div class="mb-2">
                             <label class="form-label fw-semibold">Obat</label>
@@ -271,7 +284,7 @@ require '../../controller/view.php';
                                     style="max-width:140px">
                                     <input type="number"
                                         class="form-control text-center"
-                                        name="signa1" min="1">
+                                        name="signa1" min="1" id="signa1">
                                     <span class="input-group-text">×</span>
                                 </div>
                                 <span class="text-muted small">per hari, tiap</span>
@@ -279,7 +292,7 @@ require '../../controller/view.php';
                                     style="max-width:140px">
                                     <input type="number"
                                         class="form-control text-center"
-                                        name="signa2" min="1">
+                                        name="signa2" min="1" id="signa2">
                                     <span class="input-group-text">tablet</span>
                                 </div>
                             </div>
@@ -290,23 +303,24 @@ require '../../controller/view.php';
                         </div>
                         <div class="row">
                             <div class="col-6 mb-2">
-                                <label class="form-label fw-semibold">Jumlah Obat</label>
+                                <label class="form-label fw-semibold"><span id="kodejmhobat">Jumlah Obat</span></label>
                                 <input type="number" class="form-control"
-                                    name="jmlObat" min="1">
+                                    name="jmlObat" id="jmlObat" min="1">
                             </div>
+
                             <div class="col-6 mb-2">
-                                <label class="form-label fw-semibold">Jumlah Permintaan</label>
+                                <label class="form-label fw-semibold"><span id="kodejmhpermintaan">Jumlah Permintaan</span></label>
                                 <input type="number" class="form-control"
-                                    name="jmlPermintaan" min="1">
+                                    name="jmlPermintaan" id="jmlPermintaan" min="1">
                             </div>
                         </div>
                         <div class="mb-2">
                             <label class="form-label fw-semibold">
-                                Nama Obat Non DPHO
+                                Nama Obat Non DPHO / Racikan
                             </label>
                             <input type="text" class="form-control"
-                                name="nmObatNonDPHO"
-                                placeholder="Isi jika non DPHO / racikan">
+                                name="nmObatNonDPHO" id="nmObatNonDPHO"
+                                placeholder="" readonly>
                         </div>
                     </form>
                 </div>

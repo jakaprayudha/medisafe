@@ -4,17 +4,27 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/servicebpjs.php';
 header('Content-Type: application/json');
 $kdObatSK  = !empty($_POST['kdObatSK']) ? $_POST['kdObatSK'] : '0';
-$kdRacikan = !empty($_POST['kdRacikan']) ? $_POST['kdRacikan'] : null;
+// $kdRacikan = !empty($_POST['kdRacikan']) ? $_POST['kdRacikan'] : null;
 $nmObat = $_POST['nmObat'];
 $noKunjungan = $_POST['noKunjungan'];
-$obatDPHO = isset($_POST['obatDPHO']) ? true : false;;
-$racikan = isset($_POST['racikan']) ? true : false;
 $signa1 = $_POST['signa1'];
 $signa2 = $_POST['signa2'];
 $jmlObat = $_POST['jmlObat'];
 $jmlPermintaan = $_POST['jmlPermintaan'];
-$nmObatNonDPHO = $_POST['nmObatNonDPHO'];
+$nmObatNonDPHO = $nmObat;
 $kdObat = $_POST['kdObat'];
+if ($_POST['jenisObat'] == 'R') {
+    $sql = mysqli_query(
+        $koneksi,
+        "SELECT COUNT(*) AS total FROM pcare_obat WHERE racikan = '1'");
+    $row = mysqli_fetch_assoc($sql);
+    $kdRacikan = "R.0" . $row['total'] + 1;
+    $racikan = true;
+    $obatDPHO = false;
+} else {
+    $racikan = false;
+    $obatDPHO = true;
+}
 
 $payload = [
     "kdObatSK" => $kdObatSK,

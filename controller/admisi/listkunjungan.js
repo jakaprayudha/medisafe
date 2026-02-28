@@ -455,6 +455,12 @@ $(function () {
                     { data: 'jmlObat' },
                     { data: 'jmlPermintaan' },
                     {
+                        data: 'racikan',
+                        render: function (data, type, row) {
+                            return data != '1' ? 'Non Racikan' : 'Racikan';
+                        }
+                    },
+                    {
                         data: null,
                         orderable: false,
                         className: 'text-center',
@@ -563,6 +569,9 @@ $(function () {
     $('#kdObat').on('select2:select', function (e) {
         const data = e.params.data;
         $('input[name="nmObat"]').val(data.nmObat);
+        if ($('input[name="jenisObat"]:checked').val() !== 'R') {
+            $('#nmObatNonDPHO').val(data.nmObat);
+        }
     });
     $('#kdObat').on('select2:open', function () {
         setTimeout(function () {
@@ -623,4 +632,27 @@ $(function () {
             }
         });
     })
+    $('input[name="jenisObat"]').on('change', function () {
+        $('#jmlObat, #jmlPermintaan, #nmObatNonDPHO, #signa1, #signa2').val('');
+        $('#kdObat').val('').trigger('change');
+        if (this.value === 'R') {
+            $('#kodejmhobat').html('Jumlah Kemasan');
+            $('#nmObatNonDPHO').prop('readonly', false);
+        } else {
+            $('#kodejmhobat').html('Jumlah Obat');
+            $('#nmObatNonDPHO').prop('readonly', true);
+            nonRacikan();
+        }
+    });
+    $('#jmlObat').on('input', function () {
+        if ($('input[name="jenisObat"]:checked').val() !== 'R') {
+            $('#jmlPermintaan').val(this.value);
+        }
+    });
+    function nonRacikan() {
+        const jml = $('#jmlObat').val();
+        $('#jmlPermintaan')
+            .val(jml)
+            .prop('readonly', true);
+    }
 });
