@@ -315,8 +315,10 @@ $(function () {
         let status = $(this).val();
         if (status == 'SP') {
             TrigerSP();
+            // console.log('SP');
         } else {
             triggerKH();
+            // console.log('KH');
         }
     });
     $('#kdKategori').on('change', function () {
@@ -470,6 +472,8 @@ $(function () {
                 $('#kdfaskes').val(dataPasien.kdppk);
                 $('#nmfaskes').val(dataPasien.kdppk);
             }
+        }else{
+            APP.ambil_data('#kdKategori', '/spesialis', 'kdSpesialis', 'nmSpesialis', false);
         }
     }
     function triggerKH() {
@@ -493,10 +497,11 @@ $(function () {
             .addClass(newCol);
     }
     function checkRujuk() {
-        if (dataPasien.subSpesialis != "") {
+        if (dataPasien.subSpesialis != "" && statusEdit == true) {
             $('input[name="kdStatusRujuk"][value="SP"]').prop('checked', true).trigger('change');
+            // console.log('masuk')
             TrigerSP()
-        } else if (dataPasien.kdkhSpesialis != "") {
+        } else if (dataPasien.kdkhSpesialis != "" && statusEdit == true) {
             $('input[name="kdStatusRujuk"][value="KH"]').prop('checked', true).trigger('change');
             triggerKH()
         }

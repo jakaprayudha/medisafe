@@ -13,7 +13,7 @@ $total = 0;
 
 $result = bpjsGet('/skrinning/peserta/' . $nomor . '/' . $start . '/' . $limit);
 $total = $result['data']['count'] ?? 0;
-
+ 
 echo json_encode([
     "draw" => $draw,
     "recordsTotal" => $total,
