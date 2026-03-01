@@ -3,30 +3,23 @@
 require_once __DIR__ . '/view.php';
 require_once __DIR__ . '/../../../vendor/autoload.php';
 
-function getheader($containType = "application/json; charset=utf-8")
+function bpjsGet($endpoint)
 {
-    global $consid, $tStamp, $encodedSignature, $userkey, $encodedAuthorization;
+    global $base_url, $service, $const_id, $secretKey, $tStamp, $encodedSignature, $userkey, $encodedAuthorization;
     $headers = array(
-        "X-cons-id: " . $consid,
+        "X-cons-id: " . $const_id,
         "X-timestamp: " . $tStamp,
         "X-signature: " . $encodedSignature,
         "X-authorization: Basic " . $encodedAuthorization,
-        'user_key: ' . $userkey,
-        "Content-Type: " . $containType
+        "user_key: " . $userkey,
+        "Content-Type: application/json; charset=utf-8",
     );
-    return $headers;
-}
-function bpjsGet($endpoint)
-{
-    global $base_url, $service, $consid, $secretKey, $tStamp;
-
     $url = rtrim($base_url, '/') . '/' . trim($service, '/') . '/' . ltrim($endpoint, '/');
-    // echo trim($url);
     $ch = curl_init();
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,
         CURLOPT_CUSTOMREQUEST => 'GET',
-        CURLOPT_HTTPHEADER => getheader(),
+        CURLOPT_HTTPHEADER => $headers,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT => 10,
         CURLOPT_SSL_VERIFYPEER => false
@@ -40,18 +33,25 @@ function bpjsGet($endpoint)
         return bpjsError("Tidak ada response dari server BPJS");
     }
 
-    return bpjsDecryptResponse($response, $consid, $secretKey, $tStamp);
+    return bpjsDecryptResponse($response, $const_id, $secretKey, $tStamp);
 }
 function bpjsPost($endpoint, array $payload, $method = "POST")
 {
-    global $base_url, $service, $consid, $secretKey, $tStamp;
+    global $base_url, $service, $const_id, $secretKey, $tStamp, $encodedSignature, $userkey, $encodedAuthorization;
+    $headers = array(
+        "X-cons-id: " . $const_id,
+        "X-timestamp: " . $tStamp,
+        "X-signature: " . $encodedSignature,
+        "X-authorization: Basic " . $encodedAuthorization,
+        "user_key: " . $userkey,
+        "Content-Type: text/plain",
+    );
     $url = rtrim($base_url, '/') . '/' . trim($service, '/') . '/' . ltrim($endpoint, '/');
-    $containType = "text/plain";
     // echo trim($url);die();
     $ch = curl_init();
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,
-        CURLOPT_HTTPHEADER => getheader($containType),
+        CURLOPT_HTTPHEADER => $headers,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT => 20,
         CURLOPT_SSL_VERIFYPEER => false,
@@ -67,19 +67,25 @@ function bpjsPost($endpoint, array $payload, $method = "POST")
         return bpjsError("Tidak ada response dari server BPJS");
     }
 
-    return bpjsDecryptResponse($response, $consid, $secretKey, $tStamp);
+    return bpjsDecryptResponse($response, $const_id, $secretKey, $tStamp);
 }
 function bpjsDelete($endpoint)
 {
-    global $base_url, $service, $consid, $secretKey, $tStamp;
-
+    global $base_url, $service, $const_id, $secretKey, $tStamp, $encodedSignature, $userkey, $encodedAuthorization;
+    $headers = array(
+        "X-cons-id: " . $const_id,
+        "X-timestamp: " . $tStamp,
+        "X-signature: " . $encodedSignature,
+        "X-authorization: Basic " . $encodedAuthorization,
+        "user_key: " . $userkey,
+        "Content-Type: application/json; charset=utf-8",
+    );
     $url = rtrim($base_url, '/') . '/' . trim($service, '/') . '/' . ltrim($endpoint, '/');
-    // echo trim($url);die();
     $ch = curl_init();
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,
         CURLOPT_CUSTOMREQUEST => "DELETE",
-        CURLOPT_HTTPHEADER => getheader("application/json; charset=utf-8"),
+        CURLOPT_HTTPHEADER => $headers,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT => 20,
         CURLOPT_SSL_VERIFYPEER => false
@@ -88,7 +94,6 @@ function bpjsDelete($endpoint)
     $response = curl_exec($ch);
     $err = curl_error($ch);
     curl_close($ch);
-    // echo $response;die();
     if ($err) {
         return bpjsError("CURL Error: " . $err);
     }
@@ -97,9 +102,8 @@ function bpjsDelete($endpoint)
         return bpjsError("Tidak ada response dari server BPJS");
     }
 
-    return bpjsDecryptResponse($response, $consid, $secretKey, $tStamp);
+    return bpjsDecryptResponse($response, $const_id, $secretKey, $tStamp);
 }
-
 function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp, $decrypt = true)
 {
     $json = json_decode($response, true);

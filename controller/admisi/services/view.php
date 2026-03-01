@@ -9,15 +9,16 @@ $kodeppk = $sql['KodePPK'];
 $tanggal = date('Y-m-d');
 $tglbulan = date('d') . ' ' . getNamaBulan(date('n')) . ' ' . date('Y');
 $waktusekarang = date('Y-m-d H:i:s');
-$consid = $sql['cons_id'];
 $secretKey = $sql['secret_key'];
 $userkey = $sql['user_key'];
 $username = $sql['username'];
 $password = $sql['password'];
 $kdAplikasi = '095';
+// $consid = $sql['cons_id'];
+$const_id = $sql['cons_id'];
 date_default_timezone_set('UTC');
 $tStamp = strval(time() - strtotime('1970-01-01 00:00:00'));
-$signature = hash_hmac('sha256', $consid . "&" . $tStamp, $secretKey, true);
+$signature = hash_hmac('sha256', $const_id . "&" . $tStamp, $secretKey, true);
 $encodedSignature = base64_encode($signature);
 $encodedAuthorization = base64_encode($username . ":" . $password . ":" . $kdAplikasi);
 
