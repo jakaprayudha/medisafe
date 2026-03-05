@@ -661,10 +661,11 @@ date_default_timezone_set('Asia/Jakarta');
                                             </label>
                                         </div>
                                         <div class="col-10">
-                                            <input type="text" class="form-control" placeholder="Masukan Nomor Laporan Polisi Disini..."
+                                            <input type="text"
+                                                class="form-control"
+                                                placeholder="Masukan Nomor Laporan Polisi Disini..."
                                                 id="nomorLp"
                                                 name="nomorLp">
-                                            </input>
                                         </div>
                                     </div>
                                 </div>

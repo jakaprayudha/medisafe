@@ -641,7 +641,7 @@ $(function () {
         } else {
             $('#kodejmhobat').html('Jumlah Obat');
             $('#nmObatNonDPHO').prop('readonly', true);
-            nonRacikan();
+            // nonRacikan();
         }
     });
     $('#jmlObat').on('input', function () {

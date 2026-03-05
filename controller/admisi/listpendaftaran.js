@@ -89,37 +89,56 @@ $(function () {
         const tanggal = data.tanggal_daftar;
         const noUrut = data.noUrut;
         const kdpoli = data.kdPoli;
-        $.ajax({
-            url: 'controller/admisi/services/deletePendaftaran.php',
-            type: "POST",
-            data: {
-                nokartu: nokartu,
-                tanggal: tanggal,
-                noUrut: noUrut,
-                kdpoli: kdpoli
-            },
-            dataType: 'json',
-            success: function (res) {
-                if (res.success) {
-                    Swal.fire({
-                        title: "Berhasil",
-                        html: `
+        const btn = $(this);
+        Swal.fire({
+            title: "Apakah Kamu Yakin?",
+            text: "Menghapus Pendaftaran",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Ya, Hapus",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: 'controller/admisi/services/deletePendaftaran.php',
+                    type: "POST",
+                    data: {
+                        nokartu: nokartu,
+                        tanggal: tanggal,
+                        noUrut: noUrut,
+                        kdpoli: kdpoli
+                    },
+                    dataType: 'json',
+                    beforeSend: function(){
+                        APP.load_btn_aktif(btn);
+                    },
+                    complete: function(){
+                        APP.load_btn_non(btn, 'Batal');
+                    },
+                    success: function (res) {
+                        if (res.success) {
+                            Swal.fire({
+                                title: "Berhasil",
+                                html: `
                             <b>${res.message}</b><br></b>
                         `,
-                        icon: "success",
-                        confirmButtonText: "Tutup",
-                    });
-                    table.ajax.reload();
-                } else {
-                    Swal.fire({
-                        title: "Gagal Hapus",
-                        text: res.message,
-                        icon: "error",
-                        confirmButtonText: "Tutup"
-                    });
-                }
+                                icon: "success",
+                                confirmButtonText: "Tutup",
+                            });
+                            table.ajax.reload();
+                        } else {
+                            Swal.fire({
+                                title: "Gagal Hapus",
+                                text: res.message,
+                                icon: "error",
+                                confirmButtonText: "Tutup"
+                            });
+                        }
+                    }
+                })
             }
-        })
+        });
     })
     $('#searchLocal').on('keyup', function () {
         var value = this.value.toLowerCase();

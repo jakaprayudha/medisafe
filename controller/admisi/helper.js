@@ -8,7 +8,6 @@ const tanggalJS = `${dd}-${mm}-${yyyy}`;
 APP.load_btn_aktif = function (id) {
     $(id).prop('disabled', true).html(`
         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-        Loading...
     `);
 }
 APP.load_btn_non = function (id, value) {
@@ -121,7 +120,7 @@ APP.initDiagnosa = function (selector, hiddenNameSelector, idkdspesialis) {
                 return {
                     results: items.map(item => ({
                         id: item.kdDiag,
-                        text: item.nmDiag,
+                        text:  `${item.nmDiag} ${item.nonSpesialis ? ": TACC" : ": NON TACC"}`,
                         nmDiag: item.nmDiag,
                         idspesialis: item.nonSpesialis
                     })),

@@ -223,6 +223,7 @@ $(function () {
         APP.addValueInput('#suhu', dataPasien.suhu);
         APP.addValueInput('#tglPulang', dataPasien.tglPulang);
         APP.addValueInput('#tglDaftar', dataPasien.tglDaftar);
+        APP.addValueInput('#nomorLp', dataPasien.noLP);
         $('#kdPrognosa').val(dataPasien.kdPrognosa).trigger('change');
         $('#alergiMakan').val(dataPasien.alergiMakan).trigger('change');
         $('#alergiUdara').val(dataPasien.alergiUdara).trigger('change');
@@ -444,10 +445,12 @@ $(function () {
         $('#kdSarana').prop('disabled', true);
         $('#kdSaranaHidden').val('9');
         $('#useSarana').on('change', function () {
-            if ($('input[name="kdStatusRujuk"]').checked) {
+            if ($(this).is(':checked')) {
+                console.log('pilih');
                 $('#kdSarana').prop('disabled', false);
                 APP.ambil_data('#kdSarana', '/spesialis/sarana', 'kdSarana', 'nmSarana', true);
             } else {
+            console.log('tidak');
                 $('#kdSarana')
                     .val('9')
                     .trigger('change')
@@ -463,7 +466,7 @@ $(function () {
         if (statusEdit) {
             loadRujukan();
             async function loadRujukan() {
-                await APP.ambil_data('#kdKategori', '/spesialis', 'kdSpesialis', 'nmSpesialis', false);
+                await APP.ambil_data('#kdKategori', '/spesialis', 'kdSpesialis', 'nmSpesialis', true);
                 $('#kdKategori').val(dataPasien.kdKhusus).trigger('change');
                 $('#kdsubspesialis').val(dataPasien.subSpesialis).trigger('change');
                 $('#kdSarana').val(dataPasien.kdSarana).trigger('change');
