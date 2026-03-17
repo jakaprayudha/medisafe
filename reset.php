@@ -6,47 +6,77 @@ require 'controller/auth.php';
 <html lang="en">
 
 <head>
-  <?php
-  require 'assets/template/head.php';
-  ?>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Medisafe | <?= $title ?></title>
+  <link rel="shortcut icon" type="image/png" href="assets/images/logos/icon_medisafe.png" />
+  <!-- <script src="assets/js/sweet-alert/sweetalert.min.js"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
+  <link rel="stylesheet" href="assets/css/login.css">
+  <style>
+    /* center text tambahan */
+    .form-extra.center {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .form-extra.center span {
+      font-size: 14px;
+      color: #555;
+      margin-right: 5px;
+    }
+
+    .form-extra.center a {
+      font-weight: bold;
+      color: #0f9b8e;
+      text-decoration: none;
+    }
+  </style>
 </head>
 
 <body>
-  <!--  Body Wrapper -->
-  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
-    data-sidebar-position="fixed" data-header-position="fixed">
-    <div
-      class="position-relative overflow-hidden text-bg-light min-vh-100 d-flex align-items-center justify-content-center">
-      <div class="d-flex align-items-center justify-content-center w-100">
-        <div class="row justify-content-center w-100">
-          <div class="col-md-8 col-lg-6 col-xxl-3">
-            <div class="card mb-0">
-              <div class="card-body">
-                <a href="javascript:;" class="text-nowrap logo-img text-center d-block py-0 w-100">
-                  <img src="assets/images/logos/medisafe_logo.png" width="150" alt="">
-                </a>
-                <p class="text-center">Medisafe Clinic Management</p>
-                <form method="POST">
-                  <div class="mb-3">
-                    <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="username" name="username" required>
-                  </div>
-                  <button type="submit" name="reset" class="btn btn-primary w-100 py-8 fs-4 mb-4 rounded-2">Reset Password</button>
-                  <div class="d-flex align-items-center justify-content-center">
-                    <p class="fs-4 mb-0 fw-bold">Already have an password ?</p>
-                    <a class="text-primary fw-bold ms-2" href="index">Sign In</a>
-                  </div>
-                </form>
-              </div>
-            </div>
+
+  <div class="login-container">
+    <div class="login-card">
+
+      <!-- LEFT -->
+      <div class="login-left">
+        <img src="assets/images/logos/medisafe_logo.png" class="logo" alt="">
+
+        <h2>Reset Password 🔐</h2>
+        <p>Masukkan username anda untuk melakukan reset </p>
+
+        <form method="POST">
+          <div class="form-group">
+            <label>Username</label>
+            <input type="text" name="username" required>
           </div>
+
+          <button type="submit" name="reset" class="btn-login">
+            Reset Password
+          </button>
+
+          <div class="form-extra center">
+            <span>Sudah punya password?</span>
+            <a href="index">Sign In</a>
+          </div>
+        </form>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="login-right">
+        <div class="overlay">
+          <h3>Secure Access 🔒</h3>
+          <p>Pastikan akun Anda tetap aman dengan proses reset yang cepat dan terpercaya.</p>
         </div>
       </div>
+
     </div>
   </div>
-  <?php
-  require 'assets/template/library.php';
-  ?>
+
 </body>
+<?php
+require 'assets/template/library.php';
+?>
 
 </html>

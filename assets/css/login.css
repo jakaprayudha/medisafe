@@ -1,0 +1,155 @@
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Inter", sans-serif;
+}
+
+/* BACKGROUND */
+body {
+  background: linear-gradient(135deg, #0f9b8e, #1e3c72);
+  height: 100vh;
+}
+
+/* CONTAINER */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+/* CARD */
+.login-card {
+  display: flex;
+  width: 900px;
+  max-width: 95%;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* LEFT SIDE */
+.login-left {
+  flex: 1;
+  padding: 40px;
+}
+
+.logo {
+  width: 140px;
+  margin-bottom: 20px;
+}
+
+.login-left h2 {
+  font-weight: 700;
+  color: #1e3c72;
+}
+
+.login-left p {
+  margin-bottom: 25px;
+  color: #555;
+}
+
+/* FORM */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  font-size: 14px;
+  color: #333;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  margin-top: 5px;
+  transition: 0.3s;
+}
+
+.form-group input:focus {
+  border-color: #0f9b8e;
+  outline: none;
+  box-shadow: 0 0 5px rgba(15, 155, 142, 0.4);
+}
+
+/* EXTRA */
+.form-extra {
+  text-align: right;
+  margin-bottom: 20px;
+}
+
+.form-extra a {
+  text-decoration: none;
+  color: #0f9b8e;
+  font-size: 14px;
+}
+
+/* BUTTON */
+.btn-login {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #0f9b8e, #38ef7d);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* RIGHT SIDE */
+.login-right {
+  flex: 1;
+  background: url("https://images.unsplash.com/photo-1580281657527-47cbe2d15726")
+    center/cover;
+  position: relative;
+}
+
+.overlay {
+  background: rgba(30, 60, 114, 0.7);
+  color: white;
+  height: 100%;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.overlay h3 {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .login-card {
+    flex-direction: column;
+  }
+
+  .login-right {
+    display: none;
+  }
+}
+
+body.swal2-shown {
+  overflow-y: scroll !important;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+.login-container {
+  min-height: 100vh;
+}
