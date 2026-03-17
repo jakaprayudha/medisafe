@@ -61,6 +61,15 @@
       width: 100% !important;
    }
 
+   .container-fluid {
+      max-width: 1400px;
+      margin: 0 auto;
+   }
+
+   .page-wrapper {
+      overflow-x: hidden;
+   }
+
    /* styling untuk label yang required */
    .form-label.required::after {
       content: " *";
@@ -100,5 +109,85 @@
       font-size: 1rem;
       border: 1px solid #ced4da !important;
       border-radius: 0.375rem !important;
+   }
+</style>
+
+<style>
+   /* SUBMENU */
+   .collapse-menu {
+      max-height: 0;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      background: transparent;
+      border-radius: 10px;
+   }
+
+   /* OPEN STATE */
+   .sidebar-item.open .collapse-menu {
+      background: #f1f5f9;
+      margin-top: 6px;
+      padding: 6px 0;
+   }
+
+   /* ITEM */
+   .collapse-menu li a {
+      display: flex;
+      align-items: center;
+      padding: 8px 14px;
+      font-size: 13px;
+      color: #374151;
+      border-radius: 8px;
+      margin: 2px 8px;
+      transition: 0.2s;
+      position: relative;
+   }
+
+   /* DOT */
+   .collapse-menu li a::before {
+      content: "";
+      width: 5px;
+      height: 5px;
+      background: #9ca3af;
+      border-radius: 50%;
+      margin-right: 10px;
+      transition: 0.2s;
+   }
+
+   /* HOVER */
+   .collapse-menu li a:hover {
+      background: #e0f2fe;
+      color: #0f9b8e;
+   }
+
+   .collapse-menu li a:hover::before {
+      background: #0f9b8e;
+   }
+
+   /* ACTIVE */
+   .collapse-menu li a.active {
+      background: #0f9b8e;
+      color: white;
+      font-weight: 600;
+   }
+
+   .collapse-menu li a.active::before {
+      background: white;
+   }
+
+   /* ARROW */
+   .arrow {
+      margin-left: auto;
+      transition: 0.3s;
+   }
+
+   .sidebar-item.open .arrow {
+      transform: rotate(180deg);
+   }
+
+   /* PARENT ACTIVE */
+   .sidebar-item.open>.sidebar-link {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: white;
+      border-radius: 10px;
    }
 </style>

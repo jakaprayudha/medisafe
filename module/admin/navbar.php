@@ -1,66 +1,148 @@
+<style>
+   /* SEARCH */
+   .navbar input {
+      border-radius: 20px;
+      width: 250px;
+      transition: 0.3s;
+   }
+
+   .navbar input:focus {
+      width: 300px;
+      box-shadow: 0 0 8px rgba(15, 155, 142, 0.3);
+   }
+
+
+   .nav-link {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+   }
+
+   .notif-dot {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 12px;
+      height: 12px;
+      background: #ff3b3b;
+      border-radius: 50%;
+      border: 2px solid #fff;
+   }
+
+   .nav-link iconify-icon {
+      display: block;
+   }
+
+   .notif-dot {
+      animation: pulse 1.5s infinite;
+   }
+
+   @keyframes pulse {
+      0% {
+         transform: translate(50%, -50%) scale(1);
+      }
+
+      50% {
+         transform: translate(50%, -50%) scale(1.2);
+      }
+
+      100% {
+         transform: translate(50%, -50%) scale(1);
+      }
+   }
+
+   /* DROPDOWN */
+   .dropdown-menu {
+      border-radius: 12px;
+   }
+
+   /* BUTTON */
+   .btn-success {
+      background: linear-gradient(135deg, #0f9b8e, #38ef7d);
+      border: none;
+   }
+
+   .nav-link.position-relative {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+   }
+</style>
 <header class="app-header">
-   <nav class="navbar navbar-expand-lg navbar-light">
-      <ul class="navbar-nav">
-         <li class="nav-item d-block d-xl-none">
-            <a class="nav-link sidebartoggler " id="headerCollapse" href="javascript:void(0)">
+   <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-3">
+
+      <!-- LEFT -->
+      <ul class="navbar-nav align-items-center">
+         <!-- Toggle -->
+         <li class="nav-item d-block d-xl-none me-2">
+            <a class="nav-link sidebartoggler" id="headerCollapse" href="javascript:void(0)">
                <i class="ti ti-menu-2"></i>
             </a>
          </li>
+
+         <!-- Logo Klinik -->
+         <li class="nav-item d-flex align-items-center me-3">
+            <img src="assets/images/logos/default.png" width="35" class="rounded-circle me-2">
+            <strong class="text-primary">Klinik Pratama</strong>
+         </li>
+
+         <!-- SEARCH PASIEN -->
          <li class="nav-item">
-            <a class="nav-link " href="javascript:void(0)">
-               <iconify-icon icon="solar:bell-linear" class="fs-6"></iconify-icon>
-               <div class="notification bg-primary rounded-circle"></div>
-            </a>
+            <div class="position-relative">
+               <input type="text" class="form-control ps-5" placeholder="Cari pasien...">
+               <iconify-icon icon="solar:magnifer-linear"
+                  class="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></iconify-icon>
+            </div>
          </li>
       </ul>
-      <div class="navbar-collapse justify-content-end px-0" id="navbarNav">
-         <ul class="navbar-nav flex-row ms-auto align-items-center justify-content-end">
-            <a href="https://imzack.id/" target="_blank" class="btn btn-outline-danger">Bantuan</a>
+
+      <!-- RIGHT -->
+      <div class="navbar-collapse justify-content-end">
+
+         <ul class="navbar-nav align-items-center gap-2">
+
+            <!-- ACTION DROPDOWN -->
             <li class="nav-item dropdown">
-               <a class="nav-link " href="javascript:void(0)" id="drop2" data-bs-toggle="dropdown"
-                  aria-expanded="false">
-                  <img src="assets/images/profile/user-1.jpg" alt="" width="35" height="35" class="rounded-circle">
+               <button class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
+                  + Pendaftaran
+               </button>
+
+               <ul class="dropdown-menu shadow border-0">
+                  <li><a class="dropdown-item" href="javascript:;">Pendaftaran Baru</a></li>
+                  <li><a class="dropdown-item" href="javascript:;">Pasien Baru</a></li>
+                  <li><a class="dropdown-item" href="javascript:;">Surat Baru</a></li>
+               </ul>
+            </li>
+
+            <!-- NOTIF -->
+            <li class="nav-item">
+               <a class="nav-link position-relative" href="javascript:;">
+                  <iconify-icon icon="solar:bell-linear" width="22"></iconify-icon>
+                  <span class="notif-dot"></span>
                </a>
-               <div class="dropdown-menu dropdown-menu-end dropdown-menu-animate-up" aria-labelledby="drop2">
-                  <div class="message-body">
-                     <a href="javascript:void(0)" class="d-flex align-items-center gap-2 dropdown-item">
-                        <i class="ti ti-user fs-6"></i>
-                        <p class="mb-0 fs-3">My Profile</p>
-                     </a>
-                     <a href="javascript:void(0)" class="d-flex align-items-center gap-2 dropdown-item">
-                        <i class="ti ti-mail fs-6"></i>
-                        <p class="mb-0 fs-3">My Account</p>
-                     </a>
-                     <a href="javascript:void(0)" class="d-flex align-items-center gap-2 dropdown-item">
-                        <i class="ti ti-list-check fs-6"></i>
-                        <p class="mb-0 fs-3">My Task</p>
-                     </a>
-                     <a href="module/admin/index.php?logout" class="btn btn-outline-primary mx-3 mt-2 d-block">Logout</a>
-                  </div>
+            </li>
+
+            <!-- HELP -->
+            <li class="nav-item">
+               <a href="javascript:;" class="btn btn-outline-primary btn-sm">Bantuan</a>
+            </li>
+
+            <!-- USER -->
+            <li class="nav-item dropdown">
+               <a class="nav-link" data-bs-toggle="dropdown">
+                  <img src="assets/images/profile/user-1.jpg" width="35" class="rounded-circle">
+               </a>
+
+               <div class="dropdown-menu dropdown-menu-end shadow border-0">
+                  <a class="dropdown-item" href="javascript:;">Profile</a>
+                  <a class="dropdown-item" href="javascript:;">Pengaturan</a>
+                  <div class="dropdown-divider"></div>
+                  <a href="" class="dropdown-item text-danger">Logout</a>
                </div>
             </li>
+
          </ul>
       </div>
    </nav>
 </header>
-
-<?php
-// Cek apakah tombol logout ditekan
-if (isset($_GET['logout'])) {
-   echo "<script>
-     Swal.fire({
-       title: 'Apakah Anda yakin?',
-       text: 'Anda akan keluar dari sistem!',
-       icon: 'warning',
-       showCancelButton: true,
-       confirmButtonText: 'Ya, Logout',
-       cancelButtonText: 'Batal'
-     }).then((result) => {
-       if (result.isConfirmed) {
-         // Melakukan logout jika konfirmasi diterima
-         window.location.href = 'controller/logout';
-       }
-     });
-   </script>";
-}
-?>
