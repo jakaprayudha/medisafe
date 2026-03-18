@@ -63,6 +63,16 @@
          </a>
       </li>
       <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Jadwal Dokter') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/admin/schedule"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:calendar-outline"></iconify-icon>
+            <span class="hide-menu">Jadwal Dokter</span>
+         </a>
+      </li>
+      <li class="sidebar-item">
          <a class="sidebar-link <?php if ($title == 'Pemeriksaan' or $title == 'Permintan Farmasi' or $title == 'Resep Luar' or $title == 'Vaksin' or $title == 'Biaya Transaksi' or $title == 'Riwayat'  or $title == 'Permintaan Rawat Inap') {
                                     echo 'active';
                                  } ?>"
