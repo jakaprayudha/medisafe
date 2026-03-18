@@ -192,4 +192,47 @@
       color: white;
       border-radius: 10px;
    }
+
+   .switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+   }
+
+   .switch input {
+      display: none;
+   }
+
+   .slider {
+      position: absolute;
+      cursor: pointer;
+      background-color: #ccc;
+      border-radius: 20px;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      transition: .3s;
+   }
+
+   .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: .3s;
+   }
+
+   input:checked+.slider {
+      background-color: #22c55e;
+   }
+
+   input:checked+.slider:before {
+      transform: translateX(18px);
+   }
 </style>

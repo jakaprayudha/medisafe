@@ -1,49 +1,51 @@
 <?php
 include '../../database/connect.php';
+
+header('Content-Type: application/json');
+
+// 🔐 VALIDASI SESSION
+if (!isset($_SESSION['id_customer'])) {
+   http_response_code(401);
+   echo json_encode([
+      'status' => 'error',
+      'message' => 'Session tidak valid / expired'
+   ]);
+   exit;
+}
+
+$id_customer = $_SESSION['id_customer'];
+
 $method = $_SERVER['REQUEST_METHOD'];
+
 switch ($method) {
    case 'POST':
-      createData();
+      createData($id_customer);
       break;
    case 'GET':
       if (isset($_GET['id'])) {
-         getID($_GET['id']);
+         getID($_GET['id'], $id_customer);
       } else {
-         getData();
+         getData($id_customer);
       }
       break;
    case 'PUT':
-      // Update User
-      updateData();
+      updateData($id_customer);
       break;
-
    case 'DELETE':
-      // Delete User
-      deleteData();
-      break;
-
-   default:
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Method tidak diizinkan.'
-      ]);
+      deleteData($id_customer);
       break;
 }
 
-// Function untuk Create
-function createData()
+// ================= CREATE =================
+function createData($id_customer)
 {
    global $koneksi;
 
    if (empty($_POST)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Data tidak ditemukan.'
-      ]);
+      echo json_encode(['status' => 'error', 'message' => 'Data kosong']);
       exit;
    }
 
-   // Field yang boleh masuk ke ms_users
    $allowedFields = [
       'fullname',
       'username',
@@ -52,197 +54,196 @@ function createData()
       'path'
    ];
 
-   $fields = ['uid_user']; // kolom uid_user
-   $values = [generateDoctorNumber($koneksi)];
+   $fields = ['uid_user', 'id_customer'];
+   $values = [generateUserUID($koneksi), $id_customer];
+   $types  = "si";
 
    foreach ($allowedFields as $f) {
       if (isset($_POST[$f])) {
-         $fields[] = $f;
 
-         // khusus password → hash md5
          if ($f === 'password') {
+            $fields[] = $f;
             $values[] = md5($_POST[$f]);
+            $types .= "s";
          } else {
+            $fields[] = $f;
             $values[] = $_POST[$f];
+            $types .= "s";
          }
       }
    }
 
-   if (empty($fields)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Tidak ada data yang dikirim.'
-      ]);
-      exit;
-   }
+   $placeholders = implode(',', array_fill(0, count($fields), '?'));
+   $columns = implode(',', $fields);
 
-   // Buat placeholder dan tipe untuk prepared statement
-   $placeholders = implode(', ', array_fill(0, count($fields), '?'));
-   $columns = implode(', ', $fields);
-   $types = str_repeat('s', count($fields)); // semua string
+   $stmt = $koneksi->prepare("INSERT INTO ms_users ($columns) VALUES ($placeholders)");
+   $stmt->bind_param($types, ...$values);
 
-   $query = "INSERT INTO ms_users ($columns) VALUES ($placeholders)";
-
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param($types, ...$values);
-
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil ditambahkan.'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menambahkan data: ' . $stmt->error
-         ]);
-      }
-
-      $stmt->close();
+   if ($stmt->execute()) {
+      echo json_encode(['status' => 'success']);
    } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query: ' . $koneksi->error
-      ]);
+      echo json_encode(['status' => 'error', 'message' => $stmt->error]);
    }
+
+   $stmt->close();
 }
 
-/**
- * Generate uid_user unik dengan format DCT-XXXXXX
- */
-function generateDoctorNumber($koneksi)
+// ================= GENERATE UID =================
+function generateUserUID($koneksi)
 {
-   $count = 0; // inisialisasi supaya tidak merah
-   do {
-      $random = mt_rand(100000, 999999); // 6 digit angka
-      $doctorNumber = "USR-" . md5($random);
+   $count = 0;
 
-      // cek ke database apakah sudah ada
-      $check = $koneksi->prepare("SELECT COUNT(*) FROM ms_users WHERE uid_user = ?");
-      $check->bind_param("s", $doctorNumber);
+   do {
+      $random = mt_rand(100000, 999999);
+      $uid = "USR-" . md5($random);
+
+      $check = $koneksi->prepare("SELECT COUNT(*) FROM ms_users WHERE uid_user=?");
+      $check->bind_param("s", $uid);
       $check->execute();
       $check->bind_result($count);
       $check->fetch();
       $check->close();
-   } while ($count > 0); // ulang jika sudah ada
+   } while ($count > 0);
 
-   return $doctorNumber;
+   return $uid;
 }
 
-function getData()
+// ================= READ =================
+function getData($id_customer)
 {
    global $koneksi;
 
-   $query = "SELECT * FROM ms_users ORDER BY username DESC";
-   $result = mysqli_query($koneksi, $query);
+   $stmt = $koneksi->prepare(
+      "SELECT * FROM ms_users 
+       WHERE id_customer=? 
+       ORDER BY username DESC"
+   );
 
-   if (!$result) {
-      http_response_code(500);
+   $stmt->bind_param("i", $id_customer);
+   $stmt->execute();
+
+   $data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+   echo json_encode(['status' => 'success', 'data' => $data]);
+
+   $stmt->close();
+}
+
+// ================= READ BY ID =================
+function getID($id, $id_customer)
+{
+   global $koneksi;
+
+   $stmt = $koneksi->prepare(
+      "SELECT * FROM ms_users 
+       WHERE id_user=? AND id_customer=?"
+   );
+
+   $stmt->bind_param("ii", $id, $id_customer);
+   $stmt->execute();
+
+   $res = $stmt->get_result();
+
+   if ($res->num_rows > 0) {
       echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal mengambil data: ' . mysqli_error($koneksi)
+         'status' => 'success',
+         'data' => $res->fetch_assoc()
       ]);
-      return;
-   }
-
-   // Ambil semua data dalam bentuk array asosiatif
-   $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
-
-   // Tutup hasil query
-   mysqli_free_result($result);
-
-   // Kirimkan data dalam format JSON
-   header('Content-Type: application/json');
-   echo json_encode([
-      'status' => 'success',
-      'data' => $data,
-   ]);
-}
-
-// Function untuk Read User berdasarkan ID
-function  getID($iduser)
-{
-   global $koneksi;
-
-   // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM ms_users WHERE id_user = ?";
-
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $iduser); // Bind parameter iduser
-      $stmt->execute();
-      $result = $stmt->get_result();
-
-      if ($result->num_rows > 0) {
-         $data = $result->fetch_assoc();
-         echo json_encode([
-            'status' => 'success',
-            'data' => $data
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Data tidak ditemukan.'
-         ]);
-      }
-
-      $stmt->close();
    } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
+      echo json_encode(['status' => 'error', 'message' => 'Tidak ditemukan']);
    }
+
+   $stmt->close();
 }
 
-
-
-function updateData()
+// ================= UPDATE =================
+function updateData($id_customer)
 {
    global $koneksi;
+
    parse_str(file_get_contents("php://input"), $_PUT);
 
    if (empty($_PUT['id_user'])) {
-      echo json_encode(['status' => 'error', 'message' => 'ID tidak ditemukan.']);
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'ID tidak ditemukan'
+      ]);
       return;
    }
 
    $id = $_PUT['id_user'];
-   $allowedFields = [
-      'fullname',
-      'username',
-      'password',
-      'roles',
-      'path'
-   ];
-   $fields = [];
-   $values = [];
+   $oldPassword = '';
 
-   // Ambil password lama dari DB
-   $oldPassword = null;
-   $stmtOld = $koneksi->prepare("SELECT password FROM ms_users WHERE id_user=?");
-   $stmtOld->bind_param("i", $id);
+   // ================= 🔥 TOGGLE STATUS =================
+   if (isset($_GET['toggle_status']) && isset($_PUT['status'])) {
+
+      $status = $_PUT['status'];
+
+      $stmt = $koneksi->prepare(
+         "UPDATE ms_users 
+          SET status=? 
+          WHERE id_user=? AND id_customer=?"
+      );
+
+      $stmt->bind_param("iii", $status, $id, $id_customer);
+
+      if ($stmt->execute()) {
+         echo json_encode([
+            'status' => 'success',
+            'message' => 'Status berhasil diupdate.'
+         ]);
+      } else {
+         echo json_encode([
+            'status' => 'error',
+            'message' => 'Gagal update status.'
+         ]);
+      }
+
+      $stmt->close();
+      return; // ⛔ STOP di sini (penting)
+   }
+
+   // ================= 🔥 AMBIL PASSWORD LAMA =================
+   $stmtOld = $koneksi->prepare(
+      "SELECT password FROM ms_users 
+       WHERE id_user=? AND id_customer=?"
+   );
+
+   $stmtOld->bind_param("ii", $id, $id_customer);
    $stmtOld->execute();
    $stmtOld->bind_result($oldPassword);
    $stmtOld->fetch();
    $stmtOld->close();
 
+   // ================= 🔥 UPDATE NORMAL =================
+   $allowedFields = [
+      'fullname',
+      'username',
+      'password',
+      'roles',
+      'path'
+   ];
+
+   $fields = [];
+   $values = [];
+
    foreach ($allowedFields as $f) {
       if (isset($_PUT[$f])) {
+
          if ($f === 'password') {
-            $newPassword = $_PUT[$f];
 
-            // Jika password kosong, skip update
-            if (trim($newPassword) === '') {
-               continue;
-            }
+            // skip kalau kosong
+            if (trim($_PUT[$f]) === '') continue;
 
-            // Kalau password baru berbeda dari yang lama (belum di-md5)
-            if ($newPassword !== $oldPassword) {
-               $newPassword = md5($newPassword);
+            $newPass = $_PUT[$f];
+
+            // kalau beda → hash
+            if ($newPass !== $oldPassword) {
+               $newPass = md5($newPass);
             }
 
             $fields[] = "$f=?";
-            $values[] = $newPassword;
+            $values[] = $newPass;
          } else {
             $fields[] = "$f=?";
             $values[] = $_PUT[$f];
@@ -251,70 +252,63 @@ function updateData()
    }
 
    if (empty($fields)) {
-      echo json_encode(['status' => 'error', 'message' => 'Tidak ada data diupdate.']);
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Tidak ada update'
+      ]);
       return;
    }
 
    $values[] = $id;
-   $types = str_repeat('s', count($values) - 1) . "i";
+   $values[] = $id_customer;
 
-   $query = "UPDATE ms_users SET " . implode(',', $fields) . " WHERE id_user=?";
+   $types = str_repeat('s', count($values) - 2) . "ii";
+
+   $query = "UPDATE ms_users SET " . implode(',', $fields) . " 
+             WHERE id_user=? AND id_customer=?";
+
    $stmt = $koneksi->prepare($query);
+   $stmt->bind_param($types, ...$values);
 
-   if ($stmt) {
-      $stmt->bind_param($types, ...$values);
-      if ($stmt->execute()) {
-         echo json_encode(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
-      } else {
-         echo json_encode(['status' => 'error', 'message' => 'Update gagal: ' . $stmt->error]);
-      }
-      $stmt->close();
+   if ($stmt->execute()) {
+      echo json_encode([
+         'status' => 'success',
+         'message' => 'Data berhasil diperbarui.'
+      ]);
    } else {
-      echo json_encode(['status' => 'error', 'message' => 'Query error: ' . $koneksi->error]);
+      echo json_encode([
+         'status' => 'error',
+         'message' => $stmt->error
+      ]);
    }
+
+   $stmt->close();
 }
 
-
-
-// Function untuk Delete User
-function deleteData()
+// ================= DELETE =================
+function deleteData($id_customer)
 {
    global $koneksi;
 
-   // Ambil ID user dari query parameter
-   $id = isset($_GET['id']) ? $_GET['id'] : '';
+   $id = $_GET['id'] ?? '';
 
-   if (empty($id)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'ID tidak ditemukan.'
-      ]);
-      exit;
+   if (!$id) {
+      echo json_encode(['status' => 'error', 'message' => 'ID kosong']);
+      return;
    }
 
-   // Query untuk menghapus data user
-   $query = "DELETE FROM ms_users WHERE id_user = ?";
+   $stmt = $koneksi->prepare(
+      "DELETE FROM ms_users 
+       WHERE id_user=? AND id_customer=?"
+   );
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $id);
+   $stmt->bind_param("ii", $id, $id_customer);
 
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil dihapus.'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menghapus.'
-         ]);
-      }
-
-      $stmt->close();
+   if ($stmt->execute()) {
+      echo json_encode(['status' => 'success']);
    } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
+      echo json_encode(['status' => 'error']);
    }
+
+   $stmt->close();
 }

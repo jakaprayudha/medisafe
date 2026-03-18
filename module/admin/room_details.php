@@ -1,7 +1,10 @@
 <?php
 $title = 'Ruangan Rawat Inap';
+require '../../database/connect.php';
 require '../../controller/view.php';
 $idroom = $_SESSION['selected_room_id'];
+$check = mysqli_query($koneksi, "SELECT * FROM ms_room WHERE id_room = '$idroom'");
+$dataroom = mysqli_fetch_array($check);
 ?>
 <!doctype html>
 <html lang="en">
@@ -32,6 +35,52 @@ $idroom = $_SESSION['selected_room_id'];
       <div class="body-wrapper-inner">
         <div class="container-fluid">
           <div class="row">
+            <div class="col-12">
+              <div class="card shadow-sm border-0">
+                <div class="card-body">
+
+                  <div class="row g-3">
+
+                    <div class="col-md-4">
+                      <small class="text-muted">Kelas</small>
+                      <div class="fw-semibold"><?php echo $dataroom['service_class']; ?></div>
+                    </div>
+
+                    <div class="col-md-4">
+                      <small class="text-muted">Nama Ruangan</small>
+                      <div class="fw-semibold"><?php echo $dataroom['room_name']; ?></div>
+                    </div>
+
+                    <div class="col-md-4">
+                      <small class="text-muted">Kapasitas</small>
+                      <div class="fw-semibold"><?php echo $dataroom['room_capacity']; ?> Orang</div>
+                    </div>
+
+                    <div class="col-md-4">
+                      <small class="text-muted">Status</small>
+                      <div>
+                        <?php
+                        if ($dataroom['room_status'] == 0) {
+                          echo '<span class="badge bg-danger-subtle text-danger">Tidak Aktif</span>';
+                        } else {
+                          echo '<span class="badge bg-success-subtle text-success">Aktif</span>';
+                        }
+                        ?>
+                      </div>
+                    </div>
+
+                    <div class="col-md-8">
+                      <small class="text-muted">Deskripsi</small>
+                      <div class="fw-semibold">
+                        <?php echo $dataroom['room_description']; ?>
+                      </div>
+                    </div>
+
+                  </div>
+
+                </div>
+              </div>
+            </div>
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
                 <div class="card-body p-4">
@@ -47,11 +96,11 @@ $idroom = $_SESSION['selected_room_id'];
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
-                          <th class="text-dark fw-normal">Nama/Nomor Tempat Tidur</th>
+                          <th class="text-dark fw-normal col-2">Nama/Nomor Tempat Tidur</th>
                           <th class="text-dark fw-normal">Kebutuhan (P/L)</th>
                           <th scope="col" class="text-dark fw-normal">Catatan</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Status</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Actions</th>
+                          <th scope="col" class="text-dark fw-normal text-center col-1">Status</th>
+                          <th scope="col" class="text-dark fw-normal text-center col-1">Actions</th>
                         </tr>
                       </thead>
                       <tbody></tbody>
@@ -145,8 +194,10 @@ $idroom = $_SESSION['selected_room_id'];
               "bed_name": row.bed_name ?? "-",
               "bed_gender": row.bed_gender ?? "-",
               "bed_notes": row.bed_notes ?? "-",
-              "status": row.bed_status === '1' ?
-                '<span class="badge bg-success text-center d-block">Aktif</span>' : '<span class="badge bg-danger text-center d-block">Nonaktif</span>'
+              "status": row.bed_status == '0' ?
+                '<span class="badge bg-success-subtle text-success d-block text-center">Kosong</span>' : row.bed_status == '2' ?
+                '<span class="badge bg-warning-subtle text-warning d-block text-center">Digunakan</span>' : row.bed_status == '99' ?
+                '<span class="badge bg-secondary-subtle text-secondary d-block text-center">Tidak Dipakai</span>' : '<span class="badge bg-dark text-white d-block text-center">Unknown</span>'
             };
           });
         }

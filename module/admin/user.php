@@ -93,7 +93,6 @@ require '../../controller/view.php';
               <label class="form-label required">Roles</label>
               <select name="roles" id="roles" class="form-select" required>
                 <option value="">PILIH</option>
-                <option value="admin">Admin</option>
                 <option value="dokter">Dokter</option>
                 <option value="dokter">Perawat</option>
                 <option value="receptionis">Receptionis</option>
@@ -161,8 +160,14 @@ require '../../controller/view.php';
               "username": row.username ?? "-",
               "roles": row.roles ?? "-",
               "password": maskedPassword,
-              "status": row.status === '1' ?
-                '<span class="badge bg-success text-center d-block">Aktif</span>' : '<span class="badge bg-danger text-center d-block">Nonaktif</span>'
+              "status": `
+              <label class="switch">
+                <input type="checkbox" class="toggle-status-user"
+                  data-id="${row.id_user}"
+                  ${row.status == '1' ? 'checked' : ''}>
+                <span class="slider"></span>
+              </label>
+              `
             };
           });
         }
@@ -285,6 +290,37 @@ require '../../controller/view.php';
             });
         }
       });
+    });
+
+    $(document).on('change', '.toggle-status-user', function() {
+
+      let checkbox = $(this);
+      let id = checkbox.data('id');
+      let status = checkbox.is(':checked') ? 1 : 0;
+
+      fetch(apiUrl + '?toggle_status=1', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: `id_user=${id}&status=${status}`
+        })
+        .then(res => res.json())
+        .then(res => {
+
+          if (res.status !== 'success') {
+            // ❌ revert kalau gagal
+            checkbox.prop('checked', !status);
+
+            Swal.fire('Gagal!', res.message, 'error');
+          }
+
+        })
+        .catch(() => {
+          checkbox.prop('checked', !status);
+          Swal.fire('Error!', 'Server error', 'error');
+        });
+
     });
   });
 </script>

@@ -1,37 +1,50 @@
 <?php
+session_start();
 include '../../database/connect.php';
+
+header('Content-Type: application/json');
+
 $method = $_SERVER['REQUEST_METHOD'];
+
+// 🔥 VALIDASI SESSION GLOBAL
+if (!isset($_SESSION['id_customer'])) {
+   echo json_encode([
+      'status' => 'error',
+      'message' => 'Session faskes tidak ditemukan.'
+   ]);
+   exit;
+}
+
+$id_customer = $_SESSION['id_customer'];
+
 switch ($method) {
    case 'POST':
-      createData();
+      createData($id_customer);
       break;
    case 'GET':
       if (isset($_GET['id'])) {
-         getID($_GET['id']);
+         getID($_GET['id'], $id_customer);
       } else {
-         getData();
+         getData($id_customer);
       }
       break;
    case 'PUT':
-      // Update User
-      updateData();
+      updateData($id_customer);
       break;
-
    case 'DELETE':
-      // Delete User
-      deleteData();
+      deleteData($id_customer);
       break;
-
    default:
       echo json_encode([
          'status' => 'error',
          'message' => 'Method tidak diizinkan.'
       ]);
-      break;
 }
 
-// Function untuk Create
-function createData()
+/* =========================
+   CREATE
+========================= */
+function createData($id_customer)
 {
    global $koneksi;
 
@@ -40,15 +53,10 @@ function createData()
          'status' => 'error',
          'message' => 'Data tidak ditemukan.'
       ]);
-      exit;
+      return;
    }
 
-   // Ambil semua field yang valid untuk tabel ms_poli
-   $allowedFields = [
-      'poli_code',
-      'poli_name',
-      'poli_queue'
-   ];
+   $allowedFields = ['poli_code', 'poli_name', 'poli_queue'];
 
    $fields = [];
    $values = [];
@@ -56,119 +64,95 @@ function createData()
    foreach ($allowedFields as $f) {
       if (isset($_POST[$f])) {
          $fields[] = $f;
-         $values[] = $_POST[$f];
+         $values[] = trim($_POST[$f]);
       }
    }
 
-   if (empty($fields)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Tidak ada data yang dikirim.'
-      ]);
-      exit;
-   }
+   // wajib
+   $fields[] = 'id_customer';
+   $values[] = $id_customer;
 
-   // Buat placeholder dan tipe untuk prepared statement
-   $placeholders = implode(', ', array_fill(0, count($fields), '?'));
-   $columns = implode(', ', $fields);
-   $types = str_repeat('s', count($fields)); // semua string (varchar), bisa ubah jika ada int
+   $placeholders = implode(',', array_fill(0, count($fields), '?'));
+   $columns = implode(',', $fields);
 
-   $query = "INSERT INTO ms_poli ($columns) VALUES ($placeholders)";
+   // semua string + id_customer int
+   $types = str_repeat('s', count($fields) - 1) . 'i';
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param($types, ...$values);
+   $stmt = $koneksi->prepare("INSERT INTO ms_poli ($columns) VALUES ($placeholders)");
 
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil ditambahkan.'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menambahkan data: ' . $stmt->error
-         ]);
-      }
-
-      $stmt->close();
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query: ' . $koneksi->error
-      ]);
-   }
-}
-
-function getData()
-{
-   global $koneksi;
-
-   $query = "SELECT * FROM ms_poli  ORDER BY poli_name DESC";
-   $result = mysqli_query($koneksi, $query);
-
-   if (!$result) {
-      http_response_code(500);
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal mengambil data: ' . mysqli_error($koneksi)
-      ]);
+   if (!$stmt) {
+      echo json_encode(['status' => 'error', 'message' => $koneksi->error]);
       return;
    }
 
-   // Ambil semua data dalam bentuk array asosiatif
-   $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
+   $stmt->bind_param($types, ...$values);
 
-   // Tutup hasil query
-   mysqli_free_result($result);
+   if ($stmt->execute()) {
+      echo json_encode(['status' => 'success', 'message' => 'Data berhasil ditambahkan.']);
+   } else {
+      echo json_encode(['status' => 'error', 'message' => $stmt->error]);
+   }
 
-   // Kirimkan data dalam format JSON
-   header('Content-Type: application/json');
-   echo json_encode([
-      'status' => 'success',
-      'data' => $data,
-   ]);
+   $stmt->close();
 }
 
-// Function untuk Read User berdasarkan ID
-function  getID($iduser)
+/* =========================
+   READ ALL (FILTER FASKES)
+========================= */
+function getData($id_customer)
 {
    global $koneksi;
 
-   // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM ms_poli WHERE id_poli = ?";
+   $stmt = $koneksi->prepare("SELECT * FROM ms_poli WHERE id_customer=? ORDER BY poli_name ASC");
+   $stmt->bind_param("i", $id_customer);
+   $stmt->execute();
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $iduser); // Bind parameter iduser
-      $stmt->execute();
-      $result = $stmt->get_result();
+   $result = $stmt->get_result();
+   $data = $result->fetch_all(MYSQLI_ASSOC);
 
-      if ($result->num_rows > 0) {
-         $data = $result->fetch_assoc();
-         echo json_encode([
-            'status' => 'success',
-            'data' => $data
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Data tidak ditemukan.'
-         ]);
-      }
+   echo json_encode([
+      'status' => 'success',
+      'data' => $data
+   ]);
 
-      $stmt->close();
+   $stmt->close();
+}
+
+/* =========================
+   READ BY ID (SAFE MULTI TENANT)
+========================= */
+function getID($id, $id_customer)
+{
+   global $koneksi;
+
+   $stmt = $koneksi->prepare("SELECT * FROM ms_poli WHERE id_poli=? AND id_customer=?");
+   $stmt->bind_param("ii", $id, $id_customer);
+   $stmt->execute();
+
+   $result = $stmt->get_result();
+
+   if ($result->num_rows > 0) {
+      echo json_encode([
+         'status' => 'success',
+         'data' => $result->fetch_assoc()
+      ]);
    } else {
       echo json_encode([
          'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
+         'message' => 'Data tidak ditemukan.'
       ]);
    }
+
+   $stmt->close();
 }
 
-
-
-function updateData()
+/* =========================
+   UPDATE
+========================= */
+function updateData($id_customer)
 {
    global $koneksi;
+
    parse_str(file_get_contents("php://input"), $_PUT);
 
    if (empty($_PUT['id_poli'])) {
@@ -177,86 +161,69 @@ function updateData()
    }
 
    $id = $_PUT['id_poli'];
-   $allowedFields = [
-      'poli_code',
-      'poli_name',
-      'poli_queue'
-   ];
+
+   // toggle status
+   if (isset($_PUT['poli_status'])) {
+      $status = $_PUT['poli_status'];
+
+      $stmt = $koneksi->prepare("UPDATE ms_poli SET poli_status=? WHERE id_poli=? AND id_customer=?");
+      $stmt->bind_param("iii", $status, $id, $id_customer);
+
+      echo json_encode(['status' => $stmt->execute() ? 'success' : 'error']);
+      $stmt->close();
+      return;
+   }
+
+   $allowedFields = ['poli_code', 'poli_name', 'poli_queue'];
+
    $fields = [];
    $values = [];
 
    foreach ($allowedFields as $f) {
       if (isset($_PUT[$f])) {
          $fields[] = "$f=?";
-         $values[] = $_PUT[$f];
+         $values[] = trim($_PUT[$f]);
       }
    }
 
    if (empty($fields)) {
-      echo json_encode(['status' => 'error', 'message' => 'Tidak ada data diupdate.']);
+      echo json_encode(['status' => 'error', 'message' => 'Tidak ada update']);
       return;
    }
 
    $values[] = $id;
-   $types = str_repeat('s', count($values) - 1) . "i";
+   $values[] = $id_customer;
 
-   $query = "UPDATE ms_poli SET " . implode(',', $fields) . " WHERE id_poli=?";
+   $types = str_repeat('s', count($values) - 2) . "ii";
+
+   $query = "UPDATE ms_poli SET " . implode(',', $fields) . " WHERE id_poli=? AND id_customer=?";
    $stmt = $koneksi->prepare($query);
 
-   if ($stmt) {
-      $stmt->bind_param($types, ...$values);
-      if ($stmt->execute()) {
-         echo json_encode(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
-      } else {
-         echo json_encode(['status' => 'error', 'message' => 'Update gagal: ' . $stmt->error]);
-      }
-      $stmt->close();
-   } else {
-      echo json_encode(['status' => 'error', 'message' => 'Query error: ' . $koneksi->error]);
-   }
+   $stmt->bind_param($types, ...$values);
+
+   echo json_encode(['status' => $stmt->execute() ? 'success' : 'error']);
+
+   $stmt->close();
 }
 
-
-
-// Function untuk Delete User
-function deleteData()
+/* =========================
+   DELETE (SAFE)
+========================= */
+function deleteData($id_customer)
 {
    global $koneksi;
 
-   // Ambil ID user dari query parameter
-   $id = isset($_GET['id']) ? $_GET['id'] : '';
+   $id = $_GET['id'] ?? null;
 
-   if (empty($id)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'ID tidak ditemukan.'
-      ]);
-      exit;
+   if (!$id) {
+      echo json_encode(['status' => 'error', 'message' => 'ID kosong']);
+      return;
    }
 
-   // Query untuk menghapus data user
-   $query = "DELETE FROM ms_poli WHERE id_poli = ?";
+   $stmt = $koneksi->prepare("DELETE FROM ms_poli WHERE id_poli=? AND id_customer=?");
+   $stmt->bind_param("ii", $id, $id_customer);
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $id);
+   echo json_encode(['status' => $stmt->execute() ? 'success' : 'error']);
 
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil dihapus.'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menghapus.'
-         ]);
-      }
-
-      $stmt->close();
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
-   }
+   $stmt->close();
 }

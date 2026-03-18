@@ -1,25 +1,41 @@
 <?php
 include '../../database/connect.php';
+
+header('Content-Type: application/json');
+
+// 🔐 VALIDASI SESSION
+if (!isset($_SESSION['id_customer'])) {
+   http_response_code(401);
+   echo json_encode([
+      'status' => 'error',
+      'message' => 'Session tidak valid / expired'
+   ]);
+   exit;
+}
+
+$id_customer = $_SESSION['id_customer'];
+
 $method = $_SERVER['REQUEST_METHOD'];
+
 switch ($method) {
    case 'POST':
-      createData();
+      createData($id_customer);
       break;
+
    case 'GET':
       if (isset($_GET['id'])) {
-         getID($_GET['id']);
+         getID($_GET['id'], $id_customer);
       } else {
-         getData();
+         getData($id_customer);
       }
       break;
+
    case 'PUT':
-      // Update User
-      updateData();
+      updateData($id_customer);
       break;
 
    case 'DELETE':
-      // Delete User
-      deleteData();
+      deleteData($id_customer);
       break;
 
    default:
@@ -30,8 +46,8 @@ switch ($method) {
       break;
 }
 
-// Function untuk Create
-function createData()
+// ================= CREATE =================
+function createData($id_customer)
 {
    global $koneksi;
 
@@ -43,7 +59,6 @@ function createData()
       exit;
    }
 
-   // Ambil semua field yang valid untuk tabel ms_room_bed
    $allowedFields = [
       'id_room',
       'bed_name',
@@ -69,14 +84,19 @@ function createData()
       exit;
    }
 
-   // Buat placeholder dan tipe untuk prepared statement
+   // 🔥 inject id_customer
+   $fields[] = 'id_customer';
+   $values[] = $id_customer;
+
    $placeholders = implode(', ', array_fill(0, count($fields), '?'));
    $columns = implode(', ', $fields);
-   $types = str_repeat('s', count($fields)); // semua string (varchar), bisa ubah jika ada int
+
+   $types = str_repeat('s', count($values) - 1) . 'i';
 
    $query = "INSERT INTO ms_room_bed ($columns) VALUES ($placeholders)";
+   $stmt = $koneksi->prepare($query);
 
-   if ($stmt = $koneksi->prepare($query)) {
+   if ($stmt) {
       $stmt->bind_param($types, ...$values);
 
       if ($stmt->execute()) {
@@ -87,103 +107,103 @@ function createData()
       } else {
          echo json_encode([
             'status' => 'error',
-            'message' => 'Gagal menambahkan data: ' . $stmt->error
+            'message' => 'Gagal: ' . $stmt->error
          ]);
       }
 
       $stmt->close();
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query: ' . $koneksi->error
-      ]);
    }
 }
 
-function getData()
+// ================= READ ALL =================
+function getData($id_customer)
 {
    global $koneksi;
-   $no = $_GET['no'];
-   $query = "SELECT * FROM ms_room_bed WHERE id_room = $no  ORDER BY id_bed DESC";
-   $result = mysqli_query($koneksi, $query);
 
-   if (!$result) {
-      http_response_code(500);
+   if (!isset($_GET['no'])) {
       echo json_encode([
          'status' => 'error',
-         'message' => 'Gagal mengambil data: ' . mysqli_error($koneksi)
+         'message' => 'Parameter id_room (no) wajib'
       ]);
       return;
    }
 
-   // Ambil semua data dalam bentuk array asosiatif
-   $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
+   $id_room = $_GET['no'];
 
-   // Tutup hasil query
-   mysqli_free_result($result);
+   $query = "SELECT * FROM ms_room_bed 
+             WHERE id_room = ? 
+             AND id_customer = ?
+             ORDER BY id_bed DESC";
 
-   // Kirimkan data dalam format JSON
-   header('Content-Type: application/json');
+   $stmt = $koneksi->prepare($query);
+   $stmt->bind_param("ii", $id_room, $id_customer);
+   $stmt->execute();
+
+   $result = $stmt->get_result();
+   $data = $result->fetch_all(MYSQLI_ASSOC);
+
    echo json_encode([
       'status' => 'success',
-      'data' => $data,
+      'data' => $data
    ]);
+
+   $stmt->close();
 }
 
-// Function untuk Read User berdasarkan ID
-function  getID($iduser)
+// ================= READ BY ID =================
+function getID($id, $id_customer)
 {
    global $koneksi;
 
-   // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM ms_room_bed WHERE id_bed = ?";
+   $query = "SELECT * FROM ms_room_bed 
+             WHERE id_bed = ? 
+             AND id_customer = ?";
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $iduser); // Bind parameter iduser
-      $stmt->execute();
-      $result = $stmt->get_result();
+   $stmt = $koneksi->prepare($query);
+   $stmt->bind_param("ii", $id, $id_customer);
+   $stmt->execute();
 
-      if ($result->num_rows > 0) {
-         $data = $result->fetch_assoc();
-         echo json_encode([
-            'status' => 'success',
-            'data' => $data
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Data tidak ditemukan.'
-         ]);
-      }
+   $result = $stmt->get_result();
 
-      $stmt->close();
+   if ($result->num_rows > 0) {
+      echo json_encode([
+         'status' => 'success',
+         'data' => $result->fetch_assoc()
+      ]);
    } else {
       echo json_encode([
          'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
+         'message' => 'Data tidak ditemukan.'
       ]);
    }
+
+   $stmt->close();
 }
 
-
-
-function updateData()
+// ================= UPDATE =================
+function updateData($id_customer)
 {
    global $koneksi;
+
    parse_str(file_get_contents("php://input"), $_PUT);
 
    if (empty($_PUT['id_bed'])) {
-      echo json_encode(['status' => 'error', 'message' => 'ID tidak ditemukan.']);
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'ID tidak ditemukan.'
+      ]);
       return;
    }
 
    $id = $_PUT['id_bed'];
+
    $allowedFields = [
       'id_room',
       'bed_name',
       'bed_gender',
       'bed_notes'
    ];
+
    $fields = [];
    $values = [];
 
@@ -195,38 +215,48 @@ function updateData()
    }
 
    if (empty($fields)) {
-      echo json_encode(['status' => 'error', 'message' => 'Tidak ada data diupdate.']);
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Tidak ada data diupdate.'
+      ]);
       return;
    }
 
    $values[] = $id;
-   $types = str_repeat('s', count($values) - 1) . "i";
+   $values[] = $id_customer;
 
-   $query = "UPDATE ms_room_bed SET " . implode(',', $fields) . " WHERE id_bed=?";
+   $types = str_repeat('s', count($values) - 2) . "ii";
+
+   $query = "UPDATE ms_room_bed SET " . implode(',', $fields) . " 
+             WHERE id_bed=? AND id_customer=?";
+
    $stmt = $koneksi->prepare($query);
 
    if ($stmt) {
       $stmt->bind_param($types, ...$values);
+
       if ($stmt->execute()) {
-         echo json_encode(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
+         echo json_encode([
+            'status' => 'success',
+            'message' => 'Data berhasil diperbarui.'
+         ]);
       } else {
-         echo json_encode(['status' => 'error', 'message' => 'Update gagal: ' . $stmt->error]);
+         echo json_encode([
+            'status' => 'error',
+            'message' => 'Update gagal: ' . $stmt->error
+         ]);
       }
+
       $stmt->close();
-   } else {
-      echo json_encode(['status' => 'error', 'message' => 'Query error: ' . $koneksi->error]);
    }
 }
 
-
-
-// Function untuk Delete User
-function deleteData()
+// ================= DELETE =================
+function deleteData($id_customer)
 {
    global $koneksi;
 
-   // Ambil ID user dari query parameter
-   $id = isset($_GET['id']) ? $_GET['id'] : '';
+   $id = $_GET['id'] ?? '';
 
    if (empty($id)) {
       echo json_encode([
@@ -236,29 +266,24 @@ function deleteData()
       exit;
    }
 
-   // Query untuk menghapus data user
-   $query = "DELETE FROM ms_room_bed WHERE id_bed = ?";
+   $query = "DELETE FROM ms_room_bed 
+             WHERE id_bed = ? 
+             AND id_customer = ?";
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $id);
+   $stmt = $koneksi->prepare($query);
+   $stmt->bind_param("ii", $id, $id_customer);
 
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil dihapus.'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menghapus.'
-         ]);
-      }
-
-      $stmt->close();
+   if ($stmt->execute()) {
+      echo json_encode([
+         'status' => 'success',
+         'message' => 'Data berhasil dihapus.'
+      ]);
    } else {
       echo json_encode([
          'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
+         'message' => 'Gagal menghapus.'
       ]);
    }
+
+   $stmt->close();
 }

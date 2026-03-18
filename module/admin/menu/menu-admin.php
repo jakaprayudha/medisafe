@@ -23,7 +23,7 @@
             <li><a href="module/admin/poli">Poliklinik</a></li>
             <li><a href="module/admin/display">Display</a></li>
             <li><a href="module/admin/provider">Jenis Bayar</a></li>
-            <li><a href="module/admin/room">Rawat Inap</a></li>
+            <li><a href="module/admin/room">Kamar Rawat Inap</a></li>
             <li><a href="module/admin/doctor">Dokter</a></li>
             <li><a href="module/admin/nurse">Tenaga Kesehatan</a></li>
             <li><a href="module/admin/patient">Pasien</a></li>

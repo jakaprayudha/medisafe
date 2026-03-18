@@ -1,81 +1,105 @@
 <?php
 include '../../database/connect.php';
+
+header('Content-Type: application/json');
+
+// 🔐 VALIDASI SESSION
+if (!isset($_SESSION['id_customer'])) {
+   http_response_code(401);
+   echo json_encode([
+      'status' => 'error',
+      'message' => 'Session tidak valid / expired'
+   ]);
+   exit;
+}
+
+$id_customer = $_SESSION['id_customer'];
+
 $method = $_SERVER['REQUEST_METHOD'];
+
 switch ($method) {
    case 'POST':
-      createData();
+      createData($id_customer);
       break;
    case 'GET':
       if (isset($_GET['id'])) {
-         getID($_GET['id']);
+         getID($_GET['id'], $id_customer);
       } else {
-         getData();
+         getData($id_customer);
       }
       break;
    case 'PUT':
-      // Update User
-      updateData();
+      updateData($id_customer);
       break;
-
    case 'DELETE':
-      // Delete User
-      deleteData();
-      break;
-
-   default:
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Method tidak diizinkan.'
-      ]);
+      deleteData($id_customer);
       break;
 }
 
-// Function untuk Create
-function createData()
+// ================= CREATE =================
+function createData($id_customer)
 {
    global $koneksi;
 
    if (empty($_POST)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Data tidak ditemukan.'
-      ]);
+      echo json_encode(['status' => 'error', 'message' => 'Data kosong']);
       exit;
    }
 
-   // 🔹 Ambil nomor_rm_end dari setting_clinic
-   $querySetting = "SELECT nomor_rm_end FROM setting_clinic WHERE id = 1 LIMIT 1";
-   $result = $koneksi->query($querySetting);
+   // 🔥 AMBIL nomor RM per customer
+   $stmt = $koneksi->prepare(
+      "SELECT nomor_rm_end FROM setting_clinic 
+       WHERE id_customer=? LIMIT 1"
+   );
+   $stmt->bind_param("i", $id_customer);
+   $stmt->execute();
+   $result = $stmt->get_result();
 
-   if ($result && $row = $result->fetch_assoc()) {
+   if ($row = $result->fetch_assoc()) {
       $lastRM = intval($row['nomor_rm_end']);
    } else {
       $lastRM = 0;
-      $koneksi->query("INSERT INTO setting_clinic (id, nomor_rm_end) VALUES (1, 0)
-                       ON DUPLICATE KEY UPDATE nomor_rm_end = nomor_rm_end");
+
+      $insert = $koneksi->prepare(
+         "INSERT INTO setting_clinic (id_customer, nomor_rm_end) VALUES (?,0)"
+      );
+      $insert->bind_param("i", $id_customer);
+      $insert->execute();
+      $insert->close();
    }
 
-   // 🔹 Tambah nomor RM
-   $newRM = $lastRM + 1;
-   $nomorRM = str_pad($newRM, 6, "0", STR_PAD_LEFT); // format 6 digit
+   $stmt->close();
 
-   // 🔹 Generate random patient_number unik
+   // 🔥 generate nomor RM
+   $newRM = $lastRM + 1;
+   $nomorRM = str_pad($newRM, 6, "0", STR_PAD_LEFT);
+   $count = 0;
+
+   // 🔥 generate patient_number unik
    do {
-      $patientNumber = "PCT-" . strtoupper(bin2hex(random_bytes(4))); // contoh: PCT-A1B2C3D4
-      $check = $koneksi->prepare("SELECT COUNT(*) AS cnt FROM ms_patient WHERE patient_number = ?");
+      $patientNumber = "PCT-" . strtoupper(bin2hex(random_bytes(4)));
+
+      $check = $koneksi->prepare(
+         "SELECT COUNT(*) FROM ms_patient WHERE patient_number=?"
+      );
       $check->bind_param("s", $patientNumber);
       $check->execute();
-      $res = $check->get_result()->fetch_assoc();
+      $check->bind_result($count);
+      $check->fetch();
       $check->close();
-   } while ($res['cnt'] > 0);
+   } while ($count > 0);
 
-   // 🔹 Update setting_clinic
-   $updateSetting = $koneksi->prepare("UPDATE setting_clinic SET nomor_rm_end = ? WHERE id = 1");
-   $updateSetting->bind_param("i", $newRM);
-   $updateSetting->execute();
-   $updateSetting->close();
+   // 🔥 update nomor_rm_end per customer
+   $update = $koneksi->prepare(
+      "UPDATE setting_clinic 
+       SET nomor_rm_end=? 
+       WHERE id_customer=?"
+   );
+   $update->bind_param("ii", $newRM, $id_customer);
+   $update->execute();
+   $update->close();
 
-   // 🔹 Field yang diizinkan
+   // 🔥 fields
    $allowedFields = [
       'patient_name',
       'patient_gender',
@@ -86,185 +110,110 @@ function createData()
       'patient_address'
    ];
 
-   $fields = ['patient_number', 'nomor_rm'];
-   $values = [$patientNumber, $nomorRM];
-   $types  = "ss";
+   $fields = ['patient_number', 'nomor_rm', 'id_customer'];
+   $values = [$patientNumber, $nomorRM, $id_customer];
+   $types  = "ssi";
 
    foreach ($allowedFields as $f) {
       if (isset($_POST[$f])) {
          $fields[] = $f;
          $values[] = $_POST[$f];
-         $types   .= "s";
+         $types .= "s";
       }
    }
 
-   if (count($fields) <= 2) { // hanya patient_number & nomor_rm
+   $placeholders = implode(',', array_fill(0, count($fields), '?'));
+   $columns = implode(',', $fields);
+
+   $stmt = $koneksi->prepare("INSERT INTO ms_patient ($columns) VALUES ($placeholders)");
+   $stmt->bind_param($types, ...$values);
+
+   if ($stmt->execute()) {
       echo json_encode([
-         'status' => 'error',
-         'message' => 'Tidak ada data pasien yang dikirim.'
+         'status' => 'success',
+         'patient_number' => $patientNumber,
+         'nomor_rm' => $nomorRM
       ]);
-      exit;
-   }
-
-   $placeholders = implode(', ', array_fill(0, count($fields), '?'));
-   $columns = implode(', ', $fields);
-
-   $query = "INSERT INTO ms_patient ($columns) VALUES ($placeholders)";
-
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param($types, ...$values);
-
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil ditambahkan.',
-            'patient_number' => $patientNumber,
-            'nomor_rm' => $nomorRM
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menambahkan data: ' . $stmt->error
-         ]);
-      }
-
-      $stmt->close();
    } else {
       echo json_encode([
          'status' => 'error',
-         'message' => 'Gagal menyiapkan query: ' . $koneksi->error
+         'message' => $stmt->error
       ]);
    }
-}
-/**
- * Generate patient_number unik dengan format DCT-XXXXXX
- */
-function generateDoctorNumber($koneksi)
-{
-   $count = 0; // inisialisasi supaya tidak merah
-   do {
-      $random = mt_rand(100000, 999999); // 6 digit angka
-      $doctorNumber = "PST-" . $random;
 
-      // cek ke database apakah sudah ada
-      $check = $koneksi->prepare("SELECT COUNT(*) FROM ms_patient WHERE patient_number = ?");
-      $check->bind_param("s", $doctorNumber);
-      $check->execute();
-      $check->bind_result($count);
-      $check->fetch();
-      $check->close();
-   } while ($count > 0); // ulang jika sudah ada
-
-   return $doctorNumber;
+   $stmt->close();
 }
 
-function getData()
+// ================= READ =================
+function getData($id_customer)
 {
    global $koneksi;
 
-   $query = "SELECT * FROM ms_patient  ORDER BY patient_name DESC";
-   $result = mysqli_query($koneksi, $query);
+   $stmt = $koneksi->prepare(
+      "SELECT * FROM ms_patient 
+       WHERE id_customer=? 
+       ORDER BY patient_name DESC"
+   );
 
-   if (!$result) {
-      http_response_code(500);
+   $stmt->bind_param("i", $id_customer);
+   $stmt->execute();
+
+   $data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+   echo json_encode(['status' => 'success', 'data' => $data]);
+
+   $stmt->close();
+}
+
+// ================= READ BY ID =================
+function getID($id, $id_customer)
+{
+   global $koneksi;
+
+   $stmt = $koneksi->prepare(
+      "SELECT * FROM ms_patient 
+       WHERE id_patient=? AND id_customer=?"
+   );
+
+   $stmt->bind_param("ii", $id, $id_customer);
+   $stmt->execute();
+
+   $res = $stmt->get_result();
+
+   if ($res->num_rows > 0) {
       echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal mengambil data: ' . mysqli_error($koneksi)
+         'status' => 'success',
+         'data' => $res->fetch_assoc()
       ]);
-      return;
-   }
-
-   // Ambil semua data dalam bentuk array asosiatif
-   $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
-
-   // Tutup hasil query
-   mysqli_free_result($result);
-
-   // Kirimkan data dalam format JSON
-   header('Content-Type: application/json');
-   echo json_encode([
-      'status' => 'success',
-      'data' => $data,
-   ]);
-}
-
-// Function untuk Read User berdasarkan ID
-function  getID($iduser)
-{
-   global $koneksi;
-
-   // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM ms_patient WHERE id_patient = ?";
-
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $iduser); // Bind parameter iduser
-      $stmt->execute();
-      $result = $stmt->get_result();
-
-      if ($result->num_rows > 0) {
-         $data = $result->fetch_assoc();
-         echo json_encode([
-            'status' => 'success',
-            'data' => $data
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Data tidak ditemukan.'
-         ]);
-      }
-
-      $stmt->close();
    } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
+      echo json_encode(['status' => 'error', 'message' => 'Tidak ditemukan']);
    }
+
+   $stmt->close();
 }
 
-
-
-function updateData()
+// ================= UPDATE =================
+function updateData($id_customer)
 {
    global $koneksi;
+
    parse_str(file_get_contents("php://input"), $_PUT);
 
    if (empty($_PUT['id_patient'])) {
-      echo json_encode(['status' => 'error', 'message' => 'ID tidak ditemukan.']);
+      echo json_encode(['status' => 'error', 'message' => 'ID tidak ditemukan']);
       return;
    }
 
    $id = $_PUT['id_patient'];
+
    $allowedFields = [
-      'patient_nik',
-      'nomor_rm',
-      'patient_datebirth',
-      'patient_religion',
-      'patient_gender',
-      'patient_address',
-      'patient_place',
-      'patient_notes',
-      'patient_provinsi',
-      'patient_kabupaten',
-      'patient_kecamatan',
-      'patient_kelurahan',
-      'patient_desa',
-      'patient_phone',
       'patient_name',
-      'patient_blood',
-      'patient_mail',
-      'patient_marital_status',
-      'patient_nationality',
-      'patient_education',
-      'patient_occupation',
-      'patient_emergency_contact_name',
-      'patient_emergency_contact_relation',
-      'patient_emergency_contact_phone',
-      'patient_allergy',
-      'patient_disability',
-      'nomor_rm_any',
+      'patient_phone',
+      'patient_address',
+      'patient_gender',
+      'patient_datebirth'
    ];
+
    $fields = [];
    $values = [];
 
@@ -276,70 +225,86 @@ function updateData()
    }
 
    if (empty($fields)) {
-      echo json_encode(['status' => 'error', 'message' => 'Tidak ada data diupdate.']);
+      echo json_encode(['status' => 'error', 'message' => 'Tidak ada update']);
       return;
    }
 
    $values[] = $id;
-   $types = str_repeat('s', count($values) - 1) . "i";
+   $values[] = $id_customer;
 
-   $query = "UPDATE ms_patient SET " . implode(',', $fields) . " WHERE id_patient=?";
+   $types = str_repeat('s', count($values) - 2) . "ii";
+
+   $query = "UPDATE ms_patient SET " . implode(',', $fields) . " 
+             WHERE id_patient=? AND id_customer=?";
+
    $stmt = $koneksi->prepare($query);
+   $stmt->bind_param($types, ...$values);
 
-   if ($stmt) {
-      $stmt->bind_param($types, ...$values);
-      if ($stmt->execute()) {
-         echo json_encode(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
-      } else {
-         echo json_encode(['status' => 'error', 'message' => 'Update gagal: ' . $stmt->error]);
-      }
-      $stmt->close();
+   if ($stmt->execute()) {
+      echo json_encode(['status' => 'success']);
    } else {
-      echo json_encode(['status' => 'error', 'message' => 'Query error: ' . $koneksi->error]);
+      echo json_encode(['status' => 'error', 'message' => $stmt->error]);
    }
+
+   $stmt->close();
 }
 
-
-
-// Function untuk Delete User
-function deleteData()
+// ================= DELETE =================
+function deleteData($id_customer)
 {
    global $koneksi;
 
-   // Ambil ID user dari query parameter
-   $id = isset($_GET['id']) ? $_GET['id'] : '';
+   $id = $_GET['id'] ?? '';
 
-   if (empty($id)) {
+   if (!$id) {
       echo json_encode([
          'status' => 'error',
-         'message' => 'ID tidak ditemukan.'
+         'message' => 'ID kosong'
       ]);
-      exit;
+      return;
    }
 
-   // Query untuk menghapus data user
-   $query = "DELETE FROM ms_patient WHERE id_patient = ?";
+   // 🔥 CEK RELASI KE pasien_visit
+   $check = $koneksi->prepare(
+      "SELECT COUNT(*) FROM pasien_visit 
+       WHERE id_patient=?"
+   );
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $id);
+   $count = 0;
 
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil dihapus.'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menghapus.'
-         ]);
-      }
+   $check->bind_param("i", $id);
+   $check->execute();
+   $check->bind_result($count);
+   $check->fetch();
+   $check->close();
 
-      $stmt->close();
+   if ($count > 0) {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Data Tidak Dapat Dihapus Karena Sudah Ada Riwayat Pasien Visit'
+      ]);
+      return;
+   }
+
+   // 🔥 DELETE (kalau aman)
+   $stmt = $koneksi->prepare(
+      "DELETE FROM ms_patient 
+       WHERE id_patient=? AND id_customer=?"
+   );
+
+   $stmt->bind_param("ii", $id, $id_customer);
+
+   if ($stmt->execute()) {
+      echo json_encode([
+         'status' => 'success',
+         'message' => 'Data berhasil dihapus'
+      ]);
    } else {
       echo json_encode([
          'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
+         'message' => 'Gagal menghapus data'
       ]);
    }
+
+   $stmt->close();
 }

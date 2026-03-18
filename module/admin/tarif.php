@@ -49,8 +49,8 @@ require '../../controller/view.php';
                           <th scope="col" class="text-dark fw-normal">Nama Tarif</th>
                           <th scope="col" class="text-dark fw-normal">Harga</th>
                           <th scope="col" class="text-dark fw-normal">Jaminan</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Status</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Actions</th>
+                          <th scope="col" class="text-dark fw-normal text-center col-1">Status</th>
+                          <th scope="col" class="text-dark fw-normal text-center col-1">Actions</th>
                         </tr>
                       </thead>
                       <tbody></tbody>
@@ -165,11 +165,16 @@ require '../../controller/view.php';
                 new Intl.NumberFormat('id-ID', {
                   style: 'currency',
                   currency: 'IDR'
-                }).format(row.tarif_amount) :
-                "-",
-              "provider": row.tarif_provider ?? "-",
-              "status": row.tarif_status === '1' ?
-                '<span class="badge bg-success text-center d-block">Aktif</span>' : '<span class="badge bg-danger text-center d-block">Nonaktif</span>'
+                }).format(row.tarif_amount) : "-",
+              "provider": row.provider_name ?? "-",
+              "status": `
+              <label class="switch">
+                <input type="checkbox" class="toggle-status-tarif"
+                  data-id="${row.id_tarif}"
+                  ${row.tarif_status == '1' ? 'checked' : ''}>
+                <span class="slider"></span>
+              </label>
+              `
             };
           });
         }
@@ -292,6 +297,28 @@ require '../../controller/view.php';
             });
         }
       });
+    });
+
+    $(document).on('change', '.toggle-status-tarif', function() {
+      let id = $(this).data('id');
+      let status = $(this).is(':checked') ? 1 : 0;
+
+      fetch(apiUrl + '?toggle_status=1', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: `id_tarif=${id}&tarif_status=${status}`
+        })
+        .then(res => res.json())
+        .then(res => {
+          if (res.status !== 'success') {
+            Swal.fire('Gagal!', res.message, 'error');
+          }
+        })
+        .catch(() => {
+          Swal.fire('Error!', 'Server error', 'error');
+        });
     });
   });
 </script>

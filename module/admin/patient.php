@@ -54,7 +54,6 @@ require '../../controller/view.php';
                           <th scope="col" class="text-dark fw-normal">TTL</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">Agama</th>
-                          <th scope="col" class="text-dark fw-normal">No.Handphone</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                         </tr>
                       </thead>
@@ -261,8 +260,7 @@ require '../../controller/view.php';
               "name": row.patient_name ?? "-",
               "ttl": row.patient_datebirth + '/' + row.patient_place ?? "-",
               "gender": row.patient_gender ?? "-",
-              "agama": row.patient_religion ?? "-",
-              "phone": row.patient_phone ?? "-"
+              "agama": row.patient_religion ?? "-"
             };
           });
         }
@@ -280,9 +278,6 @@ require '../../controller/view.php';
         },
         {
           data: "agama"
-        },
-        {
-          data: "phone"
         },
         {
           data: "actions",
@@ -364,9 +359,9 @@ require '../../controller/view.php';
         });
     });
 
-    // 🔹 Delete
     $(document).on('click', '.delete-btn', function() {
       let id = $(this).data('id');
+
       Swal.fire({
         title: 'Hapus Data?',
         icon: 'warning',
@@ -375,16 +370,30 @@ require '../../controller/view.php';
         cancelButtonText: 'Batal'
       }).then((result) => {
         if (result.isConfirmed) {
+
           fetch(apiUrl + `?id=${id}`, {
               method: 'DELETE'
             })
             .then(res => res.json())
             .then(data => {
+
+              // ✅ SUCCESS
               if (data.status === 'success') {
-                Swal.fire('Berhasil!', 'Data dihapus.', 'success');
+                Swal.fire('Berhasil!', data.message || 'Data dihapus.', 'success');
                 table.ajax.reload(null, false);
               }
+              // ❌ ERROR (INI YANG KAMU BELUM ADA)
+              else {
+                Swal.fire('Gagal!', data.message || 'Tidak bisa menghapus data.', 'error');
+              }
+
+            })
+            .catch(err => {
+              // ❌ NETWORK / SERVER ERROR
+              Swal.fire('Error!', 'Terjadi kesalahan server.', 'error');
+              console.error(err);
             });
+
         }
       });
     });

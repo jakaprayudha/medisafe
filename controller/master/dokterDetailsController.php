@@ -52,7 +52,18 @@ switch ($method) {
             'doctor_address',
             'doctor_sip',
             'doctor_str',
-            'doctor_expaired'
+            'doctor_expaired',
+            'doctor_his',
+            'str_lembaga',
+            'str_number',
+            'str_date_expaired',
+            'sip_lembaga',
+            'sip_number',
+            'sip_date_expaired',
+            'doctor_title_front',
+            'doctor_title_back',
+            'doctor_antrean',
+            'estimated_services',
          ];
 
          $updates = [];

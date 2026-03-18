@@ -1,17 +1,69 @@
+<?php
+$id_customer = $_SESSION['id_customer'];
+$cust = mysqli_query($koneksi, "SELECT * FROM ms_customer WHERE id_customer='$id_customer'");
+$dataCust = mysqli_fetch_array($cust);
+?>
 <style>
-   /* SEARCH */
+   /* =========================
+   NAVBAR MODERN STYLE
+========================= */
+
+   .app-header {
+      padding: 10px 16px;
+      background: transparent;
+   }
+
+   .navbar {
+      border-radius: 16px;
+      padding: 10px 20px;
+      background: #ffffff;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+      border: 1px solid #f1f1f1;
+      backdrop-filter: blur(10px);
+   }
+
+   .main-content .navbar {
+      margin: 10px 16px 0 16px;
+   }
+
+   /* =========================
+   LOGO (FIX FULL CIRCLE)
+========================= */
+   .navbar img.rounded-circle {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 2px solid #e9ecef;
+   }
+
+   /* =========================
+   SEARCH (FIX ANIMASI + BORDER)
+========================= */
    .navbar input {
       border-radius: 20px;
       width: 250px;
-      transition: 0.3s;
+      transition: all 0.3s ease;
+      background: #f8fafc;
+      border: 1px solid transparent;
    }
 
    .navbar input:focus {
-      width: 300px;
-      box-shadow: 0 0 8px rgba(15, 155, 142, 0.3);
+      width: 320px;
+      background: #ffffff;
+      outline: none;
+      border: 1px solid #0f9b8e;
+      box-shadow: 0 0 0 3px rgba(15, 155, 142, 0.15);
    }
 
+   /* ICON SEARCH */
+   .navbar .position-relative iconify-icon {
+      pointer-events: none;
+   }
 
+   /* =========================
+   NAV LINK + ICON
+========================= */
    .nav-link {
       position: relative;
       display: inline-flex;
@@ -19,54 +71,65 @@
       justify-content: center;
    }
 
-   .notif-dot {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 12px;
-      height: 12px;
-      background: #ff3b3b;
-      border-radius: 50%;
-      border: 2px solid #fff;
-   }
-
    .nav-link iconify-icon {
       display: block;
    }
 
+   /* =========================
+   NOTIFICATION DOT
+========================= */
    .notif-dot {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 10px;
+      height: 10px;
+      background: #ff3b3b;
+      border-radius: 50%;
+      border: 2px solid #fff;
       animation: pulse 1.5s infinite;
    }
 
    @keyframes pulse {
       0% {
-         transform: translate(50%, -50%) scale(1);
+         transform: scale(1);
       }
 
       50% {
-         transform: translate(50%, -50%) scale(1.2);
+         transform: scale(1.3);
       }
 
       100% {
-         transform: translate(50%, -50%) scale(1);
+         transform: scale(1);
       }
    }
 
-   /* DROPDOWN */
+   /* =========================
+   DROPDOWN
+========================= */
    .dropdown-menu {
       border-radius: 12px;
+      border: none;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
    }
 
-   /* BUTTON */
+   /* =========================
+   BUTTON
+========================= */
    .btn-success {
       background: linear-gradient(135deg, #0f9b8e, #38ef7d);
       border: none;
+      border-radius: 12px;
+      padding: 8px 16px;
+      font-weight: 500;
    }
 
-   .nav-link.position-relative {
-      display: inline-flex;
+   /* =========================
+   NAV ITEM ALIGNMENT
+========================= */
+   .navbar .nav-item {
+      display: flex;
       align-items: center;
-      justify-content: center;
    }
 </style>
 <header class="app-header">
@@ -84,7 +147,7 @@
          <!-- Logo Klinik -->
          <li class="nav-item d-flex align-items-center me-3">
             <img src="assets/images/logos/default.png" width="35" class="rounded-circle me-2">
-            <strong class="text-primary">Klinik Pratama</strong>
+            <strong class="text-primary"><?= $dataCust['customer_name'] ?></strong>
          </li>
 
          <!-- SEARCH PASIEN -->
@@ -110,7 +173,7 @@
 
                <ul class="dropdown-menu shadow border-0">
                   <li><a class="dropdown-item" href="javascript:;">Pendaftaran Baru</a></li>
-                  <li><a class="dropdown-item" href="javascript:;">Pasien Baru</a></li>
+                  <li><a class="dropdown-item" href="module/admin/patient">Pasien Baru</a></li>
                   <li><a class="dropdown-item" href="javascript:;">Surat Baru</a></li>
                </ul>
             </li>
