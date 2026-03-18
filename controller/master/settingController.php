@@ -1,67 +1,113 @@
 <?php
-require '../../database/connect.php'; // Koneksi ke database
+require '../../database/connect.php';
 
 header("Content-Type: application/json");
 
-$method = $_SERVER['REQUEST_METHOD'];
-
-// Handle GET: Ambil 1 data setting bisnis
-if ($method === 'GET') {
-   $query = "SELECT * FROM setting_clinic LIMIT 1";
-   $result = $koneksi->query($query);
-   $data = $result->fetch_assoc();
-
-   if ($data) {
-      echo json_encode(["status" => "success", "user" => $data]);
-   } else {
-      echo json_encode(["status" => "error", "message" => "Data tidak ditemukan."]);
-   }
+// 🔐 VALIDASI SESSION
+if (!isset($_SESSION['id_customer'])) {
+   echo json_encode([
+      "status" => "error",
+      "message" => "Session tidak valid"
+   ]);
    exit;
 }
 
-// Handle POST: Insert atau Update data setting bisnis
-if ($method === 'POST') {
-   $namaBisnis = trim($_POST['clinic_name']);
-   $telepon = trim($_POST['telepon']);
-   $alamat = trim($_POST['alamat']);
+$id_customer = $_SESSION['id_customer'];
+$method = $_SERVER['REQUEST_METHOD'];
 
-   // Validasi input
-   if (empty($namaBisnis) || empty($telepon) || empty($alamat)) {
-      echo json_encode(["status" => "error", "message" => "Semua field wajib diisi!"]);
-      exit;
-   }
 
-   // Cek apakah data sudah ada
-   $checkQuery = "SELECT COUNT(*) as total FROM setting_clinic";
-   $result = $koneksi->query($checkQuery);
-   $row = $result->fetch_assoc();
+// ================= GET =================
+if ($method === 'GET') {
 
-   if ($row['total'] == 0) {
-      // Insert jika belum ada data
-      $query = "INSERT INTO setting_clinic (clinic_name, phone_number, address) VALUES (?, ?, ?)";
+   $stmt = $koneksi->prepare(
+      "SELECT * FROM setting_clinic 
+       WHERE id_customer=? 
+       LIMIT 1"
+   );
+
+   $stmt->bind_param("i", $id_customer);
+   $stmt->execute();
+
+   $result = $stmt->get_result();
+   $data = $result->fetch_assoc();
+
+   if ($data) {
+      echo json_encode([
+         "status" => "success",
+         "user" => $data
+      ]);
    } else {
-      // Update jika data sudah ada
-      $query = "UPDATE setting_clinic SET clinic_name = ?, phone_number = ?, address = ?";
-   }
-
-   // Jalankan query dengan prepared statement
-   $stmt = $koneksi->prepare($query);
-   if (!$stmt) {
-      echo json_encode(["status" => "error", "message" => "Gagal mempersiapkan query."]);
-      exit;
-   }
-
-   $stmt->bind_param("sss", $namaBisnis, $telepon, $alamat);
-
-   if ($stmt->execute()) {
-      echo json_encode(["status" => "success", "message" => "Data berhasil disimpan."]);
-   } else {
-      echo json_encode(["status" => "error", "message" => "Gagal menyimpan data."]);
+      echo json_encode([
+         "status" => "error",
+         "message" => "Data tidak ditemukan"
+      ]);
    }
 
    $stmt->close();
    exit;
 }
 
-// Jika metode tidak dikenali
-echo json_encode(["status" => "error", "message" => "Invalid request."]);
+
+// ================= UPDATE ONLY =================
+if ($method === 'POST') {
+
+   $namaBisnis = trim($_POST['clinic_name'] ?? '');
+   $telepon    = trim($_POST['telepon'] ?? '');
+   $alamat     = trim($_POST['alamat'] ?? '');
+
+   if (!$namaBisnis || !$telepon || !$alamat) {
+      echo json_encode([
+         "status" => "error",
+         "message" => "Semua field wajib diisi!"
+      ]);
+      exit;
+   }
+
+   // 🔥 UPDATE WAJIB PAKAI WHERE
+   $stmt = $koneksi->prepare(
+      "UPDATE setting_clinic 
+       SET clinic_name=?, phone_number=?, address=? 
+       WHERE id_customer=? LIMIT 1"
+   );
+
+   if (!$stmt) {
+      echo json_encode([
+         "status" => "error",
+         "message" => "Prepare gagal"
+      ]);
+      exit;
+   }
+
+   $stmt->bind_param("sssi", $namaBisnis, $telepon, $alamat, $id_customer);
+
+   if ($stmt->execute()) {
+
+      // 🔍 cek apakah benar ada row yg kena update
+      if ($stmt->affected_rows > 0) {
+         echo json_encode([
+            "status" => "success",
+            "message" => "Data berhasil diperbarui"
+         ]);
+      } else {
+         echo json_encode([
+            "status" => "error",
+            "message" => "Data tidak ditemukan / belum dibuat"
+         ]);
+      }
+   } else {
+      echo json_encode([
+         "status" => "error",
+         "message" => "Gagal update"
+      ]);
+   }
+
+   $stmt->close();
+   exit;
+}
+
+
+// ================= INVALID =================
+echo json_encode([
+   "status" => "error",
+   "message" => "Invalid request"
+]);

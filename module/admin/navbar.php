@@ -1,6 +1,6 @@
 <?php
 $id_customer = $_SESSION['id_customer'];
-$cust = mysqli_query($koneksi, "SELECT * FROM ms_customer WHERE id_customer='$id_customer'");
+$cust = mysqli_query($koneksi, "SELECT * FROM setting_clinic  WHERE id_customer='$id_customer'");
 $dataCust = mysqli_fetch_array($cust);
 ?>
 <style>
@@ -146,8 +146,15 @@ $dataCust = mysqli_fetch_array($cust);
 
          <!-- Logo Klinik -->
          <li class="nav-item d-flex align-items-center me-3">
-            <img src="assets/images/logos/default.png" width="35" class="rounded-circle me-2">
-            <strong class="text-primary"><?= $dataCust['customer_name'] ?></strong>
+            <?php
+            if ($dataCust['image_clinic'] == null) { ?>
+               <img src="assets/images/logos/default.png" width="35" class="rounded-circle me-2">
+            <?php } else { ?>
+               <img src="uploads/<?= $dataCust['image_clinic'] ?>" width="35" class="rounded-circle me-2">
+            <?php  }
+            ?>
+
+            <strong class="text-primary"><?= $dataCust['clinic_name'] ?></strong>
          </li>
 
          <!-- SEARCH PASIEN -->

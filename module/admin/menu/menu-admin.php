@@ -42,8 +42,9 @@
          </a>
 
          <ul class="collapse-menu">
-            <li><a href="module/admin/setting_rme">RME</a></li>
-            <li><a href="module/admin/setting">Faskes</a></li>
+            <li><a href="module/admin/setting_bpjs">Integrasi BPJS</a></li>
+            <li><a href="module/admin/setting_satusehat">Integrasi Satu Sehat</a></li>
+            <li><a href="module/admin/setting_faskes">Faskes</a></li>
          </ul>
       </li> <!-- LAPORAN -->
 

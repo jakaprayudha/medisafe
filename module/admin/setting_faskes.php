@@ -1,5 +1,6 @@
 <?php
 $title = 'Setting Bisnis';
+require '../../controller/view.php';
 ?>
 <!doctype html>
 <html lang="en">
@@ -62,7 +63,8 @@ $title = 'Setting Bisnis';
             <?php
             require '../../database/connect.php'; // Koneksi ke database
             // Ambil logo dari database
-            $query = "SELECT image_clinic FROM setting_clinic LIMIT 1";
+            $idcustomer = $_SESSION['id_customer'];
+            $query = "SELECT image_clinic FROM setting_clinic WHERE id_customer = '$idcustomer' LIMIT 1";
             $result = $koneksi->query($query);
             $data = $result->fetch_assoc();
             $logoPath = isset($data['image_clinic']) ? "uploads/" . $data['image_clinic'] : "uploads/default.png";
