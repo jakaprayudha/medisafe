@@ -53,16 +53,6 @@
          <span class="hide-menu">Aktivitas</span>
       </li>
       <li class="sidebar-item">
-         <a class="sidebar-link <?php if ($title == 'Registrasi' or $title == 'List Pasien') {
-                                    echo 'active';
-                                 } ?>"
-            href="module/admin/registrasi"
-            aria-expanded="false">
-            <iconify-icon icon="mdi:register-outline"></iconify-icon>
-            <span class="hide-menu">Registrasi Pasien</span>
-         </a>
-      </li>
-      <li class="sidebar-item">
          <a class="sidebar-link <?php if ($title == 'Jadwal Dokter') {
                                     echo 'active';
                                  } ?>"
@@ -70,6 +60,16 @@
             aria-expanded="false">
             <iconify-icon icon="mdi:calendar-outline"></iconify-icon>
             <span class="hide-menu">Jadwal Dokter</span>
+         </a>
+      </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Registrasi' or $title == 'List Pasien') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/admin/registrasi"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:register-outline"></iconify-icon>
+            <span class="hide-menu">Registrasi Pasien</span>
          </a>
       </li>
       <li class="sidebar-item">

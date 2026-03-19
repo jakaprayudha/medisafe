@@ -12,47 +12,213 @@ require '../../controller/view.php';
   ?>
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <style>
+    /* ================= RESET GLOBAL HOVER (KUNCI UTAMA) ================= */
+    .table-scroll table tbody tr:hover td,
+    .table-scroll table tbody tr:hover th {
+      background: unset !important;
+      color: inherit !important;
+    }
+
+    /* ================= CONTAINER ================= */
     .table-scroll {
       max-height: 600px;
-      /* tinggi area scroll */
-      overflow-y: auto;
-      /* scroll vertical */
-      overflow-x: auto;
-      /* scroll horizontal */
+      overflow: auto;
       border: 1px solid #ddd;
+      position: relative;
     }
 
-    #jadwalTable {
+    /* ================= TABLE ================= */
+    .table-scroll #jadwalTable {
       font-size: 12px;
+      border-collapse: separate;
+      border-spacing: 0;
+      width: 100%;
+      transform: translateZ(0);
     }
 
-    #jadwalTable th,
-    #jadwalTable td {
-      padding: 4px 6px;
+    /* ================= CELL ================= */
+    .table-scroll #jadwalTable th,
+    .table-scroll #jadwalTable td {
+      padding: 6px 8px;
       white-space: nowrap;
+      position: relative;
+      z-index: 1;
+      background: #fff;
     }
 
-    /* biar header tetap di atas saat scroll */
+    /* ================= HEADER ================= */
     .table-scroll thead th {
       position: sticky;
       top: 0;
-      background: #fff;
-      z-index: 2;
+      z-index: 5;
+      background: #f8f9fa !important;
     }
 
-    /* kolom jam tetap di kiri */
+    /* ================= KOLOM KIRI ================= */
     .table-scroll tbody td:first-child,
     .table-scroll thead th:first-child {
       position: sticky;
       left: 0;
-      background: #fff;
-      z-index: 3;
+      z-index: 6;
+      background: #fff !important;
     }
 
-    .doctor-item.active {
-      background: #0d6efd;
-      color: white;
+    /* pojok */
+    .table-scroll thead th:first-child {
+      z-index: 7;
+    }
+
+    /* ================= SLOT (DI PROTECT KERAS) ================= */
+
+    /* 🟢 dokter hadir */
+    .table-scroll .jadwal-tersedia {
+      background: linear-gradient(135deg, #28a745, #20c997) !important;
+      color: #fff !important;
+    }
+
+    /* 🔵 dokter + pasien */
+    .table-scroll .jadwal-penuh {
+      background: linear-gradient(135deg, #0d6efd, #4dabf7) !important;
+      color: #fff !important;
+    }
+
+    /* tidak praktik */
+    .table-scroll td.text-muted {
+      background: #f1f3f5 !important;
+      color: #999 !important;
+    }
+
+    /* ================= CELL CONTENT ================= */
+    .jadwal-cell {
+      cursor: pointer;
+      vertical-align: top;
+      text-align: left;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* header "Hadir" */
+    .jadwal-cell>div:first-child {
       font-weight: bold;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    /* ================= PASIEN ================= */
+    .pasien-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      padding: 4px 6px;
+      margin-bottom: 4px;
+      border-radius: 6px;
+
+      background: rgba(255, 255, 255, 0.25) !important;
+      border-left: 4px solid #fff !important;
+
+      transition: all 0.15s ease;
+    }
+
+    .pasien-item:hover {
+      background: rgba(255, 255, 255, 0.4) !important;
+      transform: translateX(2px);
+    }
+
+    .pasien-item .antrian {
+      font-weight: bold;
+      /* background: #fff !important; */
+      color: white !important;
+      padding: 2px 6px;
+      border-radius: 4px;
+      min-width: 22px;
+      text-align: center;
+    }
+
+    .status-icons {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-icon {
+      width: 14px;
+      height: 14px;
+      object-fit: contain;
+      opacity: 0.9;
+      transition: 0.2s;
+    }
+
+    .status-icon:hover {
+      transform: scale(1.2);
+    }
+
+    .pasien-item .nama {
+      flex: 1;
+      text-align: left;
+      font-weight: 500;
+    }
+
+    /* ================= VARIASI WARNA ================= */
+    .warna-0 {
+      border-left: 4px solid #ffd43b !important;
+    }
+
+    .warna-1 {
+      border-left: 4px solid #ff6b6b !important;
+    }
+
+    .warna-2 {
+      border-left: 4px solid #69db7c !important;
+    }
+
+    .warna-3 {
+      border-left: 4px solid #4dabf7 !important;
+    }
+
+    .warna-4 {
+      border-left: 4px solid #b197fc !important;
+    }
+
+    /* ================= BUTTON ================= */
+    .jadwal-cell .btn {
+      font-size: 11px;
+      margin-top: 4px;
+      text-align: left;
+      z-index: 10;
+      position: relative;
+    }
+
+    /* ================= HOVER CUSTOM (AMAN) ================= */
+
+    /* hanya affect cell NON jadwal */
+    .table-scroll tbody tr:hover td:not(.jadwal-cell) {
+      background: #f8f9fa !important;
+    }
+
+    /* PROTECT jadwal dari hover global */
+    .table-scroll tbody tr:hover td.jadwal-cell {
+      background: inherit !important;
+      color: #fff !important;
+    }
+
+    /* efek hover halus (opsional) */
+    .jadwal-cell::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: transparent;
+      transition: 0.2s;
+      pointer-events: none;
+    }
+
+    .table-scroll tbody tr:hover .jadwal-cell::after {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* ================= FIX RENDER ================= */
+    .table-scroll * {
+      backface-visibility: hidden;
     }
   </style>
 </head>
@@ -75,6 +241,11 @@ require '../../controller/view.php';
       <!--  Header End -->
       <div class="body-wrapper-inner">
         <div class="container-fluid">
+          <div class="alert alert-primary" role="alert">
+            Status Pasien : <div class="d-inline-flex gap-1">
+              <span class="badge bg-danger">Pending</span> <span class="badge bg-warning">Confirmed</span><span class="badge bg-secondary">Waiting</span><span class="badge bg-primary">Engaged</span><span class="badge bg-success">Success</span>
+            </div>
+          </div>
           <div class="row">
             <div class="col-3">
               <ul class="list-group">
@@ -93,7 +264,7 @@ require '../../controller/view.php';
             </div>
             <div class="col-9">
               <div class="col-9 mb-2 d-flex gap-2">
-                <input type="date" id="datePicker" class="form-control" style="max-width:200px;">
+                <input type="date" value="<?php echo date('Y-m-d') ?>" id="datePicker" class="form-control" style="max-width:200px;">
                 <button id="btnToday" class="btn btn-primary">Hari Ini</button>
               </div>
               <div class="table-scroll">
@@ -166,13 +337,14 @@ require '../../controller/view.php';
   require 'library.php';
   ?>
 </body>
-
 <script>
   $(document).ready(function() {
+
     let visits = [];
     let schedules = [];
     let selectedDoctor = null;
     let selectedDoctorName = null;
+    let currentBaseDate = new Date(); // 🔥 simpan state tanggal
 
     // ================= 🔥 CLICK DOKTER =================
     $(document).on('click', '.doctor-item', function() {
@@ -186,8 +358,47 @@ require '../../controller/view.php';
       loadSchedule(selectedDoctor);
     });
 
-    // ================= 🔥 LOAD SCHEDULE =================
+    $('#modalPasien').on('shown.bs.modal', function() {
+
+      // 🔥 DESTROY dulu kalau sudah ada
+      if ($.fn.select2 && $('#id_patient').hasClass("select2-hidden-accessible")) {
+        $('#id_patient').select2('destroy');
+      }
+
+      // 🔥 INIT ULANG (SELALU FRESH)
+      $('#id_patient').select2({
+        dropdownParent: $('#modalPasien'),
+        width: '100%',
+        placeholder: 'Cari pasien...',
+        minimumInputLength: 2,
+        ajax: {
+          url: 'controller/admisi/patientSearchController',
+          type: 'GET',
+          dataType: 'json',
+          delay: 300,
+          data: function(params) {
+            return {
+              search: params.term
+            };
+          },
+          processResults: function(data) {
+            return {
+              results: data.data.map(item => ({
+                id: item.id_patient,
+                text: `${item.patient_name} (${item.nomor_rm})`
+              }))
+            };
+          },
+          cache: true
+        }
+      });
+
+    });
+
+    // ================= 🔥 LOAD DATA =================
     function loadSchedule(id_doctor) {
+
+      $("#bodyRow").html(`<tr><td colspan="5">Loading...</td></tr>`);
 
       let today = new Date();
       let endDate = new Date();
@@ -199,22 +410,24 @@ require '../../controller/view.php';
       fetch(`controller/master/scheduleController?id_doctor=${id_doctor}`)
         .then(res => res.json())
         .then(res => {
-          if (res.status === 'success') {
-            schedules = res.data;
 
-            // 🔥 TAMBAHAN (AMBIL VISIT)
-            fetch(`controller/visit/visitScheduleController?id_doctor=${id_doctor}&start=${start}&end=${end}`)
-              .then(res => res.json())
-              .then(res => {
-                visits = Array.isArray(res.data) ? res.data : [];
-                renderTable(new Date());
-              });
+          schedules = res.data || [];
 
-          }
+          return fetch(`controller/visit/visitScheduleController?id_doctor=${id_doctor}&start=${start}&end=${end}`);
+        })
+        .then(res => res.json())
+        .then(res => {
+
+          visits = Array.isArray(res.data) ? res.data : [];
+
+          renderTable(currentBaseDate);
+        })
+        .catch(err => {
+          console.error(err);
         });
     }
 
-    // ================= DEFAULT LOAD =================
+    // ================= DEFAULT =================
     let firstDoctor = $('.doctor-item').first();
     if (firstDoctor.length) {
       firstDoctor.addClass('active');
@@ -243,22 +456,43 @@ require '../../controller/view.php';
       return h * 60 + m;
     }
 
-    // ================= RENDER TABLE =================
+    function normalizeTime(t) {
+      return t.substring(0, 5);
+    }
+
+    function generateTimeSlots() {
+      let times = [];
+      let current = new Date();
+      current.setHours(8, 0, 0);
+
+      let end = new Date();
+      end.setHours(23, 59, 0);
+
+      while (current <= end) {
+        let hh = String(current.getHours()).padStart(2, '0');
+        let mm = String(current.getMinutes()).padStart(2, '0');
+        times.push(`${hh}:${mm}`);
+        current.setMinutes(current.getMinutes() + 15);
+      }
+
+      return times;
+    }
+
+    // ================= 🔥 RENDER =================
     function renderTable(baseDate) {
+
+      currentBaseDate = baseDate;
 
       const headerRow = $("#headerRow");
       const bodyRow = $("#bodyRow");
 
       headerRow.html(`<th>Jam</th>`);
-      bodyRow.html("");
 
       let dateObjs = [];
 
-      // HEADER
       for (let i = 0; i < 3; i++) {
         let d = new Date(baseDate);
         d.setDate(d.getDate() + i);
-
         dateObjs.push(d);
 
         let formatted = d.toLocaleDateString('id-ID', {
@@ -270,29 +504,9 @@ require '../../controller/view.php';
         headerRow.append(`<th>${formatted}</th>`);
       }
 
-      // JAM
-      function generateTimeSlots() {
-        let times = [];
-        let current = new Date();
-        current.setHours(8, 0, 0);
-
-        let end = new Date();
-        end.setHours(23, 59, 0);
-
-        while (current <= end) {
-          let hh = String(current.getHours()).padStart(2, '0');
-          let mm = String(current.getMinutes()).padStart(2, '0');
-
-          times.push(`${hh}:${mm}`);
-          current.setMinutes(current.getMinutes() + 15);
-        }
-
-        return times;
-      }
-
       let times = generateTimeSlots();
+      let allRows = "";
 
-      // RENDER
       times.forEach(time => {
 
         let row = `<tr><td>${time}</td>`;
@@ -302,7 +516,6 @@ require '../../controller/view.php';
           let dayName = getDayName(date);
 
           let found = schedules.find(s => {
-
             let start = toMinutes(formatTime(s.start_time));
             let end = toMinutes(formatTime(s.end_time));
             let current = toMinutes(time);
@@ -315,95 +528,127 @@ require '../../controller/view.php';
           });
 
           if (found) {
+
             let dateStr = date.toISOString().split('T')[0];
 
-            // 🔥 FILTER PASIEN
-            let visitList = [];
+            let visitList = visits.filter(v =>
+              v.visit_date === dateStr &&
+              normalizeTime(v.visit_time) === time
+            );
 
-            if (Array.isArray(visits)) {
-              visitList = visits.filter(v => {
-                return (
-                  v.visit_date === dateStr &&
-                  normalizeTime(v.visit_time) === time
-                );
-              });
-            }
-
-            // 🔥 WARNA DINAMIS
-            let bg = "bg-success"; // default kosong
+            let bgClass = "jadwal-tersedia";
 
             if (visitList.length > 0) {
-              bg = "bg-primary"; // ada pasien
+              bgClass = "jadwal-penuh";
             }
+            let pasienHtml = visitList.map(v => {
 
-            // 🔥 LIST PASIEN
-            let pasienHtml = "";
+              // ================= STATUS BADGE ANTRIAN =================
+              const statusMap = {
+                99: "bg-danger",
+                1: "bg-warning",
+                2: "bg-secondary",
+                3: "bg-primary",
+                4: "bg-success"
+              };
+              let statusClass = statusMap[String(v.visit_status)] || "bg-secondary";
+              console.log(v.visit_status, typeof v.visit_status);
+              let icareIcon = v.status_icare == 1 ?
+                `<span class='badge bg-info'>iCare</span>` :
+                '';
 
-            if (visitList.length > 0) {
-              pasienHtml = visitList.map(v => `
-    <div style="font-size:11px; text-align:left; padding:2px 0;">
-      <b>${v.visit_antrian}.</b> ${v.patient_name}
-    </div>
-  `).join('');
-            }
+              let sehatIcon = v.status_satusehat == 1 ?
+                `<span class='badge bg-success'>Satu Sehat</span>` :
+                '';
 
-            // 🔥 BUTTON TAMBAH
+              let antrianBadge = `
+                    <span class="antrian badge ${statusClass}">
+                      ${v.visit_antrian}
+                    </span>
+                  `;
+
+
+              return `
+              <div class="pasien-item">
+                ${antrianBadge}
+
+                <span class="nama">
+                  ${v.patient_name}
+                </span>
+
+                <span class="status-icons">
+                  ${icareIcon}
+                  ${sehatIcon}
+                </span>
+              </div>
+            `;
+            }).join('');
+
             let addButton = `
-  <div style="margin-top:4px;">
-    <button class="btn btn-light btn-xs w-100 add-patient-btn"
-      data-time="${time}"
-      data-date="${date.toISOString()}"
-      data-doctor="${selectedDoctor}"
-      data-doctor-name="${selectedDoctorName}">
-      ➕ Tambah
-    </button>
-  </div>
-`;
+            <button class="btn btn-light btn-xs w-100 add-patient-btn"
+              data-time="${time}"
+              data-date="${date.toISOString()}"
+              data-doctor="${selectedDoctor}"
+              data-doctor-name="${selectedDoctorName}">
+              ➕ Tambah Pasien
+            </button>
+          `;
 
             row += `
-  <td class="${bg} text-white jadwal-cell"
-    data-time="${time}"
-    data-date="${date.toISOString()}"
-    data-doctor="${selectedDoctor}"
-    data-doctor-name="${selectedDoctorName}"
-    style="cursor:pointer; vertical-align:top;">
+            <td class="jadwal-cell ${bgClass}"
+              data-time="${time}"
+              data-date="${date.toISOString()}"
+              data-doctor="${selectedDoctor}"
+              data-doctor-name="${selectedDoctorName}">
 
-    <div style="font-size:12px"><b>Hadir</b></div>
+              <div><b>Hadir</b></div>
+              ${pasienHtml}
+              <div class="mt-1">${addButton}</div>
 
-    ${pasienHtml}
-
-    ${addButton}
-
-  </td>
-`;
+            </td>
+          `;
           } else {
-            row += `<td>Tidak Praktik</td>`;
+            row += `<td class="text-muted">Tidak Praktik</td>`;
           }
 
         });
 
         row += `</tr>`;
-        bodyRow.append(row);
+        allRows += row;
       });
+
+      bodyRow.html(allRows);
     }
 
-    // ================= DATE PICKER =================
+    // ================= DATE =================
     $("#datePicker").on("change", function() {
-      let selected = new Date($(this).val());
-      renderTable(selected);
+      renderTable(new Date($(this).val()));
     });
 
     $("#btnToday").on("click", function() {
       renderTable(new Date());
     });
 
-    // ================= CLICK CELL =================
+    // ================= 🔥 CLICK CELL =================
     $(document).on('click', '.jadwal-cell', function() {
 
       let time = $(this).data('time');
       let date = new Date($(this).data('date'));
-      let doctorId = $(this).data('doctor');
-      let doctorName = $(this).data('doctor-name');
+
+      openModal(time, date);
+    });
+
+    // ================= 🔥 CLICK BUTTON (FIX BUG) =================
+    $(document).on('click', '.add-patient-btn', function(e) {
+      e.stopPropagation(); // 🔥 penting
+
+      let time = $(this).data('time');
+      let date = new Date($(this).data('date'));
+
+      openModal(time, date);
+    });
+
+    function openModal(time, date) {
 
       let formattedDate = date.toLocaleDateString('id-ID', {
         weekday: 'long',
@@ -414,51 +659,15 @@ require '../../controller/view.php';
 
       $('#visit_date').val(date.toISOString().split('T')[0]);
       $('#visit_time').val(time);
-      $('#id_doctor').val(doctorId);
-      $('#doctor_name').val(doctorName);
+      $('#id_doctor').val(selectedDoctor);
+      $('#doctor_name').val(selectedDoctorName);
 
       $('#infoJadwal').text(`${formattedDate} - ${time}`);
 
       $('#modalPasien').modal('show');
-    });
+    }
 
-    // ================= SELECT2 PASIEN =================
-    $('#modalPasien').on('shown.bs.modal', function() {
-
-      if (!$('#id_patient').hasClass("select2-hidden-accessible")) {
-
-        $('#id_patient').select2({
-          dropdownParent: $('#modalPasien'),
-          width: '100%',
-          placeholder: 'Cari pasien...',
-          minimumInputLength: 2,
-          ajax: {
-            url: 'controller/admisi/patientSearchController',
-            type: 'GET',
-            dataType: 'json',
-            delay: 300,
-            data: function(params) {
-              return {
-                search: params.term
-              };
-            },
-            processResults: function(data) {
-              return {
-                results: data.data.map(item => ({
-                  id: item.id_patient,
-                  text: `${item.patient_name} (${item.nomor_rm})`
-                }))
-              };
-            },
-            cache: true
-          }
-        });
-
-      }
-
-    });
-
-    // ================= SAVE VISIT =================
+    // ================= 🔥 SAVE =================
     $('#saveVisit').on('click', function() {
 
       let form = $('#formVisit')[0];
@@ -474,39 +683,37 @@ require '../../controller/view.php';
         .then(res => res.json())
         .then(res => {
 
-          console.log(res); // 🔥 debug (lihat di console)
-
           if (res.status === 'success') {
+
+            let newVisit = {
+              visit_date: $('#visit_date').val(),
+              visit_time: $('#visit_time').val(),
+              patient_name: $('#id_patient option:selected').text(),
+              visit_antrian: res.data.antrian
+            };
+
+            // 🔥 TAMBAH KE STATE (NO REFRESH)
+            visits.push(newVisit);
+
+            renderTable(currentBaseDate); // 🔥 langsung update UI
 
             Swal.fire({
               icon: 'success',
               title: 'Berhasil!',
               text: `Antrian No: ${res.data.antrian}`,
-              timer: 1500,
+              timer: 1200,
               showConfirmButton: false
             });
 
-            // 🔥 RESET FORM
             form.reset();
-
-            // 🔥 RESET SELECT2
             $('#id_patient').val(null).trigger('change');
 
-            // 🔥 CLOSE MODAL (Bootstrap 5)
             let modal = bootstrap.Modal.getInstance(document.getElementById('modalPasien'));
             modal.hide();
 
-            // 🔥 OPTIONAL: refresh table
-            renderTable(new Date());
-
           } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Gagal',
-              text: res.message || 'Terjadi kesalahan'
-            });
+            Swal.fire('Gagal', res.message, 'error');
           }
-
         })
         .catch(err => {
           console.error(err);
@@ -514,12 +721,6 @@ require '../../controller/view.php';
         });
 
     });
-
-    function normalizeTime(t) {
-      return t.substring(0, 5); // fix 08:00:00 -> 08:00
-    }
-
-
 
   });
 </script>

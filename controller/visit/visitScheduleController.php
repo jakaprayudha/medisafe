@@ -14,7 +14,10 @@ $query = "SELECT
   v.visit_date,
   v.visit_time,
   v.visit_antrian,
-  p.patient_name
+  p.patient_name,
+  v.status_icare,
+  v.status_satusehat,
+  v.visit_status
 FROM pasien_visit v
 JOIN ms_patient p ON p.id_patient = v.id_patient
 WHERE v.id_doctor = ?
