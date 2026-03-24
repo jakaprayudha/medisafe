@@ -1,5 +1,5 @@
 <?php
-$title = 'Registrasi Rawat Inap';
+$title = 'Registrasi Gawat Darurat';
 require '../../controller/view.php';
 ?>
 <!doctype html>
@@ -41,7 +41,7 @@ require '../../controller/view.php';
               <div class="card w-100">
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Data Registrasi Rawat Inap</h5>
+                    <h5 class="card-title fw-semibold">Data Registrasi Gawat Darurat</h5>
                     <!-- Grup tombol di sisi kanan -->
 
                     <!-- 🔽 Filter + Tombol Kembali -->
@@ -58,11 +58,23 @@ require '../../controller/view.php';
                       </div>
                       <!-- Tombol kembali -->
                       <div class="d-flex ms-auto">
-                        <a href="module/admin/registrasi_booking_ranap">
-                          <button class="btn btn-primary">
-                            <i class="fas fa-list"></i> Permintaan Rawat Inap
+                        <div class="dropdown">
+                          <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-plus"></i> Tambah
                           </button>
-                        </a>
+                          <ul class="dropdown-menu dropdown-menu-end shadow">
+                            <li>
+                              <a class="dropdown-item" href="module/admin/patient_new">
+                                <i class="fas fa-user-plus me-2 text-primary"></i> Pasien Baru
+                              </a>
+                            </li>
+                            <li>
+                              <a class="dropdown-item poli-btn" href="javascript:;">
+                                <i class="fas fa-stethoscope me-2 text-success"></i> Pasien Gawat Darurat
+                              </a>
+                            </li>
+                          </ul>
+                        </div>
                       </div>
                     </div>
                   </div>

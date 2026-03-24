@@ -46,6 +46,7 @@ function createVisit()
       $visit_date = $_POST['visit_date'] ?? '';
       $visit_time = $_POST['visit_time'] ?? '';
       $id_doctor  = $_POST['id_doctor'] ?? '';
+      $source_hub = !empty($_POST['source_hub']) ? $_POST['source_hub'] : 'Poliklinik';
 
       if (!$id_patient || !$visit_date || !$visit_time || !$id_doctor) {
          echo json_encode([
@@ -98,7 +99,7 @@ function createVisit()
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
-      $source_hub = 'Poliklinik';
+
       $visit_status = 1;
       $status_antrian = 0;
 

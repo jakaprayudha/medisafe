@@ -27,69 +27,107 @@ switch ($method) {
       break;
 }
 
-// Function untuk Create
-
-
-
 function getData()
 {
    global $koneksi;
 
-   // Ambil parameter tanggal (opsional)
-   $fromDate = isset($_GET['fromDate']) ? $_GET['fromDate'] : null;
-   $toDate   = isset($_GET['toDate']) ? $_GET['toDate'] : null;
+   header('Content-Type: application/json');
 
-   // Base query dengan status_dilayani
+   $today = date('Y-m-d');
+
+   // ================= PARAMETER =================
+   $fromDate = !empty($_GET['fromDate']) ? $_GET['fromDate'] : $today;
+   $toDate   = !empty($_GET['toDate']) ? $_GET['toDate'] : $today;
+   $doctor   = !empty($_GET['doctor']) ? $_GET['doctor'] : null;
+   $provider = !empty($_GET['provider']) ? $_GET['provider'] : null;
+   $poli     = !empty($_GET['poli']) ? $_GET['poli'] : null;
+   $tipe_pasien = !empty($_GET['tipe_pasien']) ? $_GET['tipe_pasien'] : null;
+
    $query = "SELECT 
-    pasien_visit.*, 
-    ms_patient.*, 
-    ms_doctor.*, 
-    ms_poli.*,
-    CASE 
-        WHEN visit_pemeriksaan.nomor_visit IS NOT NULL THEN 1
-        ELSE 0
-    END AS status_dilayani
-FROM pasien_visit
-INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient
-INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor
-INNER JOIN ms_poli ON ms_poli.id_poli = pasien_visit.id_poli
-LEFT JOIN visit_pemeriksaan ON visit_pemeriksaan.nomor_visit = pasien_visit.visit_ID
-WHERE 1=1
-";
+      pasien_visit.*, 
+      ms_patient.patient_name, ms_patient.nomor_rm, 
+      ms_patient.patient_gender, ms_patient.patient_datebirth,
+      ms_doctor.doctor_name, 
+      ms_poli.poli_name,
+      ms_provider.provider_name
+   FROM pasien_visit
+   INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient
+   INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor
+   INNER JOIN ms_poli ON ms_poli.id_poli = pasien_visit.id_poli
+   LEFT JOIN ms_provider ON ms_provider.id_provider = pasien_visit.id_provider
+   WHERE 1=1";
 
-   // Jika ada filter tanggal (contoh pakai created_at, ganti sesuai kolom di DB)
-   if ($fromDate && $toDate) {
-      $query .= " AND DATE(visit_date) BETWEEN ? AND ?";
+   $params = [];
+   $types  = "";
+
+   // 🔹 tanggal
+   $query .= " AND DATE(pasien_visit.visit_date) BETWEEN ? AND ?";
+   $params[] = $fromDate;
+   $params[] = $toDate;
+   $types .= "ss";
+
+   // 🔹 dokter
+   if (!empty($doctor)) {
+      $query .= " AND pasien_visit.id_doctor = ?";
+      $params[] = $doctor;
+      $types .= "s";
    }
 
-   $query .= " ORDER BY visit_date ASC";
+   // 🔹 provider
+   if (!empty($provider)) {
+      $query .= " AND pasien_visit.id_provider = ?";
+      $params[] = $provider;
+      $types .= "s";
+   }
 
-   if ($stmt = $koneksi->prepare($query)) {
-      if ($fromDate && $toDate) {
-         $stmt->bind_param("ss", $fromDate, $toDate);
-      }
+   // 🔹 poli
+   if (!empty($poli)) {
+      $query .= " AND pasien_visit.id_poli = ?";
+      $params[] = $poli;
+      $types .= "s";
+   }
 
-      $stmt->execute();
-      $result = $stmt->get_result();
+   // 🔥 🔥 TIPE PASIEN
+   if (!empty($tipe_pasien)) {
+      $query .= " AND pasien_visit.source_hub = ?";
+      $params[] = $tipe_pasien;
+      $types .= "s";
+   }
 
-      $data = $result->fetch_all(MYSQLI_ASSOC);
+   $query .= " ORDER BY pasien_visit.visit_date ASC";
 
-      $stmt->close();
+   $stmt = $koneksi->prepare($query);
 
-      header('Content-Type: application/json');
-      echo json_encode([
-         'status' => 'success',
-         'data' => $data,
-      ]);
-   } else {
+   if (!$stmt) {
       http_response_code(500);
       echo json_encode([
          'status' => 'error',
-         'message' => 'Gagal menyiapkan query: ' . $koneksi->error
+         'message' => 'Prepare failed: ' . $koneksi->error
       ]);
+      return;
    }
-}
 
+   $stmt->bind_param($types, ...$params);
+
+   if (!$stmt->execute()) {
+      http_response_code(500);
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Execute failed: ' . $stmt->error
+      ]);
+      return;
+   }
+
+   $result = $stmt->get_result();
+   $data = $result->fetch_all(MYSQLI_ASSOC);
+
+   $stmt->close();
+
+   echo json_encode([
+      'status' => 'success',
+      'data'   => $data
+   ]);
+}
 // Function untuk Read User berdasarkan ID
 function  getID($iduser)
 {

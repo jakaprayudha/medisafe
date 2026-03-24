@@ -46,7 +46,8 @@
             <li><a href="module/admin/setting_satusehat">Integrasi Satu Sehat</a></li>
             <li><a href="module/admin/setting_faskes">Faskes</a></li>
          </ul>
-      </li> <!-- LAPORAN -->
+      </li>
+      <!-- LAPORAN -->
 
       <li class="nav-small-cap">
          <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
@@ -62,15 +63,24 @@
             <span class="hide-menu">Jadwal Dokter</span>
          </a>
       </li>
-      <li class="sidebar-item">
-         <a class="sidebar-link <?php if ($title == 'Registrasi' or $title == 'List Pasien') {
-                                    echo 'active';
-                                 } ?>"
-            href="module/admin/registrasi"
-            aria-expanded="false">
+      <!-- PENGATURAN -->
+      <li class="sidebar-item has-sub">
+         <a href="javascript:void(0)" class="sidebar-link" onclick="toggleSidebarMenu(this)">
             <iconify-icon icon="mdi:register-outline"></iconify-icon>
             <span class="hide-menu">Registrasi Pasien</span>
+            <i class="ti ti-chevron-down arrow"></i>
          </a>
+
+         <ul class="collapse-menu">
+            <li><a href="module/admin/registrasi">Poliklinik</a></li>
+            <li><a href="module/admin/registrasi_ugd">Gawat Darurat</a></li>
+            <li><a href="module/admin/registrasi_ranap">Rawat Inap</a></li>
+            <li><a href="#">Kunjungan Sehat</a></li>
+            <li><a href="#">Promotif Preventif</a></li>
+            <li><a href="#">Antrian Awal</a></li>
+            <li><a href="#">Satu Sehat</a></li>
+            <li><a href="#">Display Antrian</a></li>
+         </ul>
       </li>
       <li class="sidebar-item">
          <a class="sidebar-link <?php if ($title == 'Pemeriksaan' or $title == 'Permintan Farmasi' or $title == 'Resep Luar' or $title == 'Vaksin' or $title == 'Biaya Transaksi' or $title == 'Riwayat'  or $title == 'Permintaan Rawat Inap') {

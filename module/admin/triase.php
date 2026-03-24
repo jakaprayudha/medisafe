@@ -2,6 +2,7 @@
 $title = 'Triase Kegawatdaruratan';
 $no = $_GET['no'];
 $rm = $_GET['rm'];
+require '../../controller/view.php';
 ?>
 <!doctype html>
 <html lang="en">
