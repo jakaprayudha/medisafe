@@ -52,6 +52,7 @@ require '../../controller/view.php';
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">Agama</th>
                           <th scope="col" class="text-dark fw-normal">No.Handphone</th>
+                          <th scope="col" class="text-dark fw-normal">Face Status</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                         </tr>
                       </thead>
@@ -214,7 +215,9 @@ require '../../controller/view.php';
               "ttl": row.patient_datebirth + '/' + row.patient_place ?? "-",
               "gender": row.patient_gender ?? "-",
               "agama": row.patient_religion ?? "-",
-              "phone": row.patient_phone ?? "-"
+              "phone": row.patient_phone ?? "-",
+              "face_status": row.face_image ?
+                '<span class="badge bg-success">✔️ Sudah direkam</span>' : '<span class="badge bg-danger">❌ Belum direkam</span>',
             };
           });
         }
@@ -235,6 +238,9 @@ require '../../controller/view.php';
         },
         {
           data: "phone"
+        },
+        {
+          data: "face_status"
         },
         {
           data: "actions",
@@ -342,19 +348,20 @@ require '../../controller/view.php';
     });
   });
 </script>
-
 <script>
   let currentPatientId = null;
   let stream = null;
 
   $(document).on("click", ".camera-btn", async function() {
-
+    // 🔥 WAJIB: ambil id dari tombol
+    currentPatientId = $(this).data("id");
+    console.log("📌 ID PATIENT:", currentPatientId);
     const modalEl = document.getElementById("cameraModal");
     const modal = new bootstrap.Modal(modalEl);
     modal.show();
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      stream = await navigator.mediaDevices.getUserMedia({
         video: true
       });
 
@@ -363,16 +370,15 @@ require '../../controller/view.php';
 
       await video.play();
 
-      // 🔥 simpan stream biar bisa dihentikan
-      modalEl.stream = stream;
-
     } catch (err) {
       alert("Kamera tidak bisa diakses");
       console.error(err);
     }
 
   });
+
   document.getElementById("captureBtn").addEventListener("click", function() {
+
     const video = document.getElementById("video");
     const canvas = document.getElementById("canvas");
 
@@ -384,7 +390,6 @@ require '../../controller/view.php';
 
     const imageData = canvas.toDataURL("image/png");
 
-    // 🔥 kirim ke backend
     fetch("controller/admisi/recordFace.php", {
         method: "POST",
         headers: {
@@ -398,15 +403,32 @@ require '../../controller/view.php';
       .then(res => res.json())
       .then(res => {
         alert("Wajah berhasil disimpan");
+        $("#cameraModal").modal("hide");
+        table.ajax.reload(null, false);
       });
+
 
   });
 
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
-  };
+  /* =========================
+     CLEANUP (INI YANG PENTING)
+  ========================= */
+  document.getElementById("cameraModal")
+    .addEventListener("hidden.bs.modal", function() {
+
+      console.log("🛑 Stop camera");
+
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+
+      const video = document.getElementById("video");
+      if (video) {
+        video.srcObject = null; // 🔥 penting
+      }
+
+    });
 </script>
 
 </html>
