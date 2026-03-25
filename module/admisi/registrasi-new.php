@@ -72,84 +72,111 @@ require '../../controller/view.php';
   <?php
   require '../admin/library.php';
   ?>
-</body>
 
-<div class="modal fade" id="programModal" tabindex="-1">
-  <div class="modal-dialog">
-    <form id="programForm" class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title"></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+  <div class="modal fade" id="cameraModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Ambil Wajah</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body text-center">
+          <video id="video" width="100%" autoplay playsinline></video>
+          <canvas id="canvas" style="display:none;"></canvas>
+
+          <div class="mt-3">
+            <button id="captureBtn" class="btn btn-success">
+              Ambil Gambar
+            </button>
+          </div>
+        </div>
+
       </div>
-      <div class="modal-body">
-        <input type="hidden" name="id_patient" id="id_patient">
-        <div class="row">
-          <div class="col-12">
-            <div class="alert alert-warning" role="alert">
-              Nomor rekam medis di generate otomatis, untuk melakukan perubahan silahkan klik tombol ubah pada data pasien
+    </div>
+  </div>
+  <div class="modal fade" id="programModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="programForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="id_patient" id="id_patient">
+          <div class="row">
+            <div class="col-12">
+              <div class="alert alert-warning" role="alert">
+                Nomor rekam medis di generate otomatis, untuk melakukan perubahan silahkan klik tombol ubah pada data pasien
+              </div>
             </div>
-          </div>
-          <div class="col-12">
-            <div class="mb-3">
-              <label class="form-label required" id="patient_name">Nama Pasien</label>
-              <input type="text" id="patient_name" name="patient_name" class="form-control" required>
+            <div class="col-12">
+              <div class="mb-3">
+                <label class="form-label required" id="patient_name">Nama Pasien</label>
+                <input type="text" id="patient_name" name="patient_name" class="form-control" required>
+              </div>
             </div>
-          </div>
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label required">Jenis Kelamin</label>
-              <select name="patient_gender" class="form-select" id="patient_gender" required>
-                <option value="">PILIH</option>
-                <option value="Laki-laki">Laki-laki</option>
-                <option value="Perempuan">Perempuan</option>
-              </select>
+            <div class="col-6">
+              <div class="mb-3">
+                <label class="form-label required">Jenis Kelamin</label>
+                <select name="patient_gender" class="form-select" id="patient_gender" required>
+                  <option value="">PILIH</option>
+                  <option value="Laki-laki">Laki-laki</option>
+                  <option value="Perempuan">Perempuan</option>
+                </select>
+              </div>
             </div>
-          </div>
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label required">Agama</label>
-              <select name="patient_religion" class="form-select" id="patient_religion" required>
-                <option value="">PILIH</option>
-                <option value="Islam">Islam</option>
-                <option value="Kristen">Kristen</option>
-                <option value="Katolik">Katolik</option>
-                <option value="Hindu">Hindu</option>
-                <option value="Budha">Budha</option>
-              </select>
+            <div class="col-6">
+              <div class="mb-3">
+                <label class="form-label required">Agama</label>
+                <select name="patient_religion" class="form-select" id="patient_religion" required>
+                  <option value="">PILIH</option>
+                  <option value="Islam">Islam</option>
+                  <option value="Kristen">Kristen</option>
+                  <option value="Katolik">Katolik</option>
+                  <option value="Hindu">Hindu</option>
+                  <option value="Budha">Budha</option>
+                </select>
+              </div>
             </div>
-          </div>
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label required">Tempat Lahir</label>
-              <input type="text" id="patient_place" name="patient_place" class="form-control" required>
+            <div class="col-6">
+              <div class="mb-3">
+                <label class="form-label required">Tempat Lahir</label>
+                <input type="text" id="patient_place" name="patient_place" class="form-control" required>
+              </div>
             </div>
-          </div>
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label required">Tanggal Lahir</label>
-              <input type="date" id="patient_datebirth" name="patient_datebirth" class="form-control" required>
+            <div class="col-6">
+              <div class="mb-3">
+                <label class="form-label required">Tanggal Lahir</label>
+                <input type="date" id="patient_datebirth" name="patient_datebirth" class="form-control" required>
+              </div>
             </div>
-          </div>
-          <div class="col-12">
-            <div class="mb-3">
-              <label class="form-label ">No.Handphone</label>
-              <input type="text" id="patient_phone" name="patient_phone" class="form-control">
+            <div class="col-12">
+              <div class="mb-3">
+                <label class="form-label ">No.Handphone</label>
+                <input type="text" id="patient_phone" name="patient_phone" class="form-control">
+              </div>
             </div>
-          </div>
-          <div class="col-12">
-            <div class="mb-3">
-              <label class="form-label">Alamat</label>
-              <textarea name="patient_address" id="patient_address" class="form-control" rows="5"></textarea>
+            <div class="col-12">
+              <div class="mb-3">
+                <label class="form-label">Alamat</label>
+                <textarea name="patient_address" id="patient_address" class="form-control" rows="5"></textarea>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Simpan</button>
-      </div>
-    </form>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Simpan</button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
+</body>
+
+
+
 <script>
   const apiUrl = 'controller/master/patientContrroller';
   $(document).ready(function() {
@@ -165,6 +192,11 @@ require '../../controller/view.php';
               "actions": `
                       <div class="text-center">
 								<div class="btn-group btn-group-sm" role="group">
+                  <!-- 🔥 Tombol kamera -->
+                  <a class="btn btn-primary camera-btn" href="javascript:;" data-id="${row.id_patient}">
+                    <i class="fas fa-camera"></i>
+                  </a>
+
                 	<a class="btn btn-info" href="module/admin/patient_details?no=${row.patient_number}">
 											<i class="fas fa-info-circle"></i>
 									</a>
@@ -309,6 +341,72 @@ require '../../controller/view.php';
       });
     });
   });
+</script>
+
+<script>
+  let currentPatientId = null;
+  let stream = null;
+
+  $(document).on("click", ".camera-btn", async function() {
+
+    const modalEl = document.getElementById("cameraModal");
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true
+      });
+
+      const video = document.getElementById("video");
+      video.srcObject = stream;
+
+      await video.play();
+
+      // 🔥 simpan stream biar bisa dihentikan
+      modalEl.stream = stream;
+
+    } catch (err) {
+      alert("Kamera tidak bisa diakses");
+      console.error(err);
+    }
+
+  });
+  document.getElementById("captureBtn").addEventListener("click", function() {
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+
+    const imageData = canvas.toDataURL("image/png");
+
+    // 🔥 kirim ke backend
+    fetch("controller/admisi/recordFace.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          id: currentPatientId,
+          image: imageData
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        alert("Wajah berhasil disimpan");
+      });
+
+  });
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+  };
 </script>
 
 </html>

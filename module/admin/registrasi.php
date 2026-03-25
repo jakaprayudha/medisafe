@@ -16,6 +16,21 @@ require '../../controller/view.php';
       z-index: 99999 !important;
     }
   </style>
+  <style id="fixcss">
+    #cameraModal .modal-body {
+      position: relative;
+    }
+
+    #cameraModal video {
+      width: 100%;
+    }
+
+    #cameraModal canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+  </style>
 </head>
 
 <body>
@@ -308,7 +323,7 @@ require '../../controller/view.php';
     <div class="modal-content">
 
       <div class="modal-header">
-        <h5 class="modal-title">📸 Capture Foto</h5>
+        <h5 class="modal-title">📸 Pengenalan Wajah</h5>
         <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
       </div>
 
@@ -567,6 +582,7 @@ require '../../controller/view.php';
     </div>
   </div>
 </div>
+
 <script>
   function hitungBMI() {
     const tinggi = parseFloat(document.getElementById('tinggi').value);
@@ -981,7 +997,7 @@ require '../../controller/view.php';
     }
   });
 </script>
-<script>
+<!-- <script>
   let stream;
   let currentVisitId = null;
 
@@ -1041,7 +1057,7 @@ require '../../controller/view.php';
       }
     });
   });
-</script>
+</script> -->
 <script>
   $(document).on('shown.bs.dropdown', '.dropdown, .dropup', function() {
     const $menu = $(this).find('.dropdown-menu');
@@ -1376,6 +1392,199 @@ require '../../controller/view.php';
         }
       });
   };
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+<script>
+  /* =========================
+   GLOBAL STATE
+========================= */
+  let stream = null;
+  let intervalId = null;
+  let modelsLoaded = false;
+
+  /* =========================
+     LOAD MODELS (ONCE)
+  ========================= */
+  async function loadModels() {
+    if (modelsLoaded) return;
+
+    if (typeof faceapi === "undefined") {
+      alert("❌ face-api.js belum ter-load");
+      return;
+    }
+
+    console.log("⏳ Loading models...");
+
+    await faceapi.nets.tinyFaceDetector.loadFromUri('/medisafe/models');
+    await faceapi.nets.faceRecognitionNet.loadFromUri('/medisafe/models');
+    await faceapi.nets.faceLandmark68Net.loadFromUri('/medisafe/models');
+
+    modelsLoaded = true;
+    console.log("✅ Models loaded");
+  }
+
+  /* =========================
+     CLICK CAMERA BUTTON
+  ========================= */
+  $(document).on("click", ".camera-btn", async function() {
+
+    try {
+      await loadModels();
+
+      const modalEl = document.getElementById("cameraModal");
+      const modal = new bootstrap.Modal(modalEl);
+      modal.show();
+
+      modalEl.addEventListener("shown.bs.modal", async function handler() {
+        modalEl.removeEventListener("shown.bs.modal", handler);
+
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true
+        });
+
+        const video = document.getElementById("video");
+        video.srcObject = stream;
+
+        video.onloadedmetadata = () => {
+          video.play();
+          startRecognition(video);
+        };
+      });
+
+    } catch (err) {
+      console.error("❌ Camera error:", err);
+      alert("Tidak bisa mengakses kamera");
+    }
+
+  });
+
+  /* =========================
+     FACE RECOGNITION
+  ========================= */
+  async function startRecognition(video) {
+
+    try {
+      const labeledDescriptors = await getLabeledFaceDescriptions();
+
+      if (!labeledDescriptors.length) {
+        console.warn("⚠️ Tidak ada data wajah di database");
+        return;
+      }
+
+      const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
+
+      const container = document.querySelector("#cameraModal .modal-body");
+
+      // hapus canvas lama
+      const oldCanvas = container.querySelector("canvas.overlay");
+      if (oldCanvas) oldCanvas.remove();
+
+      const canvas = faceapi.createCanvasFromMedia(video);
+      canvas.classList.add("overlay");
+      container.append(canvas);
+
+      const displaySize = {
+        width: video.videoWidth,
+        height: video.videoHeight
+      };
+
+      faceapi.matchDimensions(canvas, displaySize);
+
+      // clear interval lama
+      if (intervalId) clearInterval(intervalId);
+
+      intervalId = setInterval(async () => {
+
+        const detections = await faceapi
+          .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks()
+          .withFaceDescriptors();
+
+        const resized = faceapi.resizeResults(detections, displaySize);
+
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        resized.forEach((d) => {
+          const match = faceMatcher.findBestMatch(d.descriptor);
+
+          const box = d.detection.box;
+
+          const drawBox = new faceapi.draw.DrawBox(box, {
+            label: match.toString()
+          });
+
+          drawBox.draw(canvas);
+        });
+
+      }, 150);
+
+    } catch (err) {
+      console.error("❌ Recognition error:", err);
+    }
+  }
+
+  /* =========================
+     LOAD FACE DATA
+  ========================= */
+  async function getLabeledFaceDescriptions() {
+
+    try {
+      const res = await fetch("controller/visit/getFaces.php");
+      const data = await res.json();
+
+      return Promise.all(
+        data.map(async (user) => {
+
+          try {
+            const img = await faceapi.fetchImage(`/medisafe/uploads/faces/${user.image}`);
+
+            const detection = await faceapi
+              .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions())
+              .withFaceLandmarks()
+              .withFaceDescriptor();
+
+            if (!detection) return null;
+
+            return new faceapi.LabeledFaceDescriptors(
+              user.name,
+              [detection.descriptor]
+            );
+
+          } catch (err) {
+            console.warn("❌ Gagal load image:", user.image);
+            return null;
+          }
+
+        })
+      ).then(results => results.filter(r => r !== null));
+
+    } catch (err) {
+      console.error("❌ Error ambil data wajah:", err);
+      return [];
+    }
+  }
+
+  /* =========================
+     CLEANUP (STOP CAMERA)
+  ========================= */
+  document.getElementById("cameraModal")
+    .addEventListener("hidden.bs.modal", function() {
+
+      console.log("🛑 Stop camera");
+
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+
+    });
 </script>
 
 </html>
