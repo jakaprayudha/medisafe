@@ -3,7 +3,7 @@ require '../../database/connect.php';
 $visit = $_GET['visit'];
 $clinic = mysqli_query($koneksi, "SELECT * FROM setting_clinic LIMIT 1");
 $dataclinic = mysqli_fetch_array($clinic);
-$visitCheck = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor INNER JOIN ms_poli ON ms_poli.id_poli = pasien_visit.id_poli INNER JOIN visit_pemeriksaan ON visit_pemeriksaan.nomor_visit = pasien_visit.visit_ID WHERE pasien_visit.visit_ID='$visit'");
+$visitCheck = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor INNER JOIN ms_poli ON ms_poli.id_poli = pasien_visit.id_poli WHERE pasien_visit.visit_ID='$visit'");
 $visitData = mysqli_fetch_array($visitCheck);
 ?>
 <!DOCTYPE html>
@@ -154,6 +154,8 @@ $visitData = mysqli_fetch_array($visitCheck);
       <div class="data-grid">
          <div class="label">Kondisi Masuk</div>
          <div class="value"><?= $visitData['kondisi_masuk'] ?></div>
+         <div class="label">Kondisi keluar</div>
+         <div class="value"><?= $visitData['kondisi_keluar'] ?></div>
          <div class="label">Tekanan Darah</div>
          <div class="value"><?= $visitData['tekanan_darah'] ?> mmHg</div>
          <div class="label">Suhu</div>
@@ -163,39 +165,55 @@ $visitData = mysqli_fetch_array($visitCheck);
          <div class="label">Respirasi</div>
          <div class="value"><?= $visitData['respirasi'] ?> x/menit</div>
          <div class="label">Tinggi</div>
-         <div class="value"><?= $visitData['tinggi'] ?> cm</div>
+         <div class="value"><?= $visitData['tinggi_badan'] ?> cm</div>
          <div class="label">Berat</div>
-         <div class="value"><?= $visitData['berat'] ?> kg</div>
+         <div class="value"><?= $visitData['berat_badan'] ?> kg</div>
          <div class="label">BMI</div>
-         <div class="value"><?= $visitData['bmi'] ?> (<?= $visitData['bmi_ket'] ?>)</div>
+         <div class="value"><?= $visitData['bmi'] ?> (<?= $visitData['bmi_keterangan'] ?>)</div>
       </div>
       <p><b>Pemeriksaan Fisik:</b><br><?= nl2br($visitData['pemeriksaan_fisik']) ?></p>
    </div>
 
    <div class="section">
-      <h2>Anamnesa</h2>
-      <?php
-      $getanamesa = mysqli_query($koneksi, "SELECT visit_anamnesa.*, ms_anamnesa_detail.ass_name FROM visit_anamnesa  INNER JOIN ms_anamnesa_detail ON ms_anamnesa_detail.id_ass = visit_anamnesa.id_anamnesa_detail WHERE visit_anamnesa.nomor_visit='$visit'");
-      $anamnesa = mysqli_fetch_all($getanamesa, MYSQLI_ASSOC);
-      ?>
-      <ul>
-         <?php foreach ($anamnesa as $a): ?>
-            <li><strong><?= $a['ass_name'] ?> : </strong> <br> Catatan <?= $a['detail'] ?></li>
-         <?php endforeach; ?>
-      </ul>
+      <h2>Anamnesa (Keluhan Utama)</h2>
+      <p><?= nl2br($visitData['anamnesa']) ?></p>
+   </div>
+   <div class="section">
+      <h2>Keluhan Penyerta</h2>
+      <p><?= nl2br($visitData['keluhan_penyerta']) ?></p>
+   </div>
+   <div class="section">
+      <h2>Riwayat Alergi</h2>
+      <p><?= nl2br($visitData['riwayat_alergi']) ?></p>
+   </div>
+   <div class="section">
+      <h2>Riwayat Penyakit Pribadi</h2>
+      <p><?= nl2br($visitData['riwayat_penyakit_pribadi']) ?></p>
+   </div>
+   <div class="section">
+      <h2>Riwayat Penyakit Sekarang</h2>
+      <p><?= nl2br($visitData['riwayat_penyakit_sekarang']) ?></p>
    </div>
 
    <div class="section">
-      <h2>Analisis</h2>
-      <p><?= nl2br($visitData['analyst']) ?></p>
+      <h2>Riwayat Pengobatan</h2>
+      <p><?= nl2br($visitData['riwayat_pengobatan']) ?></p>
    </div>
    <div class="section">
-      <h2>Riwayat Konsumsi obat</h2>
-      <p><?= nl2br($visitData['riwayat_konsumsi']) ?></p>
+      <h2>Pemeriksaan Fisik</h2>
+      <p><?= nl2br($visitData['pemeriksaan_fisik']) ?></p>
+   </div>
+   <div class="section">
+      <h2>Pemeriksaan Fungsional</h2>
+      <p><?= nl2br($visitData['pemeriksaan_fungsional']) ?></p>
    </div>
    <div class="section">
       <h2>Diagnosa</h2>
       <p><?= nl2br($visitData['diagnosa']) ?></p>
+   </div>
+   <div class="section">
+      <h2>Edukasi</h2>
+      <p><?= nl2br($visitData['edukasi']) ?></p>
    </div>
 
    <div class="section">

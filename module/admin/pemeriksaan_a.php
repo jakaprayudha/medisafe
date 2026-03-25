@@ -178,7 +178,7 @@ if ($data) {
                       <textarea id="riwayat_penyakit_pribadi" name="riwayat_penyakit_pribadi" rows="2" class="form-control"><?= @$data['riwayat_penyakit_pribadi'] ?></textarea>
                     </div>
                     <div class="mb-3">
-                      <label for="riwayat_penyakit_sekarang" class="form-label">Riwayat Penyakit Keluarga</label>
+                      <label for="riwayat_penyakit_sekarang" class="form-label">Riwayat Penyakit Sekarang</label>
                       <textarea id="riwayat_penyakit_sekarang" name="riwayat_penyakit_sekarang" rows="2" class="form-control"><?= @$data['riwayat_penyakit_sekarang'] ?></textarea>
                     </div>
                     <div class="mb-3">
