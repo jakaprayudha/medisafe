@@ -66,7 +66,7 @@ $apiUrl = getenv('API_URL');
 
                       <!-- Tombol kembali -->
                       <div class="d-flex ms-auto gap-2">
-                      
+
                       </div>
                     </div>
                   </div>
@@ -134,16 +134,120 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
             let pemeriksaanFile = (rmeType == 1) ? 'pemeriksaan_a' : 'pemeriksaan_b';
             return {
               "actions": `
-                  <div class="text-center">
-                  <!-- Pemeriksaan -->
-                  <a href="module/admin/${pemeriksaanFile}?no=${row.visit_ID}&rm=${row.nomor_rm}"
-                    class="btn btn-sm btn-primary"
-                    data-bs-toggle="tooltip"
-                    data-bs-placement="top"
-                    title="Pemeriksaan">
-                    <i class="ti ti-stethoscope"></i>
-                  </a>
-                  </div>
+                <div class="dropdown text-center position-relative">
+                  <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    Actions
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="z-index:1055; min-width: 180px;">
+                    <li>
+                      <a class="dropdown-item" target="_blank" href="module/admin/print/bundle_klaim?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
+                        <i class="bi bi-clipboard2-pulse me-2"></i>Preview RME Klaim
+                      </a>
+                    </li>
+                       <li>
+                        <a class="dropdown-item" href="module/admin/form_sep?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="bi bi-file-earmark-text me-2"></i>SEP (Surat Eligibilitas Peserta) 
+                        </a>
+                      </li>
+                    <li>
+                      <a class="dropdown-item" href="module/admin/rme_inap?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
+                        <i class="bi bi-clipboard2-pulse me-2"></i>Pemeriksaan
+                      </a>
+                    </li>
+                     <li>
+                        <a class="dropdown-item" href="module/admin/triase?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="bi bi-file-earmark-text me-2"></i>Triase
+                        </a>
+                      </li>
+                      <li>
+                        <a class="dropdown-item" href="module/admin/form_pernyataan?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="bi bi-file-earmark-text me-2"></i>Formulir Pernyataan Peserta
+                        </a>
+                      </li>
+                       <li>
+                        <a class="dropdown-item" href="module/admin/form_capture_patient?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="bi bi-file-earmark-text me-2"></i>Foto Pasien
+                        </a>
+                      </li>
+                        <li>
+                        <a class="dropdown-item" href="module/admin/form_dok_perawatan?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="bi bi-file-earmark-text me-2"></i>Dokumentasi Perawatan
+                        </a>
+                      </li>
+                       <li>
+                        <a class="dropdown-item" href="module/admin/form_dok_pasien?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="bi bi-file-earmark-text me-2"></i>Dokumen Pasien
+                        </a>
+                      </li>
+                        <li>
+                        <a class="dropdown-item" href="module/admin/form_ekg?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="bi bi-file-earmark-text me-2"></i>Foto Elektrokardiogram (EKG) 
+                        </a>
+                      </li>
+                        <li>
+                        <a class="dropdown-item" href="module/admin/form_usg?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="bi bi-file-earmark-text me-2"></i>Foto Ultrasonografi (USG) 
+                        </a>
+                      </li>
+                         <li>
+                        <a class="dropdown-item" href="module/admin/cppt?no=${row.visit_ID}&rm=${row.nomor_rm}" >
+                          <i class="bi bi-file-earmark-text me-2"></i>CPPT
+                        </a>
+                      </li>
+                         <li>
+                        <a class="dropdown-item" href="module/admin/form_io_ranap?no=${row.visit_ID}&rm=${row.nomor_rm}" >
+                          <i class="bi bi-file-earmark-text me-2"></i>Lembar Masuk dan keluar Rawat Inap
+                        </a>
+                      </li>
+                      <li>
+                        <a class="dropdown-item" href="module/admin/form_lbp?no=${row.visit_ID}&rm=${row.nomor_rm}" >
+                          <i class="bi bi-file-earmark-text me-2"></i>Lembar Bukti Pelayanan (LBP)
+                        </a>
+                      </li>
+                      <li>
+                        <a class="dropdown-item" href="module/admin/form_rekap_persalinan?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="bi bi-file-earmark-text me-2"></i>Rekapitulasi Pelayanan Persalinan
+                        </a>
+                      </li>
+                       <li>
+                        <a class="dropdown-item" href="module/admin/form_upload_buku_kia?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="bi bi-file-earmark-text me-2"></i>Upload Buku Kesehatan Ibu dan Anak
+                        </a>
+                      </li>
+                       <li>
+                        <a class="dropdown-item" href="module/admin/form_kb?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="bi bi-file-earmark-text me-2"></i>Kartu Status Peserta KB
+                        </a>
+                      </li>
+                        <li>
+                        <a class="dropdown-item" href="module/admin/print/formulir_surat_persetujuan?no=${row.visit_ID}&rm=${row.nomor_rm}" target="_blank">
+                          <i class="bi bi-file-earmark-text me-2"></i>Surat Persetujuan Tindakan Medis
+                        </a>
+                      </li>
+                        <li>
+                        <a class="dropdown-item" href="module/admin/print/formulir_inout_ranap?no=${row.visit_ID}&rm=${row.nomor_rm}" target="_blank">
+                          <i class="bi bi-file-earmark-text me-2"></i>Lembar Masuk dan Keluar Rawat Inap
+                        </a>
+                      </li>
+                        <li>
+                        <a class="dropdown-item" href="module/admin/instruksi?no=${row.visit_ID}&rm=${row.nomor_rm}" target="_blank">
+                          <i class="bi bi-file-earmark-text me-2"></i>Perkembangan Pasien & Instruksi Dokter
+                        </a>
+                      </li>
+                        <li>
+                        <a class="dropdown-item" href="module/admin/resume_medis?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="bi bi-file-earmark-text me-2"></i>Resume Medis
+                        </a>
+                      </li>
+                       <hr>
+                        <li>
+                        <a class="dropdown-item" href="module/admin/form_ranap?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="bi bi-file-earmark-text me-2"></i>Surat Keterangan Rawat Inap
+                        </a>
+                      </li>
+                  </ul>
+                </div>
               `,
               "tanggal": row.visit_date + ' ' + row.visit_time,
               "nomor_rm": row.nomor_rm,
@@ -210,50 +314,77 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 
 
   });
-
-
 </script>
 
 <script>
-function callPatient(noAntrian, namaPasien, poli, visitID) {
+  function callPatient(noAntrian, namaPasien, poli, visitID) {
 
-  /* =========================
-     1. SUARA (LANGSUNG - USER GESTURE)
-  ========================= */
-  if ('speechSynthesis' in window) {
+    /* =========================
+       1. SUARA (LANGSUNG - USER GESTURE)
+    ========================= */
+    if ('speechSynthesis' in window) {
 
-    speechSynthesis.cancel();
+      speechSynthesis.cancel();
 
-    const text = `Nomor antrean ${noAntrian}, atas nama ${namaPasien}, silakan menuju poli ${poli}`;
-    const utterance = new SpeechSynthesisUtterance(text);
+      const text = `Nomor antrean ${noAntrian}, atas nama ${namaPasien}, silakan menuju poli ${poli}`;
+      const utterance = new SpeechSynthesisUtterance(text);
 
-    utterance.lang = 'id-ID';
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-    utterance.volume = 1;
+      utterance.lang = 'id-ID';
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      utterance.volume = 1;
 
-    const voices = speechSynthesis.getVoices();
-    const indo = voices.find(v => v.lang === 'id-ID');
-    if (indo) utterance.voice = indo;
+      const voices = speechSynthesis.getVoices();
+      const indo = voices.find(v => v.lang === 'id-ID');
+      if (indo) utterance.voice = indo;
 
-    speechSynthesis.speak(utterance);
-  }
-
-  /* =========================
-     2. UPDATE DISPLAY (ASYNC)
-  ========================= */
-  fetch('controller/queue/poliCall.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ visit_ID: visitID })
-  })
-  .then(res => res.json())
-  .then(res => {
-    if (res.status !== 'success') {
-      console.warn('Update display gagal');
+      speechSynthesis.speak(utterance);
     }
+
+    /* =========================
+       2. UPDATE DISPLAY (ASYNC)
+    ========================= */
+    fetch('controller/queue/poliCall.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          visit_ID: visitID
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status !== 'success') {
+          console.warn('Update display gagal');
+        }
+      });
+  }
+</script>
+
+<script>
+  $(document).on('shown.bs.dropdown', '.dropdown', function() {
+    const $menu = $(this).find('.dropdown-menu');
+    const $btn = $(this).find('[data-bs-toggle="dropdown"]');
+
+    const offset = $btn.offset();
+
+    $('body').append($menu);
+
+    $menu.css({
+      position: 'absolute',
+      top: offset.top + $btn.outerHeight(),
+      left: offset.left,
+      display: 'block',
+      zIndex: 999999
+    });
   });
-}
+
+  $(document).on('hide.bs.dropdown', '.dropdown', function() {
+    const $menu = $('body > .dropdown-menu');
+    $(this).append($menu);
+    $menu.removeAttr('style');
+  });
 </script>
 
 </html>

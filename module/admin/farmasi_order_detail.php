@@ -30,29 +30,29 @@ if ($data) {
   ?>
   <style>
     .info-item {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: #f0fdfa;
-  padding: 14px 16px;
-  border-radius: 12px;
-}
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #f0fdfa;
+      padding: 14px 16px;
+      border-radius: 12px;
+    }
 
-.info-item i {
-  font-size: 28px;
-  color: #0f766e;
-}
+    .info-item i {
+      font-size: 28px;
+      color: #0f766e;
+    }
 
-.info-item .label {
-  font-size: 13px;
-  color: #64748b;
-}
+    .info-item .label {
+      font-size: 13px;
+      color: #64748b;
+    }
 
-.info-item .value {
-  font-size: 16px;
-  font-weight: 600;
-  color: #0f172a;
-}
+    .info-item .value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #0f172a;
+    }
   </style>
 </head>
 
@@ -78,53 +78,53 @@ if ($data) {
             <div class="col-12">
               <div class="card">
                 <div class="card-body">
-                    <!-- NAMA PASIEN -->
-                    <h4 class="fw-bold mb-2">
-                      <?= $data['patient_name'] ?>
-                      <span class="badge bg-warning text-dark ms-2">
-                        RM : <?= $data['nomor_rm'] ?>
-                      </span>
-                    </h4>
+                  <!-- NAMA PASIEN -->
+                  <h4 class="fw-bold mb-2">
+                    <?= $data['patient_name'] ?>
+                    <span class="badge bg-warning text-dark ms-2">
+                      RM : <?= $data['nomor_rm'] ?>
+                    </span>
+                  </h4>
 
-                    <!-- INFO PASIEN -->
-                    <div class="text-muted mb-3">
-                      <i class="ti ti-calendar"></i>
-                      Usia:
-                      <?= $usia->y ?> Th <?= $usia->m ?> Bl <?= $usia->d ?> Hr
-                      &nbsp;•&nbsp;
-                      <i class="ti ti-gender-bigender"></i>
-                      <?= $data['patient_gender'] ?>
-                    </div>
+                  <!-- INFO PASIEN -->
+                  <div class="text-muted mb-3">
+                    <i class="ti ti-calendar"></i>
+                    Usia:
+                    <?= $usia->y ?> Th <?= $usia->m ?> Bl <?= $usia->d ?> Hr
+                    &nbsp;•&nbsp;
+                    <i class="ti ti-gender-bigender"></i>
+                    <?= $data['patient_gender'] ?>
+                  </div>
 
-                    <!-- GARIS PEMISAH -->
-                    <hr class="my-3">
+                  <!-- GARIS PEMISAH -->
+                  <hr class="my-3">
 
-                    <!-- INFO DOKTER & LAYANAN -->
-                    <div class="row g-3">
+                  <!-- INFO DOKTER & LAYANAN -->
+                  <div class="row g-3">
 
-                      <!-- DOKTER -->
-                      <div class="col-md-6">
-                        <div class="info-item">
-                          <i class="ti ti-stethoscope"></i>
-                          <div>
-                            <div class="label">Dokter</div>
-                            <div class="value"><?= $data['doctor_name'] ?></div>
-                          </div>
+                    <!-- DOKTER -->
+                    <div class="col-md-6">
+                      <div class="info-item">
+                        <i class="ti ti-stethoscope"></i>
+                        <div>
+                          <div class="label">Dokter</div>
+                          <div class="value"><?= $data['doctor_name'] ?></div>
                         </div>
                       </div>
+                    </div>
 
-                      <!-- LAYANAN -->
-                      <div class="col-md-6">
-                        <div class="info-item">
-                          <i class="ti ti-building-hospital"></i>
-                          <div>
-                            <div class="label">Layanan</div>
-                            <div class="value"><?= $data['poli_name'] ?></div>
-                          </div>
+                    <!-- LAYANAN -->
+                    <div class="col-md-6">
+                      <div class="info-item">
+                        <i class="ti ti-building-hospital"></i>
+                        <div>
+                          <div class="label">Layanan</div>
+                          <div class="value"><?= $data['poli_name'] ?></div>
                         </div>
                       </div>
-
                     </div>
+
+                  </div>
                 </div>
               </div>
             </div>
@@ -136,11 +136,12 @@ if ($data) {
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
                       <a href="module/print/struk_obat?no=<?= $no ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
-                        <button class="btn btn-info"><i class="fas fa-print"></i> Struk</button>
+                        <button class="btn btn-outline-info"><i class="fas fa-print"></i> Struk</button>
                       </a>
                       <a href="module/print/resep?no=<?= $no ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
-                        <button class="btn btn-warning"><i class="fas fa-print"></i> Resep</button>
+                        <button class="btn btn-outline-warning"><i class="fas fa-print"></i> Resep</button>
                       </a>
+                      <button class="btn btn-danger"><i class="fas fa-check-circle"></i> Persiapan Obat</button>
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
                     </div>
                   </div>
@@ -421,7 +422,7 @@ if ($data) {
     });
 
     // 🔹 Approve
-    $(document).on('click', '.approve-btn', function () {
+    $(document).on('click', '.approve-btn', function() {
       let id = $(this).data('id');
 
       Swal.fire({
@@ -434,12 +435,12 @@ if ($data) {
       }).then((result) => {
         if (result.isConfirmed) {
           fetch(apiUrl + `&approve=1`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: `id_permintaan_farmasi=${id}`
-          })
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: `id_permintaan_farmasi=${id}`
+            })
             .then(res => res.json())
             .then(resp => {
               if (resp.status === 'success') {

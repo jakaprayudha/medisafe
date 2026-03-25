@@ -57,7 +57,7 @@ function getData()
             ON ms_poli.id_poli = pasien_visit.id_poli
          LEFT JOIN ms_provider
             ON ms_provider.id_provider = pasien_visit.id_provider
-        WHERE 1=1
+        WHERE 1=1 AND pasien_visit.source_hub = 'Poliklinik'
     ";
 
    // =========================

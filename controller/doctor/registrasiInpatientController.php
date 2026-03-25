@@ -30,28 +30,23 @@ switch ($method) {
 // Function untuk Create
 function getData()
 {
-    global $koneksi;
+   global $koneksi;
 
-    // =========================
-    // PARAMETER FILTER
-    // =========================
-    $fromDate   = $_GET['fromDate']   ?? null;
-    $toDate     = $_GET['toDate']     ?? null;
+   // =========================
+   // PARAMETER FILTER
+   // =========================
+   $fromDate   = $_GET['fromDate']   ?? null;
+   $toDate     = $_GET['toDate']     ?? null;
 
-    // =========================
-    // BASE QUERY
-    // =========================
-    $query = "
-        SELECT 
+   // =========================
+   // BASE QUERY
+   // =========================
+   $query = "SELECT 
             pasien_visit.*, 
             ms_patient.*, 
             ms_doctor.*, 
             ms_poli.*,
-            ms_provider.provider_name,
-            CASE 
-                WHEN visit_pemeriksaan.nomor_visit IS NOT NULL THEN 1
-                ELSE 0
-            END AS status_dilayani
+            ms_provider.provider_name
         FROM pasien_visit
         INNER JOIN ms_patient 
             ON ms_patient.id_patient = pasien_visit.id_patient
@@ -59,61 +54,59 @@ function getData()
             ON ms_doctor.id_doctor = pasien_visit.id_doctor
         LEFT JOIN ms_poli 
             ON ms_poli.id_poli = pasien_visit.id_poli
-        LEFT JOIN visit_pemeriksaan 
-            ON visit_pemeriksaan.nomor_visit = pasien_visit.visit_ID
          LEFT JOIN ms_provider
             ON ms_provider.id_provider = pasien_visit.id_provider
         WHERE 1=1 AND pasien_visit.source_hub = 'Rawat Inap'
     ";
 
-    // =========================
-    // PREPARED PARAM
-    // =========================
-    $params = [];
-    $types  = "";
+   // =========================
+   // PREPARED PARAM
+   // =========================
+   $params = [];
+   $types  = "";
 
-    // Filter tanggal
-    if ($fromDate && $toDate) {
-        $query   .= " AND DATE(pasien_visit.visit_date) BETWEEN ? AND ?";
-        $params[] = $fromDate;
-        $params[] = $toDate;
-        $types   .= "ss";
-    }
+   // Filter tanggal
+   if ($fromDate && $toDate) {
+      $query   .= " AND DATE(pasien_visit.visit_date) BETWEEN ? AND ?";
+      $params[] = $fromDate;
+      $params[] = $toDate;
+      $types   .= "ss";
+   }
 
-    // Order
-    $query .= " ORDER BY pasien_visit.visit_date ASC";
+   // Order
+   $query .= " ORDER BY pasien_visit.visit_date ASC";
 
-    // =========================
-    // PREPARE & EXECUTE
-    // =========================
-    $stmt = $koneksi->prepare($query);
+   // =========================
+   // PREPARE & EXECUTE
+   // =========================
+   $stmt = $koneksi->prepare($query);
 
-    if (!$stmt) {
-        http_response_code(500);
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Prepare failed: ' . $koneksi->error
-        ]);
-        return;
-    }
+   if (!$stmt) {
+      http_response_code(500);
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Prepare failed: ' . $koneksi->error
+      ]);
+      return;
+   }
 
-    if (!empty($params)) {
-        $stmt->bind_param($types, ...$params);
-    }
+   if (!empty($params)) {
+      $stmt->bind_param($types, ...$params);
+   }
 
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $data   = $result->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
+   $stmt->execute();
+   $result = $stmt->get_result();
+   $data   = $result->fetch_all(MYSQLI_ASSOC);
+   $stmt->close();
 
-    // =========================
-    // RESPONSE
-    // =========================
-    header('Content-Type: application/json');
-    echo json_encode([
-        'status' => 'success',
-        'data'   => $data
-    ]);
+   // =========================
+   // RESPONSE
+   // =========================
+   header('Content-Type: application/json');
+   echo json_encode([
+      'status' => 'success',
+      'data'   => $data
+   ]);
 }
 
 
