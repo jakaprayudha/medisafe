@@ -39,6 +39,7 @@ require '../../controller/view.php';
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
+                      <button class="btn btn-warning" id="btnTambahDokter"><i class="fas fa-plus"></i> Access Dokter</button>
                     </div>
                   </div>
                   <div class="table-responsive" data-simplebar>
@@ -93,11 +94,57 @@ require '../../controller/view.php';
               <label class="form-label required">Roles</label>
               <select name="roles" id="roles" class="form-select" required>
                 <option value="">PILIH</option>
-                <option value="dokter">Dokter</option>
-                <option value="dokter">Perawat</option>
+                <option value="perawat">Perawat</option>
                 <option value="receptionis">Receptionis</option>
                 <option value="kasir">Kasir</option>
                 <option value="apoteker">Apoteker</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="mb-3">
+              <label class="form-label required">Username</label>
+              <input type="text" id="username" name="username" class="form-control" required>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="mb-3">
+              <label class="form-label required">Password</label>
+              <input type="password" id="password" name="password" class="form-control" required>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal fade" id="programDokterModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form id="programFormDokter" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="id_user" id="id_user">
+        <input type="hidden" name="path" id="path" value="admin">
+        <input type="hidden" name="roles" id="roles" value="dokter">
+        <div class="row">
+          <div class="col-12">
+            <div class="mb-3">
+              <label class="form-label required" id="comp_code">Nama Dokter</label>
+              <select name="fullname" id="fullname" class="form-select" required>
+                <?php
+                $query = tampildata("SELECT * FROM ms_doctor WHERE doctor_status='1'");
+                ?>
+                <option value="">PILIH DOKTER</option>
+                <?php foreach ($query as $rows): ?>
+                  <option value="<?= $rows['doctor_name'] ?>"><?= $rows['doctor_name'] ?></option>
+                <?php endforeach ?>
               </select>
             </div>
           </div>
@@ -322,7 +369,41 @@ require '../../controller/view.php';
         });
 
     });
+
+    // 🔹 Tambah
+    $('#btnTambahDokter').on('click', function() {
+      $('#programFormDokter')[0].reset(); // ✅ pakai programForm, bukan addForm
+      $('#id_user').val('');
+      $('#programDokterModal .modal-title').text('Tambah Data');
+      $('#programDokterModal').modal('show');
+    });
+
+    // 🔹 Submit (Tambah / Update)
+    $('#programFormDokter').on('submit', function(e) {
+      e.preventDefault();
+      let formData = new URLSearchParams(new FormData(this));
+      let id = $('#id_user').val();
+
+      fetch(apiUrl + (id ? `?id=${id}` : ''), {
+          method: id ? 'PUT' : 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success') {
+            Swal.fire('Berhasil!', data.message, 'success');
+            $('#programDokterModal').modal('hide');
+            table.ajax.reload(null, false);
+          } else {
+            Swal.fire('Gagal!', data.message, 'error');
+          }
+        });
+    });
   });
 </script>
+
 
 </html>
