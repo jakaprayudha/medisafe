@@ -3,3 +3,5 @@
 .htaccess
 /logs
 .env
+models/uncompressed/
+models/proto/
