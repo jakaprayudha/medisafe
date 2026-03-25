@@ -135,6 +135,9 @@ if ($data) {
                     <h5 class="card-title fw-semibold">Permintaan Farmasi</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
+                      <button class="btn btn-light" onclick="window.history.back()">
+                        <i class="fas fa-arrow-left"></i> Kembali
+                      </button>
                       <a href="module/print/struk_obat?no=<?= $no ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
                         <button class="btn btn-outline-info"><i class="fas fa-print"></i> Struk</button>
                       </a>
