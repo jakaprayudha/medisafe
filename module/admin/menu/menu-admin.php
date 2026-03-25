@@ -65,7 +65,9 @@
       </li>
       <!-- PENGATURAN -->
       <li class="sidebar-item has-sub">
-         <a href="javascript:void(0)" class="sidebar-link" onclick="toggleSidebarMenu(this)">
+         <a href="javascript:void(0)" class="sidebar-link <?php if ($title == 'Registrasi Poliklinik' or $title == 'Registrasi Gawat Darurat') {
+                                                               echo 'active';
+                                                            } ?>" onclick="toggleSidebarMenu(this)">
             <iconify-icon icon="mdi:register-outline"></iconify-icon>
             <span class="hide-menu">Registrasi Pasien</span>
             <i class="ti ti-chevron-down arrow"></i>
@@ -75,11 +77,11 @@
             <li><a href="module/admin/registrasi">Poliklinik</a></li>
             <li><a href="module/admin/registrasi_ugd">Gawat Darurat</a></li>
             <li><a href="module/admin/registrasi_ranap">Rawat Inap</a></li>
-            <li><a href="#">Kunjungan Sehat</a></li>
-            <li><a href="#">Promotif Preventif</a></li>
-            <li><a href="#">Antrian Awal</a></li>
-            <li><a href="#">Satu Sehat</a></li>
-            <li><a href="#">Display Antrian</a></li>
+            <li><a href="module/admin/registrasi_sehat">Kunjungan Sehat</a></li>
+            <li><a href="module/admin/registrasi_promotif">Promotif Preventif</a></li>
+            <li><a href="module/admin/registrasi_antrean">Antrian Awal</a></li>
+            <li><a href="module/admin/registrasi_satusehat">Satu Sehat</a></li>
+            <li><a href="module/admin/display">Display Antrian</a></li>
          </ul>
       </li>
       <li class="sidebar-item">

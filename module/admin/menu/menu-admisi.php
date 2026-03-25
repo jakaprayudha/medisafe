@@ -27,6 +27,15 @@
               <span class="hide-menu">Data Pasien</span>
            </a>
         </li>
+        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Jadwal Dokter') {
+                                                            echo 'active';
+                                                         } ?>"
+              href="module/admisi/schedule"
+              aria-expanded="false">
+              <iconify-icon icon="solar:calendar-outline"></iconify-icon>
+              <span class="hide-menu">Jadwal Dokter</span>
+           </a>
+        </li>
         <li class="sidebar-item">
            <a class="sidebar-link <?php if ($title == 'Registrasi Polilklinik' or $title == 'List Pasien' and $_GET['type'] == 'Poliklinik') {
                                        echo 'active';
@@ -87,7 +96,7 @@
               href="module/admisi/pendaftaran"
               aria-expanded="false">
               <iconify-icon icon="solar:file-broken"></iconify-icon>
-              <span class="hide-menu">Pendaftaran</span>
+              <span class="hide-menu">Pendaftaran BPJS</span>
            </a>
         </li>
         <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'List Pendaftaran') {
@@ -117,14 +126,18 @@
               <span class="hide-menu">Skrining</span>
            </a>
         </li>
-        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Kegiatan Kelompok') {echo 'active';} ?>"
+        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Kegiatan Kelompok') {
+                                                            echo 'active';
+                                                         } ?>"
               href="module/admisi/addkegiatankelompok"
               aria-expanded="false">
               <iconify-icon icon="solar:widget-add-broken"></iconify-icon>
               <span class="hide-menu">Kegiatan</span>
            </a>
         </li>
-        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'mcu') {echo 'active';} ?>"
+        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'mcu') {
+                                                            echo 'active';
+                                                         } ?>"
               href="module/admisi/listmcu"
               aria-expanded="false">
               <iconify-icon icon="material-symbols:pulse-alert-outline"></iconify-icon>

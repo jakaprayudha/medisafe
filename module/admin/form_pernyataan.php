@@ -16,10 +16,6 @@ if ($data) {
   $usia = $tanggal_lahir->diff($tanggal_visit);
 }
 
-$query = $koneksi->query("SELECT * FROM pasien_resume WHERE nomor_visit = '$no'");
-$dataresume = $query->fetch_assoc();
-// Decode JSON dari kolom 'pemeriksaan'
-@$datarme = json_decode($dataresume['pemeriksaan'], true);
 ?>
 <!doctype html>
 <html lang="en">

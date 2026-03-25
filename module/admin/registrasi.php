@@ -307,9 +307,9 @@ require '../../controller/view.php';
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
 
-      <div class="modal-header bg-dark text-white">
+      <div class="modal-header">
         <h5 class="modal-title">📸 Capture Foto</h5>
-        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
       </div>
 
       <div class="modal-body text-center">
@@ -540,6 +540,66 @@ require '../../controller/view.php';
   </div>
 </div>
 
+<div class="modal fade" id="ttdModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">✍️ Tanda Tangan Pasien</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body text-center">
+
+        <input type="hidden" id="ttd_id_visit">
+
+        <canvas id="signaturePad"
+          style="border:1px solid #ccc; width:100%; height:200px;">
+        </canvas>
+
+        <div class="mt-3 d-flex justify-content-between">
+          <button class="btn btn-warning" id="clearSignature">🧹 Clear</button>
+          <button class="btn btn-primary" id="saveSignature">💾 Simpan</button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+<script>
+  function hitungBMI() {
+    const tinggi = parseFloat(document.getElementById('tinggi').value);
+    const berat = parseFloat(document.getElementById('berat').value);
+
+    if (!tinggi || !berat) return;
+
+    const tinggiMeter = tinggi / 100;
+    const bmi = berat / (tinggiMeter * tinggiMeter);
+
+    // set nilai BMI (2 decimal)
+    document.getElementById('bmi').value = bmi.toFixed(2);
+
+    // kategori BMI
+    let ket = '';
+
+    if (bmi < 18.5) {
+      ket = 'Kurus';
+    } else if (bmi < 25) {
+      ket = 'Normal';
+    } else if (bmi < 30) {
+      ket = 'Gemuk';
+    } else {
+      ket = 'Obesitas';
+    }
+
+    document.getElementById('bmi_ket').value = ket;
+  }
+
+  // trigger saat input berubah
+  document.getElementById('tinggi').addEventListener('input', hitungBMI);
+  document.getElementById('berat').addEventListener('input', hitungBMI);
+</script>
 <script>
   $(document).ready(function() {
     $('#filterModal').on('show.bs.modal', function() {
@@ -681,6 +741,11 @@ require '../../controller/view.php';
                       <li>
                         <a class="dropdown-item camera-btn" href="javascript:;" data-id="${row.id_visit}">
                           <i class="fas fa-camera me-2 text-success"></i> Ambil Foto
+                        </a>
+                      </li>
+                        <li>
+                        <a class="dropdown-item ttd-btn" href="javascript:;" data-id="${row.id_visit}">
+                          <i class="fas fa-signature me-2 text-dark"></i> Tanda Tangan
                         </a>
                       </li>
 
@@ -1210,6 +1275,107 @@ require '../../controller/view.php';
       }
     });
   });
+</script>
+
+<script>
+  let canvas = document.getElementById('signaturePad');
+  let ctx = canvas.getContext('2d');
+
+  let drawing = false;
+
+  // resize canvas biar presisi
+  function resizeCanvas() {
+    canvas.width = canvas.offsetWidth;
+    canvas.height = 200;
+  }
+  resizeCanvas();
+
+  // start drawing
+  canvas.addEventListener('mousedown', () => drawing = true);
+  canvas.addEventListener('mouseup', () => {
+    drawing = false;
+    ctx.beginPath();
+  });
+  canvas.addEventListener('mousemove', draw);
+
+  // support touch (HP)
+  canvas.addEventListener('touchstart', (e) => {
+    drawing = true;
+  });
+  canvas.addEventListener('touchend', () => {
+    drawing = false;
+    ctx.beginPath();
+  });
+  canvas.addEventListener('touchmove', drawTouch);
+
+  function draw(e) {
+    if (!drawing) return;
+
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+
+    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(e.offsetX, e.offsetY);
+  }
+
+  function drawTouch(e) {
+    e.preventDefault();
+    if (!drawing) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  }
+
+  // clear
+  document.getElementById('clearSignature').onclick = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
+
+  // open modal
+  $(document).on('click', '.ttd-btn', function() {
+    let id = $(this).data('id');
+
+    $('#ttd_id_visit').val(id);
+    $('#ttdModal').modal('show');
+
+    setTimeout(resizeCanvas, 200);
+  });
+
+  // save
+  document.getElementById('saveSignature').onclick = function() {
+    const image = canvas.toDataURL('image/png');
+
+    fetch('controller/admisi/saveSignature.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          id_visit: $('#ttd_id_visit').val(),
+          image: image
+        })
+      })
+      .then(res => res.json())
+      .then(resp => {
+        if (resp.status === 'success') {
+          alert('Tanda tangan berhasil disimpan');
+          $('#ttdModal').modal('hide');
+        }
+      });
+  };
 </script>
 
 </html>

@@ -20,7 +20,7 @@ if (!$counter) {
 $currentQuery = "
    SELECT q.no_antrian, p.poli_name
    FROM transaction_queue q
-   INNER JOIN ms_poli p ON p.id_poli = q.id_poli
+   LEFT JOIN ms_poli p ON p.id_poli = q.id_poli
    WHERE q.queue_date = '$today'
      AND q.status = 'dipanggil'
      AND q.counter = $counter
@@ -39,7 +39,7 @@ if ($row = mysqli_fetch_assoc($current)) {
 $listQuery = "
    SELECT q.no_antrian, q.nama_pasien, p.poli_name
    FROM transaction_queue q
-   INNER JOIN ms_poli p ON p.id_poli = q.id_poli
+   LEFT JOIN ms_poli p ON p.id_poli = q.id_poli
    WHERE q.queue_date = '$today'
      AND q.status = 'menunggu'
    ORDER BY q.created_at ASC
