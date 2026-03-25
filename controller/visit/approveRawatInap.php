@@ -1,7 +1,6 @@
 <?php
 require_once '../../database/connect.php';
 header('Content-Type: application/json');
-session_start();
 
 $input = $_POST;
 
@@ -13,10 +12,10 @@ $id_bed     = $input['bed_name'] ?? null;
 $user       = $_SESSION['fullname'] ?? ($input['user'] ?? 'System');
 
 // === Validasi dasar ===
-if (!$id_ranap || !$id_patient || !$id_room || !$id_bed) {
-   echo json_encode(['status' => 'error', 'message' => 'Data tidak lengkap.']);
-   exit;
-}
+// if (!$id_ranap || !$id_patient || !$id_room || !$id_bed) {
+//    echo json_encode(['status' => 'error', 'message' => 'Data tidak lengkap.']);
+//    exit;
+// }
 
 // === Ambil data permintaan ranap ===
 $q = $koneksi->prepare("SELECT * FROM permintaan_ranap WHERE id_ranap = ?");

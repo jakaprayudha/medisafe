@@ -102,54 +102,7 @@ require '../../controller/view.php';
 </body>
 
 
-<div class="modal fade" id="programModal" tabindex="-1">
-  <div class="modal-dialog">
-    <form id="programForm" class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title"></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" name="id_visit" id="id_visit">
-        <input type="hidden" name="id_patient" id="id_patient"> <!-- 🔹 dari klik add -->
-        <input type="hidden" name="user" value="<?= $_SESSION['fullname'] ?>" id="user">
-        <div class="mb-3">
-          <label class="form-label required">Layanan (Poli)</label>
-          <select name="id_poli" id="id_poli" class="form-select" required>
-            <option value="">PILIH</option>
-            <?php
-            $getpoli = tampildata("SELECT * FROM ms_poli WHERE poli_status='1'");
-            foreach ($getpoli as $poli) :
-            ?>
-              <option value="<?= $poli['id_poli'] ?>"><?= $poli['poli_name'] ?></option>
-            <?php endforeach ?>
-          </select>
-        </div>
 
-        <div class="mb-3">
-          <label class="form-label required">Dokter</label>
-          <select name="id_doctor" id="id_doctor" class="form-select" required>
-            <option value="">PILIH</option>
-            <?php
-            $getdoc = tampildata("SELECT * FROM ms_doctor WHERE doctor_status='1'");
-            foreach ($getdoc as $doc) :
-            ?>
-              <option value="<?= $doc['id_doctor'] ?>"><?= $doc['doctor_name'] ?></option>
-            <?php endforeach ?>
-          </select>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Catatan</label>
-          <textarea name="visit_notes" id="visit_notes" class="form-control" rows="5"></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Simpan</button>
-      </div>
-    </form>
-  </div>
-</div>
 <div class="modal fade" id="detailModal">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content shadow">
@@ -532,7 +485,7 @@ require '../../controller/view.php';
     $("#fromDate").val(today);
     $("#toDate").val(today);
     const tipePasien = "UGD";
-    const apiUrl = 'controller/visit/registrasiController';
+    const apiUrl = 'controller/visit/registrasiRanapController';
     var table = $('#periodeTable').DataTable({
       processing: true,
       serverSide: false, // 🔹 ubah jadi false
@@ -707,38 +660,6 @@ require '../../controller/view.php';
       table.search(this.value).draw();
     });
 
-    // 🔹 Tambah
-    $('#btnTambah').on('click', function() {
-      $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
-      $('#id_visit').val('');
-      $('#programModal .modal-title').text('Tambah Data');
-      $('#programModal').modal('show');
-    });
-
-    // 🔹 Submit (Tambah / Update)
-    $('#programForm').on('submit', function(e) {
-      e.preventDefault();
-      let formData = new URLSearchParams(new FormData(this));
-      let id = $('#id_visit').val();
-
-      fetch(apiUrl + (id ? `?id=${id}` : ''), {
-          method: id ? 'PUT' : 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === 'success') {
-            Swal.fire('Berhasil!', data.message, 'success');
-            $('#programModal').modal('hide');
-            table.ajax.reload(null, false);
-          } else {
-            Swal.fire('Gagal!', data.message, 'error');
-          }
-        });
-    });
     // 🔹 Edit
     $(document).on('click', '.edit-btn', function() {
       let id = $(this).data('id');
@@ -794,7 +715,6 @@ require '../../controller/view.php';
       $('#toDate').val(today);
       $('#doctorSelect').val('');
       $('#providerSelect').val('');
-      $('#poliSelect').val('');
       table.ajax.reload();
     });
 
@@ -996,18 +916,6 @@ require '../../controller/view.php';
       });
   }
 
-  function loadPoli() {
-    fetch('controller/visit/getpoli')
-      .then(res => res.json())
-      .then(res => {
-        let html = '<option value="">Pilih Poli</option>';
-        res.forEach(p => {
-          html += `<option value="${p.id_poli}">${p.poli_name}</option>`;
-        });
-        $('#poli_poli').html(html);
-      });
-  }
-
   function loadProvider() {
     fetch('controller/visit/getprovider')
       .then(res => res.json())
@@ -1019,103 +927,6 @@ require '../../controller/view.php';
         $('#poli_provider').html(html);
       });
   }
-  $('#btnSavePoli').on('click', function() {
-
-    const data = {
-      id_patient: $('#id_patient_select').val(), // 🔥 FIX select2
-      id_doctor: $('#poli_doctor').val(),
-      id_poli: $('#poli_poli').val(),
-      id_provider: $('#poli_provider').val(),
-      visit_date: $('#poli_date').val(),
-      visit_time: $('#poli_time').val(),
-      source_hub: $('#source_hub').val(),
-    };
-
-    // 🔥 VALIDASI (optional tapi bagus)
-    if (!data.id_patient || !data.id_doctor || !data.visit_date || !data.visit_time) {
-      alert('Data wajib belum lengkap');
-      return;
-    }
-
-    // 🔥 CONVERT KE FORM-ENCODED
-    const formData = new URLSearchParams();
-    for (let key in data) {
-      formData.append(key, data[key] ?? '');
-    }
-
-    fetch('controller/visit/visitController', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: formData
-      })
-      .then(res => res.json())
-      .then(resp => {
-
-        if (resp.status === 'success') {
-
-          // 🔥 ALERT LEBIH INFORMATIVE
-          alert(`✅ Registrasi berhasil\nPasien UGD Hari Ini Ke: ${resp.data.antrian}`);
-
-          $('#poliModal').modal('hide');
-
-          // reload table tanpa reset paging
-          $('#periodeTable').DataTable().ajax.reload(null, false);
-
-        } else {
-          alert('❌ ' + resp.message);
-        }
-
-      })
-      .catch(err => {
-        console.error(err);
-        alert('Terjadi error');
-      });
-
-  });
-
-  $('#poliModal').on('shown.bs.modal', function() {
-
-    const $select = $('#id_patient_select');
-
-    // destroy kalau sudah ada
-    if ($select.hasClass("select2-hidden-accessible")) {
-      $select.select2('destroy');
-    }
-    console.log("INIT SELECT2");
-    $select.select2({
-      dropdownParent: $('#poliModal'),
-      width: '100%',
-      placeholder: 'Cari pasien...',
-      minimumInputLength: 2,
-      ajax: {
-        url: 'controller/admisi/patientSearchController',
-        type: 'GET',
-        dataType: 'json',
-        delay: 300,
-        data: function(params) {
-          return {
-            search: params.term
-          };
-        },
-
-        processResults: function(data) {
-          console.log("RESPONSE:", data);
-
-          let items = data.data ? data.data : data;
-
-          return {
-            results: items.map(item => ({
-              id: item.id_patient,
-              text: `${item.patient_name} (${item.nomor_rm})`
-            }))
-          };
-        },
-        cache: true
-      }
-    });
-  });
 </script>
 
 </html>

@@ -31,7 +31,7 @@ switch ($type) {
 
    // 🔹 Ambil bed berdasarkan id_room
    case 'bed_name':
-      $stmt = $koneksi->prepare("SELECT id_bed, bed_name, bed_gender FROM ms_room_bed WHERE id_room = ? AND bed_status = 1 ORDER BY bed_name ASC");
+      $stmt = $koneksi->prepare("SELECT id_bed, bed_name, bed_gender FROM ms_room_bed WHERE id_room = ? AND bed_status = 0 ORDER BY bed_name ASC");
       $stmt->bind_param("i", $value);
       $stmt->execute();
       $result = $stmt->get_result();
