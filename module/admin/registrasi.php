@@ -337,7 +337,10 @@ require '../../controller/view.php';
 
         <div class="mt-3">
           <button class="btn btn-outline-primary" id="btnCapture">📸 Ambil Foto</button>
-          <button class="btn btn-primary d-none" id="btnSave">💾 Simpan</button>
+          <!-- 🔥 TAMBAHAN -->
+          <button class="btn btn-success d-none" id="btnVerify">
+            ✅ Verifikasi Pasien
+          </button>
         </div>
 
       </div>
@@ -1398,6 +1401,7 @@ require '../../controller/view.php';
 
 <script>
   let currentVisitId = null;
+  let verifiedUser = null;
   window.addEventListener("load", function() {
 
     console.log("faceapi:", typeof faceapi);
@@ -1515,6 +1519,18 @@ require '../../controller/view.php';
 
           resized.forEach((d) => {
             const match = faceMatcher.findBestMatch(d.descriptor);
+            const label = match.toString();
+
+            if (label !== "unknown") {
+              console.log("✅ MATCH:", label);
+
+              verifiedUser = label; // simpan hasil match
+              enableVerifyButton(label);
+
+            } else {
+              verifiedUser = null;
+              disableVerifyButton();
+            }
 
             const drawBox = new faceapi.draw.DrawBox(d.detection.box, {
               label: match.toString()
@@ -1584,6 +1600,18 @@ require '../../controller/view.php';
       }
     }
 
+    function enableVerifyButton(name) {
+      $("#btnVerify")
+        .removeClass("d-none")
+        .text(`✅ Verifikasi (${name})`);
+    }
+
+    function disableVerifyButton() {
+      $("#btnVerify")
+        .addClass("d-none")
+        .text("Verifikasi");
+    }
+
     /* =========================
        CLEANUP
     ========================= */
@@ -1603,6 +1631,35 @@ require '../../controller/view.php';
         }
 
       });
+
+    $("#btnVerify").on("click", function() {
+
+      if (!verifiedUser) {
+        alert("Wajah belum dikenali");
+        return;
+      }
+
+      fetch("controller/visit/verifyFace.php", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            id_visit: currentVisitId,
+            id_patient: verifiedUser
+          })
+        })
+        .then(res => res.json())
+        .then(resp => {
+          if (resp.status === "success") {
+            alert("✅ Verifikasi berhasil");
+            $("#cameraModal").modal("hide");
+          } else {
+            alert("❌ Verifikasi gagal");
+          }
+        });
+
+    });
 
   });
 </script>
