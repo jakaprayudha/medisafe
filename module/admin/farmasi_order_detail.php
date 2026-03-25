@@ -141,7 +141,9 @@ if ($data) {
                       <a href="module/print/resep?no=<?= $no ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
                         <button class="btn btn-outline-warning"><i class="fas fa-print"></i> Resep</button>
                       </a>
-                      <button class="btn btn-danger"><i class="fas fa-check-circle"></i> Persiapan Obat</button>
+                      <button id="btnPersiapan" class="btn btn-danger">
+                        <i class="fas fa-check-circle"></i> Persiapan Obat
+                      </button>
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
                     </div>
                   </div>
@@ -183,7 +185,7 @@ if ($data) {
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <input type="hidden" name="id_permintaan_farmasi" id="id_permintaan_farmasi">
+        <input type="hidden" name="id_pharmacy_details" id="id_pharmacy_details">
         <input type="hidden" name="id_visit" id="id_visit" value="<?= $_GET['no'] ?>">
         <div class="row">
           <div class="col-12">
@@ -236,7 +238,7 @@ if ($data) {
 </html>
 
 <script>
-  const apiUrl = 'controller/visit/permintaanFarmasi?no=<?= $_GET['no'] ?>';
+  const apiUrl = 'controller/visit/permintaanFarmasiDetails?no=<?= $_GET['id'] ?>';
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
@@ -264,13 +266,13 @@ if ($data) {
               "actions": `
                       <div class="text-center">
 								<div class="btn-group btn-group-sm" role="group">
-                  <a class="btn btn-success approve-btn" href="javascript:;" data-id="${row.id_permintaan_farmasi}">
+                  <a class="btn btn-info approve-btn" href="javascript:;" data-id="${row.id_pharmacy_details}">
 											<i class="fas fa-check-circle"></i>
 									</a>
-									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_permintaan_farmasi}">
+									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_pharmacy_details}">
 											<i class="fas fa-edit"></i>
 									</a>
-									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_permintaan_farmasi}">
+									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_pharmacy_details}">
 											<i class="fas fa-trash"></i>
 									</a>
 								</div>
@@ -282,8 +284,8 @@ if ($data) {
               "harga": formatter.format(harga), // ✅ harga format IDR
               "total": formatter.format(total), // ✅ total format IDR
               "catatan": row.catatan_permintaan ?? "-",
-              "status": row.status_permintaan === '1' ?
-                '<span class="badge bg-success text-center d-block">Selesai</span>' : '<span class="badge bg-danger text-center d-block">Belum proses</span>'
+              "status": row.status_item === '1' ?
+                '<span class="badge bg-success text-center d-block">Approve</span>' : '<span class="badge bg-danger text-center d-block">Belum proses</span>'
             };
           });
         }
@@ -340,7 +342,7 @@ if ($data) {
     // 🔹 Tambah
     $('#btnTambah').on('click', function() {
       $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
-      $('#id_permintaan_farmasi').val('');
+      $('#id_pharmacy_details').val('');
       $('#programModal .modal-title').text('Tambah Data');
       $('#programModal').modal('show');
     });
@@ -349,7 +351,7 @@ if ($data) {
     $('#programForm').on('submit', function(e) {
       e.preventDefault();
       let formData = new URLSearchParams(new FormData(this));
-      let id = $('#id_permintaan_farmasi').val();
+      let id = $('#id_pharmacy_details').val();
 
       fetch(apiUrl + (id ? `?id=${id}` : ''), {
           method: id ? 'PUT' : 'POST',
@@ -439,7 +441,7 @@ if ($data) {
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
               },
-              body: `id_permintaan_farmasi=${id}`
+              body: `id_pharmacy_details=${id}`
             })
             .then(res => res.json())
             .then(resp => {
@@ -453,5 +455,55 @@ if ($data) {
         }
       });
     });
+  });
+</script>
+
+<script>
+  const getUrlParam = (param) => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+  };
+
+  const id_permintaan = getUrlParam("id");
+  document.getElementById("btnPersiapan").addEventListener("click", function() {
+
+    Swal.fire({
+      title: "Apakah akan proses order ?",
+      text: "Obat akan diproses (status berubah)",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Ya, proses!",
+      cancelButtonText: "Batal"
+    }).then((result) => {
+
+      if (result.isConfirmed) {
+
+        fetch("controller/farmasi/approveTiketOrder.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              id: id_permintaan
+            })
+          })
+          .then(res => res.json())
+          .then(res => {
+            if (res.status === "success") {
+              Swal.fire("Berhasil!", "Status berhasil diupdate", "success")
+                .then(() => location.reload());
+            } else {
+              Swal.fire("Gagal!", res.message, "error");
+            }
+          })
+          .catch(err => {
+            Swal.fire("Error!", "Terjadi kesalahan", "error");
+            console.error(err);
+          });
+
+      }
+
+    });
+
   });
 </script>

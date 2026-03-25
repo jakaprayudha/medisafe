@@ -46,9 +46,10 @@ require '../../controller/view.php';
               <div class="card w-100">
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Data Item Farmasi</h5>
+                    <h5 class="card-title fw-semibold">Detail Item Permintaan Farmasi</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
+                      <button class="btn btn-light" onclick="history.back()"><i class="fas fa-arrow-left"></i> Kembali</button>
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
                     </div>
                   </div>
@@ -56,11 +57,11 @@ require '../../controller/view.php';
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
-                          <th class="text-dark fw-normal">ID Order</th>
-                          <th class="text-dark fw-normal">Tanggal</th>
-                          <th class="text-dark fw-normal">RM</th>
-                          <th class="text-dark fw-normal">Nama Pasien</th>
-                          <th class="text-dark fw-normal">Dokter</th>
+                          <th class="text-dark fw-normal">Item</th>
+                          <th scope="col" class="text-dark fw-normal">Qty</th>
+                          <th scope="col" class="text-dark fw-normal">Signa</th>
+                          <th scope="col" class="text-dark fw-normal">Harga</th>
+                          <th scope="col" class="text-dark fw-normal">Total</th>
                           <th scope="col" class="text-dark fw-normal">Catatan</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
@@ -92,18 +93,46 @@ require '../../controller/view.php';
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <input type="hidden" name="id_permintaan_farmasi" id="id_permintaan_farmasi">
-        <input type="hidden" name="id_visit" id="id_visit" value="<?= $_GET['no'] ?>">
+        <input type="hidden" name="id_permintaan_farmasi" id="id_permintaan_farmasi" value="<?= $_GET['id'] ?>">
+        <input type="hidden" name="id_pharmacy_details" id="id_pharmacy_details">
+        <input type="hidden" name="created_user" id="created_user" value="<?= $_SESSION['fullname'] ?>">
         <div class="row">
           <div class="col-12">
-            <div class="alert alert-primary" role="alert">
-              Buat Tiket Order Permintaan Farmasi Sebelum Membuat Isi Rincian Obat/BMHP yang akan dibuat
+            <div class="mb-3">
+              <label for="id_pharmacy" class="form-label">Nama Item <span class="text-danger">*</span> </label>
+              <select name="id_pharmacy" id="id_pharmacy" class="form-select js-example-basic-item" required>
+                <option value="">Select Option</option>
+                <?php
+                $getbarang = tampildata("SELECT * FROM ms_pharmacy WHERE pharmacy_status='1'");
+                ?>
+                <?php foreach ($getbarang as $barang): ?>
+                  <option value="<?= $barang['id_pharmacy']; ?>" data-harga="<?= $barang['pharmacy_sale']; ?>"><?= $barang['pharmacy_name_generic']; ?>/<?= $barang['pharmacy_name_trade']; ?></option>
+                <?php endforeach ?>
+              </select>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="mb-3">
+              <label class="form-label">Harga Dasar</label>
+              <input type="number" id="harga" name="harga" class="form-control">
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="mb-3">
+              <label class="form-label required">Qty</label>
+              <input type="number" id="qty" name="qty" class="form-control" required>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="mb-3">
+              <label class="form-label required">Signa</label>
+              <input type="text" id="signa" name="signa" class="form-control" required>
             </div>
           </div>
           <div class="col-12">
             <div class="mb-3">
               <label class="form-label">Catatan</label>
-              <textarea name="catatan_permintaan" id="catatan_permintaan" class="form-control" rows="5"></textarea>
+              <textarea name="catatan" id="catatan" class="form-control" rows="5"></textarea>
             </div>
           </div>
         </div>
@@ -128,9 +157,14 @@ require '../../controller/view.php';
   });
 </script>
 <script>
-  const apiUrl = 'controller/visit/permintaanFarmasi?no=<?= $_GET['no'] ?>';
+  const apiUrl = 'controller/visit/permintaanFarmasiDetails?no=<?= $_GET['id'] ?>';
 
   $(document).ready(function() {
+    const formatRupiah = (angka) => {
+      const number = Number(angka);
+      if (isNaN(number)) return "-";
+      return new Intl.NumberFormat("id-ID").format(number);
+    };
     var table = $('#periodeTable').DataTable({
       processing: true,
       serverSide: false, // 🔹 ubah jadi false
@@ -143,41 +177,41 @@ require '../../controller/view.php';
               "actions": `
                       <div class="text-center">
 								<div class="btn-group btn-group-sm" role="group">
-									<a class="btn btn-info" href="module/admin/permintaan_farmasi_details?no=<?= $_GET['no'] ?>&rm=${row.nomor_rm}&rme=a&id=${row.id_permintaan_farmasi}">
-											<i class="fas fa-pencil"></i>
+									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_pharmacy_details}">
+											<i class="fas fa-edit"></i>
 									</a>
-									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_permintaan_farmasi}">
+									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_pharmacy_details}">
 											<i class="fas fa-trash"></i>
 									</a>
 								</div>
 							</div>
                     `,
-              "idorder": row.permintaan_number ?? "-",
-              "timestamp": row.created_at ?? "-",
-              "nomor_rm": row.nomor_rm ?? "-",
-              "nama": row.patient_name ?? "-",
-              "dokter": row.doctor_name ?? "-",
-              "catatan": row.catatan_permintaan ?? "-",
-              "status": row.status_permintaan === '1' ?
+              "nama": row.pharmacy_name_generic + '/' + row.pharmacy_name_trade ?? "-",
+              "qty": row.qty ?? "-",
+              "signa": row.signa ?? "-",
+              "harga": formatRupiah(row.harga),
+              "total": formatRupiah(row.total_item),
+              "catatan": row.catatan ?? "-",
+              "status": row.status_item === '1' ?
                 '<span class="badge bg-success text-center d-block">Selesai</span>' : '<span class="badge bg-danger text-center d-block">Belum proses</span>'
             };
           });
         }
       },
       columns: [{
-          data: "idorder"
-        },
-        {
-          data: "timestamp"
-        },
-        {
-          data: "nomor_rm"
-        },
-        {
           data: "nama"
         },
         {
-          data: "dokter"
+          data: "qty"
+        },
+        {
+          data: "signa"
+        },
+        {
+          data: "harga"
+        },
+        {
+          data: "total"
         },
         {
           data: "catatan"
@@ -216,7 +250,7 @@ require '../../controller/view.php';
     // 🔹 Tambah
     $('#btnTambah').on('click', function() {
       $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
-      $('#id_permintaan_farmasi').val('');
+      $('#id_pharmacy_details').val('');
       $('#programModal .modal-title').text('Tambah Data');
       $('#programModal').modal('show');
     });
@@ -225,7 +259,7 @@ require '../../controller/view.php';
     $('#programForm').on('submit', function(e) {
       e.preventDefault();
       let formData = new URLSearchParams(new FormData(this));
-      let id = $('#id_permintaan_farmasi').val();
+      let id = $('#id_pharmacy_details').val();
 
       fetch(apiUrl + (id ? `?id=${id}` : ''), {
           method: id ? 'PUT' : 'POST',
@@ -245,7 +279,33 @@ require '../../controller/view.php';
           }
         });
     });
+    // 🔹 Edit
+    $(document).on('click', '.edit-btn', function() {
+      let id = $(this).data('id');
+      fetch(apiUrl + `&id=${id}`)
+        .then(res => res.json())
+        .then(resp => {
+          if (resp.status === 'success') {
+            let d = resp.data;
 
+            // isi otomatis field biasa
+            for (let key in d) {
+              if (key !== "id_pharmacy" && key !== "harga") { // skip select & harga
+                $(`[name="${key}"]`).val(d[key]);
+              }
+            }
+
+            // isi dropdown select2
+            $('#id_pharmacy').val(d.id_pharmacy).trigger("change");
+
+            // isi harga langsung dari response DB
+            $('#harga').val(d.harga);
+
+            $('#programModal .modal-title').text('Edit Data');
+            $('#programModal').modal('show');
+          }
+        });
+    });
     // 🔹 Delete
     $(document).on('click', '.delete-btn', function() {
       let id = $(this).data('id');
