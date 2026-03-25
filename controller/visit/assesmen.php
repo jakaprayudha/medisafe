@@ -1,57 +1,77 @@
 <?php
-require '../../database/connect.php'; // koneksi
+require '../../database/connect.php';
 
 if (isset($_POST['simpan_pemeriksaan'])) {
+
    $rm = $_POST['nomor_rm'];
    $nomor_visit = $_POST['nomor_visit'];
+   $id_patient = $_POST['id_patient'];
 
-   // Gabungkan semua field menjadi array asosiatif
-   $data = [
-      'kondisi_masuk' => $_POST['kondisi_masuk'],
-      'tekanan_darah' => $_POST['tekanan_darah'],
-      'suhu' => $_POST['suhu'],
-      'nadi' => $_POST['nadi'],
-      'respirasi' => $_POST['respirasi'],
-      'tinggi' => $_POST['tinggi'],
-      'berat' => $_POST['berat'],
-      'keluhan_utama' => $_POST['keluhan_utama'],
-      'keluhan_penyerta' => $_POST['keluhan_penyerta'],
-      'riwayat_alergi' => $_POST['riwayat_alergi'],
-      'riwayat_penyakit_pribadi' => $_POST['riwayat_penyakit_pribadi'],
-      'riwayat_penyakit_sekarang' => $_POST['riwayat_penyakit_sekarang'],
-      'riwayat_pengobatan' => $_POST['riwayat_pengobatan'],
-      'pemeriksaan_fisik' => $_POST['pemeriksaan_fisik'],
-      'pemeriksaan_fungsional' => $_POST['pemeriksaan_fungsional'],
-      'diagnosa' => $_POST['diagnosa'],
-      'tindakan' => $_POST['tindakan'],
-      'edukasi' => $_POST['edukasi'],
-      'cara_keluar' => $_POST['cara_keluar']
-   ];
 
-   $json_data = json_encode($data);
+   $stmt = $koneksi->prepare("UPDATE pasien_visit SET
+         kondisi_masuk = ?,
+         tekanan_darah = ?,
+         suhu = ?,
+         nadi = ?,
+         respirasi = ?,
+         tinggi_badan = ?,
+         berat_badan = ?,
+         bmi = ?,
+         bmi_keterangan = ?,
 
-   // Cek apakah data sudah ada
-   $cek = $koneksi->prepare("SELECT id FROM pasien_resume WHERE nomor_visit = ?");
-   $cek->bind_param("s", $nomor_visit);
-   $cek->execute();
-   $cek->store_result();
+         anamnesa = ?,
+         keluhan_penyerta = ?,
+         riwayat_alergi = ?,
+         riwayat_penyakit_pribadi = ?,
+         riwayat_penyakit_sekarang = ?,
+         riwayat_pengobatan = ?,
+         pemeriksaan_fisik = ?,
+         pemeriksaan_fungsional = ?,
+         diagnosa = ?,
+         tindakan = ?,
+         edukasi = ?,
+         visit_out = ?, 
+         kondisi_keluar = ?
 
-   if ($cek->num_rows > 0) {
-      // Update
-      $stmt = $koneksi->prepare("UPDATE pasien_resume SET pemeriksaan = ? WHERE nomor_visit = ?");
-      $stmt->bind_param("ss", $json_data, $nomor_visit);
-   } else {
-      // Insert
-      $stmt = $koneksi->prepare("INSERT INTO pasien_resume (nomor_visit, nomor_rm, pemeriksaan) VALUES (?, ?, ?)");
-      $stmt->bind_param("sss", $nomor_visit, $rm, $json_data);
-   }
+      WHERE visit_ID = ? AND id_patient = ?
+   ");
+
+   $stmt->bind_param(
+      "ssssssssssssssssssssssss",
+
+      $_POST['kondisi_masuk'],
+      $_POST['tekanan_darah'],
+      $_POST['suhu'],
+      $_POST['nadi'],
+      $_POST['respirasi'],
+      $_POST['tinggi'],
+      $_POST['berat'],
+      $_POST['bmi'],
+      $_POST['bmi_ket'],
+
+      $_POST['keluhan_utama'], // masuk ke anamnesa
+      $_POST['keluhan_penyerta'],
+      $_POST['riwayat_alergi'],
+      $_POST['riwayat_penyakit_pribadi'],
+      $_POST['riwayat_penyakit_sekarang'],
+      $_POST['riwayat_pengobatan'],
+      $_POST['pemeriksaan_fisik'],
+      $_POST['pemeriksaan_fungsional'],
+      $_POST['diagnosa'],
+      $_POST['tindakan'],
+      $_POST['edukasi'],
+      $_POST['cara_keluar'],
+      $_POST['cara_keluar'],
+
+      $nomor_visit,
+      $id_patient
+   );
 
    if ($stmt->execute()) {
-      echo "<script>alert('Pemeriksaan berhasil disimpan.'); window.location.href='pemeriksaan_a?no=$nomor_visit&rm=$rm';</script>";
+      echo "<script>alert('Pemeriksaan berhasil disimpan'); window.location.href='pemeriksaan_a?no=$nomor_visit&rm=$rm';</script>";
    } else {
-      echo "<script>alert('Gagal menyimpan.');</script>";
+      echo "<script>alert('Gagal menyimpan');</script>";
    }
 
    $stmt->close();
-   $cek->close();
 }
