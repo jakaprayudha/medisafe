@@ -180,6 +180,7 @@ require '../../controller/view.php';
 
 <script>
   const apiUrl = 'controller/master/patientContrroller';
+  let table;
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
       processing: true,
@@ -403,8 +404,12 @@ require '../../controller/view.php';
       .then(res => res.json())
       .then(res => {
         alert("Wajah berhasil disimpan");
+
         $("#cameraModal").modal("hide");
-        table.ajax.reload(null, false);
+
+        setTimeout(() => {
+          table.ajax.reload(null, false);
+        }, 500); // 🔥 delay 0.5 detik
       });
 
 
