@@ -4,6 +4,7 @@ require '../../controller/view.php';
 
 $no = $_GET['no'];
 $rm = $_GET['rm'];
+$id = $_GET['id'];
 
 $checkklinik = mysqli_query($koneksi, "SELECT * FROM setting_clinic LIMIT 1");
 $dataklinik = mysqli_fetch_array($checkklinik);
@@ -13,7 +14,7 @@ $checkpasien = mysqli_query($koneksi, "SELECT * FROM pasien_visit
    WHERE pasien_visit.visit_ID='$no'");
 $datapasien = mysqli_fetch_array($checkpasien);
 
-$checkobat = tampildata("SELECT * FROM permintaan_pharmacy INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy.id_pharmacy WHERE id_visit='$no' ");
+$checkobat = tampildata("SELECT * FROM permintaan_pharmacy_details INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy_details.id_pharmacy WHERE id_permintaan_farmasi='$id' ");
 
 $total = 0;
 foreach ($checkobat as $obat) {

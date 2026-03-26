@@ -138,10 +138,10 @@ if ($data) {
                       <button class="btn btn-light" onclick="window.history.back()">
                         <i class="fas fa-arrow-left"></i> Kembali
                       </button>
-                      <a href="module/print/struk_obat?no=<?= $no ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
+                      <a href="module/print/struk_obat?no=<?= $no ?>&rm=<?= $_GET['rm'] ?>&id=<?= $_GET['id'] ?>" target="_blank">
                         <button class="btn btn-outline-info"><i class="fas fa-print"></i> Struk</button>
                       </a>
-                      <a href="module/print/resep?no=<?= $no ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
+                      <a href="module/print/resep?no=<?= $no ?>&rm=<?= $_GET['rm'] ?>&id=<?= $_GET['id'] ?>" target="_blank">
                         <button class="btn btn-outline-warning"><i class="fas fa-print"></i> Resep</button>
                       </a>
                       <button id="btnPersiapan" class="btn btn-danger">
