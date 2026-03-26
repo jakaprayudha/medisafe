@@ -31,7 +31,7 @@
            <a class="sidebar-link <?php if ($title == 'Pembelian') {
                                        echo 'active';
                                     } ?>"
-              href="module/pharmacy/pembelian-bebas"
+              href="javascript:;"
               aria-expanded="false">
               <iconify-icon icon="mdi:coins"></iconify-icon>
               <span class="hide-menu">Pembelian</span>
@@ -41,7 +41,7 @@
            <a class="sidebar-link <?php if ($title == 'Persediaan') {
                                        echo 'active';
                                     } ?>"
-              href="module/pharmacy/persediaan"
+              href="javascript:;"
               aria-expanded="false">
               <iconify-icon icon="mdi:sitemap"></iconify-icon>
               <span class="hide-menu">Persediaan</span>

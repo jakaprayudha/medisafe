@@ -1397,7 +1397,7 @@ require '../../controller/view.php';
   };
 </script>
 
-<script src="/medisafe/assets/js/face-api.min.js"></script>
+<script src="https://medisafe.sehatdigital.id/assets/js/face-api.min.js"></script>
 
 <script>
   let currentVisitId = null;
@@ -1426,13 +1426,13 @@ require '../../controller/view.php';
 
       console.log("⏳ Loading models...");
 
-      await faceapi.nets.tinyFaceDetector.loadFromUri('/medisafe/models');
-      await faceapi.nets.faceRecognitionNet.loadFromUri('/medisafe/models');
-      await faceapi.nets.faceLandmark68Net.loadFromUri('/medisafe/models');
+      await faceapi.nets.tinyFaceDetector.loadFromUri('https://medisafe.sehatdigital.id/models');
+      await faceapi.nets.faceRecognitionNet.loadFromUri('https://medisafe.sehatdigital.id/models');
+      await faceapi.nets.faceLandmark68Net.loadFromUri('https://medisafe.sehatdigital.id/models');
 
       modelsLoaded = true;
       console.log("✅ Models loaded");
-      console.log("MODEL URL:", '/medisafe/models/tiny_face_detector_model-weights_manifest.json');
+      console.log("MODEL URL:", 'https://medisafe.sehatdigital.id/models/tiny_face_detector_model-weights_manifest.json');
     }
 
     /* =========================
