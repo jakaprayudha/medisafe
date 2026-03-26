@@ -13,8 +13,11 @@ switch ($method) {
          exit;
       }
       $no = $_GET['no'];
-      $stmt = $koneksi->prepare("SELECT * FROM ms_doctor_schedule WHERE doctor_number = ?");
-      $stmt->bind_param("s", $no);
+      $checkid = mysqli_query($koneksi, "SELECT * FROM ms_doctor WHERE doctor_number = '$no'");
+      $dataid = mysqli_fetch_array($checkid);
+      $id_doctor = $dataid['id_doctor'];
+      $stmt = $koneksi->prepare("SELECT * FROM ms_doctor_schedule WHERE id_doctor = ?");
+      $stmt->bind_param("s", $id_doctor);
       $stmt->execute();
       $result = $stmt->get_result();
       $data = $result->fetch_all(MYSQLI_ASSOC);
@@ -27,8 +30,12 @@ switch ($method) {
       $start_time = $_POST['start_time'] ?? '';
       $end_time = $_POST['end_time'] ?? '';
 
-      $stmt = $koneksi->prepare("INSERT INTO ms_doctor_schedule (doctor_number, day_of_week, start_time, end_time) VALUES (?,?,?,?)");
-      $stmt->bind_param("ssss", $doctor_number, $day_of_week, $start_time, $end_time);
+      $checkid = mysqli_query($koneksi, "SELECT * FROM ms_doctor WHERE doctor_number = '$doctor_number'");
+      $dataid = mysqli_fetch_array($checkid);
+      $id_doctor = $dataid['id_doctor'];
+
+      $stmt = $koneksi->prepare("INSERT INTO ms_doctor_schedule (id_doctor, day_of_week, start_time, end_time) VALUES (?,?,?,?)");
+      $stmt->bind_param("ssss", $id_doctor, $day_of_week, $start_time, $end_time);
       if ($stmt->execute()) {
          echo json_encode(['success' => true]);
       } else {
