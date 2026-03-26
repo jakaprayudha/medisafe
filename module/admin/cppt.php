@@ -253,8 +253,29 @@ $id_patient = $datapatient['id_patient'];
                 "<strong>A : </strong>" + (row.analysis ?? "-") + "<br>" +
                 "<strong>P : </strong>" + (row.planning ?? "-"),
               "instruksi": row.instruction ?? "-",
-              "verifikasi": row.verifikasi == 1 ?
-                '<span class="badge bg-success">Sudah Diverifikasi</span>' : '<span class="badge bg-danger">Belum Diverifikasi</span>',
+              "verifikasi": (() => {
+
+                // ✅ kalau sudah diverifikasi
+                if (row.verifikasi == 1) {
+                  return '<span class="badge bg-success">✔️ Sudah Diverifikasi</span>';
+                }
+
+                // ❌ kalau yang input dokter → tidak perlu tombol
+                if (row.cppt_profesi === "Dokter") {
+                  return '<span class="badge bg-info">Input Dokter</span>';
+                }
+
+                // 🔥 selain dokter → tampil tombol verifikasi
+                return `
+                  <div class="d-flex flex-column gap-1">
+                    <span class="badge bg-danger">❌ Belum Diverifikasi</span>
+                    <button class="btn btn-sm btn-success verify-btn" data-id="${row.id_cppt}">
+                      ✔️ Verifikasi
+                    </button>
+                  </div>
+                `;
+
+              })(),
             };
           });
         }
@@ -381,6 +402,37 @@ $id_patient = $datapatient['id_patient'];
             });
         }
       });
+    });
+
+    $(document).on("click", ".verify-btn", function() {
+
+      let id = $(this).data("id");
+
+      Swal.fire({
+        title: "Verifikasi data ini?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Ya, Verifikasi",
+        cancelButtonText: "Batal"
+      }).then((result) => {
+
+        if (result.isConfirmed) {
+
+          fetch(apiUrl + `&verify=${id}`, {
+              method: "POST"
+            })
+            .then(res => res.json())
+            .then(res => {
+              if (res.status === "success") {
+                Swal.fire("Berhasil!", "Data sudah diverifikasi", "success");
+                table.ajax.reload(null, false);
+              }
+            });
+
+        }
+
+      });
+
     });
   });
 </script>

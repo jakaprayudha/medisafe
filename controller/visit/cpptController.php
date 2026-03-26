@@ -3,6 +3,11 @@ include '../../database/connect.php';
 $method = $_SERVER['REQUEST_METHOD'];
 switch ($method) {
    case 'POST':
+      // 🔥 HANDLE VERIFY DULU
+      if (isset($_GET['verify'])) {
+         verifyData($_GET['verify']);
+         exit;
+      }
       createData();
       break;
    case 'GET':
@@ -298,6 +303,45 @@ function deleteData()
       echo json_encode([
          'status' => 'error',
          'message' => 'Gagal menyiapkan query.'
+      ]);
+   }
+}
+
+function verifyData($id)
+{
+   global $koneksi;
+
+   if (empty($id)) {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'ID tidak ditemukan'
+      ]);
+      return;
+   }
+
+   // 🔥 update status verifikasi
+   $query = "UPDATE visit_cppt SET verifikasi = 1 WHERE id_cppt = ?";
+
+   if ($stmt = $koneksi->prepare($query)) {
+      $stmt->bind_param("i", $id);
+
+      if ($stmt->execute()) {
+         echo json_encode([
+            'status' => 'success',
+            'message' => 'Berhasil diverifikasi'
+         ]);
+      } else {
+         echo json_encode([
+            'status' => 'error',
+            'message' => 'Gagal verifikasi: ' . $stmt->error
+         ]);
+      }
+
+      $stmt->close();
+   } else {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Query error: ' . $koneksi->error
       ]);
    }
 }
