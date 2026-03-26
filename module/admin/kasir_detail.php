@@ -22,7 +22,10 @@ if ($data) {
 
 
 // Total dari permintaan_pharmacy
-$queryObat = mysqli_query($koneksi, "SELECT qty, harga FROM permintaan_pharmacy WHERE id_visit='$no'");
+$checkid = mysqli_query($koneksi, "SELECT id_permintaan_farmasi FROM permintaan_pharmacy WHERE id_visit='$no'");
+$idfarmasi = mysqli_fetch_array($checkid)['id_permintaan_farmasi'];
+
+$queryObat = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy_details WHERE id_permintaan_farmasi='$idfarmasi'");
 $totalObat = 0;
 while ($row = mysqli_fetch_assoc($queryObat)) {
   $totalObat += $row['qty'] * $row['harga'];
@@ -142,7 +145,7 @@ $totalKeseluruhan = $totalObat + $totalBilling;
                       </thead>
                       <tbody>
                         <?php
-                        $getobat = tampildata("SELECT * FROM permintaan_pharmacy INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy.id_pharmacy  WHERE id_visit='$no'");
+                        $getobat = tampildata("SELECT * FROM permintaan_pharmacy_details INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy_details.id_pharmacy  WHERE id_permintaan_farmasi='$idfarmasi'");
                         ?>
                         <?php foreach ($getobat as $obat): ?>
                           <tr>

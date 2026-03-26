@@ -8,7 +8,11 @@ $pasien = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM pasien_visit
     JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient 
     WHERE pasien_visit.visit_ID='$no'"));
 
-$obat = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy.id_pharmacy WHERE id_visit='$no'");
+
+$checkid = mysqli_query($koneksi, "SELECT id_permintaan_farmasi FROM permintaan_pharmacy WHERE id_visit='$no'");
+$idfarmasi = mysqli_fetch_array($checkid)['id_permintaan_farmasi'];
+
+$obat = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy_details INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy_details.id_pharmacy WHERE permintaan_pharmacy_details.id_permintaan_farmasi='$idfarmasi' ");
 $billing = mysqli_query($koneksi, "SELECT * FROM pasien_billing WHERE id_visit='$no' ");
 
 // Hitung total
