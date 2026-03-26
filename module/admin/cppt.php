@@ -15,6 +15,12 @@ $datapatient = mysqli_fetch_array($patient);
   <?php
   require '../../assets/template/head.php';
   ?>
+  <style>
+    .cppt-text {
+      max-width: 400px;
+      white-space: normal;
+    }
+  </style>
 </head>
 
 <body>
@@ -224,6 +230,19 @@ $id_patient = $datapatient['id_patient'];
 <script>
   const apiUrl = 'controller/visit/cpptController?no=<?= $_GET['no'] ?>&id_patient=<?= $id_patient ?>';
 
+  function readMore(text, limit = 30) {
+    if (!text) return "-";
+
+    if (text.length <= limit) return text;
+
+    const shortText = text.substring(0, limit);
+
+    return `
+    <span class="short-text">${shortText}...</span>
+    <span class="full-text d-none">${text}</span>
+    <a href="javascript:;" class="read-more text-primary"> Selengkapnya</a>
+  `;
+  }
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
       processing: true,
@@ -248,11 +267,15 @@ $id_patient = $datapatient['id_patient'];
                     `,
               "tanggal": row.cppt_date + " " + row.cppt_time ?? "-",
               "profesi": row.cppt_profesi ?? "-",
-              "cppt": "<strong>S : </strong>" + (row.subjective ?? "-") + "<br>" +
-                "<strong>O : </strong>" + (row.objective ?? "-") + "<br>" +
-                "<strong>A : </strong>" + (row.analysis ?? "-") + "<br>" +
-                "<strong>P : </strong>" + (row.planning ?? "-"),
-              "instruksi": row.instruction ?? "-",
+              "cppt": `
+                <div class="cppt-text">
+                  <strong>S : </strong>${readMore(row.subjective)}<br>
+                  <strong>O : </strong>${readMore(row.objective)}<br>
+                  <strong>A : </strong>${readMore(row.analysis)}<br>
+                  <strong>P : </strong>${readMore(row.planning)}
+                </div>
+              `,
+              "instruksi": row.instruksi ?? "-",
               "verifikasi": (() => {
 
                 // ✅ kalau sudah diverifikasi
@@ -432,6 +455,21 @@ $id_patient = $datapatient['id_patient'];
         }
 
       });
+
+    });
+
+    $(document).on("click", ".read-more", function() {
+
+      const parent = $(this).closest("div");
+
+      parent.find(".short-text").toggleClass("d-none");
+      parent.find(".full-text").toggleClass("d-none");
+
+      if ($(this).text().includes("Selengkapnya")) {
+        $(this).text(" Sembunyikan");
+      } else {
+        $(this).text(" Selengkapnya");
+      }
 
     });
   });
