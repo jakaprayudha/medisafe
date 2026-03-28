@@ -2,13 +2,13 @@
 include '../../database/connect.php';
 
 header('Content-Type: application/json');
-
+session_start();
 // 🔐 VALIDASI SESSION
 if (!isset($_SESSION['id_customer'])) {
    http_response_code(401);
    echo json_encode([
       'status' => 'error',
-      'message' => 'Session tidak valid / expired'
+      'message' => 'Session tidak valid / expired',
    ]);
    exit;
 }
