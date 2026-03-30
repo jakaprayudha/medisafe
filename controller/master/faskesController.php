@@ -217,7 +217,7 @@ function updateData()
       'faskes_district',
       'faskes_village',
       'faskes_status',
-      'contarct_date',
+      'contract_date',
       'faskes_payment',
       'contract_amount',
       'contract_start',
