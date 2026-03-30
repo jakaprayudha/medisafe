@@ -17,13 +17,23 @@
          <span class="hide-menu">Aktivitas</span>
       </li>
       <li class="sidebar-item">
-         <a class="sidebar-link <?php if ($title == 'Data Faskes') {
+         <a class="sidebar-link <?php if ($title == 'Data Faskes' or $title == 'Master Faskes Details') {
                                     echo 'active';
                                  } ?>"
             href="module/administrator/master-faskes"
             aria-expanded="false">
             <iconify-icon icon="mdi:folder-outline"></iconify-icon>
             <span class="hide-menu">Data Faskes</span>
+         </a>
+      </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Data Import') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/administrator/data-import"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:download-outline"></iconify-icon>
+            <span class="hide-menu">Data Import</span>
          </a>
       </li>
    </ul>

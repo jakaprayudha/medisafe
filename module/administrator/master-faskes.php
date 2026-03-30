@@ -1,5 +1,5 @@
 <?php
-$title = 'Master Faskes';
+$title = 'Data Faskes';
 require '../../controller/view.php';
 ?>
 <!doctype html>

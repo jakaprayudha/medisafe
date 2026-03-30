@@ -1,0 +1,443 @@
+<?php
+$title = 'Data Import';
+require '../../controller/view.php';
+?>
+<!doctype html>
+<html lang="en">
+
+<head>
+  <base href="../../">
+  <?php
+  require '../../assets/template/head.php';
+  ?>
+</head>
+
+<body>
+  <!--  Body Wrapper -->
+  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
+    data-sidebar-position="fixed" data-header-position="fixed">
+    <!-- Sidebar Start -->
+    <?php
+    require '../admin/sidebar.php';
+    ?>
+    <!--  Sidebar End -->
+    <!--  Main wrapper -->
+    <div class="body-wrapper">
+      <!--  Header Start -->
+      <?php
+      require '../admin/navbar.php';
+      ?>
+      <!--  Header End -->
+      <div class="body-wrapper-inner">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-lg-12 d-flex align-items-stretch">
+              <div class="card w-100">
+                <div class="card-body p-4">
+                  <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="card-title fw-semibold">Data Import</h5>
+                    <!-- Grup tombol di sisi kanan -->
+                    <div class="d-flex ms-auto gap-2">
+                      <button class="btn btn-primary" id="btnImport">
+                        <i class="fas fa-upload"></i> Import
+                      </button>
+                    </div>
+                  </div>
+                  <div class="alert alert-primary d-flex justify-content-between align-items-start" role="alert">
+                    <div>
+                      📥 <strong>Import Data</strong><br>
+                      Gunakan fitur ini untuk mengunggah data secara massal sesuai template yang telah disediakan.
+                      Pastikan format file sudah sesuai.
+                      Jika terdapat data yang belum tersedia di sistem, harap sesuaikan terlebih dahulu sebelum melakukan import.
+                    </div>
+
+                    <div class="ms-3">
+                      <div class="dropdown">
+                        <button class="btn btn-sm btn-light dropdown-toggle" data-bs-toggle="dropdown">
+                          📄 Lihat Format
+                        </button>
+                        <ul class="dropdown-menu">
+                          <li><a class="dropdown-item" href="templates/pasien.xlsx" target="_blank">Master Pasien</a></li>
+                          <li><a class="dropdown-item" href="templates/dokter.xlsx" target="_blank">Master Dokter</a></li>
+                          <li><a class="dropdown-item" href="templates/farmasi.xlsx" target="_blank">Master Farmasi</a></li>
+                          <li><a class="dropdown-item" href="templates/visit.xlsx" target="_blank">Master Visit</a></li>
+                          <li><a class="dropdown-item" href="templates/faskes.xlsx" target="_blank">Master Faskes</a></li>
+                        </ul>
+                      </div>
+                    </div>
+
+                  </div>
+                  <div class="table-responsive" data-simplebar>
+                    <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
+                      <thead>
+                        <tr>
+                          <th>Nomor PKS</th>
+                          <th>Kode Faskes</th>
+                          <th>Nama Faskes</th>
+                          <th>PIC</th>
+                          <th>Pasien</th>
+                          <th>Dokter</th>
+                          <th>Farmasi</th>
+                          <th>Visit</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="importModal">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title">📥 Import Data</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label>Pilih Faskes</label>
+            <select id="faskesSelect" class="form-select">
+              <option value="">-- Pilih Faskes --</option>
+            </select>
+          </div>
+          <!-- Pilih jenis -->
+          <div class="mb-3">
+            <label>Jenis Data</label>
+            <select id="importType" class="form-select">
+              <option value="">-- Pilih --</option>
+              <option value="pasien">Master Pasien</option>
+              <option value="dokter">Master Dokter</option>
+              <option value="farmasi">Master Farmasi</option>
+              <option value="visit">Master Visit</option>
+              <option value="faskes">Master Faskes</option>
+            </select>
+          </div>
+
+          <!-- Upload -->
+          <div class="mb-3">
+            <label>Upload File (Excel)</label>
+            <input type="file" id="importFile" class="form-control" accept=".xlsx,.xls">
+          </div>
+
+          <!-- Preview -->
+          <div id="previewArea" style="display:none;">
+            <hr>
+            <h6>🔍 Preview Data</h6>
+            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+              <table class="table table-bordered" id="previewTable">
+                <thead></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
+          <button class="btn btn-success" id="btnUpload" disabled>
+            🚀 Proses Import
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <?php
+  require '../admin/library.php';
+  ?>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+</body>
+
+<script>
+  const apiUrl = 'controller/master/faskesImportController';
+  $(document).ready(function() {
+    var table = $('#periodeTable').DataTable({
+      processing: true,
+      serverSide: false, // 🔹 ubah jadi false
+      scrollX: true,
+      ajax: {
+        url: apiUrl,
+        type: "GET",
+        dataSrc: function(json) {
+          return json.data.map(function(row) {
+            return {
+              pks: row.contract_number ?? '-',
+              code: row.faskes_code ?? '-',
+              name: row.faskes_name ?? '-',
+              pic: row.pic_name ? `${row.pic_name} (${row.pic_phone})` : '-',
+
+              pasien: row.total_pasien > 0 ? '✔️' : '❌',
+              dokter: row.total_dokter > 0 ? '✔️' : '❌',
+              farmasi: row.total_farmasi > 0 ? '✔️' : '❌',
+              visit: row.total_visit > 0 ? '✔️' : '❌',
+
+              status: `
+      <label class="switch">
+        <input type="checkbox" class="toggle-status" 
+          data-id="${row.id_faskes}" 
+          ${row.faskes_status == '1' ? 'checked' : ''}>
+        <span class="slider round"></span>
+      </label>
+    `
+            };
+          });
+        }
+      },
+      columns: [{
+          data: "pks"
+        },
+        {
+          data: "code"
+        },
+        {
+          data: "name"
+        },
+        {
+          data: "pic"
+        },
+        {
+          data: "pasien"
+        },
+        {
+          data: "dokter"
+        },
+        {
+          data: "farmasi"
+        },
+        {
+          data: "visit"
+        },
+        {
+          data: "status"
+        }
+      ],
+      footerCallback: function(row, data, start, end, display) {
+        var api = this.api();
+      }
+    });
+
+    $('#customSearch').on('keyup', function() {
+      table.search(this.value).draw();
+    });
+
+    // 🔹 Tambah
+    $('#btnTambah').on('click', function() {
+      $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
+      $('#id_faskes').val('');
+      $('#programModal .modal-title').text('Tambah Data');
+      $('#programModal').modal('show');
+    });
+
+    // 🔹 Submit (Tambah / Update)
+    $('#programForm').on('submit', function(e) {
+      e.preventDefault();
+      let formData = new URLSearchParams(new FormData(this));
+      let id = $('#id_faskes').val();
+
+      fetch(apiUrl + (id ? `?id=${id}` : ''), {
+          method: id ? 'PUT' : 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success') {
+            Swal.fire('Berhasil!', data.message, 'success');
+            $('#programModal').modal('hide');
+            table.ajax.reload(null, false);
+          } else {
+            Swal.fire('Gagal!', data.message, 'error');
+          }
+        });
+    });
+    // 🔹 Edit
+    $(document).on('click', '.edit-btn', function() {
+      let id = $(this).data('id');
+      fetch(apiUrl + `?id=${id}`)
+        .then(res => res.json())
+        .then(resp => {
+          if (resp.status === 'success') {
+            let d = resp.data;
+
+            // isi otomatis berdasarkan name field
+            for (let key in d) {
+              $(`[name="${key}"]`).val(d[key]);
+            }
+
+            $('#programModal .modal-title').text('Edit Data');
+            $('#programModal').modal('show');
+          }
+        });
+    });
+
+    // 🔹 Delete
+    $(document).on('click', '.delete-btn', function() {
+      let id = $(this).data('id');
+      Swal.fire({
+        title: 'Hapus Data?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Hapus',
+        cancelButtonText: 'Batal'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(apiUrl + `?id=${id}`, {
+              method: 'DELETE'
+            })
+            .then(res => res.json())
+            .then(data => {
+              if (data.status === 'success') {
+                Swal.fire('Berhasil!', 'Data dihapus.', 'success');
+                table.ajax.reload(null, false);
+              }
+            });
+        }
+      });
+    });
+
+    $(document).on('change', '.toggle-status', function() {
+      let id = $(this).data('id');
+      let status = $(this).is(':checked') ? 1 : 0;
+
+      fetch(apiUrl + '?toggle_status=1', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: `id_faskes=${id}&faskes_status=${status}`
+        })
+        .then(res => res.json())
+        .then(res => {
+          if (res.status !== 'success') {
+            Swal.fire('Gagal!', res.message, 'error');
+          }
+        });
+    });
+  });
+</script>
+<script>
+  function loadFaskesDropdown() {
+    fetch('controller/master/faskesController')
+      .then(res => res.json())
+      .then(res => {
+        let opt = '<option value="">-- Pilih Faskes --</option>';
+
+        res.data.forEach(f => {
+          opt += `<option value="${f.id_faskes}">
+                  ${f.faskes_name} (${f.faskes_code})
+                </option>`;
+        });
+
+        $('#faskesSelect').html(opt);
+      });
+  }
+
+  // load saat buka modal
+  $('#btnImport').on('click', function() {
+    loadFaskesDropdown();
+    $('#importModal').modal('show');
+  });
+</script>
+<script>
+  let excelData = [];
+
+  $('#btnImport').on('click', function() {
+    $('#importModal').modal('show');
+  });
+
+  // 🔹 preview excel
+  $('#importFile').on('change', function(e) {
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(evt) {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, {
+        type: 'array'
+      });
+
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      excelData = XLSX.utils.sheet_to_json(sheet);
+
+      renderPreview(excelData);
+    };
+
+    reader.readAsArrayBuffer(file);
+  });
+
+  // 🔹 render preview
+  function renderPreview(data) {
+    if (!data.length) return;
+
+    $('#previewArea').show();
+    $('#btnUpload').prop('disabled', false);
+
+    let columns = Object.keys(data[0]);
+
+    let thead = '<tr>' + columns.map(c => `<th>${c}</th>`).join('') + '</tr>';
+    $('#previewTable thead').html(thead);
+
+    let rows = data.slice(0, 10).map(row => {
+      return '<tr>' + columns.map(c => `<td>${row[c] ?? ''}</td>`).join('') + '</tr>';
+    }).join('');
+
+    $('#previewTable tbody').html(rows);
+  }
+
+  // 🔹 upload
+  $('#btnUpload').on('click', function() {
+
+    let type = $('#importType').val();
+    let faskes = $('#faskesSelect').val();
+
+    if (!type) {
+      Swal.fire('Error', 'Pilih jenis data', 'error');
+      return;
+    }
+
+    if (!faskes) {
+      Swal.fire('Error', 'Pilih faskes terlebih dahulu', 'error');
+      return;
+    }
+
+    fetch('controller/import/importController.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: type,
+          id_faskes: faskes, // 🔥 penting
+          data: excelData
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === 'success') {
+          Swal.fire('Berhasil!', res.message, 'success');
+          $('#importModal').modal('hide');
+        } else {
+          Swal.fire('Gagal!', res.message, 'error');
+        }
+      });
+  });
+</script>
+
+</html>
