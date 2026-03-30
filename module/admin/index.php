@@ -71,17 +71,19 @@ $amount = $data['total'] ?? 0;
             <span><?= date('l, d F Y') ?></span>
           </div>
           <!--  Row 1 -->
-          <?php 
-          if($role == 'admin'){
+          <?php
+          if ($role == 'admin') {
             require '../dashboard/dashboard-admin.php';
-          }else if($role == 'receptionis'){
+          } else if ($role == 'receptionis') {
             require '../dashboard/dashboard-admisi.php';
-          }else if($role == 'dokter'){
+          } else if ($role == 'dokter') {
             require '../dashboard/dashboard-dokter.php';
-          }else if($role == 'apoteker'){
+          } else if ($role == 'apoteker') {
             require '../dashboard/dashboard-farmasi.php';
-          }else if($role == 'kasir'){
+          } else if ($role == 'kasir') {
             require '../dashboard/dashboard-kasir.php';
+          } else if ($role == 'superadmin') {
+            require '../dashboard/dashboard-administrator.php';
           } ?>
           <?php
           require '../../assets/template/footer.php';
