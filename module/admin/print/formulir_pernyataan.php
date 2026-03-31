@@ -115,7 +115,7 @@
             Tj. Morawa, 29 Oktober 2025<br><br>
             Yang Membuat Pernyataan<br><br><br><br>
             <img id="ttd_img" src="" alt="TTD" style="max-height:80px;">
-            <p>Regina Pardede </p>
+            <p id="ttd_nama"></p>
             <!-- <div class="sign-line" id="fp_nama"></div> -->
          </div>
       </div>
@@ -159,6 +159,10 @@
             } else {
                document.getElementById("ttd_img").style.display = "none";
             }
+            // 🔥 NAMA TTD
+            document.getElementById("ttd_nama").innerText =
+               data.nama_ttd ?? data.patient_name ?? "";
+
          });
    });
 </script>
