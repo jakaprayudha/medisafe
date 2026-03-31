@@ -3,6 +3,9 @@
    ?>
   <nav>
      <div class="nav nav-tabs" id="nav-tab" role="tablist">
+        <a href="module/admin/triase?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+           <button class="nav-link <?= ($current == 'triase.php') ? 'active' : '' ?>">Triase</button>
+        </a>
         <a href="module/admin/rme_inap?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
            <button class="nav-link <?= ($current == 'rme_inap.php') ? 'active' : '' ?>">Pemeriksaan Medis</button>
         </a>
@@ -26,6 +29,27 @@
         </a>
         <a href="module/admin/cppt?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
            <button class="nav-link <?= ($current == 'cppt.php') ? 'active' : '' ?>">CPPT</button>
+        </a>
+        <a href="module/admin/form_sep?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+           <button class="nav-link <?= ($current == 'form_sep.php') ? 'active' : '' ?>">SEP</button>
+        </a>
+        <a href="module/admin/form_pernyataan?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+           <button class="nav-link <?= ($current == 'form_pernyataan.php') ? 'active' : '' ?>">Pernyataan Peserta</button>
+        </a>
+        <a href="module/admin/form_capture_patient?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+           <button class="nav-link <?= ($current == 'form_capture_patient.php') ? 'active' : '' ?>">Foto Pasien</button>
+        </a>
+        <a href="module/admin/form_dok_perawatan?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+           <button class="nav-link <?= ($current == 'form_dok_perawatan.php') ? 'active' : '' ?>">Foto Perawatan</button>
+        </a>
+        <a href="module/admin/form_dok_pasien?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+           <button class="nav-link <?= ($current == 'form_dok_pasien.php') ? 'active' : '' ?>">Dokumen Pasien</button>
+        </a>
+        <a href="module/admin/form_ekg?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+           <button class="nav-link <?= ($current == 'form_ekg.php') ? 'active' : '' ?>">EKG</button>
+        </a>
+        <a href="module/admin/form_usg?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+           <button class="nav-link <?= ($current == 'form_usg.php') ? 'active' : '' ?>">USG</button>
         </a>
         <button onclick="window.history.back()" class="nav-link <?= ($current == 'pemeriksaan-rawat-inap') ? '' : '' ?>">Kembali</button>
      </div>

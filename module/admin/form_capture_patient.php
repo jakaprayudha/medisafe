@@ -46,6 +46,16 @@ if ($data) {
       <!--  Header End -->
       <div class="body-wrapper-inner">
         <div class="container-fluid">
+          <?php
+          $rme = $_GET['rme']; // default a
+          if ($rme == 'a') {
+            include 'menu_rme.php';
+          } else if ($rme == 'b') {
+            include 'menu_rmeb.php';
+          } else if ($rme == 'c') {
+            include 'menu_rme_inap.php';
+          }
+          ?>
           <div class="row">
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
