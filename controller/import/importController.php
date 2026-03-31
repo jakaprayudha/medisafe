@@ -95,15 +95,25 @@ switch ($type) {
       foreach ($rows as $r) {
 
          $stmt = $koneksi->prepare("
-            INSERT INTO farmasi (id_faskes, nama_obat, harga)
-            VALUES (?, ?, ?)
+            INSERT INTO ms_pharmacy (id_customer, pharmacy_code, pharmacy_name_trade, pharmcy_jenis_drugs, pharmacy_category, pharmacy_stock, pharmacy_unit, pharmacy_price_general, pharmacy_price_item, pharmacy_price_buy, pharmacy_price_otc, pharmacy_price_bpjs, pharmacy_margin_profit)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ");
 
          $stmt->bind_param(
-            "isi",
+            "issssssssssss", // 🔥 13 karakter
             $id_faskes,
-            $r['nama_obat'],
-            $r['harga']
+            $r['Kode'],
+            $r['Nama Obat'],
+            $r['Jenis'],
+            $r['Kategori'],
+            $r['Stok'],
+            $r['Satuan'],
+            $r['Harga Umum'],
+            $r['Harga Barang'],
+            $r['Harga Beli (Setelah Pajak)'],
+            $r['Harga OTC'],
+            $r['Harga Jual BPJS'],
+            $r['Margin Profit']
          );
 
          $stmt->execute();

@@ -12,8 +12,7 @@ if (!$no || !$rm) {
 }
 
 // Ambil data pasien & dokter
-$q = mysqli_query($koneksi, "
-    SELECT 
+$q = mysqli_query($koneksi, "SELECT 
         p.patient_name,
         p.patient_gender,
         p.patient_datebirth,

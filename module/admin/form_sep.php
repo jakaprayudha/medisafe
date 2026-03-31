@@ -2,6 +2,7 @@
 $title = 'Form SEP (Surat Eligibilitas Peserta)';
 $no = $_GET['no'];
 $rm = $_GET['rm'];
+require '../../controller/view.php';
 ?>
 <!doctype html>
 <html lang="en">
@@ -54,7 +55,7 @@ $rm = $_GET['rm'];
                     <div class="col-3">
                       <div class="mb-3">
                         <label for="usia" class="form-label">Usia</label>
-                        <input type="text" value="<?php echo  $usia->y . " tahun " . $usia->m . " bulan " . $usia->d . " hari"; ?>" id="usia" name="usia" class="form-control bg-light" readonly>
+                        <input type="text" id="usia" name="usia" class="form-control bg-light" readonly>
                       </div>
                     </div>
                     <div class="col-3">
@@ -92,7 +93,10 @@ $rm = $_GET['rm'];
                   </div>
                   <div class="text-end mt-2">
                     <div id="sep_preview_box" class="mt-2"></div>
-
+                    <button class="btn btn-light" onclick="window.history.back()">
+                      <iconify-icon icon="mdi:arrow-left"></iconify-icon>
+                      Kembail
+                    </button>
                     <a href="module/admin/print/formulir_sep.php?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
                       <button class="btn btn-outline-primary">
                         <iconify-icon icon="mdi:printer-outline"></iconify-icon>
