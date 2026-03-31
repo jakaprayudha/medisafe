@@ -114,7 +114,7 @@
          <div class="ttd-box">
             Tj. Morawa, 29 Oktober 2025<br><br>
             Yang Membuat Pernyataan<br><br><br><br>
-            <img src="../../../uploads/ttd/ttdregina.png" alt="">
+            <img id="ttd_img" src="" alt="TTD" style="max-height:80px;">
             <p>Regina Pardede </p>
             <!-- <div class="sign-line" id="fp_nama"></div> -->
          </div>
@@ -153,6 +153,12 @@
             document.getElementById("fp_jk").innerText = data.patient_gender ?? "";
             document.getElementById("fp_nik").innerText = data.patient_nik ?? "";
             document.getElementById("fp_phone").innerText = data.patient_phone ?? "";
+            // 🔥 SET TTD DINAMIS
+            if (data.file_ttd) {
+               document.getElementById("ttd_img").src = `../../../uploads/ttd/${data.file_ttd}`;
+            } else {
+               document.getElementById("ttd_img").style.display = "none";
+            }
          });
    });
 </script>
