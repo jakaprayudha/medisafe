@@ -1,7 +1,8 @@
 <?php
 require_once __DIR__ . '/../../../database/connect.php';
 session_start();
-$sql = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM `setting_pcare` WHERE id = 1"));
+$idcustomer = $_SESSION['id_customer'];
+$sql = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM `setting_pcare` WHERE id_customer = '$idcustomer'"));
 $base_url = $sql['base_url'];
 $service = $sql['service_name'];
 // date_default_timezone_set('Asia/Jakarta');
