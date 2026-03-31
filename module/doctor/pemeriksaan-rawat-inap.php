@@ -221,17 +221,12 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                         </a>
                       </li>
                         <li>
-                        <a class="dropdown-item" href="module/admin/print/formulir_surat_persetujuan?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c" target="_blank">
+                        <a class="dropdown-item" href="module/admin/print/formulir_surat_persetujuan?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c" >
                           <i class="bi bi-file-earmark-text me-2"></i>Surat Persetujuan Tindakan Medis
                         </a>
                       </li>
                         <li>
-                        <a class="dropdown-item" href="module/admin/print/formulir_inout_ranap?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c" target="_blank">
-                          <i class="bi bi-file-earmark-text me-2"></i>Lembar Masuk dan Keluar Rawat Inap
-                        </a>
-                      </li>
-                        <li>
-                        <a class="dropdown-item" href="module/admin/instruksi?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c" target="_blank">
+                        <a class="dropdown-item" href="module/admin/instruksi?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c" >
                           <i class="bi bi-file-earmark-text me-2"></i>Perkembangan Pasien & Instruksi Dokter
                         </a>
                       </li>

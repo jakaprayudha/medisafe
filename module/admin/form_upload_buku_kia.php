@@ -15,11 +15,6 @@ if ($data) {
 
   $usia = $tanggal_lahir->diff($tanggal_visit);
 }
-
-$query = $koneksi->query("SELECT * FROM pasien_resume WHERE nomor_visit = '$no'");
-$dataresume = $query->fetch_assoc();
-// Decode JSON dari kolom 'pemeriksaan'
-@$datarme = json_decode($dataresume['pemeriksaan'], true);
 ?>
 <!doctype html>
 <html lang="en">
@@ -50,6 +45,16 @@ $dataresume = $query->fetch_assoc();
       <!--  Header End -->
       <div class="body-wrapper-inner">
         <div class="container-fluid">
+          <?php
+          $rme = $_GET['rme']; // default a
+          if ($rme == 'a') {
+            include 'menu_rme.php';
+          } else if ($rme == 'b') {
+            include 'menu_rmeb.php';
+          } else if ($rme == 'c') {
+            include 'menu_rme_inap.php';
+          }
+          ?>
           <div class="row">
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">

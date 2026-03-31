@@ -9,8 +9,11 @@
         <a href="module/admin/rme_inap?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
            <button class="nav-link <?= ($current == 'rme_inap.php') ? 'active' : '' ?>">Pemeriksaan Medis</button>
         </a>
-        <a href="module/admin/permintaan_farmasi?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
-           <button class="nav-link <?= ($current == 'permintaan_farmasi.php') ? 'active' : '' ?>">Permintaan Farmasi</button>
+        <a href="module/admin/rme_inap?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+           <button class="nav-link <?= ($current == 'rme_inap.php') ? 'active' : '' ?>">Instruksi Dokter</button>
+        </a>
+        <a href="module/admin/instruksi?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+           <button class="nav-link <?= ($current == 'instruksi.php') ? 'active' : '' ?>">Permintaan Farmasi</button>
         </a>
         <a href="module/admin/resep?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
            <button class="nav-link <?= ($current == 'resep.php') ? 'active' : '' ?>">Resep Luar</button>
@@ -50,6 +53,24 @@
         </a>
         <a href="module/admin/form_usg?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
            <button class="nav-link <?= ($current == 'form_usg.php') ? 'active' : '' ?>">USG</button>
+        </a>
+        <a href="module/admin/form_io_ranap?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+           <button class="nav-link <?= ($current == 'form_io_ranap.php') ? 'active' : '' ?>">Form Masuk Keluar Rawat Inap</button>
+        </a>
+        <a href="module/admin/form_lbp?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+           <button class="nav-link <?= ($current == 'form_lbp.php') ? 'active' : '' ?>">LBP</button>
+        </a>
+        <a href="module/admin/form_rekap_persalinan?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+           <button class="nav-link <?= ($current == 'form_rekap_persalinan.php') ? 'active' : '' ?>">Pelayanan Persalinan</button>
+        </a>
+        <a href="module/admin/form_upload_buku_kia?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+           <button class="nav-link <?= ($current == 'form_upload_buku_kia.php') ? 'active' : '' ?>">Buku KIA</button>
+        </a>
+        <a href="module/admin/form_kb?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+           <button class="nav-link <?= ($current == 'form_kb.php') ? 'active' : '' ?>">Status KB</button>
+        </a>
+        <a href="module/admin/resume_medis?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+           <button class="nav-link <?= ($current == 'resume_medis.php') ? 'active' : '' ?>">Resume Medis</button>
         </a>
         <button onclick="window.history.back()" class="nav-link <?= ($current == 'pemeriksaan-rawat-inap') ? '' : '' ?>">Kembali</button>
      </div>
