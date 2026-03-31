@@ -27,5 +27,6 @@
         <a href="module/admin/cppt?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
            <button class="nav-link <?= ($current == 'cppt.php') ? 'active' : '' ?>">CPPT</button>
         </a>
+        <button onclick="window.history.back()" class="nav-link <?= ($current == 'pemeriksaan-rawat-inap') ? '' : '' ?>">Kembali</button>
      </div>
   </nav>

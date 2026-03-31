@@ -1,6 +1,7 @@
 <?php
 $title = "FORMULIR TRIASE KEGAWATDARURATAN";
 $subtitle = "Assesmen Medis Awal Pasien IGD";
+require '../../../database/connect.php';
 ?>
 <!DOCTYPE html>
 <html lang="id">

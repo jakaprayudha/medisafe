@@ -315,6 +315,10 @@ require '../../controller/view.php';
                         </div>
 
                         <div class="text-end mt-3">
+                          <button class="btn btn-light" onclick="window.history.back()">
+                            <iconify-icon icon="mdi:arrow-left"></iconify-icon>
+                            Kembail
+                          </button>
                           <a href="module/admin/print/formulir_triase?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
                             <button class="btn btn-outline-primary">
                               <iconify-icon icon="mdi:printer-outline"></iconify-icon> Cetak
