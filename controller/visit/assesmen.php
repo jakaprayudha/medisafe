@@ -68,7 +68,7 @@ if (isset($_POST['simpan_pemeriksaan'])) {
    );
 
    if ($stmt->execute()) {
-      echo "<script>alert('Pemeriksaan berhasil disimpan'); window.location.href='pemeriksaan_a?no=$nomor_visit&rm=$rm';</script>";
+      echo "<script>alert('Pemeriksaan berhasil disimpan');</script>";
    } else {
       echo "<script>alert('Gagal menyimpan');</script>";
    }

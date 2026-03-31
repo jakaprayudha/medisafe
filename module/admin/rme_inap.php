@@ -7,6 +7,7 @@ $no = $_GET['no'];
 $rm = $_GET['rm'];
 $check = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor WHERE visit_ID='$no' AND nomor_rm='$rm'");
 $data = mysqli_fetch_array($check);
+$id_patient = $data['id_patient'];
 
 // Hitung usia jika data ditemukan
 if ($data) {
@@ -16,10 +17,6 @@ if ($data) {
   $usia = $tanggal_lahir->diff($tanggal_visit);
 }
 
-$query = $koneksi->query("SELECT * FROM pasien_resume WHERE nomor_visit = '$no'");
-$dataresume = $query->fetch_assoc();
-// Decode JSON dari kolom 'pemeriksaan'
-@$datarme = json_decode($dataresume['pemeriksaan'], true);
 ?>
 <!doctype html>
 <html lang="en">
@@ -59,7 +56,8 @@ $dataresume = $query->fetch_assoc();
                   <form id="formPemeriksaan" class="p-4 border rounded shadow-sm" method="POST">
                     <input type="hidden" name="nomor_rm" value="<?= $rm ?>">
                     <input type="hidden" name="nomor_visit" value="<?= $no ?>">
-                    <h4 class="mb-3">Form Pemeriksaan Medis Awal Rawat Inap</h4>
+                    <input type="hidden" name="id_patient" id="id_patient" value="<?= $data['id_patient'] ?>" hidden>
+                    <h4 class="mb-3">Form Pemeriksaan Medis</h4>
                     <!-- Data Pasien -->
                     <div class="row">
                       <div class="col-3">
@@ -89,8 +87,8 @@ $dataresume = $query->fetch_assoc();
                     </div>
 
                     <div class="mb-3">
-                      <label for="visit_notes" class="form-label">Catatan Khusus</label>
-                      <input type="text" id="visit_notes" value="<?= $data['visit_notes'] ?>" name="visit_notes" class="form-control bg-light" readonly>
+                      <label for="visit_notes" class="form-label">Catatan Screening</label>
+                      <input type="text" id="visit_notes" value="<?= $data['catatan_screening'] ?>" name="visit_notes" class="form-control bg-light" readonly>
                     </div>
 
                     <hr>
@@ -100,7 +98,7 @@ $dataresume = $query->fetch_assoc();
                       <div class="col-md-4">
                         <label for="kondisi_masuk" class="form-label">Kondisi Masuk <span class="text-danger">*</span></label>
                         <select name="kondisi_masuk" id="kondisi_masuk" class="form-select" required>
-                          <option value="<?= @$datarme['kondisi_masuk'] ?>"><?= @$datarme['kondisi_masuk'] ?></option>
+                          <option value="<?= @$data['kondisi_masuk'] ?>"><?= @$data['kondisi_masuk'] ?></option>
                           <option value="Baik">Baik</option>
                           <option value="Lemah">Lemah</option>
                           <option value="Sedang">Sedang</option>
@@ -117,7 +115,7 @@ $dataresume = $query->fetch_assoc();
                           name="tekanan_darah"
                           class="form-control"
 
-                          value="<?= @$datarme['tekanan_darah'] ?>"
+                          value="<?= @$data['tekanan_darah'] ?>"
                           maxlength="7"
                           required>
                       </div>
@@ -132,23 +130,31 @@ $dataresume = $query->fetch_assoc();
                       </script>
                       <div class="col-md-4">
                         <label for="suhu" class="form-label">Suhu (°C) <span class="text-danger">*</span></label>
-                        <input type="number" value="<?= $datarme['suhu'] ?>" step="0.1" id="suhu" required name="suhu" class="form-control">
+                        <input type="number" value="<?= $data['suhu'] ?>" step="0.1" id="suhu" required name="suhu" class="form-control">
                       </div>
                       <div class="col-md-4">
                         <label for="nadi" class="form-label">Nadi (x/menit) <span class="text-danger">*</span></label>
-                        <input type="number" value="<?= $datarme['nadi'] ?>" id="nadi" name="nadi" required class="form-control">
+                        <input type="number" value="<?= $data['nadi'] ?>" id="nadi" name="nadi" required class="form-control">
                       </div>
                       <div class="col-md-4 mt-2">
                         <label for="respirasi" class="form-label">Respirasi (x/menit) <span class="text-danger">*</span></label>
-                        <input type="number" value="<?= $datarme['respirasi'] ?>" id="respirasi" name="respirasi" required class="form-control">
+                        <input type="number" value="<?= $data['respirasi'] ?>" id="respirasi" name="respirasi" required class="form-control">
                       </div>
                       <div class="col-md-4 mt-2">
                         <label for="tinggi" class="form-label">Tinggi Badan (cm) <span class="text-danger">*</span></label>
-                        <input type="number" value="<?= $datarme['tinggi'] ?>" id="tinggi" name="tinggi" required class="form-control">
+                        <input type="number" value="<?= $data['tinggi_badan'] ?>" id="tinggi" name="tinggi" required class="form-control">
                       </div>
                       <div class="col-md-4 mt-2">
                         <label for="berat" class="form-label">Berat Badan (kg) <span class="text-danger">*</span></label>
-                        <input type="number" value="<?= $datarme['berat'] ?>" id="berat" name="berat" required class="form-control">
+                        <input type="number" value="<?= $data['berat_badan'] ?>" id="berat" name="berat" required class="form-control">
+                      </div>
+                      <div class="col-md-4 mt-2">
+                        <label for="bmi" class="form-label">BMI</label>
+                        <input type="text" value="<?= $data['bmi'] ?>" id="bmi" name="bmi" readonly class="form-control bg-light">
+                      </div>
+                      <div class="col-md-4 mt-2">
+                        <label for="bmi_keterangan" class="form-label">Keterangan BMI </label>
+                        <input type="text" value="<?= $data['bmi_keterangan'] ?>" id="bmi_keterangan" name="bmi_keterangan" readonly class="form-control bg-light">
                       </div>
                     </div>
 
@@ -158,48 +164,59 @@ $dataresume = $query->fetch_assoc();
                     <h5>Pemeriksaan Dokter</h5>
                     <div class="mb-3">
                       <label for="keluhan_utama" class="form-label">Keluhan Utama</label>
-                      <textarea id="keluhan_utama" name="keluhan_utama" rows="2" class="form-control"><?= @$datarme['keluhan_utama'] ?></textarea>
+                      <textarea id="keluhan_utama" name="keluhan_utama" rows="2" class="form-control"><?= @$data['anamnesa'] ?></textarea>
                     </div>
                     <div class="mb-3">
                       <label for="keluhan_penyerta" class="form-label">Keluhan Penyerta</label>
-                      <textarea id="keluhan_penyerta" name="keluhan_penyerta" rows="2" class="form-control"><?= @$datarme['keluhan_penyerta'] ?></textarea>
+                      <textarea id="keluhan_penyerta" name="keluhan_penyerta" rows="2" class="form-control"><?= @$data['keluhan_penyerta'] ?></textarea>
                     </div>
                     <div class="mb-3">
                       <label for="riwayat_alergi" class="form-label">Riwayat Alergi</label>
-                      <textarea id="riwayat_alergi" name="riwayat_alergi" rows="2" class="form-control"><?= @$datarme['riwayat_alergi'] ?></textarea>
+                      <textarea id="riwayat_alergi" name="riwayat_alergi" rows="2" class="form-control"><?= @$data['riwayat_alergi'] ?></textarea>
                     </div>
                     <div class="mb-3">
                       <label for="riwayat_penyakit_pribadi" class="form-label">Riwayat Penyakit Pribadi</label>
-                      <textarea id="riwayat_penyakit_pribadi" name="riwayat_penyakit_pribadi" rows="2" class="form-control"><?= @$datarme['riwayat_penyakit_pribadi'] ?></textarea>
+                      <textarea id="riwayat_penyakit_pribadi" name="riwayat_penyakit_pribadi" rows="2" class="form-control"><?= @$data['riwayat_penyakit_pribadi'] ?></textarea>
                     </div>
                     <div class="mb-3">
-                      <label for="riwayat_penyakit_sekarang" class="form-label">Riwayat Penyakit Keluarga</label>
-                      <textarea id="riwayat_penyakit_sekarang" name="riwayat_penyakit_sekarang" rows="2" class="form-control"><?= @$datarme['riwayat_penyakit_sekarang'] ?></textarea>
+                      <label for="riwayat_penyakit_sekarang" class="form-label">Riwayat Penyakit Sekarang</label>
+                      <textarea id="riwayat_penyakit_sekarang" name="riwayat_penyakit_sekarang" rows="2" class="form-control"><?= @$data['riwayat_penyakit_sekarang'] ?></textarea>
                     </div>
                     <div class="mb-3">
                       <label for="riwayat_pengobatan" class="form-label">Riwayat Pengobatan</label>
-                      <textarea id="riwayat_pengobatan" name="riwayat_pengobatan" rows="2" class="form-control"><?= @$datarme['riwayat_pengobatan'] ?></textarea>
+                      <textarea id="riwayat_pengobatan" name="riwayat_pengobatan" rows="2" class="form-control"><?= @$data['riwayat_pengobatan'] ?></textarea>
                     </div>
                     <div class="mb-3">
                       <label for="pemeriksaan_fisik" class="form-label">Pemeriksaan Fisik</label>
-                      <textarea id="pemeriksaan_fisik" name="pemeriksaan_fisik" rows="2" class="form-control"><?= @$datarme['pemeriksaan_fisik'] ?></textarea>
+                      <textarea id="pemeriksaan_fisik" name="pemeriksaan_fisik" rows="2" class="form-control"><?= @$data['pemeriksaan_fisik'] ?></textarea>
                     </div>
                     <div class="mb-3">
                       <label for="pemeriksaan_fungsional" class="form-label">Pemeriksaan Fungsional</label>
-                      <textarea id="pemeriksaan_fungsional" name="pemeriksaan_fungsional" rows="2" class="form-control"><?= @$datarme['pemeriksaan_fungsional'] ?></textarea>
+                      <textarea id="pemeriksaan_fungsional" name="pemeriksaan_fungsional" rows="2" class="form-control"><?= @$data['pemeriksaan_fungsional'] ?></textarea>
                     </div>
                     <div class="mb-3">
                       <label for="diagnosa" class="form-label">Diagnosa</label>
-                      <textarea id="diagnosa" name="diagnosa" rows="2" class="form-control"><?= @$datarme['diagnosa'] ?></textarea>
+                      <textarea id="diagnosa" name="diagnosa" rows="2" class="form-control"><?= @$data['diagnosa'] ?></textarea>
                     </div>
                     <div class="mb-3">
                       <label for="tindakan" class="form-label">Tindakan / Terapi / Instruksi / Rencana Rawat</label>
-                      <textarea id="tindakan" name="tindakan" rows="2" class="form-control"><?= @$datarme['tindakan'] ?></textarea>
+                      <textarea id="tindakan" name="tindakan" rows="2" class="form-control"><?= @$data['tindakan'] ?></textarea>
                     </div>
 
                     <div class="mb-3">
                       <label for="edukasi" class="form-label">Edukasi</label>
-                      <textarea id="edukasi" name="edukasi" rows="2" class="form-control"><?= @$datarme['edukasi'] ?></textarea>
+                      <textarea id="edukasi" name="edukasi" rows="2" class="form-control"><?= @$data['edukasi'] ?></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                      <label for="cara_keluar" class="form-label">Cara Keluar <span class="text-danger">*</span></label>
+                      <select name="cara_keluar" id="cara_keluar" class="form-select" required>
+                        <option value="<?= @$data['kondisi_keluar'] ?>"><?= @$data['kondisi_keluar'] ?></option>
+                        <option value="Pulang">Pulang</option>
+                        <option value="Rujuk">Rujuk</option>
+                        <option value="Rawat Inap">Rawat Inap</option>
+                        <option value="Meninggal">Meninggal</option>
+                      </select>
                     </div>
 
                     <!-- Tombol Submit -->
@@ -222,5 +239,46 @@ $dataresume = $query->fetch_assoc();
 </body>
 
 
+<script>
+  function hitungBMI() {
+    let tinggi = parseFloat(document.getElementById('tinggi').value);
+    let berat = parseFloat(document.getElementById('berat').value);
+
+    let bmiInput = document.getElementById('bmi');
+    let ketInput = document.getElementById('bmi_keterangan');
+
+    if (!tinggi || !berat) {
+      bmiInput.value = '';
+      ketInput.value = '';
+      return;
+    }
+
+    tinggi = tinggi / 100;
+    let bmi = berat / (tinggi * tinggi);
+
+    let kategori = '';
+
+    if (bmi < 18.5) {
+      kategori = 'Kurus';
+    } else if (bmi < 25) {
+      kategori = 'Normal';
+    } else if (bmi < 30) {
+      kategori = 'Overweight';
+    } else {
+      kategori = 'Obesitas';
+    }
+
+    // 🔥 pisah output
+    bmiInput.value = bmi.toFixed(2);
+    ketInput.value = kategori;
+  }
+
+  // realtime
+  document.getElementById('tinggi').addEventListener('input', hitungBMI);
+  document.getElementById('berat').addEventListener('input', hitungBMI);
+
+  // load awal (kalau edit data)
+  window.addEventListener('DOMContentLoaded', hitungBMI);
+</script>
 
 </html>
