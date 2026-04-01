@@ -80,8 +80,9 @@ require '../../controller/view.php';
       </div>
       <div class="modal-body">
         <input type="hidden" name="id_room" id="id_room">
+        <input type="hidden" name="service_class" id="service_class" value="Umum">
         <div class="row">
-          <div class="col-12">
+          <!-- <div class="col-12">
             <div class="mb-3">
               <label class="form-label required" id="service_class">Kelas Layanan</label>
               <select name="service_class" id="service_class" class="form-select" required>
@@ -93,7 +94,7 @@ require '../../controller/view.php';
                 <option value="Kelas VVIP">Kelas VVIP</option>
               </select>
             </div>
-          </div>
+          </div> -->
           <div class="col-12">
             <div class="mb-3">
               <label class="form-label required">Nama Ruangan</label>

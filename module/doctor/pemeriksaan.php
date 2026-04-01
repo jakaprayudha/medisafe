@@ -66,7 +66,7 @@ $apiUrl = getenv('API_URL');
 
                       <!-- Tombol kembali -->
                       <div class="d-flex ms-auto gap-2">
-                      
+
                       </div>
                     </div>
                   </div>
@@ -132,26 +132,26 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
           d.doctorName = doctorName;
         },
         "dataSrc": function(json) {
+          console.log(json.data); // 🔥 lihat isi asli
           // Format data yang akan ditampilkan dalam tabel
           return json.data.map(function(row, index) {
             // pilih file tujuan sesuai rme_type
             let pemeriksaanFile = (rmeType == 1) ? 'pemeriksaan_a' : 'pemeriksaan_b';
-             // ✅ Kondisi tampil tombol panggil
-            let callButton = '';  
+            // ✅ Kondisi tampil tombol panggil
+            let callButton = '';
             if (row.source_hub === 'Poliklinik') {
-            callButton = `
-              <button class="btn btn-sm btn-warning"
-                data-bs-toggle="tooltip"
-                title="Panggil Pasien"
-              onclick="callPatient(
-              '${row.visit_antrian}',
-              '${row.patient_name}',
-              '${row.poli_name}',
-              '${row.visit_ID}')">
+              callButton = `
+              <button class="btn btn-sm btn-warning btn-call"
+                data-antrian="${row.visit_antrian}"
+                data-nama="${row.patient_name}"
+                data-poli="${row.poli_name}"
+                data-visit="${row.visit_ID}"
+                data-dokter="${row.doctor_name}"
+                title="Panggil Pasien">
                 <i class="ti ti-volume"></i>
               </button>
             `;
-          }
+            }
             return {
               "actions": `
                   <div class="text-center">
@@ -240,50 +240,64 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 
 
   });
-
-
 </script>
 
 <script>
-function callPatient(noAntrian, namaPasien, poli, visitID) {
+  $(document).on('click', '.btn-call', function() {
+    const noAntrian = $(this).data('antrian');
+    const nama = $(this).data('nama');
+    const poli = $(this).data('poli');
+    const visit = $(this).data('visit');
+    const dokter = $(this).data('dokter');
 
-  /* =========================
-     1. SUARA (LANGSUNG - USER GESTURE)
-  ========================= */
-  if ('speechSynthesis' in window) {
+    console.log('DOKTER:', dokter); // debug
 
-    speechSynthesis.cancel();
-
-    const text = `Nomor antrean ${noAntrian}, atas nama ${namaPasien}, silakan menuju poli ${poli}`;
-    const utterance = new SpeechSynthesisUtterance(text);
-
-    utterance.lang = 'id-ID';
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-    utterance.volume = 1;
-
-    const voices = speechSynthesis.getVoices();
-    const indo = voices.find(v => v.lang === 'id-ID');
-    if (indo) utterance.voice = indo;
-
-    speechSynthesis.speak(utterance);
-  }
-
-  /* =========================
-     2. UPDATE DISPLAY (ASYNC)
-  ========================= */
-  fetch('controller/queue/poliCall.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ visit_ID: visitID })
-  })
-  .then(res => res.json())
-  .then(res => {
-    if (res.status !== 'success') {
-      console.warn('Update display gagal');
-    }
+    callPatient(noAntrian, nama, poli, visit, dokter);
   });
-}
+
+  function callPatient(noAntrian, namaPasien, poli, visitID, doctor_name) {
+
+    /* =========================
+       1. SUARA (LANGSUNG - USER GESTURE)
+    ========================= */
+    if ('speechSynthesis' in window) {
+
+      speechSynthesis.cancel();
+
+      const text = `Nomor antrean ${noAntrian}, atas nama ${namaPasien}, silakan menuju ruangan dokter ${doctor_name}`;
+      const utterance = new SpeechSynthesisUtterance(text);
+
+      utterance.lang = 'id-ID';
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+
+      const voices = speechSynthesis.getVoices();
+      const indo = voices.find(v => v.lang === 'id-ID');
+      if (indo) utterance.voice = indo;
+
+      speechSynthesis.speak(utterance);
+    }
+
+    /* =========================
+       2. UPDATE DISPLAY (ASYNC)
+    ========================= */
+    fetch('controller/queue/poliCall.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          visit_ID: visitID
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status !== 'success') {
+          console.warn('Update display gagal');
+        }
+      });
+  }
 </script>
 
 </html>

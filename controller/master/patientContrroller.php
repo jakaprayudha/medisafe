@@ -2,7 +2,7 @@
 include '../../database/connect.php';
 
 header('Content-Type: application/json');
-session_start();
+
 // 🔐 VALIDASI SESSION
 if (!isset($_SESSION['id_customer'])) {
    http_response_code(401);

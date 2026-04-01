@@ -140,6 +140,10 @@ if ($data) {
                         <input type="number" value="<?= $data['respirasi'] ?>" id="respirasi" name="respirasi" required class="form-control">
                       </div>
                       <div class="col-md-4 mt-2">
+                        <label for="saturasi" class="form-label">Saturasi (Spo2 %) </label>
+                        <input type="number" value="<?= $data['saturasi'] ?>" id="saturasi" name="saturasi" class="form-control">
+                      </div>
+                      <div class="col-md-4 mt-2">
                         <label for="tinggi" class="form-label">Tinggi Badan (cm) <span class="text-danger">*</span></label>
                         <input type="number" value="<?= $data['tinggi_badan'] ?>" id="tinggi" name="tinggi" required class="form-control">
                       </div>
@@ -237,6 +241,47 @@ if ($data) {
   ?>
 </body>
 
+<script>
+  function hitungBMI() {
+    let tinggi = parseFloat(document.getElementById('tinggi').value);
+    let berat = parseFloat(document.getElementById('berat').value);
+
+    let bmiInput = document.getElementById('bmi');
+    let ketInput = document.getElementById('bmi_keterangan');
+
+    if (!tinggi || !berat) {
+      bmiInput.value = '';
+      ketInput.value = '';
+      return;
+    }
+
+    tinggi = tinggi / 100;
+    let bmi = berat / (tinggi * tinggi);
+
+    let kategori = '';
+
+    if (bmi < 18.5) {
+      kategori = 'Kurus';
+    } else if (bmi < 25) {
+      kategori = 'Normal';
+    } else if (bmi < 30) {
+      kategori = 'Overweight';
+    } else {
+      kategori = 'Obesitas';
+    }
+
+    // 🔥 pisah output
+    bmiInput.value = bmi.toFixed(2);
+    ketInput.value = kategori;
+  }
+
+  // realtime
+  document.getElementById('tinggi').addEventListener('input', hitungBMI);
+  document.getElementById('berat').addEventListener('input', hitungBMI);
+
+  // load awal (kalau edit data)
+  window.addEventListener('DOMContentLoaded', hitungBMI);
+</script>
 
 
 </html>
