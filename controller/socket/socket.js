@@ -1,5 +1,4 @@
 window.APP = window.APP || {};
-// const base_url = "http://localhost:3001";
 const base_url = "https://websocketservermedicine.online";
 if (!window.io) {
     const script = document.createElement("script");
@@ -11,7 +10,6 @@ if (!window.io) {
 }
 function startApp() {
     let enableSocket = true;
-    const idDisplaypoli = localStorage.getItem("display_id");
     const data = JSON.parse(localStorage.getItem("rs_config"));
     let path_url = window.location.pathname;
     let parts = path_url.split("/");
@@ -25,14 +23,13 @@ function startApp() {
                 reconnection: true
             });
             socket.on("connect", () => {
-                if (target == "DISPLAYPEMANGGILANPOLI") {
-                    socket.emit("join", data.id_customer + "_" + target + "_" + idDisplaypoli);
-                    target = "DISPLAYPEMANGGILANPOLI_" + idDisplaypoli;
+                if (pageName == "display-admisi") {
+                    socket.emit("join", data.id_customer + "_" + pageName);
                 } else {
                     socket.emit("join", data.id_customer + "_" + target);
                 }
                 // console.log(data.id_customer + "_" + target);
-                //  console.log(pageName);
+                // console.log(pageName);
             });
             socket.on('trigger', data => {
                 let key = target +"/"+ pageName;
@@ -41,18 +38,17 @@ function startApp() {
                     case "ADMISI/counter-call":
                         APP.resetTable();
                         break;
+                    case "DISPLAY/display-admisi":
+                        APP.showQueue();
+                        break;
                 }
             });
             socket.on("panggil", data => {
-                switch (target) {
-                    case "DISPLAYPEMANGGILANADMISI":
-                        APP.addAntaianAdmisi(data.type, data.nomor, data.loket, data.idantrian, "admisi");
-                        break;
-                    case "DISPLAYPEMANGGILANPOLI_" + idDisplaypoli:
-                        APP.addAntaianPoli(data.type, data.nomor, data.loket, data.idantrian);
-                        break;
-                    case "DISPLAYPEMANGGILANFARMASI":
-                        APP.addAntaianFarmasi(data.type, data.nomor, data.loket, data.idantrian, "farmasi");
+                let key = target +"/"+ pageName;
+                console.log(key)
+                switch (key) {
+                    case "DISPLAY/display-admisi":
+                        APP.CallAntrian(data.type, data.nomor, data.loket, data.idantrian, "pendaftaran");
                         break;
                 }
             })

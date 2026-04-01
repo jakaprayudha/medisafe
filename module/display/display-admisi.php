@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <title>Display Admisi</title>
@@ -56,7 +57,7 @@
       border-radius: 18px;
       padding: 32px;
       margin-bottom: 40px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
 
     /* ===== NOMOR DIPANGGIL ===== */
@@ -130,6 +131,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <!-- HEADER -->
@@ -148,10 +150,11 @@
   <div class="container">
 
     <!-- NOMOR DIPANGGIL -->
-    <div class="card call-card">
-      <div class="call-label">NOMOR ANTRIAN DIPANGGIL</div>
-      <div class="call-number">A001</div>
-      <div class="call-counter">LOKET 1</div>
+    <div class="card call-card text-center">
+      <div class="call-label">PANGGILAN PASIEN</div>
+      <div class="call-number" id="callPatient">-</div>
+      <div class="call-counter" id="callQueue">-</div>
+      <div class="call-counter" id="callLoket">-</div>
     </div>
 
     <!-- DAFTAR ANTRIAN -->
@@ -164,59 +167,118 @@
             <th>Status</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td>A002</td>
-            <td>Siti Aminah</td>
-            <td class="status-wait">Menunggu</td>
-          </tr>
-          <tr>
-            <td>A003</td>
-            <td>Rudi Hartono</td>
-            <td class="status-wait">Menunggu</td>
-          </tr>
-          <tr>
-            <td>A004</td>
-            <td>Dewi Lestari</td>
-            <td class="status-wait">Menunggu</td>
-          </tr>
+        <tbody id="tableBody">
         </tbody>
       </table>
     </div>
 
   </div>
-
-  <!-- FOOTER -->
   <div class="footer">
     Medisafe • Display Admisi
   </div>
 
   <!-- ===== REALTIME DATE & TIME SCRIPT ===== -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="../../controller/socket/socket.js"></script>
   <script>
-    function updateDateTime() {
-      const now = new Date();
+    APP.window = APP.window || {};
+    let voices = [];
+    $(function() {
+      APP.showQueue = function() {
+        $.ajax({
+          url: '../../controller/queue/listAntriAdmisiDisplay',
+          type: 'GET',
+          dataType: 'json',
+          success: function(res) {
+            let html = '';
+            if (res == null) {
+              $('#tableBody').html(`
+              <tr>
+                <td colspan="3" class="text-center">Tidak ada antrian</td>
+              </tr>
+          `);
+              $('#callPatient').html('-');
+              $('#callQueue').html('-');
+              $('#callLoket').html('-');
+              return;
+            }
+            res.data.forEach(function(item) {
+              html += `
+                <tr>
+                  <td>${item.no_antrian}</td>
+                  <td>${item.nama_pasien}</td>
+                  <td class="status-wait">${item.status}</td>
+                </tr>
+              `;
+            });
+            $('#tableBody').html(html);
+          }
+        })
+      }
+      APP.showQueue();
+      APP.CallAntrian = function(nama, nomor, loket, kdantri, target) {
+        APP.showQueue();
+        $('#callPatient').html(nama);
+        $('#callQueue').html(nomor);
+        $('#callLoket').html(target.toUpperCase());
+        speakQueue(nama, target, nomor);
+      }
 
-      const optionsDate = {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      };
+      function updateDateTime() {
+        const now = new Date();
 
-      const date = now.toLocaleDateString('id-ID', optionsDate);
-      const time = now.toLocaleTimeString('id-ID', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
+        const optionsDate = {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        };
+
+        const date = now.toLocaleDateString('id-ID', optionsDate);
+        const time = now.toLocaleTimeString('id-ID', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+
+        document.getElementById('date').textContent = date;
+        document.getElementById('time').textContent = time;
+      }
+      updateDateTime();
+      setInterval(updateDateTime, 1000);
+
+      function loadVoices() {
+        voices = speechSynthesis.getVoices();
+      }
+      speechSynthesis.onvoiceschanged = loadVoices;
+      document.addEventListener("DOMContentLoaded", () => {
+        loadVoices();
       });
 
-      document.getElementById('date').textContent = date;
-      document.getElementById('time').textContent = time;
-    }
+      function speakQueue(nama, target, nomor) {
+        if (!('speechSynthesis' in window)) return;
 
-    updateDateTime();
-    setInterval(updateDateTime, 1000);
+        const text = `Kepada pasien atas nama ${nama}, dengan antrian ${nomor}, dipersilakan ke loket ${target}`;
+        const utterance = new SpeechSynthesisUtterance(text);
+
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+
+        // Cari voice Indonesia, fallback aman
+        let voice =
+          voices.find(v => v.lang === 'id-ID') ||
+          voices.find(v => v.lang && v.lang.startsWith('id')) ||
+          voices[0];
+
+        if (voice) utterance.voice = voice;
+
+        speechSynthesis.cancel();
+        speechSynthesis.speak(utterance);
+      }
+    })
   </script>
 
 </body>
+
 </html>

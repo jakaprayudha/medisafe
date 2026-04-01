@@ -42,23 +42,25 @@ require '../../controller/view.php';
                                     <div class="card-body">
                                        <small class="text-muted">Antrean Saat Ini</small>
                                        <h1 class="fw-bold my-3" id="currentQueue">-</h1>
-                                       <span class="badge bg-info" id="currentPoli">-</span>
+                                       <div class="d-flex flex-column gap-2 align-items-center">
+                                          <span class="badge bg-info" id="currentPoli">-</span>
+                                          <span class="badge bg-secondary" id="nmPatient">-</span>
+                                       </div>
                                     </div>
                                  </div>
                                  <!-- ACTION BUTTONS -->
                                  <div class="d-grid gap-2 mt-3">
-                                    <button class="btn btn-primary" onclick="callNext()">
-                                       <i class="ti ti-volume"></i> Panggil Berikutnya
+                                    <button class="btn btn-primary" id="start">
+                                       <i class="ti ti-volume"></i> Mulai Antrian
                                     </button>
-                                    <button class="btn btn-warning" onclick="skipQueue()">
+                                    <button class="btn btn-warning d-none" id="skipQueue">
                                        <i class="ti ti-player-skip-forward"></i> Lewati
                                     </button>
-                                    <button class="btn btn-success" onclick="finishQueue()">
+                                    <button class="btn btn-success d-none" id="finishQueue">
                                        <i class="ti ti-check"></i> Selesai
                                     </button>
                                  </div>
                               </div>
-
                               <!-- QUEUE LIST -->
                               <div class="col-md-8">
                                  <div class="card admisi-card">
@@ -96,11 +98,13 @@ require '../../controller/view.php';
 </html>
 <script>
    APP.window = APP.window || {};
+   const urlParams = new URLSearchParams(window.location.search);
+   const counter = urlParams.get('counter');
    $(function() {
-
-      $('#tableQueue').DataTable({
+      let table = $('#tableQueue').DataTable({
          processing: true,
          serverSide: false,
+         searching: false,
          ajax: {
             url: 'controller/queue/listAntrianAdmisi',
             type: 'GET',
@@ -140,9 +144,96 @@ require '../../controller/view.php';
          }
       });
 
-      APP.resetTable = function(){
+      APP.resetTable = function() {
          $('#tableQueue').DataTable().ajax.reload();
+         let count = table.rows().count();
+         if (count == 0) {
+            $('#start').prop('disabled', true);
+            $('#skipQueue', '#finishQueue').addClass('d-none');
+         } else {
+            $('#start').prop('disabled', false);
+         }
       }
+
+      $('#start').on('click', function() {
+         let btn = $(this);
+         let iconClass = $('#start i').attr('class').split(' ')[1];
+         let count = table.rows().count();
+         if (count > 0) {
+            if (iconClass == "ti-volume") {
+               showQueue();
+               btn.html('<i class="ti ti-rotate-clockwise"></i> Panggil');
+               $('#skipQueue, #finishQueue').removeClass('d-none');
+            }else{
+               let data = JSON.parse(localStorage.getItem("AdmisiCall"));
+               callQueue('call', data.nomor, 'pendaftaran', data.nama, data.id);
+            }
+         }
+      })
+      $('#finishQueue').on('click', function(){
+         let data = JSON.parse(localStorage.getItem("AdmisiCall"));
+         const id = data.id;
+         let btn = $(this);
+         $.ajax({
+            url: 'controller/queue/finishCall',
+            type: 'POST',
+            data: {
+               idAntri: id,
+            },
+            dataType: 'json',
+            success: function(res) {
+               $('#skipQueue, #finishQueue').addClass('d-none');
+               $('#start').html('<i class="ti ti-volume"></i> Mulai Antrian');
+               $('#currentQueue').html('-');
+               $('#currentPoli').html('-');
+               $('#nmPatient').html('-');
+               APP.resetTable();
+            }
+         })
+      })
+
+      function showQueue() {
+         $.ajax({
+            url: 'controller/queue/listAntrianAdmisi',
+            type: 'GET',
+            dataType: 'json',
+            success: function(res) {
+               $('#currentQueue').html(res.data[0].no_antrian);
+               $('#currentPoli').html(res.data[0].poli);
+               $('#nmPatient').html(res.data[0].nama_pasien);
+               callQueue('call', res.data[0].no_antrian, 'pendaftaran', res.data[0].nama_pasien, res.data[0].id);
+               const AdmisiCall = {
+                  nomor: res.data[0].no_antrian,
+                  nama: res.data[0].nama_pasien,
+                  id: res.data[0].id
+               };
+               localStorage.setItem("AdmisiCall", JSON.stringify(AdmisiCall));
+            }
+         })
+      }
+
+      function callQueue(type, no, poli, name, id) {
+         $.ajax({
+            url: 'controller/queue/admisiCall',
+            type: 'POST',
+            data: {
+               type: type,
+               nomor: no,
+               loket: poli,
+               name: name,
+               id: counter,
+               idAntri: id,
+            },
+            dataType: 'json',
+            success: function(res) {
+               $('#start').prop('disabled', true);
+               setTimeout(function() {
+                  $('#start').prop('disabled', false);
+               }, 8000);
+            }
+         })
+      }
+
       // /* =========================
       //    GLOBAL STATE
       //    ========================= */
@@ -231,48 +322,6 @@ require '../../controller/view.php';
       //    </tr>
       // `;
       //    });
-      // }
-
-      // /* =========================
-      //    ACTION BUTTONS
-      // ========================= */
-      // function callNext() {
-      //    actionQueue('call');
-      // }
-
-      // function skipQueue() {
-      //    actionQueue('skip');
-      // }
-
-      // function finishQueue() {
-      //    actionQueue('finish');
-      // }
-
-      // function actionQueue(type) {
-      //    const counter = document.getElementById('counterSelect').value;
-      //    if (!counter) {
-      //       alert('Pilih counter terlebih dahulu');
-      //       return;
-      //    }
-
-      //    fetch('controller/queue/admisiCall.php', {
-      //          method: 'POST',
-      //          headers: {
-      //             'Content-Type': 'application/json'
-      //          },
-      //          body: JSON.stringify({
-      //             action: type,
-      //             counter
-      //          })
-      //       })
-      //       .then(res => res.json())
-      //       .then(res => {
-      //          if (res.status === 'error') {
-      //             alert(res.message);
-      //             return;
-      //          }
-      //          loadQueue();
-      //       });
       // }
 
       // /* =========================

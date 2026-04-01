@@ -1,81 +1,48 @@
 <?php
 header('Content-Type: application/json');
 include '../../database/connect.php';
-
-date_default_timezone_set('Asia/Jakarta');
-$today = date('Y-m-d');
-
-$input = json_decode(file_get_contents('php://input'), true);
-$action  = $input['action'] ?? '';
-$counter = (int)($input['counter'] ?? 0);
-
-if (!$action || !$counter) {
-   echo json_encode(['status' => 'error', 'message' => 'Invalid request']);
-   exit;
-}
+require_once __DIR__ . '/../socket/sendSocket.php';
+$kdRumahSakit = $_SESSION['id_customer'];
+$type = $_POST['type'];
+$nomor = $_POST['nomor'];
+$loket = $_POST['loket'];
+$name = $_POST['name'];
+$id = $_POST['id'];
+$idAntri = $_POST['idAntri'];
 
 /* =========================
    PANGGIL BERIKUTNYA
 ========================= */
-if ($action === 'call') {
+if ($type === 'call') {
 
-   // Cek apakah counter sedang memanggil
-   $check = mysqli_query($koneksi, "
-      SELECT id_queue FROM transaction_queue
-      WHERE counter = $counter
-        AND status = 'dipanggil'
-        AND queue_date = '$today'
-      LIMIT 1
-   ");
-
-   if (mysqli_num_rows($check) > 0) {
-      echo json_encode(['status'=>'error','message'=>'Masih ada antrean aktif']);
-      exit;
+   $check = mysqli_query($koneksi, "SELECT * FROM `transaction_queue` WHERE `id_queue` = '$idAntri' ORDER BY created_at ASC LIMIT 1");
+   $result = mysqli_fetch_assoc($check);
+   if ($result['counter'] == NULL) {
+      mysqli_query($koneksi, "UPDATE `transaction_queue` SET status='dipanggil', counter='$id' WHERE `id_queue`='$idAntri'");
    }
-
-   // Ambil antrean berikutnya
-   $next = mysqli_query($koneksi, "
-      SELECT id_queue
-      FROM transaction_queue
-      WHERE queue_date = '$today'
-        AND status = 'menunggu'
-      ORDER BY created_at ASC
-      LIMIT 1
-   ");
-
-   if ($row = mysqli_fetch_assoc($next)) {
-      mysqli_query($koneksi, "
-         UPDATE transaction_queue
-         SET status='dipanggil', counter=$counter
-         WHERE id_queue={$row['id_queue']}
-      ");
-   }
+   callAntrian([
+      "rs_id" => $kdRumahSakit,
+      "target_role" => "display-admisi",
+      "idantrian" => $idAntri,
+      "type" => $name,
+      "nomor"  => $nomor,
+      "loket" => $loket
+   ]);
+   echo json_encode(['status' => 'success']);
 }
 
 /* =========================
    LEWATI
 ========================= */
-if ($action === 'skip') {
-   mysqli_query($koneksi, "
-      UPDATE transaction_queue
-      SET status = 'skip'
-      WHERE counter = $counter
-        AND status = 'dipanggil'
-        AND queue_date = '$today'
-   ");
-}
+// if ($action === 'skip') {
+//    mysqli_query($koneksi, "
+//       UPDATE transaction_queue
+//       SET status = 'skip'
+//       WHERE counter = $counter
+//         AND status = 'dipanggil'
+//         AND queue_date = '$today'
+//    ");
+// }
 
-/* =========================
-   SELESAI
-========================= */
-if ($action === 'finish') {
-   mysqli_query($koneksi, "
-      UPDATE transaction_queue
-      SET status = 'selesai'
-      WHERE counter = $counter
-        AND status = 'dipanggil'
-        AND queue_date = '$today'
-   ");
-}
 
-echo json_encode(['status' => 'success']);
+// echo json_encode(['status' => 'success']);
