@@ -1,6 +1,6 @@
 window.APP = window.APP || {};
-const base_url = "http://localhost:3001";
-// const base_url = "https://websocketservermedicine.online";
+// const base_url = "http://localhost:3001";
+const base_url = "https://websocketservermedicine.online";
 if (!window.io) {
     const script = document.createElement("script");
     script.src = base_url + "/socket.io/socket.io.js";

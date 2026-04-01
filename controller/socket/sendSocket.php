@@ -2,8 +2,8 @@
 include '../../database/connect.php';
 session_start();
 $kdRumahSakit = $_SESSION['id_customer'];
-$urlsocket = "http://localhost:3001";
-// $urlsocket = "https://websocketservermedicine.online";
+// $urlsocket = "http://localhost:3001";
+$urlsocket = "https://websocketservermedicine.online";
 
 function trigger($data)
 {
