@@ -52,6 +52,7 @@ require '../../controller/view.php';
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">Agama</th>
                           <th scope="col" class="text-dark fw-normal">No.Handphone</th>
+                          <th scope="col" class="text-dark fw-normal text-center">Foto</th>
                           <th scope="col" class="text-dark fw-normal">Face Status</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                         </tr>
@@ -179,6 +180,12 @@ require '../../controller/view.php';
 
 
 <script>
+  const getBaseUrl = () => {
+    const path = window.location.pathname.split('/');
+    return path[1] ? `${window.location.origin}/${path[1]}/` : `${window.location.origin}/`;
+  };
+
+  const baseUrl = getBaseUrl();
   const apiUrl = 'controller/master/patientContrroller';
   let table;
   $(document).ready(function() {
@@ -217,6 +224,14 @@ require '../../controller/view.php';
               "gender": row.patient_gender ?? "-",
               "agama": row.patient_religion ?? "-",
               "phone": row.patient_phone ?? "-",
+
+
+              "face_image": row.face_image ? `
+                <a href="${baseUrl}${row.face_image.replace('../../','')}" target="_blank">
+                  <img src="${baseUrl}${row.face_image.replace('../../','')}" 
+                      style="width:50px;height:50px;object-fit:cover;border-radius:8px;">
+                </a>
+              ` : '-',
               "face_status": row.face_image ?
                 '<span class="badge bg-success">✔️ Sudah direkam</span>' : '<span class="badge bg-danger">❌ Belum direkam</span>',
             };
@@ -239,6 +254,9 @@ require '../../controller/view.php';
         },
         {
           data: "phone"
+        },
+        {
+          data: "face_image"
         },
         {
           data: "face_status"
