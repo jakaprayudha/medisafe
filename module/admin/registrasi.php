@@ -426,24 +426,18 @@ require '../../controller/view.php';
             </select>
           </div>
           <div class="col-md-4">
-            <label for="tekanan_darah" class="form-label">Tekanan Darah (mmHg) <span class="text-danger">*</span></label>
-            <input
-              type="text"
-              id="tekanan_darah"
-              name="tekanan_darah"
-              class="form-control"
-              maxlength="7"
-              required>
+            <label class="form-label">Tekanan Darah (mmHg)</label>
+
+            <div class="d-flex gap-2">
+              <input type="number" id="sistolik" class="form-control" placeholder="Sistolik" required>
+              <span class="align-self-center">/</span>
+              <input type="number" id="diastolik" class="form-control" placeholder="Diastolik" required>
+            </div>
+
+            <!-- hidden untuk backend -->
+            <input type="hidden" id="tekanan_darah" name="tekanan_darah">
           </div>
-          <script>
-            document.getElementById("tekanan_darah").addEventListener("input", function() {
-              let value = this.value.replace(/[^\d]/g, ''); // hanya angka
-              if (value.length > 3) {
-                value = value.slice(0, 3) + '/' + value.slice(3, 6); // sisipkan '/'
-              }
-              this.value = value;
-            });
-          </script>
+
           <div class="col-md-4">
             <label for="suhu" class="form-label">Suhu (°C) <span class="text-danger">*</span></label>
             <input type="number" step="0.1" id="suhu" required name="suhu" class="form-control">
@@ -1118,12 +1112,21 @@ require '../../controller/view.php';
   });
 
   $('#btnSaveScreening').on('click', function() {
+    const sistolik = $('#sistolik').val();
+    const diastolik = $('#diastolik').val();
+
+    if (!sistolik || !diastolik) {
+      alert("Tekanan darah harus diisi!");
+      return;
+    }
+
+    const tekananDarah = `${sistolik}/${diastolik}`;
     const data = {
       id_visit: $('#screening_id_visit').val(),
       keluhan: $('#sc_keluhan').val(),
       catatan: $('#sc_catatan').val(),
       kondisi_masuk: $('#kondisi_masuk').val(),
-      tekanan_darah: $('#tekanan_darah').val(),
+      tekanan_darah: tekananDarah,
       suhu: $('#suhu').val(),
       nadi: $('#nadi').val(),
       respirasi: $('#respirasi').val(),

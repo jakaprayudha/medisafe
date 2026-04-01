@@ -107,26 +107,35 @@ if ($data) {
                         </select>
                       </div>
                       <div class="col-md-4">
-                        <label for="tekanan_darah" class="form-label">Tekanan Darah (mmHg) <span class="text-danger">*</span></label>
+                        <label class="form-label">
+                          Tekanan Darah (mmHg) <span class="text-danger">*</span>
+                        </label>
+
+                        <div class="d-flex gap-2">
+                          <input
+                            type="number"
+                            id="sistolik"
+                            class="form-control"
+                            placeholder="Sistolik"
+                            required>
+
+                          <span class="align-self-center">/</span>
+
+                          <input
+                            type="number"
+                            id="diastolik"
+                            class="form-control"
+                            placeholder="Diastolik"
+                            required>
+                        </div>
+
+                        <!-- hidden tetap dipakai -->
                         <input
-                          type="text"
+                          type="hidden"
                           id="tekanan_darah"
                           name="tekanan_darah"
-                          class="form-control"
-
-                          value="<?= @$data['tekanan_darah'] ?>"
-                          maxlength="7"
-                          required>
+                          value="<?= @$data['tekanan_darah'] ?>">
                       </div>
-                      <script>
-                        document.getElementById("tekanan_darah").addEventListener("input", function() {
-                          let value = this.value.replace(/[^\d]/g, ''); // hanya angka
-                          if (value.length > 3) {
-                            value = value.slice(0, 3) + '/' + value.slice(3, 6); // sisipkan '/'
-                          }
-                          this.value = value;
-                        });
-                      </script>
                       <div class="col-md-4">
                         <label for="suhu" class="form-label">Suhu (°C) <span class="text-danger">*</span></label>
                         <input type="number" value="<?= $data['suhu'] ?>" step="0.1" id="suhu" required name="suhu" class="form-control">
@@ -242,6 +251,37 @@ if ($data) {
 </body>
 
 <script>
+  document.addEventListener("DOMContentLoaded", function() {
+
+    const td = document.getElementById("tekanan_darah").value;
+
+    if (td && td.includes("/")) {
+      const [s, d] = td.split("/");
+
+      document.getElementById("sistolik").value = s;
+      document.getElementById("diastolik").value = d;
+    }
+  });
+
+  document.getElementById("formPemeriksaan").addEventListener("submit", function(e) {
+
+    const s = document.getElementById("sistolik").value;
+    const d = document.getElementById("diastolik").value;
+
+    if (!s || !d) {
+      alert("Tekanan darah wajib diisi!");
+      e.preventDefault();
+      return;
+    }
+
+    const td = `${s}/${d}`;
+
+    // 🔥 INI KUNCI
+    document.getElementById("tekanan_darah").value = td;
+
+    console.log("TD DIKIRIM:", td); // debug
+  });
+
   function hitungBMI() {
     let tinggi = parseFloat(document.getElementById('tinggi').value);
     let berat = parseFloat(document.getElementById('berat').value);
