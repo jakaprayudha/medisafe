@@ -1,7 +1,8 @@
 <?php
 header('Content-Type: application/json');
 include '../../database/connect.php';
-
+require_once __DIR__ . '/../socket/sendSocket.php';
+$id_customer = $_SESSION['id_customer'];
 date_default_timezone_set('Asia/Jakarta');
 $today = date('Y-m-d');
 
@@ -79,7 +80,10 @@ if (!$insert) {
    ]);
    exit;
 }
-
+trigger([
+   "rs_id" => $id_customer,
+   "target_role" => "ADMISI",
+]);
 echo json_encode([
    'status' => 'success',
    'no_antrian' => $noAntrian,

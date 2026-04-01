@@ -27,7 +27,6 @@ if (isset($_POST['login'])) {
 
    // 🔐 CEK PASSWORD
    if ($datauser['password'] == $password) {
-
       $_SESSION['uid_user'] = $datauser['uid_user'];
       $_SESSION['username'] = $datauser['username'];
       $_SESSION['roles'] = $datauser['roles'];
@@ -37,6 +36,14 @@ if (isset($_POST['login'])) {
 
       $_SESSION["sukses"] = 'Selamat Anda Berhasil Login Sebagai ' . $datauser['roles'];
       $_SESSION['redirectlogin'] = 'module/admin';
+?>
+      <script>
+         const configData = {
+            id_customer: "<?php echo $datauser['id_customer'] ?>",
+         };
+         localStorage.setItem("rs_config", JSON.stringify(configData));
+      </script>
+<?php
    } else {
       $_SESSION["error"] = 'Password Salah';
       $_SESSION['redirectlogin'] = '';
