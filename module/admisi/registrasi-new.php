@@ -192,6 +192,7 @@ require '../../controller/view.php';
     var table = $('#periodeTable').DataTable({
       processing: true,
       serverSide: false, // 🔹 ubah jadi false
+      scrollX: true,
       ajax: {
         url: apiUrl,
         type: "GET",
@@ -206,7 +207,7 @@ require '../../controller/view.php';
                     <i class="fas fa-camera"></i>
                   </a>
 
-                	<a class="btn btn-info" href="module/admin/patient_details?no=${row.patient_number}">
+                	<a class="btn btn-info" href="module/admin/patient_details?no=${row.patient_number}&pt=${row.id_patient}">
 											<i class="fas fa-info-circle"></i>
 									</a>
 									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_patient}">

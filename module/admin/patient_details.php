@@ -58,6 +58,9 @@ $no = $_GET['no'];
                       <button class="nav-link" id="nav-dokumen-tab" data-bs-toggle="tab"
                         data-bs-target="#nav-dokumen" type="button" role="tab" aria-controls="nav-dokumen"
                         aria-selected="false">Dokumen</button>
+                      <button class="nav-link" id="nav-ttd-tab" data-bs-toggle="tab"
+                        data-bs-target="#nav-ttd" type="button" role="tab" aria-controls="nav-ttd"
+                        aria-selected="false">Tanda Tangan</button>
                     </div>
                   </nav>
 
@@ -79,13 +82,13 @@ $no = $_GET['no'];
                               <input type="text" class="form-control" name="patient_nik">
                             </div>
                           </div>
-                           <div class="col-6">
+                          <div class="col-6">
                             <div class="mb-3">
                               <label class="form-label">Nomor Kartu Keluarga</label>
                               <input type="text" class="form-control" name="patient_kk">
                             </div>
                           </div>
-                           <div class="col-6">
+                          <div class="col-6">
                             <div class="mb-3">
                               <label class="form-label">Nomor BPJS</label>
                               <input type="text" class="form-control" name="patient_bpjs">
@@ -233,7 +236,6 @@ $no = $_GET['no'];
                         </div>
                       </form>
                     </div>
-
                     <!-- Kepegawaian -->
                     <div class="tab-pane fade" id="nav-contact" role="tabpanel"
                       aria-labelledby="nav-contact-tab" tabindex="0">
@@ -293,6 +295,24 @@ $no = $_GET['no'];
                           <button type="submit" class="btn btn-primary">Upload Dokumen</button>
                         </div>
                     </div>
+                    <div class="tab-pane fade" id="nav-ttd" role="tabpanel" aria-labelledby="nav-ttd-tab" tabindex="0">
+                      <canvas id="signature-pad" style="border: 1px dashed #ccc; width: 100%; height: 200px; border-radius: 8px;"></canvas>
+                      <hr>
+                      <div id="ttd-preview-container" class="mt-3 text-center">
+                        <label class="fw-semibold">Preview Tanda Tangan:</label><br>
+
+                        <img id="ttd-preview"
+                          src=""
+                          style="max-width:300px; display:none; border:1px solid #ddd; border-radius:8px; padding:5px;">
+                        <div id="ttd-empty" class="text-muted mt-2">
+                          Belum ada tanda tangan
+                        </div>
+                      </div>
+                      <div class="mt-3 text-end">
+                        <button type="button" class="btn btn-light" id="clear-signature">Hapus</button>
+                        <button type="button" class="btn btn-primary" id="save-signature">Simpan Tanda Tangan</button>
+                      </div>
+                    </div>
 
                     </form>
                   </div>
@@ -314,6 +334,121 @@ $no = $_GET['no'];
   require 'library.php';
   ?>
 </body>
+
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const nomor_visit = urlParams.get("no");
+  const id_patient = urlParams.get("pt");
+  document.addEventListener("DOMContentLoaded", function() {
+
+    const canvas = document.getElementById("signature-pad");
+    const clearBtn = document.getElementById("clear-signature");
+    const saveBtn = document.getElementById("save-signature");
+
+    const signaturePad = new SignaturePad(canvas, {
+      backgroundColor: "rgba(255,255,255,0)",
+      penColor: "black"
+    });
+
+    function resizeCanvas() {
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      canvas.width = canvas.offsetWidth * ratio;
+      canvas.height = canvas.offsetHeight * ratio;
+      canvas.getContext("2d").scale(ratio, ratio);
+      signaturePad.clear();
+    }
+
+    // 🔥 INIT AWAL (kalau langsung buka tab)
+    resizeCanvas();
+
+    // 🔥 KEY FIX → saat tab TTD dibuka
+    document.querySelector('#nav-ttd-tab')
+      .addEventListener('shown.bs.tab', function() {
+        resizeCanvas();
+        loadTTD(); // 🔥 ini tambahan
+      });
+
+    window.addEventListener("resize", resizeCanvas);
+
+    clearBtn.addEventListener("click", function() {
+      signaturePad.clear();
+    });
+
+    saveBtn.addEventListener("click", function() {
+
+      if (signaturePad.isEmpty()) {
+        alert("Tanda tangan kosong!");
+        return;
+      }
+
+      const dataUrl = signaturePad.toDataURL();
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const nomor_visit = urlParams.get("no");
+
+      fetch("controller/visit/saveSignature.php", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            nomor_visit: nomor_visit,
+            nomor_rm: nomor_visit, // sementara pakai ini dulu
+            id_patient: id_patient, // kalau ada isi dari API nanti
+            ttd: dataUrl
+          })
+        })
+        .then(res => res.json())
+        .then(res => {
+          console.log(res);
+
+          if (res.status === "success") {
+
+            const baseUrl = window.location.origin + '/medisafe/'; // sesuaikan
+            const imageUrl = baseUrl + 'uploads/ttd/' + res.file;
+
+            const preview = document.getElementById("ttd-preview");
+            const empty = document.getElementById("ttd-empty");
+
+            preview.src = imageUrl;
+            preview.style.display = "block";
+            empty.style.display = "none";
+
+            alert("✅ Tanda tangan berhasil disimpan");
+          } else {
+            alert("❌ Gagal: " + res.message);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert("❌ Error server");
+        });
+
+    });
+
+    function loadTTD() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const nomor = urlParams.get("pt");
+
+      fetch("controller/visit/getSignature.php?pt=" + nomor)
+        .then(res => res.json())
+        .then(res => {
+          if (res.status === "success") {
+
+            const baseUrl = window.location.origin + '/medisafe/';
+            const imageUrl = baseUrl + 'uploads/ttd/' + res.file;
+
+            document.getElementById("ttd-preview").src = imageUrl;
+            document.getElementById("ttd-preview").style.display = "block";
+            document.getElementById("ttd-empty").style.display = "none";
+          }
+        });
+    }
+
+  });
+</script>
 <script>
   $(document).ready(function() {
     const urlParams = new URLSearchParams(window.location.search);
