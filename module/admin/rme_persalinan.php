@@ -48,7 +48,7 @@ if ($data) {
         <div class="container-fluid">
           <div class="row">
             <?php
-            require 'menu_rme_inap.php';
+            require 'menu_persalinan.php';
             ?>
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">

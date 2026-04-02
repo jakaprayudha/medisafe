@@ -145,102 +145,19 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                         <i class="bi bi-clipboard2-pulse me-2"></i>Preview RME Klaim
                       </a>
                     </li>
-                       <li>
-                        <a class="dropdown-item" href="module/admin/form_sep?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
-                          <i class="bi bi-file-earmark-text me-2"></i>SEP (Surat Eligibilitas Peserta) 
-                        </a>
-                      </li>
-                    <li>
-                      <a class="dropdown-item" href="module/admin/rme_inap?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
-                        <i class="bi bi-clipboard2-pulse me-2"></i>Pemeriksaan
-                      </a>
-                    </li>
-                     <li>
-                        <a class="dropdown-item" href="module/admin/triase?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
-                          <i class="bi bi-file-earmark-text me-2"></i>Triase
-                        </a>
-                      </li>
-                      <li>
-                        <a class="dropdown-item" href="module/admin/form_pernyataan?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
-                          <i class="bi bi-file-earmark-text me-2"></i>Formulir Pernyataan Peserta
-                        </a>
-                      </li>
-                       <li>
-                        <a class="dropdown-item" href="module/admin/form_capture_patient?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
-                          <i class="bi bi-file-earmark-text me-2"></i>Foto Pasien
-                        </a>
-                      </li>
                         <li>
-                        <a class="dropdown-item" href="module/admin/form_dok_perawatan?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
-                          <i class="bi bi-file-earmark-text me-2"></i>Dokumentasi Perawatan
+                        <a class="dropdown-item" href="module/admin/rme_inap?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
+                          <i class="bi bi-file-earmark-text me-2"></i>Pemeriksaan Rawat Inap
                         </a>
                       </li>
-                       <li>
-                        <a class="dropdown-item" href="module/admin/form_dok_pasien?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
-                          <i class="bi bi-file-earmark-text me-2"></i>Dokumen Pasien
-                        </a>
-                      </li>
+                       </li>
+                        ${row.patient_gender === 'Perempuan' ? `
                         <li>
-                        <a class="dropdown-item" href="module/admin/form_ekg?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
-                          <i class="bi bi-file-earmark-text me-2"></i>Foto Elektrokardiogram (EKG) 
-                        </a>
-                      </li>
-                        <li>
-                        <a class="dropdown-item" href="module/admin/form_usg?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
-                          <i class="bi bi-file-earmark-text me-2"></i>Foto Ultrasonografi (USG) 
-                        </a>
-                      </li>
-                         <li>
-                        <a class="dropdown-item" href="module/admin/cppt?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c" >
-                          <i class="bi bi-file-earmark-text me-2"></i>CPPT
-                        </a>
-                      </li>
-                         <li>
-                        <a class="dropdown-item" href="module/admin/form_io_ranap?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c" >
-                          <i class="bi bi-file-earmark-text me-2"></i>Lembar Masuk dan keluar Rawat Inap
-                        </a>
-                      </li>
-                      <li>
-                        <a class="dropdown-item" href="module/admin/form_lbp?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c" >
-                          <i class="bi bi-file-earmark-text me-2"></i>Lembar Bukti Pelayanan (LBP)
-                        </a>
-                      </li>
-                      <li>
-                        <a class="dropdown-item" href="module/admin/form_rekap_persalinan?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
-                          <i class="bi bi-file-earmark-text me-2"></i>Rekapitulasi Pelayanan Persalinan
-                        </a>
-                      </li>
-                       <li>
-                        <a class="dropdown-item" href="module/admin/form_upload_buku_kia?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
-                          <i class="bi bi-file-earmark-text me-2"></i>Upload Buku Kesehatan Ibu dan Anak
-                        </a>
-                      </li>
-                       <li>
-                        <a class="dropdown-item" href="module/admin/form_kb?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
-                          <i class="bi bi-file-earmark-text me-2"></i>Kartu Status Peserta KB
-                        </a>
-                      </li>
-                        <li>
-                        <a class="dropdown-item" href="module/admin/print/formulir_surat_persetujuan?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c" >
-                          <i class="bi bi-file-earmark-text me-2"></i>Surat Persetujuan Tindakan Medis
-                        </a>
-                      </li>
-                        <li>
-                        <a class="dropdown-item" href="module/admin/instruksi?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c" >
-                          <i class="bi bi-file-earmark-text me-2"></i>Perkembangan Pasien & Instruksi Dokter
-                        </a>
-                      </li>
-                        <li>
-                        <a class="dropdown-item" href="module/admin/resume_medis?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
-                          <i class="bi bi-file-earmark-text me-2"></i>Resume Medis
-                        </a>
-                      </li>
-                       <hr>
-                        <li>
-                        <a class="dropdown-item" href="module/admin/form_ranap?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
-                          <i class="bi bi-file-earmark-text me-2"></i>Surat Keterangan Rawat Inap
-                        </a>
-                      </li>
+                          <a class="dropdown-item" href="module/admin/rme_persalinan?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
+                            <i class="bi bi-file-earmark-text me-2"></i>Persalinan
+                          </a>
+                        </li>
+                        ` : ''}
                   </ul>
                 </div>
               `,
