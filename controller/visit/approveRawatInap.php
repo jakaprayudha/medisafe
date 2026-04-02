@@ -29,41 +29,28 @@ if (!$d) {
 }
 
 // === Generate visit ID unik ===
-$visit_ID = "VIS-" . date('ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
-$timeranap = date('H:i:s');
-$source = "Rawat Inap";
-$id_poli = 99; // default poli rawat inap
-
-// === Insert ke pasien_visit ===
-$stmt = $koneksi->prepare("
-   INSERT INTO pasien_visit 
-   (id_patient, visit_ID, visit_date, visit_time, id_doctor, id_poli, source_hub, created_user, visit_notes)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+$visit_ID = $d['visit_ID_inpatient'];
+$status = 1;
+$stmt = $koneksi->prepare("UPDATE pasien_visit SET
+   status_rawatinap = ?
+   WHERE visit_ID = ?
 ");
 
 $stmt->bind_param(
-   "sssssssss",
-   $d['id_patient'],
-   $visit_ID,
-   $d['ranap_date'],
-   $timeranap,
-   $d['id_doctor'],
-   $id_poli,
-   $source,
-   $user,
-   $d['diagnosa_awal']
+   "is",
+   $status,
+   $visit_ID
 );
-
 // === Jalankan proses insert utama ===
 if ($stmt->execute()) {
 
    // === Step 1: Update permintaan_ranap ===
    $update = $koneksi->prepare("
       UPDATE permintaan_ranap 
-      SET ranap_booking = 1, id_room = ?, id_bed = ?, visit_ID_outpatient = ?
+      SET ranap_booking = 1, id_room = ?, id_bed = ?
       WHERE id_ranap = ?
    ");
-   $update->bind_param("iisi", $id_room, $id_bed, $visit_ID, $id_ranap);
+   $update->bind_param("iii", $id_room, $id_bed, $id_ranap);
 
    if ($update->execute()) {
 
