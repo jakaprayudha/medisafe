@@ -267,6 +267,10 @@ require '../../controller/view.php';
               </span>
 
               <span class="badge bg-light text-dark">
+                🩸 Saturasi: <span id="d_saturasi">-</span>
+              </span>
+
+              <span class="badge bg-light text-dark">
                 📏 TB: <span id="d_tinggi">-</span>
               </span>
 
@@ -449,6 +453,10 @@ require '../../controller/view.php';
           <div class="col-md-4 mt-2">
             <label for="respirasi" class="form-label">Respirasi (x/menit) <span class="text-danger">*</span></label>
             <input type="number" id="respirasi" name="respirasi" required class="form-control">
+          </div>
+          <div class="col-md-4 mt-2">
+            <label for="saturasi" class="form-label">Saturasi (Sp02%)</label>
+            <input type="number" id="saturasi" name="saturasi" class="form-control">
           </div>
           <div class="col-md-4 mt-2">
             <label for="tinggi" class="form-label">Tinggi Badan (cm) <span class="text-danger">*</span></label>
@@ -978,6 +986,7 @@ require '../../controller/view.php';
       $('#d_suhu').text((d.suhu ?? '-') + ' °C');
       $('#d_nadi').text((d.nadi ?? '-') + ' bpm');
       $('#d_respirasi').text((d.respirasi ?? '-') + ' /menit');
+      $('#d_saturasi').text((d.saturasi ?? '-') + ' %');
       $('#d_tinggi').text((d.tinggi_badan ?? '-') + ' cm');
       $('#d_berat').text((d.berat_badan ?? '-') + ' kg');
       $('#d_bmi').text(d.bmi ?? '-');
@@ -1104,6 +1113,7 @@ require '../../controller/view.php';
     $('#suhu').val('');
     $('#nadi').val('');
     $('#respirasi').val('');
+    $('#saturasi').val('');
     $('#tinggi').val('');
     $('#berat').val('');
     $('#bmi').val('');
@@ -1130,6 +1140,7 @@ require '../../controller/view.php';
       suhu: $('#suhu').val(),
       nadi: $('#nadi').val(),
       respirasi: $('#respirasi').val(),
+      saturasi: $('#saturasi').val(),
       tinggi: $('#tinggi').val(),
       berat: $('#berat').val(),
       bmi: $('#bmi').val(),

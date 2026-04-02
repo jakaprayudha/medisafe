@@ -31,13 +31,14 @@ if (isset($_POST['simpan_pemeriksaan'])) {
          tindakan = ?,
          edukasi = ?,
          visit_out = ?, 
-         kondisi_keluar = ?
+         kondisi_keluar = ?,
+         saturasi = ?
 
       WHERE visit_ID = ? AND id_patient = ?
    ");
 
    $stmt->bind_param(
-      "ssssssssssssssssssssssss",
+      "sssssssssssssssssssssssss",
 
       $_POST['kondisi_masuk'],
       $_POST['tekanan_darah'],
@@ -62,6 +63,7 @@ if (isset($_POST['simpan_pemeriksaan'])) {
       $_POST['edukasi'],
       $_POST['cara_keluar'],
       $_POST['cara_keluar'],
+      $_POST['saturasi'],
 
       $nomor_visit,
       $id_patient
