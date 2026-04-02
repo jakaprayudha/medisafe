@@ -3,6 +3,8 @@ $title = 'Triase Kegawatdaruratan';
 $no = $_GET['no'];
 $rm = $_GET['rm'];
 require '../../controller/view.php';
+$checkrawatinap = mysqli_query($koneksi, "SELECT permintaan_ranap.*, pasien_visit.*, ms_patient.nomor_rm, ms_patient.id_patient FROM permintaan_ranap INNER JOIN ms_patient ON ms_patient.id_patient = permintaan_ranap.id_patient INNER JOIN pasien_visit ON pasien_visit.visit_ID = permintaan_ranap.visit_ID_inpatient WHERE permintaan_ranap.visit_ID_inpatient = '$no' AND ms_patient.nomor_rm = '$rm' ");
+$datarawapinap = mysqli_fetch_array($checkrawatinap);
 ?>
 <!doctype html>
 <html lang="en">
@@ -82,45 +84,70 @@ require '../../controller/view.php';
                       <div class="row">
                         <div class="col-3 mb-3">
                           <label class="form-label">Tanggal Masuk</label>
-                          <input type="date" id="tanggal_masuk" class="form-control">
+                          <input type="date" value="<?= $datarawapinap['ranap_date'] ?>" id="tanggal_masuk" class="form-control">
                         </div>
 
                         <div class="col-3 mb-3">
                           <label class="form-label">Jam Masuk</label>
-                          <input type="time" id="jam_masuk" class="form-control">
+                          <input type="time" value="<?= $datarawapinap['ranap_time'] ?>" id="jam_masuk" class="form-control">
                         </div>
 
                         <div class="col-6 mb-3">
                           <label class="form-label">Keluhan Utama</label>
-                          <input type="text" id="keluhan_utama" class="form-control" placeholder="Contoh: Sesak napas, nyeri dada ...">
+                          <input type="text" id="keluhan_utama" class="form-control" value="<?= $datarawapinap['anamnesa'] ?>">
                         </div>
                       </div>
 
                       <h5 class="mt-3">Pemeriksaan Vital Sign</h5>
                       <div class="row">
-                        <div class="col-2 mb-3">
-                          <label class="form-label">Tekanan Darah</label>
-                          <input type="text" id="tekanan_darah" class="form-control" placeholder="120/80">
-                        </div>
+                        <div class="col-md-4">
+                          <label class="form-label">
+                            Tekanan Darah (mmHg) <span class="text-danger">*</span>
+                          </label>
 
+                          <div class="d-flex gap-2">
+                            <input
+                              type="number"
+                              id="sistolik"
+                              class="form-control"
+                              placeholder="Sistolik"
+                              required>
+
+                            <span class="align-self-center">/</span>
+
+                            <input
+                              type="number"
+                              id="diastolik"
+                              class="form-control"
+                              placeholder="Diastolik"
+                              required>
+                          </div>
+
+                          <!-- hidden tetap dipakai -->
+                          <input
+                            type="hidden"
+                            id="tekanan_darah"
+                            name="tekanan_darah"
+                            value="<?= @$datarawapinap['tekanan_darah'] ?>">
+                        </div>
                         <div class="col-2 mb-3">
                           <label class="form-label">Nadi (x/menit)</label>
-                          <input type="number" id="nadi" class="form-control">
+                          <input type="number" id="nadi" value="<?= $datarawapinap['nadi'] ?>" class="form-control">
                         </div>
 
                         <div class="col-2 mb-3">
                           <label class="form-label">RR (x/menit)</label>
-                          <input type="number" id="rr" class="form-control">
+                          <input type="number" id="rr" value="<?= $datarawapinap['respirasi'] ?>" class="form-control">
                         </div>
 
                         <div class="col-2 mb-3">
                           <label class="form-label">Suhu (°C)</label>
-                          <input type="number" step="0.1" id="suhu" class="form-control">
+                          <input type="number" step="0.1" id="suhu" value="<?= $datarawapinap['suhu'] ?>" class="form-control">
                         </div>
 
                         <div class="col-2 mb-3">
-                          <label class="form-label">SpO₂ (%)</label>
-                          <input type="number" id="spo2" class="form-control">
+                          <label class="form-label">Saturasi SpO₂ (%)</label>
+                          <input type="number" id="spo2" value="<?= $datarawapinap['saturasi'] ?>" class="form-control">
                         </div>
                       </div>
 
@@ -352,6 +379,87 @@ require '../../controller/view.php';
         ?>
 </body>
 
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+
+    const td = document.getElementById("tekanan_darah").value;
+
+    if (td && td.includes("/")) {
+      const [s, d] = td.split("/");
+
+      document.getElementById("sistolik").value = s;
+      document.getElementById("diastolik").value = d;
+    }
+
+    const $diagnosa = $('#diagnosa');
+
+    // destroy kalau sudah ada
+    if ($diagnosa.hasClass("select2-hidden-accessible")) {
+      $diagnosa.select2('destroy');
+    }
+
+    // init select2 ICD
+    $diagnosa.select2({
+      width: '100%',
+      placeholder: 'Cari diagnosa ICD-10...',
+      minimumInputLength: 2,
+      ajax: {
+        url: 'controller/visit/getICD10.php',
+        type: 'GET',
+        dataType: 'json',
+        delay: 300,
+        data: function(params) {
+          return {
+            search: params.term
+          };
+        },
+        processResults: function(data) {
+          return {
+            results: data
+          };
+        }
+      }
+    });
+
+    const existingDiagnosa = `<?= @$data['diagnosa'] ?>`; // misal A00
+
+    if (existingDiagnosa) {
+
+      fetch(`controller/visit/getICD10.php?search=${existingDiagnosa}`)
+        .then(res => res.json())
+        .then(data => {
+
+          const item = data.find(d => d.id === existingDiagnosa);
+
+          if (item) {
+            const option = new Option(item.text, item.id, true, true);
+            $('#diagnosa').append(option).trigger('change');
+          }
+
+        });
+
+    }
+  });
+
+  document.getElementById("formPemeriksaan").addEventListener("submit", function(e) {
+
+    const s = document.getElementById("sistolik").value;
+    const d = document.getElementById("diastolik").value;
+
+    if (!s || !d) {
+      alert("Tekanan darah wajib diisi!");
+      e.preventDefault();
+      return;
+    }
+
+    const td = `${s}/${d}`;
+
+    // 🔥 INI KUNCI
+    document.getElementById("tekanan_darah").value = td;
+
+    console.log("TD DIKIRIM:", td); // debug
+  });
+</script>
 
 <script>
   /* ==========================================
