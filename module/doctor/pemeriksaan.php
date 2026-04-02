@@ -264,7 +264,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 
       speechSynthesis.cancel();
 
-      const text = `Nomor antrean ${noAntrian}, atas nama ${namaPasien}, silakan menuju ruangan dokter ${doctor_name}`;
+      const text = `Nomor antrean ${noAntrian}, atas nama ${namaPasien}, silakan menuju ruangan  ${doctor_name}`;
       const utterance = new SpeechSynthesisUtterance(text);
 
       utterance.lang = 'id-ID';
