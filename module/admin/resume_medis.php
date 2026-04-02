@@ -4,6 +4,8 @@ $no = $_GET['no'];
 $rm = $_GET['rm'];
 require '../../database/connect.php';
 require '../../controller/view.php';
+$checkvisit = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa WHERE visit_ID='$no' AND nomor_rm='$rm'");
+$dataresume =  mysqli_fetch_array($checkvisit);
 ?>
 <!doctype html>
 <html lang="en">
@@ -79,44 +81,104 @@ require '../../controller/view.php';
                   <div class="row">
 
                     <div class="col-6 mb-3">
-                      <label class="form-label">Diagnosa</label>
-                      <textarea id="diagnosa" class="form-control" rows="6"></textarea>
+                      <label class="form-label">Diagnosa Masuk</label>
+                      <input type="text" class="form-control   bg-light" readonly value="<?= $dataresume['diagnosa'] ?? '' ?> - <?= $dataresume['icd10'] ?? '' ?>">
                     </div>
 
                     <div class="col-6 mb-3">
-                      <label class="form-label">Tindakan</label>
-                      <textarea id="tindakan" class="form-control" rows="6"></textarea>
+                      <label class="form-label">Indikasi Rawat Inap</label>
+                      <input type="text" class="form-control bg-light" readonly value="<?= $dataresume['anamnesa'] ?? '' ?> ">
                     </div>
 
                     <div class="col-6 mb-3">
-                      <label class="form-label">Pemeriksaan Penunjang</label>
-                      <textarea id="pemeriksaan_penunjang" class="form-control" rows="6"></textarea>
+                      <label class="form-label">Diagnosa Utama (ICD-10)</label>
+                      <select id="diagnosa_utama" name="diagnosa_utama" class="form-select"></select>
                     </div>
 
                     <div class="col-6 mb-3">
-                      <label class="form-label">Obat</label>
-                      <textarea id="obat" class="form-control" rows="6"></textarea>
+                      <label class="form-label">Diagnosa Sekunder (ICD-10)</label>
+                      <select id="diagnosa_sekunder" name="diagnosa_sekunder[]" class="form-select" multiple></select>
                     </div>
 
                     <div class="col-6 mb-3">
-                      <label class="form-label">Instruksi</label>
-                      <textarea id="instruksi" class="form-control" rows="6"></textarea>
+                      <label class="form-label">Pemeriksaan Fisik</label>
+                      <textarea id="pemeriksaan_fisik" name="pemeriksaan_fisik" class="form-control" rows="6"></textarea>
+                    </div>
+                    <?php
+                    $terapi = '';
+                    $gettiket = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy WHERE id_visit='$no' AND status_obat_pulang=0");
+                    while ($tiket = mysqli_fetch_assoc($gettiket)) {
+                      $idvisit = $tiket['id_permintaan_farmasi'];
+                      $getobat = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy_details INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy_details.id_pharmacy WHERE id_permintaan_farmasi='$idvisit'");
+                      while ($obat = mysqli_fetch_assoc($getobat)) {
+                        $terapi .= "- {$obat['pharmacy_name_generic']} {$obat['qty']} {$obat['signa']}\n";
+                      }
+                    }
+                    ?>
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Terapi Selama Rawat Inap</label>
+                      <textarea id="pemeriksaan_penunjang" class="form-control" rows="6"><?= $terapi ?></textarea>
                     </div>
 
                     <div class="col-6 mb-3">
-                      <label class="form-label">Petugas</label>
-                      <input type="text" id="petugas" class="form-control">
+                      <label class="form-label">Alergi Obat</label>
+                      <textarea id="alergi_obat" class="form-control" rows="6" value="<?= $dataresume['alergi_obat'] ?? '' ?> "></textarea>
+                    </div>
+                    <?php
+                    $no = $_GET['no'];
+                    $terapipulang = '';
+                    $gettiketpulang = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy WHERE id_visit='$no' AND status_obat_pulang=1");
+                    while ($tiket = mysqli_fetch_assoc($gettiketpulang)) {
+                      $idvisit = $tiket['id_permintaan_farmasi'];
+                      $getobat = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy_details INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy_details.id_pharmacy WHERE id_permintaan_farmasi='$idvisit'");
+                      while ($obat = mysqli_fetch_assoc($getobat)) {
+                        $terapipulang .= "- {$obat['pharmacy_name_generic']} {$obat['qty']} {$obat['signa']}\n";
+                      }
+                    }
+                    ?>
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Terapi Pulang</label>
+                      <textarea id="instruksi" class="form-control" rows="6"><?= $terapipulang ?></textarea>
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Kondisi Pasien Saat Pulang</label>
+                      <select name="kondisi_pulang" id="kondisi_pulang" class="form-select">
+                        <option value="">PILIH</option>
+                        <option value="Membaik">Membaik</option>
+                        <option value="Rujuk">Rujuk</option>
+                        <option value="Lemah">Lemah</option>
+                        <option value="Lainnya">Lainnya</option>
+                      </select>
+                    </div>
+
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Cara Keluar</label>
+                      <select name="cara_keluar" id="cara_keluar" class="form-select">
+                        <option value="">PILIH</option>
+                        <option value="Lari">Lari</option>
+                        <option value="Pulang">Pulang</option>
+                        <option value="Paksa">Paksa</option>
+                        <option value="Diizinkan Pulang">Diizinkan Pulang</option>
+                        <option value="Lainnya">Lainnya</option>
+                      </select>
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Rencana Tindak Lanjut</label>
+                      <textarea id="rencana_tindak_lanjut" name="rencana_tindak_lanjut" class="form-control" rows="6" value="<?= $dataresume['rencana_tindak_lanjut'] ?? '' ?> "></textarea>
                     </div>
 
                     <div class="col-6 mb-3">
                       <label class="form-label">DPJP</label>
-                      <input type="text" id="dokter" class="form-control">
+                      <input type="text" id="dokter" class="form-control bg-light" readonly>
                     </div>
 
                   </div>
 
                   <div class="text-end mt-3">
-                    <a href="module/admin/print/formulir_resume?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                    <a href="module/admin/print/formulir_resume_v2?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
                       <button class="btn btn-outline-primary">
                         <iconify-icon icon="mdi:printer-outline"></iconify-icon> Cetak
                       </button>
@@ -224,6 +286,34 @@ require '../../controller/view.php';
       });
 
   });
+</script>
+
+<script>
+  function initICD(selector, multiple = false) {
+    $(selector).select2({
+      width: '100%',
+      placeholder: 'Cari diagnosa ICD-10...',
+      minimumInputLength: 2,
+      multiple: multiple,
+      ajax: {
+        url: 'controller/visit/getICD10.php',
+        dataType: 'json',
+        delay: 300,
+        data: params => ({
+          search: params.term
+        }),
+        processResults: data => ({
+          results: data
+        })
+      }
+    });
+  }
+
+  // utama = single
+  initICD('#diagnosa_utama');
+
+  // sekunder = multi 🔥
+  initICD('#diagnosa_sekunder', true);
 </script>
 
 </html>

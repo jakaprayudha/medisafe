@@ -1,6 +1,12 @@
 <?php
 $title = "Formulir Resume Medis";
 $subtitle = "";
+require '../../../database/connect.php';
+
+$visit = $_GET['no'] ?? '';
+$rm    = $_GET['rm'] ?? '';
+$checkdata = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor INNER JOIN permintaan_ranap ON permintaan_ranap.visit_ID_inpatient = pasien_visit.visit_ID LEFT JOIN ms_room ON ms_room.id_room = permintaan_ranap.id_room LEFT JOIN ms_room_bed ON ms_room_bed.id_bed = permintaan_ranap.id_bed LEFT JOIN ms_provider ON ms_provider.id_provider = pasien_visit.id_provider INNER JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa WHERE visit_ID='$visit' AND nomor_rm='$rm'");
+$dataresume = mysqli_fetch_array($checkdata);
 ?>
 
 <style>
@@ -72,37 +78,38 @@ $subtitle = "";
    <table class="resume-table">
       <tr>
          <td class="resume-label">Nama Pasien</td>
-         <td id="rm_name"></td>
+         <td id="rm_name"><?php echo $dataresume['patient_name'] ?? ''; ?></td>
          <td class="resume-label">Tanggal Masuk</td>
-         <td id="rm_tgl_masuk"></td>
+         <td id="rm_tgl_masuk"><?php echo $dataresume['visit_date'] ?? ''; ?></td>
       </tr>
 
       <tr>
          <td class="resume-label">Jenis Kelamin</td>
-         <td id="rm_jk"></td>
+         <td id="rm_jk"><?php echo $dataresume['patient_gender'] ?? ''; ?></td>
          <td class="resume-label">Tanggal Keluar</td>
-         <td id="rm_tgl_keluar"></td>
+         <td id="rm_tgl_keluar"><?php echo $dataresume['visit_date_out'] ?? ''; ?></td>
+      </tr>
       </tr>
 
       <tr>
          <td class="resume-label">No. Rekam Medis</td>
-         <td id="rm_no_rm"></td>
+         <td id="rm_no_rm"><?php echo $dataresume['nomor_rm'] ?? ''; ?></td>
          <td class="resume-label">Ruang Rawat</td>
-         <td id="rm_ruang"></td>
+         <td id="rm_ruang"><?php echo $dataresume['room_name'] ?? ''; ?></td>
       </tr>
 
       <tr>
          <td class="resume-label">Tanggal Lahir</td>
-         <td id="rm_tgl_lahir"></td>
+         <td id="rm_tgl_lahir"><?php echo $dataresume['patient_datebirth'] ?? ''; ?></td>
          <td class="resume-label">Kamar / Kelas</td>
-         <td id="rm_kelas"></td>
+         <td id="rm_kelas"><?php echo $dataresume['bed_name'] ?? ''; ?></td>
       </tr>
 
       <tr>
          <td class="resume-label">Cara Bayar</td>
-         <td id="rm_cara_bayar"></td>
+         <td id="rm_cara_bayar"><?php echo $dataresume['payment_method'] ?? ''; ?></td>
          <td class="resume-label">DPJP</td>
-         <td id="rm_dpjp"></td>
+         <td id="rm_dpjp"><?php echo $dataresume['doctor_name'] ?? ''; ?></td>
       </tr>
    </table>
 
@@ -110,66 +117,83 @@ $subtitle = "";
 
       <tr>
          <td class="resume-label">Diagnosa Masuk</td>
-         <td colspan="3" id="rs_diagnosa_masuk">
-
-         </td>
+         <td id="rm_dpjp"><?php echo $dataresume['diagnosa'] . ' - ' . $dataresume['icd10'] ?? ''; ?></td>
       </tr>
 
       <tr>
          <td class="resume-label">Indikasi Rawat Inap</td>
-         <td colspan="3" id="rs_indikasi"></td>
+         <td colspan="3" id="rs_indikasi"><?php echo $dataresume['anamnesa'] ?? ''; ?></td>
       </tr>
 
       <tr>
          <td class="resume-label">Pemeriksaan Fisik</td>
-         <td colspan="3" id="rs_fisik">
+         <td colspan="3" id="rs_fisik"><?php echo $dataresume['pemeriksaan_fisik'] ?? ''; ?>
          </td>
       </tr>
 
       <tr>
          <td class="resume-label">Diagnosa Utama</td>
-         <td colspan="3" id="rs_diagnosa_utama">
-
-         </td>
+         <td id="rm_dpjp"><?php echo $dataresume['diagnosa_utama'] ?? ''; ?></td>
       </tr>
 
       <tr>
          <td class="resume-label">Diagnosa Sekunder</td>
-         <td colspan="3" id="rs_diagnosa_sekunder">
-         </td>
+         <td id="rm_dpjp"><?php echo $dataresume['diagnosa_sekunder'] ?? ''; ?></td>
       </tr>
-
+      <?php
+      $no = $_GET['no'];
+      $terapi = '';
+      $gettiket = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy WHERE id_visit='$no' AND status_obat_pulang=0");
+      while ($tiket = mysqli_fetch_assoc($gettiket)) {
+         $idvisit = $tiket['id_permintaan_farmasi'];
+         $getobat = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy_details INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy_details.id_pharmacy WHERE id_permintaan_farmasi='$idvisit'");
+         while ($obat = mysqli_fetch_assoc($getobat)) {
+            $terapi .= "- {$obat['pharmacy_name_generic']} {$obat['qty']} {$obat['signa']}\n";
+         }
+      }
+      ?>
       <tr>
-         <td class="resume-label">Terapi Selama di Rumah Sakit</td>
-         <td colspan="3" style="white-space:pre-line" id="rs_terapi_rs">
+         <td class="resume-label">Terapi Selama di Klinik</td>
+         <td colspan="3" style="white-space:pre-line" id="rs_terapi_rs"> <?= $terapi ?>
          </td>
       </tr>
 
       <tr>
          <td class="resume-label">Alergi Obat</td>
-         <td colspan="3" id="rs_alergi"></td>
+         <td colspan="3" id="rs_alergi"><?php echo $dataresume['alergi_obat'] ?? ''; ?></td>
       </tr>
-
+      <?php
+      $no = $_GET['no'];
+      $terapipulang = '';
+      $gettiketpulang = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy WHERE id_visit='$no' AND status_obat_pulang=1");
+      while ($tiket = mysqli_fetch_assoc($gettiketpulang)) {
+         $idvisit = $tiket['id_permintaan_farmasi'];
+         $getobat = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy_details INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy_details.id_pharmacy WHERE id_permintaan_farmasi='$idvisit'");
+         while ($obat = mysqli_fetch_assoc($getobat)) {
+            $terapipulang .= "- {$obat['pharmacy_name_generic']} {$obat['qty']} {$obat['signa']}\n";
+         }
+      }
+      ?>
       <tr>
          <td class="resume-label">Terapi Pulang</td>
-         <td colspan="3" style="white-space:pre-line" id="rs_terapi_pulang">
+         <td colspan="3" style="white-space:pre-line" id="rs_terapi_pulang"> <?= $terapipulang ?>
 
          </td>
       </tr>
 
       <tr>
          <td class="resume-label">Kondisi Pasien Saat Pulang</td>
-         <td colspan="3" id="rs_kondisi_pulang"></td>
+         <td colspan="3" id="rs_kondisi_pulang"> <?= $dataresume['kondisi_pulang'] ?></td>
       </tr>
 
       <tr>
-         <td class="resume-label">Cara Keluar RS</td>
-         <td colspan="3" id="rs_cara_keluar">Izin Dokter</td>
+         <td class="resume-label">Cara Keluar</td>
+         <td colspan="3" id="rs_cara_keluar"><?= $dataresume['cara_keluar'] ?></td>
       </tr>
 
       <tr>
          <td class="resume-label">Rencana Tindak Lanjut</td>
-         <td colspan="3" id="rs_rencana">
+         <td colspan="3" id="rs_rencana"><?= $dataresume['rencana_tindak_lanjut'] ?>
          </td>
       </tr>
 
@@ -178,7 +202,7 @@ $subtitle = "";
    <div class="resume-sign-area">
 
       <div class="resume-sign-city">
-         Tanjung Morawa, 11-12-2025
+         Deli Serdang, <?= date('d F Y', strtotime($dataresume['visit_date_out'] ?? date('Y-m-d'))) ?>
       </div>
 
       <div class="resume-sign-title">
@@ -191,147 +215,9 @@ $subtitle = "";
             class="resume-sign-img" width="50px"
             alt="TTD Dokter">
 
-         <div class="resume-doc-line" id="doctor_name"></div>
+         <div class="resume-doc-line" id="doctor_name"><?= $dataresume['doctor_name'] ?? '' ?></div>
       </div>
 
    </div>
 
 </div>
-
-<script>
-   document.addEventListener("DOMContentLoaded", function() {
-
-      const params = new URLSearchParams(window.location.search);
-      const no = params.get("no");
-      const rm = params.get("rm");
-
-      if (!no || !rm) return;
-
-      fetch(`getpasien.php?no=${no}&rm=${rm}`)
-         .then(r => r.json())
-         .then(d => {
-
-            if (!d) return;
-
-            // ========== IDENTITAS PASIEN ==========
-            document.getElementById("rm_name").textContent = d.patient_name ?? "";
-            document.getElementById("rm_no_rm").textContent = d.nomor_rm ?? "";
-
-            document.getElementById("rm_jk").textContent =
-               d.patient_gender ?? "";
-
-            document.getElementById("rm_tgl_lahir").textContent =
-               d.patient_datebirth ?? "";
-
-            // ========== KUNJUNGAN ==========
-            document.getElementById("rm_tgl_masuk").textContent =
-               d.visit_date && d.visit_time ?
-               `${d.visit_date} ${d.visit_time}` :
-               (d.visit_date ?? "");
-
-            document.getElementById("rm_tgl_keluar").textContent =
-               d.visit_out ?? "";
-
-            document.getElementById("rm_ruang").textContent =
-               d.source_hub ?? ""; // karena di JSON tidak ada ruang_rawat
-
-            document.getElementById("rm_kelas").textContent =
-               ""; // tidak ada field kelas di JSON
-
-            document.getElementById("rm_cara_bayar").textContent =
-               d.patient_bpjs ? "BPJS" : "";
-
-            // ========== DOKTER ==========
-            document.getElementById("rm_dpjp").textContent =
-               d.doctor_name ?? "";
-
-            document.getElementById("doctor_name").textContent =
-               d.doctor_name ?? "";
-
-         })
-         .catch(err => console.error(err));
-
-   });
-</script>
-
-<script>
-   document.addEventListener("DOMContentLoaded", function() {
-
-      const params = new URLSearchParams(window.location.search);
-      const no = params.get("no");
-      const rm = params.get("rm");
-
-      if (!no || !rm) return;
-
-      /* =============================
-         DATA PASIEN
-      ============================= */
-
-      fetch(`getpasien.php?no=${no}&rm=${rm}`)
-         .then(r => r.json())
-         .then(d => {
-
-            if (!d) return;
-
-            document.getElementById("rm_name").textContent = d.patient_name ?? "";
-            document.getElementById("rm_no_rm").textContent = d.nomor_rm ?? "";
-            document.getElementById("rm_jk").textContent = d.patient_gender ?? "";
-            document.getElementById("rm_tgl_lahir").textContent = d.patient_datebirth ?? "";
-
-            document.getElementById("rm_tgl_masuk").textContent =
-               d.visit_date && d.visit_time ?
-               `${d.visit_date} ${d.visit_time}` :
-               (d.visit_date ?? "");
-
-            document.getElementById("rm_tgl_keluar").textContent = d.visit_out ?? "";
-            document.getElementById("rm_ruang").textContent = d.source_hub ?? "";
-            document.getElementById("rm_kelas").textContent = "";
-            document.getElementById("rm_cara_bayar").textContent = d.patient_bpjs ? "BPJS" : "";
-            document.getElementById("rm_dpjp").textContent = d.doctor_name ?? "";
-            document.getElementById("doctor_name").textContent = d.doctor_name ?? "";
-
-         });
-
-      /* =============================
-         DATA RESUME MEDIS
-      ============================= */
-
-      fetch(`getresume.php?no=${no}&rm=${rm}`)
-         .then(r => r.json())
-         .then(resp => {
-
-            if (!resp || resp.status !== "success") return;
-
-            const r = resp.data;
-
-            document.getElementById("rs_diagnosa_utama").textContent =
-               r.diagnosa ?? "";
-
-            document.getElementById("rs_indikasi").textContent =
-               r.indikasi_dirawat ?? "";
-
-            document.getElementById("rs_fisik").textContent =
-               r.pemeriksaan_fisik ?? "";
-
-            document.getElementById("rs_diagnosa_sekunder").textContent =
-               r.diagnosa_sekunder ?? "";
-
-            document.getElementById("rs_terapi_rs").textContent =
-               r.terapi_rs ?? "";
-
-            document.getElementById("rs_terapi_pulang").textContent =
-               r.terapi_pulang ?? "";
-
-            document.getElementById("rs_kondisi_pulang").textContent =
-               r.kondisi_pulang ?? "";
-
-            document.getElementById("rs_cara_keluar").textContent =
-               r.cara_keluar_rs ?? "";
-
-            document.getElementById("rs_rencana").textContent =
-               r.rencana_tindak_lanjut ?? "";
-
-         });
-
-   });
-</script>
