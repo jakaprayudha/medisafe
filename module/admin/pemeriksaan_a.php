@@ -207,8 +207,8 @@ if ($data) {
                       <textarea id="pemeriksaan_fungsional" name="pemeriksaan_fungsional" rows="2" class="form-control"><?= @$data['pemeriksaan_fungsional'] ?></textarea>
                     </div>
                     <div class="mb-3">
-                      <label for="diagnosa" class="form-label">Diagnosa</label>
-                      <textarea id="diagnosa" name="diagnosa" rows="2" class="form-control"><?= @$data['diagnosa'] ?></textarea>
+                      <label class="form-label">Diagnosa (ICD-10)</label>
+                      <select id="diagnosa" name="diagnosa" class="form-select" style="width:100%"></select>
                     </div>
                     <div class="mb-3">
                       <label for="tindakan" class="form-label">Tindakan / Terapi / Instruksi / Rencana Rawat</label>
@@ -260,6 +260,55 @@ if ($data) {
 
       document.getElementById("sistolik").value = s;
       document.getElementById("diastolik").value = d;
+    }
+
+    const $diagnosa = $('#diagnosa');
+
+    // destroy kalau sudah ada
+    if ($diagnosa.hasClass("select2-hidden-accessible")) {
+      $diagnosa.select2('destroy');
+    }
+
+    // init select2 ICD
+    $diagnosa.select2({
+      width: '100%',
+      placeholder: 'Cari diagnosa ICD-10...',
+      minimumInputLength: 2,
+      ajax: {
+        url: 'controller/visit/getICD10.php',
+        type: 'GET',
+        dataType: 'json',
+        delay: 300,
+        data: function(params) {
+          return {
+            search: params.term
+          };
+        },
+        processResults: function(data) {
+          return {
+            results: data
+          };
+        }
+      }
+    });
+
+    const existingDiagnosa = `<?= @$data['diagnosa'] ?>`; // misal A00
+
+    if (existingDiagnosa) {
+
+      fetch(`controller/visit/getICD10.php?search=${existingDiagnosa}`)
+        .then(res => res.json())
+        .then(data => {
+
+          const item = data.find(d => d.id === existingDiagnosa);
+
+          if (item) {
+            const option = new Option(item.text, item.id, true, true);
+            $('#diagnosa').append(option).trigger('change');
+          }
+
+        });
+
     }
   });
 

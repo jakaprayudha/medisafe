@@ -122,19 +122,39 @@ require '../../controller/view.php';
                     <div class="row g-3">
                       <input type="hidden" name="id_patient" id="id_patient" value="<?= $datapasien['id_patient'] ?>">
                       <input type="hidden" name="visit_ID_inpatient" id="visit_ID_inpatient" value="<?= $_GET['no'] ?>">
+                      <?php
+                      $checkvisit = mysqli_query($koneksi, "SELECT 
+                        ms_doctor.doctor_name, 
+                        pasien_visit.diagnosa,
+                        pasien_visit.id_doctor,
+                        icd_10.code,
+                        icd_10.icd10 as icd_name
+                      FROM pasien_visit 
+                      INNER JOIN ms_doctor 
+                        ON pasien_visit.id_doctor = ms_doctor.id_doctor 
+                      LEFT JOIN icd_10 
+                        ON icd_10.code = pasien_visit.diagnosa  
+                      WHERE visit_ID = '" . $_GET['no'] . "' 
+                        AND id_patient = '" . $datapasien['id_patient'] . "'
+                    ");
+                      $datavisit = mysqli_fetch_array($checkvisit);
+                      ?>
+
 
                       <!-- Dokter Penanggung Jawab -->
                       <div class="col-md-6">
                         <label for="dokter" class="form-label fw-semibold">Dokter Penanggung Jawab</label>
-                        <select class="form-select" id="dokter" name="id_doctor" required>
-                          <option value="" selected disabled>Pilih dokter</option>
-                          <?php
-                          $getdokter = mysqli_query($koneksi, "SELECT * FROM ms_doctor ORDER BY doctor_name ASC");
-                          while ($dok = mysqli_fetch_array($getdokter)) {
-                            echo '<option value="' . $dok['id_doctor'] . '">' . $dok['doctor_name'] . '</option>';
-                          }
-                          ?>
-                        </select>
+                        <!-- <select class="form-select" id="dokter" name="id_doctor" required>
+                          <option value="" selected disabled>Pilih dokter</option> -->
+                        <?php
+                        // $getdokter = mysqli_query($koneksi, "SELECT * FROM ms_doctor ORDER BY doctor_name ASC");
+                        // while ($dok = mysqli_fetch_array($getdokter)) {
+                        //   echo '<option value="' . $dok['id_doctor'] . '">' . $dok['doctor_name'] . '</option>';
+                        // }
+                        ?>
+                        <!-- </select> -->
+                        <input type="text" class="form-control bg-light" id="" name="" value="<?= $datavisit['doctor_name'] ?>" readonly>
+                        <input type="hidden" name="id_doctor" id="id_doctor" value="<?= $datavisit['id_doctor'] ?>">
                       </div>
 
                       <!-- Tanggal & Waktu Masuk -->
@@ -150,7 +170,7 @@ require '../../controller/view.php';
                       <!-- Diagnosa -->
                       <div class="col-md-12">
                         <label for="diagnosa" class="form-label fw-semibold">Diagnosa Awal</label>
-                        <input type="text" class="form-control" id="diagnosa" name="diagnosa_awal" placeholder="Contoh: Demam Berdarah Dengue" required>
+                        <input type="text" class="form-control bg-light" id="diagnosa" name="diagnosa_awal" value="<?= $datavisit['code'] . "-" . $datavisit['icd_name']  ?>" readonly>
                       </div>
 
                       <!-- Catatan -->
