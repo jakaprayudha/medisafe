@@ -105,6 +105,7 @@ require '../../controller/view.php';
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">Dokter</th>
                           <th scope="col" class="text-dark fw-normal">Poli</th>
+                          <th scope="col" class="text-dark fw-normal">Screening</th>
                           <th scope="col" class="text-dark fw-normal">Jenis Bayar</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                         </tr>
@@ -807,6 +808,8 @@ require '../../controller/view.php';
               "gender": row.patient_gender ?? "-",
               "dokter": row.doctor_name ?? "-",
               "layanan": row.poli_name ?? "-",
+              "screening": row.tekanan_darah ?
+                '<span class="badge bg-success">✔️ Sudah</span>' : '<span class="badge bg-secondary">❌ Belum</span>',
               "provider": row.provider_name ?? "-",
               "status": row.visit_status === 99 ? '<span class="badge bg-danger text-center d-block">Batal</span>' : row.visit_status === 1 ? '<span class="badge bg-warning text-center d-block">Menunggu</span>' : row.visit_status === 2 ? '<span class="badge bg-secondary text-center d-block">Dipanggil</span>' : row.visit_status === 3 ? '<span class="badge bg-primary text-center d-block">Dilayani</span>' : row.visit_status === 4 ? '<span class="badge bg-success text-center d-block">Selesai</span>' : '<span class="badge bg-dark text-center d-block">Unknown</span>'
             };
@@ -835,6 +838,9 @@ require '../../controller/view.php';
         },
         {
           data: "layanan"
+        },
+        {
+          data: "screening"
         },
         {
           data: "provider"
@@ -1101,24 +1107,53 @@ require '../../controller/view.php';
     $(this).append($menu);
     $menu.removeAttr('style');
   });
-
   $(document).on('click', '.screening-btn', function() {
+
     let id = $(this).data('id');
 
     $('#screening_id_visit').val(id);
-    $('#sc_keluhan').val('');
-    $('#sc_catatan').val('');
-    $('#kondisi_masuk').val('');
-    $('#tekanan_darah').val('');
-    $('#suhu').val('');
-    $('#nadi').val('');
-    $('#respirasi').val('');
-    $('#saturasi').val('');
-    $('#tinggi').val('');
-    $('#berat').val('');
-    $('#bmi').val('');
-    $('#bmi_ket').val('');
-    $('#screeningModal').modal('show');
+
+    // 🔥 ambil data dari API
+    fetch(`controller/visit/getDetailPemeriksaan?id=${id}`)
+      .then(res => res.json())
+      .then(resp => {
+
+        if (resp.status === 'success') {
+
+          let d = resp.data;
+
+          // 🔥 isi form
+          $('#sc_keluhan').val(d.anamnesa ?? '');
+          $('#sc_catatan').val(d.catatan_screening ?? '');
+          $('#kondisi_masuk').val(d.kondisi_masuk ?? '');
+
+          $('#suhu').val(d.suhu ?? '');
+          $('#nadi').val(d.nadi ?? '');
+          $('#respirasi').val(d.respirasi ?? '');
+          $('#saturasi').val(d.saturasi ?? '');
+          $('#tinggi').val(d.tinggi_badan ?? '');
+          $('#berat').val(d.berat_badan ?? '');
+          $('#bmi').val(d.bmi ?? '');
+          $('#bmi_ket').val(d.bmi_keterangan ?? '');
+
+          // 🔥 SPLIT TEKANAN DARAH
+          if (d.tekanan_darah && d.tekanan_darah.includes('/')) {
+            const [s, di] = d.tekanan_darah.split('/');
+            $('#sistolik').val(s);
+            $('#diastolik').val(di);
+          } else {
+            $('#sistolik').val('');
+            $('#diastolik').val('');
+          }
+
+        } else {
+          console.log("Data kosong → mode input baru");
+        }
+
+        $('#screeningModal').modal('show');
+
+      });
+
   });
 
   $('#btnSaveScreening').on('click', function() {
@@ -1159,8 +1194,16 @@ require '../../controller/view.php';
         if (resp.status === 'success') {
           alert('Screening berhasil disimpan');
           $('#screeningModal').modal('hide');
+          $('#periodeTable').DataTable().ajax.reload(null, false);
         }
       });
+  });
+  $('.screening-btn').each(function() {
+    if ($(this).data('filled')) {
+      $(this).text('Edit Screening');
+    } else {
+      $(this).text('Input Screening');
+    }
   });
 </script>
 <script>
