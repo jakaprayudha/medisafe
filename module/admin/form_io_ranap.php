@@ -4,6 +4,10 @@ $no = $_GET['no'];
 $rm = $_GET['rm'];
 require '../../database/connect.php';
 require '../../controller/view.php';
+$checkvisit = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa
+INNER JOIN permintaan_ranap ON permintaan_ranap.visit_ID_inpatient = pasien_visit.visit_ID INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor INNER JOIN ms_room ON ms_room.id_room = permintaan_ranap.id_room INNER JOIN ms_room_bed ON ms_room_bed.id_bed = permintaan_ranap.id_bed
+ WHERE visit_ID='$no' AND nomor_rm='$rm'");
+$dataio =  mysqli_fetch_array($checkvisit);
 ?>
 <!doctype html>
 <html lang="en">
@@ -80,77 +84,63 @@ require '../../controller/view.php';
 
                     <div class="col-3 mb-3">
                       <label class="form-label">Tanggal Masuk</label>
-                      <input type="date" id="tanggal_masuk" class="form-control">
+                      <input type="date" id="tanggal_masuk" value="<?= $dataio['visit_date'] ?? '' ?>" class="form-control">
                     </div>
 
                     <div class="col-3 mb-3">
                       <label class="form-label">Jam Masuk</label>
-                      <input type="time" id="jam_masuk" class="form-control">
-                    </div>
-
-                    <div class="col-3 mb-3">
-                      <label class="form-label">Status Perkawinan</label>
-                      <select id="status_perkawinan" class="form-control">
-                        <option value="">-- Pilih --</option>
-                        <option>Kawin</option>
-                        <option>Belum Kawin</option>
-                        <option>Cerai</option>
-                      </select>
+                      <input type="time" id="jam_masuk" value="<?= $dataio['visit_time'] ?? '' ?>" class="form-control">
                     </div>
 
                     <div class="col-3 mb-3">
                       <label class="form-label">Penanggung Jawab</label>
-                      <input type="text" id="penanggung_jawab" class="form-control">
+                      <input type="text" id="penanggung_jawab" value="<?= $dataio['penanggung_jawab'] ?? '' ?>" class="form-control">
                     </div>
 
-                    <div class="col-6 mb-3">
-                      <label class="form-label">Alamat Penanggung Jawab</label>
-                      <textarea id="alamat_pj" class="form-control" rows="2"></textarea>
-                    </div>
 
                     <div class="col-3 mb-3">
                       <label class="form-label">Tanggal Pindah</label>
-                      <input type="date" id="tanggal_pindah" class="form-control">
+                      <input type="date" id="tanggal_pindah" value="<?= $dataio['ranap_date'] ?? '' ?>" class="form-control">
                     </div>
 
                     <div class="col-3 mb-3">
                       <label class="form-label">Jam Pindah</label>
-                      <input type="time" id="jam_pindah" class="form-control">
+                      <input type="time" id="jam_pindah" value="<?= $dataio['ranap_time'] ?? '' ?>" class="form-control">
                     </div>
 
                     <div class="col-6 mb-3">
                       <label class="form-label">Ruang Rawat / Kelas</label>
-                      <input type="text" id="ruang_rawat" class="form-control">
+                      <input type="text" id="ruang_rawat" value="<?= $dataio['room_name'] ?? '' ?> / <?= $dataio['bed_name'] ?? '' ?>" class="form-control bg-light" readonly>
                     </div>
 
                     <div class="col-3 mb-3">
                       <label class="form-label">Tanggal Keluar</label>
-                      <input type="date" id="tanggal_keluar" class="form-control">
+                      <input type="date" id="tanggal_keluar" value="<?= $dataio['visit_date_out'] ?? '' ?>" class="form-control">
                     </div>
 
                     <div class="col-3 mb-3">
                       <label class="form-label">Jam Keluar</label>
-                      <input type="time" id="jam_keluar" class="form-control">
+                      <input type="time" id="jam_keluar" value="<?= $dataio['visit_out'] ?? '' ?>" class="form-control">
                     </div>
 
                     <div class="col-6 mb-3">
                       <label class="form-label">Diagnosa Medik</label>
-                      <input type="text" id="diagnosa_medik" class="form-control">
+                      <input type="text" id="diagnosa_medik" class="form-control" value="<?= $dataio['anamnesa'] ?? '' ?>">
                     </div>
 
                     <div class="col-6 mb-3">
                       <label class="form-label">Diagnosa Utama</label>
-                      <input type="text" id="diagnosa_utama" class="form-control">
+                      <input type="text" id="diagnosa_utama" class="form-control" value="<?= $dataio['diagnosa_utama'] ?? '' ?>">
                     </div>
 
                     <div class="col-6 mb-3">
-                      <label class="form-label">Diagnosa Komplikasi</label>
-                      <input type="text" id="diagnosa_komplikasi" class="form-control">
+                      <label class="form-label">Diagnosa Sekunder</label>
+                      <input type="text" id="diagnosa_komplikasi" class="form-control" value="<?= $dataio['diagnosa_sekunder'] ?? '' ?>">
                     </div>
 
                     <div class="col-12 mb-3">
                       <label class="form-label">Penyebab Cedera / Keracunan</label>
-                      <textarea id="penyebab_keracunan" class="form-control" rows="2"></textarea>
+                      <textarea id="penyebab_keracunan" class="form-control" rows="2"><?= $dataio['penyebab_keracunan'] ?? '' ?></textarea>
                     </div>
 
                     <div class="col-6 mb-3">
@@ -193,18 +183,31 @@ require '../../controller/view.php';
                     </div>
 
                     <div class="col-6 mb-3">
-                      <label class="form-label">Keadaan Keluar</label>
-                      <input type="text" id="keadaan_keluar" class="form-control">
+                      <label class="form-label">Keadaan Pulang</label>
+                      <select name="kondisi_pulang" id="kondisi_pulang" class="form-select">
+                        <option value="">PILIH</option>
+                        <option value="Membaik">Membaik</option>
+                        <option value="Rujuk">Rujuk</option>
+                        <option value="Lemah">Lemah</option>
+                        <option value="Lainnya">Lainnya</option>
+                      </select>
                     </div>
 
                     <div class="col-6 mb-3">
                       <label class="form-label">Cara Keluar</label>
-                      <input type="text" id="cara_keluar" class="form-control">
+                      <select name="cara_keluar" id="cara_keluar" class="form-select">
+                        <option value="">PILIH</option>
+                        <option value="Lari">Lari</option>
+                        <option value="Pulang">Pulang</option>
+                        <option value="Paksa">Paksa</option>
+                        <option value="Diizinkan Pulang">Diizinkan Pulang</option>
+                        <option value="Lainnya">Lainnya</option>
+                      </select>
                     </div>
 
                     <div class="col-6 mb-3">
                       <label class="form-label">Dokter Merawat</label>
-                      <input type="text" id="dokter_merawat" class="form-control">
+                      <input type="text" id="dokter_merawat" class="form-control bg-light" readonly value="<?= $dataio['doctor_name'] ?? '' ?>">
                     </div>
                     <div class="col-6 mb-3">
                       <label class="form-label">Lama Dirawat</label>
@@ -325,6 +328,27 @@ require '../../controller/view.php';
       });
 
   });
+
+  function hitungLamaDirawat() {
+    const tglMasuk = document.getElementById("tanggal_masuk").value;
+    const tglKeluar = document.getElementById("tanggal_keluar").value;
+
+    if (!tglMasuk || !tglKeluar) return;
+
+    const masuk = new Date(tglMasuk);
+    const keluar = new Date(tglKeluar);
+
+    // hitung selisih hari
+    const selisih = Math.floor((keluar - masuk) / (1000 * 60 * 60 * 24));
+
+    // minimal 1 hari kalau sudah masuk
+    const lama = selisih >= 0 ? selisih + 1 : 0;
+
+    document.getElementById("lama_dirawat").value = lama;
+  }
+
+  document.getElementById("tanggal_masuk").addEventListener("change", hitungLamaDirawat);
+  document.getElementById("tanggal_keluar").addEventListener("change", hitungLamaDirawat);
 </script>
 
 </html>
