@@ -179,7 +179,7 @@ $dataio = mysqli_fetch_array($checkdata);
       <table class="ranap-table">
         <tr>
           <td width="30%">Diagnosa Medik</td>
-          <td id="diagnosa_medik"><?= $dataio['anamnesa'] ?></td>
+          <td id="diagnosa_medik"><?= $dataio['code'] ?> - <?= $dataio['icd10'] ?></td>
         </tr>
         <tr>
           <td>Diagnosa Akhir</td>

@@ -108,7 +108,7 @@ $dataio =  mysqli_fetch_array($checkvisit);
                       <input type="time" id="jam_pindah" value="<?= $dataio['ranap_time'] ?? '' ?>" class="form-control">
                     </div>
 
-                    <div class="col-6 mb-3">
+                    <div class="col-3 mb-3">
                       <label class="form-label">Ruang Rawat / Kelas</label>
                       <input type="text" id="ruang_rawat" value="<?= $dataio['room_name'] ?? '' ?> / <?= $dataio['bed_name'] ?? '' ?>" class="form-control bg-light" readonly>
                     </div>
@@ -124,13 +124,13 @@ $dataio =  mysqli_fetch_array($checkvisit);
                     </div>
 
                     <div class="col-6 mb-3">
-                      <label class="form-label">Diagnosa Medik</label>
+                      <label class="form-label">Anamnesa Masuk</label>
                       <input type="text" id="diagnosa_medik" class="form-control" value="<?= $dataio['anamnesa'] ?? '' ?>">
                     </div>
 
                     <div class="col-6 mb-3">
                       <label class="form-label">Diagnosa Utama</label>
-                      <input type="text" id="diagnosa_utama" class="form-control" value="<?= $dataio['diagnosa_utama'] ?? '' ?>">
+                      <input type="text" id="diagnosa_utama" class="form-control bg-light" readonly value="<?= $dataio['code']  ?? '' ?> - <?= $dataio['icd10'] ?>">
                     </div>
 
                     <div class="col-6 mb-3">
