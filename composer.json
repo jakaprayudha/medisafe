@@ -7,6 +7,15 @@
         "setasign/fpdi": "^2.6",
         "setasign/fpdf": "^1.8",
         "wyndow/fuzzywuzzy": "^0.6.0",
-        "phpoffice/phpspreadsheet": "^1.29"
+        "phpoffice/phpspreadsheet": "^1.29",
+        "lcobucci/jwt": "^4.0"
+    },
+    "config": {
+        "audit": {
+            "ignore": ["PKSA-y2cr-5h3j-g3ys"]
+        },
+        "platform": {
+            "php": "8.2.4"
+        }
     }
 }

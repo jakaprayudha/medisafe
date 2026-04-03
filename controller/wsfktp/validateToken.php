@@ -1,58 +1,89 @@
 <?php
+
 require_once __DIR__ . '/../../database/connect.php';
-require_once __DIR__ . '/JWT.php';
-require_once __DIR__ . '/Key.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
 
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
+use Lcobucci\JWT\Configuration;
+use Lcobucci\JWT\Signer\Hmac\Sha256;
+use Lcobucci\JWT\Signer\Key\InMemory;
+use Lcobucci\JWT\Token\InvalidTokenStructure;
+use Lcobucci\JWT\Validation\Constraint\SignedWith;
 
-function validateBpjsToken($username)
+function validateBpjsToken($usernameParam)
 {
     global $koneksi;
+
+    // ambil user dari DB
     $stmt = $koneksi->prepare("SELECT * FROM setting_antrol WHERE username = ?");
-    $stmt->bind_param('s', $username);
+    $stmt->bind_param('s', $usernameParam);
     $stmt->execute();
     $result = $stmt->get_result();
     $user = $result->fetch_assoc();
+    $stmt->close();
 
-    $headers = array_change_key_case(getallheaders(), CASE_LOWER);
-    $token = $headers['x-token'] ?? null;
-    $username = $headers['x-username'] ?? null;
-    if (!$token || !$username) {
+    if (!$user) {
         echo json_encode([
             "metadata" => [
-                "message" => "Header tidak lengkap",
+                "message" => "User configuration not found",
+                "code" => 401
+            ]
+        ]);
+        exit;
+    }
+
+    $secret_key = $user['secret_key'];
+
+    // ambil header
+    $headers = array_change_key_case(getallheaders(), CASE_LOWER);
+    $tokenString = $headers['x-token'] ?? null;
+    $headerUsername = $headers['x-username'] ?? null;
+
+    if (!$tokenString || !$headerUsername) {
+        echo json_encode([
+            "metadata" => [
+                "message" => "Missing required headers",
                 "code" => 400
             ]
         ]);
         exit;
     }
+
+    // konfigurasi JWT
+    $config = Configuration::forSymmetricSigner(
+        new Sha256(),
+        InMemory::plainText($secret_key)
+    );
+
     try {
-        $decoded = JWT::decode($token, new Key($user['secret_key'], 'HS256'));
-        $tokenUser = $decoded->data->username ?? null;
-        if ($tokenUser !== $username) {
+        $token = $config->parser()->parse($tokenString);
+
+        // validasi signature
+        $config->validator()->assert(
+            $token,
+            new SignedWith($config->signer(), $config->verificationKey())
+        );
+
+        $token = $config->parser()->parse($tokenString);
+        /** @var \Lcobucci\JWT\Token\Plain $token */
+        $claims = $token->claims();
+        $username = $claims->get('username');
+
+        // cek username
+        if ($username !== $headerUsername) {
             echo json_encode([
                 "metadata" => [
-                    "message" => "Username tidak sesuai dengan token",
+                    "message" => "Username does not match token",
                     "code" => 401
                 ]
             ]);
             exit;
         }
-        if ($decoded->exp < time()) {
-            echo json_encode([
-                "metadata" => [
-                    "message" => "Token expired",
-                    "code" => 401
-                ]
-            ]);
-            exit;
-        }
-        return $decoded->data;
+
+        return $token->claims();
     } catch (Exception $e) {
         echo json_encode([
             "metadata" => [
-                "message" => "Token tidak valid",
+                "message" => "Invalid or expired token",
                 "code" => 401,
                 "error" => $e->getMessage()
             ]
