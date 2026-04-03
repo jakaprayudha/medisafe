@@ -1,226 +1,226 @@
 <div class="dokmulti-wrap">
    <style>
-  @page {
-    size: A4;
-    margin: 12mm;
-  }
+      @page {
+         size: A4;
+         margin: 12mm;
+      }
 
-  /* =========================
+      /* =========================
      BODY KHUSUS DOKMULTI
      ========================= */
-  body.dokmulti-body {
-    font-family: "Times New Roman", serif;
-    font-size: 12pt;
-    margin: 0;
-    padding: 0;
-    background: #fff;
-    color: #000;
-  }
+      body.dokmulti-body {
+         font-family: "Times New Roman", serif;
+         font-size: 12pt;
+         margin: 0;
+         padding: 0;
+         background: #fff;
+         color: #000;
+      }
 
-  /* =========================
+      /* =========================
      WRAPPER
      ========================= */
-  .dokmulti-wrap {
-    width: 100%;
-    max-width: 780px;
-    margin: auto;
-  }
+      .dokmulti-wrap {
+         width: 100%;
+         max-width: 780px;
+         margin: auto;
+      }
 
-  /* =========================
+      /* =========================
      PAGE
      ========================= */
-  .dokmulti-page {
-    border: 1px solid #000;
-    padding: 18px;
-    min-height: 100%;
-    background: #fff;
-    position: relative;
-    page-break-after: always;
-  }
+      .dokmulti-page {
+         border: 1px solid #000;
+         padding: 18px;
+         min-height: 100%;
+         background: #fff;
+         position: relative;
+         page-break-after: always;
+      }
 
-  /* =========================
+      /* =========================
      WATERMARK
      ========================= */
-  .dokmulti-watermark {
-    position: absolute;
-    top: 40%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 80pt;
-    color: rgba(0, 0, 0, 0.06);
-    font-weight: bold;
-    pointer-events: none;
-    user-select: none;
-    white-space: nowrap;
-  }
+      .dokmulti-watermark {
+         position: absolute;
+         top: 40%;
+         left: 50%;
+         transform: translate(-50%, -50%);
+         font-size: 80pt;
+         color: rgba(0, 0, 0, 0.06);
+         font-weight: bold;
+         pointer-events: none;
+         user-select: none;
+         white-space: nowrap;
+      }
 
-  /* =========================
+      /* =========================
      TITLE
      ========================= */
-  .dokmulti-title {
-    text-align: center;
-    font-size: 18pt;
-    font-weight: bold;
-    margin-bottom: 4px;
-  }
+      .dokmulti-title {
+         text-align: center;
+         font-size: 18pt;
+         font-weight: bold;
+         margin-bottom: 4px;
+      }
 
-  .dokmulti-subtitle {
-    text-align: center;
-    font-size: 12pt;
-    margin-bottom: 10px;
-  }
+      .dokmulti-subtitle {
+         text-align: center;
+         font-size: 12pt;
+         margin-bottom: 10px;
+      }
 
-  /* =========================
+      /* =========================
      QR CODE
      ========================= */
-  .dokmulti-qr-img {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    width: 110px;
-    height: 110px;
-    border: 1px solid #000;
-    background: #fff;
-    object-fit: cover;
-  }
+      .dokmulti-qr-img {
+         position: absolute;
+         top: 15px;
+         right: 15px;
+         width: 110px;
+         height: 110px;
+         border: 1px solid #000;
+         background: #fff;
+         object-fit: cover;
+      }
 
-  /* =========================
+      /* =========================
      TABLE
      ========================= */
-  .dokmulti-table {
-    width: 100%;
-    margin-top: 10px;
-    border-collapse: collapse;
-  }
+      .dokmulti-table {
+         width: 100%;
+         margin-top: 10px;
+         border-collapse: collapse;
+      }
 
-  .dokmulti-table td {
-    padding: 4px 3px;
-    vertical-align: top;
-  }
+      .dokmulti-table td {
+         padding: 4px 3px;
+         vertical-align: top;
+      }
 
-  /* =========================
+      /* =========================
      LINE
      ========================= */
-  .dokmulti-line {
-    border-bottom: 1px dotted #333;
-    display: inline-block;
-    width: 260px;
-    height: 15px;
-  }
+      .dokmulti-line {
+         border-bottom: 1px dotted #333;
+         display: inline-block;
+         width: 260px;
+         height: 15px;
+      }
 
-  /* =========================
+      /* =========================
      PHOTO
      ========================= */
-  .dokmulti-photo-box {
-    width: 100%;
-    height: 350px;
-    border: 2px solid #000;
-    margin: 18px 0;
-    background: #f0f0f0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-  }
+      .dokmulti-photo-box {
+         width: 100%;
+         height: 350px;
+         border: 2px solid #000;
+         margin: 18px 0;
+         background: #f0f0f0;
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         overflow: hidden;
+      }
 
-  .dokmulti-photo {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
+      .dokmulti-photo {
+         width: 100%;
+         height: 100%;
+         object-fit: contain;
+      }
 
-  .dokmulti-photo-date {
-    text-align: center;
-    font-size: 10pt;
-    margin-top: 4px;
-    color: #333;
-  }
+      .dokmulti-photo-date {
+         text-align: center;
+         font-size: 10pt;
+         margin-top: 4px;
+         color: #333;
+      }
 
-  /* =========================
+      /* =========================
      SIGNATURE
      ========================= */
-  .dokmulti-sign {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 25px;
-  }
+      .dokmulti-sign {
+         display: flex;
+         justify-content: space-between;
+         margin-top: 25px;
+      }
 
-  .dokmulti-sign-box {
-    width: 45%;
-    text-align: center;
-  }
+      .dokmulti-sign-box {
+         width: 45%;
+         text-align: center;
+      }
 
-  .dokmulti-sign-img {
-    width: 150px;
-    height: 70px;
-    object-fit: contain;
-  }
+      .dokmulti-sign-img {
+         width: 150px;
+         height: 70px;
+         object-fit: contain;
+      }
 
-  .dokmulti-sign-line {
-    border-top: 1px solid #000;
-    padding-top: 5px;
-    margin-top: 5px;
-  }
+      .dokmulti-sign-line {
+         border-top: 1px solid #000;
+         padding-top: 5px;
+         margin-top: 5px;
+      }
 
-  /* =========================
+      /* =========================
      PAGE NUMBER
      ========================= */
-  .dokmulti-page-number {
-    position: absolute;
-    bottom: 8px;
-    right: 15px;
-    font-size: 10pt;
-    color: #444;
-  }
+      .dokmulti-page-number {
+         position: absolute;
+         bottom: 8px;
+         right: 15px;
+         font-size: 10pt;
+         color: #444;
+      }
 
-  /* =========================
+      /* =========================
      GRID FOTO PERAWATAN
      ========================= */
-  .dokmulti-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-top: 20px;
-  }
+      .dokmulti-grid {
+         display: grid;
+         grid-template-columns: 1fr 1fr;
+         gap: 12px;
+         margin-top: 20px;
+      }
 
-  .dokmulti-grid-item {
-    width: 100%;
-    height: 300px;
-    overflow: hidden;
-    border: 1px solid #ccc;
-    background: #fafafa;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-  }
+      .dokmulti-grid-item {
+         width: 100%;
+         height: 300px;
+         overflow: hidden;
+         border: 1px solid #ccc;
+         background: #fafafa;
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         flex-direction: column;
+      }
 
-  .dokmulti-grid-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+      .dokmulti-grid-item img {
+         width: 100%;
+         height: 100%;
+         object-fit: cover;
+      }
 
-  /* =========================
+      /* =========================
      PRINT CONTROL
      ========================= */
-  @media print {
-    .dokmulti-noprint {
-      display: none !important;
-    }
-  }
+      @media print {
+         .dokmulti-noprint {
+            display: none !important;
+         }
+      }
 
-  .dokmulti-noprint {
-    text-align: center;
-    margin-top: 20px;
-  }
-</style>
+      .dokmulti-noprint {
+         text-align: center;
+         margin-top: 20px;
+      }
+   </style>
 
-  <div id="dokmulti_container"></div>
+   <div id="dokmulti_container"></div>
 
-  <div class="dokmulti-noprint">
-    <button onclick="window.print()">🖨 CETAK SEMUA</button>
-  </div>
+   <div class="dokmulti-noprint">
+      <button onclick="window.print()">🖨 CETAK SEMUA</button>
+   </div>
 
 </div>
 
@@ -278,7 +278,9 @@
                         <div style="width:100%;height:100%;display:flex;justify-content:center;align-items:center;overflow:hidden;">
                            <img src="${baseURL + p.foto_path}" style="width:100%;height:100%;object-fit:cover;">
                         </div>
-                        <div class="dokmulti-photo-date">Tanggal: ${p.tgl_upload ?? "-"}</div>
+                       <div class="dokmulti-photo-date">
+                        Tanggal: ${(p.tgl_upload || '-').split(' ')[0]}
+                        </div>
                      </div>
                   `)
                   .join("");
