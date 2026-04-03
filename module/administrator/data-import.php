@@ -116,10 +116,7 @@ require '../../controller/view.php';
             <select id="importType" class="form-select">
               <option value="">-- Pilih --</option>
               <option value="pasien">Master Pasien</option>
-              <option value="dokter">Master Dokter</option>
               <option value="farmasi">Master Farmasi</option>
-              <option value="visit">Master Visit</option>
-              <option value="faskes">Master Faskes</option>
             </select>
           </div>
 
@@ -337,8 +334,8 @@ require '../../controller/view.php';
         let opt = '<option value="">-- Pilih Faskes --</option>';
 
         res.data.forEach(f => {
-          opt += `<option value="${f.id_faskes}">
-                  ${f.faskes_name} (${f.faskes_code})
+          opt += `<option value="${f.id_customer}">
+                  ${f.clinic_name} (${f.id_customer})
                 </option>`;
         });
 
