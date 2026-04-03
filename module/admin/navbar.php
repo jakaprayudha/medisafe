@@ -205,7 +205,7 @@ $dataCust = mysqli_fetch_array($cust);
                </a>
 
                <div class="dropdown-menu dropdown-menu-end shadow border-0">
-                  <a class="dropdown-item" href="javascript:;">Profile</a>
+                  <a class="dropdown-item" href="module/admin/profile">Profile</a>
                   <a class="dropdown-item" href="javascript:;">Pengaturan</a>
                   <div class="dropdown-divider"></div>
                   <a href="" class="dropdown-item text-danger">Logout</a>
