@@ -73,5 +73,8 @@
            <button class="nav-link <?= ($current == 'resume_medis.php') ? 'active' : '' ?>">Resume Medis</button>
         </a>
         <button onclick="window.history.back()" class="nav-link <?= ($current == 'pemeriksaan-rawat-inap') ? '' : '' ?>">Kembali</button>
+        <?php
+         require 'trigger_pulang.php';
+         ?>
      </div>
   </nav>

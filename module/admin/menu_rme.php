@@ -27,5 +27,8 @@
         <a href="module/admin/rawat_inap?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=a">
            <button class="nav-link <?= ($current == 'rawat_inap.php') ? 'active' : '' ?>">Rawat Inap</button>
         </a>
+        <?php
+         require 'trigger_pulang.php';
+         ?>
      </div>
   </nav>
