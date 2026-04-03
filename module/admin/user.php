@@ -140,7 +140,8 @@ require '../../controller/view.php';
               <label class="form-label required" id="comp_code">Nama Dokter</label>
               <select name="fullname" id="fullname" class="form-select" required>
                 <?php
-                $query = tampildata("SELECT * FROM ms_doctor WHERE doctor_status='1'");
+                $id_customer = $_SESSION['id_customer'];
+                $query = tampildata("SELECT * FROM ms_doctor WHERE doctor_status='1' AND id_customer='$id_customer' ORDER BY doctor_name ASC");
                 ?>
                 <option value="">PILIH DOKTER</option>
                 <?php foreach ($query as $rows): ?>
