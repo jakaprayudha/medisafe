@@ -52,6 +52,7 @@ switch ($method) {
             'doctor_address',
             'doctor_sip',
             'doctor_str',
+            'doctor_nik',
             'doctor_expaired',
             'doctor_his',
             'str_lembaga',
