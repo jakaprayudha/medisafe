@@ -36,6 +36,16 @@
             <span class="hide-menu">Data Import</span>
          </a>
       </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Master Data') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/administrator/master-data"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:folder-outline"></iconify-icon>
+            <span class="hide-menu">Master Data</span>
+         </a>
+      </li>
    </ul>
 </nav>
 

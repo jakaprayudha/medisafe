@@ -25,7 +25,7 @@ require '../../controller/view.php';
     <div class="body-wrapper">
       <!--  Header Start -->
       <?php
-      require '../admin/navbar.php';
+      require '../admin/navbar-master.php';
       ?>
       <!--  Header End -->
       <div class="body-wrapper-inner">
@@ -71,15 +71,16 @@ require '../../controller/view.php';
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
-                          <th>Nomor PKS</th>
                           <th>Kode Faskes</th>
                           <th>Nama Faskes</th>
-                          <th>PIC</th>
                           <th>Pasien</th>
                           <th>Dokter</th>
+                          <th>Nakes</th>
                           <th>Farmasi</th>
                           <th>Visit</th>
-                          <th>Status</th>
+                          <th>Poli</th>
+                          <th>Tarif</th>
+                          <th>Provider</th>
                         </tr>
                       </thead>
                       <tbody></tbody>
@@ -170,39 +171,25 @@ require '../../controller/view.php';
         dataSrc: function(json) {
           return json.data.map(function(row) {
             return {
-              pks: row.contract_number ?? '-',
               code: row.faskes_code ?? '-',
-              name: row.faskes_name ?? '-',
-              pic: row.pic_name ? `${row.pic_name} (${row.pic_phone})` : '-',
-
+              name: row.clinic_name ?? '-',
               pasien: row.total_pasien > 0 ? '✔️' : '❌',
               dokter: row.total_dokter > 0 ? '✔️' : '❌',
+              nakes: row.total_nakes > 0 ? '✔️' : '❌',
               farmasi: row.total_farmasi > 0 ? '✔️' : '❌',
               visit: row.total_visit > 0 ? '✔️' : '❌',
-
-              status: `
-      <label class="switch">
-        <input type="checkbox" class="toggle-status" 
-          data-id="${row.id_faskes}" 
-          ${row.faskes_status == '1' ? 'checked' : ''}>
-        <span class="slider round"></span>
-      </label>
-    `
+              poli: row.total_poli > 0 ? '✔️' : '❌',
+              tarif: row.total_tarif > 0 ? '✔️' : '❌',
+              provider: row.total_provider > 0 ? '✔️' : '❌'
             };
           });
         }
       },
       columns: [{
-          data: "pks"
-        },
-        {
           data: "code"
         },
         {
           data: "name"
-        },
-        {
-          data: "pic"
         },
         {
           data: "pasien"
@@ -211,13 +198,22 @@ require '../../controller/view.php';
           data: "dokter"
         },
         {
+          data: "nakes"
+        },
+        {
           data: "farmasi"
         },
         {
           data: "visit"
         },
         {
-          data: "status"
+          data: "poli"
+        },
+        {
+          data: "tarif"
+        },
+        {
+          data: "provider"
         }
       ],
       footerCallback: function(row, data, start, end, display) {
@@ -434,7 +430,7 @@ require '../../controller/view.php';
       .then(res => {
         // restore button state
         $btn.prop('disabled', false).html(originalText);
-        
+
         if (res.status === 'success') {
           // Build detailed response summary
           let summaryHtml = `

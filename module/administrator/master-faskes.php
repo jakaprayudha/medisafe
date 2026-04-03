@@ -25,7 +25,7 @@ require '../../controller/view.php';
     <div class="body-wrapper">
       <!--  Header Start -->
       <?php
-      require '../admin/navbar.php';
+      require '../admin/navbar-master.php';
       ?>
       <!--  Header End -->
       <div class="body-wrapper-inner">

@@ -25,18 +25,22 @@ function getData()
    global $koneksi;
 
    // 🔥 QUERY SUDAH DIGABUNG (ADA COUNT)
-   $query = "
-      SELECT 
+   $query = "SELECT 
          f.*,
 
-         (SELECT COUNT(*) FROM ms_patient p WHERE p.id_customer = f.id_faskes) AS total_pasien,
-         (SELECT COUNT(*) FROM ms_doctor d WHERE d.id_customer = f.id_faskes) AS total_dokter,
-         (SELECT COUNT(*) FROM ms_pharmacy fa WHERE fa.id_customer = f.id_faskes) AS total_farmasi,
-         (SELECT COUNT(*) FROM pasien_visit v WHERE v.id_customer = f.id_faskes) AS total_visit
+         (SELECT COUNT(*) FROM ms_patient p WHERE p.id_customer = f.id_customer) AS total_pasien,
+         (SELECT COUNT(*) FROM ms_doctor d WHERE d.id_customer = f.id_customer) AS total_dokter,
+         (SELECT COUNT(*) FROM ms_pharmacy fa WHERE fa.id_customer = f.id_customer) AS total_farmasi,
+         (SELECT COUNT(*) FROM pasien_visit v WHERE v.id_customer = f.id_customer) AS total_visit,
+         (SELECT COUNT(*) FROM ms_poli poli WHERE poli.id_customer = f.id_customer) AS total_poli,
+         (SELECT COUNT(*) FROM ms_provider pv WHERE pv.id_customer = f.id_customer) AS total_provider,
+         (SELECT COUNT(*) FROM ms_nurse nr WHERE nr.id_customer = f.id_customer) AS total_nakes,
+         (SELECT COUNT(*) FROM ms_tarif tf WHERE tf.id_customer = f.id_customer) AS total_tarif
+         
 
-      FROM ms_faskes f
-      WHERE f.faskes_status != 99
-      ORDER BY f.faskes_name DESC
+      FROM setting_clinic f
+      WHERE f.status != 99
+      ORDER BY f.clinic_name DESC
    ";
 
    $result = mysqli_query($koneksi, $query);
