@@ -84,7 +84,7 @@ require '../../controller/view.php';
                               </a>
                             </li>
                             <li>
-                              <a class="dropdown-item " href="module/admisi/pendaftaran">
+                              <a class="dropdown-item poli-btn" href="javascript:;">
                                 <i class="fas fa-stethoscope me-2 text-success"></i> Pasien Poliklinik
                               </a>
                             </li>
@@ -157,8 +157,7 @@ require '../../controller/view.php';
           <select name="id_doctor" id="id_doctor" class="form-select" required>
             <option value="">PILIH</option>
             <?php
-            $id_customer = $_SESSION['id_customer'];
-            $getdoc = tampildata("SELECT * FROM ms_doctor WHERE doctor_status='1' AND id_customer='$id_customer' ");
+            $getdoc = tampildata("SELECT * FROM ms_doctor WHERE doctor_status='1'");
             foreach ($getdoc as $doc) :
             ?>
               <option value="<?= $doc['id_doctor'] ?>"><?= $doc['doctor_name'] ?></option>
@@ -625,7 +624,7 @@ require '../../controller/view.php';
   $(document).ready(function() {
     $('#filterModal').on('show.bs.modal', function() {
       // loadDoctors();
-      APP.ambil_data('#kdDokter', 'dokter/0/15', 'nmDokter', 'nmDokter', false);
+      APP.ambil_data('#kdDokter', 'dokter/0/15', 'kdDokter', 'nmDokter', false);
       loadProviders();
       loadPoli();
     });
@@ -811,7 +810,7 @@ require '../../controller/view.php';
               "screening": row.tekanan_darah ?
                 '<span class="badge bg-success">✔️ Sudah</span>' : '<span class="badge bg-secondary">❌ Belum</span>',
               "provider": row.provider_name ?? "-",
-              "status": row.visit_status === 99 ? '<span class="badge bg-danger text-center d-block">Batal</span>' : row.visit_status === 1 ? '<span class="badge bg-warning text-center d-block">Menunggu</span>' : row.visit_status === 2 ? '<span class="badge bg-secondary text-center d-block">Dipanggil</span>' : row.visit_status === 3 ? '<span class="badge bg-primary text-center d-block">Dilayani</span>' : row.visit_status === 4 ? '<span class="badge bg-success text-center d-block">Selesai</span>' : '<span class="badge bg-dark text-center d-block">Belum Dilayani</span>'
+              "status": row.visit_status === 99 ? '<span class="badge bg-danger text-center d-block">Batal</span>' : row.visit_status === 1 ? '<span class="badge bg-warning text-center d-block">Menunggu</span>' : row.visit_status === 2 ? '<span class="badge bg-secondary text-center d-block">Dipanggil</span>' : row.visit_status === 3 ? '<span class="badge bg-primary text-center d-block">Dilayani</span>' : row.visit_status === 4 ? '<span class="badge bg-success text-center d-block">Selesai</span>' : '<span class="badge bg-dark text-center d-block">Unknown</span>'
             };
           });
         }
@@ -1213,11 +1212,24 @@ require '../../controller/view.php';
     const now = new Date();
     $('#poli_date').val(now.toISOString().split('T')[0]);
     $('#poli_time').val(now.toTimeString().slice(0, 5));
-    APP.ambil_data('#poli_doctor', 'dokter/0/15', 'nmDokter', 'nmDokter', true);
+    APP.ambil_data('#poli_doctor', 'dokter/0/15', 'kdDokter', 'nmDokter', true);
     // loadDoctors();
     loadPoli();
     loadProvider();
   });
+
+
+  function loadDoctors() {
+    fetch('controller/visit/getdoctor')
+      .then(res => res.json())
+      .then(res => {
+        let html = '<option value="">Pilih Dokter</option>';
+        res.forEach(d => {
+          html += `<option value="${d.id_doctor}">${d.doctor_name}</option>`;
+        });
+        $('#poli_doctor').html(html);
+      });
+  }
 
   function loadPoli() {
     poliSakit = true;
@@ -1238,7 +1250,7 @@ require '../../controller/view.php';
         select.empty();
         $.each(response.data, function(index, item) {
           if (item.poliSakit == poliSakit) {
-            select.append(new Option(item.nmPoli, item.nmPoli, false, false));
+            select.append(new Option(item.nmPoli, item.kdPoli, false, false));
           }
         });
         select.prop('disabled', false);
