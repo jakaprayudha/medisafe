@@ -67,13 +67,14 @@ $amount = $data['total'] ?? 0;
           <?php   }
           ?>
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5>Selamat Datang, <?= $_SESSION['fullname'] ?></h5>
+            <h5>👋 Selamat Datang, <?= $_SESSION['fullname'] ?></h5>
             <span><?= date('l, d F Y') ?></span>
           </div>
           <!--  Row 1 -->
           <?php
           if ($role == 'admin') {
-            require '../dashboard/dashboard-admin.php';
+            // require '../dashboard/dashboard-admin.php';
+            require '../dashboard/welcome-page.php';
           } else if ($role == 'receptionis') {
             require '../dashboard/dashboard-admisi.php';
           } else if ($role == 'dokter') {

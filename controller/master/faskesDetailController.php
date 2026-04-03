@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
       $q = mysqli_query($koneksi, "
             SELECT * FROM ms_faskes 
-            WHERE order_number = '$no'
+            WHERE id_clinic = '$no'
             LIMIT 1
         ");
 

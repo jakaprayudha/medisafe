@@ -446,7 +446,7 @@ require '../../controller/view.php';
           });
 
           let idField = document.getElementById('faskes_id');
-          if (idField) idField.value = data.id_faskes ?? '';
+          if (idField) idField.value = no ?? '';
 
         } else {
           Swal.fire('Gagal!', res.message, 'error');

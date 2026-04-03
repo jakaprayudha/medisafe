@@ -245,7 +245,7 @@ function updateData()
    $values[] = $id;
    $types = str_repeat('s', count($values) - 1) . "i";
 
-   $query = "UPDATE ms_faskes SET " . implode(',', $fields) . " WHERE id_faskes=?";
+   $query = "UPDATE ms_faskes SET " . implode(',', $fields) . " WHERE id_clinic=?";
    $stmt = $koneksi->prepare($query);
 
    if ($stmt) {
