@@ -17,6 +17,15 @@ if (!$id_faskes) {
    exit;
 }
 
+// Trim and remove extra whitespaces
+function removeWhitespaces($value) {
+   if (is_string($value)) {
+      // Trim and replace multiple consecutive whitespaces with single space
+      return preg_replace('/\s+/', ' ', trim($value));
+   }
+   return $value;
+}
+
 switch ($type) {
 
    // 🔹 MASTER FASKES (tidak perlu id_faskes)
@@ -37,36 +46,161 @@ switch ($type) {
 
    // 🔹 PASIEN
    case 'pasien':
-      foreach ($rows as $r) {
+      $successCount = 0;
+      $duplicateData = [];
+      $errorData = [];
 
-         $stmt = $koneksi->prepare("
-            INSERT INTO ms_patient (id_customer, patient_name, patient_nik, nomor_rm, patient_datebirth, patient_gender, patient_religion, patient_status_lainnya, patient_blood, patient_education, patient_occupation, patient_phone, patient_mail, patient_address, total_visit, registration_date, tag, description)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ");
+      try {
+         foreach ($rows as $rowIndex => $r) {
+            try {
+               // Trim all data and remove extra whitespaces
+               $nomor_ktp = removeWhitespaces($r['Nomor KTP'] ?? '');
+               $nomor_rm = removeWhitespaces($r['nomor RM'] ?? '');
+               $patient_name = removeWhitespaces($r['Nama Pasien'] ?? '');
+               $patient_datebirth = removeWhitespaces($r['Tanggal Lahir'] ?? '');
+               $patient_gender = removeWhitespaces($r['Jenis Kelamin'] ?? '');
+               $patient_religion = removeWhitespaces($r['Agama'] ?? '');
+               $patient_status = removeWhitespaces($r['Status'] ?? '');
+               $patient_blood = removeWhitespaces($r['Golongan darah'] ?? '');
+               $patient_education = removeWhitespaces($r['Pendidikan terakhir'] ?? '');
+               $patient_occupation = removeWhitespaces($r['Pekerjaan'] ?? '');
+               $patient_phone = removeWhitespaces($r['No. HP'] ?? '');
+               $patient_mail = removeWhitespaces($r['Email'] ?? '');
+               $patient_address = removeWhitespaces($r['Alamat'] ?? '');
+               $total_visit = removeWhitespaces($r['Jumlah Kunjungan'] ?? '0');
+               $registration_date = removeWhitespaces($r['Tanggal Terdaftar'] ?? '');
+               $tag = removeWhitespaces($r['Tag'] ?? '');
+               $description = removeWhitespaces($r['Deskripsi'] ?? '');
 
-         $stmt->bind_param(
-            "ssssssssssssssssss",
-            $id_faskes,
-            $r['Nama Pasien'],
-            $r['Nomor KTP'],
-            $r['nomor RM'],
-            $r['Tanggal Lahir'],
-            $r['Jenis Kelamin'],
-            $r['Agama'],
-            $r['Status'],
-            $r['Golongan darah'],
-            $r['Pendidikan terakhir'],
-            $r['Pekerjaan'],
-            $r['No. HP'],
-            $r['Email'],
-            $r['Alamat'],
-            $r['Jumlah Kunjungan'],
-            $r['Tanggal Terdaftar'],
-            $r['Tag'],
-            $r['Deskripsi']
-         );
+               // Validate required fields
+               if (empty($nomor_ktp) && empty($nomor_rm)) {
+                  throw new Exception('Nomor KTP atau nomor RM harus diisi');
+               }
 
-         $stmt->execute();
+               if (empty($patient_name)) {
+                  throw new Exception('Nama Pasien harus diisi');
+               }
+
+               // Check for duplicates based on nomor_ktp
+               if (!empty($nomor_ktp)) {
+                  $checkKtp = $koneksi->prepare("
+                     SELECT id_patient FROM ms_patient 
+                     WHERE patient_nik = ? AND id_customer = ?
+                  ");
+                  $checkKtp->bind_param("ss", $nomor_ktp, $id_faskes);
+                  $checkKtp->execute();
+                  $resultKtp = $checkKtp->get_result();
+
+                  if ($resultKtp->num_rows > 0) {
+                     throw new Exception('Nomor KTP sudah terdaftar');
+                  }
+                  $checkKtp->close();
+               }
+
+               // Check for duplicates based on nomor_rm
+               if (!empty($nomor_rm)) {
+                  $checkRm = $koneksi->prepare("
+                     SELECT id_patient FROM ms_patient 
+                     WHERE nomor_rm = ? AND id_customer = ?
+                  ");
+                  $checkRm->bind_param("ss", $nomor_rm, $id_faskes);
+                  $checkRm->execute();
+                  $resultRm = $checkRm->get_result();
+
+                  if ($resultRm->num_rows > 0) {
+                     throw new Exception('Nomor RM sudah terdaftar');
+                  }
+                  $checkRm->close();
+               }
+
+               // Insert data if no duplicates
+               $stmt = $koneksi->prepare("
+                  INSERT INTO ms_patient (id_customer, patient_name, patient_nik, nomor_rm, patient_datebirth, patient_gender, patient_religion, patient_status_lainnya, patient_blood, patient_education, patient_occupation, patient_phone, patient_mail, patient_address, total_visit, registration_date, tag, description)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+               ");
+
+               if (!$stmt) {
+                  throw new Exception('Error: ' . $koneksi->error);
+               }
+
+               $stmt->bind_param(
+                  "ssssssssssssssssss",
+                  $id_faskes,
+                  $patient_name,
+                  $nomor_ktp,
+                  $nomor_rm,
+                  $patient_datebirth,
+                  $patient_gender,
+                  $patient_religion,
+                  $patient_status,
+                  $patient_blood,
+                  $patient_education,
+                  $patient_occupation,
+                  $patient_phone,
+                  $patient_mail,
+                  $patient_address,
+                  $total_visit,
+                  $registration_date,
+                  $tag,
+                  $description
+               );
+
+               if (!$stmt->execute()) {
+                  throw new Exception('Execute gagal: ' . $stmt->error);
+               }
+
+               $stmt->close();
+               $successCount++;
+
+            } catch (Exception $e) {
+               // Check if it's a duplicate error
+               if (strpos($e->getMessage(), 'sudah terdaftar') !== false) {
+                  $duplicateData[] = [
+                     'row' => $rowIndex + 1,
+                     'ktp' => $nomor_ktp ?? '',
+                     'rm' => $nomor_rm ?? '',
+                     'nama' => $patient_name ?? '',
+                     'reason' => $e->getMessage()
+                  ];
+               } else {
+                  $errorData[] = [
+                     'row' => $rowIndex + 1,
+                     'ktp' => $nomor_ktp ?? '',
+                     'rm' => $nomor_rm ?? '',
+                     'nama' => $patient_name ?? '',
+                     'error' => $e->getMessage()
+                  ];
+               }
+            }
+         }
+
+         // Return comprehensive response
+         $response = [
+            'status' => 'success',
+            'message' => "Import selesai: $successCount data berhasil diimport",
+            'summary' => [
+               'total_rows' => count($rows),
+               'success' => $successCount,
+               'duplicates' => count($duplicateData),
+               'errors' => count($errorData)
+            ]
+         ];
+
+         if (!empty($duplicateData)) {
+            $response['duplicates'] = $duplicateData;
+         }
+
+         if (!empty($errorData)) {
+            $response['errors'] = $errorData;
+         }
+
+         echo json_encode($response);
+
+      } catch (Exception $e) {
+         echo json_encode([
+            'status' => 'error',
+            'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+         ]);
       }
       break;
 
