@@ -26,6 +26,8 @@ $role = $_SESSION['roles']; // ambil dari session login
          require 'menu/menu-kasir.php';
       } else if ($role == 'superadmin') {
          require 'menu/menu-administrator.php';
+      } else if ($role == 'perawat' or $role == 'bidan') {
+         require 'menu/menu-perawat.php';
       } else {
          require 'menu/menu-admin.php';
       }
