@@ -94,6 +94,7 @@ require '../../controller/view.php';
               <label class="form-label required">Roles</label>
               <select name="roles" id="roles" class="form-select" required>
                 <option value="">PILIH</option>
+                <option value="bidan">Bidan</option>
                 <option value="perawat">Perawat</option>
                 <option value="receptionis">Receptionis</option>
                 <option value="kasir">Kasir</option>
