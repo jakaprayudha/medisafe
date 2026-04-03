@@ -135,7 +135,7 @@ function getData($id_customer)
 
    $query = "SELECT d.*, p.poli_name 
              FROM ms_doctor d
-             INNER JOIN ms_poli p 
+             LEFT JOIN ms_poli p 
              ON p.id_poli = d.id_poli 
              AND p.id_customer = d.id_customer
              WHERE d.id_customer = ?

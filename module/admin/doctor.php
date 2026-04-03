@@ -93,7 +93,8 @@ require '../../controller/view.php';
               <select name="id_poli" id="id_poli" class="form-select" required>
                 <option value="">PILIH</option>
                 <?php
-                $getpoli = tampildata("SELECT * FROM ms_poli WHERE poli_status='1'");
+                $id_customer = $_SESSION['id_customer'];
+                $getpoli = tampildata("SELECT * FROM ms_poli WHERE poli_status='1' AND id_customer = '$id_customer' ORDER BY poli_name ASC");
                 ?>
                 <?php foreach ($getpoli as $poli) : ?>
                   <option value="<?= $poli['id_poli'] ?>"><?= $poli['poli_name'] ?></option>
