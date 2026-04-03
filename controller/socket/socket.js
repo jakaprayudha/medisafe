@@ -9,7 +9,7 @@ if (!window.io) {
     startApp();
 }
 function startApp() {
-    let enableSocket = true;
+    let enableSocket = false;
     const data = JSON.parse(localStorage.getItem("rs_config"));
     let path_url = window.location.pathname;
     let parts = path_url.split("/");
@@ -17,22 +17,29 @@ function startApp() {
     let moduleName = moduleIndex !== -1 ? parts[moduleIndex + 1].toUpperCase() : null;
     let pageName = moduleIndex !== -1 ? parts[moduleIndex + 2] : null;
     let target = moduleName;
+    let pages = ["counter-call", "display-admisi"];
+    if (pages.includes(pageName)) {
+        enableSocket = true;
+    }
+    // console.log(
     $(document).ready(function () {
         if (enableSocket) {
             const socket = io(base_url, {
                 reconnection: true
             });
             socket.on("connect", () => {
-                if (pageName == "display-admisi") {
-                    socket.emit("join", data.id_customer + "_" + pageName);
-                } else {
-                    socket.emit("join", data.id_customer + "_" + target);
-                }
+                page.forEach((pageName) => {
+                    if (pageName == "display-admisi") {
+                        socket.emit("join", data.id_customer + "_" + pageName);
+                    } else {
+                        socket.emit("join", data.id_customer + "_" + target);
+                    }
+                })
                 // console.log(data.id_customer + "_" + target);
                 // console.log(pageName);
             });
             socket.on('trigger', data => {
-                let key = target +"/"+ pageName;
+                let key = target + "/" + pageName;
                 // console.log(key);
                 switch (key) {
                     case "ADMISI/counter-call":
@@ -44,7 +51,7 @@ function startApp() {
                 }
             });
             socket.on("panggil", data => {
-                let key = target +"/"+ pageName;
+                let key = target + "/" + pageName;
                 console.log(key)
                 switch (key) {
                     case "DISPLAY/display-admisi":
