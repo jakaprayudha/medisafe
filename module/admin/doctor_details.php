@@ -194,16 +194,31 @@ $no = $_GET['no'];
                               </select>
                             </div>
                           </div>
-                          <div class="col-3">
-                            <div class="mb-3">
-                              <label class="form-label">Nomor Registrasi (STR)</label>
-                              <input type="text" class="form-control" name="str_number" required id="str_number">
+                          <div class="row">
+                            <div class="col-3">
+                              <div class="mb-3">
+                                <label class="form-label">Nomor Registrasi (STR)</label>
+                                <input type="text" class="form-control" name="str_number" required id="str_number">
+                              </div>
                             </div>
-                          </div>
-                          <div class="col-3">
-                            <div class="mb-3">
-                              <label class="form-label">Masa Berlaku STR</label>
-                              <input type="date" class="form-control" name="str_date_expaired" required id="str_date_expaired">
+
+                            <div class="col-3">
+                              <div class="mb-3">
+                                <label class="form-label">Masa Berlaku STR</label>
+                                <input type="date" class="form-control" name="str_date_expaired" id="str_date_expaired" required>
+                              </div>
+                            </div>
+
+                            <div class="col-3 d-flex align-items-end">
+                              <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox"
+                                  id="str_lifetime"
+                                  name="str_lifetime"
+                                  value="1">
+                                <label class="form-check-label" for="str_lifetime">
+                                  Berlaku Selamanya
+                                </label>
+                              </div>
                             </div>
                           </div>
                           <div class="col-6">
@@ -370,6 +385,18 @@ $no = $_GET['no'];
         })
         .catch(err => console.error("Error:", err));
     }
+
+    const checkbox = document.getElementById("str_lifetime");
+    const dateInput = document.getElementById("str_date_expaired");
+
+    checkbox.addEventListener("change", function() {
+      if (this.checked) {
+        dateInput.value = "";
+        dateInput.disabled = true;
+      } else {
+        dateInput.disabled = false;
+      }
+    });
 
     // Handle Identitas submit
     const formIdentitas = document.getElementById("formIdentitas");

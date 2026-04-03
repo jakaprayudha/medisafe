@@ -75,6 +75,20 @@ switch ($method) {
             }
          }
 
+         // handle STR lifetime
+         $strLifetime = isset($_POST['str_lifetime']) ? 1 : 0;
+
+         if ($strLifetime == 1) {
+            // override jadi NULL
+            $updates[] = "str_date_expaired = NULL";
+         } else {
+            if (isset($_POST['str_date_expaired'])) {
+               $date = $koneksi->real_escape_string($_POST['str_date_expaired']);
+               $updates[] = "str_date_expaired = '$date'";
+            }
+         }
+
+
          if (!empty($updates)) {
             $updates[] = "updated_at = NOW()";
             $sql = "UPDATE ms_doctor SET " . implode(", ", $updates) . " WHERE doctor_number = '$doctorNo'";
