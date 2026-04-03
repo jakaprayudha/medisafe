@@ -35,6 +35,8 @@ function createData()
 {
    global $koneksi;
 
+   header('Content-Type: application/json');
+
    if (empty($_POST)) {
       echo json_encode([
          'status' => 'error',
@@ -43,20 +45,36 @@ function createData()
       exit;
    }
 
-   // Ambil semua field yang valid untuk tabel pharmacy_order_buy
+   // ===============================
+   // 🔥 GENERATE ID CUSTOMER (COUNT + 1)
+   // ===============================
+   $q = mysqli_query($koneksi, "
+      SELECT COUNT(*) as total 
+      FROM setting_clinic
+   ");
+
+   if (!$q) {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Query gagal: ' . mysqli_error($koneksi)
+      ]);
+      exit;
+   }
+
+   $d = mysqli_fetch_assoc($q);
+   $total = (int)$d['total'];
+
+   $id_customer = $total + 1;
+
+   // ===============================
+   // FIELD YANG DIIZINKAN
+   // ===============================
    $allowedFields = [
-      'contract_number',
-      'faskes_name',
-      'pic_name',
-      'pic_phone',
-      'contract_start',
-      'contract_end',
-      'contract_amount',
-      'address'
+      'clinic_name'
    ];
 
-   $fields = ['order_number']; // tambahkan order_number
-   $values = [generateDoctorNumber($koneksi)];
+   $fields = ['id_customer'];
+   $values = [$id_customer];
 
    foreach ($allowedFields as $f) {
       if (isset($_POST[$f])) {
@@ -65,7 +83,7 @@ function createData()
       }
    }
 
-   if (empty($fields)) {
+   if (count($fields) <= 1) {
       echo json_encode([
          'status' => 'error',
          'message' => 'Tidak ada data yang dikirim.'
@@ -73,64 +91,49 @@ function createData()
       exit;
    }
 
-   // Buat placeholder dan tipe untuk prepared statement
+   // ===============================
+   // PREPARE QUERY
+   // ===============================
    $placeholders = implode(', ', array_fill(0, count($fields), '?'));
    $columns = implode(', ', $fields);
-   $types = str_repeat('s', count($fields)); // semua string
 
-   $query = "INSERT INTO ms_faskes ($columns) VALUES ($placeholders)";
+   $types = 'i' . str_repeat('s', count($fields) - 1);
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param($types, ...$values);
+   $query = "INSERT INTO setting_clinic ($columns) VALUES ($placeholders)";
 
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil ditambahkan.'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menambahkan data: ' . $stmt->error
-         ]);
-      }
+   $stmt = $koneksi->prepare($query);
 
-      $stmt->close();
+   if (!$stmt) {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Prepare gagal: ' . $koneksi->error
+      ]);
+      exit;
+   }
+
+   $stmt->bind_param($types, ...$values);
+
+   if ($stmt->execute()) {
+      echo json_encode([
+         'status' => 'success',
+         'message' => 'Data berhasil ditambahkan.',
+         'id_customer' => $id_customer
+      ]);
    } else {
       echo json_encode([
          'status' => 'error',
-         'message' => 'Gagal menyiapkan query: ' . $koneksi->error
+         'message' => 'Gagal insert: ' . $stmt->error
       ]);
    }
-}
 
-/**
- * Generate order_number unik dengan format ORD-XXXXXX
- */
-function generateDoctorNumber($koneksi)
-{
-   $count = 0; // inisialisasi supaya tidak merah
-   do {
-      $random = mt_rand(100000, 999999); // 6 digit angka
-      $doctorNumber = "ORD-" . $random;
-
-      // cek ke database apakah sudah ada
-      $check = $koneksi->prepare("SELECT COUNT(*) FROM ms_faskes WHERE order_number = ?");
-      $check->bind_param("s", $doctorNumber);
-      $check->execute();
-      $check->bind_result($count);
-      $check->fetch();
-      $check->close();
-   } while ($count > 0); // ulang jika sudah ada
-
-   return $doctorNumber;
+   $stmt->close();
 }
 
 function getData()
 {
    global $koneksi;
 
-   $query = "SELECT * FROM ms_faskes WHERE faskes_status !=99 ORDER BY faskes_name DESC";
+   $query = "SELECT * FROM setting_clinic LEFT JOIN ms_faskes ON setting_clinic.id = ms_faskes.id_clinic WHERE status != 99  ORDER BY setting_clinic.id DESC";
    $result = mysqli_query($koneksi, $query);
 
    if (!$result) {
@@ -162,7 +165,7 @@ function  getID($iduser)
    global $koneksi;
 
    // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM ms_faskes WHERE id_faskes = ?";
+   $query = "SELECT * FROM setting_clinic WHERE id = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $iduser); // Bind parameter iduser
@@ -277,7 +280,7 @@ function deleteData()
    }
 
    // Query untuk menghapus data user
-   $query = "UPDATE ms_faskes SET faskes_status = 99 WHERE id_faskes = ?";
+   $query = "UPDATE setting_clinic SET status = 99 WHERE id = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $id);

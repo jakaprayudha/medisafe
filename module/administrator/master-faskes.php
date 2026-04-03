@@ -45,6 +45,7 @@ require '../../controller/view.php';
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
+                          <th>ID</th>
                           <th class="text-dark fw-normal col-1">Nomor PKS</th>
                           <th class="text-dark fw-normal col-1">Kode Faskes</th>
                           <th scope="col" class="text-dark fw-normal">Nama Faskes (Klinik)</th>
@@ -82,54 +83,12 @@ require '../../controller/view.php';
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <input type="hidden" name="id_faskes" id="id_faskes">
+        <input type="hidden" name="id" id="id">
         <div class="row">
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label required" id="comp_code">No. PKS</label>
-              <input type="text" id="contract_number" name="contract_number" class="form-control" required>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label required">Nama Klinik (Faskes)</label>
-              <input type="text" id="faskes_name" name="faskes_name" class="form-control" required>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label ">Nama PIC</label>
-              <input type="text" id="pic_name" name="pic_name" class="form-control">
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label ">No.Hp PIC</label>
-              <input type="text" id="pic_phone" name="pic_phone" class="form-control">
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label required">Mulai Kontrak</label>
-              <input type="date" required id="contract_start" name="contract_start" class="form-control">
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label required">Selesai Kontrak</label>
-              <input type="date" required id="contract_end" name="contract_end" class="form-control">
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label required">Nominal Kontrak (IDR)</label>
-              <input type="number" required id="contract_amount" name="contract_amount" class="form-control">
-            </div>
-          </div>
           <div class="col-12">
             <div class="mb-3">
-              <label class="form-label required">Alamat</label>
-              <textarea name="faskes_address" rows="3" id="faskes_address" class="form-control" required></textarea>
+              <label class="form-label required">Nama Klinik (Faskes)</label>
+              <input type="text" id="clinic_name" name="clinic_name" class="form-control" required>
             </div>
           </div>
         </div>
@@ -160,18 +119,19 @@ require '../../controller/view.php';
                 	<a class="btn btn-info" href="module/administrator/master-faskes-detail?no=${row.order_number}">
 											<i class="fas fa-info-circle"></i>
 									</a>
-									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_faskes}">
-											<i class="fas fa-edit"></i>
+									<a class="btn btn-primary user-btn" href="javascript:;" data-id="${row.id}">
+											<i class="fas fa-user"></i>
 									</a>
-									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_faskes}">
+									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id}">
 											<i class="fas fa-trash"></i>
 									</a>
 								</div>
 							</div>
                     `,
+              "id": row.id_customer,
               "pks": row.contract_number,
               "code": row.faskes_code,
-              "name": row.faskes_name,
+              "name": row.clinic_name,
               "pic": row.pic_name ? `${row.pic_name} (${row.pic_phone})` : '-',
               "start": row.contract_start,
               "end": row.contract_end,
@@ -179,7 +139,7 @@ require '../../controller/view.php';
               "status": `
                 <label class="switch">
                   <input type="checkbox" class="toggle-status" 
-                    data-id="${row.id_faskes}" 
+                    data-id="${row.id}" 
                     ${row.faskes_status == '1' ? 'checked' : ''}>
                   <span class="slider round"></span>
                 </label>
@@ -189,6 +149,9 @@ require '../../controller/view.php';
         }
       },
       columns: [{
+          data: "id"
+        },
+        {
           data: "pks"
         },
         {
@@ -243,7 +206,7 @@ require '../../controller/view.php';
     // 🔹 Tambah
     $('#btnTambah').on('click', function() {
       $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
-      $('#id_faskes').val('');
+      $('#id').val('');
       $('#programModal .modal-title').text('Tambah Data');
       $('#programModal').modal('show');
     });
@@ -252,7 +215,7 @@ require '../../controller/view.php';
     $('#programForm').on('submit', function(e) {
       e.preventDefault();
       let formData = new URLSearchParams(new FormData(this));
-      let id = $('#id_faskes').val();
+      let id = $('#id').val();
 
       fetch(apiUrl + (id ? `?id=${id}` : ''), {
           method: id ? 'PUT' : 'POST',
@@ -326,7 +289,7 @@ require '../../controller/view.php';
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
           },
-          body: `id_faskes=${id}&faskes_status=${status}`
+          body: `id=${id}&faskes_status=${status}`
         })
         .then(res => res.json())
         .then(res => {
