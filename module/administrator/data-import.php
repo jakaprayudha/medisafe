@@ -416,7 +416,7 @@ require '../../controller/view.php';
           $('#progressBar').css('width', pct + '%').text(pct + '%');
           $('#progressStatus').text(processed + ' / ' + total + ' baris diproses');
 
-          if (response.job_status === 'completed') {
+          if (response.job_status === 'done') {
             clearInterval(pollingInterval);
             pollingInterval = null;
             $('#progressArea').hide();
@@ -634,7 +634,7 @@ require '../../controller/view.php';
   const statusBadge = {
     pending:    '<span class="badge bg-secondary">⏳ Pending</span>',
     processing: '<span class="badge bg-primary">🔄 Processing</span>',
-    completed:  '<span class="badge bg-success">✅ Selesai</span>',
+    done:  '<span class="badge bg-success">✅ Selesai</span>',
     error:      '<span class="badge bg-danger">❌ Gagal</span>',
   };
 
@@ -661,17 +661,17 @@ require '../../controller/view.php';
           const processed = (j.success || 0) + (j.duplicates || 0) + (j.errors || 0);
           const pct = j.status === 'processing' 
             ? Math.min(100, Math.round((processed / total) * 100))
-            : (j.status === 'completed' ? 100 : 0);
+            : (j.status === 'done' ? 100 : 0);
 
           const progBar = j.status === 'processing'
             ? `<div class="progress" style="height:16px;min-width:90px;">
                  <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:${pct}%">${pct}%</div>
                </div>`
-            : (j.status === 'completed' ? `<div class="progress" style="height:16px;min-width:90px;">
+            : (j.status === 'done' ? `<div class="progress" style="height:16px;min-width:90px;">
                  <div class="progress-bar bg-success" style="width:100%">100%</div>
                </div>` : '-');
 
-          const detailBtn = (j.status === 'completed')
+          const detailBtn = (j.status === 'done')
             ? `<button class="btn btn-xs btn-sm btn-outline-primary py-0 px-2 view-job-result" data-id="${j.id}">Lihat</button>`
             : '-';
 
