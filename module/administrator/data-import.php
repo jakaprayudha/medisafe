@@ -414,6 +414,11 @@ require '../../controller/view.php';
       return;
     }
 
+    // set loading state
+    const $btn = $(this);
+    const originalText = $btn.html();
+    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Sedang memproses...');
+
     fetch('controller/import/importController.php', {
         method: 'POST',
         headers: {
@@ -427,12 +432,20 @@ require '../../controller/view.php';
       })
       .then(res => res.json())
       .then(res => {
+        // restore button state
+        $btn.prop('disabled', false).html(originalText);
+        
         if (res.status === 'success') {
           Swal.fire('Berhasil!', res.message, 'success');
           $('#importModal').modal('hide');
         } else {
           Swal.fire('Gagal!', res.message, 'error');
         }
+      })
+      .catch(err => {
+        // restore button state on error
+        $btn.prop('disabled', false).html(originalText);
+        Swal.fire('Error!', 'Terjadi kesalahan', 'error');
       });
   });
 </script>
