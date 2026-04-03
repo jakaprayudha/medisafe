@@ -133,7 +133,7 @@ function getData()
 {
    global $koneksi;
 
-   $query = "SELECT * FROM setting_clinic LEFT JOIN ms_faskes ON setting_clinic.id = ms_faskes.id_clinic WHERE status != 99  ORDER BY setting_clinic.id DESC";
+   $query = "SELECT * FROM setting_clinic LEFT JOIN ms_faskes ON setting_clinic.id = ms_faskes.id_clinic LEFT JOIN ms_users ON ms_users.id_customer = setting_clinic.id_customer WHERE setting_clinic.status != 99  ORDER BY setting_clinic.id DESC";
    $result = mysqli_query($koneksi, $query);
 
    if (!$result) {

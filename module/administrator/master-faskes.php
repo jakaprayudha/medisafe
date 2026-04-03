@@ -49,7 +49,7 @@ require '../../controller/view.php';
                           <th class="text-dark fw-normal col-1">Nomor PKS</th>
                           <th class="text-dark fw-normal col-1">Kode Faskes</th>
                           <th scope="col" class="text-dark fw-normal">Nama Faskes (Klinik)</th>
-                          <th class="text-dark fw-normal">PIC</th>
+                          <th class="text-dark fw-normal">Admin</th>
                           <th class="text-dark fw-normal">Mulai</th>
                           <th class="text-dark fw-normal">Berakhir</th>
                           <th class="text-dark fw-normal">Biaya</th>
@@ -100,6 +100,40 @@ require '../../controller/view.php';
   </div>
 </div>
 
+<div class="modal fade" id="userModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form id="userForm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Tambah Admin Klinik</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="id_customer_user" name="id_customer">
+
+        <div class="mb-3">
+          <label>Nama</label>
+          <input type="text" name="nama" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label>Username</label>
+          <input type="text" name="username" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label>Password</label>
+          <input type="password" name="password" class="form-control" required>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
   const apiUrl = 'controller/master/faskesController';
   $(document).ready(function() {
@@ -116,10 +150,10 @@ require '../../controller/view.php';
               "actions": `
                       <div class="text-end">
 								<div class="btn-group btn-group-sm" role="group">
-                	<a class="btn btn-info" href="module/administrator/master-faskes-detail?no=${row.order_number}">
+                	<a class="btn btn-info" href="module/administrator/master-faskes-detail?no=${row.id}">
 											<i class="fas fa-info-circle"></i>
 									</a>
-									<a class="btn btn-primary user-btn" href="javascript:;" data-id="${row.id}">
+									<a class="btn btn-primary user-btn" href="javascript:;" data-id="${row.id_customer}">
 											<i class="fas fa-user"></i>
 									</a>
 									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id}">
@@ -132,7 +166,7 @@ require '../../controller/view.php';
               "pks": row.contract_number,
               "code": row.faskes_code,
               "name": row.clinic_name,
-              "pic": row.pic_name ? `${row.pic_name} (${row.pic_phone})` : '-',
+              "pic": row.fullname ? `${row.fullname}` : '-',
               "start": row.contract_start,
               "end": row.contract_end,
               "amount": row.contract_amount,
@@ -294,6 +328,63 @@ require '../../controller/view.php';
         .then(res => res.json())
         .then(res => {
           if (res.status !== 'success') {
+            Swal.fire('Gagal!', res.message, 'error');
+          }
+        });
+    });
+
+    $(document).on('click', '.user-btn', function() {
+
+      let id = $(this).data('id');
+
+      $('#id_customer_user').val(id);
+      $('#userForm')[0].reset();
+
+      // 🔥 ambil user existing
+      fetch(`controller/master/getUserByCustomer.php?id_customer=${id}`)
+        .then(res => res.json())
+        .then(res => {
+
+          if (res.status === 'success') {
+
+            let u = res.data;
+
+            // isi form
+            $('[name="nama"]').val(u.fullname);
+            $('[name="username"]').val(u.username);
+
+            // password kosongkan (security)
+            $('[name="password"]').val('');
+
+            $('#userModal .modal-title').text('Edit Admin Klinik');
+
+          } else {
+            $('#userModal .modal-title').text('Tambah Admin Klinik');
+          }
+
+          $('#userModal').modal('show');
+        });
+
+    });
+
+    $('#userForm').on('submit', function(e) {
+      e.preventDefault();
+
+      let formData = new URLSearchParams(new FormData(this));
+
+      fetch('controller/master/userAdminController.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: formData
+        })
+        .then(res => res.json())
+        .then(res => {
+          if (res.status === 'success') {
+            Swal.fire('Berhasil!', res.message, 'success');
+            $('#userModal').modal('hide');
+          } else {
             Swal.fire('Gagal!', res.message, 'error');
           }
         });
