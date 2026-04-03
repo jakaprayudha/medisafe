@@ -436,8 +436,118 @@ require '../../controller/view.php';
         $btn.prop('disabled', false).html(originalText);
         
         if (res.status === 'success') {
-          Swal.fire('Berhasil!', res.message, 'success');
-          $('#importModal').modal('hide');
+          // Build detailed response summary
+          let summaryHtml = `
+            <div class="mb-3">
+              <h6><strong>📊 Ringkasan Import</strong></h6>
+              <table class="table table-sm table-borderless">
+                <tr>
+                  <td width="40%"><strong>Total Data:</strong></td>
+                  <td>${res.summary.total_rows} baris</td>
+                </tr>
+                <tr>
+                  <td><strong>Berhasil:</strong></td>
+                  <td><span class="badge bg-success">${res.summary.success}</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Duplikat:</strong></td>
+                  <td><span class="badge bg-warning">${res.summary.duplicates}</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Error:</strong></td>
+                  <td><span class="badge bg-danger">${res.summary.errors}</span></td>
+                </tr>
+              </table>
+            </div>
+          `;
+
+          // Show duplicates if exist
+          let duplicatesHtml = '';
+          if (res.duplicates && res.duplicates.length > 0) {
+            duplicatesHtml = `
+              <div class="mb-3">
+                <h6><strong>⚠️ Data Duplikat (${res.duplicates.length})</strong></h6>
+                <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                  <table class="table table-sm table-bordered">
+                    <thead class="table-warning">
+                      <tr>
+                        <th>Baris</th>
+                        <th>Alasan</th>
+                        <th>Detail</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${res.duplicates.map(d => `
+                        <tr>
+                          <td>${d.row}</td>
+                          <td>${d.reason}</td>
+                          <td>
+                            ${d.ktp ? `KTP: ${d.ktp}<br>` : ''}
+                            ${d.rm ? `RM: ${d.rm}<br>` : ''}
+                            ${d.code ? `Code: ${d.code}<br>` : ''}
+                            Nama: ${d.nama}
+                          </td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            `;
+          }
+
+          // Show errors if exist
+          let errorsHtml = '';
+          if (res.errors && res.errors.length > 0) {
+            errorsHtml = `
+              <div class="mb-3">
+                <h6><strong>❌ Error (${res.errors.length})</strong></h6>
+                <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                  <table class="table table-sm table-bordered">
+                    <thead class="table-danger">
+                      <tr>
+                        <th>Baris</th>
+                        <th>Error</th>
+                        <th>Detail</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${res.errors.map(e => `
+                        <tr>
+                          <td>${e.row}</td>
+                          <td>${e.error}</td>
+                          <td>
+                            ${e.ktp ? `KTP: ${e.ktp}<br>` : ''}
+                            ${e.rm ? `RM: ${e.rm}<br>` : ''}
+                            ${e.code ? `Code: ${e.code}<br>` : ''}
+                            Nama: ${e.nama}
+                          </td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            `;
+          }
+
+          // Show comprehensive result
+          Swal.fire({
+            title: 'Import Selesai!',
+            html: summaryHtml + duplicatesHtml + errorsHtml,
+            icon: 'success',
+            confirmButtonText: 'OK',
+            didOpen: function() {
+              // Make alert scrollable if content is long
+              const popup = Swal.getHtmlContainer();
+              if (popup) {
+                popup.style.maxHeight = '70vh';
+                popup.style.overflowY = 'auto';
+              }
+            }
+          }).then(() => {
+            $('#importModal').modal('hide');
+          });
         } else {
           Swal.fire('Gagal!', res.message, 'error');
         }

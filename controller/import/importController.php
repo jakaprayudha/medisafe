@@ -18,7 +18,8 @@ if (!$id_faskes) {
 }
 
 // Trim and remove extra whitespaces
-function removeWhitespaces($value) {
+function removeWhitespaces($value)
+{
    if (is_string($value)) {
       // Trim and replace multiple consecutive whitespaces with single space
       return preg_replace('/\s+/', ' ', trim($value));
@@ -81,7 +82,6 @@ switch ($type) {
 
                $stmt->close();
                $successCount++;
-
             } catch (Exception $e) {
                if (strpos($e->getMessage(), 'sudah terdaftar') !== false) {
                   $duplicateData[] = [
@@ -121,12 +121,13 @@ switch ($type) {
          }
 
          echo json_encode($response);
-
+         exit;
       } catch (Exception $e) {
          echo json_encode([
             'status' => 'error',
             'message' => 'Terjadi kesalahan: ' . $e->getMessage()
          ]);
+         exit;
       }
       break;
 
@@ -237,7 +238,6 @@ switch ($type) {
 
                $stmt->close();
                $successCount++;
-
             } catch (Exception $e) {
                // Check if it's a duplicate error
                if (strpos($e->getMessage(), 'sudah terdaftar') !== false) {
@@ -281,12 +281,13 @@ switch ($type) {
          }
 
          echo json_encode($response);
-
+         exit;
       } catch (Exception $e) {
          echo json_encode([
             'status' => 'error',
             'message' => 'Terjadi kesalahan: ' . $e->getMessage()
          ]);
+         exit;
       }
       break;
 
@@ -343,7 +344,6 @@ switch ($type) {
 
                $stmt->close();
                $successCount++;
-
             } catch (Exception $e) {
                if (strpos($e->getMessage(), 'sudah terdaftar') !== false) {
                   $duplicateData[] = [
@@ -383,12 +383,13 @@ switch ($type) {
          }
 
          echo json_encode($response);
-
+         exit;
       } catch (Exception $e) {
          echo json_encode([
             'status' => 'error',
             'message' => 'Terjadi kesalahan: ' . $e->getMessage()
          ]);
+         exit;
       }
       break;
 
@@ -470,7 +471,6 @@ switch ($type) {
 
                $stmt->close();
                $successCount++;
-
             } catch (Exception $e) {
                if (strpos($e->getMessage(), 'sudah terdaftar') !== false) {
                   $duplicateData[] = [
@@ -510,12 +510,13 @@ switch ($type) {
          }
 
          echo json_encode($response);
-
+         exit;
       } catch (Exception $e) {
          echo json_encode([
             'status' => 'error',
             'message' => 'Terjadi kesalahan: ' . $e->getMessage()
          ]);
+         exit;
       }
       break;
 
@@ -572,7 +573,6 @@ switch ($type) {
 
                $stmt->close();
                $successCount++;
-
             } catch (Exception $e) {
                if (strpos($e->getMessage(), 'sudah terdaftar') !== false) {
                   $duplicateData[] = [
@@ -612,12 +612,13 @@ switch ($type) {
          }
 
          echo json_encode($response);
-
+         exit;
       } catch (Exception $e) {
          echo json_encode([
             'status' => 'error',
             'message' => 'Terjadi kesalahan: ' . $e->getMessage()
          ]);
+         exit;
       }
       break;
 
@@ -625,8 +626,3 @@ switch ($type) {
       echo json_encode(['status' => 'error', 'message' => 'Type tidak dikenal']);
       exit;
 }
-
-echo json_encode([
-   'status' => 'success',
-   'message' => 'Import berhasil'
-]);
