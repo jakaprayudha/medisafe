@@ -86,6 +86,32 @@ require '../../controller/view.php';
                       <tbody></tbody>
                     </table>
                   </div>
+
+                  <hr class="mt-4">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-semibold mb-0">🕓 Riwayat Import Job</h6>
+                    <span class="text-muted small" id="jobsLastRefresh"></span>
+                  </div>
+                  <div class="table-responsive">
+                    <table class="table table-sm table-bordered mb-0" id="jobsTable">
+                      <thead class="table-light">
+                        <tr>
+                          <th>Waktu</th>
+                          <th>Tipe</th>
+                          <th>Total</th>
+                          <th>Berhasil</th>
+                          <th>Duplikat</th>
+                          <th>Error</th>
+                          <th>Progress</th>
+                          <th>Status</th>
+                          <th>Detail</th>
+                        </tr>
+                      </thead>
+                      <tbody id="jobsTableBody">
+                        <tr><td colspan="9" class="text-center text-muted">Memuat...</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -137,6 +163,17 @@ require '../../controller/view.php';
                 <tbody></tbody>
               </table>
             </div>
+          </div>
+
+          <!-- Progress -->
+          <div id="progressArea" style="display:none;">
+            <hr>
+            <h6>⏳ Sedang memproses...</h6>
+            <div class="progress mb-2" style="height: 22px;">
+              <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+                id="progressBar" role="progressbar" style="width: 0%">0%</div>
+            </div>
+            <div id="progressStatus" class="text-muted small text-center">Menunggu proses dimulai...</div>
           </div>
 
         </div>
@@ -341,8 +378,154 @@ require '../../controller/view.php';
 
   // load saat buka modal
   $('#btnImport').on('click', function() {
+    // Reset modal state
+    $('#importType').val('');
+    $('#importFile').val('');
+    $('#faskesSelect').val('');
+    $('#previewArea').hide();
+    $('#progressArea').hide();
+    $('#progressBar').css('width', '0%').text('0%');
+    $('#progressStatus').text('Menunggu proses dimulai...');
+    $('#btnUpload').prop('disabled', true);
+    excelData = [];
     loadFaskesDropdown();
     $('#importModal').modal('show');
+  });
+
+  // ── Polling helpers ───────────────────────────────────────
+  let pollingInterval = null;
+
+  function startPolling(job_id) {
+    pollingInterval = setInterval(function() {
+      fetch('https://importjobs.medisafe.id/api/import/' + encodeURIComponent(job_id) + '/status')
+        .then(res => res.json())
+        .then(function(response) {
+          if (response.status !== 'success') {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+            $('#progressArea').hide();
+            Swal.fire('Error!', 'Gagal mengambil status job', 'error');
+            return;
+          }
+
+          const summary = response.summary || {};
+          const total   = summary.total_rows || 1;
+          const processed = (summary.success || 0) + (summary.duplicates || 0) + (summary.errors || 0);
+          const pct     = Math.min(100, Math.round((processed / total) * 100));
+
+          $('#progressBar').css('width', pct + '%').text(pct + '%');
+          $('#progressStatus').text(processed + ' / ' + total + ' baris diproses');
+
+          if (response.job_status === 'completed') {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+            $('#progressArea').hide();
+            showImportResult(response);
+          } else if (response.job_status === 'error') {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+            $('#progressArea').hide();
+            Swal.fire('Gagal!', response.error_message || 'Terjadi kesalahan saat memproses', 'error');
+          }
+        })
+        .catch(function() {
+          // Keep polling on network hiccup
+        });
+    }, 2000);
+  }
+
+  function showImportResult(result) {
+    if (!result) return;
+    const s = result.summary || {};
+
+    let summaryHtml = `
+      <div class="mb-3">
+        <h6><strong>📊 Ringkasan Import</strong></h6>
+        <table class="table table-sm table-borderless">
+          <tr><td width="45%"><strong>Total Data:</strong></td><td>${s.total_rows ?? 0} baris</td></tr>
+          <tr><td><strong>Berhasil:</strong></td><td><span class="badge bg-success">${s.success ?? 0}</span></td></tr>
+          <tr><td><strong>Duplikat:</strong></td><td><span class="badge bg-warning text-dark">${s.duplicates ?? 0}</span></td></tr>
+          <tr><td><strong>Error:</strong></td><td><span class="badge bg-danger">${s.errors ?? 0}</span></td></tr>
+        </table>
+      </div>
+    `;
+
+    let duplicatesHtml = '';
+    const duplicateData = result.duplicates || [];
+    if (duplicateData.length > 0) {
+      duplicatesHtml = `
+        <div class="mb-3">
+          <h6><strong>⚠️ Data Duplikat (${duplicateData.length})</strong></h6>
+          <div class="table-responsive" style="max-height:200px;overflow-y:auto;">
+            <table class="table table-sm table-bordered">
+              <thead class="table-warning"><tr><th>Baris</th><th>Detail</th><th>Alasan</th></tr></thead>
+              <tbody>
+                ${duplicateData.map(d => `
+                  <tr>
+                    <td>${d.row}</td>
+                    <td>
+                      ${d.ktp  ? 'KTP: '  + d.ktp  + '<br>' : ''}
+                      ${d.rm   ? 'RM: '   + d.rm   + '<br>' : ''}
+                      ${d.code ? 'Kode: ' + d.code + '<br>' : ''}
+                      ${d.nama ? 'Nama: ' + d.nama          : ''}
+                    </td>
+                    <td>${d.reason}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    let errorsHtml = '';
+    const errorData = result.errors || [];
+    if (errorData.length > 0) {
+      errorsHtml = `
+        <div class="mb-3">
+          <h6><strong>❌ Error (${errorData.length})</strong></h6>
+          <div class="table-responsive" style="max-height:200px;overflow-y:auto;">
+            <table class="table table-sm table-bordered">
+              <thead class="table-danger"><tr><th>Baris</th><th>Detail</th><th>Error</th></tr></thead>
+              <tbody>
+                ${errorData.map(e => `
+                  <tr>
+                    <td>${e.row}</td>
+                    <td>
+                      ${e.ktp  ? 'KTP: '  + e.ktp  + '<br>' : ''}
+                      ${e.rm   ? 'RM: '   + e.rm   + '<br>' : ''}
+                      ${e.code ? 'Kode: ' + e.code + '<br>' : ''}
+                      ${e.nama ? 'Nama: ' + e.nama          : ''}
+                    </td>
+                    <td>${e.error}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    Swal.fire({
+      title: 'Import Selesai!',
+      html: summaryHtml + duplicatesHtml + errorsHtml,
+      icon: 'success',
+      confirmButtonText: 'OK',
+      didOpen: function() {
+        const popup = Swal.getHtmlContainer();
+        if (popup) { popup.style.maxHeight = '70vh'; popup.style.overflowY = 'auto'; }
+      }
+    }).then(function() {
+      $('#importModal').modal('hide');
+    });
+  }
+
+  // Stop polling when modal is closed
+  $('#importModal').on('hidden.bs.modal', function() {
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      pollingInterval = null;
+    }
   });
 </script>
 <script>
@@ -415,7 +598,7 @@ require '../../controller/view.php';
     const originalText = $btn.html();
     $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Sedang memproses...');
 
-    fetch('controller/import/importController.php', {
+    fetch('https://importjobs.medisafe.id/api/import', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -428,124 +611,14 @@ require '../../controller/view.php';
       })
       .then(res => res.json())
       .then(res => {
-        // restore button state
         $btn.prop('disabled', false).html(originalText);
 
         if (res.status === 'success') {
-          // Build detailed response summary
-          let summaryHtml = `
-            <div class="mb-3">
-              <h6><strong>📊 Ringkasan Import</strong></h6>
-              <table class="table table-sm table-borderless">
-                <tr>
-                  <td width="40%"><strong>Total Data:</strong></td>
-                  <td>${res.summary.total_rows} baris</td>
-                </tr>
-                <tr>
-                  <td><strong>Berhasil:</strong></td>
-                  <td><span class="badge bg-success">${res.summary.success}</span></td>
-                </tr>
-                <tr>
-                  <td><strong>Duplikat:</strong></td>
-                  <td><span class="badge bg-warning">${res.summary.duplicates}</span></td>
-                </tr>
-                <tr>
-                  <td><strong>Error:</strong></td>
-                  <td><span class="badge bg-danger">${res.summary.errors}</span></td>
-                </tr>
-              </table>
-            </div>
-          `;
-
-          // Show duplicates if exist
-          let duplicatesHtml = '';
-          if (res.duplicates && res.duplicates.length > 0) {
-            duplicatesHtml = `
-              <div class="mb-3">
-                <h6><strong>⚠️ Data Duplikat (${res.duplicates.length})</strong></h6>
-                <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
-                  <table class="table table-sm table-bordered">
-                    <thead class="table-warning">
-                      <tr>
-                        <th>Baris</th>
-                        <th>Alasan</th>
-                        <th>Detail</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${res.duplicates.map(d => `
-                        <tr>
-                          <td>${d.row}</td>
-                          <td>${d.reason}</td>
-                          <td>
-                            ${d.ktp ? `KTP: ${d.ktp}<br>` : ''}
-                            ${d.rm ? `RM: ${d.rm}<br>` : ''}
-                            ${d.code ? `Code: ${d.code}<br>` : ''}
-                            Nama: ${d.nama}
-                          </td>
-                        </tr>
-                      `).join('')}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            `;
-          }
-
-          // Show errors if exist
-          let errorsHtml = '';
-          if (res.errors && res.errors.length > 0) {
-            errorsHtml = `
-              <div class="mb-3">
-                <h6><strong>❌ Error (${res.errors.length})</strong></h6>
-                <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
-                  <table class="table table-sm table-bordered">
-                    <thead class="table-danger">
-                      <tr>
-                        <th>Baris</th>
-                        <th>Error</th>
-                        <th>Detail</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${res.errors.map(e => `
-                        <tr>
-                          <td>${e.row}</td>
-                          <td>${e.error}</td>
-                          <td>
-                            ${e.ktp ? `KTP: ${e.ktp}<br>` : ''}
-                            ${e.rm ? `RM: ${e.rm}<br>` : ''}
-                            ${e.code ? `Code: ${e.code}<br>` : ''}
-                            Nama: ${e.nama}
-                          </td>
-                        </tr>
-                      `).join('')}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            `;
-          }
-
-          // Show comprehensive result
-          Swal.fire({
-            title: 'Import Selesai!',
-            html: summaryHtml + duplicatesHtml + errorsHtml,
-            icon: 'success',
-            confirmButtonText: 'OK',
-            didOpen: function() {
-              // Make alert scrollable if content is long
-              const popup = Swal.getHtmlContainer();
-              if (popup) {
-                popup.style.maxHeight = '70vh';
-                popup.style.overflowY = 'auto';
-              }
-            }
-          }).then(() => {
-            $('#importModal').modal('hide');
-          });
+          // Show progress area and start polling
+          $('#progressArea').show();
+          startPolling(res.import_job_id);
         } else {
-          Swal.fire('Gagal!', res.message, 'error');
+          Swal.fire('Gagal!', res.message || 'Terjadi kesalahan', 'error');
         }
       })
       .catch(err => {
@@ -554,6 +627,91 @@ require '../../controller/view.php';
         Swal.fire('Error!', 'Terjadi kesalahan', 'error');
       });
   });
+</script>
+
+<script>
+  // ── Import Jobs History Table ──────────────────────────────────
+  const statusBadge = {
+    pending:    '<span class="badge bg-secondary">⏳ Pending</span>',
+    processing: '<span class="badge bg-primary">🔄 Processing</span>',
+    completed:  '<span class="badge bg-success">✅ Selesai</span>',
+    error:      '<span class="badge bg-danger">❌ Gagal</span>',
+  };
+
+  function loadJobsTable() {
+    fetch('https://importjobs.medisafe.id/api/import')
+      .then(res => res.json())
+      .then(function(data) {
+        if (data.status !== 'success') {
+          $('#jobsTableBody').html('<tr><td colspan="9" class="text-center text-danger">Gagal memuat riwayat job</td></tr>');
+          return;
+        }
+
+        const jobs = data.data && data.data.data ? data.data.data : [];
+        const now  = new Date().toLocaleTimeString('id-ID');
+        $('#jobsLastRefresh').text('Diperbarui: ' + now);
+
+        if (!jobs.length) {
+          $('#jobsTableBody').html('<tr><td colspan="9" class="text-center text-muted">Belum ada job import</td></tr>');
+          return;
+        }
+
+        const rows = jobs.map(function(j) {
+          const total = j.total_rows || 1;
+          const processed = (j.success || 0) + (j.duplicates || 0) + (j.errors || 0);
+          const pct = j.status === 'processing' 
+            ? Math.min(100, Math.round((processed / total) * 100))
+            : (j.status === 'completed' ? 100 : 0);
+
+          const progBar = j.status === 'processing'
+            ? `<div class="progress" style="height:16px;min-width:90px;">
+                 <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:${pct}%">${pct}%</div>
+               </div>`
+            : (j.status === 'completed' ? `<div class="progress" style="height:16px;min-width:90px;">
+                 <div class="progress-bar bg-success" style="width:100%">100%</div>
+               </div>` : '-');
+
+          const detailBtn = (j.status === 'completed')
+            ? `<button class="btn btn-xs btn-sm btn-outline-primary py-0 px-2 view-job-result" data-id="${j.id}">Lihat</button>`
+            : '-';
+
+          return `<tr>
+            <td>${j.created_at || '-'}</td>
+            <td><span class="badge bg-light text-dark border">${j.type}</span></td>
+            <td>${j.total_rows}</td>
+            <td><span class="text-success fw-bold">${j.success || 0}</span></td>
+            <td><span class="text-warning fw-bold">${j.duplicates || 0}</span></td>
+            <td><span class="text-danger fw-bold">${j.errors || 0}</span></td>
+            <td>${progBar}</td>
+            <td>${statusBadge[j.status] ?? j.status}</td>
+            <td>${detailBtn}</td>
+          </tr>`;
+        });
+
+        $('#jobsTableBody').html(rows.join(''));
+      })
+      .catch(function() {
+        $('#jobsTableBody').html('<tr><td colspan="9" class="text-center text-danger">Gagal memuat riwayat job</td></tr>');
+      });
+  }
+
+  // Click "Lihat" detail button
+  $(document).on('click', '.view-job-result', function() {
+    const job_id = $(this).data('id');
+    fetch('https://importjobs.medisafe.id/api/import/' + encodeURIComponent(job_id) + '/status')
+      .then(res => res.json())
+      .then(function(response) {
+        if (response.status === 'success' && response.summary) {
+          showImportResult(response);
+        } else {
+          Swal.fire('Info', 'Detail tidak tersedia', 'info');
+        }
+      });
+  });
+
+  // Load on page ready and refresh every 5 seconds
+  loadJobsTable();
+  setInterval(loadJobsTable, 5000);
 </script>
 
 </html>
