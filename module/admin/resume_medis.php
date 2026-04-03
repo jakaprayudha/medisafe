@@ -201,6 +201,39 @@ $dataresume =  mysqli_fetch_array($checkvisit);
   ?>
 </body>
 <script>
+  function extractCode(text) {
+    if (!text) return "";
+    const parts = text.split(" - ");
+    return parts[0].trim();
+  }
+
+  function normalizeList(value) {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    return value
+      .split(";")
+      .map(v => v.trim())
+      .filter(Boolean);
+  }
+
+  function setSelect2Single(selector, storedText) {
+    if (!storedText) return;
+    const code = extractCode(storedText) || storedText;
+    const option = new Option(storedText, code, true, true);
+    $(selector).append(option).trigger('change');
+  }
+
+  function setSelect2Multiple(selector, storedText) {
+    const items = normalizeList(storedText);
+    if (!items.length) return;
+    items.forEach(text => {
+      const code = extractCode(text) || text;
+      const option = new Option(text, code, true, true);
+      $(selector).append(option);
+    });
+    $(selector).trigger('change');
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
 
     const url = new URLSearchParams(window.location.search);
@@ -235,12 +268,31 @@ $dataresume =  mysqli_fetch_array($checkvisit);
         if (document.getElementById("usia"))
           document.getElementById("usia").value = p.usia ?? "";
 
-        // ===== EDIT MODE (Jika i ada) =====
+        // ===== SET DATA DARI resume_medis =====
         for (let key in i) {
           if (document.getElementById(key)) {
             document.getElementById(key).value = i[key] ?? "";
           }
         }
+
+        // ===== SET DATA DARI pasien_visit =====
+        if (document.getElementById("pemeriksaan_fisik"))
+          document.getElementById("pemeriksaan_fisik").value = p.pemeriksaan_fisik ?? "";
+
+        if (document.getElementById("alergi_obat"))
+          document.getElementById("alergi_obat").value = p.alergi_obat ?? "";
+
+        if (document.getElementById("kondisi_pulang"))
+          document.getElementById("kondisi_pulang").value = p.kondisi_pulang ?? "";
+
+        if (document.getElementById("cara_keluar"))
+          document.getElementById("cara_keluar").value = p.cara_keluar ?? "";
+
+        if (document.getElementById("rencana_tindak_lanjut"))
+          document.getElementById("rencana_tindak_lanjut").value = p.rencana_tindak_lanjut ?? "";
+
+        setSelect2Single('#diagnosa_utama', p.diagnosa_utama ?? "");
+        setSelect2Multiple('#diagnosa_sekunder', p.diagnosa_sekunder ?? "");
 
       })
       .catch(err => console.error("ERR GET:", err));
@@ -250,20 +302,45 @@ $dataresume =  mysqli_fetch_array($checkvisit);
   // =============== SAVE DATA RANAP ===============
   document.getElementById("openModal").addEventListener("click", () => {
 
-    const fields = [
-      "diagnosa", "tindakan", "pemeriksaan_penunjang", "obat", "instruksi", "petugas", "dokter"
-    ];
+    const diagUtamaData = $('#diagnosa_utama').select2('data') || [];
+    const diagUtamaText = diagUtamaData.length ? (diagUtamaData[0].text || "") : "";
+    const diagUtamaVal = diagUtamaData.length ? (diagUtamaData[0].id || "") : "";
+
+    const diagSekunderData = $('#diagnosa_sekunder').select2('data') || [];
+    const diagSekunderText = diagSekunderData
+      .map(item => item.text || "")
+      .filter(Boolean)
+      .join('; ');
+    const diagSekunderVal = diagSekunderData
+      .map(item => item.id || "")
+      .filter(Boolean)
+      .join(',');
+
+    const diagnosaMasuk = document.getElementById("diagnosa_masuk")?.value ?? "";
+    const diagnosaText = diagUtamaText || diagSekunderText
+      ? `${diagUtamaText}${diagSekunderText ? ' | ' + diagSekunderText : ''}`
+      : diagnosaMasuk;
 
     let data = {
       visit_ID: "<?= $_GET['no'] ?>",
       nomor_rm: "<?= $_GET['rm'] ?>",
     };
 
-    // Auto ambil semua fields (aman walau ada yang tidak ditemukan)
-    fields.forEach(f => {
-      let el = document.getElementById(f);
-      data[f] = el ? (el.value ?? "") : "";
-    });
+    data.diagnosa_utama = diagUtamaVal;
+    data.diagnosa_utama_text = diagUtamaText;
+    data.diagnosa_sekunder = diagSekunderVal;
+    data.diagnosa_sekunder_text = diagSekunderText;
+    data.diagnosa = diagnosaText;
+    data.pemeriksaan_fisik = document.getElementById("pemeriksaan_fisik")?.value ?? "";
+    data.pemeriksaan_penunjang = document.getElementById("pemeriksaan_penunjang")?.value ?? "";
+    data.alergi_obat = document.getElementById("alergi_obat")?.value ?? "";
+    data.instruksi = document.getElementById("instruksi")?.value ?? "";
+    data.kondisi_pulang = document.getElementById("kondisi_pulang")?.value ?? "";
+    data.cara_keluar = document.getElementById("cara_keluar")?.value ?? "";
+    data.rencana_tindak_lanjut = document.getElementById("rencana_tindak_lanjut")?.value ?? "";
+    data.dokter = document.getElementById("dokter")?.value ?? "";
+    data.tindakan = data.pemeriksaan_fisik;
+    data.obat = data.alergi_obat;
 
     fetch("controller/ranap/saveResumeMedis.php", {
         method: "POST",

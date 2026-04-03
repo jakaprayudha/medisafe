@@ -5,7 +5,7 @@ require '../../../database/connect.php';
 
 $visit = $_GET['no'] ?? '';
 $rm    = $_GET['rm'] ?? '';
-$checkdata = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor INNER JOIN permintaan_ranap ON permintaan_ranap.visit_ID_inpatient = pasien_visit.visit_ID LEFT JOIN ms_room ON ms_room.id_room = permintaan_ranap.id_room LEFT JOIN ms_room_bed ON ms_room_bed.id_bed = permintaan_ranap.id_bed LEFT JOIN ms_provider ON ms_provider.id_provider = pasien_visit.id_provider INNER JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa WHERE visit_ID='$visit' AND nomor_rm='$rm'");
+$checkdata = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor INNER JOIN permintaan_ranap ON permintaan_ranap.visit_ID_inpatient = pasien_visit.visit_ID LEFT JOIN ms_room ON ms_room.id_room = permintaan_ranap.id_room LEFT JOIN ms_room_bed ON ms_room_bed.id_bed = permintaan_ranap.id_bed LEFT JOIN ms_provider ON ms_provider.id_provider = pasien_visit.id_provider INNER JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa LEFT JOIN resume_medis ON resume_medis.visit_ID = pasien_visit.visit_ID AND resume_medis.nomor_rm = ms_patient.nomor_rm WHERE pasien_visit.visit_ID='$visit' AND ms_patient.nomor_rm='$rm'");
 $dataresume = mysqli_fetch_array($checkdata);
 ?>
 
@@ -154,7 +154,7 @@ $dataresume = mysqli_fetch_array($checkdata);
       ?>
       <tr>
          <td class="resume-label">Terapi Selama di Klinik</td>
-         <td colspan="3" style="white-space:pre-line" id="rs_terapi_rs"> <?= $terapi ?>
+         <td colspan="3" style="white-space:pre-line" id="rs_terapi_rs"> <?= $dataresume['pemeriksaan_penunjang'] ?? $terapi ?>
          </td>
       </tr>
 
@@ -176,7 +176,7 @@ $dataresume = mysqli_fetch_array($checkdata);
       ?>
       <tr>
          <td class="resume-label">Terapi Pulang</td>
-         <td colspan="3" style="white-space:pre-line" id="rs_terapi_pulang"> <?= $terapipulang ?>
+         <td colspan="3" style="white-space:pre-line" id="rs_terapi_pulang"> <?= $dataresume['instruksi'] ?? $terapipulang ?>
 
          </td>
       </tr>
