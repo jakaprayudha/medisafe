@@ -133,25 +133,7 @@ function getData()
 {
    global $koneksi;
 
-   $query = "SELECT 
-    setting_clinic.*, 
-    ms_faskes.contract_number, 
-    ms_faskes.faskes_code, 
-    ms_faskes.contract_start, 
-    ms_faskes.contract_end, 
-    ms_faskes.contract_amount, 
-    ms_users.fullname, 
-    ms_users.username, 
-    ms_users.password 
-FROM setting_clinic
-LEFT JOIN ms_faskes 
-    ON setting_clinic.id = ms_faskes.id_clinic
-LEFT JOIN ms_users 
-    ON ms_users.id_customer = setting_clinic.id_customer 
-    AND ms_users.roles = 'admin'  -- 🔥 pindah ke sini
-WHERE setting_clinic.status != 99
-GROUP BY setting_clinic.id
-ORDER BY setting_clinic.id DESC;";
+   $query = "SELECT setting_clinic.*, ms_faskes.contract_number, ms_faskes.faskes_code, ms_faskes.contract_start, ms_faskes.contract_end, ms_faskes.contract_amount, ms_users.fullname, ms_users.username, ms_users.password FROM setting_clinic LEFT JOIN ms_faskes ON setting_clinic.id = ms_faskes.id_clinic LEFT JOIN ms_users ON ms_users.id_customer = setting_clinic.id_customer WHERE setting_clinic.status != 99  ORDER BY setting_clinic.id DESC";
    $result = mysqli_query($koneksi, $query);
 
    if (!$result) {
