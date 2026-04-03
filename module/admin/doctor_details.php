@@ -97,8 +97,8 @@ $no = $_GET['no'];
                               <label class="form-label">Kategori Dokter</label>
                               <select class="form-select" name="doctor_category">
                                 <option value="Umum">Umum</option>
-                                <option value="Spesialis">Spesialis</option>
-                                <option value="Sub Spesialis">Sub Spesialis</option>
+                                <option value="Dokter Gigi">Dokter Gigi</option>
+                                <!-- <option value="Spesialis">Spesialis</option> -->
                               </select>
                             </div>
                           </div>
