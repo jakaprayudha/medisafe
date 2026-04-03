@@ -28,23 +28,109 @@ function removeWhitespaces($value) {
 
 switch ($type) {
 
-   // 🔹 MASTER FASKES (tidak perlu id_faskes)
+   // MASTER FASKES
    case 'faskes':
-      foreach ($rows as $r) {
-         $stmt = $koneksi->prepare("
-            INSERT INTO ms_faskes (faskes_name, faskes_code)
-            VALUES (?, ?)
-         ");
-         $stmt->bind_param(
-            "ss",
-            $r['faskes_name'],
-            $r['faskes_code']
-         );
-         $stmt->execute();
+      $successCount = 0;
+      $duplicateData = [];
+      $errorData = [];
+
+      try {
+         foreach ($rows as $rowIndex => $r) {
+            try {
+               // Trim and remove extra whitespaces
+               $faskes_name = removeWhitespaces($r['faskes_name'] ?? '');
+               $faskes_code = removeWhitespaces($r['faskes_code'] ?? '');
+
+               // Validate required fields
+               if (empty($faskes_name)) {
+                  throw new Exception('Nama Faskes harus diisi');
+               }
+
+               if (empty($faskes_code)) {
+                  throw new Exception('Kode Faskes harus diisi');
+               }
+
+               // Check for duplicate faskes_code
+               $checkDuplicate = $koneksi->prepare("
+                  SELECT id_faskes FROM ms_faskes WHERE faskes_code = ?
+               ");
+               $checkDuplicate->bind_param("s", $faskes_code);
+               $checkDuplicate->execute();
+               $resultDuplicate = $checkDuplicate->get_result();
+
+               if ($resultDuplicate->num_rows > 0) {
+                  throw new Exception('Kode Faskes sudah terdaftar');
+               }
+               $checkDuplicate->close();
+
+               // Insert data
+               $stmt = $koneksi->prepare("
+                  INSERT INTO ms_faskes (faskes_name, faskes_code)
+                  VALUES (?, ?)
+               ");
+
+               if (!$stmt) {
+                  throw new Exception('Prepare statement gagal: ' . $koneksi->error);
+               }
+
+               $stmt->bind_param("ss", $faskes_name, $faskes_code);
+
+               if (!$stmt->execute()) {
+                  throw new Exception('Execute gagal: ' . $stmt->error);
+               }
+
+               $stmt->close();
+               $successCount++;
+
+            } catch (Exception $e) {
+               if (strpos($e->getMessage(), 'sudah terdaftar') !== false) {
+                  $duplicateData[] = [
+                     'row' => $rowIndex + 1,
+                     'code' => $faskes_code ?? '',
+                     'nama' => $faskes_name ?? '',
+                     'reason' => $e->getMessage()
+                  ];
+               } else {
+                  $errorData[] = [
+                     'row' => $rowIndex + 1,
+                     'code' => $faskes_code ?? '',
+                     'nama' => $faskes_name ?? '',
+                     'error' => $e->getMessage()
+                  ];
+               }
+            }
+         }
+
+         $response = [
+            'status' => 'success',
+            'message' => "Import selesai: $successCount data berhasil diimport",
+            'summary' => [
+               'total_rows' => count($rows),
+               'success' => $successCount,
+               'duplicates' => count($duplicateData),
+               'errors' => count($errorData)
+            ]
+         ];
+
+         if (!empty($duplicateData)) {
+            $response['duplicates'] = $duplicateData;
+         }
+
+         if (!empty($errorData)) {
+            $response['errors'] = $errorData;
+         }
+
+         echo json_encode($response);
+
+      } catch (Exception $e) {
+         echo json_encode([
+            'status' => 'error',
+            'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+         ]);
       }
       break;
 
-   // 🔹 PASIEN
+   // PASIEN
    case 'pasien':
       $successCount = 0;
       $duplicateData = [];
@@ -204,73 +290,334 @@ switch ($type) {
       }
       break;
 
-   // 🔹 DOKTER
+   // DOKTER
    case 'dokter':
-      foreach ($rows as $r) {
+      $successCount = 0;
+      $duplicateData = [];
+      $errorData = [];
 
-         $stmt = $koneksi->prepare("
-            INSERT INTO dokter (id_faskes, nama_dokter, spesialis)
-            VALUES (?, ?, ?)
-         ");
+      try {
+         foreach ($rows as $rowIndex => $r) {
+            try {
+               // Trim and remove extra whitespaces
+               $nama_dokter = removeWhitespaces($r['nama_dokter'] ?? '');
+               $spesialis = removeWhitespaces($r['spesialis'] ?? '');
 
-         $stmt->bind_param(
-            "iss",
-            $id_faskes,
-            $r['nama_dokter'],
-            $r['spesialis']
-         );
+               // Validate required fields
+               if (empty($nama_dokter)) {
+                  throw new Exception('Nama Dokter harus diisi');
+               }
 
-         $stmt->execute();
+               if (empty($spesialis)) {
+                  throw new Exception('Spesialis harus diisi');
+               }
+
+               // Check for duplicate dokter
+               $checkDuplicate = $koneksi->prepare("
+                  SELECT id_dokter FROM dokter WHERE id_faskes = ? AND nama_dokter = ? AND spesialis = ?
+               ");
+               $checkDuplicate->bind_param("iss", $id_faskes, $nama_dokter, $spesialis);
+               $checkDuplicate->execute();
+               $resultDuplicate = $checkDuplicate->get_result();
+
+               if ($resultDuplicate->num_rows > 0) {
+                  throw new Exception('Dokter dengan nama dan spesialis yang sama sudah terdaftar');
+               }
+               $checkDuplicate->close();
+
+               // Insert data
+               $stmt = $koneksi->prepare("
+                  INSERT INTO dokter (id_faskes, nama_dokter, spesialis)
+                  VALUES (?, ?, ?)
+               ");
+
+               if (!$stmt) {
+                  throw new Exception('Prepare statement gagal: ' . $koneksi->error);
+               }
+
+               $stmt->bind_param("iss", $id_faskes, $nama_dokter, $spesialis);
+
+               if (!$stmt->execute()) {
+                  throw new Exception('Execute gagal: ' . $stmt->error);
+               }
+
+               $stmt->close();
+               $successCount++;
+
+            } catch (Exception $e) {
+               if (strpos($e->getMessage(), 'sudah terdaftar') !== false) {
+                  $duplicateData[] = [
+                     'row' => $rowIndex + 1,
+                     'nama' => $nama_dokter ?? '',
+                     'spesialis' => $spesialis ?? '',
+                     'reason' => $e->getMessage()
+                  ];
+               } else {
+                  $errorData[] = [
+                     'row' => $rowIndex + 1,
+                     'nama' => $nama_dokter ?? '',
+                     'spesialis' => $spesialis ?? '',
+                     'error' => $e->getMessage()
+                  ];
+               }
+            }
+         }
+
+         $response = [
+            'status' => 'success',
+            'message' => "Import selesai: $successCount data berhasil diimport",
+            'summary' => [
+               'total_rows' => count($rows),
+               'success' => $successCount,
+               'duplicates' => count($duplicateData),
+               'errors' => count($errorData)
+            ]
+         ];
+
+         if (!empty($duplicateData)) {
+            $response['duplicates'] = $duplicateData;
+         }
+
+         if (!empty($errorData)) {
+            $response['errors'] = $errorData;
+         }
+
+         echo json_encode($response);
+
+      } catch (Exception $e) {
+         echo json_encode([
+            'status' => 'error',
+            'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+         ]);
       }
       break;
 
-   // 🔹 FARMASI
+   // FARMASI
    case 'farmasi':
-      foreach ($rows as $r) {
+      $successCount = 0;
+      $duplicateData = [];
+      $errorData = [];
 
-         $stmt = $koneksi->prepare("
-            INSERT INTO ms_pharmacy (id_customer, pharmacy_code, pharmacy_name_trade, pharmcy_jenis_drugs, pharmacy_category, pharmacy_stock, pharmacy_unit, pharmacy_price_general, pharmacy_price_item, pharmacy_price_buy, pharmacy_price_otc, pharmacy_price_bpjs, pharmacy_margin_profit)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ");
+      try {
+         foreach ($rows as $rowIndex => $r) {
+            try {
+               // Trim and remove extra whitespaces
+               $pharmacy_code = removeWhitespaces($r['Kode'] ?? '');
+               $pharmacy_name = removeWhitespaces($r['Nama Obat'] ?? '');
+               $pharmacy_jenis = removeWhitespaces($r['Jenis'] ?? '');
+               $pharmacy_category = removeWhitespaces($r['Kategori'] ?? '');
+               $pharmacy_stock = removeWhitespaces($r['Stok'] ?? '0');
+               $pharmacy_unit = removeWhitespaces($r['Satuan'] ?? '');
+               $pharmacy_price_general = removeWhitespaces($r['Harga Umum'] ?? '0');
+               $pharmacy_price_item = removeWhitespaces($r['Harga Barang'] ?? '0');
+               $pharmacy_price_buy = removeWhitespaces($r['Harga Beli (Setelah Pajak)'] ?? '0');
+               $pharmacy_price_otc = removeWhitespaces($r['Harga OTC'] ?? '0');
+               $pharmacy_price_bpjs = removeWhitespaces($r['Harga Jual BPJS'] ?? '0');
+               $pharmacy_margin = removeWhitespaces($r['Margin Profit'] ?? '0');
 
-         $stmt->bind_param(
-            "issssssssssss", // 🔥 13 karakter
-            $id_faskes,
-            $r['Kode'],
-            $r['Nama Obat'],
-            $r['Jenis'],
-            $r['Kategori'],
-            $r['Stok'],
-            $r['Satuan'],
-            $r['Harga Umum'],
-            $r['Harga Barang'],
-            $r['Harga Beli (Setelah Pajak)'],
-            $r['Harga OTC'],
-            $r['Harga Jual BPJS'],
-            $r['Margin Profit']
-         );
+               // Validate required fields
+               if (empty($pharmacy_code)) {
+                  throw new Exception('Kode Obat harus diisi');
+               }
 
-         $stmt->execute();
+               if (empty($pharmacy_name)) {
+                  throw new Exception('Nama Obat harus diisi');
+               }
+
+               // Check for duplicate pharmacy_code
+               $checkDuplicate = $koneksi->prepare("
+                  SELECT id_pharmacy FROM ms_pharmacy WHERE id_customer = ? AND pharmacy_code = ?
+               ");
+               $checkDuplicate->bind_param("ss", $id_faskes, $pharmacy_code);
+               $checkDuplicate->execute();
+               $resultDuplicate = $checkDuplicate->get_result();
+
+               if ($resultDuplicate->num_rows > 0) {
+                  throw new Exception('Kode Obat sudah terdaftar');
+               }
+               $checkDuplicate->close();
+
+               // Insert data
+               $stmt = $koneksi->prepare("
+                  INSERT INTO ms_pharmacy (id_customer, pharmacy_code, pharmacy_name_trade, pharmcy_jenis_drugs, pharmacy_category, pharmacy_stock, pharmacy_unit, pharmacy_price_general, pharmacy_price_item, pharmacy_price_buy, pharmacy_price_otc, pharmacy_price_bpjs, pharmacy_margin_profit)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+               ");
+
+               if (!$stmt) {
+                  throw new Exception('Prepare statement gagal: ' . $koneksi->error);
+               }
+
+               $stmt->bind_param(
+                  "issssssssssss",
+                  $id_faskes,
+                  $pharmacy_code,
+                  $pharmacy_name,
+                  $pharmacy_jenis,
+                  $pharmacy_category,
+                  $pharmacy_stock,
+                  $pharmacy_unit,
+                  $pharmacy_price_general,
+                  $pharmacy_price_item,
+                  $pharmacy_price_buy,
+                  $pharmacy_price_otc,
+                  $pharmacy_price_bpjs,
+                  $pharmacy_margin
+               );
+
+               if (!$stmt->execute()) {
+                  throw new Exception('Execute gagal: ' . $stmt->error);
+               }
+
+               $stmt->close();
+               $successCount++;
+
+            } catch (Exception $e) {
+               if (strpos($e->getMessage(), 'sudah terdaftar') !== false) {
+                  $duplicateData[] = [
+                     'row' => $rowIndex + 1,
+                     'code' => $pharmacy_code ?? '',
+                     'nama' => $pharmacy_name ?? '',
+                     'reason' => $e->getMessage()
+                  ];
+               } else {
+                  $errorData[] = [
+                     'row' => $rowIndex + 1,
+                     'code' => $pharmacy_code ?? '',
+                     'nama' => $pharmacy_name ?? '',
+                     'error' => $e->getMessage()
+                  ];
+               }
+            }
+         }
+
+         $response = [
+            'status' => 'success',
+            'message' => "Import selesai: $successCount data berhasil diimport",
+            'summary' => [
+               'total_rows' => count($rows),
+               'success' => $successCount,
+               'duplicates' => count($duplicateData),
+               'errors' => count($errorData)
+            ]
+         ];
+
+         if (!empty($duplicateData)) {
+            $response['duplicates'] = $duplicateData;
+         }
+
+         if (!empty($errorData)) {
+            $response['errors'] = $errorData;
+         }
+
+         echo json_encode($response);
+
+      } catch (Exception $e) {
+         echo json_encode([
+            'status' => 'error',
+            'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+         ]);
       }
       break;
 
-   // 🔹 VISIT
+   // VISIT
    case 'visit':
-      foreach ($rows as $r) {
+      $successCount = 0;
+      $duplicateData = [];
+      $errorData = [];
 
-         $stmt = $koneksi->prepare("
-            INSERT INTO visit (id_faskes, nomor_rm, tanggal)
-            VALUES (?, ?, ?)
-         ");
+      try {
+         foreach ($rows as $rowIndex => $r) {
+            try {
+               // Trim and remove extra whitespaces
+               $nomor_rm = removeWhitespaces($r['nomor_rm'] ?? '');
+               $tanggal = removeWhitespaces($r['tanggal'] ?? '');
 
-         $stmt->bind_param(
-            "iss",
-            $id_faskes,
-            $r['nomor_rm'],
-            $r['tanggal']
-         );
+               // Validate required fields
+               if (empty($nomor_rm)) {
+                  throw new Exception('Nomor RM harus diisi');
+               }
 
-         $stmt->execute();
+               if (empty($tanggal)) {
+                  throw new Exception('Tanggal harus diisi');
+               }
+
+               // Check for duplicate visit
+               $checkDuplicate = $koneksi->prepare("
+                  SELECT id_visit FROM visit WHERE id_faskes = ? AND nomor_rm = ? AND tanggal = ?
+               ");
+               $checkDuplicate->bind_param("iss", $id_faskes, $nomor_rm, $tanggal);
+               $checkDuplicate->execute();
+               $resultDuplicate = $checkDuplicate->get_result();
+
+               if ($resultDuplicate->num_rows > 0) {
+                  throw new Exception('Visit dengan nomor RM dan tanggal yang sama sudah terdaftar');
+               }
+               $checkDuplicate->close();
+
+               // Insert data
+               $stmt = $koneksi->prepare("
+                  INSERT INTO visit (id_faskes, nomor_rm, tanggal)
+                  VALUES (?, ?, ?)
+               ");
+
+               if (!$stmt) {
+                  throw new Exception('Prepare statement gagal: ' . $koneksi->error);
+               }
+
+               $stmt->bind_param("iss", $id_faskes, $nomor_rm, $tanggal);
+
+               if (!$stmt->execute()) {
+                  throw new Exception('Execute gagal: ' . $stmt->error);
+               }
+
+               $stmt->close();
+               $successCount++;
+
+            } catch (Exception $e) {
+               if (strpos($e->getMessage(), 'sudah terdaftar') !== false) {
+                  $duplicateData[] = [
+                     'row' => $rowIndex + 1,
+                     'rm' => $nomor_rm ?? '',
+                     'tanggal' => $tanggal ?? '',
+                     'reason' => $e->getMessage()
+                  ];
+               } else {
+                  $errorData[] = [
+                     'row' => $rowIndex + 1,
+                     'rm' => $nomor_rm ?? '',
+                     'tanggal' => $tanggal ?? '',
+                     'error' => $e->getMessage()
+                  ];
+               }
+            }
+         }
+
+         $response = [
+            'status' => 'success',
+            'message' => "Import selesai: $successCount data berhasil diimport",
+            'summary' => [
+               'total_rows' => count($rows),
+               'success' => $successCount,
+               'duplicates' => count($duplicateData),
+               'errors' => count($errorData)
+            ]
+         ];
+
+         if (!empty($duplicateData)) {
+            $response['duplicates'] = $duplicateData;
+         }
+
+         if (!empty($errorData)) {
+            $response['errors'] = $errorData;
+         }
+
+         echo json_encode($response);
+
+      } catch (Exception $e) {
+         echo json_encode([
+            'status' => 'error',
+            'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+         ]);
       }
       break;
 
