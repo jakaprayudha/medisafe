@@ -206,9 +206,7 @@ function getData($id_customer)
    $query = "SELECT * FROM ms_patient WHERE {$whereClause} ORDER BY {$orderByField} {$orderDir} LIMIT ?, ?";
    
    $dataStmt = $koneksi->prepare($query);
-   $bindParams[] = $start;
-   $bindParams[] = $length;
-   $dataStmt->bind_param($bindType . "ii", ...$bindParams);
+   $dataStmt->bind_param($bindType . "ii", ...$bindParams, $start, $length);
    $dataStmt->execute();
    
    $data = $dataStmt->get_result()->fetch_all(MYSQLI_ASSOC);
