@@ -46,7 +46,7 @@ function createData($id_customer)
       exit;
    }
 
-   // 🔥 AMBIL nomor RM per customer
+   // AMBIL nomor RM per customer
    $stmt = $koneksi->prepare(
       "SELECT nomor_rm_end FROM setting_clinic 
        WHERE id_customer=? LIMIT 1"
@@ -70,12 +70,12 @@ function createData($id_customer)
 
    $stmt->close();
 
-   // 🔥 generate nomor RM
+   // generate nomor RM
    $newRM = $lastRM + 1;
    $nomorRM = str_pad($newRM, 6, "0", STR_PAD_LEFT);
    $count = 0;
 
-   // 🔥 generate patient_number unik
+   // generate patient_number unik
    do {
       $patientNumber = "PCT-" . strtoupper(bin2hex(random_bytes(4)));
 
@@ -89,7 +89,7 @@ function createData($id_customer)
       $check->close();
    } while ($count > 0);
 
-   // 🔥 update nomor_rm_end per customer
+   // update nomor_rm_end per customer
    $update = $koneksi->prepare(
       "UPDATE setting_clinic 
        SET nomor_rm_end=? 
@@ -99,7 +99,7 @@ function createData($id_customer)
    $update->execute();
    $update->close();
 
-   // 🔥 fields
+   // fields
    $allowedFields = [
       'patient_name',
       'patient_gender',
@@ -149,20 +149,76 @@ function getData($id_customer)
 {
    global $koneksi;
 
-   $stmt = $koneksi->prepare(
-      "SELECT * FROM ms_patient 
-       WHERE id_customer=? 
-       ORDER BY patient_name DESC"
+   // SERVER-SIDE DATATABLE PARAMETERS
+   $draw = isset($_GET['draw']) ? intval($_GET['draw']) : 1;
+   $start = isset($_GET['start']) ? intval($_GET['start']) : 0;
+   $length = isset($_GET['length']) ? intval($_GET['length']) : 10;
+   $searchValue = isset($_GET['search']['value']) ? $_GET['search']['value'] : '';
+   
+   // ORDERING
+   $orderColumn = 0;
+   $orderDir = 'ASC';
+   
+   if (isset($_GET['order'][0]['column'])) {
+      $orderColumn = intval($_GET['order'][0]['column']);
+      $orderDir = strtoupper($_GET['order'][0]['dir']) === 'DESC' ? 'DESC' : 'ASC';
+   }
+   
+   // MAP COLUMN INDEX TO FIELD NAME
+   $columns = ['nomor_rm', 'patient_name', 'patient_datebirth', 'patient_gender', 'patient_religion', 'patient_phone', 'face_image', 'face_image'];
+   $orderByField = isset($columns[$orderColumn]) ? $columns[$orderColumn] : 'patient_name';
+   
+   // BUILD WHERE CLAUSE
+   $whereClause = "id_customer=?";
+   $bindType = "i";
+   $bindParams = [$id_customer];
+   
+   if (!empty($searchValue)) {
+      $searchValue = "%{$searchValue}%";
+      $whereClause .= " AND (nomor_rm LIKE ? OR patient_name LIKE ? OR patient_phone LIKE ?)";
+      $bindType .= "sss";
+      $bindParams[] = $searchValue;
+      $bindParams[] = $searchValue;
+      $bindParams[] = $searchValue;
+   }
+   
+   // GET TOTAL RECORDS (all records for this customer)
+   $totalStmt = $koneksi->prepare(
+      "SELECT COUNT(*) as total FROM ms_patient WHERE id_customer=?"
    );
-
-   $stmt->bind_param("i", $id_customer);
-   $stmt->execute();
-
-   $data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-   echo json_encode(['status' => 'success', 'data' => $data]);
-
-   $stmt->close();
+   $totalStmt->bind_param("i", $id_customer);
+   $totalStmt->execute();
+   $totalResult = $totalStmt->get_result()->fetch_assoc();
+   $recordsTotal = $totalResult['total'];
+   $totalStmt->close();
+   
+   // GET FILTERED RECORDS COUNT
+   $filteredStmt = $koneksi->prepare(
+      "SELECT COUNT(*) as total FROM ms_patient WHERE {$whereClause}"
+   );
+   $filteredStmt->bind_param($bindType, ...$bindParams);
+   $filteredStmt->execute();
+   $filteredResult = $filteredStmt->get_result()->fetch_assoc();
+   $recordsFiltered = $filteredResult['total'];
+   $filteredStmt->close();
+   
+   // GET DATA WITH PAGINATION
+   $query = "SELECT * FROM ms_patient WHERE {$whereClause} ORDER BY {$orderByField} {$orderDir} LIMIT ?, ?";
+   
+   $dataStmt = $koneksi->prepare($query);
+   $dataStmt->bind_param($bindType . "ii", ...$bindParams, $start, $length);
+   $dataStmt->execute();
+   
+   $data = $dataStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+   $dataStmt->close();
+   
+   // RETURN DATATABLE FORMAT
+   echo json_encode([
+      'draw' => $draw,
+      'recordsTotal' => $recordsTotal,
+      'recordsFiltered' => $recordsFiltered,
+      'data' => $data
+   ]);
 }
 
 // ================= READ BY ID =================
@@ -264,7 +320,7 @@ function deleteData($id_customer)
       return;
    }
 
-   // 🔥 CEK RELASI KE pasien_visit
+   // CEK RELASI KE pasien_visit
    $check = $koneksi->prepare(
       "SELECT COUNT(*) FROM pasien_visit 
        WHERE id_patient=?"
@@ -286,7 +342,7 @@ function deleteData($id_customer)
       return;
    }
 
-   // 🔥 DELETE (kalau aman)
+   // DELETE (kalau aman)
    $stmt = $koneksi->prepare(
       "DELETE FROM ms_patient 
        WHERE id_patient=? AND id_customer=?"

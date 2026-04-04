@@ -191,7 +191,7 @@ require '../../controller/view.php';
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
       processing: true,
-      serverSide: false, // 🔹 ubah jadi false
+      serverSide: true,
       scrollX: true,
       ajax: {
         url: apiUrl,
@@ -202,7 +202,7 @@ require '../../controller/view.php';
               "actions": `
                       <div class="text-center">
 								<div class="btn-group btn-group-sm" role="group">
-                  <!-- 🔥 Tombol kamera -->
+                  <!-- Tombol kamera -->
                   <a class="btn btn-primary camera-btn" href="javascript:;" data-id="${row.id_patient}">
                     <i class="fas fa-camera"></i>
                   </a>
@@ -268,6 +268,7 @@ require '../../controller/view.php';
           searchable: false
         },
       ],
+      order: [[1, 'asc']],
       footerCallback: function(row, data, start, end, display) {
         var api = this.api();
 
@@ -373,7 +374,7 @@ require '../../controller/view.php';
   let stream = null;
 
   $(document).on("click", ".camera-btn", async function() {
-    // 🔥 WAJIB: ambil id dari tombol
+    // WAJIB: ambil id dari tombol
     currentPatientId = $(this).data("id");
     console.log("📌 ID PATIENT:", currentPatientId);
     const modalEl = document.getElementById("cameraModal");
@@ -428,7 +429,7 @@ require '../../controller/view.php';
 
         setTimeout(() => {
           table.ajax.reload(null, false);
-        }, 500); // 🔥 delay 0.5 detik
+        }, 500); // delay 0.5 detik
       });
 
 
@@ -449,7 +450,7 @@ require '../../controller/view.php';
 
       const video = document.getElementById("video");
       if (video) {
-        video.srcObject = null; // 🔥 penting
+        video.srcObject = null; // penting
       }
 
     });
