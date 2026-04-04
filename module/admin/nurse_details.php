@@ -83,6 +83,7 @@ $no = $_GET['no'];
                             <option value="Ahli Gizi">Ahli Gizi</option>
                             <option value="Fisioterapis">Fisioterapis</option>
                             <option value="Konselor">Konselor</option>
+                            <option value="Analis">Analis</option>
                             <option value="Lainnya">Lainnya</option>
                           </select>
                         </div>
