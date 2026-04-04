@@ -48,8 +48,7 @@ require '../../controller/view.php';
                         <tr>
                           <th class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Lengkap</th>
-                          <th scope="col" class="text-dark fw-normal">NIK</th>
-                          <th scope="col" class="text-dark fw-normal">BPJS</th>
+                          <th scope="col" class="text-dark fw-normal">TTL</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">Agama</th>
                           <th scope="col" class="text-dark fw-normal">No.Handphone</th>
@@ -117,20 +116,8 @@ require '../../controller/view.php';
             </div>
             <div class="col-12">
               <div class="mb-3">
-                <label class="form-label" id="patient_name">Nama Pasien</label>
+                <label class="form-label required" id="patient_name">Nama Pasien</label>
                 <input type="text" id="patient_name" name="patient_name" class="form-control" required>
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="mb-3">
-                <label class="form-label" id="patient_nik">NIK</label>
-                <input type="text" id="patient_nik" name="patient_nik" class="form-control">
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="mb-3">
-                <label class="form-label required" id="patient_nik">No.Kartu BPJS</label>
-                <input type="text" id="patient_bpjs" name="patient_bpjs" class="form-control">
               </div>
             </div>
             <div class="col-6">
@@ -211,28 +198,6 @@ require '../../controller/view.php';
         type: "GET",
         dataSrc: function(json) {
           return json.data.map(function(row) {
-
-
-            // 🔥 CEK DATA KOSONG
-            if (!json.data || json.data.length === 0) {
-
-              // hapus alert lama biar gak dobel
-              $('#emptyAlert').remove();
-
-              // tampilkan alert
-              $('.card-body').prepend(`
-                  <div id="emptyAlert" class="alert alert-warning">
-                    ⚠️ Data pasien ini akan tersedia ketika faskes mendaftarkan pasien 
-                    karena sudah terintegrasi dengan <b>PCare BPJS</b>
-                  </div>
-                `);
-
-              return []; // tetap return array kosong ke datatable
-            }
-
-            // 🔥 HAPUS ALERT kalau data sudah ada
-            $('#emptyAlert').remove();
-
             return {
               "actions": `
                       <div class="text-center">
@@ -256,8 +221,7 @@ require '../../controller/view.php';
                     `,
               "rm": row.nomor_rm ?? "-",
               "name": row.patient_name ?? "-",
-              "nik": row.patient_nik ?? "-",
-              "bpjs": row.patient_bpjs ?? "-",
+              "ttl": row.patient_datebirth + '/' + row.patient_place ?? "-",
               "gender": row.patient_gender ?? "-",
               "agama": row.patient_religion ?? "-",
               "phone": row.patient_phone ?? "-",
@@ -281,10 +245,7 @@ require '../../controller/view.php';
           data: "name"
         },
         {
-          data: "nik"
-        },
-        {
-          data: "bpjs"
+          data: "ttl"
         },
         {
           data: "gender"
@@ -307,9 +268,7 @@ require '../../controller/view.php';
           searchable: false
         },
       ],
-      order: [
-        [1, 'asc']
-      ],
+      order: [[1, 'asc']],
       footerCallback: function(row, data, start, end, display) {
         var api = this.api();
 
@@ -343,17 +302,18 @@ require '../../controller/view.php';
     // 🔹 Submit (Tambah / Update)
     $('#programForm').on('submit', function(e) {
       e.preventDefault();
-
-      let formData = $(this).serialize();
+      let formData = new URLSearchParams(new FormData(this));
       let id = $('#id_patient').val();
 
-      $.ajax({
-        url: apiUrl,
-        type: 'POST',
-        data: formData,
-        success: function(res) {
-          let data = typeof res === 'string' ? JSON.parse(res) : res;
-
+      fetch(apiUrl + (id ? `?id=${id}` : ''), {
+          method: id ? 'PUT' : 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
           if (data.status === 'success') {
             Swal.fire('Berhasil!', data.message, 'success');
             $('#programModal').modal('hide');
@@ -361,11 +321,7 @@ require '../../controller/view.php';
           } else {
             Swal.fire('Gagal!', data.message, 'error');
           }
-        },
-        error: function(xhr) {
-          Swal.fire('Error!', xhr.responseText, 'error');
-        }
-      });
+        });
     });
     // 🔹 Edit
     $(document).on('click', '.edit-btn', function() {
