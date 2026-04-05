@@ -499,7 +499,7 @@ require '../../controller/view.php';
   APP.window = APP.window || {};
   $(document).ready(function() {
     $('#filterModal').on('show.bs.modal', function() {
-      APP.ambil_data('#kdDokter', 'dokter/0/15', 'nmDokter', 'nmDokter', false);
+      APP.ambil_data('#kdDokter', 'dokter/0/15', 'kdDnmDokterokter', 'nmDokter', false);
       // loadDoctors();
       loadProviders();
     });
