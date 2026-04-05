@@ -431,7 +431,7 @@ require '../../controller/view.php';
         .catch(function() {
           // Keep polling on network hiccup
         });
-    }, 2000);
+    }, 60000);
   }
 
   function showImportResult(result) {
