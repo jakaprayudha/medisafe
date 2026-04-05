@@ -82,9 +82,40 @@ require '../../controller/view.php';
           }
           ?>
           <?php
-          $rm = $_GET['rm'];
-          $checkpasien = mysqli_query($koneksi, "SELECT * FROM ms_patient WHERE nomor_rm = '$rm'");
-          $datapasien = mysqli_fetch_array($checkpasien);
+          $visitId = $_GET['no'] ?? '';
+          $rm = $_GET['rm'] ?? '';
+          $datapasien = null;
+          $datavisit = null;
+
+          if ($visitId !== '') {
+            $checkvisit = mysqli_query($koneksi, "SELECT 
+              pv.id_patient,
+              mp.nomor_rm,
+              md.doctor_name, 
+              pv.diagnosa,
+              pv.id_doctor,
+              icd_10.code,
+              icd_10.icd10 as icd_name
+            FROM pasien_visit pv
+            LEFT JOIN ms_patient mp 
+              ON mp.id_patient = pv.id_patient
+            LEFT JOIN ms_doctor md 
+              ON pv.id_doctor = md.id_doctor 
+            LEFT JOIN icd_10 
+              ON icd_10.code = pv.diagnosa  
+            WHERE pv.visit_ID = '$visitId'
+            LIMIT 1
+            ");
+            $datavisit = mysqli_fetch_array($checkvisit);
+            if ($datavisit) {
+              $datapasien = $datavisit;
+            }
+          }
+
+          if (!$datapasien && $rm !== '') {
+            $checkpasien = mysqli_query($koneksi, "SELECT * FROM ms_patient WHERE nomor_rm = '$rm'");
+            $datapasien = mysqli_fetch_array($checkpasien);
+          }
           ?>
 
           <div class="row">
@@ -120,25 +151,8 @@ require '../../controller/view.php';
                     </style>
 
                     <div class="row g-3">
-                      <input type="hidden" name="id_patient" id="id_patient" value="<?= $datapasien['id_patient'] ?>">
-                      <input type="hidden" name="visit_ID_inpatient" id="visit_ID_inpatient" value="<?= $_GET['no'] ?>">
-                      <?php
-                      $checkvisit = mysqli_query($koneksi, "SELECT 
-                        ms_doctor.doctor_name, 
-                        pasien_visit.diagnosa,
-                        pasien_visit.id_doctor,
-                        icd_10.code,
-                        icd_10.icd10 as icd_name
-                      FROM pasien_visit 
-                      INNER JOIN ms_doctor 
-                        ON pasien_visit.id_doctor = ms_doctor.id_doctor 
-                      LEFT JOIN icd_10 
-                        ON icd_10.code = pasien_visit.diagnosa  
-                      WHERE visit_ID = '" . $_GET['no'] . "' 
-                        AND id_patient = '" . $datapasien['id_patient'] . "'
-                    ");
-                      $datavisit = mysqli_fetch_array($checkvisit);
-                      ?>
+                      <input type="hidden" name="id_patient" id="id_patient" value="<?= $datapasien['id_patient'] ?? '' ?>">
+                      <input type="hidden" name="visit_ID_inpatient" id="visit_ID_inpatient" value="<?= $visitId ?>">
 
 
                       <!-- Dokter Penanggung Jawab -->
@@ -153,8 +167,8 @@ require '../../controller/view.php';
                         // }
                         ?>
                         <!-- </select> -->
-                        <input type="text" class="form-control bg-light" id="" name="" value="<?= $datavisit['doctor_name'] ?>" readonly>
-                        <input type="hidden" name="id_doctor" id="id_doctor" value="<?= $datavisit['id_doctor'] ?>">
+                        <input type="text" class="form-control bg-light" id="" name="" value="<?= $datavisit['doctor_name'] ?? '' ?>" readonly>
+                        <input type="hidden" name="id_doctor" id="id_doctor" value="<?= $datavisit['id_doctor'] ?? '' ?>">
                       </div>
 
                       <!-- Tanggal & Waktu Masuk -->
@@ -170,7 +184,7 @@ require '../../controller/view.php';
                       <!-- Diagnosa -->
                       <div class="col-md-12">
                         <label for="diagnosa" class="form-label fw-semibold">Diagnosa Awal</label>
-                        <input type="text" class="form-control bg-light" id="diagnosa" name="diagnosa_awal" value="<?= $datavisit['code'] . "-" . $datavisit['icd_name']  ?>" readonly>
+                        <input type="text" class="form-control bg-light" id="diagnosa" name="diagnosa_awal" value="<?= isset($datavisit['code']) ? ($datavisit['code'] . "-" . $datavisit['icd_name']) : '' ?>" readonly>
                       </div>
 
                       <!-- Catatan -->
