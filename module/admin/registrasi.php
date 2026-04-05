@@ -624,7 +624,7 @@ require '../../controller/view.php';
   $(document).ready(function() {
     $('#filterModal').on('show.bs.modal', function() {
       // loadDoctors();
-      APP.ambil_data('#kdDokter', 'dokter/0/15', 'nmDokter', 'nmDokter', false);
+      APP.ambil_data('#kdDokter', 'dokter/0/15', 'kdDokter', 'nmDokter', false);
       loadProviders();
       loadPoli();
     });
@@ -1218,6 +1218,19 @@ require '../../controller/view.php';
     loadProvider();
   });
 
+
+  function loadDoctors() {
+    fetch('controller/visit/getdoctor')
+      .then(res => res.json())
+      .then(res => {
+        let html = '<option value="">Pilih Dokter</option>';
+        res.forEach(d => {
+          html += `<option value="${d.id_doctor}">${d.doctor_name}</option>`;
+        });
+        $('#poli_doctor').html(html);
+      });
+  }
+
   function loadPoli() {
     poliSakit = true;
     var select = $('#poli_poli');
@@ -1237,7 +1250,7 @@ require '../../controller/view.php';
         select.empty();
         $.each(response.data, function(index, item) {
           if (item.poliSakit == poliSakit) {
-            select.append(new Option(item.nmPoli, item.nmPoli, false, false));
+            select.append(new Option(item.kdPoli, item.kdPoli, false, false));
           }
         });
         select.prop('disabled', false);
