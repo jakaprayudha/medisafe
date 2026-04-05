@@ -1212,7 +1212,7 @@ require '../../controller/view.php';
     const now = new Date();
     $('#poli_date').val(now.toISOString().split('T')[0]);
     $('#poli_time').val(now.toTimeString().slice(0, 5));
-    APP.ambil_data('#poli_doctor', 'dokter/0/15', 'kdDokter', 'nmDokter', true);
+    APP.ambil_data('#poli_doctor', 'dokter/0/15', 'nmDokter', 'nmDokter', true);
     // loadDoctors();
     loadPoli();
     loadProvider();
@@ -1250,7 +1250,7 @@ require '../../controller/view.php';
         select.empty();
         $.each(response.data, function(index, item) {
           if (item.poliSakit == poliSakit) {
-            select.append(new Option(item.nmPoli, item.kdPoli, false, false));
+            select.append(new Option(item.kdPoli, item.kdPoli, false, false));
           }
         });
         select.prop('disabled', false);
