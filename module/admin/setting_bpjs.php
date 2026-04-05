@@ -50,6 +50,9 @@ require '../../controller/view.php';
                   </nav>
                   <div class="tab-content" id="nav-tabContent">
                     <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
+                      <div class="alert mt-4 alert-warning" role="alert">
+                        Untuk usernam dan password pcare apabila anda telah melakukan perubahan di aplikasi pcare, silakan update juga di halaman ini agar aplikasi dapat terhubung dengan pcare dengan baik karena apabila tidak diperbarui maka aplikasi tidak dapat terhubung dengan pcare dan fitur yang terhubung dengan pcare tidak dapat digunakan dengan baik. Terima kasih.
+                      </div>
                       <div class="row mt-4">
                         <div class="col-12">
                           <div class="mb-3">
@@ -65,39 +68,48 @@ require '../../controller/view.php';
                         </div>
                         <div class="col-12">
                           <div class="mb-3">
+                            <label for="consumer_id" class="form-label">Kode PPK</label>
+                            <input type="text" class="form-control bg-light" id="kodePPK" name="kodePPK" readonly>
+                          </div>
+                        </div>
+                        <div class="col-12">
+                          <div class="mb-3">
                             <label for="consumer_id" class="form-label">Consumer ID</label>
-                            <input type="text" class="form-control" id="consumer_id" name="consumer_id" required>
+                            <input type="text" class="form-control bg-light" id="consumer_id" name="consumer_id" readonly>
                           </div>
                         </div>
                         <div class="col-12">
                           <div class="mb-3">
                             <label for="secret_key" class="form-label">Secret Key</label>
-                            <input type="text" class="form-control" id="secret_key" name="secret_key" required>
+                            <input type="text" class="form-control bg-light" id="secret_key" name="secret_key" readonly>
                           </div>
                         </div>
                         <div class="col-12">
                           <div class="mb-3">
-                            <label for="apps_code" class="form-label">Kode Aplikasi</label>
-                            <input type="text" class="form-control" id="apps_code" name="apps_code" readonly>
+                            <label for="apps_code" class="form-label">Kode Aplikasi (Services)</label>
+                            <input type="text" class="form-control bg-light" id="apps_code" name="apps_code" readonly>
                           </div>
                         </div>
                         <div class="col-12">
                           <div class="mb-3">
                             <label for="user_key" class="form-label">User Key</label>
-                            <input type="text" class="form-control" id="user_key" name="user_key" required>
+                            <input type="text" class="form-control bg-light" id="user_key" name="user_key" readonly>
                           </div>
                         </div>
                         <div class="col-12">
                           <div class="mb-3">
                             <label for="kode_provider" class="form-label">Kode Provider</label>
-                            <input type="text" class="form-control" id="kode_provider" name="kode_provider" required>
+                            <input type="text" class="form-control bg-light" id="kode_provider" name="kode_provider" readonly>
                           </div>
                         </div>
                       </div>
                       <button class="btn btn-primary col-12">Simpan</button>
                     </div>
                     <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" tabindex="0">
-                      <div class="row mt-4">
+                      <div class="alert alert-danger" role="alert">
+                        Proses Integrasi (Bridging) Antrean Online sedang dalam tahap koordinasi menunggu jadwal UAT, untuk informasi lebih lanjut silakan hubungi tim IT kami. Terima kasih atas pengertiannya.
+                      </div>
+                      <!-- <div class="row mt-4">
                         <div class="col-12">
                           <div class="mb-3">
                             <label for="username_antrol" class="form-label">Username Antrean Online</label>
@@ -129,10 +141,13 @@ require '../../controller/view.php';
                           </div>
                         </div>
                       </div>
-                      <button class="btn btn-primary col-12">Simpan</button>
+                      <button class="btn btn-primary col-12">Simpan</button> -->
                     </div>
                     <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab" tabindex="0">
-                      <div class="row mt-4">
+                      <div class="alert alert-danger" role="alert">
+                        Proses Integrasi (Bridging) I Care sedang dalam tahap koordinasi menunggu jadwal UAT, untuk informasi lebih lanjut silakan hubungi tim IT kami. Terima kasih atas pengertiannya.
+                      </div>
+                      <!-- <div class="row mt-4">
                         <div class="col-12">
                           <div class="mb-3">
                             <label for="username_antrol" class="form-label">Username I Care</label>
@@ -163,8 +178,8 @@ require '../../controller/view.php';
                             <input type="text" class="form-control" id="user_key" name="user_key" required>
                           </div>
                         </div>
-                      </div>
-                      <button class="btn btn-primary col-12">Simpan</button>
+                      </div> -->
+                      <!-- <button class="btn btn-primary col-12">Simpan</button> -->
                     </div>
                   </div>
                 </div>
@@ -179,6 +194,50 @@ require '../../controller/view.php';
   require 'library.php';
   ?>
 </body>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    fetch('controller/master/pcareSetting.php')
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === 'success') {
+          const data = res.data;
 
+          document.getElementById('username_pcare').value = data.username ?? '';
+          document.getElementById('password_pcare').value = data.password ?? '';
+          document.getElementById('consumer_id').value = data.KodePPK ?? '';
+          document.getElementById('kodePPK').value = data.KodePPK ?? '';
+          document.getElementById('secret_key').value = data.secret_key ?? '';
+          document.getElementById('user_key').value = data.user_key ?? '';
+          document.getElementById('kode_provider').value = data.KodePPK ?? '';
+
+          // tambahan kalau mau
+          document.getElementById('apps_code').value = data.service_name ?? '';
+        }
+      })
+      .catch(err => console.error(err));
+  });
+</script>
+
+<script>
+  document.querySelector('.btn-primary').addEventListener('click', function(e) {
+    e.preventDefault();
+
+    const username = document.getElementById('username_pcare').value;
+    const password = document.getElementById('password_pcare').value;
+
+    fetch('controller/master/pcareUpdate.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+      })
+      .then(res => res.json())
+      .then(res => {
+        alert(res.message);
+      })
+      .catch(err => console.error(err));
+  });
+</script>
 
 </html>
