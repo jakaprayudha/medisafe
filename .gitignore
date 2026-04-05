@@ -1,22 +1,8 @@
-# Environment variables containing sensitive credentials
-.env
-
-# Server configuration, ignored to prevent overriding production settings
-.htaccess
-
-# Composer dependencies, must be installed via composer install on the server
-/vendor/
-
-# Local database files or backups
 /database/
-
-# Application generated files and user uploads
 /uploads/
-/logs/
-
-# Unnecessary model assets
+/vendor/
+.htaccess
+/logs
+.env
 models/uncompressed/
 models/proto/
-
-# macOS directory cache
-.DS_Store
