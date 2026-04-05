@@ -33,6 +33,16 @@ function getData()
 
    header('Content-Type: application/json');
 
+   $id_customer = $_SESSION['id_customer'] ?? null;
+   if (!$id_customer) {
+      http_response_code(401);
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Session tidak valid / expired'
+      ]);
+      return;
+   }
+
    $today = date('Y-m-d');
 
    // ================= PARAMETER =================
@@ -59,6 +69,11 @@ function getData()
 
    $params = [];
    $types  = "";
+
+   // 🔹 tenant/clinic
+   $query .= " AND pasien_visit.id_customer = ?";
+   $params[] = $id_customer;
+   $types .= "i";
 
    // 🔹 tanggal
    $query .= " AND DATE(pasien_visit.visit_date) BETWEEN ? AND ?";
