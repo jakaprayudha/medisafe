@@ -150,6 +150,7 @@ LEFT JOIN ms_users
     ON ms_users.id_customer = setting_clinic.id_customer 
     AND ms_users.roles = 'admin'  -- 🔥 pindah ke sini
 WHERE setting_clinic.status != 99
+GROUP BY setting_clinic.id
 ORDER BY setting_clinic.id DESC;";
    $result = mysqli_query($koneksi, $query);
 
