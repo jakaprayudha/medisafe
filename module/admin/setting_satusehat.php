@@ -131,131 +131,47 @@ require '../../controller/view.php';
     </div>
   </div>
 </body>
-
 <script>
-  const apiUrl = 'controller/master/dokterController';
+  const apiSatusehat = 'controller/master/settingSatusehatController.php';
 
+  // 🔹 Load data saat halaman dibuka
   $(document).ready(function() {
-    var table = $('#periodeTable').DataTable({
-      processing: true,
-      serverSide: false, // 🔹 ubah jadi false
-      ajax: {
-        url: apiUrl,
-        type: "GET",
-        dataSrc: function(json) {
-          return json.data.map(function(row) {
-            return {
-              "actions": `
-                      <div class="text-center">
-								<div class="btn-group btn-group-sm" role="group">
-									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_doctor}">
-											<i class="fas fa-edit"></i>
-									</a>
-								</div>
-							</div>
-                    `,
-              "name": row.doctor_name ?? "-",
-              "spesialis": row.poli_name ?? "-",
-              "phone": row.doctor_phone ?? "-",
-              "nik": row.doctor_nik ?? "-",
-            };
-          });
+    fetch(apiSatusehat)
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === 'success' && res.data) {
+          $('#client_id').val(res.data.client_id);
+          $('#client_secret').val(res.data.client_secret);
+          $('#organization_id').val(res.data.organization_id);
         }
-      },
-      columns: [{
-          data: "name"
-        },
-        {
-          data: "spesialis"
-        },
-        {
-          data: "phone"
-        },
-        {
-          data: "nik"
-        },
-        {
-          data: "actions",
-          orderable: false,
-          searchable: false
-        },
-      ],
-      footerCallback: function(row, data, start, end, display) {
-        var api = this.api();
+      });
+  });
 
-        // Hitung total bobot
-        let total = api
-          .column(3, {
-            page: 'current'
-          })
-          .data()
-          .reduce((a, b) => {
-            return (parseFloat(a) || 0) + (parseFloat(b) || 0);
-          }, 0);
 
-        // Tampilkan di footer
-        $(api.column(3).footer()).html(total.toFixed(2) + " %");
-      }
+  // 🔹 Submit
+  $('button.btn-primary').on('click', function() {
+
+    let formData = new URLSearchParams({
+      client_id: $('#client_id').val(),
+      client_secret: $('#client_secret').val(),
+      organization_id: $('#organization_id').val()
     });
 
-    $('#customSearch').on('keyup', function() {
-      table.search(this.value).draw();
-    });
-
-
-    // 🔹 Tambah
-    $('#btnTambah').on('click', function() {
-      $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
-      $('#id_doctor').val('');
-      $('#programModal .modal-title').text('Tambah Data');
-      $('#programModal').modal('show');
-    });
-
-    // 🔹 Submit (Tambah / Update)
-    $('#programForm').on('submit', function(e) {
-      e.preventDefault();
-      let formData = new URLSearchParams(new FormData(this));
-      let id = $('#id_doctor').val();
-
-      fetch(apiUrl + (id ? `?id=${id}` : ''), {
-          method: id ? 'PUT' : 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === 'success') {
-            Swal.fire('Berhasil!', data.message, 'success');
-            $('#programModal').modal('hide');
-            table.ajax.reload(null, false);
-          } else {
-            Swal.fire('Gagal!', data.message, 'error');
-          }
-        });
-    });
-
-    // 🔹 Edit
-    $(document).on('click', '.edit-btn', function() {
-      let id = $(this).data('id');
-      fetch(apiUrl + `?id=${id}`)
-        .then(res => res.json())
-        .then(resp => {
-          if (resp.status === 'success') {
-            let d = resp.data;
-
-            // isi otomatis berdasarkan name field
-            for (let key in d) {
-              $(`[name="${key}"]`).val(d[key]);
-            }
-
-            $('#programModal .modal-title').text('Edit Data');
-            $('#programModal').modal('show');
-          }
-        });
-    });
-
+    fetch(apiSatusehat, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: formData
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === 'success') {
+          Swal.fire('Berhasil', res.message, 'success');
+        } else {
+          Swal.fire('Gagal', res.message, 'error');
+        }
+      });
   });
 
   const apiSatusehat = 'controller/master/settingSatusehatController.php';
