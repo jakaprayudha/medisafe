@@ -111,6 +111,7 @@ require '../../controller/view.php';
   <?php
   require 'library.php';
   ?>
+  <script src="controller/admisi/helper.js"></script>
 </body>
 
 
@@ -495,9 +496,11 @@ require '../../controller/view.php';
 </div>
 
 <script>
+  APP.window = APP.window || {};
   $(document).ready(function() {
     $('#filterModal').on('show.bs.modal', function() {
-      loadDoctors();
+      APP.ambil_data('#kdDokter', 'dokter/0/15', 'kdDnmDokterokter', 'nmDokter', false);
+      // loadDoctors();
       loadProviders();
     });
 
@@ -990,34 +993,51 @@ require '../../controller/view.php';
     $('#poli_date').val(now.toISOString().split('T')[0]);
     $('#poli_time').val(now.toTimeString().slice(0, 5));
 
-    loadDoctors();
+    // loadDoctors();
+    APP.ambil_data('#poli_doctor', 'dokter/0/15', 'nmDokter', 'nmDokter', true);
     loadPoli();
     loadProvider();
   });
 
 
-  function loadDoctors() {
-    fetch('controller/visit/getdoctor')
-      .then(res => res.json())
-      .then(res => {
-        let html = '<option value="">Pilih Dokter</option>';
-        res.forEach(d => {
-          html += `<option value="${d.id_doctor}">${d.doctor_name}</option>`;
-        });
-        $('#poli_doctor').html(html);
-      });
-  }
-
   function loadPoli() {
-    fetch('controller/visit/getpoli')
-      .then(res => res.json())
-      .then(res => {
-        let html = '<option value="">Pilih Poli</option>';
-        res.forEach(p => {
-          html += `<option value="${p.id_poli}">${p.poli_name}</option>`;
+    poliSakit = true;
+    var select = $('#poli_poli');
+    select.empty();
+    select.prop('disabled', true);
+    select.html('<option value="">Mencari data...</option>');
+    select.val('').trigger('change');
+    $.ajax({
+      url: 'controller/admisi/services/getPoli.php',
+      type: 'POST',
+      dataType: 'json',
+      success: function(response) {
+        if (!response.success) {
+          console.log('Gagal load poli');
+          return;
+        }
+        select.empty();
+        $.each(response.data, function(index, item) {
+          if (item.poliSakit == poliSakit) {
+            select.append(new Option(item.nmPoli, item.nmPoli, false, false));
+          }
         });
-        $('#poli_poli').html(html);
-      });
+        select.prop('disabled', false);
+        select.trigger('change');
+      },
+      error: function(xhr, status, error) {
+        console.log(xhr.responseText);
+      }
+    });
+    // fetch('controller/visit/getpoli')
+    //   .then(res => res.json())
+    //   .then(res => {
+    //     let html = '<option value="">Pilih Poli</option>';
+    //     res.forEach(p => {
+    //       html += `<option value="${p.id_poli}">${p.poli_name}</option>`;
+    //     });
+    //     $('#poli_poli').html(html);
+    //   });
   }
 
   function loadProvider() {

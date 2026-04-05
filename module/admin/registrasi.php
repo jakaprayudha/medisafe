@@ -624,7 +624,7 @@ require '../../controller/view.php';
   $(document).ready(function() {
     $('#filterModal').on('show.bs.modal', function() {
       // loadDoctors();
-      APP.ambil_data('#kdDokter', 'dokter/0/15', 'kdDokter', 'nmDokter', false);
+      APP.ambil_data('#kdDokter', 'dokter/0/15', 'nmDokter', 'nmDokter', false);
       loadProviders();
       loadPoli();
     });
@@ -1217,19 +1217,6 @@ require '../../controller/view.php';
     loadPoli();
     loadProvider();
   });
-
-
-  function loadDoctors() {
-    fetch('controller/visit/getdoctor')
-      .then(res => res.json())
-      .then(res => {
-        let html = '<option value="">Pilih Dokter</option>';
-        res.forEach(d => {
-          html += `<option value="${d.id_doctor}">${d.doctor_name}</option>`;
-        });
-        $('#poli_doctor').html(html);
-      });
-  }
 
   function loadPoli() {
     poliSakit = true;
