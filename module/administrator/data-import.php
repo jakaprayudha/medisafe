@@ -713,9 +713,9 @@ require '../../controller/view.php';
       });
   });
 
-  // Load on page ready and refresh every 5 seconds
+  // Load on page ready and refresh every 60 seconds
   loadJobsTable();
-  setInterval(loadJobsTable, 5000);
+  setInterval(loadJobsTable, 60000);
 </script>
 
 </html>
