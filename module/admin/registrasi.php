@@ -1250,7 +1250,7 @@ require '../../controller/view.php';
         select.empty();
         $.each(response.data, function(index, item) {
           if (item.poliSakit == poliSakit) {
-            select.append(new Option(item.kdPoli, item.kdPoli, false, false));
+            select.append(new Option(item.nmPoli, item.nmPoli, false, false));
           }
         });
         select.prop('disabled', false);
