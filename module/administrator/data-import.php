@@ -580,8 +580,9 @@ require '../../controller/view.php';
   // 🔹 upload
   $('#btnUpload').on('click', function() {
 
-    let type = $('#importType').val();
+    let type   = $('#importType').val();
     let faskes = $('#faskesSelect').val();
+    let file   = $('#importFile')[0].files[0];
 
     if (!type) {
       Swal.fire('Error', 'Pilih jenis data', 'error');
@@ -593,21 +594,24 @@ require '../../controller/view.php';
       return;
     }
 
+    if (!file) {
+      Swal.fire('Error', 'Pilih file Excel terlebih dahulu', 'error');
+      return;
+    }
+
     // set loading state
     const $btn = $(this);
     const originalText = $btn.html();
     $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Sedang memproses...');
 
+    const formData = new FormData();
+    formData.append('type', type);
+    formData.append('id_faskes', faskes);
+    formData.append('file', file);
+
     fetch('https://importjobs.medisafe.id/api/import', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          type: type,
-          id_faskes: faskes, // 🔥 penting
-          data: excelData
-        })
+        body: formData
       })
       .then(res => res.json())
       .then(res => {
