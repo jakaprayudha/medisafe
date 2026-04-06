@@ -45,11 +45,6 @@ function createData($id_customer)
 {
    global $koneksi;
 
-   if (empty($_POST)) {
-      echo json_encode(['status' => 'error', 'message' => 'Data kosong']);
-      exit;
-   }
-
    // AMBIL nomor RM per customer
    $stmt = $koneksi->prepare(
       "SELECT nomor_rm_end FROM setting_clinic 
