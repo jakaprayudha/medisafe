@@ -12,15 +12,12 @@ use Lcobucci\JWT\Validation\Constraint\SignedWith;
 function validateBpjsToken($usernameParam)
 {
     global $koneksi;
-
-    // ambil user dari DB
     $stmt = $koneksi->prepare("SELECT * FROM setting_antrol WHERE username = ?");
     $stmt->bind_param('s', $usernameParam);
     $stmt->execute();
     $result = $stmt->get_result();
     $user = $result->fetch_assoc();
     $stmt->close();
-
     if (!$user) {
         echo json_encode([
             "metadata" => [
@@ -30,14 +27,10 @@ function validateBpjsToken($usernameParam)
         ]);
         exit;
     }
-
     $secret_key = $user['secret_key'];
-
-    // ambil header
     $headers = array_change_key_case(getallheaders(), CASE_LOWER);
     $tokenString = $headers['x-token'] ?? null;
     $headerUsername = $headers['x-username'] ?? null;
-
     if (!$tokenString || !$headerUsername) {
         echo json_encode([
             "metadata" => [
@@ -47,17 +40,12 @@ function validateBpjsToken($usernameParam)
         ]);
         exit;
     }
-
-    // konfigurasi JWT
     $config = Configuration::forSymmetricSigner(
         new Sha256(),
         InMemory::plainText($secret_key)
     );
-
     try {
         $token = $config->parser()->parse($tokenString);
-
-        // validasi signature
         $config->validator()->assert(
             $token,
             new SignedWith($config->signer(), $config->verificationKey())
@@ -78,8 +66,7 @@ function validateBpjsToken($usernameParam)
             ]);
             exit;
         }
-
-        return $token->claims();
+        return $user['id_customer'];
     } catch (Exception $e) {
         echo json_encode([
             "metadata" => [

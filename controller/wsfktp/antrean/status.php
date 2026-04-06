@@ -16,7 +16,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 $headers = array_change_key_case(getallheaders(), CASE_LOWER);
 $token = $headers['x-token'] ?? null;
 $username = $headers['x-username'] ?? null;
-$user = validateBpjsToken($username);
+$id_customer = validateBpjsToken($username);
+$json = file_get_contents("php://input");
+$data = json_decode($json, true);
 
 $url = $_SERVER['REQUEST_URI'];
 $segments = explode('/', trim(parse_url($url, PHP_URL_PATH), '/'));
@@ -41,43 +43,27 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggalperiksa)) {
     ]);
     exit;
 }
+$status = "selesai";
+$stmt = $koneksi->prepare("SELECT COUNT(*) as total, ms_poli.poli_name FROM pasien_visit INNER JOIN ms_poli ON ms_poli.poli_code = pasien_visit.id_poli WHERE pasien_visit.id_customer = ? AND ms_poli.id_customer = ? AND pasien_visit.id_poli = ? AND visit_date = ?");
+$stmt->bind_param("ssss", $id_customer, $id_customer, $kodepoli, $tanggalperiksa);
+$stmt->execute();
+$result = $stmt->get_result()->fetch_assoc();
 
-// query
-// $stmt = $koneksi->prepare("
-//     SELECT COUNT(*) as sisa
-//     FROM antrean
-//     WHERE kode_poli = ? 
-//     AND tanggal_periksa = ?
-//     AND status = 'menunggu'
-// ");
-// $stmt->bind_param("ss", $kode_poli, $tanggal);
-// $stmt->execute();
-
-// $result = $stmt->get_result()->fetch_assoc();
+$stmt1 = $koneksi->prepare("SELECT COUNT(*) as total FROM transaction_queue WHERE id_customer = ? AND id_poli = ? AND DATE(created_at) = ? AND `status` = ?");
+$stmt1->bind_param("ssss", $id_customer, $kodepoli, $tanggalperiksa, $status);
+$stmt1->execute();
+$result1 = $stmt1->get_result()->fetch_assoc();
 
 // response
 echo json_encode([
     "response" => [
         [
-            "namapoli" => "Poli Umum",
-            "totalantrean" => "25",
-            "sisaantrean" => 4,
-            "antreanpanggil" => "A1-21",
-            "keterangan" => "",
-            "kodedokter" => 123456,
-            "namadokter" => "Dr. Ali",
-            "jampraktek" => "08=>00-13=>00"
+            "namapoli" => $result['poli_name'],
+            "totalantrean" => $result['total'],
+            "sisaantrean" => $result['total'] - $result1['total'],
+            "antreanpanggil" => $result1['counter'] ?? 0,
+            "keterangan" => ""
         ],
-        [
-            "namapoli" => "Poli Umum",
-            "totalantrean" => "11",
-            "sisaantrean" => 1,
-            "antreanpanggil" => "A2-10",
-            "keterangan" => "",
-            "kodedokter" => 123466,
-            "namadokter" => "Dr. Adi",
-            "jampraktek" => "08:00-12:00"
-        ]
     ],
     "metadata" => [
         "message" => "Ok",

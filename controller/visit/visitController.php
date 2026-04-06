@@ -28,9 +28,7 @@ if ($method === 'POST') {
 function createVisit()
 {
    global $koneksi;
-
    try {
-
       $id_customer = $_SESSION['id_customer'] ?? null;
       $created_user = $_SESSION['fullname'] ?? null;
 
