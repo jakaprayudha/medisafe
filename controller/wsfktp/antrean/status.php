@@ -21,6 +21,7 @@ $json = file_get_contents("php://input");
 $data = json_decode($json, true);
 
 $url = $_SERVER['REQUEST_URI'];
+var_dump($segments);
 $segments = explode('/', trim(parse_url($url, PHP_URL_PATH), '/'));
 $kodepoli = $segments[5] ?? null;
 $tanggalperiksa = $segments[6] ?? null;
