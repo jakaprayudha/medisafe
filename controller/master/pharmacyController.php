@@ -3,6 +3,10 @@ include '../../database/connect.php';
 
 header('Content-Type: application/json');
 
+if (session_status() === PHP_SESSION_NONE) {
+   session_start();
+}
+
 // 🔐 VALIDASI SESSION
 if (!isset($_SESSION['id_customer'])) {
    http_response_code(401);
@@ -43,6 +47,13 @@ switch ($method) {
 function createData($id_customer)
 {
    global $koneksi;
+
+   if (empty($_POST)) {
+      $raw = file_get_contents("php://input");
+      if (!empty($raw)) {
+         parse_str($raw, $_POST);
+      }
+   }
 
    if (empty($_POST)) {
       echo json_encode(['status' => 'error', 'message' => 'Data kosong']);
