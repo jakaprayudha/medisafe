@@ -18,7 +18,10 @@ if (!$id_customer) {
 switch ($type) {
    // 🔹 Ambil daftar kelas unik
    case 'service_class':
-      $query = $koneksi->query("SELECT DISTINCT service_class FROM ms_room WHERE room_status = 1 ORDER BY service_class ASC");
+      $stmt = $koneksi->prepare("SELECT DISTINCT service_class FROM ms_room WHERE room_status = 1 AND id_customer = ? ORDER BY service_class ASC");
+      $stmt->bind_param("i", $id_customer);
+      $stmt->execute();
+      $result = $stmt->get_result();
       $data = [];
       while ($row = $result->fetch_assoc()) {
          $data[] = $row['service_class'];
