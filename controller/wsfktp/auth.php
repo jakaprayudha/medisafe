@@ -38,18 +38,17 @@ $stmt->execute();
 $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 $secret_key = $user['secret_key'];
-$stmt->close();
 
 if (!$user || !password_verify($password, $user['password'])) {
     echo json_encode([
         "metadata" => [
             "message" => "Username atau Password salah",
-            "code" => 401
+            "code" => 401,
         ]
     ]);
     exit;
 }
-
+$stmt->close();
 $config = Configuration::forSymmetricSigner(
     new Sha256(),
     InMemory::plainText($secret_key)
