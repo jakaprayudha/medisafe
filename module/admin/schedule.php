@@ -251,7 +251,8 @@ require '../../controller/view.php';
               <ul class="list-group">
                 <li class="list-group-item">Data Dokter</li>
                 <?php
-                $getdoctor = tampildata("SELECT * FROM ms_doctor WHERE doctor_status='1'");
+                $id_customer = $_SESSION['id_customer'];
+                $getdoctor = tampildata("SELECT * FROM ms_doctor WHERE doctor_status='1' AND id_customer='$id_customer' ");
                 ?>
                 <?php foreach ($getdoctor as $doctor): ?>
                   <li class="list-group-item doctor-item"
