@@ -3,10 +3,6 @@ include '../../database/connect.php';
 
 header('Content-Type: application/json');
 
-if (session_status() === PHP_SESSION_NONE) {
-   session_start();
-}
-
 // 🔐 VALIDASI SESSION
 if (!isset($_SESSION['id_customer'])) {
    http_response_code(401);
@@ -44,6 +40,20 @@ switch ($method) {
 function createData($id_customer)
 {
    global $koneksi;
+
+   // Ambil input (support JSON & POST)
+   $input = json_decode(file_get_contents("php://input"), true);
+
+   if (!empty($input)) {
+      $data = $input;
+   } else {
+      $data = $_POST;
+   }
+
+   if (empty($data)) {
+      echo json_encode(['status' => 'error', 'message' => 'Data kosong']);
+      exit;
+   }
 
    // AMBIL nomor RM per customer
    $stmt = $koneksi->prepare(
@@ -88,7 +98,7 @@ function createData($id_customer)
       $check->close();
    } while ($count > 0);
 
-   // update nomor_rm_end per customer
+   // update nomor_rm_end
    $update = $koneksi->prepare(
       "UPDATE setting_clinic 
        SET nomor_rm_end=? 
@@ -114,9 +124,9 @@ function createData($id_customer)
    $types  = "ssi";
 
    foreach ($allowedFields as $f) {
-      if (isset($_POST[$f])) {
+      if (isset($data[$f])) {
          $fields[] = $f;
-         $values[] = $_POST[$f];
+         $values[] = $data[$f];
          $types .= "s";
       }
    }
