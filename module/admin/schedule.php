@@ -258,7 +258,7 @@ require '../../controller/view.php';
                   <li class="list-group-item doctor-item"
                     data-id="<?= $doctor['id_doctor'] ?>"
                     data-name="<?= $doctor['doctor_name'] ?>">
-                    <?= $doctor['doctor_name'] ?>
+                    <?= $doctor['doctor_title_front'] ?> <?= $doctor['doctor_name'] ?>, <?= $doctor['doctor_title_back'] ?>
                   </li>
                 <?php endforeach   ?>
               </ul>
@@ -411,9 +411,7 @@ require '../../controller/view.php';
       fetch(`controller/master/scheduleController?id_doctor=${id_doctor}`)
         .then(res => res.json())
         .then(res => {
-
           schedules = res.data || [];
-
           return fetch(`controller/visit/visitScheduleController?id_doctor=${id_doctor}&start=${start}&end=${end}`);
         })
         .then(res => res.json())
