@@ -41,6 +41,13 @@ function createData()
    global $koneksi;
 
    if (empty($_POST)) {
+      $raw = file_get_contents("php://input");
+      if (!empty($raw)) {
+         parse_str($raw, $_POST);
+      }
+   }
+
+   if (empty($_POST)) {
       echo json_encode([
          'status' => 'error',
          'message' => 'Data tidak ditemukan.'
