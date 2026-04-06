@@ -268,7 +268,9 @@ require '../../controller/view.php';
           searchable: false
         },
       ],
-      order: [[1, 'asc']],
+      order: [
+        [1, 'asc']
+      ],
       footerCallback: function(row, data, start, end, display) {
         var api = this.api();
 
@@ -302,18 +304,17 @@ require '../../controller/view.php';
     // 🔹 Submit (Tambah / Update)
     $('#programForm').on('submit', function(e) {
       e.preventDefault();
-      let formData = new URLSearchParams(new FormData(this));
+
+      let formData = $(this).serialize();
       let id = $('#id_patient').val();
 
-      fetch(apiUrl + (id ? `?id=${id}` : ''), {
-          method: id ? 'PUT' : 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
+      $.ajax({
+        url: apiUrl + (id ? '?id=' + id : ''),
+        type: id ? 'PUT' : 'POST',
+        data: formData,
+        success: function(res) {
+          let data = typeof res === 'string' ? JSON.parse(res) : res;
+
           if (data.status === 'success') {
             Swal.fire('Berhasil!', data.message, 'success');
             $('#programModal').modal('hide');
@@ -321,7 +322,8 @@ require '../../controller/view.php';
           } else {
             Swal.fire('Gagal!', data.message, 'error');
           }
-        });
+        }
+      });
     });
     // 🔹 Edit
     $(document).on('click', '.edit-btn', function() {

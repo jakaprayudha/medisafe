@@ -41,13 +41,20 @@ function createData($id_customer)
 {
    global $koneksi;
 
-   // Ambil input (support JSON & POST)
-   $input = json_decode(file_get_contents("php://input"), true);
+   header('Content-Type: application/json');
 
-   if (!empty($input)) {
-      $data = $input;
+   // Ambil input (support JSON, POST, PUT)
+   $raw = file_get_contents("php://input");
+   $json = json_decode($raw, true);
+
+   if (!empty($json)) {
+      $data = $json;
    } else {
-      $data = $_POST;
+      if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+         parse_str($raw, $data);
+      } else {
+         $data = $_POST;
+      }
    }
 
    if (empty($data)) {
@@ -55,102 +62,130 @@ function createData($id_customer)
       exit;
    }
 
-   // AMBIL nomor RM per customer
-   $stmt = $koneksi->prepare(
-      "SELECT nomor_rm_end FROM setting_clinic 
-       WHERE id_customer=? LIMIT 1"
-   );
-   $stmt->bind_param("i", $id_customer);
-   $stmt->execute();
-   $result = $stmt->get_result();
-
-   if ($row = $result->fetch_assoc()) {
-      $lastRM = intval($row['nomor_rm_end']);
-   } else {
-      $lastRM = 0;
-
-      $insert = $koneksi->prepare(
-         "INSERT INTO setting_clinic (id_customer, nomor_rm_end) VALUES (?,0)"
-      );
-      $insert->bind_param("i", $id_customer);
-      $insert->execute();
-      $insert->close();
-   }
-
-   $stmt->close();
-
-   // generate nomor RM
-   $newRM = $lastRM + 1;
-   $nomorRM = str_pad($newRM, 6, "0", STR_PAD_LEFT);
-   $count = 0;
-
-   // generate patient_number unik
-   do {
-      $patientNumber = "PCT-" . strtoupper(bin2hex(random_bytes(4)));
-
-      $check = $koneksi->prepare(
-         "SELECT COUNT(*) FROM ms_patient WHERE patient_number=?"
-      );
-      $check->bind_param("s", $patientNumber);
-      $check->execute();
-      $check->bind_result($count);
-      $check->fetch();
-      $check->close();
-   } while ($count > 0);
-
-   // update nomor_rm_end
-   $update = $koneksi->prepare(
-      "UPDATE setting_clinic 
-       SET nomor_rm_end=? 
-       WHERE id_customer=?"
-   );
-   $update->bind_param("ii", $newRM, $id_customer);
-   $update->execute();
-   $update->close();
-
-   // fields
-   $allowedFields = [
-      'patient_name',
-      'patient_gender',
-      'patient_religion',
-      'patient_datebirth',
-      'patient_place',
-      'patient_phone',
-      'patient_address'
-   ];
-
-   $fields = ['patient_number', 'nomor_rm', 'id_customer'];
-   $values = [$patientNumber, $nomorRM, $id_customer];
-   $types  = "ssi";
-
-   foreach ($allowedFields as $f) {
-      if (isset($data[$f])) {
-         $fields[] = $f;
-         $values[] = $data[$f];
-         $types .= "s";
+   // VALIDASI WAJIB
+   $required = ['patient_name', 'patient_gender'];
+   foreach ($required as $r) {
+      if (empty($data[$r])) {
+         echo json_encode([
+            'status' => 'error',
+            'message' => "$r wajib diisi"
+         ]);
+         exit;
       }
    }
 
-   $placeholders = implode(',', array_fill(0, count($fields), '?'));
-   $columns = implode(',', $fields);
+   // TRANSACTION (PENTING BANGET)
+   $koneksi->begin_transaction();
 
-   $stmt = $koneksi->prepare("INSERT INTO ms_patient ($columns) VALUES ($placeholders)");
-   $stmt->bind_param($types, ...$values);
+   try {
 
-   if ($stmt->execute()) {
+      // LOCK row biar tidak bentrok
+      $stmt = $koneksi->prepare(
+         "SELECT nomor_rm_end FROM setting_clinic 
+          WHERE id_customer=? FOR UPDATE"
+      );
+      $stmt->bind_param("i", $id_customer);
+      $stmt->execute();
+      $result = $stmt->get_result();
+
+      if ($row = $result->fetch_assoc()) {
+         $lastRM = (int)$row['nomor_rm_end'];
+      } else {
+         $lastRM = 0;
+
+         $insert = $koneksi->prepare(
+            "INSERT INTO setting_clinic (id_customer, nomor_rm_end) VALUES (?,0)"
+         );
+         $insert->bind_param("i", $id_customer);
+         $insert->execute();
+         $insert->close();
+      }
+      $stmt->close();
+
+      // generate nomor RM
+      $newRM = $lastRM + 1;
+      $nomorRM = str_pad($newRM, 6, "0", STR_PAD_LEFT);
+
+      // generate patient_number unik
+      do {
+         $patientNumber = "PCT-" . strtoupper(bin2hex(random_bytes(4)));
+
+         $check = $koneksi->prepare(
+            "SELECT COUNT(*) FROM ms_patient WHERE patient_number=?"
+         );
+         $check->bind_param("s", $patientNumber);
+         $check->execute();
+         $check->bind_result($count);
+         $check->fetch();
+         $check->close();
+
+      } while ($count > 0);
+
+      // update nomor_rm_end
+      $update = $koneksi->prepare(
+         "UPDATE setting_clinic 
+          SET nomor_rm_end=? 
+          WHERE id_customer=?"
+      );
+      $update->bind_param("ii", $newRM, $id_customer);
+      $update->execute();
+      $update->close();
+
+      // fields
+      $allowedFields = [
+         'patient_name',
+         'patient_gender',
+         'patient_religion',
+         'patient_datebirth',
+         'patient_place',
+         'patient_phone',
+         'patient_address'
+      ];
+
+      $fields = ['patient_number', 'nomor_rm', 'id_customer'];
+      $values = [$patientNumber, $nomorRM, $id_customer];
+      $types  = "ssi";
+
+      foreach ($allowedFields as $f) {
+         if (isset($data[$f])) {
+            $fields[] = $f;
+            $values[] = $data[$f];
+            $types .= "s";
+         }
+      }
+
+      $placeholders = implode(',', array_fill(0, count($fields), '?'));
+      $columns = implode(',', $fields);
+
+      $stmt = $koneksi->prepare("INSERT INTO ms_patient ($columns) VALUES ($placeholders)");
+      $stmt->bind_param($types, ...$values);
+
+      if (!$stmt->execute()) {
+         throw new Exception($stmt->error);
+      }
+
+      $stmt->close();
+
+      // COMMIT kalau sukses
+      $koneksi->commit();
+
       echo json_encode([
          'status' => 'success',
+         'message' => 'Data pasien berhasil disimpan',
          'patient_number' => $patientNumber,
          'nomor_rm' => $nomorRM
       ]);
-   } else {
+
+   } catch (Exception $e) {
+
+      // rollback kalau error
+      $koneksi->rollback();
+
       echo json_encode([
          'status' => 'error',
-         'message' => $stmt->error
+         'message' => $e->getMessage()
       ]);
    }
-
-   $stmt->close();
 }
 
 // ================= READ =================
