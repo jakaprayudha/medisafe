@@ -45,13 +45,15 @@ function getData()
       ms_patient.*, 
       ms_doctor.*, 
       ms_room.*,
-      ms_room_bed.*
+      ms_room_bed.*,
+      ms_provider.provider_name
    FROM pasien_visit
    INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient
    INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor
    INNER JOIN permintaan_ranap ON permintaan_ranap.visit_ID_inpatient = pasien_visit.visit_ID
    INNER JOIN ms_room ON ms_room.id_room = permintaan_ranap.id_room
    INNER JOIN ms_room_bed ON ms_room_bed.id_bed = permintaan_ranap.id_bed
+   LEFT JOIN ms_provider ON ms_provider.id_provider = pasien_visit.id_provider
    WHERE pasien_visit.status_rawatinap = 1";
 
    // Jika ada filter tanggal (contoh pakai visit_date)

@@ -57,7 +57,24 @@ require '../../controller/view.php';
                         </button>
                       </div>
                       <!-- Tombol kembali -->
-                      <div class="d-flex ms-auto">
+                      <div class="d-flex ms-auto gap-2">
+                        <div class="dropdown">
+                          <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-plus"></i> Tambah
+                          </button>
+                          <ul class="dropdown-menu dropdown-menu-end shadow">
+                            <li>
+                              <a class="dropdown-item" href="module/admin/patient_new">
+                                <i class="fas fa-user-plus me-2 text-primary"></i> Pasien Baru
+                              </a>
+                            </li>
+                            <li>
+                              <a class="dropdown-item poli-btn" href="javascript:;">
+                                <i class="fas fa-procedures me-2 text-success"></i> Pasien Rawat Inap
+                              </a>
+                            </li>
+                          </ul>
+                        </div>
                         <a href="module/admin/registrasi_booking_ranap">
                           <button class="btn btn-primary">
                             <i class="fas fa-list"></i> Permintaan Rawat Inap
@@ -380,46 +397,62 @@ require '../../controller/view.php';
   <div class="modal-dialog">
     <div class="modal-content">
 
-      <div class="modal-header bg-danger text-white">
-        <h5 class="modal-title">🩺 Registrasi Gawat Darurat</h5>
-        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      <div class="modal-header">
+        <h5 class="modal-title">Registrasi Rawat Inap</h5>
+        <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
       </div>
 
       <div class="modal-body">
 
         <form id="formPoli">
-          <input type="hidden" name="source_hub" id="source_hub" value="UGD">
-          <input type="hidden" name="poli_poli" id="poli_poli" value="0">
           <!-- Pasien -->
           <div class="mb-3">
-            <label class="form-label">👤 Nama Pasien</label>
+            <label class="form-label">Nama Pasien</label>
             <select name="id_patient_select" id="id_patient_select"
               class="form-select js-example-basic-item" required>
             </select>
           </div>
-
+          <div class="row">
+            <div class="col">
+              <!-- Tanggal -->
+              <div class="mb-3">
+                <label class="form-label">Tanggal</label>
+                <input type="date" id="poli_date" class="form-control">
+              </div>
+            </div>
+            <div class="col">
+              <!-- Jam -->
+              <div class="mb-3">
+                <label class="form-label">Jam Kunjungan</label>
+                <input type="time" id="poli_time" class="form-control">
+              </div>
+            </div>
+          </div>
           <!-- Dokter -->
           <div class="mb-3">
-            <label class="form-label">👨‍⚕️ Dokter</label>
+            <label class="form-label">Dokter</label>
             <select id="poli_doctor" class="form-select"></select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Kelas</label>
+            <select id="service_class" class="form-select"></select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Nama Kamar</label>
+            <select id="room_name" class="form-select"></select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">No. Tempat Tidur</label>
+            <select id="bed_name" class="form-select"></select>
           </div>
 
           <!-- Provider -->
           <div class="mb-3">
-            <label class="form-label">💳 Provider</label>
+            <label class="form-label">Provider</label>
             <select id="poli_provider" class="form-select"></select>
-          </div>
-
-          <!-- Tanggal -->
-          <div class="mb-3">
-            <label class="form-label">📅 Tanggal</label>
-            <input type="date" id="poli_date" class="form-control">
-          </div>
-
-          <!-- Jam -->
-          <div class="mb-3">
-            <label class="form-label">⏰ Jam Kunjungan</label>
-            <input type="time" id="poli_time" class="form-control">
           </div>
 
         </form>
@@ -428,7 +461,9 @@ require '../../controller/view.php';
 
       <div class="modal-footer">
         <button class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-        <button class="btn btn-success" id="btnSavePoli">💾 Simpan</button>
+        <button class="btn btn-success" id="btnSavePoli">
+          <i class="fas fa-save me-2"></i>Simpan
+        </button>
       </div>
 
     </div>
@@ -899,7 +934,7 @@ require '../../controller/view.php';
     $('#poli_time').val(now.toTimeString().slice(0, 5));
 
     loadDoctors();
-    loadPoli();
+    loadKelas();
     loadProvider();
   });
 
@@ -927,6 +962,148 @@ require '../../controller/view.php';
         $('#poli_provider').html(html);
       });
   }
+
+  function loadKelas() {
+    $('#service_class').html('<option value="">Loading...</option>');
+    $('#room_name').empty();
+    $('#bed_name').empty();
+
+    fetch('controller/visit/getRoomRanap.php?type=service_class')
+      .then(res => res.json())
+      .then(resp => {
+        if (resp.status === 'success') {
+          let opt = '<option value="">-- Pilih Kelas --</option>';
+          resp.data.forEach(v => opt += `<option value="${v}">${v}</option>`);
+          $('#service_class').html(opt);
+        }
+      });
+  }
+
+  $('#service_class').on('change', function() {
+    let kelas = $(this).val();
+    $('#room_name').html('<option value="">Loading...</option>');
+    $('#bed_name').html('');
+
+    if (kelas) {
+      fetch(`controller/visit/getRoomRanap.php?type=room_name&value=${kelas}`)
+        .then(res => res.json())
+        .then(resp => {
+          if (resp.status === 'success') {
+            let opt = '<option value="">-- Pilih Kamar --</option>';
+            resp.data.forEach(r => opt += `<option value="${r.id_room}">${r.room_name}</option>`);
+            $('#room_name').html(opt);
+          } else {
+            $('#room_name').html('<option value="">Tidak ada data</option>');
+          }
+        });
+    } else {
+      $('#room_name').html('');
+      $('#bed_name').html('');
+    }
+  });
+
+  $('#room_name').on('change', function() {
+    let id_room = $(this).val();
+    $('#bed_name').html('<option value="">Loading...</option>');
+
+    if (id_room) {
+      fetch(`controller/visit/getRoomRanap.php?type=bed_name&value=${id_room}`)
+        .then(res => res.json())
+        .then(resp => {
+          if (resp.status === 'success') {
+            let opt = '<option value="">-- Pilih Tempat Tidur --</option>';
+            resp.data.forEach(b => opt += `<option value="${b.id_bed}">${b.bed_name}-${b.bed_gender}</option>`);
+            $('#bed_name').html(opt);
+          } else {
+            $('#bed_name').html('<option value="">Tidak ada data</option>');
+          }
+        });
+    } else {
+      $('#bed_name').html('');
+    }
+  });
+
+  $('#btnSavePoli').on('click', function() {
+    const data = {
+      id_patient: $('#id_patient_select').val(),
+      id_doctor: $('#poli_doctor').val(),
+      room_name: $('#room_name').val(),
+      bed_name: $('#bed_name').val(),
+      id_provider: $('#poli_provider').val(),
+      visit_date: $('#poli_date').val(),
+      visit_time: $('#poli_time').val(),
+      source_hub: 'Rawat Inap'
+    };
+
+    if (!data.id_patient || !data.id_doctor || !data.visit_date || !data.visit_time || !data.room_name || !data.bed_name) {
+      alert('Data wajib belum lengkap');
+      return;
+    }
+
+    const formData = new URLSearchParams();
+    for (let key in data) {
+      formData.append(key, data[key] ?? '');
+    }
+
+    fetch('controller/visit/autoApproveRanap', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: formData
+      })
+      .then(res => res.json())
+      .then(resp => {
+        if (resp.status === 'success') {
+          Swal.fire('Registrasi Rawat Inap berhasil', '', 'success');
+          $('#poliModal').modal('hide');
+          $('#periodeTable').DataTable().ajax.reload(null, false);
+        } else {
+          Swal.fire('Gagal', resp.message || 'Terjadi kesalahan', 'error');
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Terjadi error');
+      });
+  });
+
+  $('#poliModal').on('shown.bs.modal', function() {
+    const $select = $('#id_patient_select');
+
+    if ($select.hasClass('select2-hidden-accessible')) {
+      $select.select2('destroy');
+    }
+
+    $select.select2({
+      dropdownParent: $('#poliModal'),
+      width: '100%',
+      placeholder: 'Cari pasien... ',
+      minimumInputLength: 2,
+      ajax: {
+        url: 'controller/admisi/patientSearchController',
+        type: 'GET',
+        dataType: 'json',
+        delay: 300,
+        data: function(params) {
+          return {
+            search: params.term
+          };
+        },
+        processResults: function(data) {
+          let items = data.data ? data.data : data;
+
+          return {
+            results: items.map(item => ({
+              id: item.id_patient,
+              text: `${item.patient_name} (${item.nomor_rm})`
+            }))
+          };
+        },
+        cache: true
+      }
+    });
+  });
 </script>
 
 </html>
