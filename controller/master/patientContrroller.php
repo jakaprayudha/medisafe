@@ -3,6 +3,10 @@ include '../../database/connect.php';
 
 header('Content-Type: application/json');
 
+if (session_status() === PHP_SESSION_NONE) {
+   session_start();
+}
+
 // 🔐 VALIDASI SESSION
 if (!isset($_SESSION['id_customer'])) {
    http_response_code(401);
