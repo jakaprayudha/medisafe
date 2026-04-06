@@ -10,6 +10,31 @@ require '../../controller/view.php';
   <?php
   require '../../assets/template/head.php';
   ?>
+  <style>
+    .logo-wrapper {
+      background: #f8f9fa;
+      border: 2px dashed #ddd;
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    .logo-wrapper img {
+      max-height: 120px;
+      object-fit: contain;
+    }
+
+    .card {
+      border-radius: 16px;
+    }
+
+    .form-control {
+      border-radius: 10px;
+    }
+
+    .btn {
+      border-radius: 10px;
+    }
+  </style>
 </head>
 
 <body>
@@ -30,68 +55,106 @@ require '../../controller/view.php';
       <!--  Header End -->
       <div class="body-wrapper-inner">
         <div class="container-fluid">
-          <div class="row">
-            <div class="col-lg-6 d-flex align-items-stretch">
-              <div class="card w-100">
-                <div class="card-body p-4">
-                  <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Pengaturan Klinik </h5>
-                    <!-- Grup tombol di sisi kanan -->
-                    <div class="d-flex ms-auto gap-2">
-                    </div>
-                  </div>
-                  <div class="table-responsive" data-simplebar>
-                    <form id="updateForm" method="POST">
-                      <div class="mb-3">
-                        <label for="clinic_name" class="form-label">Nama Klinik <span class="text-danger">*</span> </label>
-                        <input type="text" class="form-control" id="clinic_name" name="clinic_name" required>
-                      </div>
-                      <div class="mb-3">
-                        <label for="telepon" class="form-label">No.Telepon <span class="text-danger">*</span> </label>
-                        <input type="tel" class="form-control" id="telepon" name="telepon" required>
-                      </div>
-                      <div class="mb-3">
-                        <label for="alamat" class="form-label">Alamat <span class="text-danger">*</span> </label>
-                        <textarea name="alamat" id="alamat" class="form-control" rows="10"></textarea>
-                      </div>
-                      <button type="submit" class="btn btn-primary">Simpan</button>
-                    </form>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <?php
-            require '../../database/connect.php'; // Koneksi ke database
-            // Ambil logo dari database
-            $idcustomer = $_SESSION['id_customer'];
-            $query = "SELECT image_clinic FROM setting_clinic WHERE id_customer = '$idcustomer' LIMIT 1";
-            $result = $koneksi->query($query);
-            $data = $result->fetch_assoc();
-            $logoPath = isset($data['image_clinic']) ? "uploads/" . $data['image_clinic'] : "uploads/default.png";
-            ?>
+          <div class="row g-4">
 
-            <div class="col-lg-6">
-              <div class="card w-100">
+            <!-- 🔹 FORM -->
+            <div class="col-lg-8">
+              <div class="card shadow-sm border-0">
                 <div class="card-body p-4">
-                  <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Upload Logo</h5>
-                    <div class="d-flex ms-auto gap-2"></div>
-                  </div>
-                  <div class="text-center mb-3">
-                    <img id="previewLogo" src="<?= $logoPath ?>" alt="Logo Bisnis" class="img-fluid rounded" style="max-height: 150px;">
-                  </div>
-                  <div class="table-responsive" data-simplebar>
-                    <form id="uploadForm" enctype="multipart/form-data">
-                      <div class="mb-3">
-                        <label for="logo" class="form-label">File Logo <span class="text-danger">*</span></label>
-                        <input type="file" class="form-control" id="logo" name="logo" required>
+
+                  <h5 class="fw-bold mb-4">🏥 Informasi Klinik</h5>
+
+                  <form id="updateForm">
+
+                    <!-- BASIC -->
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label>Nama Klinik</label>
+                        <input type="text" class="form-control bg-light" readonly name="clinic_name">
                       </div>
-                      <button type="submit" class="btn btn-primary">Upload Proses</button>
-                    </form>
-                  </div>
+
+                      <div class="col-md-6 mb-3">
+                        <label>Nama PIC</label>
+                        <input type="text" class="form-control" name="pic_name">
+                      </div>
+                    </div>
+
+                    <!-- CONTACT -->
+                    <h6 class="mt-3 fw-semibold text-primary">Kontak</h6>
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <input type="text" class="form-control" name="pic_phone" placeholder="No HP">
+                      </div>
+
+                      <div class="col-md-6 mb-3">
+                        <input type="email" class="form-control" name="pic_email" placeholder="Email">
+                      </div>
+                    </div>
+
+                    <!-- ADDRESS -->
+                    <h6 class="mt-3 fw-semibold text-primary">Alamat</h6>
+                    <div class="mb-3">
+                      <textarea class="form-control" name="faskes_address" rows="3"></textarea>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-md-3 mb-3">
+                        <input type="text" class="form-control" name="faskes_prov" placeholder="Provinsi">
+                      </div>
+                      <div class="col-md-3 mb-3">
+                        <input type="text" class="form-control" name="faskes_city" placeholder="Kota">
+                      </div>
+                      <div class="col-md-3 mb-3">
+                        <input type="text" class="form-control" name="faskes_district" placeholder="Kecamatan">
+                      </div>
+                      <div class="col-md-3 mb-3">
+                        <input type="text" class="form-control" name="faskes_village" placeholder="Kelurahan">
+                      </div>
+                    </div>
+
+                    <!-- CONTRACT -->
+                    <h6 class="mt-3 fw-semibold text-primary">Kontrak</h6>
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <input type="date" class="form-control" name="contract_start">
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <input type="date" class="form-control" name="contract_end">
+                      </div>
+                    </div>
+
+                    <button class="btn btn-primary w-100 mt-3">💾 Simpan Perubahan</button>
+
+                  </form>
                 </div>
               </div>
             </div>
+
+            <!-- 🔹 LOGO PANEL -->
+            <div class="col-lg-4">
+              <div class="card shadow-sm border-0 text-center">
+                <div class="card-body p-4">
+
+                  <h5 class="fw-bold mb-3">Logo Klinik</h5>
+
+                  <div class="logo-wrapper mb-3">
+                    <img id="previewLogo" src="<?= $logoPath ?>" class="img-fluid rounded shadow-sm">
+                  </div>
+
+                  <form id="uploadForm" enctype="multipart/form-data">
+                    <input type="file" name="logo" id="logo" hidden>
+
+                    <button type="button" class="btn btn-outline-primary w-100 mb-2" onclick="$('#logo').click()">
+                      📁 Pilih Logo
+                    </button>
+
+                    <button class="btn btn-primary w-100">⬆ Upload</button>
+                  </form>
+
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -102,27 +165,35 @@ require '../../controller/view.php';
   ?>
 </body>
 <script>
+  $('#logo').on('change', function(e) {
+    let reader = new FileReader();
+    reader.onload = function(e) {
+      $('#previewLogo').attr('src', e.target.result);
+    }
+    reader.readAsDataURL(this.files[0]);
+  });
   $(document).ready(function() {
-    const apiUrl = 'controller/master/settingController';
+    const apiUrl = 'controller/master/faskesProfileController';
 
     // Fungsi untuk mengambil data bisnis (tanpa parameter ID)
     function getSurveyData() {
       fetch(apiUrl)
-        .then(response => response.json())
-        .then(data => {
-          if (data.status === 'success') {
-            let survey = data.user;
-            $('#clinic_name').val(survey.clinic_name);
-            $('#telepon').val(survey.phone_number);
-            $('#alamat').val(survey.address);
-          } else {
-            Swal.fire('Data tidak ditemukan', 'Pastikan setting bisnis sudah ada.', 'warning');
+        .then(res => res.json())
+        .then(res => {
+
+          if (res.status === 'success' && res.data) {
+
+            let d = res.data;
+
+            // 🔥 AUTO BIND (BEST PRACTICE)
+            for (let key in d) {
+              $(`[name="${key}"]`).val(d[key]);
+            }
+
           }
+
         })
-        .catch(error => {
-          console.error('Error:', error);
-          Swal.fire('Error', 'Terjadi kesalahan saat mengambil data.', 'error');
-        });
+        .catch(err => console.error(err));
     }
 
     // Fungsi untuk memperbarui data bisnis
@@ -161,7 +232,7 @@ require '../../controller/view.php';
       let formData = new FormData(this);
 
       $.ajax({
-        url: "controller/master/upload_logo.php", // Endpoint PHP untuk menangani upload
+        url: "controller/master/uploadLogoController", // Endpoint PHP untuk menangani upload
         type: "POST",
         data: formData,
         contentType: false,
