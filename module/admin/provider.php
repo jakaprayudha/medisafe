@@ -38,7 +38,7 @@ require '../../controller/view.php';
                     <h5 class="card-title fw-semibold">Data Jenis Bayar</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
-                      <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
+                      <!-- <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button> -->
                     </div>
                   </div>
                   <div class="table-responsive" data-simplebar>
@@ -47,8 +47,8 @@ require '../../controller/view.php';
                         <tr>
                           <th class="text-dark fw-normal">Kode</th>
                           <th scope="col" class="text-dark fw-normal">Jenis Bayar</th>
-                          <th scope="col" class="text-dark fw-normal text-center col-1">Status</th>
-                          <th scope="col" class="text-dark fw-normal text-center col-1">Actions</th>
+                          <!-- <th scope="col" class="text-dark fw-normal text-center col-1">Status</th> -->
+                          <!-- <th scope="col" class="text-dark fw-normal text-center col-1">Actions</th> -->
                         </tr>
                       </thead>
                       <tbody></tbody>
@@ -113,28 +113,28 @@ require '../../controller/view.php';
         dataSrc: function(json) {
           return json.data.map(function(row) {
             return {
-              "actions": `
-                      <div class="text-end">
-								<div class="btn-group btn-group-sm" role="group">
-									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_provider}">
-											<i class="fas fa-edit"></i>
-									</a>
-									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_provider}">
-											<i class="fas fa-trash"></i>
-									</a>
-								</div>
-							</div>
-                    `,
+              // "actions": `
+              //         <div class="text-end">
+              // 	<div class="btn-group btn-group-sm" role="group">
+              // 		<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_provider}">
+              // 				<i class="fas fa-edit"></i>
+              // 		</a>
+              // 		<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_provider}">
+              // 				<i class="fas fa-trash"></i>
+              // 		</a>
+              // 	</div>
+              // </div>
+              //       `,
               "code": row.provider_code,
               "name": row.provider_name,
-              "status": `
-                <label class="switch">
-                  <input type="checkbox" class="toggle-status" 
-                    data-id="${row.id_provider}" 
-                    ${row.provider_status == '1' ? 'checked' : ''}>
-                  <span class="slider round"></span>
-                </label>
-                `
+              // "status": `
+              //   <label class="switch">
+              //     <input type="checkbox" class="toggle-status" 
+              //       data-id="${row.id_provider}" 
+              //       ${row.provider_status == '1' ? 'checked' : ''}>
+              //     <span class="slider round"></span>
+              //   </label>
+              //   `
             };
           });
         }
@@ -145,31 +145,15 @@ require '../../controller/view.php';
         {
           data: "name"
         },
-        {
-          data: "status"
-        },
-        {
-          data: "actions",
-          orderable: false,
-          searchable: false
-        },
+        // {
+        //   data: "status"
+        // },
+        // {
+        //   data: "actions",
+        //   orderable: false,
+        //   searchable: false
+        // },
       ],
-      footerCallback: function(row, data, start, end, display) {
-        var api = this.api();
-
-        // Hitung total bobot
-        let total = api
-          .column(3, {
-            page: 'current'
-          })
-          .data()
-          .reduce((a, b) => {
-            return (parseFloat(a) || 0) + (parseFloat(b) || 0);
-          }, 0);
-
-        // Tampilkan di footer
-        $(api.column(3).footer()).html(total.toFixed(2) + " %");
-      }
     });
 
     $('#customSearch').on('keyup', function() {

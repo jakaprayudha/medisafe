@@ -4,39 +4,27 @@ include '../../database/connect.php';
 
 header('Content-Type: application/json');
 
-// 🔐 VALIDASI SESSION
-if (!isset($_SESSION['id_customer'])) {
-   http_response_code(401);
-   echo json_encode([
-      'status' => 'error',
-      'message' => 'Session tidak valid / expired'
-   ]);
-   exit;
-}
-
-$id_customer = $_SESSION['id_customer'];
-
 $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
    case 'POST':
-      createData($id_customer);
+      createData();
       break;
 
    case 'GET':
       if (isset($_GET['id'])) {
-         getID($_GET['id'], $id_customer);
+         getID($_GET['id']);
       } else {
-         getData($id_customer);
+         getData();
       }
       break;
 
    case 'PUT':
-      updateData($id_customer);
+      updateData();
       break;
 
    case 'DELETE':
-      deleteData($id_customer);
+      deleteData();
       break;
 
    default:
@@ -48,7 +36,7 @@ switch ($method) {
 }
 
 // ================= CREATE =================
-function createData($id_customer)
+function createData()
 {
    global $koneksi;
 
@@ -75,15 +63,10 @@ function createData($id_customer)
       }
    }
 
-   // 🔥 inject id_customer di akhir (lebih aman)
-   $fields[] = 'id_customer';
-   $values[] = $id_customer;
-
    $placeholders = implode(', ', array_fill(0, count($fields), '?'));
    $columns = implode(', ', $fields);
 
-   // semua string kecuali id_customer (int)
-   $types = str_repeat('s', count($values) - 1) . 'i';
+   $types = str_repeat('s', count($values));
 
    $query = "INSERT INTO ms_provider ($columns) VALUES ($placeholders)";
    $stmt = $koneksi->prepare($query);
@@ -108,40 +91,30 @@ function createData($id_customer)
 }
 
 // ================= READ ALL =================
-function getData($id_customer)
+function getData()
 {
    global $koneksi;
 
-   $query = "SELECT * FROM ms_provider 
-             WHERE id_customer = ? 
-             ORDER BY provider_name DESC";
+   $query = "SELECT * FROM ms_provider ORDER BY provider_name DESC";
 
-   $stmt = $koneksi->prepare($query);
-   $stmt->bind_param("i", $id_customer);
-   $stmt->execute();
-
-   $result = $stmt->get_result();
+   $result = $koneksi->query($query);
    $data = $result->fetch_all(MYSQLI_ASSOC);
 
    echo json_encode([
       'status' => 'success',
       'data' => $data
    ]);
-
-   $stmt->close();
 }
 
 // ================= READ BY ID =================
-function getID($id, $id_customer)
+function getID($id)
 {
    global $koneksi;
 
-   $query = "SELECT * FROM ms_provider 
-             WHERE id_provider = ? 
-             AND id_customer = ?";
+   $query = "SELECT * FROM ms_provider WHERE id_provider = ?";
 
    $stmt = $koneksi->prepare($query);
-   $stmt->bind_param("ii", $id, $id_customer);
+   $stmt->bind_param("i", $id);
    $stmt->execute();
 
    $result = $stmt->get_result();
@@ -162,7 +135,7 @@ function getID($id, $id_customer)
 }
 
 // ================= UPDATE =================
-function updateData($id_customer)
+function updateData()
 {
    global $koneksi;
 
@@ -183,12 +156,10 @@ function updateData($id_customer)
       $status = $_PUT['provider_status'];
 
       $stmt = $koneksi->prepare(
-         "UPDATE ms_provider 
-          SET provider_status=? 
-          WHERE id_provider=? AND id_customer=?"
+         "UPDATE ms_provider SET provider_status=? WHERE id_provider=?"
       );
 
-      $stmt->bind_param("iii", $status, $id, $id_customer);
+      $stmt->bind_param("ii", $status, $id);
 
       if ($stmt->execute()) {
          echo json_encode([
@@ -231,12 +202,11 @@ function updateData($id_customer)
    }
 
    $values[] = $id;
-   $values[] = $id_customer;
 
-   $types = str_repeat('s', count($values) - 2) . "ii";
+   $types = str_repeat('s', count($values) - 1) . "i";
 
    $query = "UPDATE ms_provider SET " . implode(',', $fields) . " 
-             WHERE id_provider=? AND id_customer=?";
+             WHERE id_provider=?";
 
    $stmt = $koneksi->prepare($query);
 
@@ -260,7 +230,7 @@ function updateData($id_customer)
 }
 
 // ================= DELETE =================
-function deleteData($id_customer)
+function deleteData()
 {
    global $koneksi;
 
@@ -274,12 +244,10 @@ function deleteData($id_customer)
       exit;
    }
 
-   $query = "DELETE FROM ms_provider 
-             WHERE id_provider = ? 
-             AND id_customer = ?";
+   $query = "DELETE FROM ms_provider WHERE id_provider = ?";
 
    $stmt = $koneksi->prepare($query);
-   $stmt->bind_param("ii", $id, $id_customer);
+   $stmt->bind_param("i", $id);
 
    if ($stmt->execute()) {
       echo json_encode([
