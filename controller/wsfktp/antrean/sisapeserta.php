@@ -21,9 +21,9 @@ $json = file_get_contents("php://input");
 $data = json_decode($json, true);
 $url = $_SERVER['REQUEST_URI'];
 $segments = explode('/', trim(parse_url($url, PHP_URL_PATH), '/'));
-$nokartu = $segments[5] ?? null;
-$kdpoli = $segments[6] ?? null;
-$tanggalperiksa = $segments[7] ?? null;
+$nokartu = $segments[4] ?? null;
+$kdpoli = $segments[5] ?? null;
+$tanggalperiksa = $segments[6] ?? null;
 
 $stmt = $koneksi->prepare("SELECT pasien_visit.*, ms_poli.poli_name FROM pasien_visit INNER JOIN ms_poli ON ms_poli.poli_code = pasien_visit.id_poli WHERE pasien_visit.id_customer = ? AND ms_poli.id_customer = ? AND pasien_visit.id_poli = ? AND visit_date = ? AND noKartu = ?");
 $stmt->bind_param("sssss", $id_customer, $id_customer, $kdpoli, $tanggalperiksa, $nokartu);
