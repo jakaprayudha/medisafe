@@ -3,6 +3,10 @@ include '../../database/connect.php';
 
 header('Content-Type: application/json');
 
+if (session_status() === PHP_SESSION_NONE) {
+   session_start();
+}
+
 // 🔐 VALIDASI SESSION
 if (!isset($_SESSION['id_customer'])) {
    http_response_code(401);
@@ -51,6 +55,9 @@ function createData($id_customer)
       $data = $json;
    } else {
       $data = $_POST;
+      if (empty($data) && !empty($raw)) {
+         parse_str($raw, $data);
+      }
    }
 
    if (empty($data)) {
@@ -107,6 +114,7 @@ function createData($id_customer)
       $nomorRM = str_pad($newRM, 6, "0", STR_PAD_LEFT);
 
       // ================== GENERATE PATIENT NUMBER ==================
+      $count = 0;
       do {
          $patientNumber = "PCT-" . strtoupper(bin2hex(random_bytes(4)));
 
