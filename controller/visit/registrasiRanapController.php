@@ -35,6 +35,12 @@ function getData()
 {
    global $koneksi;
 
+   if (session_status() === PHP_SESSION_NONE) {
+      session_start();
+   }
+
+   $id_customer = $_SESSION['id_customer'] ?? null;
+
    // Ambil parameter tanggal (opsional)
    $fromDate = isset($_GET['fromDate']) ? $_GET['fromDate'] : null;
    $toDate   = isset($_GET['toDate']) ? $_GET['toDate'] : null;
@@ -56,6 +62,11 @@ function getData()
    LEFT JOIN ms_provider ON ms_provider.id_provider = pasien_visit.id_provider
    WHERE pasien_visit.status_rawatinap = 1";
 
+   // Filter id_customer
+   if ($id_customer) {
+      $query .= " AND pasien_visit.id_customer = ?";
+   }
+
    // Jika ada filter tanggal (contoh pakai visit_date)
    if ($fromDate && $toDate) {
       $query .= " AND DATE(pasien_visit.visit_date) BETWEEN ? AND ?";
@@ -64,8 +75,22 @@ function getData()
    $query .= " ORDER BY pasien_visit.visit_date ASC";
 
    if ($stmt = $koneksi->prepare($query)) {
+      $params = [];
+      $types = '';
+
+      if ($id_customer) {
+         $params[] = $id_customer;
+         $types .= 'i';
+      }
+
       if ($fromDate && $toDate) {
-         $stmt->bind_param("ss", $fromDate, $toDate);
+         $params[] = $fromDate;
+         $params[] = $toDate;
+         $types .= 'ss';
+      }
+
+      if (!empty($params)) {
+         $stmt->bind_param($types, ...$params);
       }
 
       $stmt->execute();
