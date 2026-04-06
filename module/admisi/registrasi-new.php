@@ -309,8 +309,8 @@ require '../../controller/view.php';
       let id = $('#id_patient').val();
 
       $.ajax({
-        url: apiUrl + (id ? '?id=' + id : ''),
-        type: id ? 'PUT' : 'POST',
+        url: apiUrl,
+        type: 'POST',
         data: formData,
         success: function(res) {
           let data = typeof res === 'string' ? JSON.parse(res) : res;
@@ -322,6 +322,9 @@ require '../../controller/view.php';
           } else {
             Swal.fire('Gagal!', data.message, 'error');
           }
+        },
+        error: function(xhr) {
+          Swal.fire('Error!', xhr.responseText, 'error');
         }
       });
     });

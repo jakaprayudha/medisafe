@@ -43,27 +43,27 @@ function createData($id_customer)
 
    header('Content-Type: application/json');
 
-   // Ambil input (support JSON, POST, PUT)
-   $raw = file_get_contents("php://input");
+   // ================== AMBIL DATA ==================
+   $raw  = file_get_contents("php://input");
    $json = json_decode($raw, true);
 
    if (!empty($json)) {
       $data = $json;
    } else {
-      if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
-         parse_str($raw, $data);
-      } else {
-         $data = $_POST;
-      }
+      $data = $_POST;
    }
 
    if (empty($data)) {
-      echo json_encode(['status' => 'error', 'message' => 'Data kosong']);
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Data kosong'
+      ]);
       exit;
    }
 
-   // VALIDASI WAJIB
+   // ================== VALIDASI ==================
    $required = ['patient_name', 'patient_gender'];
+
    foreach ($required as $r) {
       if (empty($data[$r])) {
          echo json_encode([
@@ -74,12 +74,12 @@ function createData($id_customer)
       }
    }
 
-   // TRANSACTION (PENTING BANGET)
+   // ================== TRANSACTION ==================
    $koneksi->begin_transaction();
 
    try {
 
-      // LOCK row biar tidak bentrok
+      // ================== AMBIL & LOCK NOMOR RM ==================
       $stmt = $koneksi->prepare(
          "SELECT nomor_rm_end FROM setting_clinic 
           WHERE id_customer=? FOR UPDATE"
@@ -102,11 +102,11 @@ function createData($id_customer)
       }
       $stmt->close();
 
-      // generate nomor RM
-      $newRM = $lastRM + 1;
+      // ================== GENERATE NOMOR RM ==================
+      $newRM   = $lastRM + 1;
       $nomorRM = str_pad($newRM, 6, "0", STR_PAD_LEFT);
 
-      // generate patient_number unik
+      // ================== GENERATE PATIENT NUMBER ==================
       do {
          $patientNumber = "PCT-" . strtoupper(bin2hex(random_bytes(4)));
 
@@ -121,7 +121,7 @@ function createData($id_customer)
 
       } while ($count > 0);
 
-      // update nomor_rm_end
+      // ================== UPDATE NOMOR RM ==================
       $update = $koneksi->prepare(
          "UPDATE setting_clinic 
           SET nomor_rm_end=? 
@@ -131,7 +131,7 @@ function createData($id_customer)
       $update->execute();
       $update->close();
 
-      // fields
+      // ================== INSERT DATA PASIEN ==================
       $allowedFields = [
          'patient_name',
          'patient_gender',
@@ -150,12 +150,12 @@ function createData($id_customer)
          if (isset($data[$f])) {
             $fields[] = $f;
             $values[] = $data[$f];
-            $types .= "s";
+            $types   .= "s";
          }
       }
 
       $placeholders = implode(',', array_fill(0, count($fields), '?'));
-      $columns = implode(',', $fields);
+      $columns      = implode(',', $fields);
 
       $stmt = $koneksi->prepare("INSERT INTO ms_patient ($columns) VALUES ($placeholders)");
       $stmt->bind_param($types, ...$values);
@@ -166,7 +166,7 @@ function createData($id_customer)
 
       $stmt->close();
 
-      // COMMIT kalau sukses
+      // ================== COMMIT ==================
       $koneksi->commit();
 
       echo json_encode([
@@ -178,7 +178,6 @@ function createData($id_customer)
 
    } catch (Exception $e) {
 
-      // rollback kalau error
       $koneksi->rollback();
 
       echo json_encode([
