@@ -157,7 +157,8 @@ require '../../controller/view.php';
           <select name="id_doctor" id="id_doctor" class="form-select" required>
             <option value="">PILIH</option>
             <?php
-            $getdoc = tampildata("SELECT * FROM ms_doctor WHERE doctor_status='1'");
+            $id_customer = $_SESSION['id_customer'];
+            $getdoc = tampildata("SELECT * FROM ms_doctor WHERE doctor_status='1' AND id_customer='$id_customer' ");
             foreach ($getdoc as $doc) :
             ?>
               <option value="<?= $doc['id_doctor'] ?>"><?= $doc['doctor_name'] ?></option>
