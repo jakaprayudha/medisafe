@@ -61,6 +61,45 @@ $dataCust = mysqli_fetch_array($cust);
       pointer-events: none;
    }
 
+   .search-dropdown {
+      position: absolute;
+      top: 110%;
+      left: 0;
+      width: 100%;
+      max-height: 300px;
+      overflow-y: auto;
+
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #eee;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+
+      display: none;
+      z-index: 9999;
+   }
+
+   /* item */
+   .search-dropdown a {
+      padding: 10px 14px;
+      display: block;
+      border-bottom: 1px solid #f1f1f1;
+   }
+
+   .search-dropdown a:hover {
+      background: #f8f9fa;
+   }
+
+   /* nama */
+   .search-dropdown strong {
+      font-size: 14px;
+   }
+
+   /* detail */
+   .search-dropdown small {
+      color: #888;
+      font-size: 12px;
+   }
+
    /* =========================
    NAV LINK + ICON
 ========================= */
@@ -159,10 +198,19 @@ $dataCust = mysqli_fetch_array($cust);
 
          <!-- SEARCH PASIEN -->
          <li class="nav-item">
-            <div class="position-relative">
-               <input type="text" class="form-control ps-5" placeholder="Cari pasien...">
+            <div class="position-relative" style="width:300px;">
+
+               <input type="text"
+                  class="form-control ps-5"
+                  id="searchPatientNavbar"
+                  placeholder="Cari pasien...">
+
                <iconify-icon icon="solar:magnifer-linear"
                   class="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></iconify-icon>
+
+               <!-- 🔥 RESULT -->
+               <div id="searchResultNavbar" class="search-dropdown"></div>
+
             </div>
          </li>
       </ul>
@@ -216,3 +264,52 @@ $dataCust = mysqli_fetch_array($cust);
       </div>
    </nav>
 </header>
+<script>
+   let debounceTimer;
+
+   $('#searchPatientNavbar').on('keyup', function() {
+      let keyword = $(this).val();
+
+      clearTimeout(debounceTimer);
+
+      if (keyword.length < 2) {
+         $('#searchResultNavbar').hide();
+         return;
+      }
+
+      debounceTimer = setTimeout(() => {
+
+         fetch(`controller/master/patientSearchNavbar?search=${keyword}`)
+            .then(res => res.json())
+            .then(res => {
+
+               let html = '';
+
+               if (res.data.length === 0) {
+                  html = `<div class="dropdown-item text-muted">Tidak ditemukan</div>`;
+               } else {
+                  res.data.forEach(p => {
+                     html += `
+              <a class="dropdown-item" href="module/admin/patient_details?pt=${p.id_patient}">
+                <strong>${p.patient_name}</strong><br>
+                <small>RM: ${p.nomor_rm} | NIK: ${p.patient_nik}</small>
+              </a>
+            `;
+                  });
+               }
+
+               $('#searchResultNavbar')
+                  .html(html)
+                  .fadeIn(150);
+
+            });
+
+      }, 300); // 🔥 debounce 300ms
+   });
+
+   $(document).on('click', function(e) {
+      if (!$(e.target).closest('.position-relative').length) {
+         $('#searchResultNavbar').fadeOut(100);
+      }
+   });
+</script>

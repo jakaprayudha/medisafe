@@ -180,10 +180,10 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
               "jenis_bayar": row.provider_name,
               "layanan": row.poli_name,
               "status_visit": `
-                <span class="badge ${row.status_dilayani == 1 ? 'bg-success' : 'bg-danger'} d-block text-center">
-                  ${row.status_dilayani == 1 ? 'Sudah Dilayani' : 'Belum Dilayani'}
-                </span>
-              `
+                  <span class="badge ${row.status_cppt == 1 ? 'bg-success' : 'bg-danger'} d-block text-center">
+                    ${row.status_cppt == 1 ? 'Sudah Dilayani' : 'Belum Dilayani'}
+                  </span>
+                `
             };
           });
         }

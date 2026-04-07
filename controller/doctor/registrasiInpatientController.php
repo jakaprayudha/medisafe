@@ -42,22 +42,33 @@ function getData()
    // BASE QUERY
    // =========================
    $query = "SELECT 
-            pasien_visit.*, 
-            ms_patient.*, 
-            ms_doctor.*, 
-            ms_poli.*,
-            ms_provider.provider_name
-        FROM pasien_visit
-        INNER JOIN ms_patient 
-            ON ms_patient.id_patient = pasien_visit.id_patient
-        INNER JOIN ms_doctor 
-            ON ms_doctor.id_doctor = pasien_visit.id_doctor
-        LEFT JOIN ms_poli 
-            ON ms_poli.id_poli = pasien_visit.id_poli
-         LEFT JOIN ms_provider
-            ON ms_provider.id_provider = pasien_visit.id_provider
-        WHERE 1=1 AND pasien_visit.status_rawatinap = 1
-    ";
+    pasien_visit.*, 
+    ms_patient.*, 
+    ms_doctor.*, 
+    ms_poli.*,
+    ms_provider.provider_name,
+
+    -- 🔥 CEK CPPT
+    CASE 
+        WHEN EXISTS (
+            SELECT 1 FROM visit_cppt vc 
+            WHERE vc.visit_ID = pasien_visit.visit_ID
+            LIMIT 1
+        )
+        THEN 1 ELSE 0
+    END as status_cppt
+
+FROM pasien_visit
+INNER JOIN ms_patient 
+    ON ms_patient.id_patient = pasien_visit.id_patient
+INNER JOIN ms_doctor 
+    ON ms_doctor.id_doctor = pasien_visit.id_doctor
+LEFT JOIN ms_poli 
+    ON ms_poli.id_poli = pasien_visit.id_poli
+LEFT JOIN ms_provider
+    ON ms_provider.id_provider = pasien_visit.id_provider
+
+WHERE pasien_visit.status_rawatinap = 1";
 
    // =========================
    // PREPARED PARAM
