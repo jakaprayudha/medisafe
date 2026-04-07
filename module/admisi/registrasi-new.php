@@ -50,7 +50,6 @@ require '../../controller/view.php';
                           <th scope="col" class="text-dark fw-normal">Nama Lengkap</th>
                           <th scope="col" class="text-dark fw-normal">TTL</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
-                          <th scope="col" class="text-dark fw-normal">Agama</th>
                           <th scope="col" class="text-dark fw-normal">No.Handphone</th>
                           <th scope="col" class="text-dark fw-normal text-center">Foto</th>
                           <th scope="col" class="text-dark fw-normal">Face Status</th>
@@ -245,7 +244,6 @@ require '../../controller/view.php';
               "name": row.patient_name ?? "-",
               "ttl": row.patient_datebirth + '/' + row.patient_place ?? "-",
               "gender": row.patient_gender ?? "-",
-              "agama": row.patient_religion ?? "-",
               "phone": row.patient_phone ?? "-",
 
 
@@ -271,9 +269,6 @@ require '../../controller/view.php';
         },
         {
           data: "gender"
-        },
-        {
-          data: "agama"
         },
         {
           data: "phone"

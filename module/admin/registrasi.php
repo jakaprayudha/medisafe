@@ -79,7 +79,7 @@ require '../../controller/view.php';
                           </button>
                           <ul class="dropdown-menu dropdown-menu-end shadow">
                             <li>
-                              <a class="dropdown-item" href="module/admin/patient_new">
+                              <a class="dropdown-item" href="module/admisi/registrasi-new">
                                 <i class="fas fa-user-plus me-2 text-primary"></i> Pasien Baru
                               </a>
                             </li>
@@ -799,14 +799,14 @@ require '../../controller/view.php';
               "antrian": row.visit_antrian ?? "-",
               "nomor_rm": row.nomor_rm ?? "-",
               "nama": `
-                ${row.patient_name ?? "-"}<br>
+                ${row.patient_name_pcare ?? "-"}<br>
                 <small class="text-muted">
                   ${hitungUmur(row.patient_datebirth, row.visit_date)}
                 </small>
               `,
               "gender": row.patient_gender ?? "-",
-              "dokter": row.doctor_name ?? "-",
-              "layanan": row.poli_name ?? "-",
+              "dokter": row.id_doctor ?? "-",
+              "layanan": row.id_poli ?? "-",
               "screening": row.tekanan_darah ?
                 '<span class="badge bg-success">✔️ Sudah</span>' : '<span class="badge bg-secondary">❌ Belum</span>',
               "provider": row.provider_name ?? "-",
@@ -969,20 +969,33 @@ require '../../controller/view.php';
       $('#detailModal').modal('show');
 
       fetch(`controller/visit/getDetailPemeriksaan?id=${id}`)
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) throw new Error("HTTP error");
+          return res.json();
+        })
         .then(resp => {
+
+          console.log("DETAIL RESP:", resp);
+
           if (resp.status === 'success') {
-            fillDetail(resp.data);
-          } else {
-            alert('Gagal load data');
+            fillDetail(resp.data || {});
           }
+
+          $('#detailModal').modal('show'); // 🔥 PASTI MUNCUL
+
+        })
+        .catch(err => {
+          console.error("DETAIL ERROR:", err);
+
+          // 🔥 tetap buka modal walau gagal
+          $('#detailModal').modal('show');
         });
     });
 
     function fillDetail(d) {
       $('#d_patient_name').text(d.patient_name ?? '-');
-      $('#d_doctor_name').text(d.doctor_name ?? '-');
-      $('#d_poli_name').text(d.poli_name ?? '-');
+      $('#d_doctor_name').text(d.id_doctor ?? '-');
+      $('#d_poli_name').text(d.id_poli ?? '-');
       $('#d_visit_date').text(d.visit_date + ' ' + d.visit_time ?? '-');
       $('#d_no_sep').text(d.no_sep ?? '-');
       $('#d_kondisi_masuk').text(d.kondisi_masuk ?? '-');

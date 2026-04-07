@@ -221,7 +221,7 @@ $dataCust = mysqli_fetch_array($cust);
          <ul class="navbar-nav align-items-center gap-2">
 
             <!-- ACTION DROPDOWN -->
-            <li class="nav-item dropdown">
+            <!-- <li class="nav-item dropdown">
                <button class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
                   + Pendaftaran
                </button>
@@ -231,7 +231,7 @@ $dataCust = mysqli_fetch_array($cust);
                   <li><a class="dropdown-item" href="module/admin/patient">Pasien Baru</a></li>
                   <li><a class="dropdown-item" href="javascript:;">Surat Baru</a></li>
                </ul>
-            </li>
+            </li> -->
 
             <!-- NOTIF -->
             <li class="nav-item">

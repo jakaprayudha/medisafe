@@ -102,7 +102,7 @@ if (!$result) {
 }
 // $result = bpjsPost("/pendaftaran", $payload);
 // echo json_encode($result);die();
-$result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
+$result = testingBPJS_POST("https://app.medisafe.id/controller/admisi/api/getpeserta.php", $payload);
 if ($result['code'] != '200') {
     $msg = $result['metadata'];
     if ($msg == null) {
@@ -180,14 +180,15 @@ if ($result['code'] != '200') {
                 nadi,
                 respirasi, 
                 tinggi_badan,
-                berat_badan
-            )VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
+                berat_badan,
+                patient_name_pcare
+            )VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
         ");
     $visit_status = 1;
     $status_antrian = 0;
     $td = $sistole . "/" . $diastole;
     $stmt->bind_param(
-        "ssssssssssssssssss",
+        "sssssssssssssssssss",
         $id_patient,
         $visit_ID,
         $tglDaftarDB,
@@ -205,7 +206,8 @@ if ($result['code'] != '200') {
         $heartRate,
         $respRate,
         $tinggiBadan,
-        $beratBadan
+        $beratBadan,
+        $nama
     );
 
     $hasil1 = $stmt->execute();

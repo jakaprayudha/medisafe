@@ -51,7 +51,8 @@ require '../../controller/view.php';
                         <tr>
                           <th class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Lengkap</th>
-                          <th scope="col" class="text-dark fw-normal">TTL</th>
+                          <th scope="col" class="text-dark fw-normal">NIK</th>
+                          <th scope="col" class="text-dark fw-normal">NO.BPJS</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">Agama</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
@@ -123,6 +124,18 @@ require '../../controller/view.php';
             <div class="mb-3">
               <label class="form-label required" id="patient_name">Nama Pasien</label>
               <input type="text" id="patient_name" name="patient_name" class="form-control" required>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="mb-3">
+              <label class="form-label " id="patient_name">NIK</label>
+              <input type="text" id="patient_nik" name="patient_nik" class="form-control">
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="mb-3">
+              <label class="form-label " id="patient_name">No.BPJS</label>
+              <input type="text" id="patient_bpjs" name="patient_bpjs" class="form-control">
             </div>
           </div>
           <div class="col-6">
@@ -234,7 +247,7 @@ require '../../controller/view.php';
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
       processing: true,
-      serverSide: false, // 🔹 ubah jadi false
+      serverSide: true, // 🔹 ubah jadi false
       ajax: {
         url: apiUrl,
         type: "GET",
@@ -258,7 +271,8 @@ require '../../controller/view.php';
                     `,
               "rm": row.nomor_rm ?? "-",
               "name": row.patient_name ?? "-",
-              "ttl": row.patient_datebirth + '/' + row.patient_place ?? "-",
+              "nik": row.patient_nik ?? "-",
+              "bpjs": row.patient_bpjs ?? "-",
               "gender": row.patient_gender ?? "-",
               "agama": row.patient_religion ?? "-"
             };
@@ -271,7 +285,10 @@ require '../../controller/view.php';
           data: "name"
         },
         {
-          data: "ttl"
+          data: "nik"
+        },
+        {
+          data: "bpjs"
         },
         {
           data: "gender"
