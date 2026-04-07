@@ -126,7 +126,6 @@ function createData($id_customer)
          $check->bind_result($count);
          $check->fetch();
          $check->close();
-
       } while ($count > 0);
 
       // ================== UPDATE NOMOR RM ==================
@@ -147,7 +146,9 @@ function createData($id_customer)
          'patient_datebirth',
          'patient_place',
          'patient_phone',
-         'patient_address'
+         'patient_address',
+         'patient_nik',
+         'patient_bpjs'
       ];
 
       $fields = ['patient_number', 'nomor_rm', 'id_customer'];
@@ -183,7 +184,6 @@ function createData($id_customer)
          'patient_number' => $patientNumber,
          'nomor_rm' => $nomorRM
       ]);
-
    } catch (Exception $e) {
 
       $koneksi->rollback();
@@ -205,25 +205,25 @@ function getData($id_customer)
    $start = isset($_GET['start']) ? intval($_GET['start']) : 0;
    $length = isset($_GET['length']) ? intval($_GET['length']) : 10;
    $searchValue = isset($_GET['search']['value']) ? $_GET['search']['value'] : '';
-   
+
    // ORDERING
    $orderColumn = 0;
    $orderDir = 'ASC';
-   
+
    if (isset($_GET['order'][0]['column'])) {
       $orderColumn = intval($_GET['order'][0]['column']);
       $orderDir = strtoupper($_GET['order'][0]['dir']) === 'DESC' ? 'DESC' : 'ASC';
    }
-   
+
    // MAP COLUMN INDEX TO FIELD NAME
    $columns = ['nomor_rm', 'patient_name', 'patient_datebirth', 'patient_gender', 'patient_religion', 'patient_phone', 'face_image', 'face_image'];
    $orderByField = isset($columns[$orderColumn]) ? $columns[$orderColumn] : 'patient_name';
-   
+
    // BUILD WHERE CLAUSE
    $whereClause = "id_customer=?";
    $bindType = "i";
    $bindParams = [$id_customer];
-   
+
    if (!empty($searchValue)) {
       $searchValue = "%{$searchValue}%";
       $whereClause .= " AND (nomor_rm LIKE ? OR patient_name LIKE ? OR patient_phone LIKE ?)";
@@ -232,7 +232,7 @@ function getData($id_customer)
       $bindParams[] = $searchValue;
       $bindParams[] = $searchValue;
    }
-   
+
    // GET TOTAL RECORDS (all records for this customer)
    $totalStmt = $koneksi->prepare(
       "SELECT COUNT(*) as total FROM ms_patient WHERE id_customer=?"
@@ -242,7 +242,7 @@ function getData($id_customer)
    $totalResult = $totalStmt->get_result()->fetch_assoc();
    $recordsTotal = $totalResult['total'];
    $totalStmt->close();
-   
+
    // GET FILTERED RECORDS COUNT
    $filteredStmt = $koneksi->prepare(
       "SELECT COUNT(*) as total FROM ms_patient WHERE {$whereClause}"
@@ -252,19 +252,19 @@ function getData($id_customer)
    $filteredResult = $filteredStmt->get_result()->fetch_assoc();
    $recordsFiltered = $filteredResult['total'];
    $filteredStmt->close();
-   
+
    // GET DATA WITH PAGINATION
    $query = "SELECT * FROM ms_patient WHERE {$whereClause} ORDER BY {$orderByField} {$orderDir} LIMIT ?, ?";
-   
+
    $dataStmt = $koneksi->prepare($query);
    $bindParams[] = $start;
    $bindParams[] = $length;
    $dataStmt->bind_param($bindType . "ii", ...$bindParams);
    $dataStmt->execute();
-   
+
    $data = $dataStmt->get_result()->fetch_all(MYSQLI_ASSOC);
    $dataStmt->close();
-   
+
    // RETURN DATATABLE FORMAT
    echo json_encode([
       'draw' => $draw,

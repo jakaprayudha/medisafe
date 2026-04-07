@@ -49,6 +49,7 @@ require '../../controller/view.php';
                           <th class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Lengkap</th>
                           <th scope="col" class="text-dark fw-normal">NIK</th>
+                          <th scope="col" class="text-dark fw-normal">BPJS</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">Agama</th>
                           <th scope="col" class="text-dark fw-normal">No.Handphone</th>
@@ -116,8 +117,20 @@ require '../../controller/view.php';
             </div>
             <div class="col-12">
               <div class="mb-3">
-                <label class="form-label required" id="patient_name">Nama Pasien</label>
+                <label class="form-label" id="patient_name">Nama Pasien</label>
                 <input type="text" id="patient_name" name="patient_name" class="form-control" required>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="mb-3">
+                <label class="form-label" id="patient_nik">NIK</label>
+                <input type="text" id="patient_nik" name="patient_nik" class="form-control">
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="mb-3">
+                <label class="form-label required" id="patient_nik">No.Kartu BPJS</label>
+                <input type="text" id="patient_bpjs" name="patient_bpjs" class="form-control">
               </div>
             </div>
             <div class="col-6">
@@ -244,6 +257,7 @@ require '../../controller/view.php';
               "rm": row.nomor_rm ?? "-",
               "name": row.patient_name ?? "-",
               "nik": row.patient_nik ?? "-",
+              "bpjs": row.patient_bpjs ?? "-",
               "gender": row.patient_gender ?? "-",
               "agama": row.patient_religion ?? "-",
               "phone": row.patient_phone ?? "-",
@@ -268,6 +282,9 @@ require '../../controller/view.php';
         },
         {
           data: "nik"
+        },
+        {
+          data: "bpjs"
         },
         {
           data: "gender"

@@ -146,6 +146,7 @@ if ($result['code'] != '200') {
     $created_user = "User";
     $source_hub = "Poliklinik";
     $id_patient = $chackpasien['id_patient'];
+    $visit_time = date('H:i:s');
     $stmt = $koneksi->prepare("
             INSERT INTO pasien_visit (
                 id_patient,
@@ -158,8 +159,9 @@ if ($result['code'] != '200') {
                 status_antrian,
                 id_customer,
                 id_doctor,
-                noKartu
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                noKartu,
+                visit_time
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
     $visit_status = 1;
     $status_antrian = 0;
@@ -175,7 +177,8 @@ if ($result['code'] != '200') {
         $status_antrian,
         $idcustomer,
         $kdDokter,
-        $noKartu
+        $noKartu,
+        $visit_time
     );
 
     $hasil1 = $stmt->execute();
