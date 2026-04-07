@@ -12,7 +12,7 @@ if (!$id_doctor) {
 
 $stmt = $koneksi->prepare(
    "SELECT * FROM ms_doctor_schedule 
-    WHERE id_doctor=? AND sch_status='Hadir'"
+    WHERE id_doctor=? AND sch_status='1'"
 );
 
 $stmt->bind_param("s", $id_doctor);

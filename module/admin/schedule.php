@@ -438,16 +438,22 @@ require '../../controller/view.php';
     // ================= HELPER =================
     function getDayName(date) {
       return date.toLocaleDateString('id-ID', {
-        weekday: 'long'
+        weekday: 'long',
+        timeZone: 'Asia/Jakarta' // 🔥 WAJIB
       });
     }
 
     function normalizeDay(day) {
-      return day.toLowerCase().replace("'", "").trim();
+      return (day || '')
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '')
+        .replace(/[^\w]/g, ''); // 🔥 buang karakter aneh
     }
 
     function formatTime(t) {
-      return t.replace('.', ':');
+      if (!t) return '00:00';
+      return t.replace('.', ':').substring(0, 5);
     }
 
     function toMinutes(timeStr) {
@@ -515,17 +521,33 @@ require '../../controller/view.php';
           let dayName = getDayName(date);
 
           let found = schedules.find(s => {
+
             let start = toMinutes(formatTime(s.start_time));
             let end = toMinutes(formatTime(s.end_time));
             let current = toMinutes(time);
 
-            return (
-              normalizeDay(s.day_of_week) === normalizeDay(dayName) &&
-              current >= start &&
-              current <= end
-            );
-          });
+            // 🔥 FIX ZERO DURATION
+            if (start === end) {
+              end += 15;
+            }
 
+            let sameDay = normalizeDay(s.day_of_week) === normalizeDay(dayName);
+
+            let inRange = current >= start && current < end;
+
+            // 🔥 DEBUG
+            console.log({
+              db_day: normalizeDay(s.day_of_week),
+              ui_day: normalizeDay(dayName),
+              sameDay,
+              start,
+              end,
+              current,
+              inRange
+            });
+
+            return sameDay && inRange;
+          });
           if (found) {
 
             let dateStr = date.toISOString().split('T')[0];
