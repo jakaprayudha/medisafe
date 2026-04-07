@@ -198,6 +198,28 @@ require '../../controller/view.php';
         type: "GET",
         dataSrc: function(json) {
           return json.data.map(function(row) {
+
+
+            // 🔥 CEK DATA KOSONG
+            if (!json.data || json.data.length === 0) {
+
+              // hapus alert lama biar gak dobel
+              $('#emptyAlert').remove();
+
+              // tampilkan alert
+              $('.card-body').prepend(`
+                  <div id="emptyAlert" class="alert alert-warning">
+                    ⚠️ Data pasien ini akan tersedia ketika faskes mendaftarkan pasien 
+                    karena sudah terintegrasi dengan <b>PCare BPJS</b>
+                  </div>
+                `);
+
+              return []; // tetap return array kosong ke datatable
+            }
+
+            // 🔥 HAPUS ALERT kalau data sudah ada
+            $('#emptyAlert').remove();
+
             return {
               "actions": `
                       <div class="text-center">
