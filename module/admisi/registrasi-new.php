@@ -48,7 +48,7 @@ require '../../controller/view.php';
                         <tr>
                           <th class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Lengkap</th>
-                          <th scope="col" class="text-dark fw-normal">TTL</th>
+                          <th scope="col" class="text-dark fw-normal">NIK</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">Agama</th>
                           <th scope="col" class="text-dark fw-normal">No.Handphone</th>
@@ -221,7 +221,7 @@ require '../../controller/view.php';
                     `,
               "rm": row.nomor_rm ?? "-",
               "name": row.patient_name ?? "-",
-              "ttl": row.patient_datebirth + '/' + row.patient_place ?? "-",
+              "nik": row.patient_nik ?? "-",
               "gender": row.patient_gender ?? "-",
               "agama": row.patient_religion ?? "-",
               "phone": row.patient_phone ?? "-",
@@ -245,7 +245,7 @@ require '../../controller/view.php';
           data: "name"
         },
         {
-          data: "ttl"
+          data: "nik"
         },
         {
           data: "gender"

@@ -3,8 +3,10 @@ include '../../database/connect.php';
 
 header('Content-Type: application/json');
 
+$id_customer = $_GET['no'] ?? $_SESSION['id_customer'] ?? null;
+
 // 🔐 VALIDASI SESSION
-if (!isset($_SESSION['id_customer'])) {
+if (!isset($id_customer)) {
    http_response_code(401);
    echo json_encode([
       'status' => 'error',
@@ -13,7 +15,7 @@ if (!isset($_SESSION['id_customer'])) {
    exit;
 }
 
-$id_customer = $_SESSION['id_customer'];
+
 
 $method = $_SERVER['REQUEST_METHOD'];
 

@@ -39,11 +39,13 @@ require '../../controller/view.php';
                 <li class="nav-item" role="presentation">
                   <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Pembayaran</button>
                 </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="user-tab" data-bs-toggle="tab" data-bs-target="#user-tab-pane" type="button" role="tab" aria-controls="user-tab-pane" aria-selected="false">User</button>
+                </li>
               </ul>
             </div>
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
-
                 <div class="tab-content" id="myTabContent">
                   <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
                     <div class="card-body p-4">
@@ -215,6 +217,32 @@ require '../../controller/view.php';
                       </div>
                     </div>
                   </div>
+                  <div class="tab-pane fade" id="user-tab-pane" role="tabpanel" aria-labelledby="user-tab" tabindex="0">
+                    <div class="card-body p-4">
+                      <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="card-title fw-semibold">Data User Faskes</h5>
+                        <!-- Grup tombol di sisi kanan -->
+                        <div class="d-flex ms-auto gap-2">
+                          <button class="btn btn-primary" id="btnTambahUser"><i class="fas fa-plus"></i> Tambah</button>
+                        </div>
+                      </div>
+                      <div class="table-responsive" data-simplebar>
+                        <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTableUser">
+                          <thead>
+                            <tr>
+                              <th class="text-dark fw-normal col-1">Fullname</th>
+                              <th class="text-dark fw-normal col-1">Username</th>
+                              <th scope="col" class="text-dark fw-normal">Roles</th>
+                              <th class="text-dark fw-normal">Registrasi</th>
+                              <th scope="col" class="text-dark fw-normal text-center col-1">Status</th>
+                              <th scope="col" class="text-dark fw-normal text-center col-1">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody></tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
               </div>
@@ -265,6 +293,52 @@ require '../../controller/view.php';
         <div class="mb-3">
           <label>Keterangan</label>
           <textarea name="keterangan" class="form-control"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal fade" id="userModal">
+  <div class="modal-dialog">
+    <form id="userForm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">User Faskes</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" name="id_user" id="user_id">
+
+        <div class="mb-3">
+          <label>Fullname</label>
+          <input type="text" name="fullname" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label>Username</label>
+          <input type="text" name="username" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label>Password</label>
+          <input type="password" name="password" class="form-control">
+        </div>
+
+        <div class="mb-3">
+          <label>Role</label>
+          <select name="roles" class="form-select">
+            <option value="">PILIH</option>
+            <option value="bidan">Bidan</option>
+            <option value="perawat">Perawat</option>
+            <option value="receptionis">Receptionis</option>
+            <option value="kasir">Kasir</option>
+            <option value="apoteker">Apoteker</option>
+          </select>
         </div>
       </div>
 
@@ -505,5 +579,168 @@ require '../../controller/view.php';
   });
 </script>
 
+<script>
+  const userApi = 'controller/master/userController';
+  const urlParamsUser = new URLSearchParams(window.location.search);
+  const noUser = urlParamsUser.get('no');
+  let tableUser;
+
+  function loadUserTable() {
+    if (!noUser) return;
+
+    tableUser = $('#periodeTableUser').DataTable({
+      destroy: true,
+      ajax: {
+        url: userApi + '?no=' + noUser,
+        dataSrc: 'data'
+      },
+      columns: [{
+          data: 'fullname'
+        },
+        {
+          data: 'username'
+        },
+        {
+          data: 'roles'
+        },
+        {
+          data: 'created_at'
+        },
+        {
+          data: 'status',
+          className: 'text-center',
+          render: function(data, type, row) {
+            let checked = data == 1 ? 'checked' : '';
+            return `
+                <div class="form-check form-switch d-flex justify-content-center">
+                  <input class="form-check-input toggleStatus" 
+                    type="checkbox" 
+                    data-id="${row.id_user}" 
+                    ${checked}>
+                </div>
+              `;
+          }
+        }, {
+          data: null,
+          className: 'text-center',
+          render: row => `
+          <button class="btn btn-warning btn-sm editUser" data-id="${row.id_user}">Edit</button>
+          <button class="btn btn-danger btn-sm deleteUser" data-id="${row.id_user}">Hapus</button>
+        `
+        }
+      ]
+    });
+
+
+  }
+
+  $(document).ready(function() {
+    loadUserTable();
+  });
+
+  $('#btnTambahUser').on('click', function() {
+    $('#userForm')[0].reset();
+    $('#user_id').val('');
+    $('#userModal').modal('show');
+  });
+
+  $('#userForm').on('submit', function(e) {
+    e.preventDefault();
+
+    let id = $('#user_id').val();
+    let formData = new URLSearchParams(new FormData(this));
+
+    fetch(userApi + '?no=' + noUser + (id ? '&id=' + id : ''), {
+        method: id ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: formData
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === 'success') {
+          Swal.fire('Berhasil!', 'Data user tersimpan', 'success');
+          $('#userModal').modal('hide');
+          tableUser.ajax.reload(null, false);
+        } else {
+          Swal.fire('Error!', res.message, 'error');
+        }
+      });
+  });
+
+  $(document).on('click', '.editUser', function() {
+    let id = $(this).data('id');
+
+    fetch(userApi + '?no=' + noUser + '&id=' + id)
+      .then(res => res.json())
+      .then(res => {
+        let d = res.data;
+
+        $('#user_id').val(d.id_user);
+        $('[name="fullname"]').val(d.fullname);
+        $('[name="username"]').val(d.username);
+        $('[name="roles"]').val(d.roles);
+
+        $('#userModal').modal('show');
+      });
+  });
+
+  $(document).on('click', '.deleteUser', function() {
+    let id = $(this).data('id');
+
+    Swal.fire({
+      title: 'Hapus user?',
+      icon: 'warning',
+      showCancelButton: true
+    }).then(result => {
+      if (result.isConfirmed) {
+        fetch(userApi + '?no=' + noUser + '&id=' + id, {
+            method: 'DELETE'
+          })
+          .then(res => res.json())
+          .then(res => {
+            if (res.status === 'success') {
+              Swal.fire('Deleted!', '', 'success');
+              tableUser.ajax.reload(null, false);
+            }
+          });
+      }
+    });
+  });
+
+  $(document).on('change', '.toggleStatus', function() {
+    let id = $(this).data('id');
+    let status = $(this).is(':checked') ? 1 : 0;
+
+    fetch(userApi + '?no=' + noUser + '&id=' + id + '&toggle_status=1', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          id_user: id,
+          status: status
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === 'success') {
+          Swal.fire({
+            icon: 'success',
+            title: 'Updated',
+            text: 'Status user berhasil diubah',
+            timer: 1200,
+            showConfirmButton: false
+          });
+        } else {
+          Swal.fire('Error!', res.message, 'error');
+        }
+      })
+      .catch(() => {
+        Swal.fire('Error!', 'Gagal update status', 'error');
+      });
+  });
+</script>
 
 </html>

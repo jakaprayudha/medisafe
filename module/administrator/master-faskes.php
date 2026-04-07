@@ -174,7 +174,7 @@ require '../../controller/view.php';
                 <label class="switch">
                   <input type="checkbox" class="toggle-status" 
                     data-id="${row.id}" 
-                    ${row.faskes_status == '1' ? 'checked' : ''}>
+                    ${row.status == '1' ? 'checked' : ''}>
                   <span class="slider round"></span>
                 </label>
                 `
