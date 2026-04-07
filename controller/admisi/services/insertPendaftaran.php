@@ -21,6 +21,7 @@ $heartRate = (int) $_POST['heartRate'];
 $kdTkp = $_POST['kdTkp'];
 $nmPoli = $_POST['nmPoli'];
 $kdDokter = $_POST['kdDokter'] ?? null;
+$noNIK = $_POST['noNik'];
 $payload = [
     "kdProviderPeserta" => $kdProviderPeserta,
     "tglDaftar" => $tglDaftar,
@@ -38,7 +39,7 @@ $payload = [
     "rujukBalik" => 0,
     "kdTkp" => $kdTkp
 ];
-// echo json_encode($payload, JSON_PRETTY_PRINT);die();
+echo json_encode($payload, JSON_PRETTY_PRINT);die();
 // $result = bpjsPost("/pendaftaran", $payload);
 // echo json_encode($result);die();
 $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
@@ -86,10 +87,11 @@ if ($result['code'] != '200') {
     $hasil = $stmt->execute();
     $stmt->close();
 
-    $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE patient_bpjs = ?");
-    $stmt->bind_param('s', $noKartu);
+    $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE patient_bpjs = ? OR patient_nik = ?");
+    $stmt->bind_param('ss', $noKartu, $noNIK);
     $stmt->execute();
     $result = $stmt->get_result()->fetch_assoc();
+
 
     $created_user = "User";
     $source_hub = "Poliklinik";
