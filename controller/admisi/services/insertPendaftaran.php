@@ -90,7 +90,6 @@ if (!$result) {
     $stmt->bind_param('ssssssss', $noKartu, $noNIK, $nama, $jnsKlamin, $tglLahir, $idcustomer, $nomorRM, $patientNumber);
     $result = $stmt->execute();
 }
-// echo json_encode($payload, JSON_PRETTY_PRINT);die();
 // $result = bpjsPost("/pendaftaran", $payload);
 // echo json_encode($result);die();
 $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
