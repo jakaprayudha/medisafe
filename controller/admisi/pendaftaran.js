@@ -36,7 +36,16 @@ $(function () {
                         Swal.fire({
                             title: "Opss..",
                             text: response.message,
-                            icon: "error"
+                            icon: "error",
+                            showDenyButton: true,
+                            confirmButtonText: "Daftar",
+                            denyButtonText: "Kembali"
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = "module/admisi/registrasi-new";
+                            } else if (result.isDenied) {
+                                Swal.close();
+                            }
                         });
                     }
                     APP.load_btn_non(btn, 'Cari');
