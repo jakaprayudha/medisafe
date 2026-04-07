@@ -660,13 +660,28 @@ require '../../controller/view.php';
     });
 
     // ================= 🔥 CLICK BUTTON (FIX BUG) =================
-    $(document).on('click', '.add-patient-btn', function(e) {
-      e.stopPropagation(); // 🔥 penting
+    // $(document).on('click', '.add-patient-btn', function(e) {
+    //   e.stopPropagation(); // 🔥 penting
 
+    //   let time = $(this).data('time');
+    //   let date = new Date($(this).data('date'));
+
+    //   openModal(time, date);
+    // });
+
+    $(document).on('click', '.add-patient-btn', function(e) {
+      e.stopPropagation();
+
+      let doctorId = $(this).data('doctor');
       let time = $(this).data('time');
       let date = new Date($(this).data('date'));
 
-      openModal(time, date);
+      let visitDate = date.toISOString().split('T')[0];
+
+      // 🔥 REDIRECT KE HALAMAN PENDAFTARAN
+      window.location.href = `
+module/admisi/pendaftaran?id_doctor=${doctorId}&visit_date=${visitDate}&visit_time=${time}
+`.trim();
     });
 
     function openModal(time, date) {
