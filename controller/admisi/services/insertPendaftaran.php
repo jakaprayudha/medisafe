@@ -20,7 +20,7 @@ $lingkarPerut = (int) $_POST['lingkarPerut'];
 $heartRate = (int) $_POST['heartRate'];
 $kdTkp = $_POST['kdTkp'];
 $nmPoli = $_POST['nmPoli'];
-
+$kdDokter = $_POST['kdDokter'] ?? null;
 $payload = [
     "kdProviderPeserta" => $kdProviderPeserta,
     "tglDaftar" => $tglDaftar,
@@ -39,9 +39,9 @@ $payload = [
     "kdTkp" => $kdTkp
 ];
 // echo json_encode($payload, JSON_PRETTY_PRINT);die();
-$result = bpjsPost("/pendaftaran", $payload);
+// $result = bpjsPost("/pendaftaran", $payload);
 // echo json_encode($result);die();
-// $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
+$result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
 if ($result['code'] != '200') {
     $msg = $result['metadata'];
     if ($msg == null) {
@@ -53,6 +53,7 @@ if ($result['code'] != '200') {
     ];
 } else {
     $noUrut = $result['data']['message'];
+    $visit_ID = generateVisitID($koneksi);
     $noUrut = (string) $noUrut;
     $sistole      = (int)$sistole;
     $diastole     = (int)$diastole;
@@ -61,9 +62,9 @@ if ($result['code'] != '200') {
     $respRate     = (int)$respRate;
     $lingkarPerut = (int)$lingkarPerut;
     $heartRate    = (int)$heartRate;
-    $stmt = $koneksi->prepare("INSERT INTO `pcare_pendaftaran` (`tanggal_daftar`, `noKartu`, `kdPoli`, `nmPoli`, `keluhan`, `kunjSakit`, `sistole`, `diastole`, `beratBadan`, `tinggiBadan`, `respRate`, `lingkarPerut`, `heartRate`, `rujukBalik`, `kdTkp`, `noUrut`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+    $stmt = $koneksi->prepare("INSERT INTO `pcare_pendaftaran` (`tanggal_daftar`, `noKartu`, `kdPoli`, `nmPoli`, `keluhan`, `kunjSakit`, `sistole`, `diastole`, `beratBadan`, `tinggiBadan`, `respRate`, `lingkarPerut`, `heartRate`, `rujukBalik`, `kdTkp`, `noUrut`, `nomor_visit`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     $stmt->bind_param(
-        "ssssssiiiiiiisss",
+        "ssssssiiiiiiissss",
         $tglDaftarDB,
         $noKartu,
         $kdPoli,
@@ -79,11 +80,53 @@ if ($result['code'] != '200') {
         $heartRate,
         $rujukbalik,
         $kdTkp,
-        $noUrut
+        $noUrut,
+        $visit_ID
     );
     $hasil = $stmt->execute();
     $stmt->close();
-    if ($hasil) {
+
+    $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE patient_bpjs = ?");
+    $stmt->bind_param('s', $noKartu);
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+
+    $created_user = "User";
+    $source_hub = "Poliklinik";
+    $id_patient = $result['id_patient'] ?? '0';
+    $stmt = $koneksi->prepare("
+            INSERT INTO pasien_visit (
+                id_patient,
+                visit_ID,
+                visit_date,
+                id_poli,
+                source_hub,
+                created_user,
+                visit_antrian,
+                status_antrian,
+                id_customer,
+                id_doctor
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+    $visit_status = 1;
+    $status_antrian = 0;
+    $stmt->bind_param(
+        "ssssssssss",
+        $id_patient,
+        $visit_ID,
+        $tglDaftarDB,
+        $nmPoli,
+        $source_hub,
+        $created_user,
+        $noUrut,
+        $status_antrian,
+        $idcustomer,
+        $kdDokter
+    );
+
+    $hasil1 = $stmt->execute();
+
+    if ($hasil AND $hasil1) {
         $response = [
             'success'  => true,
             'message'  => "Berhasil Mendaftar Pasien Dengan No Urut " . $noUrut,
@@ -97,3 +140,20 @@ if ($result['code'] != '200') {
     }
 }
 echo json_encode($response);
+function generateVisitID($koneksi)
+{
+    do {
+        $date = date('ymd');
+        $random = strtoupper(bin2hex(random_bytes(3)));
+        $visitID = "VIS-" . $date . "-" . $random;
+        $count = '';
+        $check = $koneksi->prepare("SELECT COUNT(*) FROM pasien_visit WHERE visit_ID=?");
+        $check->bind_param("s", $visitID);
+        $check->execute();
+        $check->bind_result($count);
+        $check->fetch();
+        $check->close();
+    } while ($count > 0);
+
+    return $visitID;
+}

@@ -66,6 +66,17 @@
                                     name="tglDaftar" id="tanggalKunjung" value="<?= $tanggal ?>">
                             </div>
 
+                            <div class="col-md-6">
+                                <label class="form-label">Dokter <span class="text-danger">*</span></label>
+                                <select class="form-select" id="kodedokter" name="kdDokter"></select>
+                                <input type="hidden" name="nmDokter" id="nmDokter">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Provider <span class="text-danger">*</span></label>
+                                <select class="form-select" id="kodeprov" name="kdProv"></select>
+                            </div>
+
                             <div class="col-12">
                                 <label class="form-label">Keluhan <span class="text-danger">*</span></label>
                                 <textarea class="form-control" id="keluhan" name="keluhan" rows="3" placeholder="Tulisa Keluhan..."></textarea>
