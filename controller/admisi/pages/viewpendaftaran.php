@@ -10,6 +10,9 @@
                         <div class="col-5 text-muted">No. BPJS</div>
                         <div class="col-7 fw-semibold" id="noK">-</div>
 
+                         <div class="col-5 text-muted">No. NIK</div>
+                        <div class="col-7 fw-semibold" id="noNIK">-</div>
+
                         <div class="col-5 text-muted">Nama</div>
                         <div class="col-7 fw-semibold" id="nama">-</div>
 
