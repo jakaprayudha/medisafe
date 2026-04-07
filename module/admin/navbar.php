@@ -289,12 +289,30 @@ $dataCust = mysqli_fetch_array($cust);
                   html = `<div class="dropdown-item text-muted">Tidak ditemukan</div>`;
                } else {
                   res.data.forEach(p => {
+
+                     let detail = [];
+
+                     // RM selalu tampil kalau ada
+                     if (p.nomor_rm) {
+                        detail.push(`RM: ${p.nomor_rm}`);
+                     }
+
+                     // NIK hanya kalau tidak null/kosong
+                     if (p.patient_nik && p.patient_nik !== 'null') {
+                        detail.push(`NIK: ${p.patient_nik}`);
+                     }
+
+                     // BPJS hanya kalau tidak null/kosong
+                     if (p.patient_bpjs && p.patient_bpjs !== 'null') {
+                        detail.push(`BPJS: ${p.patient_bpjs}`);
+                     }
+
                      html += `
-              <a class="dropdown-item" href="module/admin/patient_details?pt=${p.id_patient}">
-                <strong>${p.patient_name}</strong><br>
-                <small>RM: ${p.nomor_rm} | NIK: ${p.patient_nik}</small>
-              </a>
-            `;
+                        <a class="dropdown-item" href="module/admin/patient_details?pt=${p.id_patient}">
+                           <strong>${p.patient_name}</strong><br>
+                           <small>${detail.join(' | ')}</small>
+                        </a>
+                     `;
                   });
                }
 
