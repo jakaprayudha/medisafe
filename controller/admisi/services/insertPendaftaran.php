@@ -4,27 +4,37 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/servicebpjs.php';
 header('Content-Type: application/json');
 
-$kdProviderPeserta = $_POST['kdProviderPeserta'];
-$tglDaftarDB = $_POST['tglDaftar'];
-$tglDaftar = date("d-m-Y", strtotime($tglDaftarDB));
-$noKartu = $_POST['noKartu'] ?? '';
-$kdPoli = $_POST['kdPoli'];
-$keluhan = isset($_POST['keluhan']) && !empty($_POST['keluhan']) ? $_POST['keluhan'] : null;
-$kunjSakit = $_POST['kunjSakit'] === 'true';
-$sistole = (int) $_POST['sistole'];
-$diastole = (int) $_POST['diastole'];
-$beratBadan = (int) $_POST['beratBadan'];
-$tinggiBadan = (int) $_POST['tinggiBadan'];
-$respRate = (int) $_POST['respRate'];
-$lingkarPerut = (int) $_POST['lingkarPerut'];
-$heartRate = (int) $_POST['heartRate'];
-$kdTkp = $_POST['kdTkp'];
-$nmPoli = $_POST['nmPoli'];
-$kdDokter = $_POST['kdDokter'] ?? null;
-$noNIK = $_POST['noNik'] ?? '';
-$nama = $_POST['nama'];
-$jnsKlamin = $_POST['jnsKlamin'];
-$tglLahir = $_POST['tglLahir'];
+$input = $_POST;
+if (empty($input)) {
+    parse_str(file_get_contents('php://input'), $input);
+}
+
+if (empty($input)) {
+    echo json_encode(['success' => false, 'message' => 'Data tidak diterima. Pastikan request menggunakan method POST.']);
+    exit;
+}
+
+$kdProviderPeserta = $input['kdProviderPeserta'] ?? '';
+$tglDaftarDB = $input['tglDaftar'] ?? null;
+$tglDaftar = $tglDaftarDB ? date("d-m-Y", strtotime($tglDaftarDB)) : '';
+$noKartu = $input['noKartu'] ?? '';
+$kdPoli = $input['kdPoli'] ?? '';
+$keluhan = !empty($input['keluhan']) ? $input['keluhan'] : null;
+$kunjSakit = ($input['kunjSakit'] ?? '') === 'true';
+$sistole = (int) ($input['sistole'] ?? 0);
+$diastole = (int) ($input['diastole'] ?? 0);
+$beratBadan = (int) ($input['beratBadan'] ?? 0);
+$tinggiBadan = (int) ($input['tinggiBadan'] ?? 0);
+$respRate = (int) ($input['respRate'] ?? 0);
+$lingkarPerut = (int) ($input['lingkarPerut'] ?? 0);
+$heartRate = (int) ($input['heartRate'] ?? 0);
+$kdTkp = $input['kdTkp'] ?? '';
+$nmPoli = $input['nmPoli'] ?? '';
+$kdDokter = $input['kdDokter'] ?? null;
+$noNIK = $input['noNik'] ?? '';
+$nama = $input['nama'] ?? '';
+$jnsKlamin = $input['jnsKlamin'] ?? '';
+$tglLahir = $input['tglLahir'] ?? '';
 $payload = [
     "kdProviderPeserta" => $kdProviderPeserta,
     "tglDaftar" => $tglDaftar,
@@ -141,6 +151,11 @@ if ($result['code'] != '200') {
     $stmt->bind_param('ss', $noKartu, $noNIK);
     $stmt->execute();
     $chackpasien = $stmt->get_result()->fetch_assoc();
+
+    if (!$chackpasien) {
+        echo json_encode(['success' => false, 'message' => 'Data pasien tidak ditemukan.']);
+        exit;
+    }
 
     $created_user = "User";
     $source_hub = "Poliklinik";
