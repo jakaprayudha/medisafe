@@ -160,13 +160,20 @@ if ($result['code'] != '200') {
                 id_customer,
                 id_doctor,
                 noKartu,
-                visit_time
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                visit_time,
+                anamnesa,
+                tekanan_darah, 
+                nadi,
+                respirasi, 
+                tinggi_badan,
+                berat_badan
+            )VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
         ");
     $visit_status = 1;
     $status_antrian = 0;
+    $td = $sistole . "/" . $diastole;
     $stmt->bind_param(
-        "sssssssssss",
+        "ssssssssssssssssss",
         $id_patient,
         $visit_ID,
         $tglDaftarDB,
@@ -178,7 +185,13 @@ if ($result['code'] != '200') {
         $idcustomer,
         $kdDokter,
         $noKartu,
-        $visit_time
+        $visit_time,
+        $keluhan,
+        $td,
+        $heartRate,
+        $respRate,
+        $tinggiBadan,
+        $beratBadan
     );
 
     $hasil1 = $stmt->execute();
