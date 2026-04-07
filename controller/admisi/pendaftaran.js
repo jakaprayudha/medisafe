@@ -30,13 +30,16 @@ $(function () {
                             APP.cetakhtml('#ppkumum', response.data.kdProviderPst['nmProvider']);
                             APP.cetakhtml('#noTelp', response.data.noHP);
                             APP.cetak('#noKartu', response.data.noKartu);
-                            if (response.data.noKTP == null){
-                                const nomor = $('#nomor').val();
-                                APP.cetakhtml('#noNIK', nomor);
+                            APP.cetak('#namapatient', response.data.nama);
+                            APP.cetak('#Kelamin', response.data.sex == "P" ? "Perempuan" : "Laki - Laki");
+                            APP.cetak('#tgllahir', response.data.tglLahir);
+                            if (response.data.noKTP == null || response.data.noKTP == "") {
+                                let nomor = $('#nomor').val();
                                 APP.cetak('#noNIK', nomor);
-                            }else{
+                                APP.cetakhtml('#nonik', nomor);
+                            } else {
                                 APP.cetak('#noNIK', response.data.noKTP);
-                                APP.cetakhtml('#noNIK', response.data.noKTP);
+                                APP.cetakhtml('#nonik', response.data.noKTP);
                             }
                             APP.cetak('#kdProviderPeserta', response.data.kdProviderPst['kdProvider']);
                         })
@@ -82,6 +85,17 @@ $(function () {
             altFormat: "F j, Y",
             defaultDate: "today",
             maxDate: "today"
+        });
+        $.ajax({
+            url: 'controller/admisi/services/get_provider.php',
+            dataType: 'json',
+            success: function (data) {
+                let options = '';
+                $.each(data, function (i, item) {
+                    options += `<option value="${item.id}">${item.text}</option>`;
+                });
+                $('#kodeprov').html(options).trigger('change');
+            }
         });
         APP.ambil_data('#kodedokter', 'dokter/0/100', 'nmDokter', 'nmDokter', false);
         APP.updatePoliOptions = function (poliSakit) {
@@ -157,29 +171,7 @@ $(function () {
                 noResults: function () {
                     return "Provider tidak ditemukan";
                 }
-            },
-            ajax: {
-                url: 'controller/admisi/services/get_provider.php',
-                dataType: 'json',
-                delay: 250,
-                data: function (params) {
-                    return {
-                        search: params.term
-                    };
-                },
-                processResults: function (data) {
-                    return {
-                        results: $.map(data, function (item) {
-                            return {
-                                id: item.id,
-                                text: item.text
-                            };
-                        })
-                    };
-                },
-                cache: true
-            },
-            minimumInputLength: 1 
+            }
         });
         $('#kunjSakit').select2({
             width: "100%",
@@ -236,7 +228,7 @@ $(function () {
                         confirmButtonText: 'Ok'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            window.location.assign("module/admisi/listpasiendaftar.php");
+                            window.location.assign("module/admisi/registrasi-poliklinik");
                         }
                     })
                 } else {
