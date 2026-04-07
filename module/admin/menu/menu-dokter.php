@@ -18,7 +18,7 @@
            <span class="hide-menu">Aktivitas</span>
         </li>
         <li class="sidebar-item">
-           <a class="sidebar-link <?php if ($title == 'Pemeriksaan' or ($title == 'Permintan Farmasi' and $_GET['rme'] == 'a') or $title == 'Resep Luar' or $title == 'Vaksin' or $title == 'Biaya Transaksi' or $title == 'Riwayat'  or $title == 'Permintaan Rawat Inap' or $title == 'Penunjang') {
+           <a class="sidebar-link <?php if ($title == 'Pemeriksaan' or ($title == 'Permintan Farmasi' and (isset($_GET['rme']) && $_GET['rme'] == 'a')) or $title == 'Resep Luar' or $title == 'Vaksin' or $title == 'Biaya Transaksi' or $title == 'Riwayat'  or $title == 'Permintaan Rawat Inap' or $title == 'Penunjang') {
                                        echo 'active';
                                     } ?>"
               href="module/doctor/pemeriksaan"
@@ -28,16 +28,16 @@
            </a>
         </li>
         <li class="sidebar-item">
-           <a class="sidebar-link <?php if ($title == 'Pemeriksaan Rawat Inap' or $_GET['rme'] == 'c') {
+           <a class="sidebar-link <?php if ($title == 'Pemeriksaan Rawat Inap' or (isset($_GET['rme']) && $_GET['rme'] == 'c')) {
                                        echo 'active';
                                     } ?>"
               href="module/doctor/pemeriksaan-rawat-inap"
               aria-expanded="false">
-              <iconify-icon icon="mdi:register-outline"></iconify-icon>
+              <iconify-icon icon="mdi:bed-outline"></iconify-icon>
               <span class="hide-menu">Rawat Inap</span>
            </a>
         </li>
-        <li class="sidebar-item">
+        <!-- <li class="sidebar-item">
            <a class="sidebar-link <?php if ($title == 'Riwayat Visit Pasien') {
                                        echo 'active';
                                     } ?>"
@@ -56,6 +56,6 @@
               <iconify-icon icon="solar:printer-linear"></iconify-icon>
               <span class="hide-menu">Antrean</span>
            </a>
-        </li>
+        </li> -->
      </ul>
   </nav>
