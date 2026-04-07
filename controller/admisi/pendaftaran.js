@@ -33,11 +33,11 @@ $(function () {
                             APP.cetak('#namapatient', response.data.nama);
                             APP.cetak('#Kelamin', response.data.sex == "P" ? "Perempuan" : "Laki - Laki");
                             APP.cetak('#tgllahir', response.data.tglLahir);
-                            if (response.data.noKTP == null || response.data.noKTP == ""){
+                            if (response.data.noKTP == null || response.data.noKTP == "") {
                                 let nomor = $('#nomor').val();
                                 APP.cetak('#noNIK', nomor);
                                 APP.cetakhtml('#nonik', nomor);
-                            }else{
+                            } else {
                                 APP.cetak('#noNIK', response.data.noKTP);
                                 APP.cetakhtml('#nonik', response.data.noKTP);
                             }
@@ -85,6 +85,17 @@ $(function () {
             altFormat: "F j, Y",
             defaultDate: "today",
             maxDate: "today"
+        });
+        $.ajax({
+            url: 'controller/admisi/services/get_provider.php',
+            dataType: 'json',
+            success: function (data) {
+                let options = '';
+                $.each(data, function (i, item) {
+                    options += `<option value="${item.id}">${item.text}</option>`;
+                });
+                $('#kodeprov').html(options).trigger('change');
+            }
         });
         APP.ambil_data('#kodedokter', 'dokter/0/100', 'nmDokter', 'nmDokter', false);
         APP.updatePoliOptions = function (poliSakit) {
@@ -160,29 +171,7 @@ $(function () {
                 noResults: function () {
                     return "Provider tidak ditemukan";
                 }
-            },
-            ajax: {
-                url: 'controller/admisi/services/get_provider.php',
-                dataType: 'json',
-                delay: 250,
-                data: function (params) {
-                    return {
-                        search: params.term
-                    };
-                },
-                processResults: function (data) {
-                    return {
-                        results: $.map(data, function (item) {
-                            return {
-                                id: item.id,
-                                text: item.text
-                            };
-                        })
-                    };
-                },
-                cache: true
-            },
-            minimumInputLength: 1 
+            }
         });
         $('#kunjSakit').select2({
             width: "100%",
