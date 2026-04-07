@@ -11,7 +11,7 @@
                         <div class="col-7 fw-semibold" id="noK">-</div>
 
                          <div class="col-5 text-muted">No. NIK</div>
-                        <div class="col-7 fw-semibold" id="noNIK">-</div>
+                        <div class="col-7 fw-semibold" id="nonik">-</div>
 
                         <div class="col-5 text-muted">Nama</div>
                         <div class="col-7 fw-semibold" id="nama">-</div>
@@ -37,6 +37,9 @@
         <div class="col-lg-7">
             <form id="isiform">
                 <input type="hidden" name="noNik" id="noNIK">
+                <input type="hidden" name="nama" id="namapatient">
+                <input type="hidden" name="jnsKlamin" id="Kelamin">
+                <input type="hidden" name="tglLahir" id="tgllahir">
                 <div class="card shadow-sm">
                     <div class="card-header bg-light fw-semibold">
                         Form Kunjungan Pasien
