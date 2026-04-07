@@ -39,7 +39,7 @@ $payload = [
     "rujukBalik" => 0,
     "kdTkp" => $kdTkp
 ];
-echo json_encode($payload, JSON_PRETTY_PRINT);die();
+// echo json_encode($payload, JSON_PRETTY_PRINT);die();
 // $result = bpjsPost("/pendaftaran", $payload);
 // echo json_encode($result);die();
 $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
@@ -92,7 +92,7 @@ if ($result['code'] != '200') {
     $stmt->execute();
     $result = $stmt->get_result()->fetch_assoc();
 
-    
+
 
     $created_user = "User";
     $source_hub = "Poliklinik";
