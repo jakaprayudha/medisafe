@@ -30,6 +30,7 @@ $(function () {
                             APP.cetakhtml('#ppkumum', response.data.kdProviderPst['nmProvider']);
                             APP.cetakhtml('#noTelp', response.data.noHP);
                             APP.cetak('#noKartu', response.data.noKartu);
+                            APP.cetak('#noNIK', response.data.noKTP);
                             APP.cetak('#kdProviderPeserta', response.data.kdProviderPst['kdProvider']);
                         })
                     } else {

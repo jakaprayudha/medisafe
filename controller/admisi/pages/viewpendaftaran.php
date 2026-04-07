@@ -33,6 +33,7 @@
         </div>
         <div class="col-lg-7">
             <form id="isiform">
+                <input type="hidden" name="noNik" id="noNIK">
                 <div class="card shadow-sm">
                     <div class="card-header bg-light fw-semibold">
                         Form Kunjungan Pasien
