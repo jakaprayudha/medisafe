@@ -51,7 +51,6 @@ require '../../controller/view.php';
                           <th scope="col" class="text-dark fw-normal">NIK</th>
                           <th scope="col" class="text-dark fw-normal">BPJS</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
-                          <th scope="col" class="text-dark fw-normal">Agama</th>
                           <th scope="col" class="text-dark fw-normal">No.Handphone</th>
                           <th scope="col" class="text-dark fw-normal text-center">Foto</th>
                           <th scope="col" class="text-dark fw-normal">Face Status</th>
@@ -259,7 +258,6 @@ require '../../controller/view.php';
               "nik": row.patient_nik ?? "-",
               "bpjs": row.patient_bpjs ?? "-",
               "gender": row.patient_gender ?? "-",
-              "agama": row.patient_religion ?? "-",
               "phone": row.patient_phone ?? "-",
 
 
@@ -288,9 +286,6 @@ require '../../controller/view.php';
         },
         {
           data: "gender"
-        },
-        {
-          data: "agama"
         },
         {
           data: "phone"
