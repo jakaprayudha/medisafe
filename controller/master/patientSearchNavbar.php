@@ -13,7 +13,7 @@ if (!$id_customer) {
 $search = "%" . $search . "%";
 
 $stmt = $koneksi->prepare("
-  SELECT id_patient, patient_name, nomor_rm, patient_nik
+  SELECT id_patient, patient_name, nomor_rm, patient_nik, patient_bpjs
   FROM ms_patient
   WHERE id_customer = ?
   AND (
