@@ -30,13 +30,16 @@ $(function () {
                             APP.cetakhtml('#ppkumum', response.data.kdProviderPst['nmProvider']);
                             APP.cetakhtml('#noTelp', response.data.noHP);
                             APP.cetak('#noKartu', response.data.noKartu);
-                            if (response.data.noKTP == null){
-                                const nomor = $('#nomor').val();
-                                APP.cetakhtml('#noNIK', nomor);
+                            APP.cetak('#namapatient', response.data.nama);
+                            APP.cetak('#Kelamin', response.data.sex == "P" ? "Perempuan" : "Laki - Laki");
+                            APP.cetak('#tgllahir', response.data.tglLahir);
+                            if (response.data.noKTP == null || response.data.noKTP == ""){
+                                let nomor = $('#nomor').val();
                                 APP.cetak('#noNIK', nomor);
+                                APP.cetakhtml('#nonik', nomor);
                             }else{
                                 APP.cetak('#noNIK', response.data.noKTP);
-                                APP.cetakhtml('#noNIK', response.data.noKTP);
+                                APP.cetakhtml('#nonik', response.data.noKTP);
                             }
                             APP.cetak('#kdProviderPeserta', response.data.kdProviderPst['kdProvider']);
                         })
