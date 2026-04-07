@@ -30,7 +30,14 @@ $(function () {
                             APP.cetakhtml('#ppkumum', response.data.kdProviderPst['nmProvider']);
                             APP.cetakhtml('#noTelp', response.data.noHP);
                             APP.cetak('#noKartu', response.data.noKartu);
-                            APP.cetak('#noNIK', response.data.noKTP);
+                            if (response.data.noKTP == null){
+                                const nomor = $('#nomor').val();
+                                APP.cetakhtml('#noNIK', nomor);
+                                APP.cetak('#noNIK', nomor);
+                            }else{
+                                APP.cetak('#noNIK', response.data.noKTP);
+                                APP.cetakhtml('#noNIK', response.data.noKTP);
+                            }
                             APP.cetak('#kdProviderPeserta', response.data.kdProviderPst['kdProvider']);
                         })
                     } else {
