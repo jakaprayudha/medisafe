@@ -37,7 +37,7 @@
            </a>
         </li>
         <li class="sidebar-item">
-           <a class="sidebar-link <?php if ($title == 'Registrasi Polilklinik' or $title == 'List Pasien' and $_GET['type'] == 'Poliklinik') {
+           <a class="sidebar-link <?php if ($title == 'Registrasi Polilklinik' or $title == 'Pendaftaran Pasien' or $title == 'List Pasien' and $_GET['type'] == 'Poliklinik') {
                                        echo 'active';
                                     } ?>"
               href="module/admisi/registrasi-poliklinik"
@@ -46,7 +46,7 @@
               <span class="hide-menu">Poliklinik</span>
            </a>
         </li>
-        <li class="sidebar-item">
+        <!-- <li class="sidebar-item">
            <a class="sidebar-link <?php if ($title == 'Registrasi UGD' or $title == 'List Pasien' and $_GET['type'] == 'UGD') {
                                        echo 'active';
                                     } ?>"
@@ -55,7 +55,7 @@
               <iconify-icon icon="mdi:stethoscope"></iconify-icon>
               <span class="hide-menu">UGD</span>
            </a>
-        </li>
+        </li> -->
         <li class="sidebar-item">
            <a class="sidebar-link <?php if ($title == 'Registrasi Rawat Inap' or $title == 'Permintaan Pasien Rawat Inap') {
                                        echo 'active';
@@ -90,15 +90,15 @@
            <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
            <span class="hide-menu">Daftar/Layanan (Pcare)</span>
         </li>
-        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Pendaftaran') {
-                                                            echo 'active';
-                                                         } ?>"
+        <!-- <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Pendaftaran') {
+                                                                  echo 'active';
+                                                               } ?>"
               href="module/admisi/pendaftaran"
               aria-expanded="false">
               <iconify-icon icon="solar:file-broken"></iconify-icon>
               <span class="hide-menu">Pendaftaran BPJS</span>
            </a>
-        </li>
+        </li> -->
         <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'List Pendaftaran') {
                                                             echo 'active';
                                                          } ?>"

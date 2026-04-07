@@ -1,5 +1,5 @@
 <?php
-$title = 'Pasien';
+$title = 'Pendaftaran Pasien';
 require '../../controller/view.php';
 ?>
 <!doctype html>

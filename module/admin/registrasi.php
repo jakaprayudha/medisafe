@@ -84,7 +84,7 @@ require '../../controller/view.php';
                               </a>
                             </li>
                             <li>
-                              <a class="dropdown-item poli-btn" href="javascript:;">
+                              <a class="dropdown-item " href="module/admisi/pendaftaran">
                                 <i class="fas fa-stethoscope me-2 text-success"></i> Pasien Poliklinik
                               </a>
                             </li>
