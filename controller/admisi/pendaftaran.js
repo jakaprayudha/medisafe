@@ -239,7 +239,7 @@ $(function () {
                         confirmButtonText: 'Ok'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            window.location.assign("module/admisi/listpasiendaftar.php");
+                            window.location.assign("module/admisi/registrasi-poliklinik");
                         }
                     })
                 } else {
