@@ -123,8 +123,9 @@ function getData($id_customer)
 
    $stmt = $koneksi->prepare(
       "SELECT * FROM ms_pharmacy 
-       WHERE id_customer=? 
-       ORDER BY pharmacy_name_generic DESC"
+    WHERE id_customer = ? 
+       OR id_customer =0
+    ORDER BY pharmacy_name_generic DESC"
    );
 
    $stmt->bind_param("i", $id_customer);

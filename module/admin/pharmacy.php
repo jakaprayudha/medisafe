@@ -46,6 +46,7 @@ require '../../controller/view.php';
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
+                          <th class="text-dark fw-normal text-center">No</th>
                           <th class="text-dark fw-normal">Kategori</th>
                           <th scope="col" class="text-dark fw-normal">Nama Generic/Trade</th>
                           <th scope="col" class="text-dark fw-normal">Golongan</th>
@@ -159,6 +160,7 @@ require '../../controller/view.php';
         dataSrc: function(json) {
           return json.data.map(function(row) {
             return {
+
               "actions": `
                       <div class="text-center">
 								<div class="btn-group btn-group-sm" role="group">
@@ -175,7 +177,12 @@ require '../../controller/view.php';
 							</div>
                     `,
               "category": row.pharmacy_category ?? "-",
-              "name": row.pharmacy_name_generic + "/" + row.pharmacy_name_trade ?? "-",
+              "name": [
+                  row.pharmacy_name_generic,
+                  row.pharmacy_name_trade
+                ]
+                .filter(v => v && v !== 'null')
+                .join('/') || '-',
               "golongan": row.pharmcy_golongan ?? "-",
               "jenis": row.pharmcy_jenis_drugs ?? "-",
               "subcategory": row.pharmacy_sub_category ?? "-",
@@ -186,6 +193,14 @@ require '../../controller/view.php';
         }
       },
       columns: [{
+          data: null,
+          className: 'text-center',
+          orderable: false,
+          searchable: false,
+          render: function(data, type, row, meta) {
+            return meta.row + 1;
+          }
+        }, {
           data: "category"
         }, {
           data: "name"
