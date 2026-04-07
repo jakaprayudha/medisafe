@@ -92,7 +92,7 @@ if (!$result) {
 }
 // $result = bpjsPost("/pendaftaran", $payload);
 // echo json_encode($result);die();
-$result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
+$result = testingBPJS_POST("https://app.medisafe.id/controller/admisi/api/getpeserta.php", $payload);
 if ($result['code'] != '200') {
     $msg = $result['metadata'];
     if ($msg == null) {
