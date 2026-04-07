@@ -81,4 +81,16 @@ foreach ($files as $file) {
    echo "</div>";
 }
 
+echo "<script>";
+
+if (isset($_GET['print'])) {
+   echo "
+   window.onload = function () {
+      window.print();
+   };
+   ";
+}
+
+echo "</script>";
+
 echo "</body></html>";

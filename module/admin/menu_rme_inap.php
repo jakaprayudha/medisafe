@@ -72,7 +72,9 @@
         <a href="module/admin/resume_medis?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
            <button class="nav-link <?= ($current == 'resume_medis.php') ? 'active' : '' ?>">Resume Medis</button>
         </a>
-        <button onclick="window.history.back()" class="nav-link <?= ($current == 'pemeriksaan-rawat-inap') ? '' : '' ?>">Kembali</button>
+        <a href="module/doctor/pemeriksaan-rawat-inap">
+           <button class="nav-link text-primary <?= ($current == 'resume_medis.php') ? 'active' : '' ?>">Kembali</button>
+        </a>
         <?php
          require 'trigger_pulang.php';
          ?>

@@ -110,8 +110,17 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 <script>
   // Mengambil nilai API_URL dari PHP
   const apiUrl = 'controller/doctor/registrasiInpatientController';
-  var today = new Date().toISOString().split("T")[0];
-  $("#fromDate").val(today);
+  let now = new Date();
+
+  // 🔥 awal bulan
+  let firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  // 🔥 hari ini (atau bisa end of month kalau mau full 1 bulan)
+  let today = now.toISOString().split("T")[0];
+
+  let firstDayStr = firstDay.toISOString().split("T")[0];
+
+  $("#fromDate").val(firstDayStr);
   $("#toDate").val(today);
   const rmeType = '<?php echo $rme_type ?>'; // ambil dari PHP
   $(document).ready(function() {
@@ -119,6 +128,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
     var table = $('#zero_config').DataTable({
       "processing": true,
       "serverSide": true,
+      scrollX: true,
       "ajax": {
         "url": apiUrl, // Ganti dengan URL API yang sesuai
         "type": "GET",

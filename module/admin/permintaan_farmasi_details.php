@@ -103,7 +103,12 @@ require '../../controller/view.php';
               <select name="id_pharmacy" id="id_pharmacy" class="form-select js-example-basic-item" required>
                 <option value="">Select Option</option>
                 <?php
-                $getbarang = tampildata("SELECT * FROM ms_pharmacy WHERE pharmacy_status='1'");
+                $id_cust = $_SESSION['id_customer'];
+                $getbarang = tampildata("
+                SELECT * FROM ms_pharmacy 
+                WHERE pharmacy_status='1'
+                AND (id_customer = '$id_cust' OR id_customer = '0')
+              ");
                 ?>
                 <?php foreach ($getbarang as $barang): ?>
                   <option value="<?= $barang['id_pharmacy']; ?>" data-harga="<?= $barang['pharmacy_sale']; ?>"><?= $barang['pharmacy_name_generic']; ?>/<?= $barang['pharmacy_name_trade']; ?></option>
