@@ -10,7 +10,7 @@ $checkklinik = mysqli_query($koneksi, "SELECT * FROM setting_clinic LIMIT 1");
 $dataklinik = mysqli_fetch_array($checkklinik);
 
 $checkpasien = mysqli_query($koneksi, "SELECT * FROM pasien_visit 
-   INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient  INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor
+   LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient
    WHERE pasien_visit.visit_ID='$no'");
 $datapasien = mysqli_fetch_array($checkpasien);
 
@@ -124,7 +124,7 @@ foreach ($checkobat as $obat) {
          <div>Pasien: <strong><?= $datapasien['patient_name'] ?></strong></div>
          <div>No. RM: <?= $datapasien['nomor_rm'] ?></div>
          <div>Tgl: <?= date('d/m/Y') ?></div>
-         <div>Dokter: <?= $datapasien['doctor_name'] ?></div>
+         <div>Dokter: <?= $datapasien['id_doctor'] ?></div>
       </div>
 
       <table>

@@ -54,6 +54,10 @@ function createData()
    $allowedFields = [
       'id_visit',
       'catatan_permintaan',
+      'rck_jumlah',
+      'rck_satuan',
+      'rck_signa',
+      'tipe_obat',
    ];
 
    $fields = ['permintaan_number']; // tambahkan permintaan_number
@@ -132,12 +136,9 @@ function getData()
    global $koneksi;
    // pastikan ada parameter "no" (nomor_visit)
    $no = isset($_GET['no']) ? mysqli_real_escape_string($koneksi, $_GET['no']) : '';
-   $query = "SELECT permintaan_pharmacy.*, md.doctor_name, mp.poli_name, pt.patient_name, pt.nomor_rm 
+   $query = "SELECT permintaan_pharmacy.*, pv.patient_name_pcare
              FROM permintaan_pharmacy 
              INNER JOIN pasien_visit AS pv ON permintaan_pharmacy.id_visit = pv.visit_ID
-             INNER JOIN ms_doctor AS md ON pv.id_doctor = md.id_doctor
-             INNER JOIN ms_patient AS pt ON pv.id_patient = pt.id_patient
-             LEFT JOIN ms_poli AS mp ON pv.id_poli = mp.id_poli
              WHERE permintaan_pharmacy.id_visit = '$no'
              ORDER BY permintaan_pharmacy.id_permintaan_farmasi ASC";
    $result = mysqli_query($koneksi, $query);

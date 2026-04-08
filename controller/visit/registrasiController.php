@@ -62,7 +62,8 @@ function getData()
       ms_patient.patient_name, ms_patient.nomor_rm, 
       ms_patient.patient_gender, ms_patient.patient_datebirth,
       ms_poli.poli_name,
-      ms_provider.provider_name
+      ms_provider.provider_name,
+      ms_patient.patient_bpjs
    FROM pasien_visit
    LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient
    LEFT JOIN ms_poli ON ms_poli.id_poli = pasien_visit.id_poli

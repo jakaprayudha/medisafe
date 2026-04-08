@@ -18,7 +18,7 @@ switch ($method) {
 function getData()
 {
    global $koneksi;
-   $query = "SELECT permintaan_pharmacy.*,pasien_visit.visit_ID,ms_patient.patient_name,ms_doctor.doctor_name,ms_poli.poli_name, ms_patient.nomor_rm, ms_patient.patient_gender, ms_patient.patient_place, ms_patient.patient_datebirth, pasien_visit.source_hub FROM permintaan_pharmacy INNER JOIN pasien_visit ON pasien_visit.visit_ID = permintaan_pharmacy.id_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor LEFT JOIN ms_poli ON ms_poli.id_poli = pasien_visit.id_poli  WHERE status_permintaan !=2 GROUP BY permintaan_pharmacy.id_visit
+   $query = "SELECT permintaan_pharmacy.*,pasien_visit.visit_ID,pasien_visit.patient_name_pcare, pasien_visit.id_doctor, ms_patient.nomor_rm, ms_patient.patient_gender, pasien_visit.id_poli, ms_patient.patient_place, ms_patient.patient_datebirth, pasien_visit.source_hub FROM permintaan_pharmacy LEFT JOIN pasien_visit ON pasien_visit.visit_ID = permintaan_pharmacy.id_visit LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient   GROUP BY permintaan_pharmacy.id_visit
              ORDER BY id_permintaan_farmasi ASC ";
    $result = mysqli_query($koneksi, $query);
 

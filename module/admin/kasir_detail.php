@@ -9,16 +9,16 @@ $env = loadEnv();
 $apiUrl = getenv('API_URL');
 $no = $_GET['no'];
 $rm = $_GET['rm'];
-$check = mysqli_query($koneksi, "SELECT * FROM ms_patient INNER JOIN pasien_visit ON pasien_visit.id_patient = ms_patient.id_patient WHERE pasien_visit.visit_ID='$no'");
+$check = mysqli_query($koneksi, "SELECT * FROM ms_patient LEFT JOIN pasien_visit ON pasien_visit.id_patient = ms_patient.id_patient WHERE pasien_visit.visit_ID='$no'");
 $data = mysqli_fetch_array($check);
 
 // Hitung usia jika data ditemukan
-if ($data) {
-  $patient_datebirth = new DateTime($data['patient_datebirth']);
-  $tanggal_visit = new DateTime($data['visit_date']);
+// if ($data) {
+//   $patient_datebirth = new DateTime($data['patient_datebirth']);
+//   $tanggal_visit = new DateTime($data['visit_date']);
 
-  $usia = $patient_datebirth->diff($tanggal_visit);
-}
+//   $usia = $patient_datebirth->diff($tanggal_visit);
+// }
 
 
 // Total dari permintaan_pharmacy
@@ -80,13 +80,21 @@ $totalKeseluruhan = $totalObat + $totalBilling;
                       <?= $data['patient_name'] ?>
                       <span class="badge bg-warning">RM : <?= $data['nomor_rm'] ?></span>
                     </h5>
-                    <p class="card-text">Tanggal Lahir : <?= $data['patient_datebirth'] ?> <?= $data['patient_gender'] ?></p>
+                    <!-- <p class="card-text">Tanggal Lahir : <?= $data['patient_datebirth'] ?> <?= $data['patient_gender'] ?></p> -->
                   </div>
                   <div class="text-end">
                     <h1 class="text-danger" style="font-size: 24px;">
                       Rp <?= number_format($totalKeseluruhan, 0, ',', '.') ?>
                     </h1>
-                    <button class="btn btn-success mt-2" data-bs-toggle="modal" data-bs-target="#bayar"><i class="fas fa-coins"></i> Bayar</button>
+                    <?php if ($data['status_bayar'] == 1): ?>
+                      <button class="btn btn-success mt-2" disabled>
+                        ✔️ Sudah Lunas
+                      </button>
+                    <?php else: ?>
+                      <button class="btn btn-success mt-2" data-bs-toggle="modal" data-bs-target="#bayar">
+                        <i class="fas fa-coins"></i> Bayar
+                      </button>
+                    <?php endif; ?>
                   </div>
                 </div>
               </div>
@@ -519,6 +527,52 @@ $totalKeseluruhan = $totalObat + $totalBilling;
     });
 
 
+
+  });
+</script>
+<script>
+  document.getElementById("bayarForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const id_visit = document.getElementById("nomor_visit").value;
+    const metode = document.getElementById("metode_bayar").value;
+    const nomor = document.getElementById("nomor_transaksi").value;
+
+    Swal.fire({
+      title: "Konfirmasi Pembayaran?",
+      text: "Data akan disimpan sebagai Lunas",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Bayar",
+      cancelButtonText: "Batal"
+    }).then((result) => {
+
+      if (result.isConfirmed) {
+
+        fetch("controller/visit/bayar.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              id_visit: id_visit,
+              metode_bayar: metode,
+              nomor_transaksi: nomor
+            })
+          })
+          .then(res => res.json())
+          .then(res => {
+            if (res.status === "success") {
+              Swal.fire("Berhasil!", res.message, "success")
+                .then(() => location.reload());
+            } else {
+              Swal.fire("Gagal!", res.message, "error");
+            }
+          });
+
+      }
+
+    });
 
   });
 </script>

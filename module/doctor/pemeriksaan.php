@@ -93,10 +93,7 @@ $apiUrl = getenv('API_URL');
                           <th scope="col" class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
-                          <th scope="col" class="text-dark fw-normal">TTL</th>
-                          <th class="text-dark fw-normal">Dokter</th>
                           <th>Jenis Bayar</th>
-                          <th class="text-dark fw-normal">Poliklinik</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
 
                         </tr>
@@ -158,7 +155,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                 data-nama="${row.patient_name}"
                 data-poli="${row.poli_name}"
                 data-visit="${row.visit_ID}"
-                data-dokter="${row.doctor_name}"
+                data-dokter="${row.id_doctor}"
                 title="Panggil Pasien">
                 <i class="ti ti-volume"></i>
               </button>
@@ -185,13 +182,10 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
               "nomor_rm": row.nomor_rm,
               "nama_pasien": row.patient_name,
               "gender": row.patient_gender,
-              "ttl": row.patient_datebirth + '/' + row.patient_place,
-              "dokter": row.doctor_name,
               "jenis_bayar": row.provider_name,
-              "layanan": row.poli_name,
               "status_visit": `
-                <span class="badge ${row.status_dilayani == 1 ? 'bg-success' : 'bg-danger'} d-block text-center">
-                  ${row.status_dilayani == 1 ? 'Sudah Dilayani' : 'Belum Dilayani'}
+                <span class="badge ${row.visit_status == 4 ? 'bg-success' : 'bg-danger'} d-block text-center">
+                  ${row.visit_status == 4 ? 'Sudah Dilayani' : 'Belum Dilayani'}
                 </span>
               `
             };
@@ -219,16 +213,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
           "data": "gender"
         },
         {
-          "data": "ttl"
-        },
-        {
-          "data": "dokter"
-        },
-        {
           "data": "jenis_bayar"
-        },
-        {
-          "data": "layanan"
         },
         {
           "data": "status_visit"
@@ -267,7 +252,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
     callPatient(noAntrian, nama, poli, visit, dokter);
   });
 
-  function callPatient(noAntrian, namaPasien, poli, visitID, doctor_name) {
+  function callPatient(noAntrian, namaPasien, poli, visitID, id_doctor) {
 
     /* =========================
        1. SUARA (LANGSUNG - USER GESTURE)
@@ -276,7 +261,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 
       speechSynthesis.cancel();
 
-      const text = `Nomor antrean ${noAntrian}, atas nama ${namaPasien}, silakan menuju ruangan  ${doctor_name}`;
+      const text = `Nomor antrean ${noAntrian}, atas nama ${namaPasien}, silakan menuju ruangan  ${id_doctor}`;
       const utterance = new SpeechSynthesisUtterance(text);
 
       utterance.lang = 'id-ID';

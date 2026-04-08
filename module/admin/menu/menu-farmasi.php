@@ -27,7 +27,7 @@
               <span class="hide-menu">Permintaan Resep</span>
            </a>
         </li>
-        <li class="sidebar-item">
+        <!-- <li class="sidebar-item">
            <a class="sidebar-link <?php if ($title == 'Pembelian') {
                                        echo 'active';
                                     } ?>"
@@ -46,7 +46,7 @@
               <iconify-icon icon="mdi:sitemap"></iconify-icon>
               <span class="hide-menu">Persediaan</span>
            </a>
-        </li>
+        </li> -->
         <li class="sidebar-item">
            <a class="sidebar-link <?php if ($title == 'Persediaan') {
                                        echo 'active';

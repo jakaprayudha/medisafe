@@ -1,7 +1,6 @@
 <?php
 $title = 'Permintan Farmasi';
-require '../../controller/view.php';
-
+require "../../controller/view.php";
 ?>
 <!doctype html>
 <html lang="en">
@@ -130,8 +129,8 @@ require '../../controller/view.php';
           </div>
           <div class="col-12">
             <div class="mb-3">
-              <label class="form-label required">Signa</label>
-              <input type="text" id="signa" name="signa" class="form-control" required>
+              <label class="form-label">Signa</label>
+              <input type="text" id="signa" name="signa" class="form-control">
             </div>
           </div>
           <div class="col-12">

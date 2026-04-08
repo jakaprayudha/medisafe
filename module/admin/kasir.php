@@ -56,7 +56,7 @@ require '../../controller/view.php';
               <div class="card w-100">
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Data Registrasi Poliklinik</h5>
+                    <h5 class="card-title fw-semibold">Data Registrasi Pasien</h5>
                     <!-- Grup tombol di sisi kanan -->
 
                     <!-- 🔽 Filter + Tombol Kembali -->
@@ -77,16 +77,14 @@ require '../../controller/view.php';
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
-                          <th scope="col" class="text-dark fw-normal text-center">Status</th>
-                          <th scope="col" class="text-dark fw-normal">Registrasi</th>
-                          <th>Antrian</th>
+                          <th scope="col" class="text-dark fw-normal text-center">Actions</th>
+                          <th scope="col" class="text-dark fw-normal">Tanggal</th>
                           <th class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">Dokter</th>
                           <th scope="col" class="text-dark fw-normal">Poli</th>
                           <th scope="col" class="text-dark fw-normal">Jenis Bayar</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                         </tr>
                       </thead>
                       <tbody></tbody>
@@ -271,56 +269,42 @@ require '../../controller/view.php';
             }
             return {
               "actions": `
-                <div class="text-center">
-                  <div class="dropup">
-
-                    <button class="btn btn-sm btn-primary dropdown-toggle" 
-                      type="button" 
-                      data-bs-toggle="dropdown"
-                      data-bs-display="static"
-                      data-bs-boundary="viewport">
-                      ⚙️ Aksi
-                    </button>
-
-                      <ul class="dropdown-menu dropdown-menu-end shadow">
-
-                      <li>
-                            <a href="module/admin/kasir_detail?no=${row.visit_ID}&rm=${row.nomor_rm}">
-                          <button class="btn btn-primary">Lihat Rincian</button>
-                        </a>
-                      </li>
-
-                    </ul>
-
-                  </div>
-                </div>
-              `,
-              "registrasi": row.visit_ID + '<br>' + row.visit_date + ' ' + row.visit_time ?? "-",
-              "antrian": row.visit_antrian ?? "-",
+              <div class="text-center">
+                ${
+                  row.status_bayar == 1
+                    ? `<button class="btn btn-sm btn-success" disabled>
+                        <i class="fas fa-check-circle me-2"></i> Lunas
+                      </button>`
+                    : `<a href="module/admin/kasir_detail?no=${row.visit_ID}&rm=${row.nomor_rm}" 
+                        class="btn btn-sm btn-primary">
+                        <i class="fas fa-file me-2"></i> Bayar
+                      </a>`
+                }
+              </div>
+            `,
+              "registrasi": row.visit_date + ' ' + row.visit_time ?? "-",
               "nomor_rm": row.nomor_rm ?? "-",
               "nama": `
-                ${row.patient_name ?? "-"}<br>
-                <small class="text-muted">
-                  ${hitungUmur(row.patient_datebirth, row.visit_date)}
-                </small>
+                ${row.patient_name ?? "-"}
               `,
               "gender": row.patient_gender ?? "-",
-              "dokter": row.doctor_name ?? "-",
-              "layanan": row.poli_name ?? "-",
+              "dokter": row.id_doctor ?? "-",
+              "layanan": row.id_poli ?? "-",
               "provider": row.provider_name ?? "-",
-              "status": row.visit_status === 99 ? '<span class="badge bg-danger text-center d-block">Batal</span>' : row.visit_status === 1 ? '<span class="badge bg-warning text-center d-block">Menunggu</span>' : row.visit_status === 2 ? '<span class="badge bg-secondary text-center d-block">Dipanggil</span>' : row.visit_status === 3 ? '<span class="badge bg-primary text-center d-block">Dilayani</span>' : row.visit_status === 4 ? '<span class="badge bg-success text-center d-block">Selesai</span>' : '<span class="badge bg-dark text-center d-block">Unknown</span>'
+              "status": row.status_bayar == 1 ?
+                '<span class="badge bg-success text-center d-block">Lunas</span>' : '<span class="badge bg-danger text-center d-block">Belum Bayar</span>'
             };
           });
         }
       },
       columns: [{
-          data: "status"
+          data: "actions",
+          orderable: false,
+          searchable: false
         }, {
           data: "registrasi"
         },
-        {
-          data: "antrian"
-        },
+
         {
           data: "nomor_rm"
         },
@@ -338,11 +322,6 @@ require '../../controller/view.php';
         },
         {
           data: "provider"
-        },
-        {
-          data: "actions",
-          orderable: false,
-          searchable: false
         },
       ],
       footerCallback: function(row, data, start, end, display) {

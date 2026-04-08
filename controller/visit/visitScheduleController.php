@@ -4,6 +4,9 @@ include '../../database/connect.php';
 header('Content-Type: application/json');
 
 $id_doctor = $_GET['id_doctor'];
+$check = mysqli_query($koneksi, "SELECT * FROM ms_doctor WHERE id_doctor = '$id_doctor'");
+$datacheeck = mysqli_fetch_assoc($check);
+$doctor = $datacheeck['doctor_name'];
 $id_customer = $_SESSION['id_customer'];
 
 // ambil range 3 hari
@@ -27,7 +30,7 @@ ORDER BY v.visit_time ASC
 ";
 
 $stmt = $koneksi->prepare($query);
-$stmt->bind_param("iiss", $id_doctor, $id_customer, $start, $end);
+$stmt->bind_param("iiss", $doctor, $id_customer, $start, $end);
 $stmt->execute();
 
 $result = $stmt->get_result();

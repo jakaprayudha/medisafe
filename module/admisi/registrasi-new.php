@@ -128,7 +128,7 @@ require '../../controller/view.php';
             </div>
             <div class="col-6">
               <div class="mb-3">
-                <label class="form-label required" id="patient_nik">No.Kartu BPJS</label>
+                <label class="form-label" id="patient_nik">No.Kartu BPJS</label>
                 <input type="text" id="patient_bpjs" name="patient_bpjs" class="form-control">
               </div>
             </div>
