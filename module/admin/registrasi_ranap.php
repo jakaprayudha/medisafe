@@ -58,7 +58,7 @@ require '../../controller/view.php';
                       </div>
                       <!-- Tombol kembali -->
                       <div class="d-flex ms-auto gap-2">
-                        <div class="dropdown">
+                        <!-- <div class="dropdown">
                           <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
                             <i class="fas fa-plus"></i> Tambah
                           </button>
@@ -74,7 +74,7 @@ require '../../controller/view.php';
                               </a>
                             </li>
                           </ul>
-                        </div>
+                        </div> -->
                         <a href="module/admin/registrasi_booking_ranap">
                           <button class="btn btn-primary">
                             <i class="fas fa-list"></i> Permintaan Rawat Inap
@@ -88,12 +88,11 @@ require '../../controller/view.php';
                       <thead>
                         <tr>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
-                          <th scope="col" class="text-dark fw-normal">Registrasi</th>
-                          <th class="text-dark fw-normal">Nomor RM</th>
+                          <th scope="col" class="text-dark fw-normal">Tanggal</th>
+                          <th class="text-dark fw-normal">No.BPJS</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">Dokter</th>
-                          <th scope="col" class="text-dark fw-normal">Triase</th>
                           <th scope="col" class="text-dark fw-normal">Jenis Bayar</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                         </tr>
@@ -640,17 +639,13 @@ require '../../controller/view.php';
                   </div>
                 </div>
               `,
-              "registrasi": row.visit_ID + '<br>' + row.visit_date + ' ' + row.visit_time ?? "-",
-              "nomor_rm": row.nomor_rm ?? "-",
+              "registrasi": row.visit_date + ' ' + row.visit_time ?? "-",
+              "nomor_bpjs": row.patient_bpjs ?? "-",
               "nama": `
-                ${row.patient_name ?? "-"}<br>
-                <small class="text-muted">
-                  ${hitungUmur(row.patient_datebirth, row.visit_date)}
-                </small>
+                ${row.patient_name ?? "-"}
               `,
               "gender": row.patient_gender ?? "-",
               "dokter": row.id_doctor ?? "-",
-              "triase": row.triase ?? "-",
               "provider": row.provider_name ?? "-",
               "status": row.status_perawatan_inap === 0 ? '<span class="badge bg-primary text-center d-block">Perawatan</span>' : row.status_perawatan_inap === 1 ? '<span class="badge bg-success text-center d-block">Pulang</span>' : '<span class="badge bg-dark text-center d-block">Unknown</span>'
             };
@@ -663,7 +658,7 @@ require '../../controller/view.php';
           data: "registrasi"
         },
         {
-          data: "nomor_rm"
+          data: "nomor_bpjs"
         },
         {
           data: "nama"
@@ -673,9 +668,6 @@ require '../../controller/view.php';
         },
         {
           data: "dokter"
-        },
-        {
-          data: "triase"
         },
         {
           data: "provider"
