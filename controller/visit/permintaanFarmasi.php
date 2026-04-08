@@ -1,32 +1,44 @@
 <?php
 include '../../database/connect.php';
+session_start();
+
+header('Content-Type: application/json');
+
+$id_customer = $_SESSION['id_customer'] ?? null;
+
+if (!$id_customer) {
+   echo json_encode([
+      'status' => 'error',
+      'message' => 'Session tidak ditemukan'
+   ]);
+   exit;
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
+
 switch ($method) {
    case 'POST':
-      createData();
+      createData($id_customer);
       break;
    case 'GET':
       if (isset($_GET['id'])) {
-         getID($_GET['id']);
+         getID($_GET['id'], $id_customer);
       } else {
-         getData();
+         getData($id_customer);
       }
       break;
    case 'PUT':
       parse_str(file_get_contents("php://input"), $_PUT);
 
       if (isset($_GET['approve'])) {
-         approveData($_PUT);
+         approveData($_PUT, $id_customer);
       } else {
-         updateData();
+         updateData($id_customer);
       }
       break;
-
    case 'DELETE':
-      // Delete User
-      deleteData();
+      deleteData($id_customer);
       break;
-
    default:
       echo json_encode([
          'status' => 'error',
@@ -34,23 +46,10 @@ switch ($method) {
       ]);
       break;
 }
-
-// Function untuk Create
-function createData()
+function createData($id_customer)
 {
    global $koneksi;
 
-
-
-   if (empty($_POST)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Data tidak ditemukan.'
-      ]);
-      exit;
-   }
-
-   // Ambil semua field yang valid untuk tabel permintaan_pharmacy
    $allowedFields = [
       'id_visit',
       'catatan_permintaan',
@@ -60,8 +59,9 @@ function createData()
       'tipe_obat',
    ];
 
-   $fields = ['permintaan_number']; // tambahkan permintaan_number
-   $values = [generateDoctorNumber($koneksi)];
+   // ❌ HAPUS generateDoctorNumber
+   $fields = ['id_customer'];
+   $values = [$id_customer];
 
    foreach ($allowedFields as $f) {
       if (isset($_POST[$f])) {
@@ -70,272 +70,142 @@ function createData()
       }
    }
 
-   if (empty($fields)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Tidak ada data yang dikirim.'
-      ]);
-      exit;
-   }
-
-   // Buat placeholder dan tipe untuk prepared statement
    $placeholders = implode(', ', array_fill(0, count($fields), '?'));
    $columns = implode(', ', $fields);
-   $types = str_repeat('s', count($fields)); // semua string
+   $types = str_repeat('s', count($fields));
 
-   $query = "INSERT INTO permintaan_pharmacy ($columns) VALUES ($placeholders)";
+   $stmt = $koneksi->prepare("
+      INSERT INTO permintaan_pharmacy ($columns) 
+      VALUES ($placeholders)
+   ");
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param($types, ...$values);
+   $stmt->bind_param($types, ...$values);
 
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil ditambahkan.'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menambahkan data: ' . $stmt->error
-         ]);
-      }
-
-      $stmt->close();
+   if ($stmt->execute()) {
+      echo json_encode([
+         'status' => 'success',
+         'id' => $stmt->insert_id // 🔥 penting kalau mau dipakai lanjut
+      ]);
    } else {
       echo json_encode([
          'status' => 'error',
-         'message' => 'Gagal menyiapkan query: ' . $koneksi->error
+         'message' => $stmt->error
       ]);
    }
 }
-
-/**
- * Generate permintaan_number unik dengan format DCT-XXXXXX
- */
-function generateDoctorNumber($koneksi)
-{
-   $count = 0; // inisialisasi supaya tidak merah
-   do {
-      $random = mt_rand(100000, 999999); // 6 digit angka
-      $doctorNumber = "DCT-" . $random;
-
-      // cek ke database apakah sudah ada
-      $check = $koneksi->prepare("SELECT COUNT(*) FROM permintaan_pharmacy WHERE permintaan_number = ?");
-      $check->bind_param("s", $doctorNumber);
-      $check->execute();
-      $check->bind_result($count);
-      $check->fetch();
-      $check->close();
-   } while ($count > 0); // ulang jika sudah ada
-
-   return $doctorNumber;
-}
-
-function getData()
+function getData($id_customer)
 {
    global $koneksi;
-   // pastikan ada parameter "no" (nomor_visit)
-   $no = isset($_GET['no']) ? mysqli_real_escape_string($koneksi, $_GET['no']) : '';
-   $query = "SELECT permintaan_pharmacy.*, pv.patient_name_pcare
-             FROM permintaan_pharmacy 
-             INNER JOIN pasien_visit AS pv ON permintaan_pharmacy.id_visit = pv.visit_ID
-             WHERE permintaan_pharmacy.id_visit = '$no'
-             ORDER BY permintaan_pharmacy.id_permintaan_farmasi ASC";
-   $result = mysqli_query($koneksi, $query);
 
-   if (!$result) {
-      http_response_code(500);
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal mengambil data: ' . mysqli_error($koneksi)
-      ]);
-      return;
-   }
+   $no = $_GET['no'] ?? '';
 
-   // Ambil semua data dalam bentuk array asosiatif
-   $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
+   $stmt = $koneksi->prepare("SELECT p.*, pv.patient_name_pcare
+      FROM permintaan_pharmacy p
+      LEFT JOIN pasien_visit pv 
+         ON p.id_visit = pv.visit_ID
+      WHERE p.id_visit = ?
+      AND p.id_customer = ?
+      ORDER BY p.id_permintaan_farmasi ASC
+   ");
 
-   // Tutup hasil query
-   mysqli_free_result($result);
+   $stmt->bind_param("si", $no, $id_customer);
+   $stmt->execute();
 
-   // Kirimkan data dalam format JSON
-   header('Content-Type: application/json');
+   $data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
    echo json_encode([
       'status' => 'success',
-      'data' => $data,
+      'data' => $data
    ]);
 }
 
-// Function untuk Read User berdasarkan ID
-function  getID($iduser)
+function getID($id, $id_customer)
 {
    global $koneksi;
 
-   // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM permintaan_pharmacy  WHERE id_permintaan_farmasi = ?";
+   $stmt = $koneksi->prepare("
+      SELECT * FROM permintaan_pharmacy 
+      WHERE id_permintaan_farmasi = ?
+      AND id_customer = ?
+   ");
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $iduser); // Bind parameter iduser
-      $stmt->execute();
-      $result = $stmt->get_result();
+   $stmt->bind_param("ii", $id, $id_customer);
+   $stmt->execute();
 
-      if ($result->num_rows > 0) {
-         $data = $result->fetch_assoc();
-         echo json_encode([
-            'status' => 'success',
-            'data' => $data
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Data tidak ditemukan.'
-         ]);
-      }
+   $result = $stmt->get_result();
 
-      $stmt->close();
+   if ($result->num_rows > 0) {
+      echo json_encode([
+         'status' => 'success',
+         'data' => $result->fetch_assoc()
+      ]);
    } else {
       echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
+         'status' => 'error'
       ]);
    }
 }
-
-
-
-function updateData()
+function updateData($id_customer)
 {
    global $koneksi;
    parse_str(file_get_contents("php://input"), $_PUT);
 
-   if (empty($_PUT['id_permintaan_farmasi'])) {
-      echo json_encode(['status' => 'error', 'message' => 'ID tidak ditemukan.']);
-      return;
-   }
+   $id = $_PUT['id_permintaan_farmasi'] ?? '';
 
-   $id = $_PUT['id_permintaan_farmasi'];
-   $allowedFields = [
-      'id_visit',
-      'catatan_permintaan'
-   ];
-   $fields = [];
-   $values = [];
+   $stmt = $koneksi->prepare("
+      UPDATE permintaan_pharmacy 
+      SET catatan_permintaan = ?
+      WHERE id_permintaan_farmasi = ?
+      AND id_customer = ?
+   ");
 
-   foreach ($allowedFields as $f) {
-      if (isset($_PUT[$f])) {
-         $fields[] = "$f=?";
-         $values[] = $_PUT[$f];
-      }
-   }
+   $stmt->bind_param(
+      "sii",
+      $_PUT['catatan_permintaan'],
+      $id,
+      $id_customer
+   );
 
-   if (empty($fields)) {
-      echo json_encode(['status' => 'error', 'message' => 'Tidak ada data diupdate.']);
-      return;
-   }
-
-   $values[] = $id;
-   $types = str_repeat('s', count($values) - 1) . "i";
-
-   $query = "UPDATE permintaan_pharmacy SET " . implode(',', $fields) . " WHERE id_permintaan_farmasi=?";
-   $stmt = $koneksi->prepare($query);
-
-   if ($stmt) {
-      $stmt->bind_param($types, ...$values);
-      if ($stmt->execute()) {
-         echo json_encode(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
-      } else {
-         echo json_encode(['status' => 'error', 'message' => 'Update gagal: ' . $stmt->error]);
-      }
-      $stmt->close();
-   } else {
-      echo json_encode(['status' => 'error', 'message' => 'Query error: ' . $koneksi->error]);
+   if ($stmt->execute()) {
+      echo json_encode(['status' => 'success']);
    }
 }
 
-
-
-// Function untuk Delete User
-function deleteData()
+function deleteData($id_customer)
 {
    global $koneksi;
 
-   // Ambil ID user dari query parameter
-   $id = isset($_GET['id']) ? $_GET['id'] : '';
+   $id = $_GET['id'] ?? '';
 
-   if (empty($id)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'ID tidak ditemukan.'
-      ]);
-      exit;
-   }
+   $stmt = $koneksi->prepare("
+      DELETE FROM permintaan_pharmacy 
+      WHERE id_permintaan_farmasi = ?
+      AND id_customer = ?
+   ");
 
-   // Query untuk menghapus data user
-   $query = "DELETE FROM permintaan_pharmacy WHERE id_permintaan_farmasi = ?";
+   $stmt->bind_param("ii", $id, $id_customer);
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $id);
-
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil dihapus.'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menghapus.'
-         ]);
-      }
-
-      $stmt->close();
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
+   if ($stmt->execute()) {
+      echo json_encode(['status' => 'success']);
    }
 }
 
-
-function approveData($data)
+function approveData($data, $id_customer)
 {
    global $koneksi;
 
-   if (empty($data['id_permintaan_farmasi'])) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'ID permintaan tidak ditemukan.'
-      ]);
-      return;
-   }
+   $id = $data['id_permintaan_farmasi'] ?? '';
 
-   $id = $data['id_permintaan_farmasi'];
+   $stmt = $koneksi->prepare("
+      UPDATE permintaan_pharmacy 
+      SET status_permintaan = 1
+      WHERE id_permintaan_farmasi = ?
+      AND id_customer = ?
+   ");
 
-   $query = "UPDATE permintaan_pharmacy 
-             SET status_permintaan = '1'
-             WHERE id_permintaan_farmasi = ?";
+   $stmt->bind_param("ii", $id, $id_customer);
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("i", $id);
-
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Permintaan farmasi berhasil di-approve.'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Approve gagal: ' . $stmt->error
-         ]);
-      }
-
-      $stmt->close();
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Query gagal disiapkan.'
-      ]);
+   if ($stmt->execute()) {
+      echo json_encode(['status' => 'success']);
    }
 }

@@ -483,6 +483,10 @@ require "../../controller/view.php";
         // tampilkan tombol kirim
         $('#btnKirim').removeClass('d-none');
 
+      } else if (d.status_permintaan == 1) {
+        statusText = 'Terikirim Ke Farmasi';
+        statusClass = 'bg-primaru';
+
       } else if (d.status_permintaan == 2) {
         statusText = 'Sedang Diproses';
         statusClass = 'bg-info';

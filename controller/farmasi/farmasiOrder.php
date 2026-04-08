@@ -35,8 +35,7 @@ function getData()
    }
 
    // 🔥 PREPARE QUERY (WAJIB karena pakai ?)
-   $stmt = $koneksi->prepare("
-      SELECT 
+   $stmt = $koneksi->prepare("SELECT 
          permintaan_pharmacy.*,
          pasien_visit.visit_ID,
          pasien_visit.patient_name_pcare,
@@ -52,7 +51,7 @@ function getData()
          ON pasien_visit.visit_ID = permintaan_pharmacy.id_visit 
       LEFT JOIN ms_patient 
          ON ms_patient.id_patient = pasien_visit.id_patient  
-      WHERE pasien_visit.id_customer = ?
+      WHERE pasien_visit.id_customer = ? AND permintaan_pharmacy.status_permintaan !=0
       GROUP BY permintaan_pharmacy.id_visit
       ORDER BY permintaan_pharmacy.id_permintaan_farmasi ASC
    ");

@@ -56,7 +56,6 @@ require '../../controller/view.php';
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
-                          <th class="text-dark fw-normal">ID Order</th>
                           <th class="text-dark fw-normal">Tanggal</th>
                           <th class="text-dark fw-normal">Tipe Obat</th>
                           <th scope="col" class="text-dark fw-normal">Catatan</th>
@@ -184,7 +183,6 @@ require '../../controller/view.php';
 								</div>
 							</div>
                     `,
-              "idorder": row.permintaan_number ?? "-",
               "timestamp": row.created_at ?? "-",
               "tipe_obat": row.tipe_obat ?? "-",
               "catatan": row.catatan_permintaan ?? "-",
@@ -215,9 +213,6 @@ require '../../controller/view.php';
         }
       },
       columns: [{
-          data: "idorder"
-        },
-        {
           data: "timestamp"
         },
         {
