@@ -55,7 +55,7 @@ function createData()
       'pemeriksaan_fisik',
       'diagnosa',
       'pengobatan',
-      'user_entry'
+      'users_entry'
    ];
 
    $fields = ['cppt_number']; // tambahkan CPPT ID
