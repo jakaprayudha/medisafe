@@ -41,8 +41,9 @@ switch ($method) {
 // ================= CREATE =================
 function createData($id_customer)
 {
-   global $koneksi;
 
+   global $koneksi;
+   $count = 0; // 🔥 TAMBAH INI
    if (empty($_POST)) {
       echo json_encode(['status' => 'error', 'message' => 'Data kosong']);
       return;
@@ -100,7 +101,7 @@ function generateUserUID($koneksi)
    do {
       $random = mt_rand(100000, 999999);
       $uid = "USR-" . md5($random);
-
+      $count = 0; // 🔥 TAMBAH INI
       $check = $koneksi->prepare("SELECT COUNT(*) FROM ms_users WHERE uid_user=?");
       $check->bind_param("s", $uid);
       $check->execute();
@@ -200,7 +201,7 @@ function updateData($id_customer)
 
    // ================= 🔥 CEK USERNAME DUPLIKAT =================
    if (isset($_PUT['username'])) {
-
+      $count = 0; // 🔥 TAMBAH INI
       $check = $koneksi->prepare(
          "SELECT COUNT(*) FROM ms_users 
           WHERE username=? AND id_user!=? AND id_customer=?"
@@ -225,7 +226,7 @@ function updateData($id_customer)
       "SELECT password FROM ms_users 
        WHERE id_user=? AND id_customer=?"
    );
-
+   $oldPassword = '';
    $stmtOld->bind_param("ii", $id, $id_customer);
    $stmtOld->execute();
    $stmtOld->bind_result($oldPassword);

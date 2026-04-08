@@ -158,7 +158,7 @@ function getData()
 {
    global $koneksi;
 
-   $query = "SELECT * FROM permintaan_ranap rn INNER JOIN ms_patient mp ON rn.id_patient = mp.id_patient INNER JOIN pasien_visit pv ON rn.visit_ID_inpatient = pv.visit_ID INNER JOIN ms_doctor dc ON rn.id_doctor = dc.id_doctor WHERE rn.ranap_booking=0 ORDER BY rn.id_ranap DESC";
+   $query = "SELECT * FROM permintaan_ranap rn LEFT JOIN ms_patient mp ON rn.id_patient = mp.id_patient LEFT JOIN pasien_visit pv ON rn.visit_ID_inpatient = pv.visit_ID WHERE rn.ranap_booking=0 ORDER BY rn.id_ranap DESC";
    $result = mysqli_query($koneksi, $query);
 
    if (!$result) {

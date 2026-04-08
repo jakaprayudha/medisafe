@@ -79,10 +79,8 @@ $apiUrl = getenv('API_URL');
                           <th scope="col" class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
-                          <th scope="col" class="text-dark fw-normal">TTL</th>
                           <th class="text-dark fw-normal">Dokter</th>
                           <th>Jenis Bayar</th>
-                          <th class="text-dark fw-normal">Poliklinik</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
 
                         </tr>
@@ -127,7 +125,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
     // Initialize DataTable
     var table = $('#zero_config').DataTable({
       "processing": true,
-      "serverSide": true,
+      "serverSide": false,
       scrollX: true,
       "ajax": {
         "url": apiUrl, // Ganti dengan URL API yang sesuai
@@ -175,10 +173,8 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
               "nomor_rm": row.nomor_rm,
               "nama_pasien": row.patient_name,
               "gender": row.patient_gender,
-              "ttl": row.patient_datebirth + '/' + row.patient_place,
-              "dokter": row.doctor_name,
+              "dokter": row.id_doctor,
               "jenis_bayar": row.provider_name,
-              "layanan": row.poli_name,
               "status_visit": `
                   <span class="badge ${row.status_cppt == 1 ? 'bg-success' : 'bg-danger'} d-block text-center">
                     ${row.status_cppt == 1 ? 'Sudah Dilayani' : 'Belum Dilayani'}
@@ -203,16 +199,10 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
           "data": "gender"
         },
         {
-          "data": "ttl"
-        },
-        {
           "data": "dokter"
         },
         {
           "data": "jenis_bayar"
-        },
-        {
-          "data": "layanan"
         },
         {
           "data": "status_visit"
