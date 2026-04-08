@@ -57,8 +57,8 @@ switch ($method) {
       $faskes_city     = $_POST['faskes_city'] ?? '';
       $faskes_district = $_POST['faskes_district'] ?? '';
       $faskes_village  = $_POST['faskes_village'] ?? '';
-      $contract_start  = $_POST['contract_start'] ?? null;
-      $contract_end    = $_POST['contract_end'] ?? null;
+      $contract_start  = date('Y-m-d', strtotime($_POST['contract_start']));
+      $contract_end    = date('Y-m-d', strtotime($_POST['contract_start']));
 
       mysqli_begin_transaction($koneksi);
 
