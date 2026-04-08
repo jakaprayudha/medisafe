@@ -629,7 +629,9 @@ require '../../controller/view.php';
       $('#filterModal').modal('hide');
     });
 
-    var today = new Date().toISOString().split("T")[0];
+    var today = new Date().toLocaleDateString("sv-SE", {
+      timeZone: "Asia/Jakarta"
+    });
     $("#fromDate").val(today);
     $("#toDate").val(today);
     const tipePasien = "Poliklinik";

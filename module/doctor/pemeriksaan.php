@@ -122,7 +122,9 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
   let activeTab = 'belum'; // default tab
 
   const apiUrl = 'controller/doctor/registrasiController';
-  var today = new Date().toISOString().split("T")[0];
+  var today = new Date().toLocaleDateString("sv-SE", {
+    timeZone: "Asia/Jakarta"
+  });
   const doctorName = <?= json_encode($_SESSION['fullname'] ?? '') ?>;
   const rmeType = '<?php echo $rme_type ?>';
 
