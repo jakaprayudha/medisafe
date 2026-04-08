@@ -125,6 +125,20 @@ $data = mysqli_fetch_array($check);
                     </div>
 
                   </div>
+
+                  <!-- TOMBOL PANGGIL -->
+                  <div class="mt-4 text-end">
+                    <button
+                      class="btn btn-warning btn-call"
+                      data-antrian="<?= $data['visit_antrian'] ?? '-' ?>"
+                      data-nama="<?= $data['patient_name'] ?>"
+                      data-poli="<?= $data['id_poli'] ?>"
+                      data-visit="<?= $data['visit_ID'] ?>"
+                      data-dokter="<?= $data['id_doctor'] ?>"
+                      data-obat="<?= $data['obat'] ?? 'Silakan ambil obat di farmasi' ?>">
+                      <i class="ti ti-volume"></i> Panggil Pasien
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -534,5 +548,68 @@ $data = mysqli_fetch_array($check);
         .html('<i class="fas fa-check-circle"></i> Selesai')
         .prop('disabled', true);
     }
+  }
+</script>
+<script>
+  $(document).on('click', '.btn-call', function() {
+    const noAntrian = $(this).data('antrian');
+    const nama = $(this).data('nama');
+    const poli = $(this).data('poli');
+    const visit = $(this).data('visit');
+    const dokter = $(this).data('dokter');
+    const obat = $(this).data('obat');
+
+    callPatient(noAntrian, nama, poli, visit, dokter, obat);
+
+    // 🔥 disable biar gak double klik
+    $(this).prop('disabled', true);
+  });
+
+  function callPatient(noAntrian, namaPasien, poli, visitID, id_doctor, obat) {
+
+    /* =========================
+       1. SUARA
+    ========================= */
+    if ('speechSynthesis' in window) {
+
+      speechSynthesis.cancel();
+
+      const text = `
+  
+      pasien ${namaPasien}, dipersilahkan untuk ambil obat 
+    `;
+
+      const utterance = new SpeechSynthesisUtterance(text);
+
+      utterance.lang = 'id-ID';
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+
+      const voices = speechSynthesis.getVoices();
+      const indo = voices.find(v => v.lang === 'id-ID');
+      if (indo) utterance.voice = indo;
+
+      speechSynthesis.speak(utterance);
+    }
+
+    /* =========================
+       2. UPDATE STATUS
+    ========================= */
+    fetch('controller/queue/poliCall.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          visit_ID: visitID
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status !== 'success') {
+          console.warn('Update status gagal');
+        }
+      });
   }
 </script>

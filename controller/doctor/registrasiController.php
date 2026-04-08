@@ -32,6 +32,18 @@ function getData()
 {
    global $koneksi;
 
+   // 🔥 ambil session
+   $id_customer = $_SESSION['id_customer'] ?? null;
+
+   if (!$id_customer) {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Session tidak ditemukan'
+      ]);
+      exit;
+   }
+
+
    // =========================
    // PARAMETER FILTER
    // =========================
@@ -50,7 +62,7 @@ function getData()
         LEFT JOIN ms_patient 
             ON ms_patient.id_patient = pasien_visit.id_patient
       LEFT JOIN ms_provider ON ms_provider.id_provider = pasien_visit.id_provider
-        WHERE 1=1 AND pasien_visit.source_hub = 'Poliklinik'
+        WHERE 1=1 AND pasien_visit.source_hub != 'Rawat Inap' AND pasien_visit.id_customer = '$id_customer'
     ";
 
    // =========================
