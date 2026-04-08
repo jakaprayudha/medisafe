@@ -167,7 +167,7 @@ require '../../controller/view.php';
                         // }
                         ?>
                         <!-- </select> -->
-                        <input type="text" class="form-control bg-light" id="" name="" value="<?= $datavisit['doctor_name'] ?? '' ?>" readonly>
+                        <input type="text" class="form-control bg-light" id="" name="" value="<?= $datavisit['id_doctor'] ?? '' ?>" readonly>
                         <input type="hidden" name="id_doctor" id="id_doctor" value="<?= $datavisit['id_doctor'] ?? '' ?>">
                       </div>
 

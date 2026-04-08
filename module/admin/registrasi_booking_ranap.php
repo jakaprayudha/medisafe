@@ -50,7 +50,6 @@ require '../../controller/view.php';
                         <tr>
                           <th class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Lengkap</th>
-                          <th scope="col" class="text-dark fw-normal">TTL</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">DPJP</th>
                           <th scope="col" class="text-dark fw-normal">Diagnosa Awal</th>
@@ -218,9 +217,8 @@ require '../../controller/view.php';
             `,
               "rm": row.nomor_rm ?? "-",
               "name": row.patient_name ?? "-",
-              "ttl": (row.patient_place ?? '-') + ' / ' + (row.patient_datebirth ?? '-'),
               "gender": row.patient_gender ?? "-",
-              "dpjp": row.doctor_name ?? "-",
+              "dpjp": row.id_doctor ?? "-",
               "diagnosa": row.diagnosa_awal ?? "-"
             };
           });
@@ -231,9 +229,6 @@ require '../../controller/view.php';
         },
         {
           data: "name"
-        },
-        {
-          data: "ttl"
         },
         {
           data: "gender"

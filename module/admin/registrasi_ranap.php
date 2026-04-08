@@ -519,7 +519,7 @@ require '../../controller/view.php';
     var today = new Date().toISOString().split("T")[0];
     $("#fromDate").val(today);
     $("#toDate").val(today);
-    const tipePasien = "UGD";
+    const tipePasien = "Rawat Inap";
     const apiUrl = 'controller/visit/registrasiRanapController';
     var table = $('#periodeTable').DataTable({
       processing: true,
@@ -636,10 +636,10 @@ require '../../controller/view.php';
                 </small>
               `,
               "gender": row.patient_gender ?? "-",
-              "dokter": row.doctor_name ?? "-",
+              "dokter": row.id_doctor ?? "-",
               "triase": row.triase ?? "-",
               "provider": row.provider_name ?? "-",
-              "status": row.visit_status === 99 ? '<span class="badge bg-danger text-center d-block">Batal</span>' : row.visit_status === 1 ? '<span class="badge bg-warning text-center d-block">Menunggu</span>' : row.visit_status === 2 ? '<span class="badge bg-secondary text-center d-block">Dipanggil</span>' : row.visit_status === 3 ? '<span class="badge bg-primary text-center d-block">Dilayani</span>' : row.visit_status === 4 ? '<span class="badge bg-success text-center d-block">Selesai</span>' : '<span class="badge bg-dark text-center d-block">Unknown</span>'
+              "status": row.status_perawatan_inap === 0 ? '<span class="badge bg-primary text-center d-block">Perawatan</span>' : row.status_perawatan_inap === 1 ? '<span class="badge bg-success text-center d-block">Pulang</span>' : '<span class="badge bg-dark text-center d-block">Unknown</span>'
             };
           });
         }
