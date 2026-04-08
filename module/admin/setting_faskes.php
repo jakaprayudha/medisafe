@@ -112,16 +112,6 @@ require '../../controller/view.php';
                       </div>
                     </div>
 
-                    <!-- CONTRACT -->
-                    <h6 class="mt-3 fw-semibold text-primary">Kontrak</h6>
-                    <div class="row">
-                      <div class="col-md-6 mb-3">
-                        <input type="date" class="form-control" name="contract_start">
-                      </div>
-                      <div class="col-md-6 mb-3">
-                        <input type="date" class="form-control" name="contract_end">
-                      </div>
-                    </div>
 
                     <button class="btn btn-primary w-100 mt-3">💾 Simpan Perubahan</button>
 
