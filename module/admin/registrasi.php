@@ -697,6 +697,13 @@ require '../../controller/view.php';
                         </a>
                       </li>
 
+                      
+                       <li>
+                        <a class="dropdown-item" href="module/admin/form_sep?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="fas fa-upload me-2 text-info"></i> Upload SEP
+                        </a>
+                      </li>
+
                       <li>
                         <a class="dropdown-item screening-btn" href="javascript:;" data-id="${row.id_visit}">
                           <i class="fas fa-pencil me-2 text-primary"></i> Vital Sign
