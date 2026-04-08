@@ -80,9 +80,22 @@ function getData()
    }
 
    // ✅ Filter dokter (BERDASARKAN NAMA)
+   // if (!empty($doctorName)) {
+   //    $query   .= " AND pasien_visit.id_doctor = ?";
+   //    $params[] = $doctorName;
+   //    $types   .= "s";
+   // }
+
    if (!empty($doctorName)) {
-      $query   .= " AND pasien_visit.id_doctor = ?";
-      $params[] = $doctorName;
+
+      // 🔥 normalisasi nama (hapus "dr." dll)
+      $doctorNameClean = preg_replace('/^dr\.?\s*/i', '', $doctorName);
+
+      $query .= " AND (
+        REPLACE(LOWER(pasien_visit.id_doctor), 'dr. ', '') LIKE ?
+    )";
+
+      $params[] = "%" . strtolower($doctorNameClean) . "%";
       $types   .= "s";
    }
 
