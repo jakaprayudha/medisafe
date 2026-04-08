@@ -3,10 +3,12 @@ include '../../database/connect.php';
 
 header('Content-Type: application/json');
 
-$id_customer = $_GET['no'] ?? $_SESSION['id_customer'] ?? null;
+session_start();
+
+$id_customer = $_SESSION['id_customer'] ?? null;
 
 // 🔐 VALIDASI SESSION
-if (!isset($id_customer)) {
+if (!$id_customer) {
    http_response_code(401);
    echo json_encode([
       'status' => 'error',
@@ -14,8 +16,6 @@ if (!isset($id_customer)) {
    ]);
    exit;
 }
-
-
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -45,35 +45,39 @@ function createData($id_customer)
 
    if (empty($_POST)) {
       echo json_encode(['status' => 'error', 'message' => 'Data kosong']);
-      exit;
+      return;
    }
 
-   $allowedFields = [
-      'fullname',
-      'username',
-      'password',
-      'roles',
-      'path'
+   // 🔥 CEK USERNAME DUPLIKAT
+   $check = $koneksi->prepare(
+      "SELECT COUNT(*) FROM ms_users WHERE username=? AND id_customer=?"
+   );
+   $check->bind_param("si", $_POST['username'], $id_customer);
+   $check->execute();
+   $check->bind_result($count);
+   $check->fetch();
+   $check->close();
+
+   if ($count > 0) {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Username sudah digunakan!'
+      ]);
+      return;
+   }
+
+   $fields = ['uid_user', 'id_customer', 'fullname', 'username', 'password', 'roles', 'path'];
+   $values = [
+      generateUserUID($koneksi),
+      $id_customer,
+      $_POST['fullname'],
+      $_POST['username'],
+      md5($_POST['password']),
+      $_POST['roles'],
+      $_POST['path']
    ];
 
-   $fields = ['uid_user', 'id_customer'];
-   $values = [generateUserUID($koneksi), $id_customer];
-   $types  = "si";
-
-   foreach ($allowedFields as $f) {
-      if (isset($_POST[$f])) {
-
-         if ($f === 'password') {
-            $fields[] = $f;
-            $values[] = md5($_POST[$f]);
-            $types .= "s";
-         } else {
-            $fields[] = $f;
-            $values[] = $_POST[$f];
-            $types .= "s";
-         }
-      }
-   }
+   $types = "sisssss";
 
    $placeholders = implode(',', array_fill(0, count($fields), '?'));
    $columns = implode(',', $fields);
@@ -82,7 +86,7 @@ function createData($id_customer)
    $stmt->bind_param($types, ...$values);
 
    if ($stmt->execute()) {
-      echo json_encode(['status' => 'success']);
+      echo json_encode(['status' => 'success', 'message' => 'User berhasil ditambahkan']);
    } else {
       echo json_encode(['status' => 'error', 'message' => $stmt->error]);
    }
@@ -93,8 +97,6 @@ function createData($id_customer)
 // ================= GENERATE UID =================
 function generateUserUID($koneksi)
 {
-   $count = 0;
-
    do {
       $random = mt_rand(100000, 999999);
       $uid = "USR-" . md5($random);
@@ -174,12 +176,9 @@ function updateData($id_customer)
    }
 
    $id = $_PUT['id_user'];
-   $oldPassword = '';
 
    // ================= 🔥 TOGGLE STATUS =================
    if (isset($_GET['toggle_status']) && isset($_PUT['status'])) {
-
-      $status = $_PUT['status'];
 
       $stmt = $koneksi->prepare(
          "UPDATE ms_users 
@@ -187,22 +186,38 @@ function updateData($id_customer)
           WHERE id_user=? AND id_customer=?"
       );
 
-      $stmt->bind_param("iii", $status, $id, $id_customer);
+      $stmt->bind_param("iii", $_PUT['status'], $id, $id_customer);
 
       if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Status berhasil diupdate.'
-         ]);
+         echo json_encode(['status' => 'success']);
       } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal update status.'
-         ]);
+         echo json_encode(['status' => 'error']);
       }
 
       $stmt->close();
-      return; // ⛔ STOP di sini (penting)
+      return;
+   }
+
+   // ================= 🔥 CEK USERNAME DUPLIKAT =================
+   if (isset($_PUT['username'])) {
+
+      $check = $koneksi->prepare(
+         "SELECT COUNT(*) FROM ms_users 
+          WHERE username=? AND id_user!=? AND id_customer=?"
+      );
+      $check->bind_param("sii", $_PUT['username'], $id, $id_customer);
+      $check->execute();
+      $check->bind_result($count);
+      $check->fetch();
+      $check->close();
+
+      if ($count > 0) {
+         echo json_encode([
+            'status' => 'error',
+            'message' => 'Username sudah digunakan!'
+         ]);
+         return;
+      }
    }
 
    // ================= 🔥 AMBIL PASSWORD LAMA =================
@@ -217,46 +232,40 @@ function updateData($id_customer)
    $stmtOld->fetch();
    $stmtOld->close();
 
-   // ================= 🔥 UPDATE NORMAL =================
-   $allowedFields = [
-      'fullname',
-      'username',
-      'password',
-      'roles',
-      'path'
-   ];
-
+   // ================= 🔥 UPDATE FIELD =================
    $fields = [];
    $values = [];
 
-   foreach ($allowedFields as $f) {
-      if (isset($_PUT[$f])) {
-
-         if ($f === 'password') {
-
-            // skip kalau kosong
-            if (trim($_PUT[$f]) === '') continue;
-
-            $newPass = $_PUT[$f];
-
-            // kalau beda → hash
-            if ($newPass !== $oldPassword) {
-               $newPass = md5($newPass);
-            }
-
-            $fields[] = "$f=?";
-            $values[] = $newPass;
-         } else {
-            $fields[] = "$f=?";
-            $values[] = $_PUT[$f];
-         }
-      }
+   // fullname
+   if (isset($_PUT['fullname'])) {
+      $fields[] = "fullname=?";
+      $values[] = $_PUT['fullname'];
    }
+
+   // username
+   if (isset($_PUT['username'])) {
+      $fields[] = "username=?";
+      $values[] = $_PUT['username'];
+   }
+
+   // password (opsional)
+   if (isset($_PUT['password']) && trim($_PUT['password']) != '') {
+      $fields[] = "password=?";
+      $values[] = md5($_PUT['password']);
+   }
+
+   // path
+   if (isset($_PUT['path'])) {
+      $fields[] = "path=?";
+      $values[] = $_PUT['path'];
+   }
+
+   // ❌ roles TIDAK DIUPDATE (sengaja di skip)
 
    if (empty($fields)) {
       echo json_encode([
          'status' => 'error',
-         'message' => 'Tidak ada update'
+         'message' => 'Tidak ada perubahan'
       ]);
       return;
    }
@@ -275,7 +284,7 @@ function updateData($id_customer)
    if ($stmt->execute()) {
       echo json_encode([
          'status' => 'success',
-         'message' => 'Data berhasil diperbarui.'
+         'message' => 'Data berhasil diupdate'
       ]);
    } else {
       echo json_encode([

@@ -178,6 +178,7 @@ require '../../controller/view.php';
     var table = $('#periodeTable').DataTable({
       processing: true,
       serverSide: false,
+      scrollX: true,
       ajax: {
         url: apiUrl,
         type: "GET",
@@ -266,10 +267,23 @@ require '../../controller/view.php';
 
     // 🔹 Tambah
     $('#btnTambah').on('click', function() {
-      $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
+
+      $('#programForm')[0].reset();
       $('#id_user').val('');
+
+      // 🔥 ROLES BALIK NORMAL
+      $('#roles')
+        .closest('.mb-3').show()
+        .find('select')
+        .attr('required', true)
+        .prop('disabled', false);
+
+      // 🔥 PASSWORD WAJIB
+      $('#password').attr('required', true);
+
       $('#programModal .modal-title').text('Tambah Data');
       $('#programModal').modal('show');
+
     });
 
     // 🔹 Submit (Tambah / Update)
@@ -298,24 +312,35 @@ require '../../controller/view.php';
     });
     // 🔹 Edit
     $(document).on('click', '.edit-btn', function() {
+
       let id = $(this).data('id');
+
       fetch(apiUrl + `?id=${id}`)
         .then(res => res.json())
         .then(resp => {
           if (resp.status === 'success') {
             let d = resp.data;
 
-            // isi otomatis berdasarkan name field
             for (let key in d) {
               $(`[name="${key}"]`).val(d[key]);
             }
+
+            // 🔥 ROLES HIDE + DISABLE + REMOVE REQUIRED
+            $('#roles')
+              .closest('.mb-3').hide()
+              .find('select')
+              .removeAttr('required')
+              .prop('disabled', true);
+
+            // 🔥 PASSWORD OPTIONAL
+            $('#password').val('').removeAttr('required');
 
             $('#programModal .modal-title').text('Edit Data');
             $('#programModal').modal('show');
           }
         });
-    });
 
+    });
     // 🔹 Delete
     $(document).on('click', '.delete-btn', function() {
       let id = $(this).data('id');
@@ -373,13 +398,20 @@ require '../../controller/view.php';
     });
 
     // 🔹 Tambah
-    $('#btnTambahDokter').on('click', function() {
-      $('#programFormDokter')[0].reset(); // ✅ pakai programForm, bukan addForm
-      $('#id_user').val('');
-      $('#programDokterModal .modal-title').text('Tambah Data');
-      $('#programDokterModal').modal('show');
-    });
+    $('#btnTambah').on('click', function() {
 
+      $('#programForm')[0].reset();
+      $('#id_user').val('');
+
+      $('#roles').closest('.mb-3').show();
+
+      // 🔥 PASSWORD WAJIB LAGI
+      $('#password').attr('required', true);
+
+      $('#programModal .modal-title').text('Tambah Data');
+      $('#programModal').modal('show');
+
+    });
     // 🔹 Submit (Tambah / Update)
     $('#programFormDokter').on('submit', function(e) {
       e.preventDefault();
