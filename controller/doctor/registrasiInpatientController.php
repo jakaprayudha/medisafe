@@ -31,7 +31,15 @@ switch ($method) {
 function getData()
 {
    global $koneksi;
+   $id_customer = $_SESSION['id_customer'] ?? null;
 
+   if (!$id_customer) {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Session tidak ditemukan'
+      ]);
+      exit;
+   }
    // =========================
    // PARAMETER FILTER
    // =========================
@@ -44,7 +52,6 @@ function getData()
    $query = "SELECT 
     pasien_visit.*, 
     ms_patient.*, 
-    ms_doctor.*, 
     ms_poli.*,
     ms_provider.provider_name,
 
@@ -61,21 +68,18 @@ function getData()
 FROM pasien_visit
 INNER JOIN ms_patient 
     ON ms_patient.id_patient = pasien_visit.id_patient
-INNER JOIN ms_doctor 
-    ON ms_doctor.id_doctor = pasien_visit.id_doctor
 LEFT JOIN ms_poli 
     ON ms_poli.id_poli = pasien_visit.id_poli
 LEFT JOIN ms_provider
     ON ms_provider.id_provider = pasien_visit.id_provider
 
-WHERE pasien_visit.status_rawatinap = 1";
+WHERE pasien_visit.status_rawatinap = 1 AND pasien_visit.id_customer = ?";
 
    // =========================
    // PREPARED PARAM
    // =========================
-   $params = [];
-   $types  = "";
-
+   $params = [$id_customer];
+   $types  = "i";
    // Filter tanggal
    if ($fromDate && $toDate) {
       $query   .= " AND DATE(pasien_visit.visit_date) BETWEEN ? AND ?";
