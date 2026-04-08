@@ -56,11 +56,8 @@ require '../../controller/view.php';
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
-                          <th class="text-dark fw-normal">ID Order</th>
                           <th class="text-dark fw-normal">Tanggal</th>
-                          <th class="text-dark fw-normal">RM</th>
-                          <th class="text-dark fw-normal">Nama Pasien</th>
-                          <th class="text-dark fw-normal">Dokter</th>
+                          <th class="text-dark fw-normal">Tipe Obat</th>
                           <th scope="col" class="text-dark fw-normal">Catatan</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
@@ -97,7 +94,37 @@ require '../../controller/view.php';
         <div class="row">
           <div class="col-12">
             <div class="alert alert-primary" role="alert">
-              Buat Tiket Order Permintaan Farmasi Sebelum Membuat Isi Rincian Obat/BMHP yang akan dibuat
+              Buat Tiket Order Permintaan Farmasi Sebelum Membuat Isi Rincian Obat yang akan dibuat
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="mb-3">
+              <label class="form-label required">Tipe Obat</label>
+              <select class='form-select' required id="tipe_obat" name="tipe_obat">
+                <option value="">PILIH</option>
+                <option value="Racikan">Racikan</option>
+                <option value="Non Racikan">Non Racikan</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-6 racikan-field">
+            <div class="mb-3">
+              <label class="form-label">Jumlah </label>
+              <input type="number" name="rck_jumlah" id="rck_jumlah" class='form-control'>
+            </div>
+          </div>
+
+          <div class="col-6 racikan-field">
+            <div class="mb-3">
+              <label class="form-label">Satuan </label>
+              <input type="text" id='rck_satuan' name='rck_satuan' class='form-control'>
+            </div>
+          </div>
+
+          <div class="col-12 racikan-field">
+            <div class="mb-3">
+              <label class="form-label">Signa </label>
+              <input type="text" name="rck_signa" id='rck_signa' class='form-control'>
             </div>
           </div>
           <div class="col-12">
@@ -131,6 +158,7 @@ require '../../controller/view.php';
   const apiUrl = 'controller/visit/permintaanFarmasi?no=<?= $_GET['no'] ?>';
   const urlParams = new URLSearchParams(window.location.search);
   const rmeParam = urlParams.get('rme') || 'c'; // default kalau kosong
+  const nomorm = urlParams.get('rm') || 'c'; // default kalau kosong
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
@@ -142,51 +170,77 @@ require '../../controller/view.php';
         dataSrc: function(json) {
           return json.data.map(function(row) {
             return {
-              "actions": `
-                      <div class="text-center">
-								<div class="btn-group btn-group-sm" role="group">
-								<a class="btn btn-info" 
-                  href="module/admin/permintaan_farmasi_details?no=${urlParams.get('no')}&rm=${row.nomor_rm}&rme=${rmeParam}&id=${row.id_permintaan_farmasi}">
-                  <i class="fas fa-pencil"></i>
-                </a>
-									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_permintaan_farmasi}">
-											<i class="fas fa-trash"></i>
-									</a>
-								</div>
-							</div>
-                    `,
-              "idorder": row.permintaan_number ?? "-",
+              "actions": (function() {
+
+                let btnDelete = '';
+
+                // ❌ kalau selesai → tidak ada delete
+                if (row.status_permintaan != 3) {
+                  btnDelete = `
+      <a class="btn btn-danger delete-btn" 
+         href="javascript:;" 
+         data-id="${row.id_permintaan_farmasi}">
+        <i class="fas fa-trash"></i>
+      </a>
+    `;
+                }
+
+                return `
+    <div class="text-center">
+      <div class="btn-group btn-group-sm" role="group">
+        
+        <a class="btn btn-info" 
+          href="module/admin/permintaan_farmasi_details?no=${urlParams.get('no')}&rm=${nomorm}&rme=${rmeParam}&id=${row.id_permintaan_farmasi}">
+          <i class="fas fa-pencil"></i>
+        </a>
+
+        ${btnDelete}
+
+      </div>
+    </div>
+  `;
+
+              })(),
               "timestamp": row.created_at ?? "-",
-              "nomor_rm": row.nomor_rm ?? "-",
-              "nama": row.patient_name ?? "-",
-              "dokter": row.doctor_name ?? "-",
+              "tipe_obat": row.tipe_obat ?? "-",
               "catatan": row.catatan_permintaan ?? "-",
-              "status": row.status_permintaan === '1' ?
-                '<span class="badge bg-success text-center d-block">Selesai</span>' : '<span class="badge bg-danger text-center d-block">Belum proses</span>'
+              "status_permintaan": (function() {
+                let status = row.status_permintaan;
+
+                let badgeClass = '';
+                let label = '';
+
+                if (status == 1) {
+                  badgeClass = 'bg-danger';
+                  label = 'Belum';
+                } else if (status == 2) {
+                  badgeClass = 'bg-primary';
+                  label = 'Persiapan';
+                } else if (status == 3) {
+                  badgeClass = 'bg-success';
+                  label = 'Selesai';
+                } else {
+                  badgeClass = 'bg-dark';
+                  label = 'Belum Dikirim';
+                }
+
+                return `<span class="badge ${badgeClass} d-block text-center">${label}</span>`;
+              })()
             };
           });
         }
       },
       columns: [{
-          data: "idorder"
-        },
-        {
           data: "timestamp"
         },
         {
-          data: "nomor_rm"
-        },
-        {
-          data: "nama"
-        },
-        {
-          data: "dokter"
+          data: "tipe_obat"
         },
         {
           data: "catatan"
         },
         {
-          data: "status"
+          data: "status_permintaan"
         },
         {
           data: "actions",
@@ -273,6 +327,30 @@ require '../../controller/view.php';
         }
       });
     });
+  });
+</script>
+<script>
+  $(document).ready(function() {
+
+    function toggleRacikan() {
+      let tipe = $('#tipe_obat').val();
+
+      if (tipe === 'Racikan') {
+        $('.racikan-field').show();
+      } else {
+        $('.racikan-field').hide();
+        $('.racikan-field input').val(''); // reset value
+      }
+    }
+
+    // event change
+    $(document).on('change', '#tipe_obat', function() {
+      toggleRacikan();
+    });
+
+    // initial load
+    toggleRacikan();
+
   });
 </script>
 

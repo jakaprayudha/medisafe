@@ -40,10 +40,16 @@ function createVisit()
          exit;
       }
 
+      $patient_name_pcare = $_POST['patient_name_pcare'] ?? '';
+      $doctor_name = $_POST['doctor_name'] ?? '';
+      $poli_name = $_POST['poli_name'] ?? '';
+      $id_poli = $_POST['id_poli'] ?? '';
+
       $id_patient = $_POST['id_patient'] ?? '';
       $visit_date = $_POST['visit_date'] ?? '';
       $visit_time = $_POST['visit_time'] ?? '';
       $id_doctor  = $_POST['id_doctor'] ?? '';
+      $id_provider = $_POST['id_provider'] ?? '';
       $source_hub = !empty($_POST['source_hub']) ? $_POST['source_hub'] : 'Poliklinik';
 
       if (!$id_patient || !$visit_date || !$visit_time || !$id_doctor) {
@@ -53,15 +59,6 @@ function createVisit()
          ]);
          exit;
       }
-
-      // 🔥 ambil poli
-      $stmtPoli = $koneksi->prepare("SELECT id_poli FROM ms_doctor WHERE id_doctor=? AND id_customer=?");
-      $stmtPoli->bind_param("ii", $id_doctor, $id_customer);
-      $stmtPoli->execute();
-      $resPoli = $stmtPoli->get_result()->fetch_assoc();
-      $stmtPoli->close();
-
-      $id_poli = $resPoli['id_poli'] ?? null;
 
       // 🔥 generate visit ID
       $visit_ID = generateVisitID($koneksi);
@@ -93,28 +90,32 @@ function createVisit()
                 created_user,
                 visit_antrian,
                 status_antrian,
-                id_customer
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                id_customer,
+                patient_name_pcare,
+                id_provider
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
         ");
 
 
-      $visit_status = 1;
+      $visit_status = 0;
       $status_antrian = 0;
 
       $stmt->bind_param(
-         "sssssssiisii",
+         "sssssssiisiisi",
          $id_patient,
          $visit_ID,
          $visit_date,
          $visit_time,
-         $id_doctor,
-         $id_poli,
+         $doctor_name,
+         $poli_name,
          $source_hub,
          $visit_status,
          $created_user,
          $visit_antrian,
          $status_antrian,
-         $id_customer
+         $id_customer,
+         $patient_name_pcare,
+         $id_provider
       );
 
       if (!$stmt->execute()) {

@@ -84,13 +84,8 @@ require '../../controller/view.php';
                               </a>
                             </li>
                             <li>
-                              <a class="dropdown-item" href="module/admisi/pendaftaran">
-                                <i class="fas fa-stethoscope me-2 text-success"></i> Pasien BPJS
-                              </a>
-                            </li>
-                            <li>
-                              <a class="dropdown-item poli-btn" href="javascript:;">
-                                <i class="fas fa-user-plus me-2 text-success"></i> Pasien Umum
+                              <a class="dropdown-item " href="module/admisi/pendaftaran">
+                                <i class="fas fa-stethoscope me-2 text-success"></i> Pasien Poliklinik
                               </a>
                             </li>
                           </ul>
@@ -103,9 +98,9 @@ require '../../controller/view.php';
                       <thead>
                         <tr>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
-                          <th scope="col" class="text-dark fw-normal">No.BPJS</th>
+                          <th scope="col" class="text-dark fw-normal">Registrasi</th>
                           <th>Antrian</th>
-                          <th class="text-dark fw-normal">Tanggal</th>
+                          <th class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">Dokter</th>
@@ -133,6 +128,65 @@ require '../../controller/view.php';
 </body>
 
 
+<div class="modal fade" id="programModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form id="programForm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="id_visit" id="id_visit">
+        <input type="hidden" name="id_patient" id="id_patient"> <!-- 🔹 dari klik add -->
+        <input type="hidden" name="user" value="<?= $_SESSION['fullname'] ?>" id="user">
+        <div class="mb-3">
+          <label class="form-label required">Layanan (Poli)</label>
+          <select name="id_poli" id="id_poli" class="form-select" required>
+            <option value="">PILIH</option>
+            <?php
+            $getpoli = tampildata("SELECT * FROM ms_poli WHERE poli_status='1'");
+            foreach ($getpoli as $poli) :
+            ?>
+              <option value="<?= $poli['id_poli'] ?>"><?= $poli['poli_name'] ?></option>
+            <?php endforeach ?>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label required">Dokter</label>
+          <select name="id_doctor" id="id_doctor" class="form-select" required>
+            <option value="">PILIH</option>
+            <?php
+            $id_customer = $_SESSION['id_customer'];
+            $getdoc = tampildata("SELECT * FROM ms_doctor WHERE doctor_status='1' AND id_customer='$id_customer' ");
+            foreach ($getdoc as $doc) :
+            ?>
+              <option value="<?= $doc['id_doctor'] ?>"><?= $doc['doctor_name'] ?></option>
+            <?php endforeach ?>
+          </select>
+        </div>
+
+
+        <div class="mb-3">
+          <label class="form-label required">Layanan</label>
+          <select name="source_hub" id="source_hub" class="form-select" required>
+            <option value="Poliklinik">Poliklinik</option>
+            <option value="UGD">UGD</option>
+            <option value="Rawat Inap">Rawat Inap</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Catatan</label>
+          <textarea name="visit_notes" id="visit_notes" class="form-control" rows="5"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
 <div class="modal fade" id="detailModal">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content shadow">
@@ -267,7 +321,36 @@ require '../../controller/view.php';
     </div>
   </div>
 </div>
+<div class="modal fade" id="cameraModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
 
+      <div class="modal-header">
+        <h5 class="modal-title">📸 Pengenalan Wajah</h5>
+        <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body text-center">
+
+        <video id="video" autoplay class="w-100 rounded mb-3"></video>
+
+        <canvas id="canvas" class="d-none"></canvas>
+
+        <img id="preview" class="img-fluid rounded d-none" />
+
+        <div class="mt-3">
+          <button class="btn btn-outline-primary" id="btnCapture">📸 Ambil Foto</button>
+          <!-- 🔥 TAMBAHAN -->
+          <button class="btn btn-success d-none" id="btnVerify">
+            ✅ Verifikasi Pasien
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
 <div class="modal fade" id="filterModal">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -319,7 +402,7 @@ require '../../controller/view.php';
     <div class="modal-content">
 
       <div class="modal-header text-dark">
-        <h5 class="modal-title">📝 Vital Sign</h5>
+        <h5 class="modal-title">📝 Screening Pasien</h5>
         <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
       </div>
 
@@ -504,32 +587,6 @@ require '../../controller/view.php';
   </div>
 </div>
 
-
-
-<div class="modal fade" id="cameraModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-
-      <div class="modal-header">
-        <h5 class="modal-title">Ambil Wajah</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body text-center">
-        <video id="video" width="100%" autoplay playsinline></video>
-        <canvas id="canvas" style="display:none;"></canvas>
-
-        <div class="mt-3">
-          <button id="captureBtn" class="btn btn-success">
-            Ambil Gambar
-          </button>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
-
 <script>
   function hitungBMI() {
     const tinggi = parseFloat(document.getElementById('tinggi').value);
@@ -699,7 +756,7 @@ require '../../controller/view.php';
 
                       <li>
                         <a class="dropdown-item screening-btn" href="javascript:;" data-id="${row.id_visit}">
-                          <i class="fas fa-pencil me-2 text-primary"></i> Vital Sign
+                          <i class="fas fa-pencil me-2 text-primary"></i> Screening
                         </a>
                       </li>
 
@@ -714,7 +771,17 @@ require '../../controller/view.php';
                         </a>
                       </li>
 
-
+                      <li>
+                        <a class="dropdown-item edit-btn" href="javascript:;" 
+                          data-id="${row.id_visit}" 
+                          data-patient="${row.id_patient}" 
+                          data-doctor="${row.id_doctor}" 
+                          data-poli="${row.id_poli}" 
+                          data-source="${row.source_hub}" 
+                          data-notes="${row.visit_notes}">
+                          <i class="fas fa-edit me-2 text-warning"></i> Edit Data
+                        </a>
+                      </li>
 
                       <li><hr class="dropdown-divider"></li>
 
@@ -729,15 +796,20 @@ require '../../controller/view.php';
                   </div>
                 </div>
               `,
-              "registrasi": row.patient_bpjs ?? "-",
+              "registrasi": row.visit_ID + '<br>' + row.visit_date + ' ' + row.visit_time ?? "-",
               "antrian": row.visit_antrian ?? "-",
-              "tanggal": row.visit_date ?? "-",
-              "nama": row.patient_name_pcare ?? "-",
+              "nomor_rm": row.nomor_rm ?? "-",
+              "nama": `
+                ${row.patient_name_pcare ?? "-"}<br>
+                <small class="text-muted">
+                  ${hitungUmur(row.patient_datebirth, row.visit_date)}
+                </small>
+              `,
               "gender": row.patient_gender ?? "-",
               "dokter": row.id_doctor ?? "-",
               "layanan": row.id_poli ?? "-",
               "screening": row.tekanan_darah ?
-                '<span class="badge bg-success">✔️ Sudah</span>' : '<span class="badge bg-danger">❌ Belum</span>',
+                '<span class="badge bg-success">✔️ Sudah</span>' : '<span class="badge bg-secondary">❌ Belum</span>',
               "provider": row.provider_name ?? "-",
               "status": row.visit_status === 99 ? '<span class="badge bg-danger text-center d-block">Batal</span>' : row.visit_status === 1 ? '<span class="badge bg-warning text-center d-block">Menunggu</span>' : row.visit_status === 2 ? '<span class="badge bg-secondary text-center d-block">Dipanggil</span>' : row.visit_status === 3 ? '<span class="badge bg-primary text-center d-block">Dilayani</span>' : row.visit_status === 4 ? '<span class="badge bg-success text-center d-block">Selesai</span>' : '<span class="badge bg-dark text-center d-block">Belum Dilayani</span>'
             };
@@ -753,7 +825,7 @@ require '../../controller/view.php';
           data: "antrian"
         },
         {
-          data: "tanggal"
+          data: "nomor_rm"
         },
         {
           data: "nama"
@@ -830,6 +902,25 @@ require '../../controller/view.php';
             table.ajax.reload(null, false);
           } else {
             Swal.fire('Gagal!', data.message, 'error');
+          }
+        });
+    });
+    // 🔹 Edit
+    $(document).on('click', '.edit-btn', function() {
+      let id = $(this).data('id');
+      fetch(apiUrl + `?id=${id}`)
+        .then(res => res.json())
+        .then(resp => {
+          if (resp.status === 'success') {
+            let d = resp.data;
+
+            // isi otomatis berdasarkan name field
+            for (let key in d) {
+              $(`[name="${key}"]`).val(d[key]);
+            }
+
+            $('#programModal .modal-title').text('Edit Data');
+            $('#programModal').modal('show');
           }
         });
     });
@@ -931,6 +1022,67 @@ require '../../controller/view.php';
     }
   });
 </script>
+<!-- <script>
+  let stream;
+  let currentVisitId = null;
+
+  $(document).on('click', '.camera-btn', function() {
+    currentVisitId = $(this).data('id');
+
+    $('#cameraModal').modal('show');
+
+    navigator.mediaDevices.getUserMedia({
+        video: true
+      })
+      .then(s => {
+        stream = s;
+        document.getElementById('video').srcObject = stream;
+      });
+  });
+
+  $('#btnCapture').click(function() {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+
+    const img = canvas.toDataURL('image/png');
+
+    $('#preview').attr('src', img).removeClass('d-none');
+    $('#btnSave').removeClass('d-none');
+  });
+  $('#btnSave').click(function() {
+    const img = document.getElementById('canvas').toDataURL('image/png');
+
+    fetch('controller/visit/uploadCapture', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          image: img,
+          id_visit: currentVisitId
+        })
+      })
+      .then(res => res.json())
+      .then(resp => {
+        if (resp.status === 'success') {
+          alert('Foto berhasil disimpan');
+          $('#cameraModal').modal('hide');
+        }
+      });
+
+    $('#cameraModal').on('hidden.bs.modal', function() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    });
+  });
+</script> -->
 <script>
   $(document).on('shown.bs.dropdown', '.dropdown, .dropup', function() {
     const $menu = $(this).find('.dropdown-menu');
@@ -1132,21 +1284,16 @@ require '../../controller/view.php';
       });
   }
   $('#btnSavePoli').on('click', function() {
-    const selected = $('#id_patient_select').select2('data')[0];
+
     const data = {
-      id_patient: $('#id_patient_select').val(),
-      patient_name_pcare: selected?.patient_name || '',
+      id_patient: $('#id_patient_select').val(), // 🔥 FIX select2
       id_doctor: $('#poli_doctor').val(),
-      doctor_name: $('#poli_doctor option:selected').text(),
-
       id_poli: $('#poli_poli').val(),
-      poli_name: $('#poli_poli option:selected').text(),
-
       id_provider: $('#poli_provider').val(),
-
       visit_date: $('#poli_date').val(),
       visit_time: $('#poli_time').val()
     };
+
     // 🔥 VALIDASI (optional tapi bagus)
     if (!data.id_patient || !data.id_doctor || !data.visit_date || !data.visit_time) {
       alert('Data wajib belum lengkap');
@@ -1217,13 +1364,14 @@ require '../../controller/view.php';
         },
 
         processResults: function(data) {
+          console.log("RESPONSE:", data);
+
           let items = data.data ? data.data : data;
 
           return {
             results: items.map(item => ({
               id: item.id_patient,
-              text: `${item.patient_name} (${item.nomor_rm})`, // tampil di UI
-              patient_name: item.patient_name // 🔥 simpan asli
+              text: `${item.patient_name} (${item.nomor_rm})`
             }))
           };
         },
@@ -1232,6 +1380,7 @@ require '../../controller/view.php';
     });
   });
 </script>
+
 <script>
   let canvas = document.getElementById('signaturePad');
   let ctx = canvas.getContext('2d');
@@ -1332,93 +1481,272 @@ require '../../controller/view.php';
       });
   };
 </script>
+
+<script src="assets/js/face-api.min.js"></script>
+
 <script>
-  let currentPatientId = null;
-  let stream = null;
+  let currentVisitId = null;
+  let verifiedUser = null;
+  window.addEventListener("load", function() {
 
-  $(document).on("click", ".camera-btn", async function() {
-    // WAJIB: ambil id dari tombol
-    currentPatientId = $(this).data("id");
-    console.log("📌 ID PATIENT:", currentPatientId);
-    const modalEl = document.getElementById("cameraModal");
-    const modal = new bootstrap.Modal(modalEl);
-    modal.show();
+    console.log("faceapi:", typeof faceapi);
 
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: true
-      });
+    /* =========================
+       GLOBAL STATE
+    ========================= */
+    let stream = null;
+    let intervalId = null;
+    let modelsLoaded = false;
 
-      const video = document.getElementById("video");
-      video.srcObject = stream;
+    /* =========================
+       LOAD MODELS
+    ========================= */
+    async function loadModels() {
+      if (modelsLoaded) return;
 
-      await video.play();
-
-    } catch (err) {
-      alert("Kamera tidak bisa diakses");
-      console.error(err);
-    }
-
-  });
-
-  document.getElementById("captureBtn").addEventListener("click", function() {
-
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("canvas");
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0);
-
-    const imageData = canvas.toDataURL("image/png");
-
-    fetch("controller/admisi/recordFaceVisit.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          id: currentPatientId,
-          image: imageData
-        })
-      })
-      .then(res => res.json())
-      .then(res => {
-        alert("Wajah berhasil disimpan");
-
-        $("#cameraModal").modal("hide");
-
-        setTimeout(() => {
-          table.ajax.reload(null, false);
-        }, 500); // delay 0.5 detik
-      });
-
-
-  });
-
-  /* =========================
-     CLEANUP (INI YANG PENTING)
-  ========================= */
-  document.getElementById("cameraModal")
-    .addEventListener("hidden.bs.modal", function() {
-
-      console.log("🛑 Stop camera");
-
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        stream = null;
+      if (typeof faceapi === "undefined") {
+        alert("❌ face-api.js belum ter-load");
+        return;
       }
 
-      const video = document.getElementById("video");
-      if (video) {
-        video.srcObject = null; // penting
+      console.log("⏳ Loading models...");
+
+      await faceapi.nets.tinyFaceDetector.loadFromUri('models');
+      await faceapi.nets.faceRecognitionNet.loadFromUri('models');
+      await faceapi.nets.faceLandmark68Net.loadFromUri('models');
+
+      modelsLoaded = true;
+      console.log("✅ Models loaded");
+      console.log("MODEL URL:", 'models/tiny_face_detector_model-weights_manifest.json');
+    }
+
+    /* =========================
+       CLICK CAMERA
+    ========================= */
+    $(document).on("click", ".camera-btn", async function() {
+
+      currentVisitId = $(this).data("id"); // 🔥 ambil id_visit
+      console.log(currentVisitId);
+
+      try {
+        await loadModels();
+
+        const modalEl = document.getElementById("cameraModal");
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+
+        modalEl.addEventListener("shown.bs.modal", async function handler() {
+          modalEl.removeEventListener("shown.bs.modal", handler);
+
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true
+          });
+
+          const video = document.getElementById("video");
+          video.srcObject = stream;
+
+          video.onloadedmetadata = () => {
+            video.play();
+            startRecognition(video);
+          };
+        });
+
+      } catch (err) {
+        console.error("❌ Camera error:", err);
       }
 
     });
+
+    /* =========================
+       FACE RECOGNITION
+    ========================= */
+    async function startRecognition(video) {
+
+      try {
+        const labeledDescriptors = await getLabeledFaceDescriptions();
+
+        if (!labeledDescriptors.length) {
+          console.warn("⚠️ Tidak ada data wajah di database");
+          return;
+        }
+
+        const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
+
+        const container = document.querySelector("#cameraModal .modal-body");
+
+        const oldCanvas = container.querySelector("canvas.overlay");
+        if (oldCanvas) oldCanvas.remove();
+
+        const canvas = faceapi.createCanvasFromMedia(video);
+        canvas.classList.add("overlay");
+        container.append(canvas);
+
+        const displaySize = {
+          width: video.videoWidth,
+          height: video.videoHeight
+        };
+
+        faceapi.matchDimensions(canvas, displaySize);
+
+        if (intervalId) clearInterval(intervalId);
+
+        intervalId = setInterval(async () => {
+
+          const detections = await faceapi
+            .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+            .withFaceLandmarks()
+            .withFaceDescriptors();
+
+          const resized = faceapi.resizeResults(detections, displaySize);
+
+          const ctx = canvas.getContext("2d");
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          resized.forEach((d) => {
+            const match = faceMatcher.findBestMatch(d.descriptor);
+            const label = match.toString();
+
+            if (label !== "unknown") {
+              console.log("✅ MATCH:", label);
+
+              verifiedUser = label; // simpan hasil match
+              enableVerifyButton(label);
+
+            } else {
+              verifiedUser = null;
+              disableVerifyButton();
+            }
+
+            const drawBox = new faceapi.draw.DrawBox(d.detection.box, {
+              label: match.toString()
+            });
+
+            drawBox.draw(canvas);
+          });
+
+        }, 150);
+
+      } catch (err) {
+        console.error("❌ Recognition error:", err);
+      }
+    }
+
+    /* =========================
+       LOAD FACE DATA
+    ========================= */
+    async function getLabeledFaceDescriptions() {
+
+      try {
+        console.log(currentVisitId);
+        const res = await fetch(`controller/visit/getFaces.php?id_visit=${currentVisitId}`);
+        const data = await res.json();
+
+        return Promise.all(
+          data.map(async (user) => {
+
+            try {
+              if (!user.image) return null;
+
+              const img = new Image();
+              img.crossOrigin = "anonymous";
+              img.src = user.image;
+
+              await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = () => {
+                  console.warn("❌ Gagal load image:", user.image);
+                  reject();
+                };
+              });
+
+              const detection = await faceapi
+                .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions())
+                .withFaceLandmarks()
+                .withFaceDescriptor();
+
+              if (!detection) return null;
+
+              return new faceapi.LabeledFaceDescriptors(
+                user.name,
+                [detection.descriptor]
+              );
+
+            } catch (err) {
+              console.warn("❌ Error processing image:", user.image);
+              return null;
+            }
+
+          })
+        ).then(results => results.filter(r => r !== null));
+
+      } catch (err) {
+        console.error("❌ Error ambil data wajah:", err);
+        return [];
+      }
+    }
+
+    function enableVerifyButton(name) {
+      $("#btnVerify")
+        .removeClass("d-none")
+        .text(`✅ Verifikasi (${name})`);
+    }
+
+    function disableVerifyButton() {
+      $("#btnVerify")
+        .addClass("d-none")
+        .text("Verifikasi");
+    }
+
+    /* =========================
+       CLEANUP
+    ========================= */
+    document.getElementById("cameraModal")
+      .addEventListener("hidden.bs.modal", function() {
+
+        console.log("🛑 Stop camera");
+
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+          stream = null;
+        }
+
+        if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
+
+      });
+
+    $("#btnVerify").on("click", function() {
+
+      if (!verifiedUser) {
+        alert("Wajah belum dikenali");
+        return;
+      }
+
+      fetch("controller/visit/verifyFace.php", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            id_visit: currentVisitId,
+            id_patient: verifiedUser
+          })
+        })
+        .then(res => res.json())
+        .then(resp => {
+          if (resp.status === "success") {
+            alert("✅ Verifikasi berhasil");
+            $("#cameraModal").modal("hide");
+          } else {
+            alert("❌ Verifikasi gagal");
+          }
+        });
+
+    });
+
+  });
 </script>
-
-
 
 </html>

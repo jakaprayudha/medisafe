@@ -70,7 +70,7 @@ require '../../controller/view.php';
                     <div class="row">
                       <div class="col-md-6 mb-3">
                         <label>Nama Klinik</label>
-                        <input type="text" class="form-control bg-light" readonly name="clinic_name">
+                        <input type="text" class="form-control" require_once name="clinic_name">
                       </div>
 
                       <div class="col-md-6 mb-3">

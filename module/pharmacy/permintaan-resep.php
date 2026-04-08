@@ -51,12 +51,11 @@ $apiUrl = getenv('API_URL');
                       <thead>
                         <tr>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
-                          <th class="text-dark fw-normal">ID</th>
+                          <!-- <th class="text-dark fw-normal">ID</th> -->
                           <th class="text-dark fw-normal">Registrasi</th>
                           <th scope="col" class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
-                          <th scope="col" class="text-dark fw-normal">TTL</th>
                           <th class="text-dark fw-normal">Dokter</th>
                           <th class="text-dark fw-normal">Poliklinik</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
@@ -86,7 +85,8 @@ $apiUrl = getenv('API_URL');
     // Initialize DataTable
     var table = $('#zero_config').DataTable({
       "processing": true,
-      "serverSide": true,
+      "serverSide": false,
+      scrollX: true,
       "ajax": {
         "url": apiUrl, // Ganti dengan URL API yang sesuai
         "type": "GET",
@@ -101,15 +101,35 @@ $apiUrl = getenv('API_URL');
                     </a>
                   </div>
               `,
-              "permintaan_number": row.permintaan_number,
+              // "permintaan_number": row.permintaan_number,
               "tanggal": row.created_at,
               "nomor_rm": row.nomor_rm,
-              "nama_pasien": row.patient_name,
+              "nama_pasien": row.patient_name_pcare,
               "gender": row.patient_gender,
-              "ttl": row.patient_place + '/' + row.patient_datebirth,
-              "dokter": row.doctor_name,
-              "layanan": row.source_hub + ' ' + row.poli_name,
-              "status_visit": '<span class="badge ' + (row.status_permintaan == 1 ? 'bg-primary' : 'bg-danger') + ' d-block text-center">' + (row.status_permintaan == 1 ? 'Persiapan' : 'Belum') + '</span>'
+              "dokter": row.id_doctor,
+              "layanan": row.id_poli,
+              "status_visit": (function() {
+                let status = row.status_permintaan;
+
+                let badgeClass = '';
+                let label = '';
+
+                if (status == 1) {
+                  badgeClass = 'bg-danger';
+                  label = 'Belum';
+                } else if (status == 2) {
+                  badgeClass = 'bg-primary';
+                  label = 'Persiapan';
+                } else if (status == 3) {
+                  badgeClass = 'bg-success';
+                  label = 'Selesai';
+                } else {
+                  badgeClass = 'bg-secondary';
+                  label = 'Unknown';
+                }
+
+                return `<span class="badge ${badgeClass} d-block text-center">${label}</span>`;
+              })()
             };
           });
         }
@@ -117,9 +137,9 @@ $apiUrl = getenv('API_URL');
       "columns": [{
           "data": "actions"
         },
-        {
-          "data": "permintaan_number"
-        },
+        // {
+        //   "data": "permintaan_number"
+        // },
         {
           "data": "tanggal"
         },
@@ -131,9 +151,6 @@ $apiUrl = getenv('API_URL');
         },
         {
           "data": "gender"
-        },
-        {
-          "data": "ttl"
         },
         {
           "data": "dokter"

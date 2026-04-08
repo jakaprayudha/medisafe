@@ -161,6 +161,7 @@ if ($result['code'] != '200') {
     $source_hub = "Poliklinik";
     $id_patient = $chackpasien['id_patient'];
     $visit_time = date('H:i:s');
+    $suhu    = (int)$suhu;
     $stmt = $koneksi->prepare("
             INSERT INTO pasien_visit (
                 id_patient,
@@ -181,14 +182,15 @@ if ($result['code'] != '200') {
                 respirasi, 
                 tinggi_badan,
                 berat_badan,
-                patient_name_pcare
-            )VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
+                patient_name_pcare,
+                suhu
+            )VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)
         ");
     $visit_status = 1;
     $status_antrian = 0;
     $td = $sistole . "/" . $diastole;
     $stmt->bind_param(
-        "sssssssssssssssssss",
+        "ssssssssssssssssssss",
         $id_patient,
         $visit_ID,
         $tglDaftarDB,
@@ -207,14 +209,16 @@ if ($result['code'] != '200') {
         $respRate,
         $tinggiBadan,
         $beratBadan,
-        $nama
+        $nama,
+        $suhu
     );
 
     $hasil1 = $stmt->execute();
     if ($hasil and $hasil1) {
         $response = [
             'success'  => true,
-            'message'  => "Berhasil Mendaftar Pasien Dengan No Urut " . $noUrut,
+            'message'  => "Berhasil Mendaftar Pasien",
+            // 'message'  => "Berhasil Mendaftar Pasien Dengan No Urut " . $noUrut,
             'result' => $result
         ];
     } else {

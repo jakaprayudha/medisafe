@@ -32,6 +32,18 @@ function getData()
 {
    global $koneksi;
 
+   // 🔥 ambil session
+   $id_customer = $_SESSION['id_customer'] ?? null;
+
+   if (!$id_customer) {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Session tidak ditemukan'
+      ]);
+      exit;
+   }
+
+
    // =========================
    // PARAMETER FILTER
    // =========================
@@ -45,19 +57,12 @@ function getData()
    $query = "SELECT 
             pasien_visit.*, 
             ms_patient.*, 
-            ms_doctor.*, 
-            ms_poli.*,
             ms_provider.provider_name
         FROM pasien_visit
-        INNER JOIN ms_patient 
+        LEFT JOIN ms_patient 
             ON ms_patient.id_patient = pasien_visit.id_patient
-        LEFT JOIN ms_doctor 
-            ON ms_doctor.id_doctor = pasien_visit.id_doctor
-        LEFT JOIN ms_poli 
-            ON ms_poli.id_poli = pasien_visit.id_poli
-         LEFT JOIN ms_provider
-            ON ms_provider.id_provider = pasien_visit.id_provider
-        WHERE 1=1 AND pasien_visit.source_hub = 'Poliklinik'
+      LEFT JOIN ms_provider ON ms_provider.id_provider = pasien_visit.id_provider
+        WHERE 1=1 AND pasien_visit.source_hub != 'Rawat Inap' AND pasien_visit.id_customer = '$id_customer'
     ";
 
    // =========================
@@ -76,7 +81,7 @@ function getData()
 
    // ✅ Filter dokter (BERDASARKAN NAMA)
    if (!empty($doctorName)) {
-      $query   .= " AND ms_doctor.doctor_name = ?";
+      $query   .= " AND pasien_visit.id_doctor = ?";
       $params[] = $doctorName;
       $types   .= "s";
    }

@@ -10,7 +10,7 @@
                         <div class="col-5 text-muted">No. BPJS</div>
                         <div class="col-7 fw-semibold" id="noK">-</div>
 
-                         <div class="col-5 text-muted">No. NIK</div>
+                        <div class="col-5 text-muted">No. NIK</div>
                         <div class="col-7 fw-semibold" id="nonik">-</div>
 
                         <div class="col-5 text-muted">Nama</div>
@@ -96,9 +96,16 @@
                         <h5 class="text-primary fw-semibold mb-3">Pemeriksaan Fisik</h5>
                         <div class="row g-3">
                             <div class="col-md-4">
+                                <label class="form-label">Suhu</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" name="suhu" id="suhu" value="0" max="50">
+                                    <span class="input-group-text">c</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
                                 <label class="form-label">Tinggi Badan</label>
                                 <div class="input-group">
-                                    <input type="number" class="form-control" name="tinggiBadan" id="tinggiBadan" value="0" max="300">
+                                    <input type="number" class="form-control" name="tinggiBadan" id="tinggiBadan" value="0" max="200">
                                     <span class="input-group-text">cm</span>
                                 </div>
                             </div>
@@ -106,7 +113,7 @@
                             <div class="col-md-4">
                                 <label class="form-label">Berat Badan</label>
                                 <div class="input-group">
-                                    <input type="number" class="form-control" name="beratBadan" id="beratBadan" value="0">
+                                    <input type="number" class="form-control" name="beratBadan" max="300" id="beratBadan" value="0">
                                     <span class="input-group-text">kg</span>
                                 </div>
                             </div>
@@ -114,7 +121,7 @@
                             <div class="col-md-4">
                                 <label class="form-label">Lingkar Perut</label>
                                 <div class="input-group">
-                                    <input type="number" class="form-control" name="lingkarPerut" id="lingkarPerut" value="0">
+                                    <input type="number" class="form-control" name="lingkarPerut" max="300" id="lingkarPerut" value="0">
                                     <span class="input-group-text">cm</span>
                                 </div>
                             </div>

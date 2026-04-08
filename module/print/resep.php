@@ -10,7 +10,7 @@ $checkklinik = mysqli_query($koneksi, "SELECT * FROM setting_clinic LIMIT 1");
 $dataklinik = mysqli_fetch_array($checkklinik);
 
 $checkpasien = mysqli_query($koneksi, "SELECT * FROM pasien_visit 
-   INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient  INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor
+   LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient 
    WHERE pasien_visit.visit_ID='$no'");
 $datapasien = mysqli_fetch_array($checkpasien);
 
@@ -21,15 +21,15 @@ foreach ($checkobat as $obat) {
   $total += $obat['qty'] * $obat['harga'];
 }
 
-$tglLahir = new DateTime($datapasien['patient_datebirth']);
-$today    = new DateTime();
+// $tglLahir = new DateTime($datapasien['patient_datebirth']);
+// $today    = new DateTime();
 
-$usia = $today->diff($tglLahir);
+// $usia = $today->diff($tglLahir);
 
-// hasil:
-$usiaTahun = $usia->y;
-$usiaBulan = $usia->m;
-$usiaHari  = $usia->d;
+// // hasil:
+// $usiaTahun = $usia->y;
+// $usiaBulan = $usia->m;
+// $usiaHari  = $usia->d;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -165,14 +165,14 @@ $usiaHari  = $usia->d;
           <td>No. RM</td>
           <td>:</td>
           <td><?= $datapasien['nomor_rm'] ?></td>
-          <td>Umur</td>
+          <!-- <td>Umur</td>
           <td>:</td>
-          <td> <?= $usiaTahun ?> Th <?= $usiaBulan ?> Bl <?= $usiaHari ?> Hr</td>
+          <td> <?= $usiaTahun ?> Th <?= $usiaBulan ?> Bl <?= $usiaHari ?> Hr</td> -->
         </tr>
         <tr>
           <td>Dokter</td>
           <td>:</td>
-          <td colspan="4"><?= $datapasien['doctor_name'] ?></td>
+          <td colspan="4"><?= $datapasien['id_doctor'] ?></td>
         </tr>
       </table>
     </div>
@@ -214,7 +214,7 @@ $usiaHari  = $usia->d;
 
       <div class="ttd">
         <div><?= $dataklinik['kabupaten'] ?>, <?= date('d-m-Y') ?></div>
-        <div class="nama"><?= $datapasien['doctor_name'] ?></div>
+        <div class="nama"><?= $datapasien['id_doctor'] ?></div>
         <div>SIP. </div>
       </div>
 

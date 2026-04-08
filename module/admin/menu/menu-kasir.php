@@ -27,7 +27,7 @@
               <span class="hide-menu">Penerimaan</span>
            </a>
         </li>
-        <li class="sidebar-item">
+        <!-- <li class="sidebar-item">
            <a class="sidebar-link <?php if ($title == 'Pembelian') {
                                        echo 'active';
                                     } ?>"
@@ -46,6 +46,6 @@
               <iconify-icon icon="mdi:database"></iconify-icon>
               <span class="hide-menu">Pengeluaran</span>
            </a>
-        </li>
+        </li> -->
      </ul>
   </nav>

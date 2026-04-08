@@ -123,11 +123,14 @@ function getData()
             permintaan_pharmacy_details.*, 
             ms_pharmacy.pharmacy_name_generic, 
             ms_pharmacy.pharmacy_name_trade,
+            permintaan_pharmacy.status_permintaan,
             (permintaan_pharmacy_details.qty * permintaan_pharmacy_details.harga) AS total_item
           FROM permintaan_pharmacy_details 
           LEFT JOIN ms_pharmacy 
           ON permintaan_pharmacy_details.id_pharmacy = ms_pharmacy.id_pharmacy
-          WHERE id_permintaan_farmasi = '$no'
+          LEFT JOIN permintaan_pharmacy 
+          ON permintaan_pharmacy_details.id_permintaan_farmasi = permintaan_pharmacy.id_permintaan_farmasi
+          WHERE permintaan_pharmacy_details.id_permintaan_farmasi = '$no'
           ORDER BY id_pharmacy_details ASC";
    $result = mysqli_query($koneksi, $query);
 

@@ -8,16 +8,16 @@ $env = loadEnv();
 // Mengambil nilai API_URL dari environment
 $apiUrl = getenv('API_URL');
 $no = $_GET['no'];
-$check = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor LEFT JOIN ms_poli ON ms_poli.id_poli = pasien_visit.id_poli  WHERE pasien_visit.visit_ID='$no'");
+$check = mysqli_query($koneksi, "SELECT * FROM pasien_visit LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient LEFT JOIN permintaan_pharmacy ON permintaan_pharmacy.id_visit = pasien_visit.visit_ID  WHERE pasien_visit.visit_ID='$no'");
 $data = mysqli_fetch_array($check);
 
 // Hitung usia jika data ditemukan
-if ($data) {
-  $patient_datebirth = new DateTime($data['patient_datebirth']);
-  $tanggal_visit = new DateTime($data['visit_date']);
+// if ($data) {
+//   $patient_datebirth = new DateTime($data['patient_datebirth']);
+//   $tanggal_visit = new DateTime($data['visit_date']);
 
-  $usia = $patient_datebirth->diff($tanggal_visit);
-}
+//   $usia = $patient_datebirth->diff($tanggal_visit);
+// }
 
 ?>
 <!doctype html>
@@ -89,9 +89,9 @@ if ($data) {
                   <!-- INFO PASIEN -->
                   <div class="text-muted mb-3">
                     <i class="ti ti-calendar"></i>
-                    Usia:
+                    <!-- Usia:
                     <?= $usia->y ?> Th <?= $usia->m ?> Bl <?= $usia->d ?> Hr
-                    &nbsp;•&nbsp;
+                    &nbsp;•&nbsp; -->
                     <i class="ti ti-gender-bigender"></i>
                     <?= $data['patient_gender'] ?>
                   </div>
@@ -108,7 +108,7 @@ if ($data) {
                         <i class="ti ti-stethoscope"></i>
                         <div>
                           <div class="label">Dokter</div>
-                          <div class="value"><?= $data['doctor_name'] ?></div>
+                          <div class="value"><?= $data['id_doctor'] ?></div>
                         </div>
                       </div>
                     </div>
@@ -119,11 +119,25 @@ if ($data) {
                         <i class="ti ti-building-hospital"></i>
                         <div>
                           <div class="label">Layanan</div>
-                          <div class="value"><?= $data['poli_name'] ?></div>
+                          <div class="value"><?= $data['id_poli'] ?></div>
                         </div>
                       </div>
                     </div>
 
+                  </div>
+
+                  <!-- TOMBOL PANGGIL -->
+                  <div class="mt-4 text-end">
+                    <button
+                      class="btn btn-warning btn-call"
+                      data-antrian="<?= $data['visit_antrian'] ?? '-' ?>"
+                      data-nama="<?= $data['patient_name'] ?>"
+                      data-poli="<?= $data['id_poli'] ?>"
+                      data-visit="<?= $data['visit_ID'] ?>"
+                      data-dokter="<?= $data['id_doctor'] ?>"
+                      data-obat="<?= $data['obat'] ?? 'Silakan ambil obat di farmasi' ?>">
+                      <i class="ti ti-volume"></i> Panggil Pasien
+                    </button>
                   </div>
                 </div>
               </div>
@@ -462,6 +476,8 @@ if ($data) {
 </script>
 
 <script>
+  let currentStatus = <?= $data['status_permintaan'] ?? 1 ?>;
+  console.log(currentStatus)
   const getUrlParam = (param) => {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(param);
@@ -470,13 +486,13 @@ if ($data) {
   const id_permintaan = getUrlParam("id");
   document.getElementById("btnPersiapan").addEventListener("click", function() {
 
+    let nextStatus = $(this).data('next');
+
     Swal.fire({
-      title: "Apakah akan proses order ?",
-      text: "Obat akan diproses (status berubah)",
+      title: "Update status?",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Ya, proses!",
-      cancelButtonText: "Batal"
+      confirmButtonText: "Ya"
     }).then((result) => {
 
       if (result.isConfirmed) {
@@ -487,21 +503,16 @@ if ($data) {
               "Content-Type": "application/json"
             },
             body: JSON.stringify({
-              id: id_permintaan
+              id: id_permintaan,
+              status: nextStatus
             })
           })
           .then(res => res.json())
           .then(res => {
             if (res.status === "success") {
-              Swal.fire("Berhasil!", "Status berhasil diupdate", "success")
+              Swal.fire("Berhasil!", "Status diupdate", "success")
                 .then(() => location.reload());
-            } else {
-              Swal.fire("Gagal!", res.message, "error");
             }
-          })
-          .catch(err => {
-            Swal.fire("Error!", "Terjadi kesalahan", "error");
-            console.error(err);
           });
 
       }
@@ -509,4 +520,96 @@ if ($data) {
     });
 
   });
+  $(document).ready(function() {
+    renderButton(currentStatus);
+  });
+</script>
+
+<script>
+  function renderButton(status) {
+    let btn = $('#btnPersiapan');
+
+    if (status == 1) {
+      btn
+        .removeClass()
+        .addClass('btn btn-danger')
+        .html('<i class="fas fa-check-circle"></i> Persiapan Obat')
+        .data('next', 2);
+    } else if (status == 2) {
+      btn
+        .removeClass()
+        .addClass('btn btn-success')
+        .html('<i class="fas fa-check-circle"></i> Selesai')
+        .data('next', 3);
+    } else {
+      btn
+        .removeClass()
+        .addClass('btn btn-secondary')
+        .html('<i class="fas fa-check-circle"></i> Selesai')
+        .prop('disabled', true);
+    }
+  }
+</script>
+<script>
+  $(document).on('click', '.btn-call', function() {
+    const noAntrian = $(this).data('antrian');
+    const nama = $(this).data('nama');
+    const poli = $(this).data('poli');
+    const visit = $(this).data('visit');
+    const dokter = $(this).data('dokter');
+    const obat = $(this).data('obat');
+
+    callPatient(noAntrian, nama, poli, visit, dokter, obat);
+
+    // 🔥 disable biar gak double klik
+    $(this).prop('disabled', true);
+  });
+
+  function callPatient(noAntrian, namaPasien, poli, visitID, id_doctor, obat) {
+
+    /* =========================
+       1. SUARA
+    ========================= */
+    if ('speechSynthesis' in window) {
+
+      speechSynthesis.cancel();
+
+      const text = `
+  
+      pasien ${namaPasien}, dipersilahkan untuk ambil obat 
+    `;
+
+      const utterance = new SpeechSynthesisUtterance(text);
+
+      utterance.lang = 'id-ID';
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+
+      const voices = speechSynthesis.getVoices();
+      const indo = voices.find(v => v.lang === 'id-ID');
+      if (indo) utterance.voice = indo;
+
+      speechSynthesis.speak(utterance);
+    }
+
+    /* =========================
+       2. UPDATE STATUS
+    ========================= */
+    fetch('controller/queue/poliCall.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          visit_ID: visitID
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status !== 'success') {
+          console.warn('Update status gagal');
+        }
+      });
+  }
 </script>

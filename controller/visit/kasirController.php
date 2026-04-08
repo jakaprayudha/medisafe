@@ -45,18 +45,18 @@ function getData()
       pasien_visit.*, 
       ms_patient.patient_name, ms_patient.nomor_rm, 
       ms_patient.patient_gender, ms_patient.patient_datebirth,
-      ms_doctor.doctor_name, 
-      ms_poli.poli_name,
       ms_provider.provider_name
    FROM pasien_visit
-   INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient
-   INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor
-   LEFT JOIN ms_poli ON ms_poli.id_poli = pasien_visit.id_poli
+   LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient
    LEFT JOIN ms_provider ON ms_provider.id_provider = pasien_visit.id_provider
    WHERE 1=1";
 
    $params = [];
    $types  = "";
+
+
+   // 🔹 FILTER WAJIB (visit_status = 4)
+   $query .= " AND pasien_visit.visit_status = 4";
 
    // 🔹 tanggal
    $query .= " AND DATE(pasien_visit.visit_date) BETWEEN ? AND ?";
@@ -78,12 +78,6 @@ function getData()
       $types .= "s";
    }
 
-   // 🔹 poli
-   if (!empty($poli)) {
-      $query .= " AND pasien_visit.id_poli = ?";
-      $params[] = $poli;
-      $types .= "s";
-   }
    $query .= " ORDER BY pasien_visit.visit_date ASC";
 
    $stmt = $koneksi->prepare($query);

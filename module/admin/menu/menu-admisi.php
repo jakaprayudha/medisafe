@@ -70,13 +70,13 @@
            <a class="sidebar-link <?php if ($title == 'Counter Admisi') {
                                        echo 'active';
                                     } ?>"
-              href="module/admin/counter-admisi"
+              href="module/display/display-poliklinik" target="_blank"
               aria-expanded="false">
               <iconify-icon icon="solar:display-linear"></iconify-icon>
-              <span class="hide-menu">Antrean</span>
+              <span class="hide-menu">Display Antrean</span>
            </a>
         </li>
-        <li class="sidebar-item">
+        <!-- <li class="sidebar-item">
            <a class="sidebar-link <?php if ($title == 'Display Tiket') {
                                        echo 'active';
                                     } ?>"
@@ -85,11 +85,11 @@
               <iconify-icon icon="solar:printer-linear"></iconify-icon>
               <span class="hide-menu">Ambil Antrean</span>
            </a>
-        </li>
-        <li class="nav-small-cap">
+        </li> -->
+        <!-- <li class="nav-small-cap">
            <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
            <span class="hide-menu">Daftar/Layanan (Pcare)</span>
-        </li>
+        </li> -->
         <!-- <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Pendaftaran') {
                                                                   echo 'active';
                                                                } ?>"
@@ -99,9 +99,9 @@
               <span class="hide-menu">Pendaftaran BPJS</span>
            </a>
         </li> -->
-        <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'List Pendaftaran') {
-                                                            echo 'active';
-                                                         } ?>"
+        <!-- <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'List Pendaftaran') {
+                                                                  echo 'active';
+                                                               } ?>"
               href="module/admisi/listpasiendaftar"
               aria-expanded="false">
               <iconify-icon icon="solar:book-bookmark-line-duotone"></iconify-icon>
@@ -143,6 +143,6 @@
               <iconify-icon icon="material-symbols:pulse-alert-outline"></iconify-icon>
               <span class="hide-menu">MCU</span>
            </a>
-        </li>
+        </li> -->
      </ul>
   </nav>

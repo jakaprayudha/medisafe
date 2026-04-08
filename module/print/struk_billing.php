@@ -125,10 +125,10 @@ $total = 0;
                <td><?= $pasien['nomor_rm'] ?></td>
             </tr>
             <tr>
-               <td>Tanggal Lahir</td>
-               <td><?= $pasien['patient_place'] ?>/<?= $pasien['patient_datebirth'] ?></td>
+               <!-- <td>Tanggal Lahir</td>
+               <td><?= $pasien['patient_place'] ?>/<?= $pasien['patient_datebirth'] ?></td> -->
                <td>Jenis Kelamin</td>
-               <td><?= $pasien['patient_gender'] ?></td>
+               <td colspan="3"><?= $pasien['patient_gender'] ?></td>
             </tr>
             <tr>
                <td>Tanggal Kunjungan</td>

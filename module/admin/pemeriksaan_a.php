@@ -5,16 +5,16 @@ require '../../database/connect.php';
 require '../../controller/visit/assesmen.php';
 $no = $_GET['no'];
 $rm = $_GET['rm'];
-$check = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor WHERE visit_ID='$no' AND nomor_rm='$rm'");
+$check = mysqli_query($koneksi, "SELECT * FROM pasien_visit LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient WHERE pasien_visit.visit_ID='$no' AND ms_patient.nomor_rm='$rm'");
 $data = mysqli_fetch_array($check);
 
 // Hitung usia jika data ditemukan
-if ($data) {
-  $tanggal_lahir = new DateTime($data['patient_datebirth']);
-  $tanggal_visit = new DateTime($data['visit_date']);
+// if ($data) {
+//   $tanggal_lahir = new DateTime($data['patient_datebirth']);
+//   $tanggal_visit = new DateTime($data['visit_date']);
 
-  $usia = $tanggal_lahir->diff($tanggal_visit);
-}
+//   $usia = $tanggal_lahir->diff($tanggal_visit);
+// }
 
 ?>
 <!doctype html>
@@ -62,7 +62,7 @@ if ($data) {
                       <div class="col-3">
                         <div class="mb-3">
                           <label for="patient_name" class="form-label">Nama Pasien</label>
-                          <input type="text" value="<?= $data['patient_name'] ?>" id="patient_name" readonly name="patient_name" class="form-control bg-light">
+                          <input type="text" value="<?= $data['patient_name_pcare'] ?>" id="patient_name" readonly name="patient_name" class="form-control bg-light">
                         </div>
                       </div>
                       <div class="col-3">
@@ -71,16 +71,16 @@ if ($data) {
                           <input type="text" value="<?= $data['patient_gender'] ?>" id="patient_gender" name="patient_gender" class="form-control bg-light" readonly>
                         </div>
                       </div>
-                      <div class="col-3">
+                      <!-- <div class="col-3">
                         <div class="mb-3">
                           <label for="usia" class="form-label">Usia</label>
                           <input type="text" value="<?php echo  $usia->y . " tahun " . $usia->m . " bulan " . $usia->d . " hari"; ?>" id="usia" name="usia" class="form-control bg-light" readonly>
                         </div>
-                      </div>
+                      </div> -->
                       <div class="col-3">
                         <div class="mb-3">
                           <label for="doctor_name" class="form-label">Dokter</label>
-                          <input type="text" value="<?= $data['doctor_name'] ?>" id="doctor_name" name="dokter" class="form-control bg-light" readonly>
+                          <input type="text" value="<?= $data['id_doctor'] ?>" id="doctor_name" name="dokter" class="form-control bg-light" readonly>
                         </div>
                       </div>
                     </div>
@@ -175,12 +175,12 @@ if ($data) {
                     <!-- Pemeriksaan oleh Dokter -->
                     <h5>Pemeriksaan Dokter</h5>
                     <div class="mb-3">
-                      <label for="keluhan_utama" class="form-label">Keluhan Utama</label>
-                      <textarea id="keluhan_utama" name="keluhan_utama" rows="2" class="form-control"><?= @$data['anamnesa'] ?></textarea>
+                      <label for="keluhan_utama" class="form-label required">Keluhan</label>
+                      <textarea id="keluhan_utama" name="keluhan_utama" rows="2" class="form-control" required><?= @$data['anamnesa'] ?></textarea>
                     </div>
                     <div class="mb-3">
-                      <label for="keluhan_penyerta" class="form-label">Keluhan Penyerta</label>
-                      <textarea id="keluhan_penyerta" name="keluhan_penyerta" rows="2" class="form-control"><?= @$data['keluhan_penyerta'] ?></textarea>
+                      <label for="keluhan_penyerta" class="form-label required">Keluhan Utama</label>
+                      <textarea id="keluhan_penyerta" name="keluhan_penyerta" rows="2" class="form-control" required><?= @$data['keluhan_penyerta'] ?></textarea>
                     </div>
                     <div class="mb-3">
                       <label for="riwayat_alergi" class="form-label">Riwayat Alergi</label>
@@ -207,8 +207,14 @@ if ($data) {
                       <textarea id="pemeriksaan_fungsional" name="pemeriksaan_fungsional" rows="2" class="form-control"><?= @$data['pemeriksaan_fungsional'] ?></textarea>
                     </div>
                     <div class="mb-3">
-                      <label class="form-label">Diagnosa (ICD-10)</label>
-                      <select id="diagnosa" name="diagnosa" class="form-select" style="width:100%"></select>
+                      <label class="form-label required">Diagnosa (ICD-10)</label>
+                      <select id="diagnosa" required name="diagnosa" class="form-select" style="width:100%"></select>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Diagnosa Sekunder (ICD-10)</label>
+                      <select id="diagnosa_sekunder" name="diagnosa_sekunder[]"
+                        class="form-select" multiple style="width:100%">
+                      </select>
                     </div>
                     <div class="mb-3">
                       <label for="tindakan" class="form-label">Tindakan / Terapi / Instruksi / Rencana Rawat</label>
@@ -221,10 +227,10 @@ if ($data) {
                     </div>
 
                     <div class="mb-3">
-                      <label for="cara_keluar" class="form-label">Cara Keluar <span class="text-danger">*</span></label>
-                      <select name="cara_keluar" id="cara_keluar" class="form-select" required>
+                      <label for="cara_keluar" class="form-label required">Cara Keluar <span class="text-danger">*</span></label>
+                      <select name="cara_keluar" required id="cara_keluar" class="form-select" required>
                         <option value="<?= @$data['kondisi_keluar'] ?>"><?= @$data['kondisi_keluar'] ?></option>
-                        <option value="Pulang">Pulang</option>
+                        <option value="Berobat Jalan">Berobat Jalan</option>
                         <option value="Rujuk">Rujuk</option>
                         <option value="Rawat Inap">Rawat Inap</option>
                         <option value="Meninggal">Meninggal</option>
@@ -370,6 +376,61 @@ if ($data) {
 
   // load awal (kalau edit data)
   window.addEventListener('DOMContentLoaded', hitungBMI);
+</script>
+
+<script>
+  const $diagnosaSekunder = $('#diagnosa_sekunder');
+
+  if ($diagnosaSekunder.hasClass("select2-hidden-accessible")) {
+    $diagnosaSekunder.select2('destroy');
+  }
+
+  $diagnosaSekunder.select2({
+    width: '100%',
+    placeholder: 'Cari diagnosa sekunder...',
+    multiple: true,
+    minimumInputLength: 2,
+    ajax: {
+      url: 'controller/visit/getICD10.php',
+      type: 'GET',
+      dataType: 'json',
+      delay: 300,
+      data: function(params) {
+        return {
+          search: params.term
+        };
+      },
+      processResults: function(data) {
+        return {
+          results: data
+        };
+      }
+    }
+  });
+
+  const existingSekunder = `<?= @$data['diagnosa_sekunder'] ?>`;
+
+  if (existingSekunder) {
+
+    const list = existingSekunder.split(',');
+
+    list.forEach(code => {
+
+      fetch(`controller/visit/getICD10.php?search=${code}`)
+        .then(res => res.json())
+        .then(data => {
+
+          const item = data.find(d => d.id === code);
+
+          if (item) {
+            const option = new Option(item.text, item.id, true, true);
+            $('#diagnosa_sekunder').append(option).trigger('change');
+          }
+
+        });
+
+    });
+  }
 </script>
 
 
