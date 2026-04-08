@@ -211,6 +211,12 @@ $data = mysqli_fetch_array($check);
                       <select id="diagnosa" required name="diagnosa" class="form-select" style="width:100%"></select>
                     </div>
                     <div class="mb-3">
+                      <label class="form-label">Diagnosa Sekunder (ICD-10)</label>
+                      <select id="diagnosa_sekunder" name="diagnosa_sekunder[]"
+                        class="form-select" multiple style="width:100%">
+                      </select>
+                    </div>
+                    <div class="mb-3">
                       <label for="tindakan" class="form-label">Tindakan / Terapi / Instruksi / Rencana Rawat</label>
                       <textarea id="tindakan" name="tindakan" rows="2" class="form-control"><?= @$data['tindakan'] ?></textarea>
                     </div>
@@ -370,6 +376,61 @@ $data = mysqli_fetch_array($check);
 
   // load awal (kalau edit data)
   window.addEventListener('DOMContentLoaded', hitungBMI);
+</script>
+
+<script>
+  const $diagnosaSekunder = $('#diagnosa_sekunder');
+
+  if ($diagnosaSekunder.hasClass("select2-hidden-accessible")) {
+    $diagnosaSekunder.select2('destroy');
+  }
+
+  $diagnosaSekunder.select2({
+    width: '100%',
+    placeholder: 'Cari diagnosa sekunder...',
+    multiple: true,
+    minimumInputLength: 2,
+    ajax: {
+      url: 'controller/visit/getICD10.php',
+      type: 'GET',
+      dataType: 'json',
+      delay: 300,
+      data: function(params) {
+        return {
+          search: params.term
+        };
+      },
+      processResults: function(data) {
+        return {
+          results: data
+        };
+      }
+    }
+  });
+
+  const existingSekunder = `<?= @$data['diagnosa_sekunder'] ?>`;
+
+  if (existingSekunder) {
+
+    const list = existingSekunder.split(',');
+
+    list.forEach(code => {
+
+      fetch(`controller/visit/getICD10.php?search=${code}`)
+        .then(res => res.json())
+        .then(data => {
+
+          const item = data.find(d => d.id === code);
+
+          if (item) {
+            const option = new Option(item.text, item.id, true, true);
+            $('#diagnosa_sekunder').append(option).trigger('change');
+          }
+
+        });
+
+    });
+  }
 </script>
 
 

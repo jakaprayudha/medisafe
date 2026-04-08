@@ -6,6 +6,9 @@ if (isset($_POST['simpan_pemeriksaan'])) {
    $rm = $_POST['nomor_rm'];
    $nomor_visit = $_POST['nomor_visit'];
    $id_patient = $_POST['id_patient'];
+   $diagnosa_sekunder = isset($_POST['diagnosa_sekunder'])
+      ? implode(',', $_POST['diagnosa_sekunder'])
+      : '';
 
 
    $stmt = $koneksi->prepare("UPDATE pasien_visit SET
@@ -32,13 +35,14 @@ if (isset($_POST['simpan_pemeriksaan'])) {
          edukasi = ?,
          visit_out = ?, 
          kondisi_keluar = ?,
-         saturasi = ?
+         saturasi = ?,
+         diagnosa_sekunder = ?
 
       WHERE visit_ID = ? AND id_patient = ?
    ");
 
    $stmt->bind_param(
-      "sssssssssssssssssssssssss",
+      "ssssssssssssssssssssssssss",
 
       $_POST['kondisi_masuk'],
       $_POST['tekanan_darah'],
@@ -64,6 +68,7 @@ if (isset($_POST['simpan_pemeriksaan'])) {
       $_POST['cara_keluar'],
       $_POST['cara_keluar'],
       $_POST['saturasi'],
+      $diagnosa_sekunder,
 
       $nomor_visit,
       $id_patient
