@@ -89,7 +89,7 @@ require '../../controller/view.php';
                               </a>
                             </li>
                             <li>
-                              <a class="dropdown-item " id="btnTambah" href="javascript:;">
+                              <a class="dropdown-item poli-btn" href="javascript:;">
                                 <i class="fas fa-user-plus me-2 text-success"></i> Pasien Umum
                               </a>
                             </li>
@@ -133,56 +133,6 @@ require '../../controller/view.php';
 </body>
 
 
-<div class="modal fade" id="programModal" tabindex="-1">
-  <div class="modal-dialog">
-    <form id="programForm" class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title"></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" name="id_visit" id="id_visit">
-        <input type="hidden" name="id_patient" id="id_patient"> <!-- 🔹 dari klik add -->
-        <input type="hidden" name="user" value="<?= $_SESSION['fullname'] ?>" id="user">
-        <div class="mb-3">
-          <label class="form-label required">Layanan (Poli)</label>
-          <select name="id_poli" id="id_poli" class="form-select" required>
-            <option value="">PILIH</option>
-            <?php
-            $getpoli = tampildata("SELECT * FROM ms_poli WHERE poli_status='1' AND id_customer='$_SESSION[id_customer]' ");
-            foreach ($getpoli as $poli) :
-            ?>
-              <option value="<?= $poli['id_poli'] ?>"><?= $poli['poli_name'] ?></option>
-            <?php endforeach ?>
-          </select>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label required">Dokter</label>
-          <select name="id_doctor" id="id_doctor" class="form-select" required>
-            <option value="">PILIH</option>
-            <?php
-            $id_customer = $_SESSION['id_customer'];
-            $getdoc = tampildata("SELECT * FROM ms_doctor WHERE doctor_status='1' AND id_customer='$id_customer' ");
-            foreach ($getdoc as $doc) :
-            ?>
-              <option value="<?= $doc['id_doctor'] ?>"><?= $doc['doctor_name'] ?></option>
-            <?php endforeach ?>
-          </select>
-        </div>
-
-
-        <div class="mb-3">
-          <label class="form-label">Catatan</label>
-          <textarea name="visit_notes" id="visit_notes" class="form-control" rows="5"></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Simpan</button>
-      </div>
-    </form>
-  </div>
-</div>
 <div class="modal fade" id="detailModal">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content shadow">
@@ -787,7 +737,7 @@ require '../../controller/view.php';
               "dokter": row.id_doctor ?? "-",
               "layanan": row.id_poli ?? "-",
               "screening": row.tekanan_darah ?
-                '<span class="badge bg-success">✔️ Sudah</span>' : '<span class="badge bg-secondary">❌ Belum</span>',
+                '<span class="badge bg-success">✔️ Sudah</span>' : '<span class="badge bg-danger">❌ Belum</span>',
               "provider": row.provider_name ?? "-",
               "status": row.visit_status === 99 ? '<span class="badge bg-danger text-center d-block">Batal</span>' : row.visit_status === 1 ? '<span class="badge bg-warning text-center d-block">Menunggu</span>' : row.visit_status === 2 ? '<span class="badge bg-secondary text-center d-block">Dipanggil</span>' : row.visit_status === 3 ? '<span class="badge bg-primary text-center d-block">Dilayani</span>' : row.visit_status === 4 ? '<span class="badge bg-success text-center d-block">Selesai</span>' : '<span class="badge bg-dark text-center d-block">Belum Dilayani</span>'
             };
@@ -981,7 +931,6 @@ require '../../controller/view.php';
     }
   });
 </script>
-
 <script>
   $(document).on('shown.bs.dropdown', '.dropdown, .dropup', function() {
     const $menu = $(this).find('.dropdown-menu');
@@ -1183,16 +1132,21 @@ require '../../controller/view.php';
       });
   }
   $('#btnSavePoli').on('click', function() {
-
+    const selected = $('#id_patient_select').select2('data')[0];
     const data = {
-      id_patient: $('#id_patient_select').val(), // 🔥 FIX select2
+      id_patient: $('#id_patient_select').val(),
+      patient_name_pcare: selected?.patient_name || '',
       id_doctor: $('#poli_doctor').val(),
+      doctor_name: $('#poli_doctor option:selected').text(),
+
       id_poli: $('#poli_poli').val(),
+      poli_name: $('#poli_poli option:selected').text(),
+
       id_provider: $('#poli_provider').val(),
+
       visit_date: $('#poli_date').val(),
       visit_time: $('#poli_time').val()
     };
-
     // 🔥 VALIDASI (optional tapi bagus)
     if (!data.id_patient || !data.id_doctor || !data.visit_date || !data.visit_time) {
       alert('Data wajib belum lengkap');
@@ -1263,14 +1217,13 @@ require '../../controller/view.php';
         },
 
         processResults: function(data) {
-          console.log("RESPONSE:", data);
-
           let items = data.data ? data.data : data;
 
           return {
             results: items.map(item => ({
               id: item.id_patient,
-              text: `${item.patient_name} (${item.nomor_rm})`
+              text: `${item.patient_name} (${item.nomor_rm})`, // tampil di UI
+              patient_name: item.patient_name // 🔥 simpan asli
             }))
           };
         },
@@ -1279,7 +1232,6 @@ require '../../controller/view.php';
     });
   });
 </script>
-
 <script>
   let canvas = document.getElementById('signaturePad');
   let ctx = canvas.getContext('2d');
@@ -1380,7 +1332,6 @@ require '../../controller/view.php';
       });
   };
 </script>
-
 <script>
   let currentPatientId = null;
   let stream = null;
@@ -1467,5 +1418,7 @@ require '../../controller/view.php';
 
     });
 </script>
+
+
 
 </html>
