@@ -1,66 +1,40 @@
 <?php
 include '../../database/connect.php';
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 header("Content-Type: application/json");
 
-$no = $_GET['no'] ?? null;   // visit_ID
-$rm = $_GET['rm'] ?? null;   // nomor_rm
+$id_customer = $_SESSION['id_customer'] ?? null;
+$no = $_GET['no'] ?? null;
 
-if (!$no || !$rm) {
-    echo json_encode(["status" => "error", "message" => "Parameter tidak lengkap"]);
+if (!$id_customer || !$no) {
+    echo json_encode([
+        "status" => "error",
+        "message" => "Parameter tidak lengkap"
+    ]);
     exit;
 }
 
-// Ambil data pasien & dokter
-$q = mysqli_query($koneksi, "SELECT 
-        p.patient_name,
-        p.patient_gender,
-        p.patient_datebirth,
-        d.doctor_name,
-        v.visit_date
-    FROM ms_patient p
-    JOIN pasien_visit v ON v.id_patient = p.id_patient
-    INNER JOIN ms_doctor d ON d.id_doctor = v.id_doctor
-    WHERE v.visit_ID = '$no' AND p.nomor_rm = '$rm'
+// 🔥 ambil dari pasien_visit
+$stmt = $koneksi->prepare("
+    SELECT sep_file 
+    FROM pasien_visit
+    WHERE visit_ID = ? AND id_customer = ?
     LIMIT 1
 ");
 
-$pasien = mysqli_fetch_assoc($q);
+$stmt->bind_param("si", $no, $id_customer);
+$stmt->execute();
 
-// Jika tidak ditemukan
-if (!$pasien) {
-    echo json_encode(["status" => "error", "message" => "Data pasien tidak ditemukan"]);
-    exit;
-}
+$result = $stmt->get_result();
+$sep = $result->fetch_assoc();
 
-// ===============================
-// HITUNG USIA (tahun–bulan–hari)
-// ===============================
-$usia = "-";
-
-if (!empty($pasien['patient_datebirth']) && !empty($pasien['visit_date'])) {
-
-    $dob = new DateTime($pasien['patient_datebirth']);  // tanggal lahir
-    $visit = new DateTime($pasien['visit_date']);        // tanggal kunjungan
-
-    $diff = $dob->diff($visit);
-
-    $usia = $diff->y . " tahun " . $diff->m . " bulan " . $diff->d . " hari";
-}
-
-// Ambil data SEP
-$qSep = mysqli_query($koneksi, "SELECT sep_file 
-    FROM pasien_sep
-    WHERE nomor_rm = '$rm'
-    AND visit_ID = '$no'
-    LIMIT 1
-");
-
-$sep = mysqli_fetch_assoc($qSep);
+$stmt->close();
 
 echo json_encode([
     "status" => "success",
-    "pasien" => $pasien,
-    "usia"   => $usia, // ← usia dikirim ke view
-    "sep"    => $sep
+    "sep" => $sep
 ]);

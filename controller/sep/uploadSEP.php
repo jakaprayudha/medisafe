@@ -1,19 +1,24 @@
 <?php
-session_start();
-$username = $_SESSION['fullname'];
 include '../../database/connect.php';
+
+if (session_status() === PHP_SESSION_NONE) {
+   session_start();
+}
+
 header("Content-Type: application/json");
+
+$username = $_SESSION['fullname'] ?? '';
+$id_customer = $_SESSION['id_customer'] ?? null;
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
    echo json_encode(["status" => "error", "message" => "Invalid request"]);
    exit;
 }
 
-$id_patient = $_POST['id_patient'] ?? null;
 $no_visit = $_POST['no_visit'] ?? null;
 
-if (!$id_patient || !$no_visit) {
-   echo json_encode(["status" => "error", "message" => "Data tidak lengkap"]);
+if (!$no_visit || !$id_customer) {
+   echo json_encode(["status" => "error", "message" => "Data tidak lengkap / session"]);
    exit;
 }
 
@@ -24,40 +29,55 @@ if (!isset($_FILES['sep_file']) || $_FILES['sep_file']['error'] != UPLOAD_ERR_OK
 
 $file = $_FILES['sep_file'];
 $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
-$maxSize = 5 * 1024 * 1024; // 5MB
+$maxSize = 5 * 1024 * 1024;
 $uploadDir = "../../uploads/sep/";
 
 $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
 if (!in_array($ext, $allowedExtensions)) {
-   echo json_encode(["status" => "error", "message" => "Hanya JPG, PNG, PDF yang diperbolehkan"]);
+   echo json_encode(["status" => "error", "message" => "Format file tidak valid"]);
    exit;
 }
 
 if ($file['size'] > $maxSize) {
-   echo json_encode(["status" => "error", "message" => "Ukuran maksimal 5MB"]);
+   echo json_encode(["status" => "error", "message" => "Maksimal 5MB"]);
    exit;
 }
 
-// Generate nama file baru
+if (!is_dir($uploadDir)) {
+   mkdir($uploadDir, 0777, true);
+}
+
+// 🔥 nama file baru
 $newFile = uniqid("sep_", true) . "." . $ext;
 $targetPath = $uploadDir . $newFile;
 
 if (move_uploaded_file($file['tmp_name'], $targetPath)) {
 
-   // Simpan di database (insert/update)
-
-   mysqli_query($koneksi, "INSERT INTO pasien_sep (nomor_rm, visit_ID, sep_file, user)
-      VALUES ('$id_patient', '$no_visit', '$newFile','$username')
-      ON DUPLICATE KEY UPDATE sep_file = '$newFile'
+   // 🔥 UPDATE ke pasien_visit (BUKAN pasien_sep lagi)
+   $stmt = $koneksi->prepare("
+      UPDATE pasien_visit 
+      SET sep_file = ?
+      WHERE visit_ID = ? AND id_customer = ?
    ");
 
-   echo json_encode([
-      "status" => "success",
-      "message" => "File SEP berhasil diupload",
-      "file" => $newFile
-   ]);
+   $stmt->bind_param("ssi", $newFile,  $no_visit, $id_customer);
+
+   if ($stmt->execute()) {
+      echo json_encode([
+         "status" => "success",
+         "message" => "File SEP berhasil diupload",
+         "file" => $newFile
+      ]);
+   } else {
+      echo json_encode([
+         "status" => "error",
+         "message" => $stmt->error
+      ]);
+   }
+
+   $stmt->close();
    exit;
 }
 
-echo json_encode(["status" => "error", "message" => "Gagal upload file"]);
+echo json_encode(["status" => "error", "message" => "Gagal upload"]);

@@ -49,32 +49,7 @@ require '../../controller/view.php';
                 <div class="card-body p-4">
                   <h4 class="mb-3">Form SEP (Surat Eligibilitas Peserta)</h4>
                   <!-- Data Pasien -->
-                  <div class="row">
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="patient_name" class="form-label">Nama Pasien</label>
-                        <input type="text" id="patient_name" readonly name="patient_name" class="form-control bg-light">
-                      </div>
-                    </div>
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="patient_gender" class="form-label">Gender</label>
-                        <input type="text" id="patient_gender" name="patient_gender" class="form-control bg-light" readonly>
-                      </div>
-                    </div>
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="usia" class="form-label">Usia</label>
-                        <input type="text" id="usia" name="usia" class="form-control bg-light" readonly>
-                      </div>
-                    </div>
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="doctor_name" class="form-label">Dokter</label>
-                        <input type="text" id="doctor_name" name="dokter" class="form-control bg-light" readonly>
-                      </div>
-                    </div>
-                  </div>
+                  <?php require 'card-pasien.php'; ?>
                   <div class="mb-3">
                     <div class="alert alert-info border-2 shadow-sm"
                       role="alert"
@@ -143,89 +118,41 @@ require '../../controller/view.php';
     // ==========================================
     function loadSEP() {
 
-      fetch(`controller/sep/getSEP.php?no=${no}&rm=${rm}`)
+      fetch(`controller/sep/getSEP.php?no=${no}`)
         .then(r => r.json())
         .then(res => {
 
           if (res.status !== "success") return;
 
-          const p = res.pasien;
           const sep = res.sep;
           const box = document.getElementById("sep_preview_box");
 
-          // SET DATA PASIEN
-          if (p) {
-            document.getElementById("patient_name").value = p.patient_name;
-            document.getElementById("patient_gender").value = p.patient_gender;
-            document.getElementById("doctor_name").value = p.doctor_name;
-            document.getElementById("usia").value = res.usia;
-          }
-
-          // =======================
-          //  TAMPILKAN SEP JIKA ADA
-          // =======================
           if (sep && sep.sep_file) {
 
             let fileURL = `uploads/sep/${sep.sep_file}`;
 
             box.innerHTML = `
-                <div class="alert alert-success d-flex justify-content-between align-items-center">
-                    <div>
-                       <strong>File SEP sudah ada:</strong><br>
-                       <small>${sep.sep_file}</small>
-                    </div>
+          <div class="alert alert-success d-flex justify-content-between align-items-center">
+            <div>
+              <strong>File SEP sudah ada:</strong><br>
+              <small>${sep.sep_file}</small>
+            </div>
 
-                    <div>
-                       <a href="${fileURL}" target="_blank" class="btn btn-sm btn-info">
-                          <iconify-icon icon="mdi:eye-outline"></iconify-icon>
-                          Lihat
-                       </a>
-
-                       <button class="btn btn-sm btn-danger" id="deleteSEP">
-                          <iconify-icon icon="mdi:trash-can-outline"></iconify-icon>
-                          Hapus
-                       </button>
-                    </div>
-                </div>
-            `;
-
-            // ACTION DELETE
-            document.getElementById("deleteSEP").onclick = () => {
-
-              Swal.fire({
-                title: "Hapus SEP?",
-                text: "File SEP akan dihapus dari server!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Hapus"
-              }).then(x => {
-
-                if (!x.isConfirmed) return;
-
-                fetch("controller/sep/deleteSEP.php", {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/x-www-form-urlencoded"
-                    },
-                    body: `no_visit=${no}&rm=${rm}`
-                  })
-                  .then(r => r.json())
-                  .then(res => {
-
-                    Swal.fire(res.status, res.message, res.status);
-
-                    if (res.status === "success") {
-                      loadSEP(); // ← REFRESH DATA TANPA REFRESH HALAMAN
-                    }
-                  });
-              });
-            };
+            <div>
+              <a href="${fileURL}" target="_blank" class="btn btn-sm btn-info">
+                <iconify-icon icon="mdi:eye-outline"></iconify-icon>
+                Lihat
+              </a>
+            </div>
+          </div>
+        `;
 
           } else {
             box.innerHTML = `
-                <div class="alert alert-warning">
-                  <strong>Belum ada file SEP.</strong> Silakan upload.
-                </div>`;
+          <div class="alert alert-warning">
+            <strong>Belum ada file SEP.</strong>
+          </div>
+        `;
           }
         });
     }
