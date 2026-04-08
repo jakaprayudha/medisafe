@@ -412,6 +412,22 @@ require '../../controller/view.php';
       $('#programModal').modal('show');
 
     });
+
+    $('#btnTambahDokter').on('click', function() {
+
+      // reset form dokter
+      $('#programFormDokter')[0].reset();
+      $('#id_user').val('');
+
+      // optional: password wajib
+      $('#programFormDokter #password').attr('required', true);
+
+      $('#programDokterModal .modal-title').text('Tambah Access Dokter');
+
+      // 🔥 INI YANG PENTING
+      $('#programDokterModal').modal('show');
+
+    });
     // 🔹 Submit (Tambah / Update)
     $('#programFormDokter').on('submit', function(e) {
       e.preventDefault();
