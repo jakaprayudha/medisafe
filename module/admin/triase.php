@@ -50,31 +50,10 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
               <div class="card w-100">
                 <div class="card-body p-4">
                   <h4 class="mb-3">Triase Kegawatdaruratan</h4>
-
-                  <!-- IDENTITAS PASIEN -->
-                  <div class="row">
-                    <div class="col-3 mb-3">
-                      <label class="form-label">Nama Pasien</label>
-                      <input type="text" id="patient_name" class="form-control bg-light" readonly>
-                    </div>
-
-                    <div class="col-3 mb-3">
-                      <label class="form-label">Gender</label>
-                      <input type="text" id="patient_gender" class="form-control bg-light" readonly>
-                    </div>
-
-                    <div class="col-3 mb-3">
-                      <label class="form-label">Usia</label>
-                      <input type="text" id="usia" class="form-control bg-light" readonly>
-                    </div>
-
-                    <div class="col-3 mb-3">
-                      <label class="form-label">Dokter</label>
-                      <input type="text" id="doctor_name" class="form-control bg-light" readonly>
-                    </div>
-                  </div>
-
                   <hr>
+                  <?php
+                  require 'card-pasien.php';
+                  ?>
 
                   <!-- FORM TRIASE -->
                   <div class="card">
@@ -519,54 +498,7 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
       });
     });
   }
-  document.addEventListener("DOMContentLoaded", () => {
 
-    const url = new URLSearchParams(window.location.search);
-    const no = url.get("no");
-    const rm = url.get("rm");
-
-    if (!no || !rm) return;
-
-    // ===== GET DATA PASIEN + INAP =====
-    fetch(`controller/ranap/getFormTriase.php?no=${no}&rm=${rm}`)
-      .then(r => r.json())
-      .then(res => {
-
-        if (!res || res.status !== "success") return;
-
-        const p = res.pasien ?? {};
-        const i = res.triase ?? {};
-
-        // Isi identitas pasien (aman walaupun null)
-        if (document.getElementById("patient_name"))
-          document.getElementById("patient_name").value = p.nama_pasien ?? "";
-
-        if (document.getElementById("patient_gender"))
-          document.getElementById("patient_gender").value = p.jk ?? "";
-
-        if (document.getElementById("doctor_name"))
-          document.getElementById("doctor_name").value = p.doctor_name ?? "";
-
-        if (document.getElementById("usia"))
-          document.getElementById("usia").value = p.usia ?? "";
-
-        // ===== EDIT MODE (Jika i ada) =====
-        // ===== EDIT MODE (Jika i ada) =====
-        for (let key in i) {
-          if (document.getElementById(key)) {
-            document.getElementById(key).value = i[key] ?? "";
-          }
-        }
-
-        // Jalankan auto-centang checkbox jika ada triase
-        if (i.triase && i.referensi_triase) {
-          applyChecklist(i.referensi_triase, i.triase);
-        }
-
-      })
-      .catch(err => console.error("ERR GET:", err));
-
-  });
 
   // =============== SAVE DATA RANAP ===============
   document.getElementById("openModal").addEventListener("click", () => {

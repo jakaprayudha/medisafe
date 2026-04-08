@@ -1,5 +1,8 @@
 <?php
 require '../../database/connect.php';
+if (session_status() === PHP_SESSION_NONE) {
+   session_start();
+}
 header("Content-Type: application/json");
 
 $data = json_decode(file_get_contents("php://input"), true);
@@ -11,6 +14,7 @@ if (!$data) {
 
 $visit_ID = $data['visit_ID'] ?? null;
 $nomor_rm = $data['nomor_rm'] ?? null;
+$id_customer = $_SESSION['id_customer'] ?? null;
 
 if (!$visit_ID || !$nomor_rm) {
    echo json_encode(["status" => "error", "message" => "Parameter tidak lengkap"]);
@@ -84,7 +88,7 @@ if (mysqli_num_rows($cek) > 0) {
          triase = '$triase',
          referensi_triase = '$referensi_triase',
          catatan = '$catatan',
-
+         id_customer = '$id_customer',
          updated_at = NOW()
       WHERE id_triase = '$id_triase'";
 
@@ -99,7 +103,7 @@ if (mysqli_num_rows($cek) > 0) {
          gcs_e, gcs_v, gcs_m, gcs_total,
          skala_nyeri,
          triase, referensi_triase,
-         catatan
+         catatan, id_customer
       ) VALUES (
          '$visit_ID', '$nomor_rm',
          '$tanggal_masuk', '$jam_masuk', '$keluhan_utama',
@@ -107,7 +111,7 @@ if (mysqli_num_rows($cek) > 0) {
          '$gcs_e', '$gcs_v', '$gcs_m', '$total_gcs',
          '$nyeri',
          '$triase', '$referensi_triase',
-         '$catatan'
+         '$catatan', '$id_customer'
       )
    ";
 
