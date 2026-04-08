@@ -164,7 +164,7 @@ require '../../../database/connect.php';
     <!-- ================= HEADER ================= -->
     <table class="triase-header">
       <tr>
-        <td width="70"><img id="barcode_rm" height="40"></td>
+        <td width="D"><img id="barcode_rm" height="40"></td>
         <td>
           Kategori ATS :
           <span id="tri_kategori_badge" class="badge-triase">-</span>
@@ -199,15 +199,15 @@ require '../../../database/connect.php';
           Turgor: <b>Baik</b>
         </td>
         <td>
-          GCS E: 4<br>
-          GCS V: 5<br>
-          GCS M: 6
+          GCS E: <span id="gcs_e"></span><br>
+          GCS V: <span id="gcs_v"></span><br>
+          GCS M: <span id="gcs_m"></span>
         </td>
         <td>
-          TD: 120/80 mmHg<br>
-          Nadi: 82 x/menit<br>
-          RR: 20 x/menit<br>
-          Suhu: 36.7 °C
+          TD: <span id="td"></span> mmHg<br>
+          Nadi: <span id="nadi"></span> x/menit<br>
+          RR: <span id="rr"></span> x/menit<br>
+          Suhu: <span id="suhu"></span> °C
         </td>
       </tr>
     </table>
@@ -229,19 +229,19 @@ require '../../../database/connect.php';
       </tr>
       <tr>
         <td>Riwayat Penyakit Sekarang</td>
-        <td>Pusing dan demam</td>
+        <td id="riwayat_penyakit_sekarang">: </td>
       </tr>
       <tr>
         <td>Riwayat Penyakit Dahulu</td>
-        <td>Hipertensi</td>
+        <td id="riwayat_penyakit_pribadi">: </td>
       </tr>
       <tr>
         <td>Riwayat Pengobatan</td>
-        <td>Paracetamol, Cetirizine</td>
+        <td id="riwayat_pengobatan">: </td>
       </tr>
       <tr>
         <td>Riwayat Alergi</td>
-        <td>Tidak ada</td>
+        <td id="riwayat_alergi">: </td>
       </tr>
     </table>
 
@@ -252,13 +252,11 @@ require '../../../database/connect.php';
       </tr>
       <tr>
         <td style="width:20%">Diagnosa Kerja</td>
-        <td>:</td>
-        <td>R50.9 Fever, unspecified</td>
+        <td id="diagnosa_utama"></td>
       </tr>
       <tr>
         <td>Diagnosa Banding</td>
-        <td>:</td>
-        <td>O21 Excessive vomiting</td>
+        <td id="diagnosa_sekunder"></td>
       </tr>
     </table>
 
@@ -277,7 +275,7 @@ require '../../../database/connect.php';
       <tr>
         <th style="width:20%">TERAPI</th>
         <td>:</td>
-        <td>IVFD RL, Injeksi Ranitidine, Paracetamol, Cetirizine</td>
+        <td></td>
       </tr>
     </table>
 
@@ -322,35 +320,102 @@ require '../../../database/connect.php';
       }
       painScale.innerHTML = html;
     }
-
     document.addEventListener("DOMContentLoaded", () => {
+
       const p = new URLSearchParams(location.search);
 
       fetch(`../../../controller/ranap/getFormTriase.php?no=${p.get("no")}&rm=${p.get("rm")}`)
-        .then(r => r.json()).then(res => {
-          const t = res.triase || {},
-            ps = res.pasien || {};
+        .then(r => r.json())
+        .then(res => {
 
-          tri_keluhan.innerText = t.keluhan_utama || "-";
+          const d = res.data || {};
 
+          // =============================
+          // DATA UTAMA
+          // =============================
+          tri_keluhan.innerText = d.keluhan_utama || "-";
+          riwayat_penyakit_sekarang.innerText = d.riwayat_penyakit_sekarang || "-";
+          riwayat_pengobatan.innerText = d.riwayat_pengobatan || "-";
+          riwayat_penyakit_pribadi.innerText = d.riwayat_penyakit_pribadi || "-";
+          riwayat_alergi.innerText = d.riwayat_alergi || "-";
+          diagnosa_utama.innerText =
+            `${d.code || '-'} - ${d.icd10 || ''}`;
+          diagnosa_sekunder.innerText = d.diagnosa_sekunder || "-";
+          tri_nyeri.innerText = d.skala_nyeri || "0";
+          tri_catatan.innerText = d.catatan || "-";
+          gcs_e.innerText = d.gcs_e || "-";
+          gcs_m.innerText = d.gcs_m || "-";
+          gcs_v.innerText = d.gcs_v || "-";
+          td.innerText = d.tekanan_darah || "-";
+          nadi.innerText = d.nadi || "-";
+          rr.innerText = d.rr || "-";
+          suhu.innerText = d.suhu || "-";
+          spo2.innerText = d.spo2 || "-";
+          tgl_periksa.innerText = d.tgl_periksa || "-";
+          nama_petugas.innerText = d.id_doctor || "-";
 
-          tri_nyeri.innerText = t.skala_nyeri || "0";
-          renderPainScale(parseInt(t.skala_nyeri || 0));
+          // =============================
+          // PAIN SCALE
+          // =============================
+          renderPainScale(parseInt(d.skala_nyeri || 0));
 
-          tri_catatan.innerText = t.catatan || "-";
-          nama_petugas.innerText = ps.doctor_name || "-";
+          // =============================
+          // DOKTER
+          // =============================
+          nama_petugas.innerText = d.id_doctor || "-";
 
+          // =============================
+          // BARCODE
+          // =============================
           barcode_rm.src =
-            `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(ps.nomor_rm||"")}&code=Code128`;
+            `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(d.visit_ID || "")}&code=Code128`;
 
-          /* ATS BADGE */
+          // =============================
+          // ATS BADGE (kalau ada)
+          // =============================
           const badge = document.getElementById("tri_kategori_badge");
-          const ats = parseInt(t.kategori_ats || 0);
+          const ats = parseInt(d.triase || 0); // dari field triase
+
           badge.className = "badge-triase";
+
           if (ats >= 1 && ats <= 5) {
             badge.innerText = "ATS " + ats;
             badge.classList.add("ats" + ats);
+          } else {
+            badge.innerText = "-";
           }
+
+          // =============================
+          // VITAL SIGN (DINAMIS)
+          // =============================
+          document.querySelectorAll(".igd-table")[0].rows[1].cells[4].innerHTML = `
+        TD: ${d.tekanan_darah || '-'} mmHg<br>
+        Nadi: ${d.nadi || '-'} x/menit<br>
+        RR: ${d.rr || '-'} x/menit<br>
+        Suhu: ${d.suhu || '-'} °C<br>
+        SpO2: ${d.spo2 || '-'} %
+      `;
+
+          // =============================
+          // GCS
+          // =============================
+          document.querySelectorAll(".igd-table")[0].rows[1].cells[3].innerHTML = `
+        GCS E: ${d.gcs_e || '-'}<br>
+        GCS V: ${d.gcs_v || '-'}<br>
+        GCS M: ${d.gcs_m || '-'}
+      `;
+
+          // =============================
+          // TTD DOKTER
+          // =============================
+          const ttdImg = document.querySelector(".igd-ttd img");
+
+          if (d.signature_path) {
+            ttdImg.src = `../../../uploads/ttd/${d.signature_path}`;
+          } else {
+            ttdImg.src = `../../../assets/img/no-sign.png`;
+          }
+
         });
     });
   </script>

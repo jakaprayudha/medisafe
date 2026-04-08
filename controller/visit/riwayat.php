@@ -24,7 +24,7 @@ function getData()
    global $koneksi;
    // pastikan ada parameter "no" (nomor_visit)
    $rm = isset($_GET['rm']) ? mysqli_real_escape_string($koneksi, $_GET['rm']) : '';
-   $query = "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor INNER JOIN ms_poli ON ms_poli.id_poli = pasien_visit.id_poli
+   $query = "SELECT * FROM pasien_visit LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient 
              WHERE ms_patient.nomor_rm = '$rm'
              ORDER BY pasien_visit.visit_date ASC";
    $result = mysqli_query($koneksi, $query);

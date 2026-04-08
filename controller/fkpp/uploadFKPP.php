@@ -18,19 +18,21 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $no_visit = $_POST['no_visit'] ?? null;
 
 if (!$no_visit || !$id_customer) {
-   echo json_encode(["status" => "error", "message" => "Data tidak lengkap / session"]);
+   echo json_encode(["status" => "error", "message" => "Data tidak lengkap"]);
    exit;
 }
 
-if (!isset($_FILES['sep_file']) || $_FILES['sep_file']['error'] != UPLOAD_ERR_OK) {
+// 🔥 FIX DISINI
+if (!isset($_FILES['fkpp_file']) || $_FILES['fkpp_file']['error'] != UPLOAD_ERR_OK) {
    echo json_encode(["status" => "error", "message" => "File tidak valid"]);
    exit;
 }
 
-$file = $_FILES['sep_file'];
+$file = $_FILES['fkpp_file'];
+
 $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
 $maxSize = 5 * 1024 * 1024;
-$uploadDir = "../../uploads/sep/";
+$uploadDir = "../../uploads/fkpp/";
 
 $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
@@ -48,33 +50,38 @@ if (!is_dir($uploadDir)) {
    mkdir($uploadDir, 0777, true);
 }
 
-// 🔥 nama file baru
-$newFile = uniqid("sep_", true) . "." . $ext;
+$newFile = uniqid("fkpp_", true) . "." . $ext;
 $targetPath = $uploadDir . $newFile;
 
 if (move_uploaded_file($file['tmp_name'], $targetPath)) {
 
-   // 🔥 UPDATE ke pasien_visit (BUKAN pasien_sep lagi)
    $stmt = $koneksi->prepare("
       UPDATE pasien_visit 
-      SET sep_file = ?
+      SET fkpp_file = ?
       WHERE visit_ID = ? AND id_customer = ?
    ");
 
-   $stmt->bind_param("ssi", $newFile,  $no_visit, $id_customer);
+   if (!$stmt) {
+      echo json_encode(["status" => "error", "message" => $koneksi->error]);
+      exit;
+   }
 
-   if ($stmt->execute()) {
-      echo json_encode([
-         "status" => "success",
-         "message" => "File SEP berhasil diupload",
-         "file" => $newFile
-      ]);
-   } else {
+   $stmt->bind_param("ssi", $newFile, $no_visit, $id_customer);
+   $stmt->execute();
+
+   if ($stmt->affected_rows === 0) {
       echo json_encode([
          "status" => "error",
-         "message" => $stmt->error
+         "message" => "Data tidak ditemukan"
       ]);
+      exit;
    }
+
+   echo json_encode([
+      "status" => "success",
+      "message" => "File FKPP berhasil diupload",
+      "file" => $newFile
+   ]);
 
    $stmt->close();
    exit;

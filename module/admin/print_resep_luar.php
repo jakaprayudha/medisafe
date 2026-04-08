@@ -3,10 +3,9 @@ require '../../database/connect.php';
 
 $no = $_GET['no']; // id_visit
 $rm = $_GET['rm']; // no rekam medis
-$checkfaseks = $koneksi->query("SELECT * FROM setting_clinic  LIMIT 1");
-$datafaskes = $checkfaseks->fetch_assoc();
+require 'getdataclinic.php';
 // 🔹 Ambil data pasien
-$qPasien = $koneksi->query("SELECT patient_name, patient_datebirth, patient_gender FROM ms_patient WHERE nomor_rm='$rm' LIMIT 1");
+$qPasien = $koneksi->query("SELECT * FROM pasien_visit WHERE visit_ID='$no' AND id_customer='$id_customer' LIMIT 1");
 $pasien = $qPasien->fetch_assoc();
 
 // 🔹 Ambil data resep luar
@@ -16,11 +15,6 @@ while ($row = $qResep->fetch_assoc()) {
    $resep[] = $row;
 }
 
-// 🔹 Ambil dokter (opsional, kalau ada tabel visit join dokter)
-$qDokter = $koneksi->query("SELECT d.doctor_name FROM pasien_visit v 
-    INNER JOIN ms_doctor d ON v.id_doctor = d.id_doctor 
-    WHERE v.visit_ID='$no'");
-$dokter = $qDokter->fetch_assoc();
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -81,7 +75,7 @@ $dokter = $qDokter->fetch_assoc();
 
    <div class="header">
       <div class="title">Resep Dokter</div>
-      <div><?= $datafaskes['clinic_name'] ?> <br>Alamat : <?= $datafaskes['address'] ?>, No.Telp : <?= $datafaskes['phone_number'] ?></div>
+      <div><?= $datafaskes['clinic_name'] ?> <br>Alamat : <?= $datafaskes['faskes_address'] ?>, No.Telp : <?= $datafaskes['faskes_phone'] ?></div>
       <div class="line"></div>
    </div>
 
@@ -90,11 +84,11 @@ $dokter = $qDokter->fetch_assoc();
          <td><strong>No. RM</strong></td>
          <td>: <?= htmlspecialchars($rm) ?></td>
          <td><strong>Dokter</strong></td>
-         <td>: <?= $dokter['doctor_name'] ?? '-' ?></td>
+         <td>: <?= $pasien['id_doctor'] ?? '-' ?></td>
       </tr>
       <tr>
          <td><strong>Nama Pasien</strong></td>
-         <td>: <?= $pasien['patient_name'] ?? '-' ?></td>
+         <td>: <?= $pasien['patient_name_pcare'] ?? '-' ?></td>
          <td><strong>Tgl Cetak</strong></td>
          <td>: <?= date('d-m-Y') ?></td>
       </tr>
@@ -133,7 +127,7 @@ $dokter = $qDokter->fetch_assoc();
 
    <div class="sign">
       <div>__________________________</div>
-      <div><?= $dokter['nama_dokter'] ?? 'Dokter' ?></div>
+      <div><?= $pasien['id_doctor'] ?? 'Dokter' ?></div>
    </div>
 
 </body>

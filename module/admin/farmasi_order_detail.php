@@ -550,8 +550,10 @@ $data = mysqli_fetch_array($check);
     }
   }
 </script>
+
 <script>
   $(document).on('click', '.btn-call', function() {
+
     const noAntrian = $(this).data('antrian');
     const nama = $(this).data('nama');
     const poli = $(this).data('poli');
@@ -568,16 +570,15 @@ $data = mysqli_fetch_array($check);
   function callPatient(noAntrian, namaPasien, poli, visitID, id_doctor, obat) {
 
     /* =========================
-       1. SUARA
+       SUARA SAJA (NO API CALL)
     ========================= */
     if ('speechSynthesis' in window) {
 
       speechSynthesis.cancel();
 
       const text = `
-  
-      pasien ${namaPasien}, dipersilahkan untuk ambil obat 
-    `;
+        pasien ${namaPasien}, dipersilahkan untuk ambil obat
+      `;
 
       const utterance = new SpeechSynthesisUtterance(text);
 
@@ -586,6 +587,7 @@ $data = mysqli_fetch_array($check);
       utterance.pitch = 1;
       utterance.volume = 1;
 
+      // 🔥 ambil voice Indonesia kalau ada
       const voices = speechSynthesis.getVoices();
       const indo = voices.find(v => v.lang === 'id-ID');
       if (indo) utterance.voice = indo;
@@ -593,23 +595,6 @@ $data = mysqli_fetch_array($check);
       speechSynthesis.speak(utterance);
     }
 
-    /* =========================
-       2. UPDATE STATUS
-    ========================= */
-    fetch('controller/queue/poliCall.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          visit_ID: visitID
-        })
-      })
-      .then(res => res.json())
-      .then(res => {
-        if (res.status !== 'success') {
-          console.warn('Update status gagal');
-        }
-      });
+    // ❌ TIDAK ADA FETCH / UPDATE STATUS
   }
 </script>

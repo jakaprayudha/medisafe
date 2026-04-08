@@ -275,7 +275,7 @@ $id_patient = $datapatient['id_patient'];
                   <strong>P : </strong>${readMore(row.planning)}
                 </div>
               `,
-              "instruksi": row.instruksi ?? "-",
+              "instruksi": row.instruction ?? "-",
               "verifikasi": (() => {
 
                 // ✅ kalau sudah diverifikasi

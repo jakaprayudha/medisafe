@@ -18,13 +18,21 @@ if (!$id_customer || !$no) {
     exit;
 }
 
-// 🔥 ambil dari pasien_visit
+// 🔥 PREPARE
 $stmt = $koneksi->prepare("
-    SELECT sep_file 
+    SELECT fkpp_file 
     FROM pasien_visit
     WHERE visit_ID = ? AND id_customer = ?
     LIMIT 1
 ");
+
+if (!$stmt) {
+    echo json_encode([
+        "status" => "error",
+        "message" => $koneksi->error
+    ]);
+    exit;
+}
 
 $stmt->bind_param("si", $no, $id_customer);
 $stmt->execute();
@@ -34,7 +42,12 @@ $sep = $result->fetch_assoc();
 
 $stmt->close();
 
+// 🔥 HANDLE NULL
+if (!$sep) {
+    $sep = ["fkpp_file" => null];
+}
+
 echo json_encode([
     "status" => "success",
-    "sep" => $sep
+    "fkpp" => $sep
 ]);

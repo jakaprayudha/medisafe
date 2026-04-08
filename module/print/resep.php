@@ -6,8 +6,7 @@ $no = $_GET['no'];
 $rm = $_GET['rm'];
 $id = $_GET['id'];
 
-$checkklinik = mysqli_query($koneksi, "SELECT * FROM setting_clinic LIMIT 1");
-$dataklinik = mysqli_fetch_array($checkklinik);
+require '../admin/getdataclinic.php';
 
 $checkpasien = mysqli_query($koneksi, "SELECT * FROM pasien_visit 
    LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient 
@@ -145,9 +144,9 @@ foreach ($checkobat as $obat) {
 
     <!-- KOP -->
     <div class="kop">
-      <h2><?= $dataklinik['clinic_name'] ?></h2>
-      <p><?= $dataklinik['address'] ?></p>
-      <p>Telp. <?= $dataklinik['phone_number'] ?></p>
+      <h2><?= $datafaskes['clinic_name'] ?></h2>
+      <p><?= $datafaskes['faskes_address'] ?></p>
+      <p>Telp. <?= $datafaskes['faskes_phone'] ?></p>
     </div>
 
     <!-- INFO PASIEN -->
@@ -213,7 +212,7 @@ foreach ($checkobat as $obat) {
       </div>
 
       <div class="ttd">
-        <div><?= $dataklinik['kabupaten'] ?>, <?= date('d-m-Y') ?></div>
+        <div><?= $datafaskes['faskes_city'] ?>, <?= date('d-m-Y') ?></div>
         <div class="nama"><?= $datapasien['id_doctor'] ?></div>
         <div>SIP. </div>
       </div>

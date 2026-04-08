@@ -3,7 +3,7 @@ require '../../database/connect.php';
 $visit = $_GET['visit'];
 $clinic = mysqli_query($koneksi, "SELECT * FROM setting_clinic LIMIT 1");
 $dataclinic = mysqli_fetch_array($clinic);
-$visitCheck = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor INNER JOIN ms_poli ON ms_poli.id_poli = pasien_visit.id_poli WHERE pasien_visit.visit_ID='$visit'");
+$visitCheck = mysqli_query($koneksi, "SELECT * FROM pasien_visit LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient WHERE pasien_visit.visit_ID='$visit'");
 $visitData = mysqli_fetch_array($visitCheck);
 ?>
 <!DOCTYPE html>

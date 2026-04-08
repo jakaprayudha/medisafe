@@ -54,11 +54,10 @@ require '../../controller/view.php';
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
-                          <th class="text-dark fw-normal">ID</th>
                           <th class="text-dark fw-normal">Registrasi</th>
                           <th scope="col" class="text-dark fw-normal">Dokter</th>
                           <th scope="col" class="text-dark fw-normal">Layanan</th>
-                          <th scope="col" class="text-dark fw-normal">Poliklinik</th>
+                          <th scope="col" class="text-dark fw-normal">Rawat Inap</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
@@ -75,7 +74,23 @@ require '../../controller/view.php';
   </div>
 
 
+  <div class="modal fade" id="modalRME" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
 
+        <div class="modal-header">
+          <h5 class="modal-title">Detail RME</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body p-0">
+          <iframe id="iframeRME"
+            style="width:100%; height:80vh; border:0;"></iframe>
+        </div>
+
+      </div>
+    </div>
+  </div>
   <?php
   require 'library.php';
   ?>
@@ -97,20 +112,16 @@ require '../../controller/view.php';
         dataSrc: function(json) {
           return json.data.map(function(row) {
             return {
-              "visit": row.visit_ID ?? "-",
               "tanggal": row.visit_date + ' ' + row.visit_time ?? "-",
-              "dokter": row.doctor_name ?? "-",
-              "layanan": row.source_hub ?? "-",
-              "poli": row.poli_name ?? "-",
+              "dokter": row.id_doctor ?? "-",
+              "layanan": row.id_poli ?? "-",
+              "status_rawatinap": row.status_rawatinap,
               "actions": row.visit_ID
             };
           });
         }
       },
       columns: [{
-          data: "visit"
-        },
-        {
           data: "tanggal"
         },
         {
@@ -120,17 +131,24 @@ require '../../controller/view.php';
           data: "layanan"
         },
         {
-          data: "poli"
+          data: "status_rawatinap",
+          render: function(data) {
+
+            if (parseInt(data) === 1) {
+              return `<span class="text-success fw-bold">✔</span>`;
+            }
+
+            return `<span class="text-muted">-</span>`;
+          }
         },
         {
           data: "actions",
           render: function(data, type, row) {
             return `
-              <a href="module/admin/rmeView?visit=${data}" 
-                 target="_blank" 
-                 class="btn btn-sm btn-primary">
+              <button class="btn btn-sm btn-primary btn-rme" 
+                      data-visit="${data}">
                 <i class="bi bi-eye"></i> Lihat RME
-              </a>
+              </button>
             `;
           }
         }
@@ -139,7 +157,7 @@ require '../../controller/view.php';
         var api = this.api();
 
         let total = api
-          .column(3, {
+          .column(2, {
             page: 'current'
           })
           .data()
@@ -154,5 +172,28 @@ require '../../controller/view.php';
     $('#customSearch').on('keyup', function() {
       table.search(this.value).draw();
     });
+  });
+
+  $(document).on('click', '.btn-rme', function() {
+
+    let visit = $(this).data('visit');
+
+    // 🔥 load ke iframe
+    $('#iframeRME').attr('src', `module/admin/rmeView?visit=${visit}`);
+
+    // 🔥 buka modal
+    $('#modalRME').modal('show');
+
+  });
+
+  $('#iframeRME').attr('src', '');
+  $('#modalRME').modal('show');
+
+  setTimeout(() => {
+    $('#iframeRME').attr('src', `module/admin/rmeView?visit=${visit}`);
+  }, 300);
+
+  $('#modalRME').on('hidden.bs.modal', function() {
+    $('#iframeRME').attr('src', '');
   });
 </script>

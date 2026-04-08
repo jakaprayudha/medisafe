@@ -2,8 +2,7 @@
 session_start();
 require '../../database/connect.php';
 $no = $_GET['no'];
-
-$klinik = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM setting_clinic LIMIT 1"));
+require '../admin/getdataclinic.php';
 $pasien = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM pasien_visit 
     JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient 
     WHERE pasien_visit.visit_ID='$no'"));
@@ -107,12 +106,12 @@ $total = 0;
 <body onload="window.print()">
    <div class="container">
       <!-- Logo Klinik -->
-      <img src="../../uploads/<?= $klinik['image_clinic'] ?>" alt="Logo Klinik" class="logo">
+      <img src="../../uploads/<?= $datafaskes['image_clinic'] ?>" alt="Logo Klinik" class="logo">
 
-      <h2><?= $klinik['clinic_name'] ?></h2>
+      <h2><?= $datafaskes['clinic_name'] ?></h2>
       <div class="clinic-info">
-         <?= $klinik['address'] ?><br>
-         Telp: <?= $klinik['phone_number'] ?>
+         <?= $datafaskes['faskes_address'] ?><br>
+         Telp: <?= $datafaskes['faskes_phone'] ?>
       </div>
 
       <div class="section">

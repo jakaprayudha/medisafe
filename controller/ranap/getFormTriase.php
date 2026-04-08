@@ -1,76 +1,54 @@
 <?php
 require '../../database/connect.php';
+
 header("Content-Type: application/json");
+session_start();
 
-$no = $_GET['no'] ?? null;   // visit_ID
-$rm = $_GET['rm'] ?? null;   // nomor RM
+// 🔥 AMBIL SESSION
+// $id_customer = $_SESSION['id_customer'] ?? null;
+$id_customer = 19;
 
-if (!$no || !$rm) {
-   echo json_encode(["status" => "error", "message" => "Parameter tidak lengkap"]);
+if (!$id_customer) {
+   echo json_encode([
+      "status" => "error",
+      "message" => "Session tidak ditemukan"
+   ]);
+   exit;
+}
+
+// 🔥 PARAMETER
+$no = $_GET['no'] ?? null; // visit_ID
+
+if (!$no) {
+   echo json_encode([
+      "status" => "error",
+      "message" => "Parameter visit_ID tidak ada"
+   ]);
    exit;
 }
 
 /* ================================================
-   1. GET IDENTITAS PASIEN + DOKTER IGD
+   GET DATA TRIASE SAJA
 ================================================= */
-$q = mysqli_query($koneksi, "
-   SELECT 
-      p.id_patient,
-      p.nomor_rm,
-      p.patient_name AS nama_pasien,
-      p.patient_gender AS jk,
-      CONCAT(
-         FLOOR(DATEDIFF(CURDATE(), p.patient_datebirth) / 365), ' Tahun'
-      ) AS usia,
-      d.doctor_name
-   FROM pasien_visit v
-   LEFT JOIN ms_patient p ON p.id_patient = v.id_patient
-   LEFT JOIN ms_doctor d ON d.id_doctor = v.id_doctor
-   WHERE v.visit_ID = '$no' AND p.nomor_rm = '$rm'
-");
-
-$pasien = mysqli_fetch_assoc($q);
-
-/* ================================================
-   2. GET DATA TRIASE PASIEN
-================================================= */
-$q_triase = mysqli_query($koneksi, "SELECT 
-      id_triase,
-      tanggal_masuk,
-      jam_masuk,
-      keluhan_utama,
-
-      tekanan_darah,
-      nadi,
-      rr,
-      suhu,
-      spo2,
-
-      gcs_e,
-      gcs_v,
-      gcs_m,
-      gcs_total,
-
-      skala_nyeri,
-      triase,
-      referensi_triase,
-      catatan,
-
-      created_at,
-      updated_at
-   FROM pasien_triase
-   WHERE visit_ID = '$no' AND nomor_rm = '$rm'
-   ORDER BY id_triase DESC
+$stmt = $koneksi->prepare("SELECT * FROM pasien_triase LEFT JOIN pasien_visit ON pasien_triase.visit_ID = pasien_visit.visit_ID 
+LEFT JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa
+   WHERE pasien_visit.visit_ID = ? AND pasien_visit.id_customer = ?
+   ORDER BY pasien_triase.id_triase DESC
    LIMIT 1
 ");
 
-$triase = mysqli_fetch_assoc($q_triase);
+$stmt->bind_param("ss", $no, $id_customer);
+$stmt->execute();
+
+$result = $stmt->get_result();
+$triase = $result->fetch_assoc();
+
+$stmt->close();
 
 /* ================================================
-   3. FINAL OUTPUT JSON
+   RESPONSE
 ================================================= */
 echo json_encode([
    "status" => "success",
-   "pasien" => $pasien,
-   "triase" => $triase
+   "data" => $triase ?? null
 ]);

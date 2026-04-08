@@ -58,16 +58,6 @@ require "../../controller/view.php";
 
                   <div class="col-md-4">
                     <div class="info-item">
-                      <i class="ti ti-hash"></i>
-                      <div>
-                        <div class="label">No Permintaan</div>
-                        <div class="value" id="permintaan_number">-</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="col-md-4">
-                    <div class="info-item">
                       <i class="ti ti-calendar"></i>
                       <div>
                         <div class="label">Tanggal</div>
@@ -483,7 +473,6 @@ require "../../controller/view.php";
       // =========================
       // ISI DATA
       // =========================
-      $('#permintaan_number').text(d.permintaan_number || '-');
       $('#created_at').text(tgl);
       $('#tipe_obat').text(d.tipe_obat || '-');
       tipeObatGlobal = d.tipe_obat || '';

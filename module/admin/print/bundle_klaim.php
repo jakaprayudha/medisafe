@@ -14,6 +14,7 @@ $files = [
    "formulir_dokumen.php",
    "formulir_triase.php",
    "formulir_pengantar_ranap.php",
+   "formulir_surat_persetujuan.php",
    // "formulir_inout_ranap.php",
    "formulir_cpo.php",
    "formulir_cppt.php",

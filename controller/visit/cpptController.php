@@ -1,30 +1,48 @@
 <?php
 include '../../database/connect.php';
+
+// 🔥 SESSION SAFE
+if (session_status() === PHP_SESSION_NONE) {
+   session_start();
+}
+
+header('Content-Type: application/json');
+
+$id_customer = $_SESSION['id_customer'] ?? null;
+
+if (!$id_customer) {
+   echo json_encode([
+      'status' => 'error',
+      'message' => 'Session tidak ditemukan'
+   ]);
+   exit;
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
+
 switch ($method) {
    case 'POST':
-      // 🔥 HANDLE VERIFY DULU
       if (isset($_GET['verify'])) {
-         verifyData($_GET['verify']);
+         verifyData($_GET['verify'], $id_customer);
          exit;
       }
-      createData();
+      createData($id_customer);
       break;
+
    case 'GET':
       if (isset($_GET['id'])) {
-         getID($_GET['id']);
+         getID($_GET['id'], $id_customer);
       } else {
-         getData();
+         getData($id_customer);
       }
       break;
+
    case 'PUT':
-      // Update User
-      updateData();
+      updateData($id_customer);
       break;
 
    case 'DELETE':
-      // Delete User
-      deleteData();
+      deleteData($id_customer);
       break;
 
    default:
@@ -35,20 +53,16 @@ switch ($method) {
       break;
 }
 
-// Function untuk Create
-function createData()
+// ================= CREATE =================
+function createData($id_customer)
 {
    global $koneksi;
 
    if (empty($_POST)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Data tidak ditemukan.'
-      ]);
+      echo json_encode(['status' => 'error', 'message' => 'Data tidak ditemukan.']);
       exit;
    }
 
-   // Ambil semua field yang valid untuk tabel visit_cppt
    $allowedFields = [
       'id_patient',
       'visit_ID',
@@ -63,8 +77,9 @@ function createData()
       'cppt_profesi'
    ];
 
-   $fields = ['cppt_number']; // tambahkan CPPT ID
-   $values = [generateDoctorNumber($koneksi)];
+   // 🔥 tambah id_customer
+   $fields = ['cppt_number', 'id_customer'];
+   $values = [generateDoctorNumber($koneksi), $id_customer];
 
    foreach ($allowedFields as $f) {
       if (isset($_POST[$f])) {
@@ -73,140 +88,100 @@ function createData()
       }
    }
 
-   if (empty($fields)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Tidak ada data yang dikirim.'
-      ]);
-      exit;
-   }
+   $placeholders = implode(',', array_fill(0, count($fields), '?'));
+   $columns = implode(',', $fields);
+   $types = str_repeat('s', count($fields));
 
-   // Buat placeholder dan tipe untuk prepared statement
-   $placeholders = implode(', ', array_fill(0, count($fields), '?'));
-   $columns = implode(', ', $fields);
-   $types = str_repeat('s', count($fields)); // semua string
+   $stmt = $koneksi->prepare("INSERT INTO visit_cppt ($columns) VALUES ($placeholders)");
 
-   $query = "INSERT INTO visit_cppt ($columns) VALUES ($placeholders)";
-
-   if ($stmt = $koneksi->prepare($query)) {
+   if ($stmt) {
       $stmt->bind_param($types, ...$values);
 
       if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil ditambahkan.'
-         ]);
+         echo json_encode(['status' => 'success', 'message' => 'Data berhasil ditambahkan.']);
       } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menambahkan data: ' . $stmt->error
-         ]);
+         echo json_encode(['status' => 'error', 'message' => $stmt->error]);
       }
 
       $stmt->close();
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query: ' . $koneksi->error
-      ]);
    }
 }
 
-/**
- * Generate resep_number unik dengan format DCT-XXXXXX
- */
+// ================= GENERATE NUMBER =================
 function generateDoctorNumber($koneksi)
 {
-   $count = 0; // inisialisasi supaya tidak merah
+   $count = 0;
    do {
-      $random = mt_rand(100000, 999999); // 6 digit angka
+      $random = mt_rand(100000, 999999);
       $doctorNumber = "DCT-" . $random;
 
-      // cek ke database apakah sudah ada
-      $check = $koneksi->prepare("SELECT COUNT(*) FROM visit_cppt WHERE cppt_number = ?");
+      $check = $koneksi->prepare("SELECT COUNT(*) FROM visit_cppt WHERE cppt_number=?");
       $check->bind_param("s", $doctorNumber);
       $check->execute();
       $check->bind_result($count);
       $check->fetch();
       $check->close();
-   } while ($count > 0); // ulang jika sudah ada
+   } while ($count > 0);
 
    return $doctorNumber;
 }
 
-function getData()
+// ================= READ =================
+function getData($id_customer)
 {
    global $koneksi;
-   // pastikan ada parameter "no" (nomor_visit)
-   $no = isset($_GET['no']) ? mysqli_real_escape_string($koneksi, $_GET['no']) : '';
-   $id_patient = isset($_GET['id_patient']) ? mysqli_real_escape_string($koneksi, $_GET['id_patient']) : '';
-   $query = "SELECT * FROM visit_cppt WHERE visit_ID = '$no' AND id_patient = '$id_patient'
-             ORDER BY cppt_date  ASC";
-   $result = mysqli_query($koneksi, $query);
 
-   if (!$result) {
-      http_response_code(500);
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal mengambil data: ' . mysqli_error($koneksi)
-      ]);
-      return;
-   }
+   $no = $_GET['no'] ?? '';
+   $id_patient = $_GET['id_patient'] ?? '';
 
-   // Ambil semua data dalam bentuk array asosiatif
-   $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
+   $stmt = $koneksi->prepare("
+      SELECT * FROM visit_cppt 
+      WHERE visit_ID=? AND id_patient=? AND id_customer=?
+      ORDER BY cppt_date ASC
+   ");
 
-   // Tutup hasil query
-   mysqli_free_result($result);
+   $stmt->bind_param("ssi", $no, $id_patient, $id_customer);
+   $stmt->execute();
 
-   // Kirimkan data dalam format JSON
-   header('Content-Type: application/json');
-   echo json_encode([
-      'status' => 'success',
-      'data' => $data,
-   ]);
+   $data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+   echo json_encode(['status' => 'success', 'data' => $data]);
+
+   $stmt->close();
 }
 
-// Function untuk Read User berdasarkan ID
-function  getID($iduser)
+// ================= GET BY ID =================
+function getID($id, $id_customer)
 {
    global $koneksi;
 
-   // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM visit_cppt   WHERE id_cppt = ?";
+   $stmt = $koneksi->prepare("
+      SELECT * FROM visit_cppt 
+      WHERE id_cppt=? AND id_customer=?
+   ");
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $iduser); // Bind parameter iduser
-      $stmt->execute();
-      $result = $stmt->get_result();
+   $stmt->bind_param("ii", $id, $id_customer);
+   $stmt->execute();
 
-      if ($result->num_rows > 0) {
-         $data = $result->fetch_assoc();
-         echo json_encode([
-            'status' => 'success',
-            'data' => $data
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Data tidak ditemukan.'
-         ]);
-      }
+   $res = $stmt->get_result();
 
-      $stmt->close();
+   if ($res->num_rows > 0) {
+      echo json_encode([
+         'status' => 'success',
+         'data' => $res->fetch_assoc()
+      ]);
    } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
+      echo json_encode(['status' => 'error', 'message' => 'Data tidak ditemukan.']);
    }
+
+   $stmt->close();
 }
 
-
-
-function updateData()
+// ================= UPDATE =================
+function updateData($id_customer)
 {
    global $koneksi;
+
    parse_str(file_get_contents("php://input"), $_PUT);
 
    if (empty($_PUT['id_cppt'])) {
@@ -215,6 +190,7 @@ function updateData()
    }
 
    $id = $_PUT['id_cppt'];
+
    $allowedFields = [
       'id_patient',
       'visit_ID',
@@ -228,6 +204,7 @@ function updateData()
       'users_entry',
       'cppt_profesi'
    ];
+
    $fields = [];
    $values = [];
 
@@ -239,109 +216,79 @@ function updateData()
    }
 
    if (empty($fields)) {
-      echo json_encode(['status' => 'error', 'message' => 'Tidak ada data diupdate.']);
+      echo json_encode(['status' => 'error', 'message' => 'Tidak ada perubahan']);
       return;
    }
 
    $values[] = $id;
-   $types = str_repeat('s', count($values) - 1) . "i";
+   $values[] = $id_customer;
 
-   $query = "UPDATE visit_cppt SET " . implode(',', $fields) . " WHERE id_cppt=?";
-   $stmt = $koneksi->prepare($query);
+   $types = str_repeat('s', count($values) - 2) . "ii";
+
+   $stmt = $koneksi->prepare("
+      UPDATE visit_cppt SET " . implode(',', $fields) . " 
+      WHERE id_cppt=? AND id_customer=?
+   ");
 
    if ($stmt) {
       $stmt->bind_param($types, ...$values);
-      if ($stmt->execute()) {
-         echo json_encode(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
-      } else {
-         echo json_encode(['status' => 'error', 'message' => 'Update gagal: ' . $stmt->error]);
-      }
-      $stmt->close();
-   } else {
-      echo json_encode(['status' => 'error', 'message' => 'Query error: ' . $koneksi->error]);
-   }
-}
-
-
-
-// Function untuk Delete User
-function deleteData()
-{
-   global $koneksi;
-
-   // Ambil ID user dari query parameter
-   $id = isset($_GET['id']) ? $_GET['id'] : '';
-
-   if (empty($id)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'ID tidak ditemukan.'
-      ]);
-      exit;
-   }
-
-   // Query untuk menghapus data user
-   $query = "DELETE FROM visit_cppt WHERE id_cppt = ?";
-
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $id);
 
       if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil dihapus.'
-         ]);
+         echo json_encode(['status' => 'success', 'message' => 'Data berhasil diupdate']);
       } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menghapus.'
-         ]);
+         echo json_encode(['status' => 'error', 'message' => $stmt->error]);
       }
 
       $stmt->close();
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
    }
 }
 
-function verifyData($id)
+// ================= DELETE =================
+function deleteData($id_customer)
 {
    global $koneksi;
 
-   if (empty($id)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'ID tidak ditemukan'
-      ]);
+   $id = $_GET['id'] ?? '';
+
+   if (!$id) {
+      echo json_encode(['status' => 'error', 'message' => 'ID kosong']);
       return;
    }
 
-   // 🔥 update status verifikasi
-   $query = "UPDATE visit_cppt SET verifikasi = 1 WHERE id_cppt = ?";
+   $stmt = $koneksi->prepare("
+      DELETE FROM visit_cppt 
+      WHERE id_cppt=? AND id_customer=?
+   ");
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("i", $id);
+   $stmt->bind_param("ii", $id, $id_customer);
 
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Berhasil diverifikasi'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal verifikasi: ' . $stmt->error
-         ]);
-      }
-
-      $stmt->close();
+   if ($stmt->execute()) {
+      echo json_encode(['status' => 'success']);
    } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Query error: ' . $koneksi->error
-      ]);
+      echo json_encode(['status' => 'error']);
    }
+
+   $stmt->close();
+}
+
+// ================= VERIFY =================
+function verifyData($id, $id_customer)
+{
+   global $koneksi;
+
+   $stmt = $koneksi->prepare("
+      UPDATE visit_cppt 
+      SET verifikasi=1 
+      WHERE id_cppt=? AND id_customer=?
+   ");
+
+   $stmt->bind_param("ii", $id, $id_customer);
+
+   if ($stmt->execute()) {
+      echo json_encode(['status' => 'success', 'message' => 'Berhasil diverifikasi']);
+   } else {
+      echo json_encode(['status' => 'error', 'message' => $stmt->error]);
+   }
+
+   $stmt->close();
 }

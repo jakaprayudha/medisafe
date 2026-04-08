@@ -290,7 +290,6 @@
 
                   <div class='dokmulti-title'>DOKUMENTASI PERAWATAN</div>
                   <div class='dokmulti-subtitle'>Semua Foto Dalam Perawatan</div>
-b
                   <div class="dokmulti-grid">${gridHTML}</div>
 
                   <div class="dokmulti-page-number">Page ${currentPage} / ${totalPages}</div>
@@ -333,11 +332,13 @@ b
                   </div>
 
                   <div class='dokmulti-sign'>
-                     <div class='dokmulti-sign-box'>
+                    <div class='dokmulti-sign-box'>
                         Pemegang Dokumen<br>
-                        <img class="dokmulti-sign-img" src="${baseURL}uploads/ttd/ttd_user.png">
+
+                        <img class="dokmulti-sign-img" 
+                              src="${d.signature_path ? baseURL + 'uploads/ttd/' + d.signature_path : baseURL + 'assets/img/no-sign.png'}">
                         <div class='dokmulti-sign-line'>${d.patient_name}</div>
-                     </div>
+                        </div>
 
                      <div class='dokmulti-sign-box'>
                         Petugas Klinik<br>

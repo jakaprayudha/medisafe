@@ -1,5 +1,5 @@
 <?php
-$title = 'Form SEP (Surat Eligibilitas Peserta)';
+$title = 'Form FKPP (Formulir Klaim Pelayanan Primer)';
 $no = $_GET['no'];
 $rm = $_GET['rm'];
 require '../../controller/view.php';
@@ -47,7 +47,7 @@ require '../../controller/view.php';
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
                 <div class="card-body p-4">
-                  <h4 class="mb-3">Form SEP (Surat Eligibilitas Peserta)</h4>
+                  <h4 class="mb-3">Form FKPP (Formulir Klaim Pelayanan Primer)</h4>
                   <!-- Data Pasien -->
                   <?php require 'card-pasien.php'; ?>
                   <div class="mb-3">
@@ -62,14 +62,16 @@ require '../../controller/view.php';
                         </div>
 
                         <div>
-                          <h6 class="fw-bold text-primary mb-2">PENJELASAN SEP & INTEGRASI BPJS</h6>
+                          <h6 class="fw-bold text-primary mb-2">PENJELASAN FKPP</h6>
 
                           <p class="mb-0" style="font-size: 0.9rem; color:#003366; line-height:1.55;">
-                            <strong>Surat Eligibilitas Peserta (SEP)</strong> adalah dokumen resmi yang
-                            digunakan untuk memvalidasi kepesertaan BPJS Kesehatan dalam setiap layanan medis.
-                            SEP memastikan bahwa peserta memiliki hak layanan sesuai ketentuan yang berlaku.
+                            <strong>Formulir Klaim Pelayanan Primer (FKPP)</strong> adalah dokumen yang digunakan oleh fasilitas kesehatan tingkat pertama (FKTP)
+                            untuk mengajukan klaim pelayanan kepada BPJS Kesehatan. FKPP berisi informasi pelayanan medis yang telah diberikan kepada pasien
+                            sebagai dasar proses verifikasi dan pembayaran klaim.
                             <br><br>
-                            Saat ini, proses unggah dokumen SEP digunakan untuk kebutuhan klaim sebelum adanya proses adanya <strong>Integrasi dengan BPJS Kesehatan</strong>. Apabila nantinya Faskes telah terintegrasi dengan BPJS Kesehatan, maka proses pembuatan SEP akan dilakukan secara otomatis melalui sistem kami, sehingga menghilangkan kebutuhan untuk mengunggah dokumen SEP secara manual.
+                            Saat ini, proses unggah dokumen FKPP masih dilakukan secara manual sebagai bagian dari mekanisme klaim sebelum adanya
+                            <strong>integrasi sistem dengan BPJS Kesehatan</strong>. Apabila fasilitas kesehatan telah terintegrasi, maka proses klaim akan
+                            dilakukan secara otomatis melalui sistem, sehingga tidak lagi memerlukan pengunggahan dokumen FKPP secara manual.
                           </p>
                         </div>
 
@@ -82,7 +84,7 @@ require '../../controller/view.php';
                       <iconify-icon icon="mdi:arrow-left"></iconify-icon>
                       Kembail
                     </button>
-                    <a href="module/admin/print/formulir_sep.php?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
+                    <a href="module/admin/print/formulir_fkpp.php?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
                       <button class="btn btn-outline-primary">
                         <iconify-icon icon="mdi:printer-outline"></iconify-icon>
                         Cetak
@@ -90,7 +92,7 @@ require '../../controller/view.php';
                     </a>
                     <button class="btn btn-primary" id="openModal">
                       <iconify-icon icon="mdi:upload-outline"></iconify-icon>
-                      Upload File SEP
+                      Upload File FKPP
                     </button>
                   </div>
                 </div>
@@ -118,24 +120,33 @@ require '../../controller/view.php';
     // ==========================================
     function loadSEP() {
 
-      fetch(`controller/sep/getSEP.php?no=${no}`)
+      fetch(`controller/sep/getFKPP.php?no=${no}`)
         .then(r => r.json())
         .then(res => {
 
-          if (res.status !== "success") return;
-
-          const sep = res.sep;
           const box = document.getElementById("sep_preview_box");
 
-          if (sep && sep.sep_file) {
+          if (res.status !== "success") {
+            box.innerHTML = `
+          <div class="alert alert-danger">
+            Gagal mengambil data FKPP
+          </div>
+        `;
+            return;
+          }
 
-            let fileURL = `uploads/sep/${sep.sep_file}`;
+          // 🔥 FIX DISINI
+          const sep = res.fkpp || {};
+
+          if (sep.fkpp_file && sep.fkpp_file !== "") {
+
+            let fileURL = `uploads/fkpp/${sep.fkpp_file}`;
 
             box.innerHTML = `
           <div class="alert alert-success d-flex justify-content-between align-items-center">
             <div>
-              <strong>File SEP sudah ada:</strong><br>
-              <small>${sep.sep_file}</small>
+              <strong>File FKPP sudah ada:</strong><br>
+              <small>${sep.fkpp_file}</small>
             </div>
 
             <div>
@@ -148,15 +159,25 @@ require '../../controller/view.php';
         `;
 
           } else {
+
             box.innerHTML = `
           <div class="alert alert-warning">
-            <strong>Belum ada file SEP.</strong>
+            <strong>Belum ada file FKPP.</strong>
           </div>
         `;
           }
+
+        })
+        .catch(err => {
+          console.error("FKPP ERROR:", err);
+
+          document.getElementById("sep_preview_box").innerHTML = `
+        <div class="alert alert-danger">
+          Error load FKPP
+        </div>
+      `;
         });
     }
-
     // MUAT DATA PERTAMA KALI
     loadSEP();
 
@@ -166,7 +187,7 @@ require '../../controller/view.php';
     // ==========================================
     document.getElementById("openModal").addEventListener("click", () => {
       Swal.fire({
-        title: "Upload File SEP",
+        title: "Upload File FKPP",
         html: `<input type="file" id="sep_input" class="form-control mb-3">`,
         showCancelButton: true,
         confirmButtonText: "Upload",
@@ -184,11 +205,11 @@ require '../../controller/view.php';
         let file = result.value;
 
         let form = new FormData();
-        form.append("sep_file", file);
+        form.append("fkpp_file", file);
         form.append("id_patient", rm);
         form.append("no_visit", no);
 
-        fetch("controller/sep/uploadSEP.php", {
+        fetch("controller/fkpp/uploadFKPP.php", {
             method: "POST",
             body: form
           })
