@@ -5,7 +5,8 @@ header("Content-Type: application/json");
 session_start();
 
 // 🔥 AMBIL SESSION
-$id_customer = $_SESSION['id_customer'] ?? null;
+// $id_customer = $_SESSION['id_customer'] ?? null;
+$id_customer = 19;
 
 if (!$id_customer) {
    echo json_encode([
@@ -29,39 +30,14 @@ if (!$no) {
 /* ================================================
    GET DATA TRIASE SAJA
 ================================================= */
-$stmt = $koneksi->prepare("
-   SELECT 
-      id_triase,
-      visit_ID,
-      tanggal_masuk,
-      jam_masuk,
-      keluhan_utama,
-
-      tekanan_darah,
-      nadi,
-      rr,
-      suhu,
-      spo2,
-
-      gcs_e,
-      gcs_v,
-      gcs_m,
-      gcs_total,
-
-      skala_nyeri,
-      triase,
-      referensi_triase,
-      catatan,
-
-      created_at,
-      updated_at
-   FROM pasien_triase
-   WHERE visit_ID = ?
-   ORDER BY id_triase DESC
+$stmt = $koneksi->prepare("SELECT * FROM pasien_triase LEFT JOIN pasien_visit ON pasien_triase.visit_ID = pasien_visit.visit_ID 
+LEFT JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa
+   WHERE pasien_visit.visit_ID = ? AND pasien_visit.id_customer = ?
+   ORDER BY pasien_triase.id_triase DESC
    LIMIT 1
 ");
 
-$stmt->bind_param("s", $no);
+$stmt->bind_param("ss", $no, $id_customer);
 $stmt->execute();
 
 $result = $stmt->get_result();
