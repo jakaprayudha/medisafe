@@ -33,12 +33,6 @@
         <a href="module/admin/cppt?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
            <button class="nav-link <?= ($current == 'cppt.php') ? 'active' : '' ?>">CPPT</button>
         </a>
-        <a href="module/admin/form_sep?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
-           <button class="nav-link <?= ($current == 'form_sep.php') ? 'active' : '' ?>">SEP</button>
-        </a>
-        <a href="module/admin/form_pernyataan?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
-           <button class="nav-link <?= ($current == 'form_pernyataan.php') ? 'active' : '' ?>">Pernyataan Peserta</button>
-        </a>
         <a href="module/admin/form_capture_patient?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
            <button class="nav-link <?= ($current == 'form_capture_patient.php') ? 'active' : '' ?>">Foto Pasien</button>
         </a>

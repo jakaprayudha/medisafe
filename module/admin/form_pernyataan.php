@@ -2,20 +2,6 @@
 $title = 'Pemeriksaan';
 require '../../controller/view.php';
 require '../../database/connect.php';
-require '../../controller/visit/assesmen.php';
-$no = $_GET['no'];
-$rm = $_GET['rm'];
-$check = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor WHERE visit_ID='$no' AND nomor_rm='$rm'");
-$data = mysqli_fetch_array($check);
-
-// Hitung usia jika data ditemukan
-if ($data) {
-  $tanggal_lahir = new DateTime($data['patient_datebirth']);
-  $tanggal_visit = new DateTime($data['visit_date']);
-
-  $usia = $tanggal_lahir->diff($tanggal_visit);
-}
-
 ?>
 <!doctype html>
 <html lang="en">
@@ -64,32 +50,7 @@ if ($data) {
                   <input type="hidden" name="nomor_visit" value="<?= $no ?>">
                   <h4 class="mb-3">Surat Pernyataan Peserta</h4>
                   <!-- Data Pasien -->
-                  <div class="row">
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="patient_name" class="form-label">Nama Pasien</label>
-                        <input type="text" value="<?= $data['patient_name'] ?>" id="patient_name" readonly name="patient_name" class="form-control bg-light">
-                      </div>
-                    </div>
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="patient_gender" class="form-label">Gender</label>
-                        <input type="text" value="<?= $data['patient_gender'] ?>" id="patient_gender" name="patient_gender" class="form-control bg-light" readonly>
-                      </div>
-                    </div>
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="usia" class="form-label">Usia</label>
-                        <input type="text" value="<?php echo  $usia->y . " tahun " . $usia->m . " bulan " . $usia->d . " hari"; ?>" id="usia" name="usia" class="form-control bg-light" readonly>
-                      </div>
-                    </div>
-                    <div class="col-3">
-                      <div class="mb-3">
-                        <label for="doctor_name" class="form-label">Dokter</label>
-                        <input type="text" value="<?= $data['doctor_name'] ?>" id="doctor_name" name="dokter" class="form-control bg-light" readonly>
-                      </div>
-                    </div>
-                  </div>
+                  <?php require 'card-pasien.php'; ?>
                   <div class="mb-3">
                     <div class="alert alert-danger border-2 shadow-sm" role="alert" style="background-color:#fff5f5; border-color:#dc3545;">
                       <div class="d-flex align-items-start">
