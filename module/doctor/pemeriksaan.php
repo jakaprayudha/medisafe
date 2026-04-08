@@ -119,140 +119,162 @@ $setting = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT rme_type FROM setti
 $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 ?>
 <script>
-  // Mengambil nilai API_URL dari PHP
+  let activeTab = 'belum'; // default tab
+
   const apiUrl = 'controller/doctor/registrasiController';
   var today = new Date().toISOString().split("T")[0];
   const doctorName = <?= json_encode($_SESSION['fullname'] ?? '') ?>;
+  const rmeType = '<?php echo $rme_type ?>';
+
   $("#fromDate").val(today);
   $("#toDate").val(today);
-  const rmeType = '<?php echo $rme_type ?>'; // ambil dari PHP
+
   $(document).ready(function() {
-    // Initialize DataTable
+
     var table = $('#zero_config').DataTable({
-      "processing": true,
-      "serverSide": false,
+      processing: true,
+      serverSide: false,
       scrollX: true,
-      "ajax": {
-        "url": apiUrl, // Ganti dengan URL API yang sesuai
-        "type": "GET",
+      ajax: {
+        url: apiUrl,
+        type: "GET",
         data: function(d) {
-          // kirim tanggal filter ke backend
           d.fromDate = $('#fromDate').val();
           d.toDate = $('#toDate').val();
           d.doctorName = doctorName;
+          d.tab = activeTab; // 🔥 kirim tab (opsional backend)
         },
-        "dataSrc": function(json) {
-          console.log(json.data); // 🔥 lihat isi asli
-          // Format data yang akan ditampilkan dalam tabel
-          return json.data.map(function(row, index) {
 
-            let statusClass = '';
-            let statusText = '';
+        dataSrc: function(json) {
 
-            if (row.visit_status == 0) {
-              statusClass = 'bg-danger';
-              statusText = 'Belum Dilayani';
-            } else if (row.visit_status == 1) {
-              statusClass = 'bg-warning text-dark';
-              statusText = 'Sedang Diperiksa';
-            } else if (row.visit_status == 4) {
-              statusClass = 'bg-success';
-              statusText = 'Selesai Dilayani';
-            } else {
-              statusClass = 'bg-secondary';
-              statusText = 'Unknown';
-            }
-            // pilih file tujuan sesuai rme_type
-            let pemeriksaanFile = (rmeType == 1) ? 'pemeriksaan_a' : 'pemeriksaan_b';
-            // ✅ Kondisi tampil tombol panggil
-            let callButton = '';
-            if (row.source_hub === 'Poliklinik') {
-              callButton = `
-              <button class="btn btn-sm btn-warning btn-call"
-                data-antrian="${row.visit_antrian}"
-                data-nama="${row.patient_name}"
-                data-poli="${row.poli_name}"
-                data-visit="${row.visit_ID}"
-                data-dokter="${row.id_doctor}"
-                title="Panggil Pasien">
-                <i class="ti ti-volume"></i>
-              </button>
-            `;
-            }
-            return {
-              "actions": `
+          return json.data
+
+            // 🔥 FILTER TAB DISINI
+            .filter(function(row) {
+              if (activeTab === 'belum') {
+                return row.visit_status == 0 || row.visit_status == 1;
+              } else if (activeTab === 'sudah') {
+                return row.visit_status == 4;
+              }
+              return true;
+            })
+
+            .map(function(row, index) {
+
+              let statusClass = '';
+              let statusText = '';
+
+              if (row.visit_status == 0) {
+                statusClass = 'bg-danger';
+                statusText = 'Belum Dilayani';
+              } else if (row.visit_status == 1) {
+                statusClass = 'bg-warning text-dark';
+                statusText = 'Sedang Diperiksa';
+              } else if (row.visit_status == 4) {
+                statusClass = 'bg-success';
+                statusText = 'Selesai Dilayani';
+              } else {
+                statusClass = 'bg-secondary';
+                statusText = 'Unknown';
+              }
+
+              let pemeriksaanFile = (rmeType == 1) ? 'pemeriksaan_a' : 'pemeriksaan_b';
+
+              let callButton = '';
+              if (row.source_hub === 'Poliklinik') {
+                callButton = `
+                  <button class="btn btn-sm btn-warning btn-call"
+                    data-antrian="${row.visit_antrian}"
+                    data-nama="${row.patient_name}"
+                    data-poli="${row.poli_name}"
+                    data-visit="${row.visit_ID}"
+                    data-dokter="${row.id_doctor}"
+                    title="Panggil Pasien">
+                    <i class="ti ti-volume"></i>
+                  </button>
+                `;
+              }
+
+              return {
+                actions: `
                   <div class="text-center">
-                  <!-- Pemeriksaan -->
-                  <a href="module/admin/${pemeriksaanFile}?no=${row.visit_ID}&rm=${row.nomor_rm}"
-                    class="btn btn-sm btn-primary"
-                    data-bs-toggle="tooltip"
-                    data-bs-placement="top"
-                    title="Pemeriksaan">
-                    <i class="ti ti-stethoscope"></i>
-                  </a>
-
-                  ${callButton}
+                    <a href="module/admin/${pemeriksaanFile}?no=${row.visit_ID}&rm=${row.nomor_rm}"
+                      class="btn btn-sm btn-primary"
+                      title="Pemeriksaan">
+                      <i class="ti ti-stethoscope"></i>
+                    </a>
+                    ${callButton}
                   </div>
-              `,
-              "tanggal": row.visit_date + ' ' + row.visit_time,
-              "antrian": row.visit_antrian,
-              "source_hub": row.source_hub,
-              "nomor_rm": row.nomor_rm,
-              "nama_pasien": row.patient_name,
-              "gender": row.patient_gender,
-              "jenis_bayar": row.provider_name,
-              "status_visit": `
-                 <span class="badge ${statusClass} d-block text-center">
-                  ${statusText}
-                </span>
-              `
-            };
-          });
+                `,
+                tanggal: row.visit_date + ' ' + row.visit_time,
+                antrian: row.visit_antrian,
+                source_hub: row.source_hub,
+                nomor_rm: row.nomor_rm,
+                nama_pasien: row.patient_name,
+                gender: row.patient_gender,
+                jenis_bayar: row.provider_name,
+                status_visit: `
+                  <span class="badge ${statusClass} d-block text-center">
+                    ${statusText}
+                  </span>
+                `
+              };
+            });
         }
       },
-      "columns": [{
-          "data": "actions"
-        }, {
-          "data": "tanggal"
-        },
-        {
-          "data": "antrian"
-        },
-        {
-          "data": "source_hub"
-        },
-        {
-          "data": "nomor_rm"
-        },
-        {
-          "data": "nama_pasien"
-        },
-        {
-          "data": "gender"
-        },
-        {
-          "data": "jenis_bayar"
-        },
-        {
-          "data": "status_visit"
-        }
 
+      columns: [{
+          data: "actions"
+        },
+        {
+          data: "tanggal"
+        },
+        {
+          data: "antrian"
+        },
+        {
+          data: "source_hub"
+        },
+        {
+          data: "nomor_rm"
+        },
+        {
+          data: "nama_pasien"
+        },
+        {
+          data: "gender"
+        },
+        {
+          data: "jenis_bayar"
+        },
+        {
+          data: "status_visit"
+        }
       ]
     });
 
-    // filter manual
+    // 🔥 TAB EVENT
+    $('#home-tab').on('click', function() {
+      activeTab = 'belum';
+      table.ajax.reload();
+    });
+
+    $('#profile-tab').on('click', function() {
+      activeTab = 'sudah';
+      table.ajax.reload();
+    });
+
+    // 🔍 FILTER
     $('#btnFilter').on('click', function() {
       table.ajax.reload();
     });
 
-    // reset filter ke today
+    // 🔄 RESET
     $('#btnReset').on('click', function() {
       $('#fromDate').val(today);
       $('#toDate').val(today);
       table.ajax.reload();
     });
-
-
 
   });
 </script>
@@ -313,6 +335,10 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
         }
       });
   }
+</script>
+
+<script>
+
 </script>
 
 </html>
