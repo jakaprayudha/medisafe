@@ -170,19 +170,37 @@ require '../../controller/view.php';
         dataSrc: function(json) {
           return json.data.map(function(row) {
             return {
-              "actions": `
-                      <div class="text-center">
-								<div class="btn-group btn-group-sm" role="group">
-								<a class="btn btn-info" 
-                  href="module/admin/permintaan_farmasi_details?no=${urlParams.get('no')}&rm=${nomorm}&rme=${rmeParam}&id=${row.id_permintaan_farmasi}">
-                  <i class="fas fa-pencil"></i>
-                </a>
-									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_permintaan_farmasi}">
-											<i class="fas fa-trash"></i>
-									</a>
-								</div>
-							</div>
-                    `,
+              "actions": (function() {
+
+                let btnDelete = '';
+
+                // ❌ kalau selesai → tidak ada delete
+                if (row.status_permintaan != 3) {
+                  btnDelete = `
+      <a class="btn btn-danger delete-btn" 
+         href="javascript:;" 
+         data-id="${row.id_permintaan_farmasi}">
+        <i class="fas fa-trash"></i>
+      </a>
+    `;
+                }
+
+                return `
+    <div class="text-center">
+      <div class="btn-group btn-group-sm" role="group">
+        
+        <a class="btn btn-info" 
+          href="module/admin/permintaan_farmasi_details?no=${urlParams.get('no')}&rm=${nomorm}&rme=${rmeParam}&id=${row.id_permintaan_farmasi}">
+          <i class="fas fa-pencil"></i>
+        </a>
+
+        ${btnDelete}
+
+      </div>
+    </div>
+  `;
+
+              })(),
               "timestamp": row.created_at ?? "-",
               "tipe_obat": row.tipe_obat ?? "-",
               "catatan": row.catatan_permintaan ?? "-",

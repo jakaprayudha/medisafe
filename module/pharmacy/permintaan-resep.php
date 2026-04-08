@@ -56,7 +56,6 @@ $apiUrl = getenv('API_URL');
                           <th scope="col" class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
-                          <th scope="col" class="text-dark fw-normal">TTL</th>
                           <th class="text-dark fw-normal">Dokter</th>
                           <th class="text-dark fw-normal">Poliklinik</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
@@ -86,7 +85,8 @@ $apiUrl = getenv('API_URL');
     // Initialize DataTable
     var table = $('#zero_config').DataTable({
       "processing": true,
-      "serverSide": true,
+      "serverSide": false,
+      scrollX: true,
       "ajax": {
         "url": apiUrl, // Ganti dengan URL API yang sesuai
         "type": "GET",
@@ -106,7 +106,6 @@ $apiUrl = getenv('API_URL');
               "nomor_rm": row.nomor_rm,
               "nama_pasien": row.patient_name_pcare,
               "gender": row.patient_gender,
-              "ttl": row.patient_place + '/' + row.patient_datebirth,
               "dokter": row.id_doctor,
               "layanan": row.id_poli,
               "status_visit": (function() {
@@ -152,9 +151,6 @@ $apiUrl = getenv('API_URL');
         },
         {
           "data": "gender"
-        },
-        {
-          "data": "ttl"
         },
         {
           "data": "dokter"

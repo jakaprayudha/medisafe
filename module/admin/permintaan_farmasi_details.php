@@ -260,18 +260,41 @@ require "../../controller/view.php";
         dataSrc: function(json) {
           return json.data.map(function(row) {
             return {
-              "actions": `
-                      <div class="text-center">
-								<div class="btn-group btn-group-sm" role="group">
-									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_pharmacy_details}">
-											<i class="fas fa-edit"></i>
-									</a>
-									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_pharmacy_details}">
-											<i class="fas fa-trash"></i>
-									</a>
-								</div>
-							</div>
-                    `,
+              "actions": (function() {
+
+                // ✅ kalau status selesai → tampil badge saja
+                if (row.status_permintaan == 3) {
+                  return `
+      <div class="text-center">
+        <span class="badge bg-success">
+          <i class="fas fa-check"></i> Approved
+        </span>
+      </div>
+    `;
+                }
+
+                // ✅ selain itu tampil tombol normal
+                return `
+    <div class="text-center">
+      <div class="btn-group btn-group-sm" role="group">
+
+        <a class="btn btn-warning edit-btn" 
+           href="javascript:;" 
+           data-id="${row.id_pharmacy_details}">
+          <i class="fas fa-edit"></i>
+        </a>
+
+        <a class="btn btn-danger delete-btn" 
+           href="javascript:;" 
+           data-id="${row.id_pharmacy_details}">
+          <i class="fas fa-trash"></i>
+        </a>
+
+      </div>
+    </div>
+  `;
+
+              })(),
               "nama": row.pharmacy_name_generic + '/' + row.pharmacy_name_trade ?? "-",
               "qty": row.qty ?? "-",
               "signa": row.signa ?? "-",
