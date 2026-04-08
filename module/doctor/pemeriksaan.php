@@ -130,7 +130,8 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
     // Initialize DataTable
     var table = $('#zero_config').DataTable({
       "processing": true,
-      "serverSide": true,
+      "serverSide": false,
+      scrollX: true,
       "ajax": {
         "url": apiUrl, // Ganti dengan URL API yang sesuai
         "type": "GET",
@@ -144,6 +145,23 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
           console.log(json.data); // 🔥 lihat isi asli
           // Format data yang akan ditampilkan dalam tabel
           return json.data.map(function(row, index) {
+
+            let statusClass = '';
+            let statusText = '';
+
+            if (row.visit_status == 0) {
+              statusClass = 'bg-danger';
+              statusText = 'Belum Dilayani';
+            } else if (row.visit_status == 1) {
+              statusClass = 'bg-warning text-dark';
+              statusText = 'Sedang Diperiksa';
+            } else if (row.visit_status == 4) {
+              statusClass = 'bg-success';
+              statusText = 'Selesai Dilayani';
+            } else {
+              statusClass = 'bg-secondary';
+              statusText = 'Unknown';
+            }
             // pilih file tujuan sesuai rme_type
             let pemeriksaanFile = (rmeType == 1) ? 'pemeriksaan_a' : 'pemeriksaan_b';
             // ✅ Kondisi tampil tombol panggil
@@ -184,8 +202,8 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
               "gender": row.patient_gender,
               "jenis_bayar": row.provider_name,
               "status_visit": `
-                <span class="badge ${row.visit_status == 4 ? 'bg-success' : 'bg-danger'} d-block text-center">
-                  ${row.visit_status == 4 ? 'Sudah Dilayani' : 'Belum Dilayani'}
+                 <span class="badge ${statusClass} d-block text-center">
+                  ${statusText}
                 </span>
               `
             };
