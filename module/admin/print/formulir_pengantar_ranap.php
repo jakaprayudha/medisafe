@@ -97,36 +97,38 @@
 
       /* ===== TTD ===== */
       .rinap-ttd-wrapper {
-  width: 100%;
-  margin-top: 40px;
-}
+         width: 100%;
+         margin-top: 40px;
+      }
 
-.rinap-ttd-kanan {
-  width: 220px;
-  margin-left: auto;     /* KUNCI: tetap di kanan */
-  text-align: center;
-}
+      .rinap-ttd-kanan {
+         width: 220px;
+         margin-left: auto;
+         /* KUNCI: tetap di kanan */
+         text-align: center;
+      }
 
-.rinap-ttd-title {
-  font-size: 11pt;
-  font-weight: bold;
-  margin-bottom: 6px;
-}
+      .rinap-ttd-title {
+         font-size: 11pt;
+         font-weight: bold;
+         margin-bottom: 6px;
+      }
 
-.rinap-ttd-img {
-  width: 90px;          /* TTD diperkecil */
-  height: auto;
-  margin: 4px auto;
-  display: block;
-}
+      .rinap-ttd-img {
+         width: 90px;
+         /* TTD diperkecil */
+         height: auto;
+         margin: 4px auto;
+         display: block;
+      }
 
-.rinap-ttd-box {
-  border-top: 1px solid #000;
-  margin-top: 6px;
-  padding-top: 4px;
-  font-size: 10pt;
-  font-weight: bold;
-}
+      .rinap-ttd-box {
+         border-top: 1px solid #000;
+         margin-top: 6px;
+         padding-top: 4px;
+         font-size: 10pt;
+         font-weight: bold;
+      }
    </style>
 
    <script>
@@ -140,13 +142,80 @@
 
          fetch(`getpasien.php?no=${no}&rm=${rm}`)
             .then(res => res.json())
-            .then(data => {
+            .then(res => {
 
-               if (!data) return;
+               const d = res.data || res; // 🔥 fleksibel
 
-               document.getElementById("rinap_nama").innerText = data.patient_name || "-";
-               document.getElementById("rinap_dokter").innerText = data.doctor_name || "-";
-               document.getElementById("rinap_dokter2").innerText = data.doctor_name || "-";
+               // ===============================
+               // NAMA
+               // ===============================
+               document.getElementById("rinap_nama").innerText =
+                  d.patient_name_pcare || d.patient_name || "-";
+
+               // ===============================
+               // DOKTER
+               // ===============================
+               document.getElementById("rinap_dokter").innerText =
+                  d.id_doctor || "-";
+
+               document.getElementById("rinap_dokter2").innerText =
+                  d.id_doctor || "-";
+
+               // ===============================
+               // UMUR (FIX EXCEL DATE BUG 🔥)
+               // ===============================
+               let umur = "-";
+
+               if (d.patient_datebirth) {
+
+                  let dob;
+
+                  // 🔥 kalau format excel number
+                  if (!isNaN(d.patient_datebirth)) {
+                     dob = new Date((d.patient_datebirth - 25569) * 86400 * 1000);
+                  } else {
+                     dob = new Date(d.patient_datebirth);
+                  }
+
+                  let today = new Date(d.visit_date || new Date());
+                  let diff = today - dob;
+
+                  let years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
+
+                  umur = years + " Tahun";
+               }
+
+               document.getElementById("rinap_umur").innerText = umur;
+
+               // ===============================
+               // DIAGNOSA (UTAMA + SEKUNDER)
+               // ===============================
+               let diagnosa = d.diagnosa || "-";
+
+               if (d.diagnosa_sekunder) {
+                  diagnosa += " + " + d.diagnosa_sekunder;
+               }
+
+               document.getElementById("rinap_diagnosa").innerText = diagnosa;
+
+               // ===============================
+               // INDIKASI (ambil dari anamnesa)
+               // ===============================
+               document.getElementById("rinap_indikasi").innerText =
+                  d.anamnesa || "-";
+
+               document.getElementById("kamar").innerText =
+                  d.room_name + " - " + d.bed_name || "-";
+
+               // ===============================
+               // TTD DOKTER
+               // ===============================
+               const ttd = document.getElementById("rinap_ttd");
+
+               if (d.signature_path) {
+                  ttd.src = `../../../uploads/ttd/${d.signature_path}`;
+               }
+
             });
       });
    </script>
@@ -173,25 +242,23 @@
             </tr>
             <tr>
                <td>Umur</td>
-               <td>: 29 Tahun</td>
+               <td>: <span id="rinap_umur">-</span></td>
             </tr>
             <tr>
                <td>Diagnosa</td>
-               <td>: R50.9 Fever, unspecified + O21 Excessive vomiting in pregnancy
-               </td>
+               <td>: <span id="rinap_diagnosa">-</span></td>
             </tr>
             <tr>
                <td>Indikasi Dirawat</td>
-               <td>: OS MENGELUHKAN DEMAM(+) LEMAS(+) PUSING(+)OYONG(+) MUAL(+) DAN MUNTAH(+)
-               </td>
+               <td>: <span id="rinap_indikasi">-</span></td>
             </tr>
             <tr>
                <td>Dirawat</td>
-               <td>: Kamar 01 B</td>
+               <td>: <span id="kamar">-</span></td>
             </tr>
             <tr>
                <td>Terapi</td>
-               <td>: IVFD RL 20 gtt/i, Injeksi Ranitidine 1amp/12jam, Drip Cyano 3cc (ekstra), Paracetamol 3x1, Cetirizine 1x1, Etabion 1x1</td>
+               <td>: <span id="terapi">-</span></td>
             </tr>
          </table>
 
@@ -200,18 +267,18 @@
          </p>
 
          <!-- ===== TTD (DALAM CONTAINER) ===== -->
-        <div class="rinap-ttd-wrapper">
-  <div class="rinap-ttd-kanan">
-    <p class="rinap-ttd-title">DOKTER MERAWAT</p>
-    <img src="../../../uploads/ttd/drdevi.png"
-         class="rinap-ttd-img"
-         alt="TTD Dokter">
+         <div class="rinap-ttd-wrapper">
+            <div class="rinap-ttd-kanan">
+               <p class="rinap-ttd-title">DOKTER MERAWAT</p>
+               <img src="../../../uploads/ttd/drdevi.png"
+                  class="rinap-ttd-img"
+                  alt="TTD Dokter">
 
-    <div class="rinap-ttd-box">
-      <span id="rinap_dokter2"></span>
-    </div>
-  </div>
-</div>
+               <div class="rinap-ttd-box">
+                  <span id="rinap_dokter2"></span>
+               </div>
+            </div>
+         </div>
 
       </div>
    </div>
