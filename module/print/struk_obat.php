@@ -6,8 +6,7 @@ $no = $_GET['no'];
 $rm = $_GET['rm'];
 $id = $_GET['id'];
 
-$checkklinik = mysqli_query($koneksi, "SELECT * FROM setting_clinic LIMIT 1");
-$dataklinik = mysqli_fetch_array($checkklinik);
+require '../admin/getdataclinic.php';
 
 $checkpasien = mysqli_query($koneksi, "SELECT * FROM pasien_visit 
    LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient
@@ -114,10 +113,10 @@ foreach ($checkobat as $obat) {
    <button class="print-btn" onclick="handlePrint()">🖨️ Cetak & Tutup</button>
 
    <div class="container">
-      <h2><?= $dataklinik['clinic_name'] ?></h2>
+      <h2><?= $datafaskes['clinic_name'] ?></h2>
       <div style="text-align:center; font-size: 9px;">
-         <?= $dataklinik['address'] ?><br>
-         Telp/Wa: <?= $dataklinik['phone_number'] ?>
+         <?= $datafaskes['faskes_address'] ?><br>
+         Telp/Wa: <?= $datafaskes['faskes_phone'] ?>
       </div>
 
       <div class="info">
