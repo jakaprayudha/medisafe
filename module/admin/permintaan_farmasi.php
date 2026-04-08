@@ -159,6 +159,7 @@ require '../../controller/view.php';
   const apiUrl = 'controller/visit/permintaanFarmasi?no=<?= $_GET['no'] ?>';
   const urlParams = new URLSearchParams(window.location.search);
   const rmeParam = urlParams.get('rme') || 'c'; // default kalau kosong
+  const nomorm = urlParams.get('rm') || 'c'; // default kalau kosong
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
@@ -174,7 +175,7 @@ require '../../controller/view.php';
                       <div class="text-center">
 								<div class="btn-group btn-group-sm" role="group">
 								<a class="btn btn-info" 
-                  href="module/admin/permintaan_farmasi_details?no=${urlParams.get('no')}&rm=${row.nomor_rm}&rme=${rmeParam}&id=${row.id_permintaan_farmasi}">
+                  href="module/admin/permintaan_farmasi_details?no=${urlParams.get('no')}&rm=${nomorm}&rme=${rmeParam}&id=${row.id_permintaan_farmasi}">
                   <i class="fas fa-pencil"></i>
                 </a>
 									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_permintaan_farmasi}">
@@ -187,7 +188,7 @@ require '../../controller/view.php';
               "timestamp": row.created_at ?? "-",
               "tipe_obat": row.tipe_obat ?? "-",
               "catatan": row.catatan_permintaan ?? "-",
-              "status_visit": (function() {
+              "status_permintaan": (function() {
                 let status = row.status_permintaan;
 
                 let badgeClass = '';
@@ -203,8 +204,8 @@ require '../../controller/view.php';
                   badgeClass = 'bg-success';
                   label = 'Selesai';
                 } else {
-                  badgeClass = 'bg-secondary';
-                  label = 'Unknown';
+                  badgeClass = 'bg-dark';
+                  label = 'Belum Dikirim';
                 }
 
                 return `<span class="badge ${badgeClass} d-block text-center">${label}</span>`;
@@ -226,7 +227,7 @@ require '../../controller/view.php';
           data: "catatan"
         },
         {
-          data: "status"
+          data: "status_permintaan"
         },
         {
           data: "actions",

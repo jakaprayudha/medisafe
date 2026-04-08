@@ -40,6 +40,87 @@ require "../../controller/view.php";
             include 'menu_rme_inap.php';
           }
           ?>
+          <div class="col-12">
+            <div class="card shadow-sm border-0 mb-4" style="border-radius:16px;">
+              <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h5 class="fw-bold mb-0">
+                    <i class="ti ti-ticket me-2 text-primary"></i>
+                    Tiket Order Farmasi
+                  </h5>
+                  <button id="btnKirim" class="btn btn-primary d-none">
+                    <i class="ti ti-send"></i> Kirim Obat
+                  </button>
+                </div>
+
+                <div class="row g-3">
+
+                  <div class="col-md-4">
+                    <div class="info-item">
+                      <i class="ti ti-hash"></i>
+                      <div>
+                        <div class="label">No Permintaan</div>
+                        <div class="value" id="permintaan_number">-</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-4">
+                    <div class="info-item">
+                      <i class="ti ti-calendar"></i>
+                      <div>
+                        <div class="label">Tanggal</div>
+                        <div class="value" id="created_at">-</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-4">
+                    <div class="info-item">
+                      <i class="ti ti-pill"></i>
+                      <div>
+                        <div class="label">Tipe Obat</div>
+                        <div class="value" id="tipe_obat">-</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-4">
+                    <div class="info-item">
+                      <i class="ti ti-flask"></i>
+                      <div>
+                        <div class="label">Racikan</div>
+                        <div class="value" id="racikan">-</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-4">
+                    <div class="info-item">
+                      <i class="ti ti-notes"></i>
+                      <div>
+                        <div class="label">Catatan</div>
+                        <div class="value" id="catatan">-</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-4">
+                    <div class="info-item">
+                      <i class="ti ti-check"></i>
+                      <div>
+                        <div class="label">Status Proses</div>
+                        <div class="value" id="status_obat">-</div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+            </div>
+          </div>
           <div class="row">
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
@@ -127,7 +208,7 @@ require "../../controller/view.php";
               <input type="number" id="qty" name="qty" class="form-control" required>
             </div>
           </div>
-          <div class="col-12">
+          <div class="col-12" id="group_signa">
             <div class="mb-3">
               <label class="form-label">Signa</label>
               <input type="text" id="signa" name="signa" class="form-control">
@@ -161,6 +242,7 @@ require "../../controller/view.php";
   });
 </script>
 <script>
+  let tipeObatGlobal = ''
   const apiUrl = 'controller/visit/permintaanFarmasiDetails?no=<?= $_GET['id'] ?>';
 
   $(document).ready(function() {
@@ -251,11 +333,15 @@ require "../../controller/view.php";
       table.search(this.value).draw();
     });
 
-    // 🔹 Tambah
     $('#btnTambah').on('click', function() {
-      $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
+      $('#programForm')[0].reset();
       $('#id_pharmacy_details').val('');
       $('#programModal .modal-title').text('Tambah Data');
+
+      setTimeout(() => {
+        handleSigna(); // 🔥 delay biar pasti dapet value
+      }, 100);
+
       $('#programModal').modal('show');
     });
 
@@ -290,6 +376,7 @@ require "../../controller/view.php";
         .then(res => res.json())
         .then(resp => {
           if (resp.status === 'success') {
+            handleSigna();
             let d = resp.data;
 
             // isi otomatis field biasa
@@ -335,6 +422,161 @@ require "../../controller/view.php";
       });
     });
   });
+</script>
+
+<script>
+  const getParam = (name) => {
+    const url = new URL(window.location.href);
+    return url.searchParams.get(name);
+  };
+
+  const idPermintaan = getParam('id');
+
+  fetch(`controller/farmasi/getPermintaanById.php?id=${idPermintaan}`)
+    .then(res => res.json())
+    .then(res => {
+
+      if (res.status !== 'success') return;
+
+      const d = res.data;
+
+      // =========================
+      // FORMAT TANGGAL
+      // =========================
+      let tgl = '-';
+      if (d.created_at) {
+        const date = new Date(d.created_at);
+        tgl = date.toLocaleString('id-ID');
+      }
+
+      // =========================
+      // RACIKAN (ANTI KOSONG)
+      // =========================
+      let racikan = '-';
+      if (d.rck_jumlah || d.rck_satuan || d.rck_signa) {
+        racikan = `${d.rck_jumlah || ''} ${d.rck_satuan || ''} ${d.rck_signa ? '(' + d.rck_signa + ')' : ''}`;
+      }
+
+      // =========================
+      // ISI DATA
+      // =========================
+      $('#permintaan_number').text(d.permintaan_number || '-');
+      $('#created_at').text(tgl);
+      $('#tipe_obat').text(d.tipe_obat || '-');
+      tipeObatGlobal = d.tipe_obat || '';
+      handleSigna();
+      $('#racikan').text(racikan);
+      $('#catatan').text(d.catatan_permintaan || '-');
+
+      // =========================
+      // STATUS (SINGLE SOURCE 🔥)
+      // =========================
+      let statusText = '';
+      let statusClass = '';
+
+      $('#btnKirim').addClass('d-none'); // default hide
+
+      if (d.status_permintaan == 0) {
+        statusText = 'Menunggu Kirim';
+        statusClass = 'bg-warning text-dark';
+
+        // tampilkan tombol kirim
+        $('#btnKirim').removeClass('d-none');
+
+      } else if (d.status_permintaan == 2) {
+        statusText = 'Sedang Diproses';
+        statusClass = 'bg-info';
+
+      } else if (d.status_permintaan == 3) {
+        statusText = 'Selesai';
+        statusClass = 'bg-success';
+
+      } else {
+        statusText = 'Unknown';
+        statusClass = 'bg-secondary';
+      }
+
+      // =========================
+      // RENDER STATUS
+      // =========================
+      $('#status_obat').html(`
+        <span class="badge ${statusClass}">
+          ${statusText}
+        </span>
+      `);
+
+      $('#statusBadge')
+        .removeClass()
+        .addClass(`badge ${statusClass}`)
+        .text(statusText);
+
+    });
+
+  // =========================
+  // ACTION TOMBOL KIRIM
+  // =========================
+  $('#btnKirim').on('click', function() {
+
+    Swal.fire({
+      title: 'Kirim obat?',
+      text: 'Pastikan data sudah benar',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, kirim',
+      cancelButtonText: 'Batal'
+    }).then((result) => {
+
+      if (result.isConfirmed) {
+
+        fetch('controller/farmasi/kirimObat.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              id: idPermintaan
+            })
+          })
+          .then(res => res.json())
+          .then(res => {
+
+            if (res.status === 'success') {
+              Swal.fire('Berhasil!', 'Obat berhasil dikirim', 'success')
+                .then(() => location.reload());
+            } else {
+              Swal.fire('Gagal!', res.message || 'Terjadi error', 'error');
+            }
+
+          });
+
+      }
+
+    });
+
+  });
+
+  function handleSigna() {
+
+    const tipe = (tipeObatGlobal || '').toLowerCase();
+
+    console.log('TIPE OBAT:', tipe); // debug penting
+
+    if (tipe === 'racikan') {
+
+      // 🔥 RACIKAN
+      $('#group_signa').hide();
+      $('#signa').val('-');
+
+    } else {
+
+      // 🔥 NON RACIKAN (INI YANG HARUS MASUK)
+      $('#group_signa').show();
+
+      if ($('#signa').val() === '-') {
+        $('#signa').val('');
+      }
+    }
+  }
 </script>
 
 </html>
