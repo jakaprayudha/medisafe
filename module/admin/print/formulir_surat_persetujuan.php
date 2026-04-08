@@ -94,7 +94,7 @@
       </table>
 
       <p>
-         Dengan ini menyatakan sesungguhnya telah memberikan persetujuan untuk dilakukan tindakan medis berupa <strong>Opname dan Pengobatan</strong>, terhadap diri saya (Anak), dengan
+         Dengan ini menyatakan sesungguhnya telah memberikan persetujuan/penolakan untuk dilakukan tindakan medis berupa <strong>Opname dan Pengobatan</strong>, terhadap diri saya (Anak), dengan
          <b><span id="sp_tindakan"></span></b>
       </p>
 

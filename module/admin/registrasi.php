@@ -704,6 +704,12 @@ require '../../controller/view.php';
                         </a>
                       </li>
 
+                         <li>
+                        <a class="dropdown-item" href="module/admin/form_fkpp?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                          <i class="fas fa-upload me-2 text-info"></i> Upload FKPP
+                        </a>
+                      </li>
+
                        
                        <li>
                         <a class="dropdown-item" href="module/admin/form_pernyataan?no=${row.visit_ID}&rm=${row.nomor_rm}">

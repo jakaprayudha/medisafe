@@ -290,7 +290,7 @@
 
                   <div class='dokmulti-title'>DOKUMENTASI PERAWATAN</div>
                   <div class='dokmulti-subtitle'>Semua Foto Dalam Perawatan</div>
-b
+
                   <div class="dokmulti-grid">${gridHTML}</div>
 
                   <div class="dokmulti-page-number">Page ${currentPage} / ${totalPages}</div>

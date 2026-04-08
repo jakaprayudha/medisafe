@@ -132,7 +132,7 @@
             if (!file) return showAlert("File fkpp tidak ditemukan.");
 
             const ext = file.split('.').pop().toLowerCase();
-            const path = "../../../uploads/dokumen/" + file;
+            const path = "../../../uploads/fkpp/" + file;
 
             // ================== PDF MODE ==================
             if (ext === "pdf") {
