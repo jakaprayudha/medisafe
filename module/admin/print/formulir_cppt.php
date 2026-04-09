@@ -112,7 +112,7 @@ require '../../../database/connect.php';
         <tr>
           <th width="15%">Tanggal / Jam</th>
           <th width="45%">Perkembangan (SOAP)</th>
-          <th width="25%">Diagnosa / Instruksi</th>
+          <th width="25%">Instruksi</th>
           <th width="15%">Paraf / Nama</th>
         </tr>
       </thead>
