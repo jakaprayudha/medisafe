@@ -1,6 +1,23 @@
+
 <?php
+session_start();
 include '../../database/connect.php';
+
+header('Content-Type: application/json');
+
+// ✅ ambil id_customer dari session
+$id_customer = $_SESSION['id_customer'] ?? null;
+
+if (!$id_customer) {
+   echo json_encode([
+      'status' => 'error',
+      'message' => 'Session id_customer tidak ditemukan'
+   ]);
+   exit;
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
+
 switch ($method) {
    case 'GET':
       if (isset($_GET['id'])) {
@@ -9,6 +26,7 @@ switch ($method) {
          getData();
       }
       break;
+
    default:
       echo json_encode([
          'status' => 'error',
@@ -17,16 +35,32 @@ switch ($method) {
       break;
 }
 
-
-
+// =======================
+// 🔹 GET DATA (by RM)
+// =======================
 function getData()
 {
-   global $koneksi;
-   // pastikan ada parameter "no" (nomor_visit)
+   global $koneksi, $id_customer;
+
    $rm = isset($_GET['rm']) ? mysqli_real_escape_string($koneksi, $_GET['rm']) : '';
-   $query = "SELECT * FROM pasien_visit LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient 
-             WHERE ms_patient.nomor_rm = '$rm'
-             ORDER BY pasien_visit.visit_date ASC";
+
+   if (!$rm) {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Parameter RM wajib diisi'
+      ]);
+      return;
+   }
+
+   $query = "SELECT * 
+   FROM pasien_visit 
+   LEFT JOIN ms_patient 
+      ON ms_patient.id_patient = pasien_visit.id_patient 
+   WHERE ms_patient.nomor_rm = '$rm'
+   AND pasien_visit.id_customer = '$id_customer'
+   AND ms_patient.id_customer = '$id_customer'
+   ORDER BY pasien_visit.visit_date ASC";
+
    $result = mysqli_query($koneksi, $query);
 
    if (!$result) {
@@ -38,38 +72,38 @@ function getData()
       return;
    }
 
-   // Ambil semua data dalam bentuk array asosiatif
    $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
-
-   // Tutup hasil query
    mysqli_free_result($result);
 
-   // Kirimkan data dalam format JSON
-   header('Content-Type: application/json');
    echo json_encode([
       'status' => 'success',
       'data' => $data,
    ]);
 }
 
-// Function untuk Read User berdasarkan ID
-function  getID($iduser)
+// =======================
+// 🔹 GET BY ID (billing)
+// =======================
+function getID($iduser)
 {
-   global $koneksi;
+   global $koneksi, $id_customer;
 
-   // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM pasien_billing    WHERE id_billing = ?";
+   $query = "SELECT * 
+   FROM pasien_billing 
+   WHERE id_billing = ? 
+   AND id_customer = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $iduser); // Bind parameter iduser
+
+      $stmt->bind_param("ss", $iduser, $id_customer);
       $stmt->execute();
+
       $result = $stmt->get_result();
 
       if ($result->num_rows > 0) {
-         $data = $result->fetch_assoc();
          echo json_encode([
             'status' => 'success',
-            'data' => $data
+            'data' => $result->fetch_assoc()
          ]);
       } else {
          echo json_encode([

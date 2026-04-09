@@ -48,9 +48,9 @@
         <!-- <a href="module/admin/form_usg?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
            <button class="nav-link <?= ($current == 'form_usg.php') ? 'active' : '' ?>">USG</button>
         </a> -->
-        <a href="module/admin/form_io_ranap?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+        <!-- <a href="module/admin/form_io_ranap?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
            <button class="nav-link <?= ($current == 'form_io_ranap.php') ? 'active' : '' ?>">Form Masuk Keluar Rawat Inap</button>
-        </a>
+        </a> -->
         <!-- <a href="module/admin/form_lbp?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
            <button class="nav-link <?= ($current == 'form_lbp.php') ? 'active' : '' ?>">LBP</button>
         </a> -->

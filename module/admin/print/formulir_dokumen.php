@@ -313,7 +313,7 @@
                   encodeURIComponent(verifyURL);
 
                page.innerHTML = `
-                  <div class="dokmulti-watermark">KLINIK TUTUN SEHATI</div>
+                  <div class="dokmulti-watermark">KLINIK</div>
                   <img class="dokmulti-qr-img" src="${qrURL}">
 
                   <div class='dokmulti-title'>DOKUMEN KEPENDUDUKAN</div>
