@@ -157,8 +157,8 @@ function createData()
 function getData()
 {
    global $koneksi;
-
-   $query = "SELECT * FROM permintaan_ranap rn LEFT JOIN ms_patient mp ON rn.id_patient = mp.id_patient LEFT JOIN pasien_visit pv ON rn.visit_ID_inpatient = pv.visit_ID WHERE rn.ranap_booking=0 ORDER BY rn.id_ranap DESC";
+   $id_customer = $_SESSION['id_customer'];
+   $query = "SELECT * FROM permintaan_ranap rn LEFT JOIN ms_patient mp ON rn.id_patient = mp.id_patient LEFT JOIN pasien_visit pv ON rn.visit_ID_inpatient = pv.visit_ID WHERE rn.ranap_booking=0 AND pv.id_customer = '$id_customer'  ORDER BY rn.id_ranap DESC";
    $result = mysqli_query($koneksi, $query);
 
    if (!$result) {
