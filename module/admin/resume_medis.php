@@ -106,13 +106,24 @@ $dataresume =  mysqli_fetch_array($checkvisit);
                     </div>
                     <?php
                     $terapi = '';
-                    $gettiket = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy WHERE id_visit='$no' AND status_obat_pulang=0");
-                    while ($tiket = mysqli_fetch_assoc($gettiket)) {
-                      $idvisit = $tiket['id_permintaan_farmasi'];
-                      $getobat = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy_details INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy_details.id_pharmacy WHERE id_permintaan_farmasi='$idvisit'");
-                      while ($obat = mysqli_fetch_assoc($getobat)) {
-                        $terapi .= "- {$obat['pharmacy_name_generic']} {$obat['qty']} {$obat['signa']}\n";
-                      }
+
+                    // 🔥 langsung join semua (tidak perlu looping 2x)
+                    $query = mysqli_query($koneksi, "
+   SELECT 
+      mp.pharmacy_name_generic,
+      pd.qty,
+      pd.signa
+   FROM permintaan_pharmacy pp
+   JOIN permintaan_pharmacy_details pd 
+      ON pd.id_permintaan_farmasi = pp.id_permintaan_farmasi
+   JOIN ms_pharmacy mp 
+      ON mp.id_pharmacy = pd.id_pharmacy
+   WHERE pp.id_visit = '$no'
+   AND pp.status_obat_pulang = 0
+");
+
+                    while ($obat = mysqli_fetch_assoc($query)) {
+                      $terapi .= "- {$obat['pharmacy_name_generic']} {$obat['qty']} {$obat['signa']}\n";
                     }
                     ?>
                     <div class="col-6 mb-3">
@@ -317,9 +328,9 @@ $dataresume =  mysqli_fetch_array($checkvisit);
       .join(',');
 
     const diagnosaMasuk = document.getElementById("diagnosa_masuk")?.value ?? "";
-    const diagnosaText = diagUtamaText || diagSekunderText
-      ? `${diagUtamaText}${diagSekunderText ? ' | ' + diagSekunderText : ''}`
-      : diagnosaMasuk;
+    const diagnosaText = diagUtamaText || diagSekunderText ?
+      `${diagUtamaText}${diagSekunderText ? ' | ' + diagSekunderText : ''}` :
+      diagnosaMasuk;
 
     let data = {
       visit_ID: "<?= $_GET['no'] ?>",
