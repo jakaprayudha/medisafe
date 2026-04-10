@@ -307,13 +307,13 @@ $totalKeseluruhan = $totalObat + $totalBilling;
             <div class="col-6">
               <div class="mb-3">
                 <label class="form-label">Uang Diterima</label>
-                <input type="text" id="uang_diterima" class="form-control">
+                <input type="text" id="uang_diterima" name="uang_diterima" class="form-control">
               </div>
             </div>
             <div class="col-6">
               <div class="mb-3">
                 <label class="form-label">Kembalian</label>
-                <input type="text" id="kembalian" class="form-control bg-light" readonly>
+                <input type="text" id="kembalian" name="kembalian" class="form-control bg-light" readonly>
               </div>
             </div>
           </div>
@@ -600,7 +600,10 @@ $totalKeseluruhan = $totalObat + $totalBilling;
 
     const id_visit = document.getElementById("nomor_visit").value;
     const metode = document.getElementById("metode_bayar").value;
-    const nomor = document.getElementById("nomor_transaksi").value;
+    const total = document.getElementById("total").value;
+    const bayar = document.getElementById("uang_diterima").value;
+    const kembalian = document.getElementById("kembalian").value;
+
 
     Swal.fire({
       title: "Konfirmasi Pembayaran?",
@@ -621,7 +624,9 @@ $totalKeseluruhan = $totalObat + $totalBilling;
             body: JSON.stringify({
               id_visit: id_visit,
               metode_bayar: metode,
-              nomor_transaksi: nomor
+              total: total,
+              bayar: bayar,
+              kembalian: kembalian
             })
           })
           .then(res => res.json())
