@@ -16,7 +16,7 @@ if (!$id_customer || !$no) {
 $stmt = $koneksi->prepare("SELECT 
       v.visit_ID,
       v.visit_status,
-      p.patient_name,
+      v.patient_name_pcare,
       p.nomor_rm,
       p.patient_gender,
       pr.provider_name,
@@ -32,7 +32,7 @@ $stmt = $koneksi->prepare("SELECT
    WHERE v.visit_ID=? AND v.id_customer=?
 ");
 
-$stmt->bind_param("ii", $no, $id_customer);
+$stmt->bind_param("ss", $no, $id_customer);
 $stmt->execute();
 
 $data = $stmt->get_result()->fetch_assoc();

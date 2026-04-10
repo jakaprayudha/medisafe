@@ -34,6 +34,17 @@ switch ($method) {
 function createData()
 {
    global $koneksi;
+   session_start(); // 🔥 WAJIB
+
+   $id_customer = $_SESSION['id_customer'] ?? null;
+
+   if (!$id_customer) {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Session id_customer tidak ditemukan'
+      ]);
+      exit;
+   }
 
    if (empty($_POST)) {
       echo json_encode([
@@ -43,7 +54,6 @@ function createData()
       exit;
    }
 
-   // Ambil semua field yang valid untuk tabel pasien_billing
    $allowedFields = [
       'id_visit',
       'billing_item',
@@ -54,8 +64,9 @@ function createData()
       'billing_notes'
    ];
 
-   $fields = ['billing_number']; // tambahkan billing_number
-   $values = [generateDoctorNumber($koneksi)];
+   // 🔥 TAMBAH id_customer
+   $fields = ['billing_number', 'id_customer'];
+   $values = [generateDoctorNumber($koneksi), $id_customer];
 
    foreach ($allowedFields as $f) {
       if (isset($_POST[$f])) {
@@ -64,18 +75,9 @@ function createData()
       }
    }
 
-   if (empty($fields)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Tidak ada data yang dikirim.'
-      ]);
-      exit;
-   }
-
-   // Buat placeholder dan tipe untuk prepared statement
    $placeholders = implode(', ', array_fill(0, count($fields), '?'));
    $columns = implode(', ', $fields);
-   $types = str_repeat('s', count($fields)); // semua string
+   $types = str_repeat('s', count($fields));
 
    $query = "INSERT INTO pasien_billing ($columns) VALUES ($placeholders)";
 
@@ -102,7 +104,6 @@ function createData()
       ]);
    }
 }
-
 /**
  * Generate billing_number unik dengan format DCT-XXXXXX
  */
@@ -128,11 +129,15 @@ function generateDoctorNumber($koneksi)
 function getData()
 {
    global $koneksi;
+   session_start(); // 🔥 WAJIB
+   $id_customer = $_SESSION['id_customer'] ?? null;
+
    // pastikan ada parameter "no" (nomor_visit)
    $no = isset($_GET['no']) ? mysqli_real_escape_string($koneksi, $_GET['no']) : '';
    $query = "SELECT * FROM pasien_billing
-             WHERE id_visit = '$no'
-             ORDER BY id_billing ASC";
+          WHERE id_visit = '$no'
+          AND id_customer = '$id_customer'
+          ORDER BY id_billing ASC";
    $result = mysqli_query($koneksi, $query);
 
    if (!$result) {
@@ -198,6 +203,15 @@ function  getID($iduser)
 function updateData()
 {
    global $koneksi;
+   session_start(); // 🔥 WAJIB
+
+   $id_customer = $_SESSION['id_customer'] ?? null;
+
+   if (!$id_customer) {
+      echo json_encode(['status' => 'error', 'message' => 'Session tidak ditemukan']);
+      return;
+   }
+
    parse_str(file_get_contents("php://input"), $_PUT);
 
    if (empty($_PUT['id_billing'])) {
@@ -206,6 +220,7 @@ function updateData()
    }
 
    $id = $_PUT['id_billing'];
+
    $allowedFields = [
       'id_visit',
       'billing_item',
@@ -215,6 +230,7 @@ function updateData()
       'billing_category',
       'billing_notes'
    ];
+
    $fields = [];
    $values = [];
 
@@ -230,34 +246,52 @@ function updateData()
       return;
    }
 
+   // 🔥 TAMBAH id_billing & id_customer
    $values[] = $id;
-   $types = str_repeat('s', count($values) - 1) . "i";
+   $values[] = $id_customer;
 
-   $query = "UPDATE pasien_billing SET " . implode(',', $fields) . " WHERE id_billing=?";
+   // 🔥 TYPES: semua string + id (int) + id_customer (string)
+   $types = str_repeat('s', count($values) - 2) . "is";
+
+   $query = "UPDATE pasien_billing 
+             SET " . implode(',', $fields) . " 
+             WHERE id_billing=? AND id_customer=?";
+
    $stmt = $koneksi->prepare($query);
 
    if ($stmt) {
       $stmt->bind_param($types, ...$values);
+
       if ($stmt->execute()) {
-         echo json_encode(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
+         echo json_encode([
+            'status' => 'success',
+            'message' => 'Data berhasil diperbarui.'
+         ]);
       } else {
-         echo json_encode(['status' => 'error', 'message' => 'Update gagal: ' . $stmt->error]);
+         echo json_encode([
+            'status' => 'error',
+            'message' => 'Update gagal: ' . $stmt->error
+         ]);
       }
+
       $stmt->close();
    } else {
-      echo json_encode(['status' => 'error', 'message' => 'Query error: ' . $koneksi->error]);
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Query error: ' . $koneksi->error
+      ]);
    }
 }
-
 
 
 // Function untuk Delete User
 function deleteData()
 {
    global $koneksi;
-
+   session_start(); // 🔥 WAJIB
    // Ambil ID user dari query parameter
    $id = isset($_GET['id']) ? $_GET['id'] : '';
+   $id_customer = $_SESSION['id_customer'] ?? null;
 
    if (empty($id)) {
       echo json_encode([
@@ -268,10 +302,10 @@ function deleteData()
    }
 
    // Query untuk menghapus data user
-   $query = "DELETE FROM pasien_billing WHERE id_billing = ?";
+   $query = "DELETE FROM pasien_billing WHERE id_billing = ? AND id_customer = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $id);
+      $stmt->bind_param("ss", $id, $id_customer);
 
       if ($stmt->execute()) {
          echo json_encode([
