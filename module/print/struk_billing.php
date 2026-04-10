@@ -1,18 +1,32 @@
 <?php
 session_start();
 require '../../database/connect.php';
+$id_customer = $_SESSION['id_customer'];
 $no = $_GET['no'];
 require '../admin/getdataclinic.php';
 $pasien = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM pasien_visit 
     JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient 
     WHERE pasien_visit.visit_ID='$no'"));
 
+$obat = mysqli_query($koneksi, "
+  SELECT 
+    mp.id_pharmacy,
+    mp.pharmacy_name_generic,
+    mp.pharmacy_name_trade,
+    SUM(pd.qty) as total_qty,
+    pd.harga,
+    SUM(pd.qty * pd.harga) as total_harga
+  FROM permintaan_pharmacy_details pd
+  INNER JOIN permintaan_pharmacy p 
+    ON p.id_permintaan_farmasi = pd.id_permintaan_farmasi
+  INNER JOIN ms_pharmacy mp 
+    ON mp.id_pharmacy = pd.id_pharmacy
+  WHERE p.id_visit = '$no'
+  AND p.id_customer = '$id_customer'
+  GROUP BY mp.id_pharmacy, pd.harga
+");
 
-$checkid = mysqli_query($koneksi, "SELECT id_permintaan_farmasi FROM permintaan_pharmacy WHERE id_visit='$no'");
-$idfarmasi = mysqli_fetch_array($checkid)['id_permintaan_farmasi'];
-
-$obat = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy_details INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy_details.id_pharmacy WHERE permintaan_pharmacy_details.id_permintaan_farmasi='$idfarmasi' ");
-$billing = mysqli_query($koneksi, "SELECT * FROM pasien_billing WHERE id_visit='$no' ");
+$billing = mysqli_query($koneksi, "SELECT * FROM pasien_billing WHERE id_visit='$no' AND id_customer='$id_customer' ");
 
 // Hitung total
 $total = 0;
@@ -150,21 +164,19 @@ $total = 0;
                </tr>
             </thead>
             <tbody>
-               <?php $i = 1; ?>
                <?php while ($row = mysqli_fetch_assoc($obat)) :
-                  $sub = $row['harga'] * $row['qty'];
+                  $sub = $row['total_qty'] * $row['harga'];
                   $total += $sub;
                ?>
                   <tr>
                      <td><?= $i++ ?></td>
                      <td><?= $row['pharmacy_name_generic'] ?>/ <?= $row['pharmacy_name_trade'] ?>(Obat)</td>
-                     <td><?= $row['qty'] ?></td>
+                     <td><?= $row['total_qty'] ?></td>
                      <td class="right"><?= number_format($row['harga']) ?></td>
                      <td class="right">0</td>
                      <td class="right"><?= number_format($sub) ?></td>
                   </tr>
                <?php endwhile; ?>
-
                <?php while ($row = mysqli_fetch_assoc($billing)) :
                   $sub = ($row['billing_qty'] * $row['billing_price']) - $row['billing_discount'];
                   $total += $sub;

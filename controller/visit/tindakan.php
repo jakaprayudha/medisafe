@@ -1,35 +1,40 @@
 <?php
-// Sertakan file koneksi database
 include '../../database/connect.php';
+session_start();
 
-// Mengambil method request
+header('Content-Type: application/json');
+
+// Ambil id_customer dari session
+$id_customer = "19";
+
+if (!$id_customer) {
+   echo json_encode([
+      'status' => 'error',
+      'message' => 'Session id_customer tidak ditemukan'
+   ]);
+   exit;
+}
+
+// Ambil method
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Handle request berdasarkan method (POST, GET, PUT, DELETE)
 switch ($method) {
    case 'POST':
-      // Create User
-      createTarif();
+      createTarif($id_customer);
       break;
    case 'GET':
       if (isset($_GET['id'])) {
-         // Jika iduser ada di parameter, ambil data user berdasarkan iduser
-         getTarifID($_GET['id']);
+         getTarifID($_GET['id'], $id_customer);
       } else {
-         // Jika tidak ada iduser, ambil semua data user
-         getTarif();
+         getTarif($id_customer);
       }
       break;
    case 'PUT':
-      // Update User
-      updateFarmasi();
+      updateFarmasi($id_customer);
       break;
-
    case 'DELETE':
-      // Delete User
-      deleteTarif();
+      deleteTarif($id_customer);
       break;
-
    default:
       echo json_encode([
          'status' => 'error',
@@ -38,24 +43,24 @@ switch ($method) {
       break;
 }
 
-// Function untuk Create User
-function createTarif()
+/* ================= CREATE ================= */
+function createTarif($id_customer)
 {
    global $koneksi;
 
-   // Ambil data dari request body
-   $nomor_rm = $_POST['nomor_rm'] ?? '';
-   $nomor_visit = $_POST['nomor_visit'] ?? '';
-   $checkvisit = mysqli_query($koneksi, "SELECT * FROM pasien_visit WHERE nomor_rm='$nomor_rm' AND nomor_visit='$nomor_visit'");
-   $datavisit = mysqli_fetch_array($checkvisit);
-   $item = $_POST['item'] ?? '';
-   $checkharga = mysqli_query($koneksi, "SELECT * FROM ms_tarif WHERE nama_tarif='$item'");
-   $dataharga = mysqli_fetch_array($checkharga);
-   $hargaitem = $dataharga['tarif'];
-   $kategori = $dataharga['keterangan'];
-   $diskon = $_POST['diskon'] ?? '';
-   $jumlah = $_POST['qty'] ?? '';
-   $catatan = $_POST['catatan'] ?? '';
+   $nomor_rm     = $_POST['nomor_rm'] ?? '';
+   $nomor_visit  = $_POST['nomor_visit'] ?? '';
+   $item         = $_POST['item'] ?? '';
+   $diskon       = $_POST['diskon'] ?? 0;
+   $jumlah       = $_POST['qty'] ?? 0;
+   $catatan      = $_POST['catatan'] ?? '';
+   $kategori      = $_POST['kategori'] ?? '';
+
+   // Ambil harga
+   $checkharga = mysqli_query($koneksi, "SELECT * FROM ms_tarif WHERE tarif_name='$item' AND id_customer='$id_customer'");
+   $dataharga  = mysqli_fetch_array($checkharga);
+
+   $hargaitem = $dataharga['tarif_amount'] ?? 0;
 
    if (empty($item)) {
       echo json_encode([
@@ -65,206 +70,171 @@ function createTarif()
       exit;
    }
 
+   $query = "INSERT INTO pasien_billing 
+      (id_customer, id_visit, billing_item, billing_price, billing_qty, billing_discount, billing_category, billing_notes) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-   // Query insert data
-   $query = "INSERT INTO pasien_billing (nomor_rm, nomor_visit, item, harga, qty, diskon, kategori_item, catatan_billing) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("sssiiiss", $nomor_rm, $nomor_visit, $item, $hargaitem, $jumlah, $diskon, $kategori, $catatan);
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil ditambahkan.'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menambahkan data.'
-         ]);
-      }
-      $stmt->close();
+   $stmt = $koneksi->prepare($query);
+   $stmt->bind_param(
+      "isssssss",
+      $id_customer,
+      $nomor_visit,
+      $item,
+      $hargaitem,
+      $jumlah,
+      $diskon,
+      $kategori,
+      $catatan
+   );
+
+   if ($stmt->execute()) {
+      echo json_encode([
+         'status' => 'success',
+         'message' => 'Data berhasil ditambahkan.'
+      ]);
    } else {
       echo json_encode([
          'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
+         'message' => 'Gagal insert'
       ]);
    }
 }
 
-// Function untuk Read User
-function getTarif()
+/* ================= READ ================= */
+function getTarif($id_customer)
 {
    global $koneksi;
 
-   // Ambil parameter pagination dan pencarian dari request
-   $start = isset($_GET['start']) ? (int)$_GET['start'] : 0;
-   $length = isset($_GET['length']) ? (int)$_GET['length'] : 10;
-   $search = isset($_GET['search']['value']) ? $_GET['search']['value'] : '';
+   $start  = $_GET['start'] ?? 0;
+   $length = $_GET['length'] ?? 10;
+   $search = $_GET['search']['value'] ?? '';
+   $no     = $_GET['no'] ?? '';
 
-   // Ambil parameter nomor_rm dan nomor_visit
-   $no = isset($_GET['no']) ? $_GET['no'] : '';
-
-   // Base query
-   $query = "SELECT * FROM pasien_billing WHERE 1=1";
+   $query = "SELECT * FROM pasien_billing WHERE id_customer='$id_customer'";
 
    if (!empty($no)) {
-      $query .= " AND id_visit = '" . mysqli_real_escape_string($koneksi, $no) . "'";
+      $query .= " AND id_visit='$no'";
    }
 
-   // Tambahkan filter pencarian jika ada
    if (!empty($search)) {
-      $query .= " AND item LIKE '%" . mysqli_real_escape_string($koneksi, $search) . "%'";
+      $query .= " AND billing_item LIKE '%$search%'";
    }
 
-   // Hitung total records (tanpa limit)
-   $totalQuery = "SELECT COUNT(*) AS total FROM ($query) AS filtered";
+   $totalQuery  = "SELECT COUNT(*) as total FROM ($query) as x";
    $totalResult = mysqli_query($koneksi, $totalQuery);
-   $totalData = mysqli_fetch_assoc($totalResult);
-   $totalRecords = $totalData['total'];
+   $totalData   = mysqli_fetch_assoc($totalResult);
 
-   // Tambahkan limit untuk pagination
    $query .= " LIMIT $start, $length";
    $result = mysqli_query($koneksi, $query);
-
-   if (!$result) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal mengambil data: ' . mysqli_error($koneksi)
-      ]);
-      exit;
-   }
 
    $data = [];
    while ($row = mysqli_fetch_assoc($result)) {
       $data[] = $row;
    }
 
-   header('Content-Type: application/json');
    echo json_encode([
       'status' => 'success',
       'data' => $data,
-      'recordsTotal' => $totalRecords,
-      'recordsFiltered' => $totalRecords
+      'recordsTotal' => $totalData['total'],
+      'recordsFiltered' => $totalData['total']
    ]);
 }
-// Function untuk Read User berdasarkan ID
-function getTarifID($iduser)
+
+/* ================= READ BY ID ================= */
+function getTarifID($id, $id_customer)
 {
    global $koneksi;
 
-   // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM pasien_billing WHERE id = ?";
+   $query = "SELECT * FROM pasien_billing WHERE id_billing=? AND id_customer=?";
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $iduser); // Bind parameter iduser
-      $stmt->execute();
-      $result = $stmt->get_result();
+   $stmt = $koneksi->prepare($query);
+   $stmt->bind_param("ss", $id, $id_customer);
+   $stmt->execute();
 
-      if ($result->num_rows > 0) {
-         $user = $result->fetch_assoc();
-         echo json_encode([
-            'status' => 'success',
-            'user' => $user
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Data tidak ditemukan.'
-         ]);
-      }
+   $result = $stmt->get_result();
 
-      $stmt->close();
+   if ($result->num_rows > 0) {
+      echo json_encode([
+         'status' => 'success',
+         'user' => $result->fetch_assoc() // 🔥 tetap user karena frontend pakai ini
+      ]);
    } else {
       echo json_encode([
          'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
+         'message' => 'Data tidak ditemukan'
       ]);
    }
 }
 
-// Function untuk Update User
-function updateFarmasi()
+/* ================= UPDATE ================= */
+function updateFarmasi($id_customer)
 {
    global $koneksi;
 
-   // Ambil data dari request body
    parse_str(file_get_contents("php://input"), $_PUT);
-   $id = isset($_PUT['iduser']) ? $_PUT['iduser'] : '';
-   $diskon = isset($_PUT['diskon']) ? $_PUT['diskon'] : '';
 
-   // Debugging input data
-   if (empty($diskon) || empty($id)) {
+   $id     = $_PUT['iduser'] ?? '';
+   $diskon = $_PUT['diskon'] ?? '';
+   $jumlah = $_PUT['jumlah'] ?? '';
+
+   if (!$id || !$diskon || !$jumlah) {
       echo json_encode([
          'status' => 'error',
-         'message' => 'ID dan Diskon Item harus diisi.'
+         'message' => 'ID dan diskon dan Jumlah wajib diisi'
       ]);
       exit;
    }
 
-   // Query untuk update data user
-   $query = "UPDATE pasien_billing SET diskon = ? WHERE id = ?";
+   $query = "UPDATE pasien_billing 
+             SET billing_discount=?, billing_price=? 
+             WHERE id_billing=? AND id_customer=?";
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("ii", $diskon, $id);
-      if ($stmt->execute()) {
-         header('Content-Type: application/json');
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil diperbarui.'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal memperbarui data.'
-         ]);
-      }
-      $stmt->close();
+   $stmt = $koneksi->prepare($query);
+   $stmt->bind_param("iiss", $diskon, $jumlah, $id, $id_customer);
+
+   if ($stmt->execute()) {
+      echo json_encode([
+         'status' => 'success',
+         'message' => 'Update berhasil'
+      ]);
    } else {
       echo json_encode([
          'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
+         'message' => 'Gagal update'
       ]);
    }
 }
 
-// Function untuk Delete User
-function deleteTarif()
+/* ================= DELETE ================= */
+function deleteTarif($id_customer)
 {
    global $koneksi;
 
-   // Ambil ID user dari query parameter
-   $id = isset($_GET['id']) ? $_GET['id'] : '';
+   $id = $_GET['id'] ?? '';
 
-   if (empty($id)) {
+   if (!$id) {
       echo json_encode([
          'status' => 'error',
-         'message' => 'ID tidak ditemukan.'
+         'message' => 'ID kosong'
       ]);
       exit;
    }
 
-   // Query untuk menghapus data user
-   $query = "DELETE FROM pasien_billing WHERE id = ?";
+   $query = "DELETE FROM pasien_billing 
+             WHERE id_billing=? AND id_customer=?";
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $id);
+   $stmt = $koneksi->prepare($query);
+   $stmt->bind_param("ss", $id, $id_customer);
 
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil dihapus.'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menghapus.'
-         ]);
-      }
-
-      $stmt->close();
+   if ($stmt->execute()) {
+      echo json_encode([
+         'status' => 'success',
+         'message' => 'Berhasil dihapus'
+      ]);
    } else {
       echo json_encode([
          'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
+         'message' => 'Gagal hapus'
       ]);
    }
 }
