@@ -12,20 +12,14 @@ $rm = $_GET['rm'];
 $check = mysqli_query($koneksi, "SELECT * FROM ms_patient LEFT JOIN pasien_visit ON pasien_visit.id_patient = ms_patient.id_patient WHERE pasien_visit.visit_ID='$no'");
 $data = mysqli_fetch_array($check);
 
-// Hitung usia jika data ditemukan
-// if ($data) {
-//   $patient_datebirth = new DateTime($data['patient_datebirth']);
-//   $tanggal_visit = new DateTime($data['visit_date']);
+$queryObat = mysqli_query($koneksi, "
+  SELECT pd.qty, pd.harga
+  FROM permintaan_pharmacy_details pd
+  INNER JOIN permintaan_pharmacy p 
+    ON p.id_permintaan_farmasi = pd.id_permintaan_farmasi
+  WHERE p.id_visit = '$no'
+");
 
-//   $usia = $patient_datebirth->diff($tanggal_visit);
-// }
-
-
-// Total dari permintaan_pharmacy
-$checkid = mysqli_query($koneksi, "SELECT id_permintaan_farmasi FROM permintaan_pharmacy WHERE id_visit='$no'");
-$idfarmasi = mysqli_fetch_array($checkid)['id_permintaan_farmasi'];
-
-$queryObat = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy_details WHERE id_permintaan_farmasi='$idfarmasi'");
 $totalObat = 0;
 while ($row = mysqli_fetch_assoc($queryObat)) {
   $totalObat += $row['qty'] * $row['harga'];
@@ -134,27 +128,37 @@ $totalKeseluruhan = $totalObat + $totalBilling;
 
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
-                <div class="card-body p-4 " class="">
+                <div class="card-body p-4 ">
                   <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="card-title fw-semibold">Rincian Farmasi</h5>
-                    <!-- Grup tombol di sisi kanan -->
-                    <div class="d-flex ms-auto gap-2">
-                    </div>
+                    <div class="d-flex ms-auto gap-2"></div>
                   </div>
+
                   <div class="table-responsive" data-simplebar>
                     <table class="table text-nowrap align-middle table-custom mb-0" id="zero_config2">
                       <thead>
                         <tr>
-                          <th scope="col" class="text-dark fw-normal">Item</th>
+                          <th class="text-dark fw-normal">Item</th>
                           <th class="text-dark fw-normal">QTY</th>
                           <th class="text-dark fw-normal">Harga</th>
                           <th class="text-dark fw-normal">Total</th>
                         </tr>
                       </thead>
                       <tbody>
+
                         <?php
-                        $getobat = tampildata("SELECT * FROM permintaan_pharmacy_details INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy_details.id_pharmacy  WHERE id_permintaan_farmasi='$idfarmasi'");
+                        $getobat = tampildata("
+              SELECT pd.*, mp.*
+              FROM permintaan_pharmacy_details pd
+              INNER JOIN permintaan_pharmacy p 
+                ON p.id_permintaan_farmasi = pd.id_permintaan_farmasi
+              INNER JOIN ms_pharmacy mp 
+                ON mp.id_pharmacy = pd.id_pharmacy
+              WHERE p.id_visit = '$no'
+              AND p.id_customer = '$id_customer'
+            ");
                         ?>
+
                         <?php foreach ($getobat as $obat): ?>
                           <tr>
                             <td><?= $obat['pharmacy_name_generic'] ?>/<?= $obat['pharmacy_name_trade'] ?></td>
@@ -163,6 +167,7 @@ $totalKeseluruhan = $totalObat + $totalBilling;
                             <td><?= number_format($obat['harga'] * $obat['qty']) ?></td>
                           </tr>
                         <?php endforeach ?>
+
                       </tbody>
                     </table>
                   </div>
@@ -203,12 +208,27 @@ $totalKeseluruhan = $totalObat + $totalBilling;
             </select>
           </div>
           <div class="mb-3">
-            <label for="qty" class="form-label">Jumlah <span class="text-danger">*</span> </label>
-            <input type="number" value="1" name="qty" id="qty" required class="form-control">
+            <label class="form-label required">Kategori</label>
+            <select name="kategori" id="kategori" class="form-select" require>
+              <option value="Tindakan">Tindakan</option>
+              <option value="Konsultasi">Konsultasi</option>
+              <option value="Obat/BMHP/Alkes">Obat/BMHP/Alkes</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
           </div>
-          <div class="mb-3">
-            <label for="diskon" class="form-label">Diskon </label>
-            <input type="number" name="diskon" id="diskon" class="form-control">
+          <div class="row">
+            <div class="col-6">
+              <div class="mb-3">
+                <label for="qty" class="form-label">Jumlah <span class="text-danger">*</span> </label>
+                <input type="number" value="1" name="qty" id="qty" required class="form-control">
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="mb-3">
+                <label for="diskon" class="form-label">Diskon </label>
+                <input type="number" name="diskon" id="diskon" class="form-control">
+              </div>
+            </div>
           </div>
           <div class="mb-3">
             <label for="catatan" class="form-label">Catatan </label>
@@ -235,6 +255,10 @@ $totalKeseluruhan = $totalObat + $totalBilling;
         <input type="hidden" name="nomor_rm" id="nomor_rm" value="<?= $rm ?>">
         <input type="hidden" name="nomor_visit" id="nomor_visit" value="<?= $no ?>">
         <div class="modal-body">
+          <div class="mb-3">
+            <label for="editjumlah" class="form-label">Biaya Nominal </label>
+            <input type="number" name="editjumlah" id="editjumlah" class="form-control">
+          </div>
           <div class="mb-3">
             <label for="editdiskon" class="form-label">Diskon </label>
             <input type="number" name="editdiskon" id="editdiskon" class="form-control">
@@ -278,6 +302,20 @@ $totalKeseluruhan = $totalObat + $totalBilling;
           <div class="mb-3">
             <label for="nomor_transaksi" class="form-label">(Nomor Kartu/Nomor ID Transaksi/Nomor Referensi) </label>
             <input type="text" name="nomor_transaksi" id="nomor_transaksi" class="form-control">
+          </div>
+          <div class="row">
+            <div class="col-6">
+              <div class="mb-3">
+                <label class="form-label">Uang Diterima</label>
+                <input type="text" id="uang_diterima" name="uang_diterima" class="form-control">
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="mb-3">
+                <label class="form-label">Kembalian</label>
+                <input type="text" id="kembalian" name="kembalian" class="form-control bg-light" readonly>
+              </div>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -330,7 +368,7 @@ $totalKeseluruhan = $totalObat + $totalBilling;
             return {
               "actions": `
             <div class="text-center">
-              <button class="btn btn-warning edit-btn" data-id="${row.id}">Diskon</button>
+              <button class="btn btn-warning edit-btn" data-id="${row.id_billing}">Ubah</button>
             </div>
           `,
               "item": row.billing_item,
@@ -376,6 +414,7 @@ $totalKeseluruhan = $totalObat + $totalBilling;
       const qty = document.getElementById("qty").value;
       const diskon = document.getElementById("diskon").value;
       const catatan = document.getElementById("catatan").value;
+      const kategori = document.getElementById("kategori").value;
 
       const formData = new URLSearchParams({
         nomor_rm: nomor_rm,
@@ -383,7 +422,8 @@ $totalKeseluruhan = $totalObat + $totalBilling;
         item: item,
         diskon: diskon,
         qty: qty,
-        catatan: catatan
+        catatan: catatan,
+        kategori: kategori
       });
 
       // ✅ Tampilkan data ke console
@@ -469,22 +509,44 @@ $totalKeseluruhan = $totalObat + $totalBilling;
     // Handle klik tombol edit
     $(document).on('click', '.edit-btn', function() {
       const userId = $(this).data('id');
-
-      fetch(apiUrl + `?id=${userId}`)
-        .then(response => response.json())
+      console.log("ID DIKLIK:", userId);
+      fetch(apiUrl + `&id=${userId}`)
+        .then(res => res.json())
         .then(data => {
-          if (data.status === 'success') {
-            const user = data.user;
-            $('#editdiskon').val(user.diskon);
-            $('#edit').modal('show');
-            $('#editForm').data('id', user.id); // Simpan ID di form
-          } else {
-            Swal.fire('Gagal!', 'Data user tidak ditemukan.', 'error');
+
+          console.log("DEBUG:", data); // 🔥 WAJIB
+
+          // ❌ HANDLE ERROR RESPONSE
+          if (data.status !== 'success') {
+            Swal.fire('Gagal!', data.message || 'Data tidak ditemukan', 'error');
+            return;
           }
+
+          // ✅ AMBIL DATA DENGAN AMAN
+          const user = data.user;
+
+          if (!user) {
+            throw new Error("User undefined dari API");
+          }
+
+          // ✅ SAFE ACCESS
+          const diskon = user.billing_discount ?? 0;
+          const jumlah = user.billing_price ?? 0;
+
+          $('#editdiskon').val(diskon);
+          $('#editjumlah').val(jumlah);
+
+          // ✅ SHOW MODAL (BOOTSTRAP 5)
+          const modal = new bootstrap.Modal(document.getElementById('edit'));
+          modal.show();
+
+          // ✅ SET ID
+          $('#editForm').data('id', user.id_billing);
+
         })
-        .catch(error => {
-          console.error('Error:', error);
-          Swal.fire('Terjadi Kesalahan!', 'Gagal memuat data. Coba lagi nanti.', 'error');
+        .catch(err => {
+          console.error("ERROR:", err);
+          Swal.fire('Error!', err.message, 'error');
         });
     });
 
@@ -494,10 +556,12 @@ $totalKeseluruhan = $totalObat + $totalBilling;
 
       const userId = $(this).data('id');
       const diskon = $('#editdiskon').val();
+      const jumlah = $('#editjumlah').val();
 
       const data = {
         iduser: userId,
-        diskon: diskon
+        diskon: diskon,
+        jumlah: jumlah
       };
 
       console.log('Data dikirim:', data);
@@ -536,7 +600,10 @@ $totalKeseluruhan = $totalObat + $totalBilling;
 
     const id_visit = document.getElementById("nomor_visit").value;
     const metode = document.getElementById("metode_bayar").value;
-    const nomor = document.getElementById("nomor_transaksi").value;
+    const total = document.getElementById("total").value;
+    const bayar = document.getElementById("uang_diterima").value;
+    const kembalian = document.getElementById("kembalian").value;
+
 
     Swal.fire({
       title: "Konfirmasi Pembayaran?",
@@ -557,7 +624,9 @@ $totalKeseluruhan = $totalObat + $totalBilling;
             body: JSON.stringify({
               id_visit: id_visit,
               metode_bayar: metode,
-              nomor_transaksi: nomor
+              total: total,
+              bayar: bayar,
+              kembalian: kembalian
             })
           })
           .then(res => res.json())
@@ -574,5 +643,29 @@ $totalKeseluruhan = $totalObat + $totalBilling;
 
     });
 
+  });
+</script>
+<script>
+  const total = <?= $totalKeseluruhan ?>;
+
+  const uangInput = document.getElementById('uang_diterima');
+  const kembalianInput = document.getElementById('kembalian');
+
+  // format rupiah
+  function formatRupiah(angka) {
+    return new Intl.NumberFormat('id-ID').format(angka);
+  }
+
+  uangInput.addEventListener('input', function() {
+
+    // ambil angka saja (hapus titik/koma)
+    let uang = this.value.replace(/\D/g, '');
+    uang = parseInt(uang) || 0;
+
+    // hitung kembalian
+    let kembali = uang - total;
+
+    // tampilkan
+    kembalianInput.value = kembali >= 0 ? formatRupiah(kembali) : 0;
   });
 </script>
