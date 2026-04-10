@@ -76,69 +76,115 @@ $data = mysqli_fetch_array($check);
         <div class="container-fluid">
           <div class="row">
             <div class="col-12">
-              <div class="card">
+              <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                  <!-- NAMA PASIEN -->
-                  <h4 class="fw-bold mb-2">
-                    <?= $data['patient_name'] ?>
-                    <span class="badge bg-warning text-dark ms-2">
-                      RM : <?= $data['nomor_rm'] ?>
-                    </span>
-                  </h4>
 
-                  <!-- INFO PASIEN -->
-                  <div class="text-muted mb-3">
-                    <i class="ti ti-calendar"></i>
-                    <!-- Usia:
-                    <?= $usia->y ?> Th <?= $usia->m ?> Bl <?= $usia->d ?> Hr
-                    &nbsp;•&nbsp; -->
-                    <i class="ti ti-gender-bigender"></i>
-                    <?= $data['patient_gender'] ?>
+                  <!-- HEADER -->
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                      <h5 class="fw-bold mb-0">
+                        💊 Permintaan Farmasi
+                      </h5>
+                      <small class="text-muted">
+                        <?= $data['permintaan_number'] ?? '-' ?>
+                      </small>
+                    </div>
+
+                    <!-- TIPE OBAT -->
+                    <span class="badge 
+                      <?= $data['tipe_obat'] == 'Racikan' ? 'bg-danger' : 'bg-success' ?>">
+                      <?= $data['tipe_obat'] ?? '-' ?>
+                    </span>
                   </div>
 
-                  <!-- GARIS PEMISAH -->
                   <hr class="my-3">
 
-                  <!-- INFO DOKTER & LAYANAN -->
+                  <!-- INFO GRID -->
                   <div class="row g-3">
 
-                    <!-- DOKTER -->
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                       <div class="info-item">
-                        <i class="ti ti-stethoscope"></i>
-                        <div>
-                          <div class="label">Dokter</div>
-                          <div class="value"><?= $data['id_doctor'] ?></div>
+                        <div class="label text-muted">Tanggal</div>
+                        <div class="value">
+                          <?= date('d-m-Y H:i', strtotime($data['created_at'])) ?>
                         </div>
                       </div>
                     </div>
 
-                    <!-- LAYANAN -->
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                       <div class="info-item">
-                        <i class="ti ti-building-hospital"></i>
-                        <div>
-                          <div class="label">Layanan</div>
-                          <div class="value"><?= $data['id_poli'] ?></div>
+                        <div class="label text-muted">Status</div>
+                        <div class="value">
+                          <span class="badge 
+                   <?= $data['status_permintaan'] == 1 ? 'bg-success' : 'bg-warning' ?>">
+                            <?= $data['status_permintaan'] == 1 ? 'Selesai' : 'Diproses' ?>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="col-md-4">
+                      <div class="info-item">
+                        <div class="label text-muted">Obat Pulang</div>
+                        <div class="value">
+                          <?= $data['status_obat_pulang'] == 1 ? 'Ya' : 'Tidak' ?>
                         </div>
                       </div>
                     </div>
 
                   </div>
 
-                  <!-- TOMBOL PANGGIL -->
+                  <!-- RACIKAN -->
+                  <?php if ($data['tipe_obat'] == 'Racikan'): ?>
+                    <hr class="my-3">
+
+                    <div class="d-flex flex-wrap gap-2">
+
+                      <!-- JUMLAH -->
+                      <span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-2">
+                        <i class="ti ti-package me-1"></i> Jumlah :
+                        <?= $data['rck_jumlah'] ?? '-' ?>
+                      </span>
+
+                      <!-- SATUAN -->
+                      <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">
+                        <i class="ti ti-ruler me-1"></i> Satuan :
+                        <?= $data['rck_satuan'] ?? '-' ?>
+                      </span>
+
+                      <!-- SIGNA -->
+                      <span class="badge rounded-pill bg-warning-subtle text-dark px-3 py-2">
+                        <i class="ti ti-pill me-1"></i> Signa :
+                        <?= $data['rck_signa'] ?? '-' ?>
+                      </span>
+
+                    </div>
+                  <?php endif; ?>
+
+                  <!-- CATATAN -->
+                  <?php if (!empty($data['catatan_permintaan'])): ?>
+                    <hr class="my-3">
+                    <div>
+                      <div class="label text-muted">Catatan</div>
+                      <div class="value"><?= $data['catatan_permintaan'] ?></div>
+                    </div>
+                  <?php endif; ?>
+
+                  <!-- 🔥 TOMBOL CALL -->
                   <div class="mt-4 text-end">
                     <button
                       class="btn btn-warning btn-call"
                       data-antrian="<?= $data['visit_antrian'] ?? '-' ?>"
                       data-nama="<?= $data['patient_name'] ?>"
-                      data-poli="<?= $data['id_poli'] ?>"
+                      data-poli="Farmasi"
                       data-visit="<?= $data['visit_ID'] ?>"
                       data-dokter="<?= $data['id_doctor'] ?>"
-                      data-obat="<?= $data['obat'] ?? 'Silakan ambil obat di farmasi' ?>">
+                      data-obat="<?= $data['tipe_obat'] ?? 'Obat siap diambil' ?>">
+
                       <i class="ti ti-volume"></i> Panggil Pasien
                     </button>
                   </div>
+
                 </div>
               </div>
             </div>
