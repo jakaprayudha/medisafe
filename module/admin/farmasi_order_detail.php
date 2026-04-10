@@ -102,7 +102,27 @@ $data = mysqli_fetch_array($check);
                   <!-- INFO GRID -->
                   <div class="row g-3">
 
-                    <div class="col-md-4">
+                    <div class="col-md-6">
+                      <div class="info-item">
+                        <div class="label text-muted">Nama Pasien</div>
+                        <div class="value">
+                          <?= $data['patient_name_pcare'] ?? '-' ?>
+                        </div>
+                      </div>
+                    </div>
+
+
+                    <div class="col-md-6">
+                      <div class="info-item">
+                        <div class="label text-muted">Nama Dokter</div>
+                        <div class="value">
+                          <?= $data['id_doctor'] ?? '-' ?>
+                        </div>
+                      </div>
+                    </div>
+
+
+                    <div class="col-md-6">
                       <div class="info-item">
                         <div class="label text-muted">Tanggal</div>
                         <div class="value">
@@ -111,7 +131,7 @@ $data = mysqli_fetch_array($check);
                       </div>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                       <div class="info-item">
                         <div class="label text-muted">Status</div>
                         <div class="value">
@@ -123,9 +143,9 @@ $data = mysqli_fetch_array($check);
                       </div>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                       <div class="info-item">
-                        <div class="label text-muted">Obat Pulang</div>
+                        <div class="label text-muted">Obat Pulang Ranap</div>
                         <div class="value">
                           <?= $data['status_obat_pulang'] == 1 ? 'Ya' : 'Tidak' ?>
                         </div>
