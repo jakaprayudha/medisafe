@@ -80,7 +80,7 @@
 
       if (!data) return;
 
-      const name = (data.patient_name || "-").trim();
+      const name = (data.patient_name_pcare || "-").trim();
 
       setText("pc_name", name);
       setText("pc_initial", name.charAt(0).toUpperCase());
