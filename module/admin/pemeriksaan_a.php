@@ -58,32 +58,9 @@ $data = mysqli_fetch_array($check);
                     <input type="hidden" name="id_patient" id="id_patient" value="<?= $data['id_patient'] ?>" hidden>
                     <h4 class="mb-3">Form Pemeriksaan Medis</h4>
                     <!-- Data Pasien -->
-                    <div class="row">
-                      <div class="col-3">
-                        <div class="mb-3">
-                          <label for="patient_name" class="form-label">Nama Pasien</label>
-                          <input type="text" value="<?= $data['patient_name_pcare'] ?>" id="patient_name" readonly name="patient_name" class="form-control bg-light">
-                        </div>
-                      </div>
-                      <div class="col-3">
-                        <div class="mb-3">
-                          <label for="patient_gender" class="form-label">Gender</label>
-                          <input type="text" value="<?= $data['patient_gender'] ?>" id="patient_gender" name="patient_gender" class="form-control bg-light" readonly>
-                        </div>
-                      </div>
-                      <!-- <div class="col-3">
-                        <div class="mb-3">
-                          <label for="usia" class="form-label">Usia</label>
-                          <input type="text" value="<?php echo  $usia->y . " tahun " . $usia->m . " bulan " . $usia->d . " hari"; ?>" id="usia" name="usia" class="form-control bg-light" readonly>
-                        </div>
-                      </div> -->
-                      <div class="col-3">
-                        <div class="mb-3">
-                          <label for="doctor_name" class="form-label">Dokter</label>
-                          <input type="text" value="<?= $data['id_doctor'] ?>" id="doctor_name" name="dokter" class="form-control bg-light" readonly>
-                        </div>
-                      </div>
-                    </div>
+                    <?php
+                    require 'card-pasien.php';
+                    ?>
 
                     <div class="mb-3">
                       <label for="visit_notes" class="form-label">Catatan Screening</label>

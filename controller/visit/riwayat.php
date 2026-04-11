@@ -42,38 +42,58 @@ function getData()
 {
    global $koneksi, $id_customer;
 
-   $rm = isset($_GET['rm']) ? mysqli_real_escape_string($koneksi, $_GET['rm']) : '';
+   $visit_ID = $_GET['visit'] ?? '';
 
-   if (!$rm) {
+   if (!$visit_ID) {
       echo json_encode([
          'status' => 'error',
-         'message' => 'Parameter RM wajib diisi'
+         'message' => 'Parameter visit wajib diisi'
       ]);
       return;
    }
 
-   $query = "SELECT * 
-   FROM pasien_visit 
-   LEFT JOIN ms_patient 
-      ON ms_patient.id_patient = pasien_visit.id_patient 
-   WHERE ms_patient.nomor_rm = '$rm'
-   AND pasien_visit.id_customer = '$id_customer'
-   AND ms_patient.id_customer = '$id_customer'
-   ORDER BY pasien_visit.visit_date ASC";
+   // 🔥 1. ambil id_patient dari visit
+   $getPatient = $koneksi->prepare("
+      SELECT id_patient 
+      FROM pasien_visit 
+      WHERE visit_ID = ? 
+      AND id_customer = ?
+      LIMIT 1
+   ");
 
-   $result = mysqli_query($koneksi, $query);
+   $getPatient->bind_param("ss", $visit_ID, $id_customer);
+   $getPatient->execute();
+   $resultPatient = $getPatient->get_result();
 
-   if (!$result) {
-      http_response_code(500);
+   if ($resultPatient->num_rows === 0) {
       echo json_encode([
          'status' => 'error',
-         'message' => 'Gagal mengambil data: ' . mysqli_error($koneksi)
+         'message' => 'Visit tidak ditemukan'
       ]);
       return;
    }
 
-   $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
-   mysqli_free_result($result);
+   $rowPatient = $resultPatient->fetch_assoc();
+   $id_patient = $rowPatient['id_patient'];
+
+   // 🔥 2. ambil semua riwayat berdasarkan id_patient
+   $stmt = $koneksi->prepare("
+      SELECT * 
+      FROM pasien_visit 
+      WHERE id_patient = ?
+      AND id_customer = ?
+      ORDER BY visit_date ASC
+   ");
+
+   $stmt->bind_param("ss", $id_patient, $id_customer);
+   $stmt->execute();
+
+   $result = $stmt->get_result();
+
+   $data = [];
+   while ($row = $result->fetch_assoc()) {
+      $data[] = $row;
+   }
 
    echo json_encode([
       'status' => 'success',
