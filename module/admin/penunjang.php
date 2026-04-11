@@ -50,6 +50,9 @@ $rm = $_GET['rm'];
                     <h5 class="card-title fw-semibold">Data Penunjang</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
+                      <a href="module/admin/print/formulir_lab?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                        <button class="btn btn-light"><i class="fas fa-print"></i> Cetak</button>
+                      </a>
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
                     </div>
                   </div>
