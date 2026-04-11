@@ -89,6 +89,9 @@ $dataroom = mysqli_fetch_array($check);
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
                       <button class="btn btn-light" onclick="history.back()"><i class="fas fa-arrow-left"></i> Kembali</button>
+                      <button class="btn btn-danger" id="btnResetBed">
+                        <i class="fas fa-sync"></i> Reset Bed
+                      </button>
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
                     </div>
                   </div>
@@ -195,9 +198,10 @@ $dataroom = mysqli_fetch_array($check);
               "bed_gender": row.bed_gender ?? "-",
               "bed_notes": row.bed_notes ?? "-",
               "status": row.bed_status == '0' ?
-                '<span class="badge bg-success-subtle text-success d-block text-center">Kosong</span>' : row.bed_status == '2' ?
-                '<span class="badge bg-warning-subtle text-warning d-block text-center">Digunakan</span>' : row.bed_status == '99' ?
-                '<span class="badge bg-secondary-subtle text-secondary d-block text-center">Tidak Dipakai</span>' : '<span class="badge bg-dark text-white d-block text-center">Unknown</span>'
+                '<span class="badge bg-warning-subtle text-warning d-block text-center">Digunakan</span>' :
+                row.bed_status == '1' ?
+                '<span class="badge bg-success-subtle text-success d-block text-center">Kosong</span>' :
+                '<span class="badge bg-secondary-subtle text-secondary d-block text-center">Tidak Dipakai</span>'
             };
           });
         }
@@ -345,6 +349,42 @@ $dataroom = mysqli_fetch_array($check);
     });
 
 
+  });
+</script>
+
+<script>
+  $('#btnResetBed').on('click', function() {
+    Swal.fire({
+      title: 'Reset Semua Bed?',
+      text: 'Semua tempat tidur akan dikosongkan!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Reset!',
+      cancelButtonText: 'Batal'
+    }).then((result) => {
+      if (result.isConfirmed) {
+
+        fetch('controller/master/resetBedController', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+              id_room: '<?php echo $idroom ?>'
+            })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === 'success') {
+              Swal.fire('Berhasil!', data.message, 'success');
+              $('#periodeTable').DataTable().ajax.reload(null, false);
+            } else {
+              Swal.fire('Gagal!', data.message, 'error');
+            }
+          });
+
+      }
+    });
   });
 </script>
 
