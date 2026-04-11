@@ -47,6 +47,122 @@
             <li><a href="module/admin/setting_faskes">Faskes</a></li>
          </ul>
       </li>
+
+      <li class="nav-small-cap">
+         <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
+         <span class="hide-menu">Admisi</span>
+      </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Registrasi Pasien Baru' or $title == 'Pasien Details') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/admisi/registrasi-new"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:register-outline"></iconify-icon>
+            <span class="hide-menu">Data Pasien</span>
+         </a>
+      </li>
+      <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Jadwal Dokter') {
+                                                         echo 'active';
+                                                      } ?>"
+            href="module/admisi/schedule"
+            aria-expanded="false">
+            <iconify-icon icon="solar:calendar-outline"></iconify-icon>
+            <span class="hide-menu">Jadwal Dokter</span>
+         </a>
+      </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Registrasi Polilklinik' or $title == 'Pendaftaran Pasien' or $title == 'List Pasien' and $_GET['type'] == 'Poliklinik') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/admisi/registrasi-poliklinik"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:stethoscope"></iconify-icon>
+            <span class="hide-menu">Poliklinik</span>
+         </a>
+      </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Registrasi Rawat Inap' or $title == 'Permintaan Pasien Rawat Inap') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/admisi/registrasi-inap"
+            aria-expanded="false">
+            <iconify-icon icon="solar:bed-linear"></iconify-icon>
+            <span class="hide-menu">Rawat Inap</span>
+         </a>
+      </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Counter Admisi') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/display/display-poliklinik" target="_blank"
+            aria-expanded="false">
+            <iconify-icon icon="solar:display-linear"></iconify-icon>
+            <span class="hide-menu">Display Antrean</span>
+         </a>
+      </li>
+      <li class="nav-small-cap">
+         <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
+         <span class="hide-menu">RME</span>
+      </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Pemeriksaan' or ($title == 'Permintan Farmasi' and (isset($_GET['rme']) && $_GET['rme'] == 'a')) or $title == 'Resep Luar' or $title == 'Vaksin' or $title == 'Biaya Transaksi' or $title == 'Riwayat'  or $title == 'Permintaan Rawat Inap' or $title == 'Penunjang') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/doctor/pemeriksaan"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:register-outline"></iconify-icon>
+            <span class="hide-menu">Poliklinik</span>
+         </a>
+      </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Pemeriksaan Rawat Inap' or (isset($_GET['rme']) && $_GET['rme'] == 'c')) {
+                                    echo 'active';
+                                 } ?>"
+            href="module/doctor/pemeriksaan-rawat-inap"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:bed-outline"></iconify-icon>
+            <span class="hide-menu">Rawat Inap</span>
+         </a>
+      </li>
+      <li class="nav-small-cap">
+         <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
+         <span class="hide-menu">Farmasi</span>
+      </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Farmasi Order') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/pharmacy/permintaan-resep"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:register-outline"></iconify-icon>
+            <span class="hide-menu">Permintaan Resep</span>
+         </a>
+      </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Persediaan') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/display/display-farmasi" target="_blank"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:monitor"></iconify-icon>
+            <span class="hide-menu">Display Farmasi</span>
+         </a>
+      </li>
+      <li class="nav-small-cap">
+         <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
+         <span class="hide-menu">Kasir</span>
+      </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Farmasi Order') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/admin/kasir"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:register-outline"></iconify-icon>
+            <span class="hide-menu">Penerimaan</span>
+         </a>
+      </li>
    </ul>
 </nav>
 
