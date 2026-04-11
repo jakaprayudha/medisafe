@@ -1,5 +1,9 @@
 <?php
 $role = $_SESSION['roles']; // ambil dari session login
+$id_customer = $_SESSION['id_customer'];
+$checkstatus = mysqli_query($koneksi, "SELECT status_farmasi_kasir FROM setting_clinic LEFT JOIN ms_faskes ON ms_faskes.id_clinic = setting_clinic.id WHERE setting_clinic.id_customer = '$id_customer' LIMIT 1");
+$datafaskes = mysqli_fetch_array($checkstatus);
+$statusfarmasikasir = $datafaskes['status_farmasi_kasir'];
 ?>
 <!-- Sidebar Start -->
 <aside class="left-sidebar">
@@ -20,10 +24,18 @@ $role = $_SESSION['roles']; // ambil dari session login
          require 'menu/menu-admisi.php';
       } else if ($role == 'dokter') {
          require 'menu/menu-dokter.php';
-      } else if ($role == 'apoteker') {
-         require 'menu/menu-farmasi.php';
-      } else if ($role == 'kasir') {
-         require 'menu/menu-kasir.php';
+      } else if ($role == 'apoteker' || $role == 'kasir') {
+         if ($statusfarmasikasir == 1) {
+            // 🔥 MODE GABUNG
+            require 'menu/menu-farmasi-kasir.php';
+         } else {
+            // 🔹 MODE NORMAL
+            if ($role == 'apoteker') {
+               require 'menu/menu-farmasi.php';
+            } else {
+               require 'menu/menu-kasir.php';
+            }
+         }
       } else if ($role == 'superadmin') {
          require 'menu/menu-administrator.php';
       } else if ($role == 'perawat' or $role == 'bidan') {

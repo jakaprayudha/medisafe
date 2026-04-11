@@ -50,6 +50,9 @@ $rm = $_GET['rm'];
                     <h5 class="card-title fw-semibold">Data Penunjang</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
+                      <a href="module/admin/print/formulir_lab?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                        <button class="btn btn-light"><i class="fas fa-print"></i> Cetak</button>
+                      </a>
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
                     </div>
                   </div>
@@ -57,12 +60,11 @@ $rm = $_GET['rm'];
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
-                          <th class="text-dark fw-normal">Nama Pemeriksaan</th>
-                          <th scope="col" class="text-dark fw-normal">Tanggal</th>
-                          <th scope="col" class="text-dark fw-normal">File</th>
-                          <th scope="col" class="text-dark fw-normal">Sumber Data</th>
+                          <th>Nama Pemeriksaan</th>
+                          <th>Tanggal</th>
+                          <th>Sumber</th>
                           <th>Keterangan</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Actions</th>
+                          <th class="text-center">Actions</th>
                         </tr>
                       </thead>
                       <tbody></tbody>
@@ -96,29 +98,27 @@ $rm = $_GET['rm'];
         <div class="row">
           <div class="mb-3">
             <label for="inspection_name" class="form-label required">Nama Pemeriksaan</label>
-            <input type="text" class="form-control" id="inspection_name" name="inspection_name" placeholder="Contoh: Darah Rutin, Thorax" required>
+            <select name="inspection_name" id="inspection_name" class="form-select js-example-basic-item" required>
+              <option value="">Select Option</option>
+              <?php
+              $getbarang = tampildata("SELECT * FROM laboratorium_detail WHERE status='1'");
+              ?>
+              <?php foreach ($getbarang as $barang): ?>
+                <option value="<?= $barang['assemen']; ?>" data-harga="<?= $barang['tarif']; ?>"><?= $barang['assemen']; ?></option>
+              <?php endforeach ?>
+            </select>
           </div>
           <div class="mb-3">
             <label for="inspection_date" class="form-label required">Tanggal Pemeriksaan</label>
             <input type="date" value="<?= date('Y-m-d') ?>" class="form-control" id="inspection_date" name="inspection_date" required>
           </div>
-          <div class="row">
-            <div class="col">
-              <div class="mb-3">
-                <label for="inspection_results" class="form-label ">File</label>
-                <input type="file" class="form-control" id="inspection_results" name="inspection_results">
-              </div>
-            </div>
-            <div class="col">
-              <div class="mb-3">
-                <label for="inspection_source" class="form-label required ">Sumber Data</label>
-                <input type="text" class="form-control" id="inspection_source" name="inspection_source" required>
-              </div>
-            </div>
+          <div class="mb-3">
+            <label for="inspection_date" class="form-label required">Sumber Hasil</label>
+            <input type="text" value="Lab Klinik" class="form-control" id="inspection_source" name="inspection_source" required>
           </div>
 
           <div class="mb-3">
-            <label for="inspection_summary" class="form-label">Kesimpulan</label>
+            <label for="inspection_summary" class="form-label">Catatan</label>
             <textarea class="form-control" id="inspection_summary" name="inspection_summary" rows="5"></textarea>
           </div>
         </div>
@@ -127,6 +127,38 @@ $rm = $_GET['rm'];
         <button type="submit" class="btn btn-primary">Simpan</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="modal fade" id="hasilModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Input Hasil Lab</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Pemeriksaan</th>
+              <th>Hasil</th>
+              <th>Satuan</th>
+              <th>Normal</th>
+              <th>Keterangan</th>
+            </tr>
+          </thead>
+          <tbody id="hasilBody"></tbody>
+        </table>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="saveHasil">Simpan</button>
+      </div>
+
+    </div>
   </div>
 </div>
 <script>
@@ -145,6 +177,10 @@ $rm = $_GET['rm'];
               "actions": `
             <div class="text-center">
               <div class="btn-group btn-group-sm" role="group">
+                <a class="btn btn-info hasil-btn" data-id="${row.id_inspection}"
+                data-kode="${row.inspection_name}">
+                  <i class="fas fa-flask"></i>
+                </a>
                 <a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_inspection}">
                   <i class="fas fa-edit"></i>
                 </a>
@@ -156,8 +192,6 @@ $rm = $_GET['rm'];
           `,
               "name": row.inspection_name ?? "-",
               "tanggal": row.inspection_date ?? "-",
-              "file": row.inspection_results ?
-                `<a href="${row.inspection_results}" target="_blank">Lihat File</a>` : "-",
               "sumber": row.inspection_source ?? "-",
               "kesimpulan": row.inspection_summary ?? "-"
             };
@@ -170,10 +204,6 @@ $rm = $_GET['rm'];
         },
         {
           data: "tanggal",
-          className: "text-wrap"
-        },
-        {
-          data: "file",
           className: "text-wrap"
         },
         {
@@ -285,6 +315,161 @@ $rm = $_GET['rm'];
         }
       });
     });
+  });
+</script>
+
+<script>
+  $('#programModal').on('shown.bs.modal', function() {
+    $('#inspection_name').select2({
+      dropdownParent: $('#programModal'),
+      width: '100%'
+    });
+  });
+  $(document).ready(function() {
+
+    $('#inspection_name').select2({
+      dropdownParent: $('#programModal'),
+      width: '100%',
+      tags: true, // bisa input manual
+      placeholder: "Ketik atau pilih obat",
+
+      createTag: function(params) {
+        return {
+          id: params.term,
+          text: params.term,
+          newOption: true
+        }
+      },
+
+      templateResult: function(data) {
+        let $result = $("<span></span>");
+        $result.text(data.text);
+
+        if (data.newOption) {
+          $result.append(" <em>(baru)</em>");
+        }
+
+        return $result;
+      }
+
+    });
+
+    // auto isi harga
+    $('#inspection_name').on('change', function() {
+      currentInspectionId = $(this).data('id');
+      let harga = $(this).find(':selected').data('harga') || '';
+      $('#harga').val(harga);
+    });
+
+  });
+</script>
+<script>
+  let currentInspectionId = null;
+
+  $(document).on('click', '.hasil-btn', function() {
+
+    let kode = $(this).data('kode');
+    let id = $(this).data('id');
+
+
+    // console.log('KODE:', kode);
+    // console.log('ID:', id);
+
+    currentInspectionId = id;
+
+    $('#hasilBody').html('<tr><td colspan="5">Loading...</td></tr>');
+
+    fetch(`controller/lab/getLabItem?kode=${kode}&id_inspection=${id}`)
+      .then(res => res.json())
+      .then(res => {
+
+        let html = '';
+
+        res.data.forEach(item => {
+
+          html += `
+        <tr>
+          <td>${item.assemen}</td>
+          <td>
+            <input 
+              type="text" 
+              class="form-control hasil-input" 
+              data-id="${item.id}" 
+              value="${item.hasil ?? ''}"
+            >
+          </td>
+          <td>${item.satuan ?? '-'}</td>
+          <td>${item.minimum ?? '-'} - ${item.maksimum ?? '-'}</td>
+          <td>${item.catatan ?? '-'}</td>
+        </tr>
+        `;
+        });
+
+        $('#hasilBody').html(html);
+        $('#hasilModal').modal('show');
+
+      });
+
+  });
+  $('#saveHasil').on('click', function() {
+
+    let btn = $(this);
+    btn.prop('disabled', true).html('⏳ Menyimpan...');
+
+    Swal.fire({
+      title: 'Menyimpan hasil...',
+      text: 'Mohon tunggu',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    let results = [];
+
+    $('#hasilBody tr').each(function() {
+      let id_item = $(this).find('.hasil-input').data('id');
+      let hasil = $(this).find('.hasil-input').val();
+
+      if (id_item) {
+        results.push({
+          id_item: id_item,
+          hasil: hasil
+        });
+      }
+    });
+
+    fetch('controller/lab/saveResult.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          id_inspection: currentInspectionId,
+          data: results
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+
+        Swal.close();
+
+        if (res.status === 'success') {
+          Swal.fire('Berhasil', 'Hasil lab disimpan', 'success');
+          $('#hasilModal').modal('hide');
+        } else {
+          Swal.fire('Gagal', res.message, 'error');
+        }
+
+      })
+      .catch(() => {
+        Swal.close();
+        Swal.fire('Error', 'Terjadi kesalahan', 'error');
+      })
+      .finally(() => {
+        btn.prop('disabled', false).html('Simpan');
+      });
+
   });
 </script>
 

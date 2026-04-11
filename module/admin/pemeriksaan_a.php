@@ -204,7 +204,7 @@ $data = mysqli_fetch_array($check);
                     </div>
 
                     <div class="mb-3">
-                      <label for="cara_keluar" class="form-label required">Cara Keluar <span class="text-danger">*</span></label>
+                      <label for="cara_keluar" class="form-label required">Cara Keluar </label>
                       <select name="cara_keluar" required id="cara_keluar" class="form-select" required>
                         <option value="<?= @$data['kondisi_keluar'] ?>"><?= @$data['kondisi_keluar'] ?></option>
                         <option value="Berobat Jalan">Berobat Jalan</option>

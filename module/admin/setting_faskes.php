@@ -55,8 +55,7 @@ require '../../controller/view.php';
       <!--  Header End -->
       <div class="body-wrapper-inner">
         <div class="container-fluid">
-          <div class="row g-4">
-
+          <div class="row g-2">
             <!-- 🔹 FORM -->
             <div class="col-lg-8">
               <div class="card shadow-sm border-0">
@@ -120,9 +119,11 @@ require '../../controller/view.php';
               </div>
             </div>
 
-            <!-- 🔹 LOGO PANEL -->
+            <!-- 🔹 RIGHT PANEL (LOGO + FARMASI) -->
             <div class="col-lg-4">
-              <div class="card shadow-sm border-0 text-center">
+
+              <!-- LOGO PANEL -->
+              <div class="card shadow-sm border-0 text-center mb-3">
                 <div class="card-body p-4">
 
                   <h5 class="fw-bold mb-3">Logo Klinik</h5>
@@ -143,8 +144,47 @@ require '../../controller/view.php';
 
                 </div>
               </div>
-            </div>
+              <div class="card shadow-sm border-0">
+                <div class="card-body p-4 text-center">
 
+                  <h5 class="fw-bold mb-2">💊💳 Farmasi + Kasir</h5>
+                  <small class="text-muted d-block mb-4">
+                    Aktifkan mode gabungan dalam 1 roles login farmasi dan kasir
+                  </small>
+
+                  <!-- TOGGLE BOX -->
+                  <div class="d-flex justify-content-between align-items-center border rounded px-3 py-3">
+
+                    <!-- KIRI -->
+                    <div class="text-start">
+                      <div class="fw-semibold">Mode Aktif</div>
+                      <small class="text-muted">Menu Farmasi & Kasir digabung</small>
+                    </div>
+
+                    <!-- KANAN -->
+                    <div class="d-flex align-items-center gap-3">
+
+                      <!-- BADGE -->
+                      <span id="statusRole" class="badge bg-secondary px-3 py-2">
+                        Nonaktif
+                      </span>
+
+                      <!-- SWITCH -->
+                      <div class="form-check form-switch m-0">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          id="role_farmasi_kasir"
+                          style="width: 50px; height: 25px;">
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -241,6 +281,68 @@ require '../../controller/view.php';
         }
       });
     });
+  });
+</script>
+<script>
+  // ================= LOAD AWAL =================
+  function loadRole() {
+    fetch('controller/master/roleDeviceController.php')
+      .then(res => res.json())
+      .then(res => {
+
+        if (res.status === 'success') {
+          let aktif = res.data.status_farmasi_kasir == 1;
+
+          $('#role_farmasi_kasir').prop('checked', aktif);
+          updateStatusUI(aktif);
+        }
+
+      });
+  }
+
+  // ================= UPDATE UI =================
+  function updateStatusUI(isActive) {
+    if (isActive) {
+      $('#statusRole')
+        .removeClass('bg-secondary')
+        .addClass('bg-success')
+        .text('Aktif');
+    } else {
+      $('#statusRole')
+        .removeClass('bg-success')
+        .addClass('bg-secondary')
+        .text('Nonaktif');
+    }
+  }
+
+  // ================= AUTO SAVE =================
+  $('#role_farmasi_kasir').on('change', function() {
+
+    let value = $(this).is(':checked') ? 1 : 0;
+
+    updateStatusUI(value);
+
+    fetch('controller/master/roleDeviceController.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          status_farmasi_kasir: value
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status !== 'success') {
+          Swal.fire('Error', res.message, 'error');
+        }
+      });
+
+  });
+
+  // ================= INIT =================
+  $(document).ready(function() {
+    loadRole();
   });
 </script>
 
