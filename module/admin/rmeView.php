@@ -1,9 +1,8 @@
 <?php
 require '../../database/connect.php';
 $visit = $_GET['visit'];
-$clinic = mysqli_query($koneksi, "SELECT * FROM setting_clinic LIMIT 1");
-$dataclinic = mysqli_fetch_array($clinic);
-$visitCheck = mysqli_query($koneksi, "SELECT * FROM pasien_visit LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient WHERE pasien_visit.visit_ID='$visit'");
+require '../admin/getdataclinic.php';
+$visitCheck = mysqli_query($koneksi, "SELECT * FROM pasien_visit LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient LEFT JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa WHERE pasien_visit.visit_ID='$visit'");
 $visitData = mysqli_fetch_array($visitCheck);
 ?>
 <!DOCTYPE html>
@@ -122,8 +121,7 @@ $visitData = mysqli_fetch_array($visitCheck);
 
    <div class="header">
       <h1>Resume Medis Pasien</h1>
-      <p><?= $dataclinic['clinic_name'] ?> <br>Alamat : <?= $dataclinic['address'] ?>, Telp. <?= $dataclinic['phone_number'] ?></p>
-      <p>Tanggal Cetak: <?= date('d/m/Y') ?></p>
+      <p><?= $datafaskes['clinic_name'] ?> <br>Alamat : <?= $datafaskes['faskes_address'] ?>, Telp. <?= $dataclinic['faskes_phone'] ?></p>
    </div>
    <div class="line"></div>
 
@@ -208,8 +206,8 @@ $visitData = mysqli_fetch_array($visitCheck);
       <p><?= nl2br($visitData['pemeriksaan_fungsional']) ?></p>
    </div>
    <div class="section">
-      <h2>Diagnosa</h2>
-      <p><?= nl2br($visitData['diagnosa']) ?></p>
+      <h2>Diagnosa Utama</h2>
+      <p><?= nl2br($visitData['code'] . ' - ' . $visitData['icd10']) ?></p>
    </div>
    <div class="section">
       <h2>Edukasi</h2>

@@ -10,6 +10,7 @@ require '../../controller/view.php';
   <?php
   require '../../assets/template/head.php';
   ?>
+
 </head>
 
 <body>
@@ -197,24 +198,20 @@ require '../../controller/view.php';
           return json.data.map(function(row) {
             return {
               "actions": `
-              <div class="dropdown text-center">
-                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  Aksi
-                </button>
-                <ul class="dropdown-menu">
-                  <li>
-                    <a class="dropdown-item approve-btn" href="javascript:;" data-id="${row.id_ranap}">
-                      <i class="fas fa-check-circle text-success me-2"></i> Approve
-                    </a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item cancel-btn text-danger" href="javascript:;" data-id="${row.id_ranap}">
-                      <i class="fas fa-times-circle me-2"></i> Batalkan
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            `,
+                <div class="text-center d-flex justify-content-center gap-1">
+                  
+                  <button class="btn btn-sm btn-primary approve-btn" 
+                          data-id="${row.id_ranap}">
+                    <i class="fas fa-check-circle"></i> Approve
+                  </button>
+
+                  <button class="btn btn-sm btn-danger cancel-btn" 
+                          data-id="${row.id_ranap}">
+                    <i class="fas fa-times-circle"></i> Cancel
+                  </button>
+
+                </div>
+              `,
               "rm": row.nomor_rm ?? "-",
               "name": row.patient_name ?? "-",
               "gender": row.patient_gender ?? "-",

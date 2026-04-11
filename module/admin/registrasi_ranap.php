@@ -77,7 +77,7 @@ require '../../controller/view.php';
                         </div> -->
                         <a href="module/admin/registrasi_booking_ranap">
                           <button class="btn btn-primary">
-                            <i class="fas fa-list"></i> Permintaan Rawat Inap
+                            <i class="fas fa-user-plus"></i> Permintaan Rawat Inap
                           </button>
                         </a>
                       </div>

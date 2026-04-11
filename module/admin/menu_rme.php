@@ -3,6 +3,7 @@
    ?>
   <nav>
      <div class="nav nav-tabs" id="nav-tab" role="tablist">
+        <?php ?>
         <a href="module/admin/pemeriksaan_a?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=a">
            <button class="nav-link <?= ($current == 'pemeriksaan_a.php') ? 'active' : '' ?>">Pemeriksaan Medis</button>
         </a>
@@ -24,11 +25,16 @@
         <a href="module/admin/riwayat?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=a">
            <button class="nav-link <?= ($current == 'riwayat.php') ? 'active' : '' ?>">Riwayat Pengobatan</button>
         </a>
-        <a href="module/admin/rawat_inap?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=a">
-           <button class="nav-link <?= ($current == 'rawat_inap.php') ? 'active' : '' ?>">Rawat Inap</button>
-        </a>
         <?php
-         require 'trigger_pulang.php';
+         $roles = $_SESSION['roles'];
+         if ($roles == "dokter") { ?>
+           <a href="module/admin/rawat_inap?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=a">
+              <button class="nav-link <?= ($current == 'rawat_inap.php') ? 'active' : '' ?>">Rawat Inap</button>
+           </a>
+        <?php }
+         if ($roles == "dokter") {
+            require 'trigger_pulang.php';
+         }
          ?>
      </div>
   </nav>

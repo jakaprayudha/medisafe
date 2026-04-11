@@ -100,7 +100,8 @@ require '../../controller/view.php';
 </html>
 
 <script>
-  const apiUrl = 'controller/visit/riwayat?rm=<?= $_GET['rm'] ?>';
+  const visitID = '<?= $_GET['no'] ?? '' ?>';
+  const apiUrl = 'controller/visit/riwayat?visit=' + visitID;
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
@@ -110,9 +111,14 @@ require '../../controller/view.php';
         url: apiUrl,
         type: "GET",
         dataSrc: function(json) {
+          if (!json || json.status !== 'success') {
+            console.error('API error:', json);
+            return [];
+          }
+
           return json.data.map(function(row) {
             return {
-              "tanggal": row.visit_date + ' ' + row.visit_time ?? "-",
+              "tanggal": (row.visit_date ?? '-') + ' ' + (row.visit_time ?? '-'),
               "dokter": row.id_doctor ?? "-",
               "layanan": row.id_poli ?? "-",
               "status_rawatinap": row.status_rawatinap,
@@ -178,20 +184,10 @@ require '../../controller/view.php';
 
     let visit = $(this).data('visit');
 
-    // 🔥 load ke iframe
     $('#iframeRME').attr('src', `module/admin/rmeView?visit=${visit}`);
-
-    // 🔥 buka modal
     $('#modalRME').modal('show');
 
   });
-
-  $('#iframeRME').attr('src', '');
-  $('#modalRME').modal('show');
-
-  setTimeout(() => {
-    $('#iframeRME').attr('src', `module/admin/rmeView?visit=${visit}`);
-  }, 300);
 
   $('#modalRME').on('hidden.bs.modal', function() {
     $('#iframeRME').attr('src', '');

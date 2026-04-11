@@ -1,5 +1,5 @@
 <?php
-$title = 'Riwayat Pasien';
+$title = 'Pemeriksaan Rawat Inap';
 require '../../controller/view.php';
 require '../../utility/env.php';
 // Memuat file .env
@@ -40,7 +40,7 @@ $apiUrl = getenv('API_URL');
               <div class="card w-100">
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Riwayat Visit Pasien</h5>
+                    <h5 class="card-title fw-semibold">Pemeriksaan Pasien Rawat Inap</h5>
                     <!-- 🔽 Filter + Tombol Kembali -->
                     <div class="d-flex align-items-end gap-2 flex-wrap">
                       <form id="filterForm" class="row g-2 align-items-end">
@@ -66,7 +66,7 @@ $apiUrl = getenv('API_URL');
 
                       <!-- Tombol kembali -->
                       <div class="d-flex ms-auto gap-2">
-                      
+
                       </div>
                     </div>
                   </div>
@@ -76,14 +76,11 @@ $apiUrl = getenv('API_URL');
                         <tr>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                           <th class="text-dark fw-normal">Registrasi</th>
-                          <th>Layanan</th>
                           <th scope="col" class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
-                          <th scope="col" class="text-dark fw-normal">TTL</th>
                           <th class="text-dark fw-normal">Dokter</th>
                           <th>Jenis Bayar</th>
-                          <th class="text-dark fw-normal">Poliklinik</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
 
                         </tr>
@@ -110,17 +107,26 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 ?>
 <script>
   // Mengambil nilai API_URL dari PHP
-  const apiUrl = 'controller/doctor/riwayatController';
-  var today = new Date().toISOString().split("T")[0];
-  const doctorName = <?= json_encode($_SESSION['fullname'] ?? '') ?>;
-  $("#fromDate").val(today);
+  const apiUrl = 'controller/doctor/registrasiInpatientController';
+  let now = new Date();
+
+  // 🔥 awal bulan
+  let firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  // 🔥 hari ini (atau bisa end of month kalau mau full 1 bulan)
+  let today = now.toISOString().split("T")[0];
+
+  let firstDayStr = firstDay.toISOString().split("T")[0];
+
+  $("#fromDate").val(firstDayStr);
   $("#toDate").val(today);
   const rmeType = '<?php echo $rme_type ?>'; // ambil dari PHP
   $(document).ready(function() {
     // Initialize DataTable
     var table = $('#zero_config').DataTable({
       "processing": true,
-      "serverSide": true,
+      "serverSide": false,
+      scrollX: true,
       "ajax": {
         "url": apiUrl, // Ganti dengan URL API yang sesuai
         "type": "GET",
@@ -128,41 +134,52 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
           // kirim tanggal filter ke backend
           d.fromDate = $('#fromDate').val();
           d.toDate = $('#toDate').val();
-          d.doctorName = doctorName;
         },
         "dataSrc": function(json) {
           // Format data yang akan ditampilkan dalam tabel
           return json.data.map(function(row, index) {
             // pilih file tujuan sesuai rme_type
             let pemeriksaanFile = (rmeType == 1) ? 'pemeriksaan_a' : 'pemeriksaan_b';
-             // ✅ Kondisi tampil tombol panggil
             return {
               "actions": `
-                  <div class="text-center">
-                  <!-- Pemeriksaan -->
-                  <a href="module/admin/${pemeriksaanFile}?no=${row.visit_ID}&rm=${row.nomor_rm}"
-                    class="btn btn-sm btn-primary"
-                    data-bs-toggle="tooltip"
-                    data-bs-placement="top"
-                    title="Pemeriksaan">
-                    <i class="ti ti-stethoscope"></i>
-                  </a>
-                  </div>
+                <div class="dropdown text-center position-relative">
+                  <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    Actions
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="z-index:1055; min-width: 180px;">
+                    <li>
+                      <a class="dropdown-item" target="_blank" href="module/admin/print/bundle_klaim?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
+                        <i class="bi bi-clipboard2-pulse me-2"></i>Preview RME Klaim
+                      </a>
+                    </li>
+                        <li>
+                        <a class="dropdown-item" href="module/admin/rme_inap?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
+                          <i class="bi bi-file-earmark-text me-2"></i>Pemeriksaan Rawat Inap
+                        </a>
+                      </li>
+                       </li>
+                        ${row.patient_gender === 'Perempuan' ? `
+                        <li>
+                          <a class="dropdown-item" href="module/admin/rme_persalinan?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
+                            <i class="bi bi-file-earmark-text me-2"></i>Persalinan
+                          </a>
+                        </li>
+                        ` : ''}
+                  </ul>
+                </div>
               `,
               "tanggal": row.visit_date + ' ' + row.visit_time,
-              "source_hub": row.source_hub,
               "nomor_rm": row.nomor_rm,
               "nama_pasien": row.patient_name,
               "gender": row.patient_gender,
-              "ttl": row.patient_datebirth + '/' + row.patient_place,
-              "dokter": row.doctor_name,
+              "dokter": row.id_doctor,
               "jenis_bayar": row.provider_name,
-              "layanan": row.poli_name,
               "status_visit": `
-                <span class="badge ${row.status_dilayani == 1 ? 'bg-success' : 'bg-danger'} d-block text-center">
-                  ${row.status_dilayani == 1 ? 'Sudah Dilayani' : 'Belum Dilayani'}
-                </span>
-              `
+                  <span class="badge ${row.status_cppt == 1 ? 'bg-success' : 'bg-danger'} d-block text-center">
+                    ${row.status_cppt == 1 ? 'Sudah Dilayani' : 'Belum Dilayani'}
+                  </span>
+                `
             };
           });
         }
@@ -171,9 +188,6 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
           "data": "actions"
         }, {
           "data": "tanggal"
-        },
-        {
-          "data": "source_hub"
         },
         {
           "data": "nomor_rm"
@@ -185,16 +199,10 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
           "data": "gender"
         },
         {
-          "data": "ttl"
-        },
-        {
           "data": "dokter"
         },
         {
           "data": "jenis_bayar"
-        },
-        {
-          "data": "layanan"
         },
         {
           "data": "status_visit"
@@ -218,31 +226,77 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 
 
   });
+</script>
 
-  function callPatient(noAntrian, namaPasien, poli) {
-   if (!('speechSynthesis' in window)) {
-      alert('Browser tidak mendukung suara');
-      return;
-   }
+<script>
+  function callPatient(noAntrian, namaPasien, poli, visitID) {
 
-   // Hentikan suara sebelumnya
-   speechSynthesis.cancel();
+    /* =========================
+       1. SUARA (LANGSUNG - USER GESTURE)
+    ========================= */
+    if ('speechSynthesis' in window) {
 
-   const text = `Nomor antrean ${noAntrian}, atas nama ${namaPasien}, silakan menuju poli ${poli}`;
-   const utterance = new SpeechSynthesisUtterance(text);
+      speechSynthesis.cancel();
 
-   utterance.lang = 'id-ID';
-   utterance.rate = 0.9;
-   utterance.pitch = 1;
-   utterance.volume = 1;
+      const text = `Nomor antrean ${noAntrian}, atas nama ${namaPasien}, silakan menuju poli ${poli}`;
+      const utterance = new SpeechSynthesisUtterance(text);
 
-   // pilih voice Indonesia jika ada
-   const voices = speechSynthesis.getVoices();
-   const indoVoice = voices.find(v => v.lang === 'id-ID');
-   if (indoVoice) utterance.voice = indoVoice;
+      utterance.lang = 'id-ID';
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      utterance.volume = 1;
 
-   speechSynthesis.speak(utterance);
-}
+      const voices = speechSynthesis.getVoices();
+      const indo = voices.find(v => v.lang === 'id-ID');
+      if (indo) utterance.voice = indo;
+
+      speechSynthesis.speak(utterance);
+    }
+
+    /* =========================
+       2. UPDATE DISPLAY (ASYNC)
+    ========================= */
+    fetch('controller/queue/poliCall.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          visit_ID: visitID
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status !== 'success') {
+          console.warn('Update display gagal');
+        }
+      });
+  }
+</script>
+
+<script>
+  $(document).on('shown.bs.dropdown', '.dropdown', function() {
+    const $menu = $(this).find('.dropdown-menu');
+    const $btn = $(this).find('[data-bs-toggle="dropdown"]');
+
+    const offset = $btn.offset();
+
+    $('body').append($menu);
+
+    $menu.css({
+      position: 'absolute',
+      top: offset.top + $btn.outerHeight(),
+      left: offset.left,
+      display: 'block',
+      zIndex: 999999
+    });
+  });
+
+  $(document).on('hide.bs.dropdown', '.dropdown', function() {
+    const $menu = $('body > .dropdown-menu');
+    $(this).append($menu);
+    $menu.removeAttr('style');
+  });
 </script>
 
 </html>

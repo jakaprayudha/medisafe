@@ -190,7 +190,7 @@
                // ===============================
                // DIAGNOSA (UTAMA + SEKUNDER)
                // ===============================
-               let diagnosa = d.diagnosa || "-";
+               let diagnosa = d.code + " - " + d.icd10 || "-";
 
                if (d.diagnosa_sekunder) {
                   diagnosa += " + " + d.diagnosa_sekunder;
