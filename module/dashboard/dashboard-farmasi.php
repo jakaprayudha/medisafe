@@ -1,53 +1,56 @@
 <style>
-/* ===== FARMASI DASHBOARD ===== */
-.farmasi-card {
-  border: none;
-  border-radius: 14px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-  transition: transform .2s ease, box-shadow .2s ease;
-}
-.farmasi-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 26px rgba(0,0,0,0.12);
-}
+  /* ===== FARMASI DASHBOARD ===== */
+  .farmasi-card {
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
 
-/* ICON BOX */
-.icon-box {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.icon-box iconify-icon {
-  font-size: 36px;
-}
+  .farmasi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+  }
 
-/* METRIC */
-.farmasi-card h3 {
-  font-size: 32px;
-  font-weight: 700;
-  line-height: 1.1;
-}
+  /* ICON BOX */
+  .icon-box {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-/* SECTION TITLE */
-.section-title {
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+  .icon-box iconify-icon {
+    font-size: 36px;
+  }
 
-/* TABLE COMPACT */
-.table-sm th, .table-sm td {
-  padding: .55rem .6rem;
-}
+  /* METRIC */
+  .farmasi-card h3 {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
 
-/* LIST CLEAN */
-.list-group-item {
-  padding: .6rem .75rem;
-}
+  /* SECTION TITLE */
+  .section-title {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* TABLE COMPACT */
+  .table-sm th,
+  .table-sm td {
+    padding: .55rem .6rem;
+  }
+
+  /* LIST CLEAN */
+  .list-group-item {
+    padding: .6rem .75rem;
+  }
 </style>
 
 <!-- ================= METRIC FARMASI ================= -->
@@ -60,7 +63,7 @@
         </div>
         <div class="ms-3">
           <h3 class="mb-0">0</h3>
-          <small class="text-muted">Resep Internal</small>
+          <small class="text-muted">Racikan</small>
         </div>
       </div>
     </div>
@@ -74,7 +77,7 @@
         </div>
         <div class="ms-3">
           <h3 class="mb-0">0</h3>
-          <small class="text-muted">Obat Bebas</small>
+          <small class="text-muted">Non Racikan</small>
         </div>
       </div>
     </div>
@@ -127,28 +130,10 @@
                 <th>Pasien</th>
                 <th>Jenis</th>
                 <th>Status</th>
-                <th>Aksi</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>R-001</td>
-                <td>Siti Aminah</td>
-                <td><span class="badge bg-primary">Internal</span></td>
-                <td><span class="badge bg-warning">Menunggu</span></td>
-                <td>
-                  <button class="btn btn-sm btn-success">Proses</button>
-                </td>
-              </tr>
-              <tr>
-                <td>R-002</td>
-                <td>Budi Santoso</td>
-                <td><span class="badge bg-secondary">Obat Bebas</span></td>
-                <td><span class="badge bg-success">Selesai</span></td>
-                <td>
-                  <button class="btn btn-sm btn-secondary" disabled>Selesai</button>
-                </td>
-              </tr>
+
             </tbody>
           </table>
         </div>
@@ -205,3 +190,40 @@
     </div>
   </div>
 </div>
+
+<script>
+  function loadDashboardFarmasi() {
+    fetch('controller/dashboard/farmasi.php')
+      .then(res => res.json())
+      .then(res => {
+
+        // ===== METRIC =====
+        document.querySelectorAll('.farmasi-card h3')[0].innerText = res.metric.racikan;
+        document.querySelectorAll('.farmasi-card h3')[1].innerText = res.metric.non_racikan;
+        document.querySelectorAll('.farmasi-card h3')[2].innerText = res.metric.menunggu;
+        document.querySelectorAll('.farmasi-card h3')[3].innerText = res.metric.selesai;
+
+        // ===== TABLE =====
+        let tbody = '';
+        res.antrian.forEach(row => {
+          tbody += `
+          <tr>
+            <td>${row.no_resep}</td>
+            <td>${row.pasien}</td>
+            <td>${row.jenis}</td>
+            <td>${row.status}</td>
+          </tr>
+        `;
+        });
+
+        document.querySelector('table tbody').innerHTML = tbody;
+
+      });
+  }
+
+  // load pertama
+  loadDashboardFarmasi();
+
+  // optional auto refresh
+  setInterval(loadDashboardFarmasi, 10000);
+</script>

@@ -14,24 +14,60 @@ if (!$visit_ID) {
    exit;
 }
 
-// update status jadi 4
-$stmt = $koneksi->prepare("
-  UPDATE pasien_visit 
-  SET visit_status = 4 
-  WHERE visit_ID = ?
-");
+// mulai transaction
+$koneksi->begin_transaction();
 
-$stmt->bind_param("s", $visit_ID);
+try {
 
-if ($stmt->execute()) {
+   // 1. update status visit
+   $stmt = $koneksi->prepare("
+      UPDATE pasien_visit 
+      SET visit_status = 4 
+      WHERE visit_ID = ?
+   ");
+   $stmt->bind_param("s", $visit_ID);
+   $stmt->execute();
+
+   // 2. ambil id_bed dari permintaan_ranap
+   $getBed = $koneksi->prepare("
+      SELECT id_bed 
+      FROM permintaan_ranap 
+      WHERE visit_ID_inpatient = ?
+      LIMIT 1
+   ");
+   $getBed->bind_param("s", $visit_ID);
+   $getBed->execute();
+   $result = $getBed->get_result();
+
+   if ($result->num_rows > 0) {
+      $row = $result->fetch_assoc();
+      $id_bed = $row['id_bed'];
+
+      // 3. update bed jadi kosong (1)
+      $updateBed = $koneksi->prepare("
+         UPDATE ms_room_bed 
+         SET bed_status = 1 
+         WHERE id_bed = ?
+      ");
+      $updateBed->bind_param("i", $id_bed);
+      $updateBed->execute();
+   }
+
+   // commit
+   $koneksi->commit();
+
    echo json_encode([
       'status' => 'success',
-      'message' => 'Pemeriksaan selesai'
+      'message' => 'Pemeriksaan selesai & bed dikosongkan'
    ]);
-} else {
+} catch (Exception $e) {
+
+   // rollback kalau gagal
+   $koneksi->rollback();
+
    echo json_encode([
       'status' => 'error',
-      'message' => 'Gagal update status',
-      'error' => $stmt->error
+      'message' => 'Gagal proses',
+      'error' => $e->getMessage()
    ]);
 }

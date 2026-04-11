@@ -161,7 +161,7 @@ if ($result['code'] != '200') {
     $source_hub = "Poliklinik";
     $id_patient = $chackpasien['id_patient'];
     $visit_time = date('H:i:s');
-    $suhu    = (int)$suhu;
+    $suhu    =  $_POST['suhu'];
     $stmt = $koneksi->prepare("
             INSERT INTO pasien_visit (
                 id_patient,
