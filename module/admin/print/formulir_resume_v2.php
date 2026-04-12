@@ -5,7 +5,7 @@ require '../../../database/connect.php';
 
 $visit = $_GET['no'] ?? '';
 $rm    = $_GET['rm'] ?? '';
-$checkdata = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor INNER JOIN permintaan_ranap ON permintaan_ranap.visit_ID_inpatient = pasien_visit.visit_ID LEFT JOIN ms_room ON ms_room.id_room = permintaan_ranap.id_room LEFT JOIN ms_room_bed ON ms_room_bed.id_bed = permintaan_ranap.id_bed LEFT JOIN ms_provider ON ms_provider.id_provider = pasien_visit.id_provider INNER JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa LEFT JOIN resume_medis ON resume_medis.visit_ID = pasien_visit.visit_ID AND resume_medis.nomor_rm = ms_patient.nomor_rm WHERE pasien_visit.visit_ID='$visit' AND ms_patient.nomor_rm='$rm'");
+$checkdata = mysqli_query($koneksi, "SELECT * FROM pasien_visit LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN permintaan_ranap ON permintaan_ranap.visit_ID_inpatient = pasien_visit.visit_ID LEFT JOIN ms_room ON ms_room.id_room = permintaan_ranap.id_room LEFT JOIN ms_room_bed ON ms_room_bed.id_bed = permintaan_ranap.id_bed LEFT JOIN ms_provider ON ms_provider.id_provider = pasien_visit.id_provider LEFT JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa LEFT JOIN resume_medis ON resume_medis.visit_ID = pasien_visit.visit_ID AND resume_medis.nomor_rm = ms_patient.nomor_rm WHERE pasien_visit.visit_ID='$visit' AND ms_patient.nomor_rm='$rm'");
 $dataresume = mysqli_fetch_array($checkdata);
 ?>
 
