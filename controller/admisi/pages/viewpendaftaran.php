@@ -119,6 +119,18 @@
                             </div>
 
                             <div class="col-md-4">
+                                <label class="form-label">BMI</label>
+                                <input type="text" class="form-control bg-light" id="bmi" name="bmi" readonly>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Keterangan BMI</label>
+                                <input type="text" class="form-control bg-light" id="bmiKet" name="bmiKet" readonly>
+                            </div>
+
+
+
+                            <div class="col-md-4">
                                 <label class="form-label">Lingkar Perut</label>
                                 <div class="input-group">
                                     <input type="number" class="form-control" name="lingkarPerut" max="300" id="lingkarPerut" value="0">
@@ -163,6 +175,14 @@
                                     <span class="input-group-text">BPM</span>
                                 </div>
                             </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Saturasi Oksigen</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" name="saturasiOksigen" id="saturasiOksigen" value="0">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="text-end mt-4">
@@ -181,3 +201,38 @@
         </div>
     </div>
 </div>
+<script>
+    function hitungBMI() {
+        let tinggi = parseFloat($('#tinggiBadan').val());
+        let berat = parseFloat($('#beratBadan').val());
+
+        if (tinggi > 0 && berat > 0) {
+            let tinggiMeter = tinggi / 100;
+            let bmi = berat / (tinggiMeter * tinggiMeter);
+
+            bmi = bmi.toFixed(2);
+
+            $('#bmi').val(bmi);
+
+            let ket = '';
+
+            if (bmi < 18.5) {
+                ket = 'Kurus';
+            } else if (bmi < 25) {
+                ket = 'Normal';
+            } else if (bmi < 30) {
+                ket = 'Kelebihan Berat';
+            } else {
+                ket = 'Obesitas';
+            }
+
+            $('#bmiKet').val(ket);
+        } else {
+            $('#bmi').val('');
+            $('#bmiKet').val('');
+        }
+    }
+    $('#tinggiBadan, #beratBadan').on('input', function() {
+        hitungBMI();
+    });
+</script>

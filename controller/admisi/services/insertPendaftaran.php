@@ -147,6 +147,9 @@ if ($result['code'] != '200') {
     $id_patient = $chackpasien['id_patient'];
     $visit_time = date('H:i:s');
     $suhu    =  $_POST['suhu'];
+    $saturasi    =  $_POST['saturasiOksigen'];
+    $bmi = $_POST['bmi'];
+    $bmiKet = $_POST['bmiKet'];
     $stmt = $koneksi->prepare("
             INSERT INTO pasien_visit (
                 id_patient,
@@ -168,14 +171,17 @@ if ($result['code'] != '200') {
                 tinggi_badan,
                 berat_badan,
                 patient_name_pcare,
-                suhu
-            )VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)
+                suhu,
+                saturasi,
+                bmi,
+                bmi_keterangan
+            )VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?)
         ");
     $visit_status = 1;
     $status_antrian = 0;
     $td = $sistole . "/" . $diastole;
     $stmt->bind_param(
-        "ssssssssssssssssssss",
+        "sssssssssssssssssssssss",
         $id_patient,
         $visit_ID,
         $tglDaftarDB,
@@ -195,7 +201,10 @@ if ($result['code'] != '200') {
         $tinggiBadan,
         $beratBadan,
         $nama,
-        $suhu
+        $suhu,
+        $saturasi,
+        $bmi,
+        $bmiKet
     );
 
     $hasil1 = $stmt->execute();
