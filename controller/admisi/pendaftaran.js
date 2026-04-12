@@ -209,6 +209,40 @@ $(function () {
         $('#kunjSakit').change(function () {
             APP.jnsKunjungvalue();
         });
+
+        APP.hitungBMI = function() {
+            let tinggi = parseFloat($('#tinggiBadan').val());
+            let berat = parseFloat($('#beratBadan').val());
+
+            if (tinggi > 0 && berat > 0) {
+                let tinggiMeter = tinggi / 100;
+                let bmi = berat / (tinggiMeter * tinggiMeter);
+
+                bmi = bmi.toFixed(2);
+
+                $('#bmi').val(bmi);
+
+                let ket = '';
+
+                if (bmi < 18.5) {
+                    ket = 'Kurus';
+                } else if (bmi < 25) {
+                    ket = 'Normal';
+                } else if (bmi < 30) {
+                    ket = 'Kelebihan Berat';
+                } else {
+                    ket = 'Obesitas';
+                }
+
+                $('#bmiKet').val(ket);
+            } else {
+                $('#bmi').val('');
+                $('#bmiKet').val('');
+            }
+        }
+        $('#tinggiBadan, #beratBadan').on('input', function () {
+            APP.hitungBMI();
+        });
     }
     APP.createpeserta = function () {
         var data = $('#isiform').serialize();
