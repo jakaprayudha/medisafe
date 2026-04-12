@@ -53,7 +53,7 @@ if (!in_array($lengthkartu, [13, 16, 19])) {
     }
     // $result = testingBPJS_GET("http://localhost/medisafe/controller/admisi/api/getpeserta.php");
 
-    if (($result['code'] ?? '') != "200" || $respon['data']['aktif'] != 'true') {
+    if (($result['code'] ?? '') != "200" || $result['data']['aktif'] != 'true') {
         $msg = $result['message'] ?? "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
         $response = [
             'success' => false,
