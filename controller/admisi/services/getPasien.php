@@ -21,38 +21,43 @@ if (!in_array($lengthkartu, [13, 16, 19])) {
 } else {
     if ($lengthkartu == 19) {
         $respon = bpjsGet('/kunjungan/rujukan/' . $nomor_kartu);
-        $result = [
-            "success" => true,
-            "code" => "200",
-            "message" => "OK",
-            'data' => [
-                'noKartu' => $respon['data']['nokaPst'],
-                'nama' => $respon['data']['nmPst'],
-                'hubunganKeluarga' => $respon['data']['ketPisa'],
-                'sex' => $respon['data']['sex'],
-                'noHP' => $respon['data']['noHP'] ?? "",
-                'tglLahir' => $respon['data']['tglLahir'],
-                'tglMulaiAktif' => $respon['data']['tglEstRujuk'],
-                'tglAkhirBerlaku' => $respon['data']['tglAkhirRujuk'],
-                'kdProviderPst' => [
-                    'kdProvider' => $respon['data']['ppk']['kdPPK'],
-                    'nmProvider' => $respon['data']['ppk']['nmPPK'],
+        if ($respon['data']['aktif'] == 'true') {
+            $result = [
+                "success" => true,
+                "code" => "200",
+                "message" => "OK",
+                'data' => [
+                    'noKartu' => $respon['data']['nokaPst'],
+                    'nama' => $respon['data']['nmPst'],
+                    'hubunganKeluarga' => $respon['data']['ketPisa'],
+                    'sex' => $respon['data']['sex'],
+                    'noHP' => $respon['data']['noHP'] ?? "",
+                    'tglLahir' => $respon['data']['tglLahir'],
+                    'tglMulaiAktif' => $respon['data']['tglEstRujuk'],
+                    'tglAkhirBerlaku' => $respon['data']['tglAkhirRujuk'],
+                    'kdProviderPst' => [
+                        'kdProvider' => $respon['data']['ppk']['kdPPK'],
+                        'nmProvider' => $respon['data']['ppk']['nmPPK'],
+                    ],
+                    'tunggakan' => $respon['data']['infoDenda'],
                 ],
-                'tunggakan' => $respon['data']['infoDenda'],
-            ],
-        ];
+            ];
+        } else {
+            $response = [
+                'success' => false,
+                'message' => $respon['data']['ketAktif']
+            ];
+        }
     } else {
         $result = bpjsGet('/peserta/' . $tipe . '/' . $nomor_kartu);
     }
     // $result = testingBPJS_GET("http://localhost/medisafe/controller/admisi/api/getpeserta.php");
 
-    if (($result['code'] ?? '') != "200") {
-        $msg = $result['message'] ??
-            "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
-
+    if (($result['code'] ?? '') != "200" || $respon['data']['aktif'] != 'true') {
+        $msg = $result['message'] ?? "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
         $response = [
             'success' => false,
-            'message' => $msg
+            'message' => $result['data']['ketAktif']
         ];
     } else {
         $response = $result;

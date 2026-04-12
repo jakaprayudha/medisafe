@@ -45,7 +45,7 @@ $(function () {
                         })
                     } else {
                         Swal.fire({
-                            title: "Opss..",
+                            title: "Warning",
                             text: response.message,
                             icon: "error",
                             showDenyButton: true,
@@ -136,10 +136,6 @@ $(function () {
             {
                 id: "10",
                 text: "Rawat Jalan",
-            },
-            {
-                id: "20",
-                text: "Rawat Inap"
             },
             {
                 id: "50",
