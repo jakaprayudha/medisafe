@@ -46,6 +46,7 @@ require '../../controller/view.php';
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
+                          <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                           <th class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Lengkap</th>
                           <th scope="col" class="text-dark fw-normal">NIK</th>
@@ -54,7 +55,7 @@ require '../../controller/view.php';
                           <th scope="col" class="text-dark fw-normal">No.Handphone</th>
                           <th scope="col" class="text-dark fw-normal text-center">Foto</th>
                           <th scope="col" class="text-dark fw-normal">Face Status</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Actions</th>
+
                         </tr>
                       </thead>
                       <tbody></tbody>
@@ -234,25 +235,47 @@ require '../../controller/view.php';
 
             return {
               "actions": `
-                      <div class="text-center">
-								<div class="btn-group btn-group-sm" role="group">
-                  <!-- Tombol kamera -->
-                  <a class="btn btn-primary camera-btn" href="javascript:;" data-id="${row.id_patient}">
-                    <i class="fas fa-camera"></i>
-                  </a>
+  <div class="text-center">
+    <div class="dropdown">
+      <button class="btn btn-sm btn-primary dropdown-toggle"
+        type="button"
+        data-bs-toggle="dropdown"
+        data-bs-boundary="window">
+        ⚙️ Aksi
+      </button>
 
-                	<a class="btn btn-info" href="module/admin/patient_details?no=${row.patient_number}&pt=${row.id_patient}">
-											<i class="fas fa-info-circle"></i>
-									</a>
-									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_patient}">
-											<i class="fas fa-edit"></i>
-									</a>
-									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_patient}">
-											<i class="fas fa-trash"></i>
-									</a>
-								</div>
-							</div>
-                    `,
+      <ul class="dropdown-menu dropdown-menu-end shadow">
+
+        <li>
+          <a class="dropdown-item camera-btn" href="javascript:;" data-id="${row.id_patient}">
+            <i class="fas fa-camera me-2 text-success"></i> Ambil Foto
+          </a>
+        </li>
+
+        <li>
+          <a class="dropdown-item" href="module/admin/patient_details?no=${row.patient_number}&pt=${row.id_patient}">
+            <i class="fas fa-info-circle me-2 text-info"></i> Detail
+          </a>
+        </li>
+
+        <li>
+          <a class="dropdown-item edit-btn" href="javascript:;" data-id="${row.id_patient}">
+            <i class="fas fa-edit me-2 text-warning"></i> Edit
+          </a>
+        </li>
+
+        <li><hr class="dropdown-divider"></li>
+
+        <li>
+          <a class="dropdown-item delete-btn text-danger" href="javascript:;" data-id="${row.id_patient}">
+            <i class="fas fa-trash me-2"></i> Hapus
+          </a>
+        </li>
+
+      </ul>
+    </div>
+  </div>
+`,
               "rm": row.nomor_rm ?? "-",
               "name": row.patient_name ?? "-",
               "nik": row.patient_nik ?? "-",
@@ -274,6 +297,10 @@ require '../../controller/view.php';
         }
       },
       columns: [{
+          data: "actions",
+          orderable: false,
+          searchable: false
+        }, {
           data: "rm"
         }, {
           data: "name"
@@ -295,11 +322,6 @@ require '../../controller/view.php';
         },
         {
           data: "face_status"
-        },
-        {
-          data: "actions",
-          orderable: false,
-          searchable: false
         },
       ],
       order: [
@@ -385,23 +407,59 @@ require '../../controller/view.php';
     // 🔹 Delete
     $(document).on('click', '.delete-btn', function() {
       let id = $(this).data('id');
+
       Swal.fire({
         title: 'Hapus Data?',
+        text: 'Data akan dihapus',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Hapus',
         cancelButtonText: 'Batal'
       }).then((result) => {
         if (result.isConfirmed) {
+
           fetch(apiUrl + `?id=${id}`, {
               method: 'DELETE'
             })
             .then(res => res.json())
             .then(data => {
-              if (data.status === 'success') {
-                Swal.fire('Berhasil!', 'Data dihapus.', 'success');
+
+              // 🔴 KALAU ADA RELASI
+              if (data.status === 'has_relation') {
+                Swal.fire({
+                  title: 'Data memiliki relasi!',
+                  text: 'Hapus juga semua data terkait?',
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonText: 'Ya, hapus semua',
+                  cancelButtonText: 'Tidak'
+                }).then((res2) => {
+                  if (res2.isConfirmed) {
+                    fetch(apiUrl + `?id=${id}&force=true`, {
+                        method: 'DELETE'
+                      })
+                      .then(res => res.json())
+                      .then(del => {
+                        if (del.status === 'success') {
+                          Swal.fire('Berhasil!', 'Semua data dihapus.', 'success');
+                          table.ajax.reload(null, false);
+                        }
+                      });
+                  }
+                });
+              }
+
+              // ✅ SUCCESS NORMAL
+              else if (data.status === 'success') {
+                Swal.fire('Berhasil!', data.message, 'success');
                 table.ajax.reload(null, false);
               }
+
+              // ❌ ERROR
+              else {
+                Swal.fire('Gagal!', data.message, 'error');
+              }
+
             });
         }
       });

@@ -313,6 +313,7 @@ function deleteData($id_customer)
    global $koneksi;
 
    $id = $_GET['id'] ?? '';
+   $force = $_GET['force'] ?? false;
 
    if (!$id) {
       echo json_encode([
@@ -322,32 +323,79 @@ function deleteData($id_customer)
       return;
    }
 
-   // CEK RELASI KE pasien_visit
-   $check = $koneksi->prepare(
-      "SELECT COUNT(*) FROM pasien_visit 
-       WHERE id_patient=?"
+   // 🔍 CEK & AMBIL SEMUA VISIT
+   $visits = [];
+   $getVisit = $koneksi->prepare(
+      "SELECT visit_ID FROM pasien_visit WHERE id_patient=? AND id_customer=?"
    );
 
-   $count = 0;
+   $getVisit->bind_param("ii", $id, $id_customer);
+   $getVisit->execute();
+   $result = $getVisit->get_result();
 
-   $check->bind_param("i", $id);
-   $check->execute();
-   $check->bind_result($count);
-   $check->fetch();
-   $check->close();
+   while ($row = $result->fetch_assoc()) {
+      $visits[] = $row['visit_ID'];
+   }
 
-   if ($count > 0) {
+   $getVisit->close();
+
+   // ❗ CEK RELASI
+   if (count($visits) > 0 && !$force) {
       echo json_encode([
-         'status' => 'error',
-         'message' => 'Data Tidak Dapat Dihapus Karena Sudah Ada Riwayat Pasien Visit'
+         'status' => 'has_relation',
+         'message' => 'Ada data relasi'
       ]);
       return;
    }
 
-   // DELETE (kalau aman)
+   // 🚀 FORCE DELETE
+   if (count($visits) > 0 && $force) {
+
+      $koneksi->begin_transaction();
+
+      try {
+
+         // ubah array jadi string: 1,2,3
+         $visitList = "'" . implode("','", $visits) . "'";
+
+         // 🔥 hapus semua relasi berdasarkan visit
+         $koneksi->query("DELETE FROM permintaan_ranap WHERE visit_ID_inpatient IN ($visitList)");
+         $koneksi->query("DELETE FROM permintaan_pharmacy WHERE id_visit IN ($visitList)");
+         $koneksi->query("DELETE FROM pasien_billing WHERE id_visit IN ($visitList)");
+
+         // 🔥 hapus pasien_visit
+         $koneksi->query("DELETE FROM pasien_visit WHERE id_patient='$id' AND id_customer='$id_customer'");
+
+         // 🔥 hapus patient
+         $stmt = $koneksi->prepare(
+            "DELETE FROM ms_patient WHERE id_patient=? AND id_customer=?"
+         );
+         $stmt->bind_param("ii", $id, $id_customer);
+         $stmt->execute();
+         $stmt->close();
+
+         $koneksi->commit();
+
+         echo json_encode([
+            'status' => 'success',
+            'message' => 'Semua data berhasil dihapus'
+         ]);
+      } catch (Exception $e) {
+
+         $koneksi->rollback();
+
+         echo json_encode([
+            'status' => 'error',
+            'message' => 'Rollback: ' . $e->getMessage()
+         ]);
+      }
+
+      return;
+   }
+
+   // 🧹 kalau tidak ada relasi → langsung hapus
    $stmt = $koneksi->prepare(
-      "DELETE FROM ms_patient 
-       WHERE id_patient=? AND id_customer=?"
+      "DELETE FROM ms_patient WHERE id_patient=? AND id_customer=?"
    );
 
    $stmt->bind_param("ii", $id, $id_customer);

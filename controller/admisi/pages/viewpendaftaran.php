@@ -119,6 +119,18 @@
                             </div>
 
                             <div class="col-md-4">
+                                <label class="form-label">BMI</label>
+                                <input type="text" class="form-control bg-light" id="bmi" name="bmi" readonly>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Keterangan BMI</label>
+                                <input type="text" class="form-control bg-light" id="bmiKet" name="bmiKet" readonly>
+                            </div>
+
+
+
+                            <div class="col-md-4">
                                 <label class="form-label">Lingkar Perut</label>
                                 <div class="input-group">
                                     <input type="number" class="form-control" name="lingkarPerut" max="300" id="lingkarPerut" value="0">
@@ -161,6 +173,14 @@
                                 <div class="input-group">
                                     <input type="number" class="form-control" name="heartRate" id="heartRate" value="0">
                                     <span class="input-group-text">BPM</span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Saturasi Oksigen</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" name="saturasiOksigen" id="saturasiOksigen" value="0">
+                                    <span class="input-group-text">%</span>
                                 </div>
                             </div>
                         </div>
