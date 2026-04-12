@@ -235,55 +235,38 @@ require '../../controller/view.php';
 
             return {
               "actions": `
-  <div class="text-center">
-    <div class="dropdown">
-      <button class="btn btn-sm btn-primary dropdown-toggle"
-        type="button"
-        data-bs-toggle="dropdown"
-        data-bs-boundary="window">
-        ⚙️ Aksi
-      </button>
+                <div class="text-center">
+                  <div class="btn-group btn-group-sm" role="group">
+                    <button class="btn btn-light camera-btn" 
+                      data-id="${row.id_patient}" title="Ambil Foto">
+                      <i class="fas fa-camera"></i>
+                    </button>
 
-      <ul class="dropdown-menu dropdown-menu-end shadow">
+                    <a class="btn btn-info" 
+                      href="module/admin/patient_details?no=${row.patient_number}&pt=${row.id_patient}" 
+                      title="Detail">
+                      <i class="fas fa-info-circle"></i>
+                    </a>
 
-        <li>
-          <a class="dropdown-item camera-btn" href="javascript:;" data-id="${row.id_patient}">
-            <i class="fas fa-camera me-2 text-success"></i> Ambil Foto
-          </a>
-        </li>
+                    <button class="btn btn-warning edit-btn" 
+                      data-id="${row.id_patient}" title="Edit">
+                      <i class="fas fa-edit"></i>
+                    </button>
 
-        <li>
-          <a class="dropdown-item" href="module/admin/patient_details?no=${row.patient_number}&pt=${row.id_patient}">
-            <i class="fas fa-info-circle me-2 text-info"></i> Detail
-          </a>
-        </li>
+                    <button class="btn btn-danger delete-btn" 
+                      data-id="${row.id_patient}" title="Hapus">
+                      <i class="fas fa-trash"></i>
+                    </button>
 
-        <li>
-          <a class="dropdown-item edit-btn" href="javascript:;" data-id="${row.id_patient}">
-            <i class="fas fa-edit me-2 text-warning"></i> Edit
-          </a>
-        </li>
-
-        <li><hr class="dropdown-divider"></li>
-
-        <li>
-          <a class="dropdown-item delete-btn text-danger" href="javascript:;" data-id="${row.id_patient}">
-            <i class="fas fa-trash me-2"></i> Hapus
-          </a>
-        </li>
-
-      </ul>
-    </div>
-  </div>
-`,
+                  </div>
+                </div>
+              `,
               "rm": row.nomor_rm ?? "-",
               "name": row.patient_name ?? "-",
               "nik": row.patient_nik ?? "-",
               "bpjs": row.patient_bpjs ?? "-",
               "gender": row.patient_gender ?? "-",
               "phone": row.patient_phone ?? "-",
-
-
               "face_image": row.face_image ? `
                 <a href="${baseUrl}${row.face_image.replace('../../','')}" target="_blank">
                   <img src="${baseUrl}${row.face_image.replace('../../','')}" 
