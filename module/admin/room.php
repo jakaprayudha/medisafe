@@ -80,21 +80,17 @@ require '../../controller/view.php';
       </div>
       <div class="modal-body">
         <input type="hidden" name="id_room" id="id_room">
-        <input type="hidden" name="service_class" id="service_class" value="Umum">
         <div class="row">
-          <!-- <div class="col-12">
+          <div class="col-12">
             <div class="mb-3">
               <label class="form-label required" id="service_class">Kelas Layanan</label>
               <select name="service_class" id="service_class" class="form-select" required>
                 <option value="">PILIH</option>
-                <option value="Kelas I">Kelas I</option>
-                <option value="Kelas II">Kelas II</option>
-                <option value="Kelas III">Kelas III</option>
-                <option value="Kelas VIP">Kelas VIP</option>
-                <option value="Kelas VVIP">Kelas VVIP</option>
+                <option value="Umum">Umum</option>
+                <option value="BPJS Kesehatan">BPJS Kesehatan</option>
               </select>
             </div>
-          </div> -->
+          </div>
           <div class="col-12">
             <div class="mb-3">
               <label class="form-label required">Nama Ruangan</label>

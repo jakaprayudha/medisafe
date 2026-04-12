@@ -82,8 +82,7 @@ require '../../admin/getdataclinic.php';
 
     <!-- JUDUL -->
     <div class="kopsurat-center">
-      <h1>KLINIK</h1>
-      <h2><?= strtoupper($datafaskes['clinic_name']) ?></h2>
+      <h1><?= strtoupper($datafaskes['clinic_name']) ?></h1>
     </div>
 
     <!-- LOGO KANAN -->
