@@ -211,8 +211,8 @@ require '../../controller/view.php';
                 let label = '';
 
                 if (status == 1) {
-                  badgeClass = 'bg-danger';
-                  label = 'Belum';
+                  badgeClass = 'bg-warning';
+                  label = 'Sudah Kirim';
                 } else if (status == 2) {
                   badgeClass = 'bg-primary';
                   label = 'Persiapan';
