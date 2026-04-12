@@ -385,23 +385,59 @@ require '../../controller/view.php';
     // 🔹 Delete
     $(document).on('click', '.delete-btn', function() {
       let id = $(this).data('id');
+
       Swal.fire({
         title: 'Hapus Data?',
+        text: 'Data akan dihapus',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Hapus',
         cancelButtonText: 'Batal'
       }).then((result) => {
         if (result.isConfirmed) {
+
           fetch(apiUrl + `?id=${id}`, {
               method: 'DELETE'
             })
             .then(res => res.json())
             .then(data => {
-              if (data.status === 'success') {
-                Swal.fire('Berhasil!', 'Data dihapus.', 'success');
+
+              // 🔴 KALAU ADA RELASI
+              if (data.status === 'has_relation') {
+                Swal.fire({
+                  title: 'Data memiliki relasi!',
+                  text: 'Hapus juga semua data terkait?',
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonText: 'Ya, hapus semua',
+                  cancelButtonText: 'Tidak'
+                }).then((res2) => {
+                  if (res2.isConfirmed) {
+                    fetch(apiUrl + `?id=${id}&force=true`, {
+                        method: 'DELETE'
+                      })
+                      .then(res => res.json())
+                      .then(del => {
+                        if (del.status === 'success') {
+                          Swal.fire('Berhasil!', 'Semua data dihapus.', 'success');
+                          table.ajax.reload(null, false);
+                        }
+                      });
+                  }
+                });
+              }
+
+              // ✅ SUCCESS NORMAL
+              else if (data.status === 'success') {
+                Swal.fire('Berhasil!', data.message, 'success');
                 table.ajax.reload(null, false);
               }
+
+              // ❌ ERROR
+              else {
+                Swal.fire('Gagal!', data.message, 'error');
+              }
+
             });
         }
       });
