@@ -37,11 +37,6 @@ require '../../controller/view.php';
       overflow: visible !important;
     }
 
-    /* body scroll (INI YANG PALING PENTING) */
-    .dataTables_scrollBody {
-      overflow: visible !important;
-    }
-
     /* responsive table */
     .table-responsive {
       overflow: visible !important;
@@ -77,6 +72,20 @@ require '../../controller/view.php';
       position: absolute;
       top: 0;
       left: 0;
+    }
+
+    /* 🔥 freeze kolom pertama */
+    #periodeTable th:first-child,
+    #periodeTable td:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 5;
+      background: #fff;
+    }
+
+    /* header lebih tinggi z-index */
+    #periodeTable thead th:first-child {
+      z-index: 6;
     }
   </style>
 </head>
@@ -1132,6 +1141,32 @@ require '../../controller/view.php';
         cache: true
       }
     });
+  });
+</script>
+<script>
+  $(document).on('show.bs.dropdown', '.dropdown', function() {
+    let $menu = $(this).find('.dropdown-menu');
+
+    // pindahkan ke body
+    $('body').append($menu);
+
+    let offset = $(this).find('.dropdown-toggle')[0].getBoundingClientRect();
+
+    $menu.css({
+      position: 'fixed',
+      top: offset.bottom,
+      left: offset.left,
+      zIndex: 999999
+    });
+  });
+
+  $(document).on('hide.bs.dropdown', '.dropdown', function() {
+    let $menu = $(this).find('.dropdown-menu');
+
+    // balikin ke tempat asal
+    $(this).append($menu);
+
+    $menu.removeAttr('style');
   });
 </script>
 

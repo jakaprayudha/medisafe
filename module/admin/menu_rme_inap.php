@@ -82,6 +82,9 @@
            </a>
         <?php  }
          ?>
+        <a href="module/admin/cpo?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+           <button class="nav-link <?= ($current == 'cpo.php') ? 'active' : '' ?>">CPO</button>
+        </a>
         <?php
          if ($roles == 'dokter') {
             require 'trigger_pulang.php';
