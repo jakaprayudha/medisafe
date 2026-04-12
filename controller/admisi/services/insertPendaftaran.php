@@ -90,9 +90,9 @@ if (!$result) {
     $stmt->bind_param('ssssssss', $noKartu, $noNIK, $nama, $jnsKlamin, $tglLahir, $idcustomer, $nomorRM, $patientNumber);
     $result = $stmt->execute();
 }
-// $result = bpjsPost("/pendaftaran", $payload);
+$result = bpjsPost("/pendaftaran", $payload);
 // echo json_encode($result);die();
-$result = testingBPJS_POST("https://app.medisafe.id/controller/admisi/api/getpeserta.php", $payload);
+// $result = testingBPJS_POST("https://app.medisafe.id/controller/admisi/api/getpeserta.php", $payload);
 if ($result['code'] != '200') {
     $msg = $result['metadata'];
     if ($msg == null) {
