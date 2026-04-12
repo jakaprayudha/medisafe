@@ -11,9 +11,72 @@ require '../../controller/view.php';
   require '../../assets/template/head.php';
   ?>
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-  <style>
+  <style id="fixcss">
+    /* =========================
+   🎯 DROPDOWN (PRIORITAS)
+========================= */
     .dropdown-menu {
-      z-index: 99999 !important;
+      z-index: 999999 !important;
+      min-width: 200px;
+      max-width: 250px;
+      width: auto;
+      white-space: normal;
+    }
+
+    /* =========================
+   🎯 DATATABLE FIX (INTI MASALAH)
+========================= */
+
+    /* wrapper utama */
+    .dataTables_wrapper {
+      overflow: visible !important;
+    }
+
+    /* scroll container */
+    .dataTables_scroll {
+      overflow: visible !important;
+    }
+
+    /* body scroll (INI YANG PALING PENTING) */
+    .dataTables_scrollBody {
+      overflow: visible !important;
+    }
+
+    /* responsive table */
+    .table-responsive {
+      overflow: visible !important;
+    }
+
+    /* card container */
+    .card {
+      overflow: visible !important;
+    }
+
+    /* =========================
+   🎯 DROPUP POSITION FIX
+========================= */
+    .dropup .dropdown-menu {
+      top: auto !important;
+      bottom: 100% !important;
+      margin-bottom: 5px;
+      transform: none !important;
+    }
+
+    /* =========================
+   🎯 CAMERA MODAL (JANGAN DIUBAH)
+========================= */
+    #cameraModal .modal-body {
+      position: relative;
+    }
+
+    #cameraModal video {
+      width: 100%;
+    }
+
+    #cameraModal canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
     }
   </style>
 </head>
@@ -83,10 +146,11 @@ require '../../controller/view.php';
                       </div>
                     </div>
                   </div>
-                  <div class="table-responsive" data-simplebar>
+                  <div class="table-responsive">
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
+                          <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
                           <th scope="col" class="text-dark fw-normal">Tanggal</th>
                           <th class="text-dark fw-normal">No.BPJS</th>
@@ -94,7 +158,7 @@ require '../../controller/view.php';
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">Dokter</th>
                           <th scope="col" class="text-dark fw-normal">Jenis Bayar</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Actions</th>
+
                         </tr>
                       </thead>
                       <tbody></tbody>
@@ -565,15 +629,13 @@ require '../../controller/view.php';
             return {
               "actions": `
                 <div class="text-center">
-                  <div class="dropup">
+                  <div class="dropdown">
 
-                    <button class="btn btn-sm btn-primary dropdown-toggle" 
-                      type="button" 
-                      data-bs-toggle="dropdown"
-                      data-bs-display="static"
-                      data-bs-boundary="viewport">
-                      ⚙️ Aksi
-                    </button>
+                     <button class="btn btn-sm btn-primary dropdown-toggle"
+                        data-bs-toggle="dropdown"
+                        data-bs-boundary="window">
+                        ⚙️ Aksi
+                      </button>
 
                       <ul class="dropdown-menu dropdown-menu-end shadow">
 
@@ -646,6 +708,10 @@ require '../../controller/view.php';
         }
       },
       columns: [{
+          data: "actions",
+          orderable: false,
+          searchable: false
+        }, {
           data: "status"
         }, {
           data: "registrasi"
@@ -665,11 +731,7 @@ require '../../controller/view.php';
         {
           data: "provider"
         },
-        {
-          data: "actions",
-          orderable: false,
-          searchable: false
-        },
+
       ],
       footerCallback: function(row, data, start, end, display) {
         var api = this.api();
@@ -691,6 +753,12 @@ require '../../controller/view.php';
 
     $('#customSearch').on('keyup', function() {
       table.search(this.value).draw();
+    });
+
+    $('#periodeTable').on('draw.dt', function() {
+      document.querySelectorAll('.dropdown-toggle').forEach(function(el) {
+        new bootstrap.Dropdown(el);
+      });
     });
 
     // 🔹 Edit
@@ -853,43 +921,6 @@ require '../../controller/view.php';
   });
 </script>
 <script>
-  $(document).on('shown.bs.dropdown', '.dropdown, .dropup', function() {
-    const $menu = $(this).find('.dropdown-menu');
-    const $button = $(this).find('[data-bs-toggle="dropdown"]');
-
-    const offset = $button.offset();
-    const height = $menu.outerHeight();
-
-    // pindahkan ke body
-    $('body').append($menu);
-
-    let top;
-
-    if ($(this).hasClass('dropup')) {
-      // 🔼 dropup → ke atas
-      top = offset.top - height;
-    } else {
-      // 🔽 dropdown → ke bawah (normal)
-      top = offset.top + $button.outerHeight();
-    }
-
-    const left = offset.left;
-
-    $menu.css({
-      position: 'absolute',
-      top: top + 'px',
-      left: left + 'px',
-      display: 'block',
-      zIndex: 99999
-    });
-  });
-  $(document).on('hide.bs.dropdown', '.dropdown, .dropup', function() {
-    const $menu = $('body > .dropdown-menu');
-
-    $(this).append($menu);
-    $menu.removeAttr('style');
-  });
-
   $(document).on('click', '.screening-btn', function() {
     let id = $(this).data('id');
 
