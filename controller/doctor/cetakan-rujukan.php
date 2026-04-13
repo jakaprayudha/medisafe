@@ -1,7 +1,7 @@
 <?php
 include '../../database/connect.php';
 $id_customer = $_SESSION['id_customer'];
-$noKunjung = "0032B0370426Y000220";
+$noKunjung = $_GET['id'];
 $stmt = $koneksi->prepare("SELECT sc.clinic_name, pc.KodePPK, pv.*, pk.kdDiag1, pk.nmDiag1, pk.nmKategori, pk.nmfaskes, p.patient_name, p.patient_gender, p.patient_datebirth, p.patient_bpjs FROM pasien_visit pv LEFT JOIN ms_patient p ON pv.nokartu = p.patient_bpjs INNER JOIN pcare_kunjungan AS pk ON pv.noKunjung = pk.noKunjungan INNER JOIN setting_clinic AS sc ON sc.id_customer = pv.id_customer INNER JOIN setting_pcare AS pc ON pc.id_customer = pv.id_customer WHERE pv.noKunjung = ? AND pv.id_customer = ?");
 $stmt->bind_param('ss', $noKunjung, $id_customer);
 $stmt->execute();
@@ -137,7 +137,7 @@ $tgl_cetak = date('d-m-Y');
             <tr>
                 <td width="50%">
                     <div style="display: flex; align-items: center;">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/BPJS_Kesehatan_logo.svg/512px-BPJS_Kesehatan_logo.svg.png" alt="Logo BPJS" style="height: 35px; margin-right: 10px;">
+                        <img src="../../assets/images/logos/bpjslogo.svg" alt="Logo BPJS" style="height: 35px; margin-right: 10px;">
                     </div>
                 </td>
                 <td width="50%" align="right">

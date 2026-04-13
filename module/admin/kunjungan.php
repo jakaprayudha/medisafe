@@ -26,7 +26,7 @@ $rm = $_GET['rm'];
   require '../../assets/template/head.php';
   ?>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 </head>
 
@@ -498,6 +498,13 @@ $rm = $_GET['rm'];
                         </div>
                       </div>
                     </div>
+                    <hr>
+                    <div class="btn-print d-none">
+                      <button type="button" class="btn btn-info" id="btn-print">
+                        Print
+                      </button>
+                    </div>
+                    <hr>
                     <div class="d-grid">
                       <button type="button" id="simpan_pemeriksaan" class="btn btn-primary">Simpan Pemeriksaan</button>
                     </div>
