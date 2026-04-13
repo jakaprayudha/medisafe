@@ -34,8 +34,7 @@ $kdSubSpesialis1 = $_POST['kdSubSpesialis1'] ?? null;
 // $kdspesialiskhusus = $_POST['kdSubSpesialiskhusus'] ?? null;
 $kdSarana = $_POST['kdSarana'] ?? null;
 $kdkategori = $_POST['kdKategori'] ?? null;
-// $kdTacc = $_POST['kdTacc'] ?? '0';
-$kdTacc = '-1';
+$kdTacc = $_POST['kdTacc'] ?? '-1';
 $alasanTacc = !empty($_POST['alasanTacc']) ? $_POST['alasanTacc'] : 'null';
 $anamnesa = $_POST['keluhan_utama'];
 $alergiMakan = $_POST['alergiMakan'];
@@ -127,6 +126,7 @@ switch ($typeRujukan) {
                 "catatan" => $catatan
             ]
         ];
+        
         break;
 }
 if ($typeRujukan == 'spesialis') {
@@ -134,13 +134,14 @@ if ($typeRujukan == 'spesialis') {
 } else if ($typeRujukan == 'khusus') {
     $kdspesialiskhusus = $kdkategori;
     $kdkategori = null;
+    $kdTacc = '0';
 }
 $method = "POST";
 if ($noKunjungan != null) {
     $method = "PUT";
 }
-// echo json_encode($payload, JSON_PRETTY_PRINT);die();
-$result = bpjsPost("/kunjungan", $payload, $method);
+echo json_encode($payload, JSON_PRETTY_PRINT);die();
+// $result = bpjsPost("/kunjungan", $payload, $method);
 // $result = testingBPJS_POST("https://app.medisafe.id/controller/admisi/api/getpeserta.php", $payload);
 if ($result['code'] != "200") {
     $msg = $result['message'];

@@ -62,6 +62,7 @@ $rm = $_GET['rm'];
                     <input type="hidden" name="kdDokter" id="kdDokter">
                     <input type="hidden" name="nmDokter" id="nmDokter">
                     <input type="hidden" name="noKunjungan" id="noKunjungan">
+                    <input type="hidden" name="kdTkp" value="10">
                     <h4 class="mb-3">Form Pemeriksaan Medis</h4>
                     <!-- Data Pasien -->
                     <?php
@@ -458,7 +459,6 @@ $rm = $_GET['rm'];
                             TACC
                           </label>
                           <select class="form-select" id="kdTacc" name="kdTacc">
-                            <option value="0">- Pilih -</option>
                             <option value="-1">Tanpa TACC</option>
                             <option value="1">Time</option>
                             <option value="2">Age</option>
