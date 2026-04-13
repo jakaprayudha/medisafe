@@ -76,7 +76,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Dokter <span class="text-danger">*</span></label>
                                 <select class="form-select" id="kodedokter" name="kdDokter"></select>
-                                <input type="hidden" name="nmDokter" id="nmDokter">
+                                <input type="hidden" name="nmDokter" id="namadokter">
                             </div>
 
                             <div class="col-md-6">

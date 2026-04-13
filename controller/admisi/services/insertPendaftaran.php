@@ -4,37 +4,28 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/servicebpjs.php';
 header('Content-Type: application/json');
 
-$input = $_POST;
-if (empty($input)) {
-    parse_str(file_get_contents('php://input'), $input);
-}
-
-if (empty($input)) {
-    echo json_encode(['success' => false, 'message' => 'Data tidak diterima. Pastikan request menggunakan method POST.']);
-    exit;
-}
-
-$kdProviderPeserta = $input['kdProviderPeserta'] ?? '';
-$tglDaftarDB = $input['tglDaftar'] ?? null;
-$tglDaftar = $tglDaftarDB ? date("d-m-Y", strtotime($tglDaftarDB)) : '';
-$noKartu = $input['noKartu'] ?? '';
-$kdPoli = $input['kdPoli'] ?? '';
-$keluhan = !empty($input['keluhan']) ? $input['keluhan'] : null;
-$kunjSakit = ($input['kunjSakit'] ?? '') === 'true';
-$sistole = (int) ($input['sistole'] ?? 0);
-$diastole = (int) ($input['diastole'] ?? 0);
-$beratBadan = (int) ($input['beratBadan'] ?? 0);
-$tinggiBadan = (int) ($input['tinggiBadan'] ?? 0);
-$respRate = (int) ($input['respRate'] ?? 0);
-$lingkarPerut = (int) ($input['lingkarPerut'] ?? 0);
-$heartRate = (int) ($input['heartRate'] ?? 0);
-$kdTkp = $input['kdTkp'] ?? '';
-$nmPoli = $input['nmPoli'] ?? '';
-$kdDokter = $input['kdDokter'] ?? null;
-$noNIK = $input['noNik'] ?? '';
-$nama = $input['nama'] ?? '';
-$jnsKlamin = $input['jnsKlamin'] ?? '';
-$tglLahir = $input['tglLahir'] ?? '';
+$kdProviderPeserta = $_POST['kdProviderPeserta'];
+$tglDaftarDB = $_POST['tglDaftar'];
+$tglDaftar = date("d-m-Y", strtotime($tglDaftarDB));
+$noKartu = $_POST['noKartu'] ?? '';
+$kdPoli = $_POST['kdPoli'];
+$keluhan = isset($_POST['keluhan']) && !empty($_POST['keluhan']) ? $_POST['keluhan'] : null;
+$kunjSakit = $_POST['kunjSakit'] === 'true';
+$sistole = (int) $_POST['sistole'];
+$diastole = (int) $_POST['diastole'];
+$beratBadan = (int) $_POST['beratBadan'];
+$tinggiBadan = (int) $_POST['tinggiBadan'];
+$respRate = (int) $_POST['respRate'];
+$lingkarPerut = (int) $_POST['lingkarPerut'];
+$heartRate = (int) $_POST['heartRate'];
+$kdTkp = $_POST['kdTkp'];
+$nmPoli = $_POST['nmPoli'];
+$kdDokter = $_POST['kdDokter'] ?? null;
+$nmDokter = $_POST['nmDokter'] ?? null;
+$noNIK = $_POST['noNik'] ?? '';
+$nama = $_POST['nama'];
+$jnsKlamin = $_POST['jnsKlamin'];
+$tglLahir = $_POST['tglLahir'];
 $payload = [
     "kdProviderPeserta" => $kdProviderPeserta,
     "tglDaftar" => $tglDaftar,
@@ -52,6 +43,14 @@ $payload = [
     "rujukBalik" => 0,
     "kdTkp" => $kdTkp
 ];
+
+if (empty($kdDokter)) {
+    echo json_encode([
+        "status" => false,
+        "message" => "Dokter harus diisi"
+    ]);
+    exit;
+}
 
 $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE patient_bpjs = ? OR patient_nik = ?");
 $stmt->bind_param('ss', $noKartu, $noNIK);
@@ -100,9 +99,11 @@ if (!$result) {
     $stmt->bind_param('ssssssss', $noKartu, $noNIK, $nama, $jnsKlamin, $tglLahir, $idcustomer, $nomorRM, $patientNumber);
     $result = $stmt->execute();
 }
+
+// echo json_encode($payload, JSON_PRETTY_PRINT);die();
 $result = bpjsPost("/pendaftaran", $payload);
 // echo json_encode($result);die();
-// $result = testingBPJS_POST("https://app.medisafe.id/controller/admisi/api/getpeserta.php", $payload);
+// $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
 if ($result['code'] != '200') {
     $msg = $result['metadata'];
     if ($msg == null) {
@@ -152,11 +153,6 @@ if ($result['code'] != '200') {
     $stmt->execute();
     $chackpasien = $stmt->get_result()->fetch_assoc();
 
-    if (!$chackpasien) {
-        echo json_encode(['success' => false, 'message' => 'Data pasien tidak ditemukan.']);
-        exit;
-    }
-
     $created_user = "User";
     $source_hub = "Poliklinik";
     $id_patient = $chackpasien['id_patient'];
@@ -189,14 +185,15 @@ if ($result['code'] != '200') {
                 suhu,
                 saturasi,
                 bmi,
-                bmi_keterangan
-            )VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?)
+                bmi_keterangan,
+                code_doctor
+            )VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?)
         ");
     $visit_status = 1;
     $status_antrian = 0;
     $td = $sistole . "/" . $diastole;
     $stmt->bind_param(
-        "sssssssssssssssssssssss",
+        "ssssssssssssssssssssssss",
         $id_patient,
         $visit_ID,
         $tglDaftarDB,
@@ -206,7 +203,7 @@ if ($result['code'] != '200') {
         $noUrut,
         $status_antrian,
         $idcustomer,
-        $kdDokter,
+        $nmDokter,
         $noKartu,
         $visit_time,
         $keluhan,
@@ -219,7 +216,8 @@ if ($result['code'] != '200') {
         $suhu,
         $saturasi,
         $bmi,
-        $bmiKet
+        $bmiKet,
+        $kdDokter
     );
 
     $hasil1 = $stmt->execute();
