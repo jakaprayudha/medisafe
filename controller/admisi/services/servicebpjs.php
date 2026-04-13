@@ -62,7 +62,7 @@ function bpjsPost($endpoint, array $payload, $method = "POST")
     $response = curl_exec($ch);
     $err = curl_error($ch);
     curl_close($ch);
-    echo $response;die();
+    // echo $response;die();
     if (!$response) {
         return bpjsError("Tidak ada response dari server BPJS");
     }
@@ -137,7 +137,8 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp, $decrypt =
             'code'    => $code,
             'message' => $errorMessage,
             'metadata' => $json['metaData']['message'],
-            'data'    => null
+            'data'    => null,
+            'response' => $response
         ];
     }
     $key = $consid . $secretKey . $tStamp;
