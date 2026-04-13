@@ -21,6 +21,7 @@ $heartRate = (int) $_POST['heartRate'];
 $kdTkp = $_POST['kdTkp'];
 $nmPoli = $_POST['nmPoli'];
 $kdDokter = $_POST['kdDokter'] ?? null;
+$nmDokter = $_POST['nmDokter'] ?? null;
 $noNIK = $_POST['noNik'] ?? '';
 $nama = $_POST['nama'];
 $jnsKlamin = $_POST['jnsKlamin'];
@@ -42,6 +43,14 @@ $payload = [
     "rujukBalik" => 0,
     "kdTkp" => $kdTkp
 ];
+
+if (empty($kdDokter)) {
+    echo json_encode([
+        "status" => false,
+        "message" => "Dokter harus diisi"
+    ]);
+    exit;
+}
 
 $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE patient_bpjs = ? OR patient_nik = ?");
 $stmt->bind_param('ss', $noKartu, $noNIK);
@@ -90,9 +99,11 @@ if (!$result) {
     $stmt->bind_param('ssssssss', $noKartu, $noNIK, $nama, $jnsKlamin, $tglLahir, $idcustomer, $nomorRM, $patientNumber);
     $result = $stmt->execute();
 }
+
+// echo json_encode($payload, JSON_PRETTY_PRINT);die();
 $result = bpjsPost("/pendaftaran", $payload);
 // echo json_encode($result);die();
-// $result = testingBPJS_POST("https://app.medisafe.id/controller/admisi/api/getpeserta.php", $payload);
+// $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
 if ($result['code'] != '200') {
     $msg = $result['metadata'];
     if ($msg == null) {
@@ -174,14 +185,15 @@ if ($result['code'] != '200') {
                 suhu,
                 saturasi,
                 bmi,
-                bmi_keterangan
-            )VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?)
+                bmi_keterangan,
+                code_doctor
+            )VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?)
         ");
     $visit_status = 1;
     $status_antrian = 0;
     $td = $sistole . "/" . $diastole;
     $stmt->bind_param(
-        "sssssssssssssssssssssss",
+        "ssssssssssssssssssssssss",
         $id_patient,
         $visit_ID,
         $tglDaftarDB,
@@ -191,7 +203,7 @@ if ($result['code'] != '200') {
         $noUrut,
         $status_antrian,
         $idcustomer,
-        $kdDokter,
+        $nmDokter,
         $noKartu,
         $visit_time,
         $keluhan,
@@ -204,7 +216,8 @@ if ($result['code'] != '200') {
         $suhu,
         $saturasi,
         $bmi,
-        $bmiKet
+        $bmiKet,
+        $kdDokter
     );
 
     $hasil1 = $stmt->execute();

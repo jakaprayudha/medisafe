@@ -97,7 +97,7 @@ $(function () {
                 $('#kodeprov').html(options).trigger('change');
             }
         });
-        APP.ambil_data('#kodedokter', 'dokter/0/100', 'nmDokter', 'nmDokter', false);
+        APP.ambil_data_dokter('#kodedokter', 'dokter/0/100', 'nmDokter', 'kdDokter', true);
         APP.updatePoliOptions = function (poliSakit) {
             poliSakit = (poliSakit === true || poliSakit === 'true');
             var select = $('#kodepoli');

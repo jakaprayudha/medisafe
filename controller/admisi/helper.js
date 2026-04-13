@@ -103,6 +103,34 @@ APP.ambil_data = async function (id, url, nama, kode, status) {
         $(id).html('<option>Error loading data</option>');
     }
 };
+APP.ambil_data_dokter = async function (id, url, nama, kode, status) {
+    try {
+        $(id).html('<option>Loading...</option>');
+        let response = await $.ajax({
+            url: 'controller/admisi/services/getApi.php',
+            type: 'POST',
+            data: { url: url },
+            dataType: 'json'
+        });
+        $(id).empty();
+        if (status) {
+            $(id).append('<option value="">- Pilih -</option>');
+        }
+        response.list.forEach(item => {
+            $(id).append(
+                `<option value="${item[kode]}">${item[nama]}</option>`
+            );
+        });
+        $(id).on('change', function () {
+            let namaDokter = $(this).find('option:selected').text();
+            $('#namadokter').val(namaDokter);
+        });
+    } catch (err) {
+        console.error(err);
+        $(id).html('<option>Error loading data</option>');
+    }
+};
+
 APP.initDiagnosa = function (selector, hiddenNameSelector, idkdspesialis) {
     $(selector).select2({
         placeholder: "Ketik Diagnosa...",
