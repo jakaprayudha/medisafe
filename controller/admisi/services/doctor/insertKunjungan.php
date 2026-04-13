@@ -7,11 +7,6 @@ header('Content-Type: application/json');
 // rawat jalan
 $noKunjungan = $_POST['noKunjungan'] ?? null;
 $noKartu = $_POST['noKartu'];
-// $DBtglDatar = $_POST['tglDaftar'];
-// // $DBtglEstRujuk = $_POST['tglRujukan'] ?? NULL;
-// $DBtglEstRujuk = !empty($_POST['tglRujukan']) ? $_POST['tglRujukan'] : NULL;
-// $DBtglPulang = $_POST['tglDaftar'];
-
 $DBtglDatar  = $_POST['tglDaftar'] ?? null;
 $DBtglEstRujuk = !empty($_POST['tglRujukan']) ? $_POST['tglRujukan'] : null;
 $DBtglPulang = $_POST['tglDaftar'] ?? null;
@@ -249,13 +244,14 @@ if ($result['code'] != "200") {
                 visit_out = ?, 
                 kondisi_keluar = ?,
                 saturasi = ?,
-                diagnosa_sekunder = ?
+                diagnosa_sekunder = ?,
+                noKunjung = ?
 
             WHERE visit_ID = ? AND id_patient = ?
         ");
 
         $stmt1->bind_param(
-            "ssssssssssssssssssssssss",
+            "sssssssssssssssssssssssss",
             $kdPrognosa,
             $tekanandarah,
             $suhu,
@@ -279,7 +275,8 @@ if ($result['code'] != "200") {
             $saturasi,
             $diagnosa_sekunder,
             $nomor_visit,
-            $id_patient
+            $id_patient,
+            $noKunjungan
         );
     } else {
         $message = "Berhasil Update Kunjungan";

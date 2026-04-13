@@ -5,8 +5,8 @@ require '../../database/connect.php';
 require '../../controller/visit/assesmen.php';
 $no = $_GET['no'];
 $rm = $_GET['rm'];
-$check = mysqli_query($koneksi, "SELECT * FROM pasien_visit LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient WHERE pasien_visit.visit_ID='$no' AND ms_patient.nomor_rm='$rm'");
-$data = mysqli_fetch_array($check);
+// $check = mysqli_query($koneksi, "SELECT * FROM pasien_visit LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient WHERE pasien_visit.visit_ID='$no' AND ms_patient.nomor_rm='$rm'");
+// $data = mysqli_fetch_array($check);
 
 // Hitung usia jika data ditemukan
 // if ($data) {
@@ -50,17 +50,18 @@ $data = mysqli_fetch_array($check);
                   <form id="formPemeriksaan" class="p-4 border rounded shadow-sm" method="POST">
                     <input type="hidden" name="nomor_rm" value="<?= $rm ?>">
                     <input type="hidden" name="nomor_visit" value="<?= $no ?>">
-                    <input type="hidden" name="id_patient" id="id_patient" value="<?= $data['id_patient'] ?>" hidden>
+                    <input type="hidden" name="id_patient" id="id_patient">
                     <input type="hidden" id="terapiObat" name="terapiObat">
                     <input type="hidden" id="terapiNonObat" name="terapiNonObat">
                     <input type="hidden" id="bmhp" name="bmhp">
-                    <input type="hidden" id="tglDaftar" name="tglDaftar" value="<?php echo $data['visit_date'] ?>">
+                    <input type="hidden" id="tglDaftar" name="tglDaftar">
                     <input type="hidden" name="typeRujukan" id="typeRujukan" value="normal">
-                    <input type="hidden" name="noKartu" id="noKartu" value="<?php echo $data['noKartu'] ?>">
+                    <input type="hidden" name="noKartu" id="noKartu">
                     <input type="hidden" name="kdPoli" id="kode_poli">
                     <input type="hidden" name="nmPoli" id="nama_poli">
-                    <input type="hidden" name="kdDokter" id="kdDokter" value="<?php echo $data['code_doctor'] ?>">
-                    <input type="hidden" name="nmDokter" id="nmDokter" value="<?php echo $data['id_doctor'] ?>">
+                    <input type="hidden" name="kdDokter" id="kdDokter">
+                    <input type="hidden" name="nmDokter" id="nmDokter">
+                    <input type="hidden" name="noKunjungan" id="noKunjungan">
                     <h4 class="mb-3">Form Pemeriksaan Medis</h4>
                     <!-- Data Pasien -->
                     <?php
@@ -203,7 +204,7 @@ $data = mysqli_fetch_array($check);
                       </div>
 
                       <div class="col-md-2">
-                        <label for="saturasi">Saturasi <span class="text-danger">*</span></label>
+                        <label for="saturasi">Saturasi</label>
                         <div class="input-group mb-2">
                           <input type="number" id="saturasi" name="saturasi" class="form-control">
                           <span class="input-group-text"><b>(Spo2 %)</b></span>
@@ -336,6 +337,179 @@ $data = mysqli_fetch_array($check);
                         </div>
                       </div>
                     </div>
+                    <div class="col-12 d-none" id="rujukvertikal">
+                      <hr>
+                      <div class="row mb-3">
+                        <div class="col-2">
+                          <label class="col-form-label col-form-label-sm">
+                            Status Rujukan <span class="text-danger">*</span>
+                          </label>
+                        </div>
+                        <div class="col-10">
+                          <div class="row g-2">
+                            <div class="col-md-6">
+                              <input type="radio" class="btn-check" name="kdStatusRujuk"
+                                id="rujukSpesialis" value="SP" required>
+                              <label class="btn btn-outline-primary w-100 text-start p-3"
+                                for="rujukSpesialis">
+                                <strong>Rujukan Spesialis</strong><br>
+                                <small class="subtext">
+                                  Rujukan ke sub spesialis sesuai indikasi medis
+                                </small>
+                              </label>
+                            </div>
+                            <div class="col-md-6">
+                              <input type="radio" class="btn-check" name="kdStatusRujuk"
+                                id="rujukKhusus" value="KH" required>
+                              <label class="btn btn-outline-success w-100 text-start p-3"
+                                for="rujukKhusus">
+                                <strong>Rujukan Khusus</strong><br>
+                                <small class="subtext">
+                                  Rujukan dengan kriteria atau program khusus
+                                </small>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-12 d-none" id="formrujukanvertikal">
+                      <!-- Kategori -->
+                      <div class="row mb-3">
+                        <div class="col-2">
+                          <label for="kdKategori" class="col-form-label">
+                            Kategori <span class="text-danger">*</span>
+                          </label>
+                        </div>
+                        <div class="col-5">
+                          <label for="kdKategori" class="form-label fw-semibold">
+                            Spesialis
+                          </label>
+                          <select class="form-select"
+                            id="kdKategori"
+                            name="kdKategori"
+                            required>
+                          </select>
+                        </div>
+                        <div class="col-2 d-none" id="subspesialis">
+                          <label for="kdKategori" class="form-label fw-semibold">
+                            Sub Spesialis
+                          </label>
+                          <select class="form-select"
+                            id="kdsubspesialis"
+                            name="kdSubSpesialis1">
+                          </select>
+                        </div>
+                        <div class="col-3 d-none" id="sarana">
+                          <div class="form-check mb-2">
+                            <input class="form-check-input"
+                              type="checkbox"
+                              id="useSarana"
+                              value="1">
+                            <label class="form-check-label fw-semibold" for="useSarana">
+                              Sarana
+                            </label>
+                          </div>
+                          <select class="form-select"
+                            id="kdSarana">
+                          </select>
+                          <input type="hidden"
+                            name="kdSarana"
+                            id="kdSaranaHidden"
+                            value="9">
+                        </div>
+                        <div class="col-5">
+                          <label for="kdKategori" class="form-label fw-semibold">
+                            Tgl Kunjung
+                          </label>
+                          <div class="input-group">
+                            <input type="date"
+                              class="form-control"
+                              id="tglRujukan"
+                              name="tglRujukan"
+                              required>
+                            <button type="button" id="btnCariFaskes"
+                              class="btn btn-primary">
+                              <i class="bi bi-search"></i> Cari Faskes
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- Alasan -->
+                      <div class="row mb-3 d-none" id="alasanrujuk">
+                        <div class="col-2">
+                          <label for="alasanRujukan" class="col-form-label">
+                            Alasan <span class="text-danger">*</span>
+                          </label>
+                        </div>
+                        <div class="col-10">
+                          <textarea class="form-control"
+                            id="alasanRujukan"
+                            name="alasanRujukan"
+                            rows="3"
+                            placeholder="Masukkan alasan rujukan..."
+                            required></textarea>
+                        </div>
+                      </div>
+                      <div class="col-12">
+                        <div class="row mb-3">
+                          <div class="col-2">
+                            <label for="" class="col-form-label col-form-label-sm">Faskes<span class="text-danger">*</span></label>
+                          </div>
+                          <div class="col-10">
+                            <input type="text" id="nmfaskes" name="nmfaskes" class="form-control" readonly>
+                            <input type="hidden" name="kdppk" id="kdfaskes">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-12 d-none" id="formTacc">
+                      <div class="row mb-3">
+                        <div class="col-2">
+                          <label for="kdKategori" class="col-form-label">
+                            TACC <span class="text-danger">*</span>
+                          </label>
+                        </div>
+                        <div class="col-3">
+                          <label for="kdTacc" class="form-label fw-semibold">
+                            TACC
+                          </label>
+                          <select class="form-select" id="kdTacc" name="kdTacc">
+                            <option value="0">- Pilih -</option>
+                            <option value="-1">Tanpa TACC</option>
+                            <option value="1">Time</option>
+                            <option value="2">Age</option>
+                            <option value="3">Complication</option>
+                            <option value="4">Comorbidity</option>
+                          </select>
+                        </div>
+                        <div class="col-7">
+                          <label for="alasanTacc" class="form-label fw-semibold">
+                            Alasan
+                          </label>
+                          <input type="text" class="form-control"
+                            id="alasanTacc"
+                            name="alasanTacc">
+                          </input>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-12 d-none" id="noLaporanPolisi">
+                      <div class="row mb-3">
+                        <div class="col-2">
+                          <label for="kdKategori" class="col-form-label">
+                            Nomor LP <span class="text-danger">*</span>
+                          </label>
+                        </div>
+                        <div class="col-10">
+                          <input type="text"
+                            class="form-control"
+                            placeholder="Masukan Nomor Laporan Polisi Disini..."
+                            id="nomorLp"
+                            name="nomorLp">
+                        </div>
+                      </div>
+                    </div>
                     <div class="d-grid">
                       <button type="button" id="simpan_pemeriksaan" class="btn btn-primary">Simpan Pemeriksaan</button>
                     </div>
@@ -343,6 +517,45 @@ $data = mysqli_fetch_array($check);
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalFaskes" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen modal-dialog-scrollable">
+      <div class="modal-content shadow-lg rounded-3 border-0">
+        <div class="modal-header bg-gradient-primary text-white">
+          <h5 class="modal-title d-flex align-items-center gap-2">
+            <i class="bi bi-hospital fs-3"></i>
+            Daftar Fasilitas Kesehatan
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="table-responsive">
+            <table class="table table-striped table-hover table-bordered align-middle text-center" id="tableRujukan">
+              <thead class="table-dark text-white">
+                <tr>
+                  <th>No</th>
+                  <th>Faskes</th>
+                  <th>Kelas</th>
+                  <th>Kantor Cabang</th>
+                  <th>Alamat</th>
+                  <th>Telp</th>
+                  <th>Jarak</th>
+                  <th>Total Rujukan</th>
+                  <th>Kapasitas</th>
+                  <th>%</th>
+                  <th>Jadwal</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Data akan diisi JS -->
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
