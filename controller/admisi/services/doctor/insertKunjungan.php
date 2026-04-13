@@ -150,6 +150,7 @@ if ($result['code'] != "200") {
     $response = [
         'success' => false,
         'message' => $msg,
+        'result' => $result
     ];
 } else {
     if ($method == "POST") {
