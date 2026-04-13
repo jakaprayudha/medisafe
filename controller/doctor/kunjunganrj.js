@@ -74,7 +74,7 @@ $(function () {
                                 APP.addValueInput('#nmDiag3', d.nmDiag3);
                             }
                             $('#kdStatusPulang').val(d.kdStatusPulang).trigger('change');
-                            $('#simpan_pemeriksaan').text('Update Pemeriksaan').removeClass('btn-primary').addClass('btn-secondary');
+                            // $('#simpan_pemeriksaan').text('Update Pemeriksaan').removeClass('btn-primary').addClass('btn-secondary');
                             if (d.noKunjungan != null) {
                                 statusEdit = true;
                             }

@@ -22,19 +22,21 @@ if (!$visit || !$id_customer) {
 try {
 
    $stmt = $koneksi->prepare("
-        UPDATE permintaan_pharmacy 
-        SET status_permintaan = ?
-        WHERE id_visit = ? 
-        AND id_customer = ?
-    ");
+      UPDATE permintaan_pharmacy 
+      SET status_permintaan = ?
+      WHERE id_visit = ? 
+      AND id_customer = ?
+      AND status_permintaan != 3
+   ");
 
    $stmt->bind_param("isi", $status, $visit, $id_customer);
    $stmt->execute();
 
    echo json_encode([
       'status' => 'success',
-      'message' => 'Semua tiket berhasil diupdate'
+      'message' => 'Tiket selain status selesai berhasil diupdate'
    ]);
+
 } catch (Exception $e) {
 
    echo json_encode([

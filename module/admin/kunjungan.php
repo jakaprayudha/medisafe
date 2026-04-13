@@ -270,23 +270,6 @@ $rm = $_GET['rm'];
                       </div>
                     </div>
                     <hr>
-                    <div class="mb-3">
-                      <label for="riwayat_alergi" class="form-label">Riwayat Alergi</label>
-                      <textarea id="riwayat_alergi" name="riwayat_alergi" rows="2" class="form-control"><?= @$data['riwayat_alergi'] ?></textarea>
-                    </div>
-                    <div class="mb-3">
-                      <label for="riwayat_penyakit_pribadi" class="form-label">Riwayat Penyakit Pribadi</label>
-                      <textarea id="riwayat_penyakit_pribadi" name="riwayat_penyakit_pribadi" rows="2" class="form-control"><?= @$data['riwayat_penyakit_pribadi'] ?></textarea>
-                    </div>
-                    <div class="mb-3">
-                      <label for="riwayat_penyakit_sekarang" class="form-label">Riwayat Penyakit Sekarang</label>
-                      <textarea id="riwayat_penyakit_sekarang" name="riwayat_penyakit_sekarang" rows="2" class="form-control"><?= @$data['riwayat_penyakit_sekarang'] ?></textarea>
-                    </div>
-                    <div class="mb-3">
-                      <label for="riwayat_pengobatan" class="form-label">Riwayat Pengobatan</label>
-                      <textarea id="riwayat_pengobatan" name="riwayat_pengobatan" rows="2" class="form-control"><?= @$data['riwayat_pengobatan'] ?></textarea>
-                    </div>
-                    <hr>
                     <div class="col-12">
                       <div class="row g-3">
                         <div class="col-md-12">
@@ -322,10 +305,10 @@ $rm = $_GET['rm'];
                       <textarea id="tindakan" name="tindakan" rows="2" class="form-control"><?= @$data['tindakan'] ?></textarea>
                     </div>
 
-                    <div class="mb-3">
+                    <!-- <div class="mb-3">
                       <label for="edukasi" class="form-label">Edukasi</label>
                       <textarea id="edukasi" name="edukasi" rows="2" class="form-control"><?= @$data['edukasi'] ?></textarea>
-                    </div>
+                    </div> -->
                     <div class="col-12">
                       <div class="row mb-3">
                         <div class="col-2">

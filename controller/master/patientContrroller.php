@@ -99,16 +99,24 @@ function createData($id_customer)
    $update->execute();
    $update->close();
 
-   // fields
-   $allowedFields = [
-      'patient_name',
-      'patient_gender',
-      'patient_religion',
-      'patient_datebirth',
-      'patient_place',
-      'patient_phone',
-      'patient_address'
-   ];
+      // ================== INSERT DATA PASIEN ==================
+      $allowedFields = [
+         'patient_name',
+         'patient_gender',
+         'patient_religion',
+         'patient_datebirth',
+         'patient_place',
+         'patient_phone',
+         'patient_address',
+         'patient_nik',
+         'patient_bpjs',
+
+         // 🔥 TAMBAHAN
+         'patient_provinsi',
+         'patient_kabupaten',
+         'patient_kecamatan',
+         'patient_kelurahan'
+      ];
 
    $fields = ['patient_number', 'nomor_rm', 'id_customer'];
    $values = [$patientNumber, $nomorRM, $id_customer];
