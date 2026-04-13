@@ -324,6 +324,32 @@ $data = mysqli_fetch_array($check);
 
         let html = '';
 
+
+        // 🔥 SET STATUS GLOBAL (ambil dari tiket terakhir / prioritas selesai)
+        let hasWaiting = false;
+        let hasPersiapan = false;
+        let hasSelesai = false;
+
+        res.data.forEach(t => {
+          if (t.status_permintaan == 1) hasWaiting = true;
+          if (t.status_permintaan == 2) hasPersiapan = true;
+          if (t.status_permintaan == 3) hasSelesai = true;
+        });
+
+        // 🔥 PRIORITAS LOGIC
+        let finalStatus = 3; // default selesai
+
+        if (hasPersiapan) {
+          finalStatus = 2;
+        } else if (hasWaiting) {
+          finalStatus = 1;
+        } else {
+          finalStatus = 3;
+        }
+
+        // 🔥 APPLY
+        setStatusUI(finalStatus);
+
         res.data.forEach((tiket, i) => {
 
           let collapseId = `collapse${tiket.id_permintaan_farmasi}`;
@@ -577,4 +603,28 @@ $data = mysqli_fetch_array($check);
       });
 
   });
+</script>
+
+<script>
+  function setStatusUI(status) {
+
+    let btn = $('#dropdownStatus');
+
+    btn.removeClass('status-fill-danger status-fill-primary status-fill-success');
+
+    let label = '';
+
+    if (status == 1) {
+      btn.addClass('status-fill-danger');
+      label = '🔴 Waiting';
+    } else if (status == 2) {
+      btn.addClass('status-fill-primary');
+      label = '🔵 Persiapan';
+    } else if (status == 3) {
+      btn.addClass('status-fill-success');
+      label = '🟢 Selesai';
+    }
+
+    $('#selectedStatus').text(label);
+  }
 </script>
