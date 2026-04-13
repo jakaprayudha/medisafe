@@ -138,7 +138,8 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp, $decrypt =
             'message' => $errorMessage,
             'metadata' => $json['metaData']['message'],
             'data'    => null,
-            'response' => $response
+            'response' => $response,
+            'json' => $json
         ];
     }
     $key = $consid . $secretKey . $tStamp;
