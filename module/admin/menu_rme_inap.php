@@ -12,9 +12,9 @@
            <a href="module/admin/rme_inap?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
               <button class="nav-link <?= ($current == 'rme_inap.php') ? 'active' : '' ?>">Pemeriksaan Medis</button>
            </a>
-           <a href="module/admin/instruksi?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+           <!-- <a href="module/admin/instruksi?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
               <button class="nav-link <?= ($current == 'instruksi.php') ? 'active' : '' ?>">Instruksi Dokter</button>
-           </a>
+           </a> -->
            <a href="module/admin/permintaan_farmasi?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
               <button class="nav-link <?= ($current == 'permintaan_farmasi.php') ? 'active' : '' ?>">Permintaan Farmasi</button>
            </a>

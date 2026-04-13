@@ -81,6 +81,11 @@ $dataresume =  mysqli_fetch_array($checkvisit);
                   <div class="row">
 
                     <div class="col-6 mb-3">
+                      <label class="form-label">Tanggal Pulang</label>
+                      <input type="date" class="form-control" required value="">
+                    </div>
+
+                    <div class="col-6 mb-3">
                       <label class="form-label">Diagnosa Masuk</label>
                       <input type="text" class="form-control   bg-light" readonly value="<?= $dataresume['diagnosa'] ?? '' ?> - <?= $dataresume['icd10'] ?? '' ?>">
                     </div>
@@ -156,9 +161,10 @@ $dataresume =  mysqli_fetch_array($checkvisit);
                       <label class="form-label">Kondisi Pasien Saat Pulang</label>
                       <select name="kondisi_pulang" id="kondisi_pulang" class="form-select">
                         <option value="">PILIH</option>
-                        <option value="Membaik">Membaik</option>
+                        <option value="Sembuh">Sembuh</option>
                         <option value="Rujuk">Rujuk</option>
                         <option value="Lemah">Lemah</option>
+                        <option value="Meninggal">Meninggal</option>
                         <option value="Lainnya">Lainnya</option>
                       </select>
                     </div>
