@@ -25,6 +25,9 @@ $rm = $_GET['rm'];
   <?php
   require '../../assets/template/head.php';
   ?>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
 </head>
 
 <body>
@@ -62,6 +65,7 @@ $rm = $_GET['rm'];
                     <input type="hidden" name="kdDokter" id="kdDokter">
                     <input type="hidden" name="nmDokter" id="nmDokter">
                     <input type="hidden" name="noKunjungan" id="noKunjungan">
+                    <input type="hidden" name="kdTkp" value="10">
                     <h4 class="mb-3">Form Pemeriksaan Medis</h4>
                     <!-- Data Pasien -->
                     <?php
@@ -373,6 +377,7 @@ $rm = $_GET['rm'];
                             name="kdKategori"
                             required>
                           </select>
+                          <input type="hidden" id="nmKategori" name="nmKategori">
                         </div>
                         <div class="col-2 d-none" id="subspesialis">
                           <label for="kdKategori" class="form-label fw-semibold">
@@ -382,6 +387,7 @@ $rm = $_GET['rm'];
                             id="kdsubspesialis"
                             name="kdSubSpesialis1">
                           </select>
+                          <input type="hidden" id="nmSubSpesialis1" name="nmSubSpesialis1">
                         </div>
                         <div class="col-3 d-none" id="sarana">
                           <div class="form-check mb-2">
@@ -458,7 +464,6 @@ $rm = $_GET['rm'];
                             TACC
                           </label>
                           <select class="form-select" id="kdTacc" name="kdTacc">
-                            <option value="0">- Pilih -</option>
                             <option value="-1">Tanpa TACC</option>
                             <option value="1">Time</option>
                             <option value="2">Age</option>

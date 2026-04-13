@@ -31,7 +31,7 @@ APP.cetak = (id, nama) => {
     $(id).val(nama);
 }
 APP.cetakhtml = (id, nama) => {
-    $(id).text(': ' + nama);
+    $(id).text(' ' + nama);
 }
 APP.cetakselect = (id, kode, nama) => {
     var selectElem = document.getElementById(id);
@@ -130,7 +130,59 @@ APP.ambil_data_dokter = async function (id, url, nama, kode, status) {
         $(id).html('<option>Error loading data</option>');
     }
 };
+APP.ambil_data_save = async function (id, url, nama, kode, status, targetNama) {
+    try {
+        $(id).html('<option>Loading...</option>');
 
+        let response = await $.ajax({
+            url: 'controller/admisi/services/getApi.php',
+            type: 'POST',
+            data: { url: url },
+            dataType: 'json'
+        });
+
+        $(id).empty();
+
+        // ✅ placeholder
+        if (status) {
+            $(id).append('<option value="">- Pilih -</option>');
+        }
+
+        // ✅ safe check list
+        if (response && Array.isArray(response.list)) {
+            response.list.forEach(item => {
+                $(id).append(
+                    `<option value="${item[kode]}" data-nama="${item[nama] || ''}">
+                        ${item[nama] || ''}
+                    </option>`
+                );
+            });
+        } else {
+            $(id).append('<option value="">Data tidak tersedia</option>');
+        }
+
+        // ✅ event aman (anti double bind)
+        $(id)
+            .off('change.ambilDataSave')
+            .on('change.ambilDataSave', function () {
+                let selected = $(this).find('option:selected');
+
+                let namaValue = selected.data('nama') || selected.text();
+
+                if (targetNama) {
+                    $(targetNama).val(namaValue);
+                }
+            });
+
+        // 🔥 IMPORTANT: biar bisa .then() / await
+        return response;
+
+    } catch (err) {
+        console.error('ambil_data_save error:', err);
+        $(id).html('<option>Error loading data</option>');
+        throw err;
+    }
+};
 APP.initDiagnosa = function (selector, hiddenNameSelector, idkdspesialis) {
     $(selector).select2({
         placeholder: "Ketik Diagnosa...",
