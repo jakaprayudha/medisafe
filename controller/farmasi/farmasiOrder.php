@@ -51,7 +51,7 @@ function getData()
          ON pasien_visit.visit_ID = permintaan_pharmacy.id_visit 
       LEFT JOIN ms_patient 
          ON ms_patient.id_patient = pasien_visit.id_patient  
-      WHERE pasien_visit.id_customer = ? AND permintaan_pharmacy.status_permintaan !=0
+      WHERE pasien_visit.id_customer = ? AND permintaan_pharmacy.status_permintaan IN (1,2)
       GROUP BY permintaan_pharmacy.id_visit
       ORDER BY permintaan_pharmacy.id_permintaan_farmasi ASC
    ");
