@@ -4,11 +4,12 @@ $(function () {
     $('select').select2({
         width: '100%'
     });
-    // flatpickr("#tglRujukan", {
-    //     dateFormat: "Y-m-d",
-    //     altFormat: "F j, Y",
-    //     minDate: statusEdit == true ? dataPasien.tglDaftar : dataPasien.tanggal_daftar
-    // });
+    flatpickr("#tglRujukan", {
+        dateFormat: "Y-m-d",
+        altFormat: "F j, Y",
+        minDate: "today",
+        defaultDate: "today"
+    });
     APP.getDataKunjungan = function () {
         const urlParams = new URLSearchParams(window.location.search);
         const no = urlParams.get('no');
@@ -87,6 +88,20 @@ $(function () {
                                 if (d.noKunjungan != null) {
                                     statusEdit = true;
                                 }
+                                loadRujukan();
+                                async function loadRujukan() {
+                                    await APP.ambil_data('#kdKategori', '/spesialis', 'kdSpesialis', 'nmSpesialis', true);
+                                    $('#kdKategori').val(d.kdKhusus).trigger('change');
+                                    $('#kdsubspesialis').val(d.subSpesialis).trigger('change');
+                                    $('#kdSarana').val(d.kdSarana).trigger('change');
+                                    $('#kdSaranaHidden').val(d.kdSarana);
+                                    $('#tglRujukan').val(d.tglEstRujuk);
+                                    $('#kdfaskes').val(d.kdfaskes);
+                                    $('#nmfaskes').val(d.nmfaskes);
+                                }
+                                checkRujuk(d.subSpesialis, d.kdkhSpesialis);
+                                window.kdTacc = d.kdTacc;
+                                window.alasanTacc = d.alasanTacc;
                             })
                             .catch(err => {
                                 console.error('Error ambil_data:', err);
@@ -327,7 +342,7 @@ $(function () {
     });
     $('#kdKategori').on('change', function () {
         const data = $(this).val();
-        APP.ambil_data('#kdsubspesialis', '/spesialis/' + data + '/subspesialis', 'kdSubSpesialis', 'nmSubSpesialis', false);
+        APP.ambil_data_save('#kdsubspesialis', '/spesialis/' + data + '/subspesialis', 'nmSubSpesialis', 'kdSubSpesialis', false, '#nmSubSpesialis1');
     })
     $('#btnCariFaskes').on('click', function () {
         const btn = $(this);
@@ -432,22 +447,9 @@ $(function () {
         });
         APP.hideSmoot('#alasanrujuk');
         APP.addValueInput('#typeRujukan', 'spesialis');
-        APP.ambil_data('#kdKategori', '/spesialis', 'kdSpesialis', 'nmSpesialis', false);
-        // if (statusEdit) {
-        //     loadRujukan();
-        //     async function loadRujukan() {
-        //         await APP.ambil_data('#kdKategori', '/spesialis', 'kdSpesialis', 'nmSpesialis', true);
-        //         $('#kdKategori').val(d.kdKhusus).trigger('change');
-        //         $('#kdsubspesialis').val(d.subSpesialis).trigger('change');
-        //         $('#kdSarana').val(d.kdSarana).trigger('change');
-        //         $('#kdSaranaHidden').val(d.kdSarana);
-        //         $('#tglRujukan').val(d.tglEstRujuk);
-        //         $('#kdfaskes').val(d.kdppk);
-        //         $('#nmfaskes').val(d.kdppk);
-        //     }
-        // } else {
-        //     APP.ambil_data('#kdKategori', '/spesialis', 'kdSpesialis', 'nmSpesialis', false);
-        // }
+        if (!statusEdit) {
+            APP.ambil_data_save('#kdKategori', '/spesialis', 'nmSpesialis', 'kdSpesialis', true, '#nmKategori');
+        }
     }
     function triggerKH() {
         APP.showSmoot('#formrujukanvertikal');
@@ -469,16 +471,16 @@ $(function () {
             })
             .addClass(newCol);
     }
-    // function checkRujuk() {
-    //     if (dataPasien.subSpesialis != "" && statusEdit == true) {
-    //         $('input[name="kdStatusRujuk"][value="SP"]').prop('checked', true).trigger('change');
-    //         // console.log('masuk')
-    //         TrigerSP()
-    //     } else if (dataPasien.kdkhSpesialis != "" && statusEdit == true) {
-    //         $('input[name="kdStatusRujuk"][value="KH"]').prop('checked', true).trigger('change');
-    //         triggerKH()
-    //     }
-    // }
+    function checkRujuk(subSpesialis, kdkhSpesialis) {
+        if (subSpesialis != "" && statusEdit == true) {
+            $('input[name="kdStatusRujuk"][value="SP"]').prop('checked', true).trigger('change');
+            // console.log('masuk')
+            TrigerSP()
+        } else if (kdkhSpesialis != "" && statusEdit == true) {
+            $('input[name="kdStatusRujuk"][value="KH"]').prop('checked', true).trigger('change');
+            triggerKH()
+        }
+    }
     function chackTacc() {
         if ($('#kdnonSpesialis1').val() == 'true') {
             $('#formTacc').removeClass('d-none');
@@ -487,10 +489,10 @@ $(function () {
             $('#formTacc').addClass('d-none');
             // console.log('non tacc');
         }
-        // if (statusEdit) {
-        //     $('#formTacc').removeClass('d-none');
-        //     $('#kdTacc').val(dataPasien.kdTacc).trigger('change');
-        //     $('#alasanTacc').val(dataPasien.alasanTacc);
-        // }
+        if (statusEdit) {
+            $('#formTacc').removeClass('d-none');
+            $('#kdTacc').val(kdTacc).trigger('change');
+            $('#alasanTacc').val(alasanTacc);
+        }
     }
 })

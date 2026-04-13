@@ -1,34 +1,9 @@
 <?php
-// $kedeputian      = "KEDEPUTIAN WILAYAH I";
-// $cabang          = "LUBUK PAKAM";
-// $no_rujukan      = "0032B0370426Y000217";
-// $fktp            = "KLINIK TUTUN SEHATI(0032B037)";
-// $kabupaten       = "KAB. DELI SERDANG(0032)";
-// $tujuan_poli     = "PENYAKIT DALAM";
-// $tujuan_rs       = "RSU YOSHUA";
-// $nama_pasien     = "AMAT MISRAN";
-// $umur            = "72";
-// $tgl_lahir       = "21-Dec-1953";
-// $no_bpjs         = "0001342013319";
-// $status_peserta  = "1";
-// $jenis_kelamin   = "L";
-// $diagnosa        = "Cholelithiasis (K80)";
-// $catatan         = "";
-// $telah_diberikan = "";
-// $tgl_kunjung     = "13-Apr-2026";
-// $jadwal_praktek  = "Senin : 09:00 - 12:00";
-// $berlaku_sampai  = "11-Jul-2026";
-// $tgl_cetak       = "13 April 2026";
-// $nama_dokter     = "dr. Citra Sakinah Parinduri";
-
-// require_once __DIR__ . '/../view.php';
-// require_once __DIR__ . '/../../../../vendor/autoload.php';
-// require_once __DIR__ . '/../servicebpjs.php';
 include '../../database/connect.php';
-
-$noKunjung = "0032B0370426Y000202";
-$stmt = $koneksi->prepare("SELECT pv.*, p.patient_name, p.patient_gender, p.patient_datebirth, p.patient_bpjs FROM pasien_visit pv LEFT JOIN ms_patient p ON pv.nokartu = p.patient_bpjs WHERE pv.noKunjung = ?");
-$stmt->bind_param('s', $noKunjung);
+$id_customer = $_SESSION['id_customer'];
+$noKunjung = "0032B0370426Y000220";
+$stmt = $koneksi->prepare("SELECT sc.clinic_name, pc.KodePPK, pv.*, pk.kdDiag1, pk.nmDiag1, pk.nmKategori, pk.nmfaskes, p.patient_name, p.patient_gender, p.patient_datebirth, p.patient_bpjs FROM pasien_visit pv LEFT JOIN ms_patient p ON pv.nokartu = p.patient_bpjs INNER JOIN pcare_kunjungan AS pk ON pv.noKunjung = pk.noKunjungan INNER JOIN setting_clinic AS sc ON sc.id_customer = pv.id_customer INNER JOIN setting_pcare AS pc ON pc.id_customer = pv.id_customer WHERE pv.noKunjung = ? AND pv.id_customer = ?");
+$stmt->bind_param('ss', $noKunjung, $id_customer);
 $stmt->execute();
 $result = $stmt->get_result();
 $data = $result->fetch_assoc();
@@ -44,7 +19,7 @@ $tgl_lahir     = $data['patient_birthdate'] ?? '';
 $umur          = $tgl_lahir ? date_diff(date_create($tgl_lahir), date_create('today'))->y : '';
 
 // ================= DATA KUNJUNGAN =================
-$diagnosa         = $data['diagnosa'] ?? '';
+$diagnosa         = $data['kdDiag1'];
 $catatan          = $data['catatan'] ?? '';
 $telah_diberikan  = $data['tindakan'] ?? '';
 $tgl_kunjung      = $data['tanggal_kunjungan'] ?? '';
@@ -52,10 +27,10 @@ $no_rujukan       = $data['no_rujukan'] ?? '';
 $no_kunjungan     = $data['noKunjungan'] ?? '';
 
 // ================= DATA TAMBAHAN =================
-$fktp         = "KLINIK TUTUN SEHATI(0032B037)";
+$fktp         = $data['clinic_name'].'('.$data['kodePPK'] .')';
 $kabupaten    = "KAB. DELI SERDANG(0032)";
-$tujuan_poli  = "PENYAKIT DALAM";
-$tujuan_rs    = "RSU YOSHUA";
+$tujuan_poli  = $data['nmKategori'];
+$tujuan_rs    = $data['nmfaskes'];
 $nama_dokter  = $data['id_doctor'] ?? '';
 $jadwal_praktek = $data['jadwal'] ?? '';
 $berlaku_sampai = $tgl_kunjung;

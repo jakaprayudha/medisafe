@@ -66,6 +66,9 @@ $edukasi = $_POST['edukasi'] ?? null;
 $saturasi = $_POST['saturasi'] ?? null;
 $nomor_visit = $_POST['nomor_visit'];
 $id_patient = $_POST['id_patient'];
+$nmKategori = $_POST['nmKategori'];
+$nmSubSpesialis1 = $_POST['nmSubSpesialis1'];
+$nmfaskes = $_POST['nmfaskes'];
 $payload = [
     "noKunjungan" => $noKunjungan,
     "noKartu" => $noKartu,
@@ -166,7 +169,7 @@ if ($result['code'] != "200") {
             catatan, kdTacc, alasanTacc, anamnesa,
             alergiMakan, alergiUdara, alergiObat,
             kdPrognosa, terapiObat, terapiNonObat,
-            bmhp, suhu, noLP
+            bmhp, suhu, noLP, nmKategori, nmSubSpesialis1, nmfaskes
             ) VALUES (
             ?,?,?,?,?,?,
             ?,?,?,?,?,?,
@@ -174,10 +177,10 @@ if ($result['code'] != "200") {
             ?,?,?,?,?,
             ?,?,?,?,?,
             ?,?,?,?,?,
-            ?,?,?,?,?,?,?,?,?,?,?,?)");
+            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
         $stmt->bind_param(
-            "ssssssssssssssssssssssssssssssssssssssssssss",
+            "sssssssssssssssssssssssssssssssssssssssssssssss",
             $noKunjungan,
             $noKartu,
             $DBtglDatar,
@@ -221,7 +224,10 @@ if ($result['code'] != "200") {
             $terapiNonObat,
             $bmhp,
             $suhu,
-            $nomorLP
+            $nomorLP,
+            $nmKategori,
+            $nmSubSpesialis1,
+            $nmfaskes,
         );
         $stmt1 = $koneksi->prepare("UPDATE pasien_visit SET
                 kondisi_masuk = ?,
@@ -324,11 +330,14 @@ if ($result['code'] != "200") {
             terapiNonObat = ?,
             bmhp = ?,
             suhu = ?,
-            noLP = ?
+            noLP = ?,
+            nmKategori = ?,
+            nmSubSpesialis1 = ?,
+            nmfaskes = ?
         WHERE noKunjungan = ?
         ");
         $stmt->bind_param(
-            "ssssssssssssssssssssssssssssssssssssssssssss",
+            "sssssssssssssssssssssssssssssssssssssssssssssss",
             $noKartu,
             $DBtglDatar,
             $kdPoli,
@@ -372,6 +381,9 @@ if ($result['code'] != "200") {
             $bmhp,
             $suhu,
             $nomorLP,
+            $nmKategori,
+            $nmSubSpesialis1,
+            $nmfaskes,
             $noKunjungan
         );
         $stmt1 = $koneksi->prepare("UPDATE pasien_visit SET

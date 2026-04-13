@@ -25,6 +25,9 @@ $rm = $_GET['rm'];
   <?php
   require '../../assets/template/head.php';
   ?>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
 </head>
 
 <body>
@@ -374,6 +377,7 @@ $rm = $_GET['rm'];
                             name="kdKategori"
                             required>
                           </select>
+                          <input type="hidden" id="nmKategori" name="nmKategori">
                         </div>
                         <div class="col-2 d-none" id="subspesialis">
                           <label for="kdKategori" class="form-label fw-semibold">
@@ -383,6 +387,7 @@ $rm = $_GET['rm'];
                             id="kdsubspesialis"
                             name="kdSubSpesialis1">
                           </select>
+                          <input type="hidden" id="nmSubSpesialis1" name="nmSubSpesialis1">
                         </div>
                         <div class="col-3 d-none" id="sarana">
                           <div class="form-check mb-2">

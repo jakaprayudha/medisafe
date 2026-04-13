@@ -21,7 +21,6 @@ if ($status == '1') {
     pv.visit_notes,
     pv.saturasi,
     pv.tindakan,
-
     p.patient_datebirth,
 
     -- 🎯 HITUNG UMUR
