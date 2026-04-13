@@ -4,8 +4,8 @@
   <nav>
      <div class="nav nav-tabs" id="nav-tab" role="tablist">
         <?php ?>
-        <a href="module/admin/pemeriksaan_a?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=a">
-           <button class="nav-link <?= ($current == 'pemeriksaan_a.php') ? 'active' : '' ?>">Pemeriksaan Medis</button>
+        <a href="module/admin/kunjungan?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=a">
+           <button class="nav-link <?= ($current == 'kunjungan.php') ? 'active' : '' ?>">Pemeriksaan Medis</button>
         </a>
         <a href="module/admin/permintaan_farmasi?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=a">
            <button class="nav-link <?= ($current == 'permintaan_farmasi.php') ? 'active' : '' ?>">Permintaan Farmasi</button>
