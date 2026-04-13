@@ -105,197 +105,197 @@ function bpjsDelete($endpoint)
     return bpjsDecryptResponse($response, $const_id, $secretKey, $tStamp);
 }
 
-// function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp, $decrypt = true)
-// {
-//     $json = json_decode($response, true);
-//     if (!$json || !isset($json['metaData'])) {
-//         return bpjsError("Format response tidak valid");
-//     }
-//     $code = (string) $json['metaData']['code'];
-//     if (!in_array($code, ["200", "201"])) {
-//         $errorMessage = 'Terjadi kesalahan';
-//         if (isset($json['response']) && is_string($json['response'])) {
-//             $errorMessage = $json['response'];
-//         } elseif (isset($json['response']) && is_array($json['response'])) {
-//             $messages = [];
-//             foreach ($json['response'] as $err) {
-//                 $field = $err['field'] ?? '';
-//                 $msg   = $err['message'] ?? 'Kesalahan tidak diketahui';
-//                 if ($field) {
-//                     $label = ucfirst(
-//                         preg_replace('/([a-z])([A-Z])/', '$1 $2', $field)
-//                     );
-//                     $messages[] = "{$label}: {$msg}";
-//                 } else {
-//                     $messages[] = $msg;
-//                 }
-//             }
-//             $errorMessage = implode("\n", $messages);
-//         }
-//         return [
-//             'success' => false,
-//             'code'    => $code,
-//             'message' => $errorMessage,
-//             'metadata' => $json['metaData']['message'],
-//             'data'    => null
-//         ];
-//     }
-//     $key = $consid . $secretKey . $tStamp;
-//     $rawResponse = $json['response'];
-//     $data = null;
-//     if (is_string($rawResponse)) {
-//         if (strlen($rawResponse) > 80) {
-//             $decrypted = stringDecrypt($key, $rawResponse);
-//             $decompressed = \LZCompressor\LZString::decompressFromEncodedURIComponent($decrypted);
-//             $data = json_decode($decompressed, true);
-//         } else {
-//             $data = json_decode($rawResponse, true);
-//         }
-//     } elseif (is_array($rawResponse)) {
-//         $data = $rawResponse;
-//     } else {
-//         $data = $rawResponse;
-//     }
-//     return [
-//         'success' => true,
-//         'code'    => '200',
-//         'message' => 'OK',
-//         'data'    => $data
-//     ];
-// }
-
 function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp, $decrypt = true)
 {
     $json = json_decode($response, true);
     if (!$json || !isset($json['metaData'])) {
-        return [
-            'success' => false,
-            'code'    => '500',
-            'message' => 'Format response tidak valid',
-            'data'    => null,
-            'json' => $json
-        ];
+        return bpjsError("Format response tidak valid");
     }
-    $code = (string) ($json['metaData']['code'] ?? '');
+    $code = (string) $json['metaData']['code'];
     if (!in_array($code, ["200", "201"])) {
         $errorMessage = 'Terjadi kesalahan';
-        if (isset($json['response'])) {
-            if (is_string($json['response'])) {
-                $errorMessage = $json['response'];
-            } elseif (is_array($json['response'])) {
-
-                $messages = [];
-
-                foreach ($json['response'] as $err) {
-                    $field = $err['field'] ?? '';
-                    $msg   = $err['message'] ?? 'Kesalahan tidak diketahui';
-
-                    if ($field) {
-                        $label = ucfirst(preg_replace('/([a-z])([A-Z])/', '$1 $2', $field));
-                        $messages[] = "{$label}: {$msg}";
-                    } else {
-                        $messages[] = $msg;
-                    }
+        if (isset($json['response']) && is_string($json['response'])) {
+            $errorMessage = $json['response'];
+        } elseif (isset($json['response']) && is_array($json['response'])) {
+            $messages = [];
+            foreach ($json['response'] as $err) {
+                $field = $err['field'] ?? '';
+                $msg   = $err['message'] ?? 'Kesalahan tidak diketahui';
+                if ($field) {
+                    $label = ucfirst(
+                        preg_replace('/([a-z])([A-Z])/', '$1 $2', $field)
+                    );
+                    $messages[] = "{$label}: {$msg}";
+                } else {
+                    $messages[] = $msg;
                 }
-
-                $errorMessage = implode("\n", $messages);
             }
+            $errorMessage = implode("\n", $messages);
         }
-
         return [
-            'success'  => false,
-            'code'     => $code,
-            'message'  => $errorMessage,
-            'metadata' => $json['metaData']['message'] ?? null,
-            'data'     => null,
-            'json' => $json
+            'success' => false,
+            'code'    => $code,
+            'message' => $errorMessage,
+            'metadata' => $json['metaData']['message'],
+            'data'    => null
         ];
     }
-
-    // ✅ AMBIL RESPONSE
-    $rawResponse = $json['response'] ?? null;
-
-    // ✅ kalau kosong
-    if (!$rawResponse) {
-        return [
-            'success' => true,
-            'code'    => '200',
-            'original_code' => $code,
-            'message' => 'OK (tanpa response)',
-            'data'    => null,
-            'json' => $json
-        ];
-    }
-
-    // ✅ kalau sudah array
-    if (is_array($rawResponse)) {
-        return [
-            'success' => true,
-            'code'    => '200',
-            'original_code' => $code,
-            'message' => 'OK',
-            'data'    => $rawResponse,
-            'json' => $json
-        ];
-    }
-
-    $data = null;
     $key = $consid . $secretKey . $tStamp;
-
-    // ✅ PROSES DECRYPT
-    if ($decrypt && is_string($rawResponse)) {
-
-        try {
+    $rawResponse = $json['response'];
+    $data = null;
+    if (is_string($rawResponse)) {
+        if (strlen($rawResponse) > 80) {
             $decrypted = stringDecrypt($key, $rawResponse);
-
-            // ❌ decrypt gagal
-            if (!$decrypted) {
-                return [
-                    'success' => false,
-                    'code'    => '500',
-                    'message' => 'Decrypt gagal',
-                    'data'    => null,
-                    'json' => $json
-                ];
-            }
-
-            // ✅ decompress
             $decompressed = \LZCompressor\LZString::decompressFromEncodedURIComponent($decrypted);
-
-            // fallback kalau decompress gagal
-            if (!$decompressed) {
-                $decompressed = $decrypted;
-            }
-
-            // ✅ decode JSON
-            $decoded = json_decode($decompressed, true);
-
-            // fallback kalau bukan JSON
-            $data = ($decoded !== null) ? $decoded : $decompressed;
-        } catch (\Throwable $e) {
-            return [
-                'success' => false,
-                'code'    => '500',
-                'message' => 'Error decrypt: ' . $e->getMessage(),
-                'data'    => null,
-                'json' => $json
-            ];
+            $data = json_decode($decompressed, true);
+        } else {
+            $data = json_decode($rawResponse, true);
         }
+    } elseif (is_array($rawResponse)) {
+        $data = $rawResponse;
     } else {
-        // tanpa decrypt
-        $decoded = json_decode($rawResponse, true);
-        $data = ($decoded !== null) ? $decoded : $rawResponse;
+        $data = $rawResponse;
     }
-
-    // ✅ FINAL RETURN (SELALU 200 JIKA SUKSES)
     return [
         'success' => true,
         'code'    => '200',
-        'original_code' => $code, // optional untuk debug
         'message' => 'OK',
         'data'    => $data
     ];
 }
+
+// function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp, $decrypt = true)
+// {
+//     $json = json_decode($response, true);
+//     if (!$json || !isset($json['metaData'])) {
+//         return [
+//             'success' => false,
+//             'code'    => '500',
+//             'message' => 'Format response tidak valid',
+//             'data'    => null,
+//             'json' => $json
+//         ];
+//     }
+//     $code = (string) ($json['metaData']['code'] ?? '');
+//     if (!in_array($code, ["200", "201"])) {
+//         $errorMessage = 'Terjadi kesalahan';
+//         if (isset($json['response'])) {
+//             if (is_string($json['response'])) {
+//                 $errorMessage = $json['response'];
+//             } elseif (is_array($json['response'])) {
+
+//                 $messages = [];
+
+//                 foreach ($json['response'] as $err) {
+//                     $field = $err['field'] ?? '';
+//                     $msg   = $err['message'] ?? 'Kesalahan tidak diketahui';
+
+//                     if ($field) {
+//                         $label = ucfirst(preg_replace('/([a-z])([A-Z])/', '$1 $2', $field));
+//                         $messages[] = "{$label}: {$msg}";
+//                     } else {
+//                         $messages[] = $msg;
+//                     }
+//                 }
+
+//                 $errorMessage = implode("\n", $messages);
+//             }
+//         }
+
+//         return [
+//             'success'  => false,
+//             'code'     => $code,
+//             'message'  => $errorMessage,
+//             'metadata' => $json['metaData']['message'] ?? null,
+//             'data'     => null,
+//             'json' => $json
+//         ];
+//     }
+
+//     // ✅ AMBIL RESPONSE
+//     $rawResponse = $json['response'] ?? null;
+
+//     // ✅ kalau kosong
+//     if (!$rawResponse) {
+//         return [
+//             'success' => true,
+//             'code'    => '200',
+//             'original_code' => $code,
+//             'message' => 'OK (tanpa response)',
+//             'data'    => null,
+//             'json' => $json
+//         ];
+//     }
+
+//     // ✅ kalau sudah array
+//     if (is_array($rawResponse)) {
+//         return [
+//             'success' => true,
+//             'code'    => '200',
+//             'original_code' => $code,
+//             'message' => 'OK',
+//             'data'    => $rawResponse,
+//             'json' => $json
+//         ];
+//     }
+
+//     $data = null;
+//     $key = $consid . $secretKey . $tStamp;
+
+//     // ✅ PROSES DECRYPT
+//     if ($decrypt && is_string($rawResponse)) {
+
+//         try {
+//             $decrypted = stringDecrypt($key, $rawResponse);
+
+//             // ❌ decrypt gagal
+//             if (!$decrypted) {
+//                 return [
+//                     'success' => false,
+//                     'code'    => '500',
+//                     'message' => 'Decrypt gagal',
+//                     'data'    => null,
+//                     'json' => $json
+//                 ];
+//             }
+
+//             // ✅ decompress
+//             $decompressed = \LZCompressor\LZString::decompressFromEncodedURIComponent($decrypted);
+
+//             // fallback kalau decompress gagal
+//             if (!$decompressed) {
+//                 $decompressed = $decrypted;
+//             }
+
+//             // ✅ decode JSON
+//             $decoded = json_decode($decompressed, true);
+
+//             // fallback kalau bukan JSON
+//             $data = ($decoded !== null) ? $decoded : $decompressed;
+//         } catch (\Throwable $e) {
+//             return [
+//                 'success' => false,
+//                 'code'    => '500',
+//                 'message' => 'Error decrypt: ' . $e->getMessage(),
+//                 'data'    => null,
+//                 'json' => $json
+//             ];
+//         }
+//     } else {
+//         // tanpa decrypt
+//         $decoded = json_decode($rawResponse, true);
+//         $data = ($decoded !== null) ? $decoded : $rawResponse;
+//     }
+
+//     // ✅ FINAL RETURN (SELALU 200 JIKA SUKSES)
+//     return [
+//         'success' => true,
+//         'code'    => '200',
+//         'original_code' => $code, // optional untuk debug
+//         'message' => 'OK',
+//         'data'    => $data
+//     ];
+// }
 
 
 // function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp)
