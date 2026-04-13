@@ -167,26 +167,19 @@ function bpjsDelete($endpoint)
 function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp, $decrypt = true)
 {
     $json = json_decode($response, true);
-
-    // ❌ validasi format awal
     if (!$json || !isset($json['metaData'])) {
         return [
             'success' => false,
             'code'    => '500',
             'message' => 'Format response tidak valid',
-            'data'    => null
+            'data'    => null,
+            'json' => $json
         ];
     }
-
     $code = (string) ($json['metaData']['code'] ?? '');
-
-    // ❌ HANDLE ERROR DARI BPJS
     if (!in_array($code, ["200", "201"])) {
-
         $errorMessage = 'Terjadi kesalahan';
-
         if (isset($json['response'])) {
-
             if (is_string($json['response'])) {
                 $errorMessage = $json['response'];
             } elseif (is_array($json['response'])) {
@@ -214,7 +207,8 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp, $decrypt =
             'code'     => $code,
             'message'  => $errorMessage,
             'metadata' => $json['metaData']['message'] ?? null,
-            'data'     => null
+            'data'     => null,
+            'json' => $json
         ];
     }
 
@@ -228,7 +222,8 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp, $decrypt =
             'code'    => '200',
             'original_code' => $code,
             'message' => 'OK (tanpa response)',
-            'data'    => null
+            'data'    => null,
+            'json' => $json
         ];
     }
 
@@ -239,7 +234,8 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp, $decrypt =
             'code'    => '200',
             'original_code' => $code,
             'message' => 'OK',
-            'data'    => $rawResponse
+            'data'    => $rawResponse,
+            'json' => $json
         ];
     }
 
@@ -258,7 +254,8 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp, $decrypt =
                     'success' => false,
                     'code'    => '500',
                     'message' => 'Decrypt gagal',
-                    'data'    => null
+                    'data'    => null,
+                    'json' => $json
                 ];
             }
 
@@ -280,7 +277,8 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp, $decrypt =
                 'success' => false,
                 'code'    => '500',
                 'message' => 'Error decrypt: ' . $e->getMessage(),
-                'data'    => null
+                'data'    => null,
+                'json' => $json
             ];
         }
     } else {
