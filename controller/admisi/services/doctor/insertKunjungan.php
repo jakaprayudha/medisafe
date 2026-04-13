@@ -4,12 +4,13 @@ require_once __DIR__ . '/../../../../vendor/autoload.php';
 require_once __DIR__ . '/../servicebpjs.php';
 header('Content-Type: application/json');
 
+// rawat jalan
 $noKunjungan = $_POST['noKunjungan'] ?? null;
 $noKartu = $_POST['noKartu'];
 $DBtglDatar = $_POST['tglDaftar'];
 // $DBtglEstRujuk = $_POST['tglRujukan'] ?? NULL;
 $DBtglEstRujuk = !empty($_POST['tglRujukan']) ? $_POST['tglRujukan'] : NULL;
-$DBtglPulang = $_POST['tglPulang'];
+$DBtglPulang = $_POST['tglDaftar'];
 $tglDaftar = date("d-m-Y", strtotime($DBtglDatar));
 $tglEstRujuk = date("d-m-Y", strtotime($DBtglEstRujuk));
 $tglPulang = date("d-m-Y", strtotime($DBtglPulang));
