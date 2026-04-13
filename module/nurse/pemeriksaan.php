@@ -180,7 +180,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                 statusText = 'Unknown';
               }
 
-              let pemeriksaanFile = (rmeType == 1) ? 'pemeriksaan_a' : 'pemeriksaan_b';
+              let pemeriksaanFile = (rmeType == 1) ? 'kunjungan' : 'pemeriksaan_b';
 
               let callButton = '';
               if (row.source_hub === 'Poliklinik') {
