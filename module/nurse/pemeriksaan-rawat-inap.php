@@ -139,7 +139,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
           // Format data yang akan ditampilkan dalam tabel
           return json.data.map(function(row, index) {
             // pilih file tujuan sesuai rme_type
-            let pemeriksaanFile = (rmeType == 1) ? 'pemeriksaan_a' : 'pemeriksaan_b';
+            let pemeriksaanFile = (rmeType == 1) ? 'kunjungan' : 'pemeriksaan_b';
             return {
               "actions": `
                 <div class="dropdown text-center position-relative">
