@@ -53,6 +53,44 @@ $data = mysqli_fetch_array($check);
       font-weight: 600;
       color: #0f172a;
     }
+
+    .accordion-button {
+      min-height: 42px;
+      font-size: 14px;
+    }
+
+    .accordion-item .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dropdown-menu {
+      border-radius: 10px;
+    }
+
+    .dropdown-item {
+      font-weight: 500;
+    }
+
+    .dropdown-item:hover {
+      background: #f1f5f9;
+    }
+
+    .status-fill-danger {
+      background: #dc3545 !important;
+      color: #fff !important;
+    }
+
+    .status-fill-primary {
+      background: #0d6efd !important;
+      color: #fff !important;
+    }
+
+    .status-fill-success {
+      background: #198754 !important;
+      color: #fff !important;
+    }
   </style>
 </head>
 
@@ -81,20 +119,52 @@ $data = mysqli_fetch_array($check);
 
                   <!-- HEADER -->
                   <div class="d-flex justify-content-between align-items-center mb-3">
+
+                    <!-- 🔹 KIRI -->
                     <div>
                       <h5 class="fw-bold mb-0">
                         💊 Permintaan Farmasi
                       </h5>
-                      <small class="text-muted">
-                        <?= $data['permintaan_number'] ?? '-' ?>
-                      </small>
                     </div>
 
-                    <!-- TIPE OBAT -->
-                    <span class="badge 
-                      <?= $data['tipe_obat'] == 'Racikan' ? 'bg-danger' : 'bg-success' ?>">
-                      <?= $data['tipe_obat'] ?? '-' ?>
-                    </span>
+                    <!-- 🔹 KANAN -->
+                    <div class="dropdown" style="min-width:180px;">
+
+                      <!-- 🔹 BUTTON -->
+                      <button class="btn w-100 text-start d-flex justify-content-between align-items-center status-fill-danger"
+                        type="button"
+                        id="dropdownStatus"
+                        data-bs-toggle="dropdown">
+
+                        <span id="selectedStatus">🔴 Waiting</span>
+                        <i class="fas fa-chevron-down"></i>
+
+                      </button>
+                      <!-- 🔹 MENU -->
+                      <ul class="dropdown-menu w-100 shadow">
+
+                        <li>
+                          <a class="dropdown-item d-flex align-items-center gap-2 text-danger status-item" data-value="1" href="javasript:;">
+                            🔴 Waiting
+                          </a>
+                        </li>
+
+                        <li>
+                          <a class="dropdown-item d-flex align-items-center gap-2 text-primary status-item" data-value="2" href="javascript:;">
+                            🔵 Persiapan
+                          </a>
+                        </li>
+
+                        <li>
+                          <a class="dropdown-item d-flex align-items-center gap-2 text-success status-item" data-value="3" href="javascript:;">
+                            🟢 Selesai
+                          </a>
+                        </li>
+
+                      </ul>
+
+                    </div>
+
                   </div>
 
                   <hr class="my-3">
@@ -120,66 +190,8 @@ $data = mysqli_fetch_array($check);
                         </div>
                       </div>
                     </div>
-
-
-                    <div class="col-md-6">
-                      <div class="info-item">
-                        <div class="label text-muted">Tanggal</div>
-                        <div class="value">
-                          <?= date('d-m-Y H:i', strtotime($data['created_at'])) ?>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="col-md-3">
-                      <div class="info-item">
-                        <div class="label text-muted">Status</div>
-                        <div class="value">
-                          <span class="badge 
-                   <?= $data['status_permintaan'] == 1 ? 'bg-success' : 'bg-warning' ?>">
-                            <?= $data['status_permintaan'] == 1 ? 'Selesai' : 'Diproses' ?>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="col-md-3">
-                      <div class="info-item">
-                        <div class="label text-muted">Obat Pulang Ranap</div>
-                        <div class="value">
-                          <?= $data['status_obat_pulang'] == 1 ? 'Ya' : 'Tidak' ?>
-                        </div>
-                      </div>
-                    </div>
-
                   </div>
 
-                  <!-- RACIKAN -->
-                  <?php if ($data['tipe_obat'] == 'Racikan'): ?>
-                    <hr class="my-3">
-
-                    <div class="d-flex flex-wrap gap-2">
-
-                      <!-- JUMLAH -->
-                      <span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-2">
-                        <i class="ti ti-package me-1"></i> Jumlah :
-                        <?= $data['rck_jumlah'] ?? '-' ?>
-                      </span>
-
-                      <!-- SATUAN -->
-                      <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">
-                        <i class="ti ti-ruler me-1"></i> Satuan :
-                        <?= $data['rck_satuan'] ?? '-' ?>
-                      </span>
-
-                      <!-- SIGNA -->
-                      <span class="badge rounded-pill bg-warning-subtle text-dark px-3 py-2">
-                        <i class="ti ti-pill me-1"></i> Signa :
-                        <?= $data['rck_signa'] ?? '-' ?>
-                      </span>
-
-                    </div>
-                  <?php endif; ?>
 
                   <!-- CATATAN -->
                   <?php if (!empty($data['catatan_permintaan'])): ?>
@@ -189,9 +201,11 @@ $data = mysqli_fetch_array($check);
                       <div class="value"><?= $data['catatan_permintaan'] ?></div>
                     </div>
                   <?php endif; ?>
-
                   <!-- 🔥 TOMBOL CALL -->
                   <div class="mt-4 text-end">
+                    <button class="btn btn-light" onclick="window.history.back()">
+                      <i class="fas fa-arrow-left"></i> Kembali
+                    </button>
                     <button
                       class="btn btn-warning btn-call"
                       data-antrian="<?= $data['visit_antrian'] ?? '-' ?>"
@@ -213,39 +227,9 @@ $data = mysqli_fetch_array($check);
                 <div class="card-body p-4 " class="">
                   <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="card-title fw-semibold">Permintaan Farmasi</h5>
-                    <!-- Grup tombol di sisi kanan -->
-                    <div class="d-flex ms-auto gap-2">
-                      <button class="btn btn-light" onclick="window.history.back()">
-                        <i class="fas fa-arrow-left"></i> Kembali
-                      </button>
-                      <a href="module/print/struk_obat?no=<?= $no ?>&rm=<?= $_GET['rm'] ?>&id=<?= $_GET['id'] ?>" target="_blank">
-                        <button class="btn btn-outline-info"><i class="fas fa-print"></i> Struk</button>
-                      </a>
-                      <a href="module/print/resep?no=<?= $no ?>&rm=<?= $_GET['rm'] ?>&id=<?= $_GET['id'] ?>" target="_blank">
-                        <button class="btn btn-outline-warning"><i class="fas fa-print"></i> Resep</button>
-                      </a>
-                      <button id="btnPersiapan" class="btn btn-danger">
-                        <i class="fas fa-check-circle"></i> Persiapan Obat
-                      </button>
-                      <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
-                    </div>
                   </div>
-                  <div class="table-responsive" data-simplebar>
-                    <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
-                      <thead>
-                        <tr>
-                          <th class="text-dark fw-normal">Item</th>
-                          <th scope="col" class="text-dark fw-normal">Qty</th>
-                          <th scope="col" class="text-dark fw-normal">Signa</th>
-                          <th scope="col" class="text-dark fw-normal">Harga</th>
-                          <th scope="col" class="text-dark fw-normal">Total</th>
-                          <th scope="col" class="text-dark fw-normal">Catatan</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Status</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody></tbody>
-                    </table>
+                  <div class="accordion" id="accordionExample">
+                    <!-- 🔥 AUTO RENDER BY JS -->
                   </div>
                 </div>
               </div>
@@ -321,302 +305,186 @@ $data = mysqli_fetch_array($check);
 </html>
 
 <script>
-  const apiUrl = 'controller/visit/permintaanFarmasiDetails?no=<?= $_GET['id'] ?>';
+  const visit = "<?= $_GET['no'] ?>";
+  const rm = "<?= $_GET['rm'] ?>";
 
+  // 🔥 LOAD SEMUA TIKET
   $(document).ready(function() {
-    var table = $('#periodeTable').DataTable({
-      processing: true,
-      serverSide: false, // 🔹 ubah jadi false
-      ajax: {
-        url: apiUrl,
-        type: "GET",
-        dataSrc: function(json) {
-          return json.data.map(function(row) {
-            let harga = parseFloat(row.harga) || 0;
-            let qty = parseFloat(row.qty) || 0;
-            let total = qty * harga;
+    loadTiket();
+  });
 
+  // ============================
+  // 🔥 LOAD TIKET
+  // ============================
+  function loadTiket() {
 
-            // Formatter IDR
-            let formatter = new Intl.NumberFormat("id-ID", {
-              style: "currency",
-              currency: "IDR",
-              minimumFractionDigits: 0
-            });
+    fetch(`controller/farmasi/getTiketByVisit?no=${visit}`)
+      .then(res => res.json())
+      .then(res => {
 
+        let html = '';
 
-            return {
-              "actions": `
-                      <div class="text-center">
-								<div class="btn-group btn-group-sm" role="group">
-                  <a class="btn btn-info approve-btn" href="javascript:;" data-id="${row.id_pharmacy_details}">
-											<i class="fas fa-check-circle"></i>
-									</a>
-									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_pharmacy_details}">
-											<i class="fas fa-edit"></i>
-									</a>
-									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_pharmacy_details}">
-											<i class="fas fa-trash"></i>
-									</a>
-								</div>
-							</div>
-                    `,
-              "nama": row.pharmacy_name_generic + '/' + row.pharmacy_name_trade ?? "-",
-              "qty": row.qty ?? "-",
-              "signa": row.signa ?? "-",
-              "harga": formatter.format(harga), // ✅ harga format IDR
-              "total": formatter.format(total), // ✅ total format IDR
-              "catatan": row.catatan_permintaan ?? "-",
-              "status": row.status_item === '1' ?
-                '<span class="badge bg-success text-center d-block">Approve</span>' : '<span class="badge bg-danger text-center d-block">Belum proses</span>'
-            };
-          });
-        }
-      },
-      columns: [{
-          data: "nama"
-        },
-        {
-          data: "qty"
-        },
-        {
-          data: "signa"
-        },
-        {
-          data: "harga"
-        },
-        {
-          data: "total"
-        },
-        {
-          data: "catatan"
-        },
-        {
-          data: "status"
-        },
-        {
-          data: "actions",
-          orderable: false,
-          searchable: false
-        },
-      ],
-      footerCallback: function(row, data, start, end, display) {
-        var api = this.api();
+        res.data.forEach((tiket, i) => {
 
-        // Hitung total bobot
-        let total = api
-          .column(3, {
-            page: 'current'
-          })
-          .data()
-          .reduce((a, b) => {
-            return (parseFloat(a) || 0) + (parseFloat(b) || 0);
-          }, 0);
+          let collapseId = `collapse${tiket.id_permintaan_farmasi}`;
 
-        // Tampilkan di footer
-        $(api.column(3).footer()).html(total.toFixed(2) + " %");
-      }
-    });
+          // 🔥 FORMAT TANGGAL
+          let tgl = new Date(tiket.created_at).toLocaleString('id-ID');
 
-    $('#customSearch').on('keyup', function() {
-      table.search(this.value).draw();
-    });
+          html += `
+        <div class="accordion-item mb-3 border rounded shadow-sm">
 
-    // 🔹 Tambah
-    $('#btnTambah').on('click', function() {
-      $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
-      $('#id_pharmacy_details').val('');
-      $('#programModal .modal-title').text('Tambah Data');
-      $('#programModal').modal('show');
-    });
+          <!-- 🔥 HEADER -->
+          <div class="px-3 py-2 bg-light border-bottom">
 
-    // 🔹 Submit (Tambah / Update)
-    $('#programForm').on('submit', function(e) {
-      e.preventDefault();
-      let formData = new URLSearchParams(new FormData(this));
-      let id = $('#id_pharmacy_details').val();
+            <div class="d-flex justify-content-between align-items-center">
 
-      fetch(apiUrl + (id ? `?id=${id}` : ''), {
-          method: id ? 'PUT' : 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === 'success') {
-            Swal.fire('Berhasil!', data.message, 'success');
-            $('#programModal').modal('hide');
-            table.ajax.reload(null, false);
-          } else {
-            Swal.fire('Gagal!', data.message, 'error');
-          }
+              <div>
+                <div class="fw-bold">
+                  ${tgl} • ${tiket.tipe_obat ?? '-'}
+                </div>
+
+                <small class="text-muted">
+                  Jumlah ${tiket.rck_jumlah ?? '-'} • Satuan ${tiket.rck_satuan ?? '-'} • Signa ${tiket.rck_signa ?? '-'} 
+                </small>
+              </div>
+
+             <span class="badge 
+              ${tiket.status_permintaan == 1 ? 'bg-danger' : 
+                tiket.status_permintaan == 2 ? 'bg-primary' : 
+                'bg-success'}">
+
+              ${tiket.status_permintaan == 1 ? 'Waiting' : 
+                tiket.status_permintaan == 2 ? 'Persiapan' : 
+                'Selesai'}
+
+            </span>
+
+            </div>
+
+            <!-- 🔥 RACIKAN INFO -->
+            ${tiket.tipe_obat === 'racikan' ? `
+              <div class="mt-2 small text-muted">
+                <b>Racikan:</b> 
+                ${tiket.rck_jumlah ?? '-'} ${tiket.rck_satuan ?? ''} 
+                (${tiket.rck_signa ?? '-'})
+              </div>
+            ` : ''}
+
+          </div>
+
+          <!-- 🔥 BODY (SELALU SHOW) -->
+          <div class="accordion-collapse show">
+            <div class="accordion-body">
+
+              <div class="d-flex justify-content-end mb-2 gap-2">
+
+                <a href="module/print/struk_obat?no=${visit}&rm=${rm}&id=${tiket.id_permintaan_farmasi}" target="_blank">
+                  <button class="btn btn-sm btn-outline-info">
+                    <i class="fas fa-print"></i>
+                  </button>
+                </a>
+
+                <a href="module/print/resep?no=${visit}&rm=${rm}&id=${tiket.id_permintaan_farmasi}" target="_blank">
+                  <button class="btn btn-sm btn-outline-warning">
+                    <i class="fas fa-file-medical"></i>
+                  </button>
+                </a>
+
+                <button class="btn btn-sm btn-primary btnTambah" data-id="${tiket.id_permintaan_farmasi}">
+                  <i class="fas fa-plus"></i>
+                </button>
+
+              </div>
+
+              <table class="table table-sm table-bordered">
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Signa</th>
+                    <th>Catatan</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="detail-${tiket.id_permintaan_farmasi}">
+                  <tr><td colspan="6" class="text-center">Loading...</td></tr>
+                </tbody>
+              </table>
+
+            </div>
+          </div>
+
+        </div>
+        `;
         });
-    });
-    // 🔹 Edit
-    $(document).on('click', '.edit-btn', function() {
-      let id = $(this).data('id');
-      fetch(apiUrl + `&id=${id}`)
-        .then(res => res.json())
-        .then(resp => {
-          if (resp.status === 'success') {
-            let d = resp.data;
 
-            // isi otomatis field biasa
-            for (let key in d) {
-              if (key !== "id_pharmacy" && key !== "harga") { // skip select & harga
-                $(`[name="${key}"]`).val(d[key]);
-              }
-            }
+        $('#accordionExample').html(html);
 
-            // isi dropdown select2
-            $('#id_pharmacy').val(d.id_pharmacy).trigger("change");
+        loadAllDetail(res.data);
 
-            // isi harga langsung dari response DB
-            $('#harga').val(d.harga);
-
-            $('#programModal .modal-title').text('Edit Data');
-            $('#programModal').modal('show');
-          }
-        });
-    });
-    // 🔹 Delete
-    $(document).on('click', '.delete-btn', function() {
-      let id = $(this).data('id');
-      Swal.fire({
-        title: 'Hapus Data?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Hapus',
-        cancelButtonText: 'Batal'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          fetch(apiUrl + `&id=${id}`, {
-              method: 'DELETE'
-            })
-            .then(res => res.json())
-            .then(data => {
-              if (data.status === 'success') {
-                Swal.fire('Berhasil!', 'Data dihapus.', 'success');
-                table.ajax.reload(null, false);
-              }
-            });
-        }
       });
-    });
-
-    // 🔹 Approve
-    $(document).on('click', '.approve-btn', function() {
-      let id = $(this).data('id');
-
-      Swal.fire({
-        title: 'Approve Permintaan?',
-        text: 'Permintaan farmasi akan ditandai sebagai selesai.',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Approve',
-        cancelButtonText: 'Batal'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          fetch(apiUrl + `&approve=1`, {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-              },
-              body: `id_pharmacy_details=${id}`
-            })
-            .then(res => res.json())
-            .then(resp => {
-              if (resp.status === 'success') {
-                Swal.fire('Berhasil!', resp.message, 'success');
-                table.ajax.reload(null, false);
-              } else {
-                Swal.fire('Gagal!', resp.message, 'error');
-              }
-            });
-        }
-      });
-    });
-  });
-</script>
-
-<script>
-  let currentStatus = <?= $data['status_permintaan'] ?? 1 ?>;
-  console.log(currentStatus)
-  const getUrlParam = (param) => {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(param);
-  };
-
-  const id_permintaan = getUrlParam("id");
-  document.getElementById("btnPersiapan").addEventListener("click", function() {
-
-    let nextStatus = $(this).data('next');
-
-    Swal.fire({
-      title: "Update status?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Ya"
-    }).then((result) => {
-
-      if (result.isConfirmed) {
-
-        fetch("controller/farmasi/approveTiketOrder.php", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              id: id_permintaan,
-              status: nextStatus
-            })
-          })
-          .then(res => res.json())
-          .then(res => {
-            if (res.status === "success") {
-              Swal.fire("Berhasil!", "Status diupdate", "success")
-                .then(() => location.reload());
-            }
-          });
-
-      }
-
-    });
-
-  });
-  $(document).ready(function() {
-    renderButton(currentStatus);
-  });
-</script>
-
-<script>
-  function renderButton(status) {
-    let btn = $('#btnPersiapan');
-
-    if (status == 1) {
-      btn
-        .removeClass()
-        .addClass('btn btn-danger')
-        .html('<i class="fas fa-check-circle"></i> Persiapan Obat')
-        .data('next', 2);
-    } else if (status == 2) {
-      btn
-        .removeClass()
-        .addClass('btn btn-success')
-        .html('<i class="fas fa-check-circle"></i> Selesai')
-        .data('next', 3);
-    } else {
-      btn
-        .removeClass()
-        .addClass('btn btn-secondary')
-        .html('<i class="fas fa-check-circle"></i> Selesai')
-        .prop('disabled', true);
-    }
   }
-</script>
 
+  // ============================
+  // 🔥 LOAD DETAIL PER TIKET
+  // ============================
+  function loadAllDetail(tikets) {
+
+    tikets.forEach(t => {
+
+      fetch(`controller/visit/permintaanFarmasiDetails?no=${t.id_permintaan_farmasi}`)
+        .then(res => res.json())
+        .then(res => {
+
+          let html = '';
+
+          res.data.forEach(row => {
+
+            html += `
+          <tr>
+            <td>${row.pharmacy_name_generic ?? ''}</td>
+            <td>${row.qty}</td>
+            <td>${row.signa}</td>
+            <td>${row.catatan_permintaan ?? '-'}</td>
+            <td class='col-1'>
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-warning edit-btn" data-id="${row.id_pharmacy_details}">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-danger delete-btn" data-id="${row.id_pharmacy_details}">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          `;
+          });
+
+          $(`#detail-${t.id_permintaan_farmasi}`).html(html);
+
+        });
+
+    });
+
+  }
+
+  // ============================
+  // 🔥 TAMBAH (MULTI TIKET)
+  // ============================
+  $(document).on('click', '.btnTambah', function() {
+
+    let id = $(this).data('id');
+
+    $('#programForm')[0].reset();
+    $('#id_pharmacy_details').val('');
+    $('#id_visit').val(id); // 🔥 penting
+
+    $('#programModal .modal-title').text('Tambah Data');
+    $('#programModal').modal('show');
+
+  });
+</script>
 <script>
   $(document).on('click', '.btn-call', function() {
 
@@ -663,4 +531,50 @@ $data = mysqli_fetch_array($check);
 
     // ❌ TIDAK ADA FETCH / UPDATE STATUS
   }
+</script>
+<script>
+  let selectedValue = '0';
+
+  $(document).on('click', '.status-item', function(e) {
+    e.preventDefault();
+
+    let text = $(this).text().trim();
+    let value = $(this).data('value');
+
+    selectedValue = value;
+
+    let btn = $('#dropdownStatus');
+
+    btn.removeClass('status-fill-danger status-fill-primary status-fill-success');
+
+    if (value == '1') {
+      btn.addClass('status-fill-danger');
+    } else if (value == '2') {
+      btn.addClass('status-fill-primary');
+    } else if (value == '3') {
+      btn.addClass('status-fill-success');
+    }
+
+    $('#selectedStatus').text(text);
+
+    // 🔥 HIT API UPDATE STATUS
+    fetch("controller/farmasi/approveTiketOrder.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          visit: "<?= $_GET['no'] ?>",
+          status: value
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === 'success') {
+          console.log('Status updated all tiket');
+          loadTiket();
+        }
+      });
+
+  });
 </script>

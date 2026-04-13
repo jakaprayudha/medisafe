@@ -1,34 +1,44 @@
 <?php
-include '../../database/connect.php';
+require '../../database/connect.php';
+
+header('Content-Type: application/json');
 
 $data = json_decode(file_get_contents("php://input"), true);
-$id = $data['id'] ?? null;
-$status = $data['status'] ?? null;
 
-if (!$id || !$status) {
+$visit  = $data['visit'] ?? '';
+$status = $data['status'] ?? '';
+
+session_start();
+$id_customer = $_SESSION['id_customer'] ?? null;
+
+if (!$visit || !$id_customer) {
    echo json_encode([
-      "status" => "error",
-      "message" => "ID / Status tidak valid"
+      'status' => 'error',
+      'message' => 'Data tidak lengkap'
    ]);
    exit;
 }
 
-// validasi hanya boleh 2 atau 3
-if (!in_array($status, [2, 3])) {
+try {
+
+   $stmt = $koneksi->prepare("
+        UPDATE permintaan_pharmacy 
+        SET status_permintaan = ?
+        WHERE id_visit = ? 
+        AND id_customer = ?
+    ");
+
+   $stmt->bind_param("isi", $status, $visit, $id_customer);
+   $stmt->execute();
+
    echo json_encode([
-      "status" => "error",
-      "message" => "Status tidak diperbolehkan"
+      'status' => 'success',
+      'message' => 'Semua tiket berhasil diupdate'
    ]);
-   exit;
+} catch (Exception $e) {
+
+   echo json_encode([
+      'status' => 'error',
+      'message' => $e->getMessage()
+   ]);
 }
-
-$query = "UPDATE permintaan_pharmacy 
-          SET status_permintaan = '$status' 
-          WHERE id_permintaan_farmasi = '$id'";
-
-$result = mysqli_query($koneksi, $query);
-
-echo json_encode([
-   "status" => $result ? "success" : "error",
-   "message" => $result ? "Berhasil update status" : mysqli_error($koneksi)
-]);
