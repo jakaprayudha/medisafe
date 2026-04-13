@@ -15,9 +15,34 @@ $result = $stmt->get_result();
 $data = $result->fetch_assoc();
 $status = $data['status_kunjungan'];
 if ($status == '1') {
-    // $stmt = $koneksi->prepare("SELECT pk.kdPrognosa,pk.kdSadar,pk.alergiObat,pk.alergiMakan,pk.alergiUdara, pk.sistole, pk.lingkarPerut, pk.diastole, pk.respRate, pk.heartRate, pv.saturasi, pv.bmi,pv.bmi_keterangan, pv.id_patient, pv.noKartu, pv.visit_date, pv.catatan_screening, pv.tinggi_badan, pv.berat_badan, pv.suhu, pv.kondisi_masuk, pv.anamnesa, pv.keluhan_penyerta, pv.code_doctor, pv.id_doctor, pv.riwayat_alergi, pv.riwayat_penyakit_pribadi, pv.riwayat_penyakit_sekarang, pv.riwayat_pengobatan, pv.tindakan, pv.edukasi, pv.visit_ID, pv.id_customer,ms_poli.poli_code,ms_poli.poli_name, pk.noKunjungan, pk.nmDiag1 , pk.nmDiag2, pk.nmDiag3, pk.kdDiag1, pk.kdDiag2, pk.kdDiag3, pk.kdStatusPulang FROM pasien_visit AS pv INNER JOIN pcare_pendaftaran AS pp ON pv.visit_ID = pp.nomor_visit INNER JOIN ms_poli ON ms_poli.poli_name = pv.id_poli LEFT JOIN pcare_kunjungan AS pk ON pk.noKunjungan = pv.noKunjung WHERE pv.id_customer = ? AND ms_poli.id_customer = ? AND pv.visit_ID = ?");
-    // $stmt->bind_param('s', $nomor_visit);
-    // $stmt->execute();
+    $stmt = $koneksi->prepare("SELECT 
+    pv.visit_ID,
+    pv.id_patient,
+    pv.visit_notes,
+    pv.saturasi,
+    pv.tindakan,
+
+    p.patient_datebirth,
+
+    -- 🎯 HITUNG UMUR
+    CONCAT(
+        TIMESTAMPDIFF(YEAR, p.patient_datebirth, CURDATE()), ' Tahun ',
+        TIMESTAMPDIFF(MONTH, p.patient_datebirth, CURDATE()) % 12, ' Bulan ',
+        DATEDIFF(
+            CURDATE(),
+            DATE_ADD(
+                DATE_ADD(
+                    p.patient_datebirth,
+                    INTERVAL TIMESTAMPDIFF(YEAR, p.patient_datebirth, CURDATE()) YEAR
+                ),
+                INTERVAL (TIMESTAMPDIFF(MONTH, p.patient_datebirth, CURDATE()) % 12) MONTH
+            )
+        ), ' Hari'
+    ) AS umur, pk.* FROM pasien_visit AS pv INNER JOIN pcare_kunjungan AS pk ON pv.noKunjung = pk.noKunjungan INNER JOIN ms_patient AS p ON p.patient_bpjs = pv.noKartu WHERE pv.visit_ID = ? AND pv.id_customer = ?");
+
+    $stmt->bind_param('ss', $nomor_visit, $idcustomer);
+    $stmt->execute();
+    $hasil = $stmt->get_result();
 } else {
     $stmt = $koneksi->prepare("SELECT pp.*, pv.id_patient, pv.id_doctor, pv.code_doctor FROM pcare_pendaftaran AS pp INNER JOIN pasien_visit AS pv ON pp.nomor_visit = pv.visit_ID WHERE nomor_visit = ? AND pv.id_customer = ?");
     $stmt->bind_param('ss', $nomor_visit, $idcustomer);

@@ -31,7 +31,7 @@ APP.cetak = (id, nama) => {
     $(id).val(nama);
 }
 APP.cetakhtml = (id, nama) => {
-    $(id).text(': ' + nama);
+    $(id).text(' ' + nama);
 }
 APP.cetakselect = (id, kode, nama) => {
     var selectElem = document.getElementById(id);

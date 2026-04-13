@@ -43,6 +43,10 @@
             <div class="text-muted">Pembayaran</div>
             <div class="fw-semibold" id="pc_provider">-</div>
          </div>
+         <div class="col-md-3">
+            <div class="text-muted">Umur</div>
+            <div class="fw-semibold"><span id="idUmur"></span></div>
+         </div>
 
       </div>
 

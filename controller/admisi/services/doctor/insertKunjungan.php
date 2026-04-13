@@ -10,9 +10,9 @@ $noKartu = $_POST['noKartu'];
 $DBtglDatar  = $_POST['tglDaftar'] ?? null;
 $DBtglEstRujuk = !empty($_POST['tglRujukan']) ? $_POST['tglRujukan'] : null;
 $DBtglPulang = $_POST['tglDaftar'] ?? null;
-$tglDaftar = !empty($DBtglDatar)? date("d-m-Y", strtotime($DBtglDatar)): null;
-$tglEstRujuk = !empty($DBtglEstRujuk) ? date("d-m-Y", strtotime($DBtglEstRujuk)): null;
-$tglPulang = !empty($DBtglPulang) ? date("d-m-Y", strtotime($DBtglPulang)): null;
+$tglDaftar = !empty($DBtglDatar) ? date("d-m-Y", strtotime($DBtglDatar)) : null;
+$tglEstRujuk = !empty($DBtglEstRujuk) ? date("d-m-Y", strtotime($DBtglEstRujuk)) : null;
+$tglPulang = !empty($DBtglPulang) ? date("d-m-Y", strtotime($DBtglPulang)) : null;
 $kdPoli = $_POST['kdPoli'];
 $nmPoli = $_POST['nmPoli'];
 $keluhan = $_POST['keluhan_penyerta'];
@@ -126,7 +126,7 @@ switch ($typeRujukan) {
                 "catatan" => $catatan
             ]
         ];
-        
+
         break;
 }
 if ($typeRujukan == 'spesialis') {
@@ -140,8 +140,8 @@ $method = "POST";
 if ($noKunjungan != null) {
     $method = "PUT";
 }
-echo json_encode($payload, JSON_PRETTY_PRINT);die();
-// $result = bpjsPost("/kunjungan", $payload, $method);
+// echo json_encode($payload, JSON_PRETTY_PRINT);die();
+$result = bpjsPost("/kunjungan", $payload, $method);
 // $result = testingBPJS_POST("https://app.medisafe.id/controller/admisi/api/getpeserta.php", $payload);
 if ($result['code'] != "200") {
     $msg = $result['message'];
@@ -233,7 +233,6 @@ if ($result['code'] != "200") {
                 berat_badan = ?,
                 bmi = ?,
                 bmi_keterangan = ?,
-
                 anamnesa = ?,
                 keluhan_penyerta = ?,
                 riwayat_alergi = ?,
@@ -276,9 +275,9 @@ if ($result['code'] != "200") {
             $kdStatusPulang,
             $saturasi,
             $diagnosa_sekunder,
+            $noKunjungan,
             $nomor_visit,
-            $id_patient,
-            $noKunjungan
+            $id_patient
         );
     } else {
         $message = "Berhasil Update Kunjungan";
@@ -374,6 +373,62 @@ if ($result['code'] != "200") {
             $suhu,
             $nomorLP,
             $noKunjungan
+        );
+        $stmt1 = $koneksi->prepare("UPDATE pasien_visit SET
+                kondisi_masuk = ?,
+                tekanan_darah = ?,
+                suhu = ?,
+                nadi = ?,
+                respirasi = ?,
+                tinggi_badan = ?,
+                berat_badan = ?,
+                bmi = ?,
+                bmi_keterangan = ?,
+                anamnesa = ?,
+                keluhan_penyerta = ?,
+                riwayat_alergi = ?,
+                riwayat_penyakit_pribadi = ?,
+                riwayat_penyakit_sekarang = ?,
+                riwayat_pengobatan = ?,
+                diagnosa = ?,
+                tindakan = ?,
+                edukasi = ?,
+                visit_out = ?, 
+                kondisi_keluar = ?,
+                saturasi = ?,
+                diagnosa_sekunder = ?,
+                noKunjung = ?
+
+            WHERE visit_ID = ? AND id_patient = ?
+        ");
+
+        $stmt1->bind_param(
+            "sssssssssssssssssssssssss",
+            $kdPrognosa,
+            $tekanandarah,
+            $suhu,
+            $heartRate,
+            $respRate,
+            $tinggiBadan,
+            $berat,
+            $bmi,
+            $bmi_keterangan,
+            $anamnesa, // masuk ke anamnesa
+            $keluhan,
+            $riwayat_alergi,
+            $riwayat_penyakit_pribadi,
+            $riwayat_penyakit_sekarang,
+            $riwayat_pengobatan,
+            $diag1,
+            $tindakan,
+            $edukasi,
+            $kdStatusPulang,
+            $kdStatusPulang,
+            $saturasi,
+            $diagnosa_sekunder,
+            $noKunjungan,
+            $nomor_visit,
+            $id_patient
         );
     }
     $simpan = $stmt->execute();
