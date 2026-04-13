@@ -100,98 +100,127 @@ require '../../controller/view.php';
       </div>
     </div>
   </div>
-  <div class="modal fade" id="programModal" tabindex="-1">
-    <div class="modal-dialog">
-      <form id="programForm" class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title"></h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" name="id_patient" id="id_patient">
-          <div class="row">
-            <div class="col-12">
-              <div class="alert alert-warning" role="alert">
-                Nomor rekam medis di generate otomatis, untuk melakukan perubahan silahkan klik tombol ubah pada data pasien
-              </div>
+</body>
+
+<div class="modal fade" id="programModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <form id="programForm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="id_patient" id="id_patient">
+        <input type="hidden" name="patient_provinsi" id="provinsi_text">
+        <input type="hidden" name="patient_kabupaten" id="kabupaten_text">
+        <input type="hidden" name="patient_kecamatan" id="kecamatan_text">
+        <input type="hidden" name="patient_kelurahan" id="kelurahan_text">
+        <div class="row">
+          <div class="col-12">
+            <div class="alert alert-warning" role="alert">
+              Nomor rekam medis di generate otomatis, untuk melakukan perubahan silahkan klik tombol ubah pada data pasien
             </div>
-            <div class="col-12">
-              <div class="mb-3">
-                <label class="form-label" id="patient_name">Nama Pasien</label>
-                <input type="text" id="patient_name" name="patient_name" class="form-control" required>
-              </div>
+          </div>
+          <div class="col-6">
+            <div class="mb-3">
+              <label class="form-label required" id="patient_name">Nama Pasien</label>
+              <input type="text" id="patient_name" name="patient_name" class="form-control" required>
             </div>
-            <div class="col-6">
-              <div class="mb-3">
-                <label class="form-label" id="patient_nik">NIK</label>
-                <input type="text" id="patient_nik" name="patient_nik" class="form-control">
-              </div>
+          </div>
+          <div class="col-6">
+            <div class="mb-3">
+              <label class="form-label " id="patient_name">NIK</label>
+              <input type="text" id="patient_nik" name="patient_nik" class="form-control">
             </div>
-            <div class="col-6">
-              <div class="mb-3">
-                <label class="form-label" id="patient_nik">No.Kartu BPJS</label>
-                <input type="text" id="patient_bpjs" name="patient_bpjs" class="form-control">
-              </div>
+          </div>
+          <div class="col-6">
+            <div class="mb-3">
+              <label class="form-label " id="patient_name">No.BPJS</label>
+              <input type="text" id="patient_bpjs" name="patient_bpjs" class="form-control">
             </div>
-            <div class="col-6">
-              <div class="mb-3">
-                <label class="form-label required">Jenis Kelamin</label>
-                <select name="patient_gender" class="form-select" id="patient_gender" required>
-                  <option value="">PILIH</option>
-                  <option value="Laki-laki">Laki-laki</option>
-                  <option value="Perempuan">Perempuan</option>
-                </select>
-              </div>
+          </div>
+          <div class="col-3">
+            <div class="mb-3">
+              <label class="form-label required">Jenis Kelamin</label>
+              <select name="patient_gender" class="form-select" id="patient_gender" required>
+                <option value="">PILIH</option>
+                <option value="Laki-laki">Laki-laki</option>
+                <option value="Perempuan">Perempuan</option>
+              </select>
             </div>
-            <div class="col-6">
-              <div class="mb-3">
-                <label class="form-label required">Agama</label>
-                <select name="patient_religion" class="form-select" id="patient_religion" required>
-                  <option value="">PILIH</option>
-                  <option value="Islam">Islam</option>
-                  <option value="Kristen">Kristen</option>
-                  <option value="Katolik">Katolik</option>
-                  <option value="Hindu">Hindu</option>
-                  <option value="Budha">Budha</option>
-                </select>
-              </div>
+          </div>
+          <div class="col-3">
+            <div class="mb-3">
+              <label class="form-label required">Agama</label>
+              <select name="patient_religion" class="form-select" id="patient_religion" required>
+                <option value="">PILIH</option>
+                <option value="Islam">Islam</option>
+                <option value="Kristen">Kristen</option>
+                <option value="Katolik">Katolik</option>
+                <option value="Hindu">Hindu</option>
+                <option value="Budha">Budha</option>
+              </select>
             </div>
-            <div class="col-6">
-              <div class="mb-3">
-                <label class="form-label required">Tempat Lahir</label>
-                <input type="text" id="patient_place" name="patient_place" class="form-control" required>
-              </div>
+          </div>
+          <div class="col-3">
+            <div class="mb-3">
+              <label class="form-label required">Tempat Lahir</label>
+              <input type="text" id="patient_place" name="patient_place" class="form-control" required>
             </div>
-            <div class="col-6">
-              <div class="mb-3">
-                <label class="form-label required">Tanggal Lahir</label>
-                <input type="date" id="patient_datebirth" name="patient_datebirth" class="form-control" required>
-              </div>
+          </div>
+          <div class="col-3">
+            <div class="mb-3">
+              <label class="form-label required">Tanggal Lahir</label>
+              <input type="date" id="patient_datebirth" name="patient_datebirth" class="form-control" required>
             </div>
-            <div class="col-12">
-              <div class="mb-3">
-                <label class="form-label ">No.Handphone</label>
-                <input type="text" id="patient_phone" name="patient_phone" class="form-control">
-              </div>
+          </div>
+          <div class="col-6">
+            <div class="mb-3">
+              <label class="form-label ">No.Handphone</label>
+              <input type="text" id="patient_phone" name="patient_phone" class="form-control">
             </div>
-            <div class="col-12">
-              <div class="mb-3">
-                <label class="form-label">Alamat</label>
-                <textarea name="patient_address" id="patient_address" class="form-control" rows="5"></textarea>
-              </div>
+          </div>
+          <div class="col-3">
+            <label class="form-label required">Provinsi</label>
+            <select id="provinsi" class="form-select">
+              <option value="">PILIH</option>
+            </select>
+          </div>
+
+          <div class="col-3">
+            <label class="form-label required">Kabupaten/Kota</label>
+            <select id="kabupaten" class="form-select">
+              <option value="">PILIH</option>
+            </select>
+          </div>
+
+          <div class="col-3">
+            <label class="form-label required">Kecamatan</label>
+            <select id="kecamatan" class="form-select">
+              <option value="">PILIH</option>
+            </select>
+          </div>
+
+          <div class="col-3">
+            <label class="form-label required">Kelurahan</label>
+            <select id="kelurahan" class="form-select">
+              <option value="">PILIH</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <div class="mb-3">
+              <label class="form-label">Alamat</label>
+              <textarea name="patient_address" id="patient_address" class="form-control" rows="5"></textarea>
             </div>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Simpan</button>
-        </div>
-      </form>
-    </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
   </div>
-</body>
-
-
-
+</div>
 <script>
   const getBaseUrl = () => {
     const path = window.location.pathname.split('/');
@@ -534,6 +563,99 @@ require '../../controller/view.php';
       }
 
     });
+</script>
+<script>
+  const apiWilayah = "controller/master/wilayah.php";
+
+  // 🔥 LOAD PROVINSI
+  function loadProvinsi() {
+    fetch(`${apiWilayah}?type=provinsi`)
+      .then(res => res.json())
+      .then(data => {
+        let html = '<option value="">PILIH</option>';
+        data.forEach(d => {
+          html += `<option value="${d.id}">${d.nama}</option>`;
+        });
+        $('#provinsi').html(html);
+      });
+  }
+
+  // 🔥 LOAD KABUPATEN
+  $('#provinsi').on('change', function() {
+    let id = $(this).val();
+
+    $('#kabupaten').html('<option>Loading...</option>');
+    $('#kecamatan').html('<option>PILIH</option>');
+    $('#kelurahan').html('<option>PILIH</option>');
+
+    fetch(`${apiWilayah}?type=kabupaten&id=${id}`)
+      .then(res => res.json())
+      .then(data => {
+        let html = '<option value="">PILIH</option>';
+        data.forEach(d => {
+          html += `<option value="${d.id}">${d.nama}</option>`;
+        });
+        $('#kabupaten').html(html);
+      });
+  });
+
+  // 🔥 LOAD KECAMATAN
+  $('#kabupaten').on('change', function() {
+    let id = $(this).val();
+
+    $('#kecamatan').html('<option>Loading...</option>');
+    $('#kelurahan').html('<option>PILIH</option>');
+
+    fetch(`${apiWilayah}?type=kecamatan&id=${id}`)
+      .then(res => res.json())
+      .then(data => {
+        let html = '<option value="">PILIH</option>';
+        data.forEach(d => {
+          html += `<option value="${d.id}">${d.nama}</option>`;
+        });
+        $('#kecamatan').html(html);
+      });
+  });
+
+  // 🔥 LOAD KELURAHAN
+  $('#kecamatan').on('change', function() {
+    let id = $(this).val();
+
+    $('#kelurahan').html('<option>Loading...</option>');
+
+    fetch(`${apiWilayah}?type=kelurahan&id=${id}`)
+      .then(res => res.json())
+      .then(data => {
+        let html = '<option value="">PILIH</option>';
+        data.forEach(d => {
+          html += `<option value="${d.id}">${d.nama}</option>`;
+        });
+        $('#kelurahan').html(html);
+      });
+  });
+
+  // 🔥 INIT
+  $(document).ready(function() {
+    loadProvinsi();
+  });
+</script>
+
+<script>
+  $('#provinsi').on('change', function() {
+    $('#provinsi_text').val($(this).find('option:selected').text());
+  });
+
+  $('#kabupaten').on('change', function() {
+    $('#kabupaten_text').val($(this).find('option:selected').text());
+  });
+
+  $('#kecamatan').on('change', function() {
+    $('#kecamatan_text').val($(this).find('option:selected').text());
+  });
+
+  $('#kelurahan').on('change', function() {
+    $('#kelurahan_text').val($(this).find('option:selected').text());
+  });
 </script>
 
 </html>

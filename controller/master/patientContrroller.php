@@ -148,7 +148,13 @@ function createData($id_customer)
          'patient_phone',
          'patient_address',
          'patient_nik',
-         'patient_bpjs'
+         'patient_bpjs',
+
+         // 🔥 TAMBAHAN
+         'patient_provinsi',
+         'patient_kabupaten',
+         'patient_kecamatan',
+         'patient_kelurahan'
       ];
 
       $fields = ['patient_number', 'nomor_rm', 'id_customer'];
