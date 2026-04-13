@@ -138,8 +138,8 @@ $method = "POST";
 if ($noKunjungan != null) {
     $method = "PUT";
 }
-// echo json_encode($payload, JSON_PRETTY_PRINT);die();
-$result = bpjsPost("/kunjungan", $payload, $method);
+echo json_encode($payload, JSON_PRETTY_PRINT);die();
+// $result = bpjsPost("/kunjungan", $payload, $method);
 // $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
 // echo json_encode($result, JSON_PRETTY_PRINT);die();
 if ($result['code'] != "200") {
