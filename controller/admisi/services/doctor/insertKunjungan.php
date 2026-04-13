@@ -7,13 +7,17 @@ header('Content-Type: application/json');
 // rawat jalan
 $noKunjungan = $_POST['noKunjungan'] ?? null;
 $noKartu = $_POST['noKartu'];
-$DBtglDatar = $_POST['tglDaftar'];
-// $DBtglEstRujuk = $_POST['tglRujukan'] ?? NULL;
-$DBtglEstRujuk = !empty($_POST['tglRujukan']) ? $_POST['tglRujukan'] : NULL;
-$DBtglPulang = $_POST['tglDaftar'];
-$tglDaftar = date("d-m-Y", strtotime($DBtglDatar));
-$tglEstRujuk = date("d-m-Y", strtotime($DBtglEstRujuk));
-$tglPulang = date("d-m-Y", strtotime($DBtglPulang));
+// $DBtglDatar = $_POST['tglDaftar'];
+// // $DBtglEstRujuk = $_POST['tglRujukan'] ?? NULL;
+// $DBtglEstRujuk = !empty($_POST['tglRujukan']) ? $_POST['tglRujukan'] : NULL;
+// $DBtglPulang = $_POST['tglDaftar'];
+
+$DBtglDatar  = $_POST['tglDaftar'] ?? null;
+$DBtglEstRujuk = !empty($_POST['tglRujukan']) ? $_POST['tglRujukan'] : null;
+$DBtglPulang = $_POST['tglDaftar'] ?? null;
+$tglDaftar = !empty($DBtglDatar)? date("d-m-Y", strtotime($DBtglDatar)): null;
+$tglEstRujuk = !empty($DBtglEstRujuk) ? date("d-m-Y", strtotime($DBtglEstRujuk)): null;
+$tglPulang = !empty($DBtglPulang) ? date("d-m-Y", strtotime($DBtglPulang)): null;
 $kdPoli = $_POST['kdPoli'];
 $nmPoli = $_POST['nmPoli'];
 $keluhan = $_POST['keluhan_penyerta'];
