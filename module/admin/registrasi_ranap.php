@@ -673,12 +673,6 @@ require '../../controller/view.php';
                       </li>
 
                       <li>
-                        <a class="dropdown-item camera-btn" href="javascript:;" data-id="${row.id_visit}">
-                          <i class="fas fa-camera me-2 text-success"></i> Ambil Foto
-                        </a>
-                      </li>
-
-                      <li>
                         <a class="dropdown-item edit-btn" href="javascript:;" 
                           data-id="${row.id_visit}" 
                           data-patient="${row.id_patient}" 
