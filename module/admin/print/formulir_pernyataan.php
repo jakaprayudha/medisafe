@@ -1,5 +1,6 @@
 <?php
-// Tidak butuh connect.php di sini karena hanya load lewat JS (getpasien.php)
+require '../../../database/connect.php';
+require '../../admin/getdataclinic.php';
 ?>
 <!-- ================== STYLE KHUSUS FORM INI ================== -->
 <style>
@@ -112,8 +113,8 @@
 
       <div class="ttd">
          <div class="ttd-box">
-            Tj. Morawa, 29 Oktober 2025<br><br>
-            Yang Membuat Pernyataan<br><br><br><br>
+            <p id="ttd_tanggal"></p>
+            Yang Membuat Pernyataan<br>
             <img id="ttd_img" src="" alt="TTD" style="max-height:80px;">
             <p id="ttd_nama"></p>
             <!-- <div class="sign-line" id="fp_nama"></div> -->
@@ -147,6 +148,14 @@
                ttl = data.patient_place + " / " + data.patient_datebirth;
             }
 
+            // 🔥 SET TANGGAL TTD
+            if (data.visit_date) {
+               let tanggal = formatTanggal(data.visit_date);
+
+               document.getElementById("ttd_tanggal").innerText =
+                  "<?= $datafaskes['faskes_district'] ?>, " + tanggal;
+            }
+
             // Isi field
             document.getElementById("fp_nama").innerText = data.patient_name ?? "";
             document.getElementById("fp_ttl").innerText = ttl;
@@ -154,8 +163,9 @@
             document.getElementById("fp_nik").innerText = data.patient_nik ?? "";
             document.getElementById("fp_phone").innerText = data.patient_phone ?? "";
             // 🔥 SET TTD DINAMIS
-            if (data.file_ttd) {
-               document.getElementById("ttd_img").src = `../../../uploads/ttd/${data.file_ttd}`;
+            if (data.signature_path) {
+               document.getElementById("ttd_img").src =
+                  `../../../uploads/ttd/${data.signature_path}`;
             } else {
                document.getElementById("ttd_img").style.display = "none";
             }
@@ -165,4 +175,19 @@
 
          });
    });
+
+   // 🔥 FORMAT TANGGAL INDONESIA
+   function formatTanggal(tgl) {
+      const bulan = [
+         "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+         "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+      ];
+
+      let d = new Date(tgl);
+      let hari = d.getDate();
+      let bln = bulan[d.getMonth()];
+      let thn = d.getFullYear();
+
+      return `${hari} ${bln} ${thn}`;
+   }
 </script>

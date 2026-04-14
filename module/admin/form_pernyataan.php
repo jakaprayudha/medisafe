@@ -1,86 +1,90 @@
-<?php
-$title = 'Pemeriksaan';
-require '../../controller/view.php';
-require '../../database/connect.php';
-?>
-<!doctype html>
-<html lang="en">
-
-<head>
-  <base href="../../">
   <?php
-  require '../../assets/template/head.php';
+  $title = 'Pemeriksaan';
+  require '../../controller/view.php';
+  require '../../database/connect.php';
+  $no = $_GET['no'];
+  $id_customer = $_SESSION['id_customer'];
+  $check = mysqli_query($koneksi, "SELECT * FROM pasien_visit WHERE visit_ID='$no' AND id_customer='$id_customer'");
+  $datacheck = mysqli_fetch_array($check);
+  $idvisit = $datacheck['id_visit'];
+
   ?>
+  <!doctype html>
+  <html lang="en">
 
-</head>
-
-<body>
-  <!--  Body Wrapper -->
-  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
-    data-sidebar-position="fixed" data-header-position="fixed">
-    <!-- Sidebar Start -->
+  <head>
+    <base href="../../">
     <?php
-    require 'sidebar.php';
+    require '../../assets/template/head.php';
     ?>
-    <!--  Sidebar End -->
-    <!--  Main wrapper -->
-    <div class="body-wrapper">
-      <!--  Header Start -->
+
+  </head>
+
+  <body>
+    <!--  Body Wrapper -->
+    <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
+      data-sidebar-position="fixed" data-header-position="fixed">
+      <!-- Sidebar Start -->
       <?php
-      require 'navbar.php';
+      require 'sidebar.php';
       ?>
-      <!--  Header End -->
-      <div class="body-wrapper-inner">
-        <div class="container-fluid">
-          <?php
-          $rme = $_GET['rme']; // default a
-          if ($rme == 'a') {
-            include 'menu_rme.php';
-          } else if ($rme == 'b') {
-            include 'menu_rmeb.php';
-          } else if ($rme == 'c') {
-            include 'menu_rme_inap.php';
-          }
-          ?>
-          <div class="row">
-            <div class="col-lg-12 d-flex align-items-stretch">
-              <div class="card w-100">
-                <div class="card-body p-4">
-                  <input type="hidden" name="nomor_rm" value="<?= $rm ?>">
-                  <input type="hidden" name="nomor_visit" value="<?= $no ?>">
-                  <h4 class="mb-3">Surat Pernyataan Peserta</h4>
-                  <!-- Data Pasien -->
-                  <?php require 'card-pasien.php'; ?>
-                  <div class="mb-3">
-                    <div class="alert alert-danger border-2 shadow-sm" role="alert" style="background-color:#fff5f5; border-color:#dc3545;">
-                      <div class="d-flex align-items-start">
-                        <div class="me-3">
-                          <iconify-icon icon="streamline-ultimate:cash-payment-bills-bold"
-                            style="font-size: 2rem; color:#dc3545;"></iconify-icon>
-                        </div>
-                        <div>
-                          <h6 class="fw-bold text-danger mb-2">Pernyataan Pemanfaatan Data Medis</h6>
-                          <p class="mb-0" style="font-size: 0.9rem; color:#333; line-height:1.5;">
-                            Dengan sadar, terkait pemanfaatan jaminan pelayanan kesehatan <strong>BPJS Kesehatan</strong>,
-                            dengan ini saya menyatakan kesediaan atas data medis (<em>rekam medis</em>) diri saya
-                            untuk dipergunakan oleh <strong>Dokter, Rumah Sakit,</strong> dan <strong>BPJS Kesehatan</strong>
-                            sesuai dengan kepentingan pelayanan dan administrasi kesehatan yang berlaku.
-                          </p>
+      <!--  Sidebar End -->
+      <!--  Main wrapper -->
+      <div class="body-wrapper">
+        <!--  Header Start -->
+        <?php
+        require 'navbar.php';
+        ?>
+        <!--  Header End -->
+        <div class="body-wrapper-inner">
+          <div class="container-fluid">
+            <?php
+            @$rme = $_GET['rme']; // default a
+            if ($rme == 'a') {
+              include 'menu_rme.php';
+            } else if ($rme == 'b') {
+              include 'menu_rmeb.php';
+            } else if ($rme == 'c') {
+              include 'menu_rme_inap.php';
+            }
+            ?>
+            <div class="row">
+              <div class="col-lg-12 d-flex align-items-stretch">
+                <div class="card w-100">
+                  <div class="card-body p-4">
+                    <input type="hidden" name="nomor_rm" value="<?= $rm ?>">
+                    <input type="hidden" name="nomor_visit" value="<?= $no ?>">
+                    <h4 class="mb-3">Surat Pernyataan Peserta</h4>
+                    <!-- Data Pasien -->
+                    <?php require 'card-pasien.php'; ?>
+                    <div class="mb-3">
+                      <div class="alert alert-danger border-2 shadow-sm" role="alert" style="background-color:#fff5f5; border-color:#dc3545;">
+                        <div class="d-flex align-items-start">
+                          <div class="me-3">
+                            <iconify-icon icon="streamline-ultimate:cash-payment-bills-bold"
+                              style="font-size: 2rem; color:#dc3545;"></iconify-icon>
+                          </div>
+                          <div>
+                            <h6 class="fw-bold text-danger mb-2">Pernyataan Pemanfaatan Data Medis</h6>
+                            <p class="mb-0" style="font-size: 0.9rem; color:#333; line-height:1.5;">
+                              Dengan sadar, terkait pemanfaatan jaminan pelayanan kesehatan <strong>BPJS Kesehatan</strong>,
+                              dengan ini saya menyatakan kesediaan atas data medis (<em>rekam medis</em>) diri saya
+                              untuk dipergunakan oleh <strong>Dokter, Rumah Sakit,</strong> dan <strong>BPJS Kesehatan</strong>
+                              sesuai dengan kepentingan pelayanan dan administrasi kesehatan yang berlaku.
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div class="text-end mt-2">
-                    <a href="module/admin/print/formulir_pernyataan.php?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
-                      <button class="btn btn-outline-primary">
-                        <iconify-icon icon="mdi:printer-outline"></iconify-icon>
-                        Cetak
-                      </button>
-                    </a>
-                    <button class="btn btn-outline-danger" id="openModal">
-                      <iconify-icon icon="mdi:check-decagram-outline"></iconify-icon>
-                      Saya Mengerti dan Setuju
-                    </button>
+                    <div id="ttdSection" class="text-end mt-2"></div>
+                    <div class="text-end mt-2">
+                      <a href="module/admin/print/formulir_pernyataan?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
+                        <button class="btn btn-outline-primary">
+                          <iconify-icon icon="mdi:printer-outline"></iconify-icon>
+                          Cetak
+                        </button>
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -89,130 +93,267 @@ require '../../database/connect.php';
         </div>
       </div>
     </div>
-  </div>
-  <!-- Modal Tanda Tangan -->
-  <div class="modal fade" id="modalTtd" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content border-0 shadow">
-        <div class="modal-header bg-danger text-white">
-          <h6 class="modal-title">Tanda Tangan Pasien</h6>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+
+    <?php
+    require 'library.php';
+    ?>
+
+
+  </body>
+  <div class="modal fade" id="ttdModal">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title">✍️ Tanda Tangan Pasien</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
         </div>
+
         <div class="modal-body text-center">
-          <p class="text-muted mb-2">Silakan tanda tangan di area berikut:</p>
-          <canvas id="signature-pad" style="border: 1px dashed #ccc; width: 100%; height: 200px; border-radius: 8px;"></canvas>
+          <input type="hidden" hidden id="ttd_id_visit" value="<?= $idvisit ?>">
+
+          <canvas id="signaturePad"
+            style="border:1px solid #ccc; width:100%; height:400;">
+          </canvas>
+
+          <div class="mt-3 d-flex justify-content-between">
+            <button class="btn btn-warning" id="clearSignature">🧹 Clear</button>
+            <button class="btn btn-primary" id="saveSignature">💾 Simpan</button>
+          </div>
+
         </div>
-        <div class="modal-footer d-flex justify-content-between">
-          <button type="button" class="btn btn-light" id="clear-signature">Hapus</button>
-          <button type="button" class="btn btn-primary" id="save-signature">Simpan Tanda Tangan</button>
-        </div>
+
       </div>
     </div>
   </div>
-  <?php
-  require 'library.php';
-  ?>
-</body>
-<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const modal = new bootstrap.Modal(document.getElementById("modalTtd"));
-    const openModalBtn = document.getElementById("openModal");
-    const canvas = document.getElementById("signature-pad");
-    const clearBtn = document.getElementById("clear-signature");
-    const saveBtn = document.getElementById("save-signature");
 
-    // Setup SignaturePad
-    const signaturePad = new SignaturePad(canvas, {
-      backgroundColor: "rgba(255, 255, 255, 0)",
-      penColor: "rgb(220, 53, 69)" // warna merah BPJS
-    });
+  <script>
+    fetch(`controller/visit/getTTD?no=<?= $no ?>`)
+      .then(res => res.json())
+      .then(resp => {
 
-    // Resize canvas sesuai modal
-    function resizeCanvas() {
-      const ratio = Math.max(window.devicePixelRatio || 1, 1);
-      canvas.width = canvas.offsetWidth * ratio;
-      canvas.height = canvas.offsetHeight * ratio;
-      canvas.getContext("2d").scale(ratio, ratio);
-      signaturePad.clear();
-    }
+        let d = resp.data;
+        let container = document.getElementById('ttdSection');
+        if (d && d.ttd && d.ttd !== 'null' && d.ttd !== '') {
 
-    window.addEventListener("resize", resizeCanvas);
-    modal._element.addEventListener("shown.bs.modal", resizeCanvas);
+          container.innerHTML = `
+          <div class="alert alert-success text-start shadow-sm">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
 
-    // Buka modal
-    openModalBtn.addEventListener("click", function() {
-      modal.show();
-    });
+              <div>
+                <strong>✔️ Berkas sudah ditandatangani</strong><br>
+                <small class="text-muted">Pasien telah menyetujui pernyataan.</small>
+              </div>
 
-    // Hapus tanda tangan
-    clearBtn.addEventListener("click", function() {
-      signaturePad.clear();
-    });
+              <div class="d-flex align-items-center gap-2">
+                <img src="${d.ttd}" 
+                    style="height:60px; border:1px solid #ccc; border-radius:6px; background:#fff;"
+                    onerror="this.style.display='none'">
 
-    // Simpan tanda tangan
-    saveBtn.addEventListener("click", function() {
-      if (signaturePad.isEmpty()) {
-        Swal.fire({
-          icon: "warning",
-          title: "Belum ada tanda tangan!",
-          text: "Silakan isi tanda tangan terlebih dahulu.",
-          confirmButtonColor: "#dc3545"
-        });
-        return;
+                <a href="${d.ttd}" target="_blank" class="btn btn-sm btn-outline-success">
+                  📄 Lihat
+                </a>
+              </div>
+
+            </div>
+          </div>
+        `;
+
+        } else {
+
+          container.innerHTML = `
+          <button class="btn btn-outline-danger" id="openModal">
+            <iconify-icon icon="mdi:check-decagram-outline"></iconify-icon>
+            Saya Mengerti dan Setuju
+          </button>
+        `;
+
+          document.getElementById("openModal").onclick = function() {
+            const modal = new bootstrap.Modal(document.getElementById("ttdModal"));
+            modal.show();
+          };
+        }
+
+      })
+      .catch(err => {
+        console.error('TTD error:', err);
+      });
+  </script>
+
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+
+      const canvas = document.getElementById('signaturePad');
+      const ctx = canvas.getContext('2d');
+
+      let drawing = false;
+
+      function resizeCanvas() {
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = 400 * ratio;
+
+        canvas.getContext("2d").scale(ratio, ratio);
       }
 
-      const dataUrl = signaturePad.toDataURL("image/png");
+      $('#ttdModal').on('shown.bs.modal', function() {
+        resizeCanvas();
+      });
 
-      // Kirim ke server
-      fetch("controller/visit/saveSignature.php", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            nomor_visit: "<?= $no ?>",
-            nomor_rm: "<?= $rm ?>",
-            id_patient: "<?= $data['id_patient'] ?>",
-            ttd: dataUrl
+      // DRAW
+      canvas.addEventListener('mousedown', () => drawing = true);
+      canvas.addEventListener('mouseup', () => {
+        drawing = false;
+        ctx.beginPath();
+      });
+      canvas.addEventListener('mousemove', draw);
+
+      canvas.addEventListener('touchstart', () => drawing = true);
+      canvas.addEventListener('touchend', () => {
+        drawing = false;
+        ctx.beginPath();
+      });
+      canvas.addEventListener('touchmove', drawTouch);
+
+      function draw(e) {
+        if (!drawing) return;
+
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+
+        ctx.lineTo(e.offsetX, e.offsetY);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(e.offsetX, e.offsetY);
+      }
+
+      function drawTouch(e) {
+        e.preventDefault();
+        if (!drawing) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+      }
+
+      // CLEAR
+      document.getElementById('clearSignature').onclick = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      };
+
+      // OPEN MODAL
+      document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'openModal') {
+          const modal = new bootstrap.Modal(document.getElementById("ttdModal"));
+          modal.show();
+        }
+      });
+
+      // SAVE 🔥
+      document.getElementById('saveSignature').onclick = function() {
+
+        console.log("CLICK SAVE"); // 🔥 DEBUG
+
+        const id_visit = document.getElementById('ttd_id_visit').value;
+
+        if (!id_visit) {
+          alert('ID visit tidak ditemukan');
+          return;
+        }
+
+        const image = canvas.toDataURL('image/png');
+
+        if (image === "data:,") {
+          alert("Tanda tangan kosong");
+          return;
+        }
+
+        fetch('controller/admisi/saveSignature.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              id_visit: id_visit,
+              image: image
+            })
           })
-        })
-        .then(res => res.json())
-        .then(result => {
-          if (result.status === "success") {
-            Swal.fire({
-              icon: "success",
-              title: "Tanda Tangan Tersimpan!",
-              text: "Terima kasih, pernyataan Anda telah disetujui.",
-              confirmButtonColor: "#198754",
-              timer: 2000,
-              showConfirmButton: false
-            });
-            setTimeout(() => modal.hide(), 2000);
-          } else {
-            Swal.fire({
-              icon: "error",
-              title: "Gagal Menyimpan!",
-              text: "Terjadi kesalahan saat menyimpan tanda tangan.",
-              confirmButtonColor: "#dc3545"
-            });
-          }
-        })
-        .catch(err => {
-          console.error(err);
-          Swal.fire({
-            icon: "error",
-            title: "Kesalahan Server",
-            text: "Tidak dapat terhubung ke server.",
-            confirmButtonColor: "#dc3545"
+          .then(res => res.json())
+          .then(resp => {
+            console.log("RESPONSE:", resp);
+            if (resp.status === 'success') {
+
+              alert('Tanda tangan berhasil disimpan');
+
+              const modalEl = document.getElementById('ttdModal');
+              const modalInstance = bootstrap.Modal.getInstance(modalEl);
+              modalInstance.hide();
+
+              // update UI tanpa reload
+              fetch(`controller/visit/getTTD?no=<?= $no ?>`)
+                .then(res => res.json())
+                .then(r => {
+                  let d = r.data;
+                  if (d && d.ttd) {
+                    renderTTD(d.ttd);
+                  }
+                });
+
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            alert('Fetch error');
           });
-        });
+      };
+
+      const modalEl = document.getElementById('ttdModal');
+
+      modalEl.addEventListener('hidden.bs.modal', function() {
+        document.body.classList.remove('modal-open');
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+      });
+
     });
+  </script>
+  <script>
+    function renderTTD(ttdUrl) {
+      let container = document.getElementById('ttdSection');
 
+      container.innerHTML = `
+      <div class="alert alert-success text-start shadow-sm">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
 
+          <div>
+            <strong>✔️ Berkas sudah ditandatangani</strong><br>
+            <small class="text-muted">Pasien telah menyetujui pernyataan.</small>
+          </div>
 
-  });
-</script>
+          <div class="d-flex align-items-center gap-2">
+            <img src="${ttdUrl}" 
+                style="height:60px; border:1px solid #ccc; border-radius:6px; background:#fff;">
 
+            <a href="${ttdUrl}" target="_blank" class="btn btn-sm btn-outline-success">
+              📄 Lihat
+            </a>
+          </div>
 
-</html>
+        </div>
+      </div>
+    `;
+    }
+  </script>
+
+  </html>

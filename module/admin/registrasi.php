@@ -744,6 +744,8 @@ require '../../controller/view.php';
 
               return `${tahun} th ${bulan} bln ${hari} hr`;
             }
+
+            let isSelesai = row.visit_status == 4; // ✅ status selesai
             return {
               "actions": `
                 <div class="text-center">
@@ -775,12 +777,6 @@ require '../../controller/view.php';
                         </a>
                       </li>
 
-                       
-                       <li>
-                        <a class="dropdown-item" href="module/admin/form_pernyataan?no=${row.visit_ID}&rm=${row.nomor_rm}">
-                          <i class="fas fa-file me-2 text-info"></i>Surat Pernyataan Pasien
-                        </a>
-                      </li>
 
                       <li>
                         <a class="dropdown-item screening-btn" href="javascript:;" data-id="${row.id_visit}">
@@ -798,9 +794,7 @@ require '../../controller/view.php';
                           <i class="fas fa-signature me-2 text-dark"></i> Tanda Tangan
                         </a>
                       </li>
-
-
-
+                      ${!isSelesai ? `
                       <li><hr class="dropdown-divider"></li>
 
                       <li>
@@ -808,6 +802,7 @@ require '../../controller/view.php';
                           <i class="fas fa-trash me-2"></i> Hapus
                         </a>
                       </li>
+                      ` : ''}
 
                     </ul>
 
@@ -1012,7 +1007,7 @@ require '../../controller/view.php';
 
       $('#d_anamnesa').text(d.anamnesa ?? '-');
       $('#d_catatan_screening').text(d.catatan_screening ?? '-');
-      $('#d_diagnosa').text(d.diagnosa ?? '-');
+      $('#d_diagnosa').text(d.code + '-' + d.icd10 ?? '-');
       $('#d_tindakan').text(d.tindakan ?? '-');
 
       if (d.suhu > 37.5) {

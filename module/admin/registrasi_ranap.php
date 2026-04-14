@@ -673,12 +673,6 @@ require '../../controller/view.php';
                       </li>
 
                       <li>
-                        <a class="dropdown-item camera-btn" href="javascript:;" data-id="${row.id_visit}">
-                          <i class="fas fa-camera me-2 text-success"></i> Ambil Foto
-                        </a>
-                      </li>
-
-                      <li>
                         <a class="dropdown-item edit-btn" href="javascript:;" 
                           data-id="${row.id_visit}" 
                           data-patient="${row.id_patient}" 
@@ -859,7 +853,7 @@ require '../../controller/view.php';
       $('#d_berat').text((d.berat ?? '-') + ' kg');
 
       $('#d_anamnesa').text(d.anamnesa ?? '-');
-      $('#d_diagnosa').text(d.diagnosa ?? '-');
+      $('#d_diagnosa').text(d.code + '-' + d.icd10 ?? '-');
       $('#d_tindakan').text(d.tindakan ?? '-');
 
       if (d.suhu > 37.5) {
