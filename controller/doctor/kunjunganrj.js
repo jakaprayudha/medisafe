@@ -102,6 +102,9 @@ $(function () {
                                 checkRujuk(d.subSpesialis, d.kdkhSpesialis);
                                 window.kdTacc = d.kdTacc;
                                 window.alasanTacc = d.alasanTacc;
+                                if (d.tglEstRujuk != null){
+                                    $('.btn-print').removeClass('d-none');
+                                }
                             })
                             .catch(err => {
                                 console.error('Error ambil_data:', err);
@@ -264,6 +267,11 @@ $(function () {
                 text: "Coma"
             }
         ]
+    })
+
+    $('#btn-print').on('click', function () {
+        const nomor = $('#noKunjungan').val();
+        window.open('controller/doctor/cetakan-rujukan.php?id=' + nomor, '_blank');
     })
 
     // BTN INSERT

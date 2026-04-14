@@ -26,7 +26,7 @@ $rm = $_GET['rm'];
   require '../../assets/template/head.php';
   ?>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 </head>
 
@@ -231,7 +231,7 @@ $rm = $_GET['rm'];
                       </div>
 
                       <div class="col-md-6">
-                        <label for="kondisi_masuk" class="form-label">Kondisi Masuk <span class="text-danger">*</span></label>
+                        <label for="kondisi_masuk" class="form-label"> Prognosa <span class="text-danger">*</span></label>
                         <select name="kondisi_masuk" id="kondisi_masuk" class="form-select" required>
                         </select>
                       </div>
@@ -498,6 +498,13 @@ $rm = $_GET['rm'];
                         </div>
                       </div>
                     </div>
+                    <hr>
+                    <div class="btn-print d-none">
+                      <button type="button" class="btn btn-info" id="btn-print">
+                        Print
+                      </button>
+                    </div>
+                    <hr>
                     <div class="d-grid">
                       <button type="button" id="simpan_pemeriksaan" class="btn btn-primary">Simpan Pemeriksaan</button>
                     </div>
@@ -519,7 +526,7 @@ $rm = $_GET['rm'];
             <i class="bi bi-hospital fs-3"></i>
             Daftar Fasilitas Kesehatan
           </h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          <button type="button" class="btn-close btn-close-dark" data-bs-dismiss="modal">X</button>
         </div>
         <div class="modal-body">
           <div class="table-responsive">
