@@ -129,7 +129,7 @@
                     </div>
                     <div id="ttdSection" class="text-end mt-2"></div>
                     <div class="text-end mt-2">
-                      <a href="module/admin/print/formulir_pernyataan?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
+                      <a href="module/admin/print/formulir_surat_persetujuan?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
                         <button class="btn btn-outline-primary">
                           <iconify-icon icon="mdi:printer-outline"></iconify-icon>
                           Cetak

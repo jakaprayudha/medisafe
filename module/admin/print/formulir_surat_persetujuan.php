@@ -1,3 +1,7 @@
+<?php
+require '../../../database/connect.php';
+require '../../admin/getdataclinic.php';
+?>
 <div class="form-surat-persetujuan">
 
    <style>
@@ -11,6 +15,11 @@
 
       .form-surat-persetujuan header {
          text-align: center;
+      }
+
+      .ttd-kanan {
+         text-align: left;
+         /* 🔥 ini kunci */
       }
 
       .form-surat-persetujuan .judul {
@@ -46,7 +55,7 @@
       .form-surat-persetujuan .ttd-wrapper {
          display: flex;
          justify-content: space-between;
-         margin-top: 50px;
+         margin-top: 5px;
       }
 
       .form-surat-persetujuan .kolom-ttd {
@@ -81,20 +90,20 @@
       <table class="data">
          <tr>
             <td>Nama</td>
-            <td>: <span id="">Regina Pardede</span></td>
+            <td>: <span id="nama_keluarga"></span></td>
          </tr>
          <tr>
             <td>Umur</td>
-            <td>: <span id="sp_usia_penyetuju">56 Tahun</span></td>
+            <td>: <span id="umur_keluarga"></span> Tahun</td>
          </tr>
          <tr>
             <td>Jenis Kelamin</td>
-            <td>: <span id="sp_jk_penyetuju">Perempuan</span></td>
+            <td>: <span id="gender_keluarga"></span></td>
          </tr>
       </table>
 
       <p>
-         Dengan ini menyatakan sesungguhnya telah memberikan persetujuan/penolakan untuk dilakukan tindakan medis berupa <strong>Opname dan Pengobatan</strong>, terhadap diri saya (Anak), dengan
+         Dengan ini menyatakan sesungguhnya telah memberikan persetujuan/penolakan untuk dilakukan tindakan medis berupa <strong>Opname dan Pengobatan</strong>, terhadap <span id="hubungan"></span>, dengan
          <b><span id="sp_tindakan"></span></b>
       </p>
 
@@ -113,16 +122,16 @@
             <td>: <span id="sp_jk"></span></td>
          </tr>
          <tr>
-            <td>No. BPJS</td>
-            <td>: <span id=""></span>0001836618682</td>
+            <td>No. Kartu</td>
+            <td>: <span id="sp_bpjs"></span></td>
          </tr>
       </table>
 
-      <p>Saya menyatakan bahwa saya:</p>
+      <p>Saya Juga telah menyatakan dengan sesungguhnya bahwa saya :</p>
 
       <ol>
-         <li>Telah diberikan informasi dan penjelasan terhadap tindakan medis tersebut.</li>
-         <li>Telah memahami sepenuhnya seluruh informasi yang diberikan oleh dokter.</li>
+         <li>Telah diberikan informasi dan penjelasan terhadap tindakan medis yang akan dilakukan tersebut.</li>
+         <li>Telah memahami sepenuhnya seluruh informasi dan penjelasan yang diberikan oleh dokter.</li>
       </ol>
 
       <p>
@@ -131,27 +140,31 @@
 
    </div>
 
-   <p class="tanggal">Tanjung Morawa, <span id="sp_tanggal">29 Oktober 2025</span></p>
-
+   <p class="tanggal"><span id="sp_tanggal"></span></p>
    <div class="ttd-wrapper">
-
       <div class="kolom-ttd">
          <p>Saksi</p>
          <img src="../../../uploads/ttd/fitri.png" style="height:100px;" alt="">
-         <div class="ttd-box">Fitri</div>
+         <div class="ttd-box"><?= $_SESSION['fullname'] ?></div>
 
       </div>
 
       <div class="kolom-ttd">
          <p>Dokter yang Merawat</p>
          <img src="../../../uploads/ttd/drdevi.png" style="height:100px;" alt="">
-         <div class="ttd-box"><span id="">dr. Devi Eka Pratiwi</span></div>
+         <div class="ttd-box"><span id="sp_dokter"></span></div>
       </div>
 
-      <div class="kolom-ttd">
+      <div class="kolom-ttd ttd-kanan">
+
          <p>Yang Membuat Pernyataan</p>
+
          <img src="../../../uploads/ttd/regina.png" style="height:100px;" alt="">
-         <div class="ttd-box"><span id="sp_nama_penyetuju_ttd">Regina Pardede</span></div>
+
+         <div class="ttd-box">
+            <span id="sp_nama_penyetuju_ttd"></span>
+         </div>
+
       </div>
 
    </div>
@@ -179,27 +192,46 @@
                const t = new Date();
                age = (t.getFullYear() - b.getFullYear()) + " tahun";
             }
-
+            document.getElementById("nama_keluarga").innerText = data.opname_keluarga_name;
+            document.getElementById("umur_keluarga").innerText = data.opname_umur;
+            document.getElementById("gender_keluarga").innerText = data.opname_gender;
+            document.getElementById("hubungan").innerText = data.opname_hubungan_pasien;
             // Isi bagian PASIEN
             document.getElementById("sp_nama").innerText = data.patient_name;
             document.getElementById("sp_usia").innerText = age;
             document.getElementById("sp_jk").innerText = data.patient_gender;
             document.getElementById("sp_bpjs").innerText = data.patient_bpjs ?? "-";
 
-            // Isi bagian PENYETUJU (pakai data pasien dulu)
-            document.getElementById("sp_nama_penyetuju").innerText = data.patient_name;
-            document.getElementById("sp_usia_penyetuju").innerText = age;
-            document.getElementById("sp_jk_penyetuju").innerText = data.patient_gender;
-            document.getElementById("sp_nama_penyetuju_ttd").innerText = data.patient_name;
+            document.getElementById("sp_nama_penyetuju_ttd").innerText = data.opname_keluarga_name;
 
             // Dokter
-            document.getElementById("sp_dokter").innerText = data.doctor_name ?? "........................";
+            document.getElementById("sp_dokter").innerText = data.id_doctor;
 
             // Tindakan default
             document.getElementById("sp_tindakan").innerText = "Pemeriksaan / Pengobatan Medis";
+            // 🔥 SET TANGGAL TTD
+            if (data.visit_date) {
+               let tanggal = formatTanggal(data.visit_date);
 
-            // Tanggal now
-            document.getElementById("sp_tanggal").innerText = new Date().toISOString().substring(0, 10);
+               document.getElementById("sp_tanggal").innerText =
+                  "<?= $datafaskes['faskes_district'] ?>, " + tanggal;
+            }
          });
    });
+
+
+   // 🔥 FORMAT TANGGAL INDONESIA
+   function formatTanggal(tgl) {
+      const bulan = [
+         "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+         "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+      ];
+
+      let d = new Date(tgl);
+      let hari = d.getDate();
+      let bln = bulan[d.getMonth()];
+      let thn = d.getFullYear();
+
+      return `${hari} ${bln} ${thn}`;
+   }
 </script>
