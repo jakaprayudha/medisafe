@@ -48,6 +48,13 @@
          </ul>
       </li>
 
+      <li class="sidebar-item">
+         <a class="sidebar-link" href="module/admin/signature" aria-expanded="false">
+            <iconify-icon icon="mdi:signature-freehand"></iconify-icon>
+            <span class="hide-menu">Tanda Tangan Digital</span>
+         </a>
+      </li>
+
       <li class="nav-small-cap">
          <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
          <span class="hide-menu">Admisi</span>
