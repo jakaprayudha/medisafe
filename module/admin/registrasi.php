@@ -744,6 +744,8 @@ require '../../controller/view.php';
 
               return `${tahun} th ${bulan} bln ${hari} hr`;
             }
+
+            let isSelesai = row.visit_status == 4; // ✅ status selesai
             return {
               "actions": `
                 <div class="text-center">
@@ -798,9 +800,7 @@ require '../../controller/view.php';
                           <i class="fas fa-signature me-2 text-dark"></i> Tanda Tangan
                         </a>
                       </li>
-
-
-
+                      ${!isSelesai ? `
                       <li><hr class="dropdown-divider"></li>
 
                       <li>
@@ -808,6 +808,7 @@ require '../../controller/view.php';
                           <i class="fas fa-trash me-2"></i> Hapus
                         </a>
                       </li>
+                      ` : ''}
 
                     </ul>
 
