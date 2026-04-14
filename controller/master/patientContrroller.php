@@ -17,6 +17,11 @@ $id_customer = $_SESSION['id_customer'];
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+// 🔥 HANDLE FAKE PUT (INI YANG BELUM ADA)
+if ($method === 'POST' && isset($_POST['_method']) && $_POST['_method'] === 'PUT') {
+   updateData($id_customer);
+   exit;
+}
 switch ($method) {
    case 'POST':
       createData($id_customer);
@@ -263,7 +268,7 @@ function updateData($id_customer)
 {
    global $koneksi;
 
-   parse_str(file_get_contents("php://input"), $_PUT);
+   $_PUT = $_POST; // 🔥 FIX UTAMA
 
    if (empty($_PUT['id_patient'])) {
       echo json_encode(['status' => 'error', 'message' => 'ID tidak ditemukan']);
@@ -277,7 +282,15 @@ function updateData($id_customer)
       'patient_phone',
       'patient_address',
       'patient_gender',
-      'patient_datebirth'
+      'patient_datebirth',
+      'patient_nik',
+      'patient_bpjs',
+      'patient_religion',
+      'patient_place',
+      'patient_provinsi',
+      'patient_kabupaten',
+      'patient_kecamatan',
+      'patient_kelurahan'
    ];
 
    $fields = [];
@@ -307,14 +320,13 @@ function updateData($id_customer)
    $stmt->bind_param($types, ...$values);
 
    if ($stmt->execute()) {
-      echo json_encode(['status' => 'success']);
+      echo json_encode(['status' => 'success', 'message' => 'Update berhasil']);
    } else {
       echo json_encode(['status' => 'error', 'message' => $stmt->error]);
    }
 
    $stmt->close();
 }
-
 // ================= DELETE =================
 function deleteData($id_customer)
 {
