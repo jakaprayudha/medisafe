@@ -556,7 +556,7 @@ require '../../controller/view.php';
         <input type="hidden" id="ttd_id_visit">
 
         <canvas id="signaturePad"
-          style="border:1px solid #ccc; width:100%; height:200px;">
+          style="border:1px solid #ccc; width:100%; height:400;">
         </canvas>
 
         <div class="mt-3 d-flex justify-content-between">
@@ -1295,7 +1295,7 @@ require '../../controller/view.php';
   // resize canvas biar presisi
   function resizeCanvas() {
     canvas.width = canvas.offsetWidth;
-    canvas.height = 200;
+    canvas.height = 400;
   }
   resizeCanvas();
 
@@ -1360,7 +1360,7 @@ require '../../controller/view.php';
     $('#ttd_id_visit').val(id);
     $('#ttdModal').modal('show');
 
-    setTimeout(resizeCanvas, 200);
+    setTimeout(resizeCanvas, 400);
   });
 
   // save
