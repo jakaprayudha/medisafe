@@ -526,7 +526,7 @@ $rm = $_GET['rm'];
             <i class="bi bi-hospital fs-3"></i>
             Daftar Fasilitas Kesehatan
           </h5>
-          <button type="button" class="btn-close btn-close-dark" data-bs-dismiss="modal">X</button>
+          <button type="button" class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <div class="table-responsive">
