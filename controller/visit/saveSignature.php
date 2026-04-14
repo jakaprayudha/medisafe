@@ -13,8 +13,8 @@ $id_customer = $_SESSION['id_customer'] ?? null;
 $input = json_decode(file_get_contents('php://input'), true);
 
 $nomor_visit = $input['nomor_visit'] ?? '';
-$nomor_rm = $input['nomor_rm'] ?? '';
 $ttd_data = $input['ttd'] ?? '';
+$id_customer = $_SESSION['id_customer'] ?? null;
 
 if (!$id_customer) {
    echo json_encode(['status' => 'error', 'message' => 'Session tidak ditemukan']);
@@ -51,11 +51,11 @@ file_put_contents($path, $decoded);
 // ===============================
 $stmt = $koneksi->prepare("
    UPDATE pasien_visit 
-   SET ttd_pernyataan = ?
+   SET signature_path = ?, ttd_pernyataan = ?
    WHERE visit_ID = ? AND id_customer = ?
 ");
 
-$stmt->bind_param("ssi", $filename, $nomor_visit, $id_customer);
+$stmt->bind_param("sssi", $filename, $filename, $nomor_visit, $id_customer);
 
 if ($stmt->execute()) {
 
