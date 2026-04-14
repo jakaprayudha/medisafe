@@ -55,18 +55,40 @@ function createData()
       exit;
    }
 
-   // Ambil semua field yang valid untuk tabel permintaan_pharmacy
+   // ================== AMBIL HARGA DARI DB ==================
+   $id_pharmacy = $_POST['id_pharmacy'] ?? null;
+   $harga = 0;
+
+   if ($id_pharmacy) {
+      $getHarga = $koneksi->prepare("
+         SELECT pharmacy_sale 
+         FROM ms_pharmacy 
+         WHERE id_pharmacy = ?
+         LIMIT 1
+      ");
+      $getHarga->bind_param("i", $id_pharmacy);
+      $getHarga->execute();
+      $result = $getHarga->get_result();
+
+      if ($row = $result->fetch_assoc()) {
+         $harga = $row['pharmacy_sale'];
+      }
+
+      $getHarga->close();
+   }
+
+   // ================== FIELD VALID ==================
    $allowedFields = [
       'id_permintaan_farmasi',
       'id_pharmacy',
       'signa',
       'qty',
       'catatan',
-      'harga',
       'created_user'
    ];
 
-
+   $fields = [];
+   $values = [];
 
    foreach ($allowedFields as $f) {
       if (isset($_POST[$f])) {
@@ -74,6 +96,10 @@ function createData()
          $values[] = $_POST[$f];
       }
    }
+
+   // 🔥 TAMBAH HARGA DARI DB
+   $fields[] = 'harga';
+   $values[] = $harga;
 
    if (empty($fields)) {
       echo json_encode([
@@ -83,10 +109,9 @@ function createData()
       exit;
    }
 
-   // Buat placeholder dan tipe untuk prepared statement
    $placeholders = implode(', ', array_fill(0, count($fields), '?'));
    $columns = implode(', ', $fields);
-   $types = str_repeat('s', count($fields)); // semua string
+   $types = str_repeat('s', count($fields));
 
    $query = "INSERT INTO permintaan_pharmacy_details ($columns) VALUES ($placeholders)";
 
@@ -96,7 +121,8 @@ function createData()
       if ($stmt->execute()) {
          echo json_encode([
             'status' => 'success',
-            'message' => 'Data berhasil ditambahkan.'
+            'message' => 'Data berhasil ditambahkan.',
+            'id' => $stmt->insert_id
          ]);
       } else {
          echo json_encode([
@@ -205,15 +231,39 @@ function updateData()
    }
 
    $id = $_PUT['id_pharmacy_details'];
+
+   // ================== AMBIL HARGA DARI DB ==================
+   $harga = 0;
+
+   if (!empty($_PUT['id_pharmacy'])) {
+
+      $getHarga = $koneksi->prepare("
+         SELECT pharmacy_sale 
+         FROM ms_pharmacy 
+         WHERE id_pharmacy = ?
+         LIMIT 1
+      ");
+
+      $getHarga->bind_param("i", $_PUT['id_pharmacy']);
+      $getHarga->execute();
+      $result = $getHarga->get_result();
+
+      if ($row = $result->fetch_assoc()) {
+         $harga = $row['pharmacy_sale'];
+      }
+
+      $getHarga->close();
+   }
+
+   // ================== FIELD UPDATE ==================
    $allowedFields = [
-      'id_pharmacy_details',
       'id_pharmacy',
       'qty',
       'signa',
       'catatan',
-      'harga',
       'created_user'
    ];
+
    $fields = [];
    $values = [];
 
@@ -224,27 +274,47 @@ function updateData()
       }
    }
 
+   // 🔥 TAMBAHKAN HARGA DARI DB (OVERRIDE)
+   $fields[] = "harga=?";
+   $values[] = $harga;
+
    if (empty($fields)) {
       echo json_encode(['status' => 'error', 'message' => 'Tidak ada data diupdate.']);
       return;
    }
 
    $values[] = $id;
+
+   // semua string + id int
    $types = str_repeat('s', count($values) - 1) . "i";
 
-   $query = "UPDATE permintaan_pharmacy_details SET " . implode(',', $fields) . " WHERE id_pharmacy_details=?";
+   $query = "UPDATE permintaan_pharmacy_details 
+             SET " . implode(',', $fields) . " 
+             WHERE id_pharmacy_details=?";
+
    $stmt = $koneksi->prepare($query);
 
    if ($stmt) {
       $stmt->bind_param($types, ...$values);
+
       if ($stmt->execute()) {
-         echo json_encode(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
+         echo json_encode([
+            'status' => 'success',
+            'message' => 'Data berhasil diperbarui.'
+         ]);
       } else {
-         echo json_encode(['status' => 'error', 'message' => 'Update gagal: ' . $stmt->error]);
+         echo json_encode([
+            'status' => 'error',
+            'message' => 'Update gagal: ' . $stmt->error
+         ]);
       }
+
       $stmt->close();
    } else {
-      echo json_encode(['status' => 'error', 'message' => 'Query error: ' . $koneksi->error]);
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Query error: ' . $koneksi->error
+      ]);
    }
 }
 
