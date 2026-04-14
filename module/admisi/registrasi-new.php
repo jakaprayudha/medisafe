@@ -373,13 +373,21 @@ require '../../controller/view.php';
     $('#programForm').on('submit', function(e) {
       e.preventDefault();
 
-      let formData = $(this).serialize();
+      let formData = $(this).serializeArray();
+
       let id = $('#id_patient').val();
+
+      if (id) {
+        formData.push({
+          name: '_method',
+          value: 'PUT'
+        });
+      }
 
       $.ajax({
         url: apiUrl,
-        type: 'POST',
-        data: formData,
+        type: 'POST', // 🔥 SELALU POST
+        data: $.param(formData),
         success: function(res) {
           let data = typeof res === 'string' ? JSON.parse(res) : res;
 
@@ -390,9 +398,6 @@ require '../../controller/view.php';
           } else {
             Swal.fire('Gagal!', data.message, 'error');
           }
-        },
-        error: function(xhr) {
-          Swal.fire('Error!', xhr.responseText, 'error');
         }
       });
     });
