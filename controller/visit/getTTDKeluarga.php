@@ -33,8 +33,8 @@ if ($row = $result->fetch_assoc()) {
    // kalau project di subfolder (medisafe)
    $base_url .= "/medisafe";
 
-   $ttd_url = !empty($row['signature_path'])
-      ? $base_url . "/uploads/ttd/" . $row['signature_path']
+   $ttd_url = !empty($row['signature_opname'])
+      ? $base_url . "/uploads/ttd/" . $row['signature_opname']
       : null;
    echo json_encode([
       'status' => 'success',
