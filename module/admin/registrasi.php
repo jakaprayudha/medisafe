@@ -1007,7 +1007,7 @@ require '../../controller/view.php';
 
       $('#d_anamnesa').text(d.anamnesa ?? '-');
       $('#d_catatan_screening').text(d.catatan_screening ?? '-');
-      $('#d_diagnosa').text(d.diagnosa ?? '-');
+      $('#d_diagnosa').text(d.code + '-' + d.icd10 ?? '-');
       $('#d_tindakan').text(d.tindakan ?? '-');
 
       if (d.suhu > 37.5) {

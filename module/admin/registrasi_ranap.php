@@ -853,7 +853,7 @@ require '../../controller/view.php';
       $('#d_berat').text((d.berat ?? '-') + ' kg');
 
       $('#d_anamnesa').text(d.anamnesa ?? '-');
-      $('#d_diagnosa').text(d.diagnosa ?? '-');
+      $('#d_diagnosa').text(d.code + '-' + d.icd10 ?? '-');
       $('#d_tindakan').text(d.tindakan ?? '-');
 
       if (d.suhu > 37.5) {
