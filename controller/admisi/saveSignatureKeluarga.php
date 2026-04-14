@@ -10,6 +10,7 @@ $image    = $input['image'] ?? null;
 $nama = $input['nama'] ?? null;
 $umur = $input['umur'] ?? null;
 $jk   = $input['jk'] ?? null;
+$hubungan = $input['hubungan'] ?? null;
 
 if (!$id_visit || !$image || !$nama || !$umur || !$jk) {
    echo json_encode([
@@ -40,7 +41,7 @@ file_put_contents($filePath, $data);
 
 // simpan ke DB
 mysqli_query($koneksi, "UPDATE pasien_visit 
-    SET signature_opname = '$filename', opname_keluarga_name = '$nama', opname_umur = '$umur', opname_gender = '$jk'
+    SET signature_opname = '$filename', opname_keluarga_name = '$nama', opname_umur = '$umur', opname_gender = '$jk', opname_hubungan_pasien = '$hubungan'
     WHERE id_visit = $id_visit
 ");
 

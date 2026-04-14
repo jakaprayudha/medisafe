@@ -90,6 +90,19 @@
                               </select>
                             </div>
 
+                            <div class="mb-3">
+                              <label class="form-label">Hubungan Keluarga</label>
+                              <select class="form-control" id="keluarga">
+                                <option value="">-- Pilih --</option>
+                                <option value="Diri Saya">Diri Saya</option>
+                                <option value="Suami">Suami</option>
+                                <option value="Istri">Istri</option>
+                                <option value="Anak">Anak</option>
+                                <option value="Ayah">Ayah</option>
+                                <option value="Ibu">Ibu</option>
+                              </select>
+                            </div>
+
                             <!-- ISI SURAT -->
                             <p style="font-size: 0.9rem; color:#333; line-height:1.6;">
                               Saya yang bertanda tangan di bawah ini menyatakan bahwa:
@@ -98,7 +111,8 @@
                             <p style="font-size: 0.9rem; color:#333; line-height:1.6;">
                               Nama : <span id="preview_nama" class="fw-bold"></span><br>
                               Umur : <span id="preview_umur" class="fw-bold"></span><br>
-                              Jenis Kelamin : <span id="preview_jk" class="fw-bold"></span>
+                              Jenis Kelamin : <span id="preview_jk" class="fw-bold"></span> <br>
+                              Hubungan Keluarga : <span id="preview_keluarga" class="fw-bold"></span>
                             </p>
 
                             <p style="font-size: 0.9rem; color:#333; line-height:1.6;">
@@ -305,6 +319,7 @@
         const nama = document.getElementById('nama_pasien').value;
         const umur = document.getElementById('umur_pasien').value;
         const jk = document.getElementById('jk_pasien').value;
+        const hubungan = document.getElementById('keluarga').value;
 
         if (!id_visit) {
           alert('ID visit tidak ditemukan');
@@ -333,7 +348,8 @@
               image: image,
               nama: nama,
               umur: umur,
-              jk: jk
+              jk: jk,
+              hubungan: hubungan
             })
           })
           .then(res => res.json())
@@ -412,6 +428,10 @@
 
     document.getElementById('jk_pasien').addEventListener('change', function() {
       document.getElementById('preview_jk').innerText = this.value;
+    });
+
+    document.getElementById('keluarga').addEventListener('change', function() {
+      document.getElementById('preview_keluarga').innerText = this.value;
     });
   </script>
 
