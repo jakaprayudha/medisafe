@@ -231,7 +231,7 @@ $rm = $_GET['rm'];
                       </div>
 
                       <div class="col-md-6">
-                        <label for="kondisi_masuk" class="form-label">Kondisi Masuk <span class="text-danger">*</span></label>
+                        <label for="kondisi_masuk" class="form-label"> Prognosa <span class="text-danger">*</span></label>
                         <select name="kondisi_masuk" id="kondisi_masuk" class="form-select" required>
                         </select>
                       </div>
