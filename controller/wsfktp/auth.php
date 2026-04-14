@@ -1,4 +1,5 @@
 <?php
+
 header("Content-Type: application/json");
 
 require_once __DIR__ . '/../../database/connect.php';
@@ -32,23 +33,38 @@ if (!$username || !$password) {
     exit;
 }
 
+// 🔥 GET USER
 $stmt = $koneksi->prepare("SELECT * FROM setting_antrol WHERE username = ?");
 $stmt->bind_param('s', $username);
 $stmt->execute();
-$result = $stmt->get_result();
-$user = $result->fetch_assoc();
-$secret_key = $user['secret_key'];
+$user = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-if (!$user || !password_verify($password, $user['password'])) {
+// ❌ USER TIDAK ADA
+if (!$user) {
     echo json_encode([
         "metadata" => [
-            "message" => "Username atau Password salah",
+            "message" => "Username tidak ditemukan",
             "code" => 401
         ]
     ]);
     exit;
 }
+
+// ❌ PASSWORD CHECK
+// NOTE: pastikan ini sesuai sistem kamu (lihat catatan bawah)
+if (!password_verify($password, $user['password'])) {
+    echo json_encode([
+        "metadata" => [
+            "message" => "Username atau password salah",
+            "code" => 401
+        ]
+    ]);
+    exit;
+}
+
+// 🔐 JWT CONFIG
+$secret_key = $user['secret_key'];
 
 $config = Configuration::forSymmetricSigner(
     new Sha256(),
@@ -57,6 +73,7 @@ $config = Configuration::forSymmetricSigner(
 
 $now = new DateTimeImmutable();
 
+// 🔥 GENERATE TOKEN
 $token = $config->builder()
     ->issuedAt($now)
     ->expiresAt($now->modify('+5 minutes'))
@@ -69,7 +86,7 @@ echo json_encode([
         "token" => $token->toString()
     ],
     "metadata" => [
-        "message" => "Ok",
+        "message" => "OK",
         "code" => 200
     ]
 ]);
