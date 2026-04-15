@@ -58,9 +58,9 @@ $pt = $_GET['pt'];
                       <button class="nav-link" id="nav-dokumen-tab" data-bs-toggle="tab"
                         data-bs-target="#nav-dokumen" type="button" role="tab" aria-controls="nav-dokumen"
                         aria-selected="false">Dokumen</button>
-                      <button class="nav-link" id="nav-ttd-tab" data-bs-toggle="tab"
+                      <!-- <button class="nav-link" id="nav-ttd-tab" data-bs-toggle="tab"
                         data-bs-target="#nav-ttd" type="button" role="tab" aria-controls="nav-ttd"
-                        aria-selected="false">Tanda Tangan</button>
+                        aria-selected="false">Tanda Tangan</button> -->
                     </div>
                   </nav>
 
