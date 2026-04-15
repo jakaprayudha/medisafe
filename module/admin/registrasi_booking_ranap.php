@@ -49,12 +49,13 @@ require '../../controller/view.php';
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
+                          <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                           <th class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Lengkap</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">DPJP</th>
                           <th scope="col" class="text-dark fw-normal">Diagnosa Awal</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Actions</th>
+
                         </tr>
                       </thead>
                       <tbody></tbody>
@@ -230,6 +231,10 @@ require '../../controller/view.php';
         }
       },
       columns: [{
+          data: "actions",
+          orderable: false,
+          searchable: false
+        }, {
           data: "rm"
         },
         {
@@ -244,11 +249,7 @@ require '../../controller/view.php';
         {
           data: "diagnosa"
         },
-        {
-          data: "actions",
-          orderable: false,
-          searchable: false
-        }
+
       ]
     });
 
