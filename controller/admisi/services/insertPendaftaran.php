@@ -53,7 +53,7 @@ if (empty($kdDokter)) {
 }
 
 $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE (patient_bpjs = ? OR patient_nik = ?) AND id_customer = ?");
-$stmt->bind_param('sss', $noKartu, $noNIK);
+$stmt->bind_param('sss', $noKartu, $noNIK, $idcustomer);
 $stmt->execute();
 $result = $stmt->get_result()->fetch_assoc();
 if (!$result) {
