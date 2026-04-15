@@ -199,7 +199,6 @@ $rm = $_GET['rm'];
                             class="form-control"
                             name="suhu"
                             id="suhu"
-                            placeholder="Suhu"
                             min="25"
                             max="45"
                             step="0.1">

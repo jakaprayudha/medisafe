@@ -26,6 +26,8 @@ $noNIK = $_POST['noNik'] ?? '';
 $nama = $_POST['nama'];
 $jnsKlamin = $_POST['jnsKlamin'];
 $tglLahir = $_POST['tglLahir'];
+$suhu    =  $_POST['suhu'];
+$saturasi    =  $_POST['saturasiOksigen'];
 $payload = [
     "kdProviderPeserta" => $kdProviderPeserta,
     "tglDaftar" => $tglDaftar,
@@ -124,9 +126,9 @@ if ($result['code'] != '200') {
     $respRate     = (int)$respRate;
     $lingkarPerut = (int)$lingkarPerut;
     $heartRate    = (int)$heartRate;
-    $stmt = $koneksi->prepare("INSERT INTO `pcare_pendaftaran` (`tanggal_daftar`, `noKartu`, `kdPoli`, `nmPoli`, `keluhan`, `kunjSakit`, `sistole`, `diastole`, `beratBadan`, `tinggiBadan`, `respRate`, `lingkarPerut`, `heartRate`, `rujukBalik`, `kdTkp`, `noUrut`, `nomor_visit`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+    $stmt = $koneksi->prepare("INSERT INTO `pcare_pendaftaran` (`tanggal_daftar`, `noKartu`, `kdPoli`, `nmPoli`, `keluhan`, `kunjSakit`, `sistole`, `diastole`, `beratBadan`, `tinggiBadan`, `respRate`, `lingkarPerut`, `heartRate`, `rujukBalik`, `kdTkp`, `noUrut`, `nomor_visit`, `saturasi`, `suhu`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
     $stmt->bind_param(
-        "ssssssiiiiiiissss",
+        "ssssssiiiiiiissssss",
         $tglDaftarDB,
         $noKartu,
         $kdPoli,
@@ -143,7 +145,9 @@ if ($result['code'] != '200') {
         $rujukbalik,
         $kdTkp,
         $noUrut,
-        $visit_ID
+        $visit_ID,
+        $saturasi,
+        $suhu
     );
     $hasil = $stmt->execute();
     $stmt->close();
@@ -157,8 +161,6 @@ if ($result['code'] != '200') {
     $source_hub = "Poliklinik";
     $id_patient = $chackpasien['id_patient'];
     $visit_time = date('H:i:s');
-    $suhu    =  $_POST['suhu'];
-    $saturasi    =  $_POST['saturasiOksigen'];
     $bmi = $_POST['bmi'];
     $bmiKet = $_POST['bmiKet'];
     $stmt = $koneksi->prepare("

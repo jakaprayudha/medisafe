@@ -240,10 +240,10 @@ $(function () {
             },
             error: function (xhr, status, error) {
                 alert('Terjadi kesalahan saat melakukan AJAX request: ' + error);
-                APP.load_btn_non('#create', "Create");
+                APP.load_btn_non('#create', "Simpan kunjungan");
             },
             complete: function () {
-                APP.load_btn_non('#create', "Create");
+                APP.load_btn_non('#create', "Simpan Kunjungan");
             }
         })
     }

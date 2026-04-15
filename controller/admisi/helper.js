@@ -187,6 +187,7 @@ APP.initDiagnosa = function (selector, hiddenNameSelector, idkdspesialis) {
     $(selector).select2({
         placeholder: "Ketik Diagnosa...",
         width: "100%",
+        allowClear: true,
         minimumInputLength: 3,
         ajax: {
             url: "controller/admisi/services/getDiagnosa.php",
