@@ -811,7 +811,7 @@ require '../../controller/view.php';
               `,
               "registrasi": row.patient_bpjs ?? "-",
               "antrian": row.visit_antrian ?? "-",
-              "tanggal": row.visit_date ?? "-",
+              "tanggal": row.visit_date + "- " + row.visit_time ?? "-",
               "nama": row.patient_name_pcare ?? "-",
               "gender": row.patient_gender ?? "-",
               "dokter": row.id_doctor ?? "-",

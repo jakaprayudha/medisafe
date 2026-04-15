@@ -435,6 +435,20 @@ require '../../controller/view.php';
       loadSchedule(selectedDoctor);
     }
 
+    function roundToSlot(timeStr) {
+      let [h, m] = timeStr.split(':').map(Number);
+
+      let total = h * 60 + m;
+
+      // 🔥 bulatkan ke bawah ke 15 menit
+      let rounded = Math.floor(total / 15) * 15;
+
+      let hh = String(Math.floor(rounded / 60)).padStart(2, '0');
+      let mm = String(rounded % 60).padStart(2, '0');
+
+      return `${hh}:${mm}`;
+    }
+
     // ================= HELPER =================
     function getDayName(date) {
       return date.toLocaleDateString('id-ID', {
@@ -554,7 +568,7 @@ require '../../controller/view.php';
 
             let visitList = visits.filter(v =>
               v.visit_date === dateStr &&
-              normalizeTime(v.visit_time) === time
+              roundToSlot(v.visit_time) === time
             );
 
             let bgClass = "jadwal-tersedia";

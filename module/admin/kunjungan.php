@@ -199,7 +199,6 @@ $rm = $_GET['rm'];
                             class="form-control"
                             name="suhu"
                             id="suhu"
-                            placeholder="Suhu"
                             min="25"
                             max="45"
                             step="0.1">
@@ -248,7 +247,7 @@ $rm = $_GET['rm'];
                       <textarea id="keluhan_penyerta" name="keluhan_penyerta" rows="2" class="form-control" required></textarea>
                     </div>
                     <div class="mb-3">
-                      <label for="keluhan_penyerta" class="form-label">Amnanesa</label>
+                      <label for="keluhan_penyerta" class="form-label required">Amnanesa</label>
                       <textarea class="form-control" id="keluhan_utama" name="keluhan_utama" rows="2" required></textarea>
                     </div>
                     <div class="col-12" id="formalergi">

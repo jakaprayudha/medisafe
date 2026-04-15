@@ -11,9 +11,9 @@ if ($method === 'POST' && isset($_POST['_method'])) {
 
 switch ($method) {
    case 'GET': // get data by patient_number
-      if (isset($_GET['no'])) {
-         $no = $koneksi->real_escape_string($_GET['no']);
-         $sql = "SELECT * FROM ms_patient WHERE patient_number = '$no' LIMIT 1";
+      if (isset($_GET['pt'])) {
+         $pt = $koneksi->real_escape_string($_GET['pt']);
+         $sql = "SELECT * FROM ms_patient WHERE id_patient = '$pt' LIMIT 1";
          $result = $koneksi->query($sql);
 
          if ($result && $result->num_rows > 0) {
@@ -24,7 +24,7 @@ switch ($method) {
          } else {
             echo json_encode([
                "success" => false,
-               "message" => "Dokter tidak ditemukan"
+               "message" => "Pasien tidak ditemukan"
             ]);
          }
       } else {
@@ -36,8 +36,8 @@ switch ($method) {
       break;
 
    case 'PUT': // update data
-      if (isset($_POST['patient_number'])) {
-         $patientNo = $koneksi->real_escape_string($_POST['patient_number']);
+      if (isset($_POST['id_patient'])) {
+         $id_patient = $koneksi->real_escape_string($_POST['id_patient']);
 
          // daftar field yang boleh diupdate
          $allowedFields = [
@@ -82,12 +82,12 @@ switch ($method) {
 
          if (!empty($updates)) {
             $updates[] = "updated_at = NOW()";
-            $sql = "UPDATE ms_patient SET " . implode(", ", $updates) . " WHERE patient_number = '$patientNo'";
+            $sql = "UPDATE ms_patient SET " . implode(", ", $updates) . " WHERE id_patient = '$id_patient'";
 
             if ($koneksi->query($sql)) {
                echo json_encode([
                   "success" => true,
-                  "message" => "Data dokter berhasil diperbarui"
+                  "message" => "Data Pasien berhasil diperbarui"
                ]);
             } else {
                echo json_encode([

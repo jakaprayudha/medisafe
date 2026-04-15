@@ -1,7 +1,7 @@
 <?php
 $title = 'Pasien Details';
 require '../../controller/view.php';
-$no = $_GET['no'];
+$pt = $_GET['pt'];
 ?>
 <!doctype html>
 <html lang="en">
@@ -227,6 +227,49 @@ $no = $_GET['no'];
                             </div>
                           </div>
                         </div>
+                        <div class="row">
+                          <div class="col-6">
+                            <div class="mb-3">
+                              <label class="form-label">Provinsi</label>
+                              <select id="provinsi" class="form-select">
+                                <option value="">PILIH</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div class="col-6">
+                            <div class="mb-3">
+                              <label class="form-label">Kabupaten</label>
+                              <select id="kabupaten" class="form-select">
+                                <option value="">PILIH</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div class="col-6">
+                            <div class="mb-3">
+                              <label class="form-label">Kecamatan</label>
+                              <select id="kecamatan" class="form-select">
+                                <option value="">PILIH</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div class="col-6">
+                            <div class="mb-3">
+                              <label class="form-label">Kelurahan</label>
+                              <select id="kelurahan" class="form-select">
+                                <option value="">PILIH</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- hidden untuk simpan text -->
+                        <input type="hidden" name="patient_provinsi" id="provinsi_text">
+                        <input type="hidden" name="patient_kabupaten" id="kabupaten_text">
+                        <input type="hidden" name="patient_kecamatan" id="kecamatan_text">
+                        <input type="hidden" name="patient_kelurahan" id="kelurahan_text">
                         <div class="mb-3">
                           <label class="form-label">Alamat</label>
                           <textarea class="form-control" name="patient_address"></textarea>
@@ -493,13 +536,13 @@ $no = $_GET['no'];
   $(document).ready(function() {
     // Ambil nomor pasien dari URL (?patient_number=XXXXXX)
     const urlParams = new URLSearchParams(window.location.search);
-    const patient_number = urlParams.get("no");
+    const patient_number = urlParams.get("pt");
 
     $("#formDokumen").on("submit", function(e) {
       e.preventDefault();
 
       let formData = new FormData(this);
-      formData.append("patient_number", patient_number); // tambahkan manual
+      formData.append("id_patient", patient_number); // tambahkan manual
 
       $.ajax({
         url: "controller/master/uploadPatient.php",
@@ -526,15 +569,34 @@ $no = $_GET['no'];
 <script>
   document.addEventListener("DOMContentLoaded", function() {
     const urlParams = new URLSearchParams(window.location.search);
-    const patientNo = urlParams.get("no");
+    const patientNo = urlParams.get("pt");
 
     // Auto fill form
     if (patientNo) {
-      fetch("controller/master/patientDetailsController.php?no=" + patientNo)
+      fetch("controller/master/patientDetailsController.php?pt=" + patientNo)
         .then(res => res.json())
         .then(data => {
           if (data.success) {
             const doctor = data.data;
+            // 🔥 load provinsi awal
+            loadProvinsi(doctor.patient_provinsi, function(provId) {
+
+              loadKabupatenByName(doctor.patient_kabupaten, provId, function(kabId) {
+
+                loadKecamatanByName(doctor.patient_kecamatan, kabId, function(kecId) {
+
+                  loadKelurahanByName(doctor.patient_kelurahan, kecId);
+
+                });
+
+              });
+
+            });
+            // 🔥 isi text wilayah lama
+            $('#provinsi_text').val(doctor.patient_provinsi);
+            $('#kabupaten_text').val(doctor.patient_kabupaten);
+            $('#kecamatan_text').val(doctor.patient_kecamatan);
+            $('#kelurahan_text').val(doctor.patient_kelurahan);
             for (const key in doctor) {
               const input = document.querySelector("[name='" + key + "']");
               if (input) input.value = doctor[key] ?? "";
@@ -554,12 +616,12 @@ $no = $_GET['no'];
       e.preventDefault();
 
       if (!patientNo) {
-        Swal.fire("Oops!", "Parameter ?no= tidak ditemukan!", "error");
+        Swal.fire("Oops!", "Parameter ?pt= tidak ditemukan!", "error");
         return;
       }
 
       const formData = new FormData(formIdentitas);
-      formData.append("patient_number", patientNo);
+      formData.append("id_patient", patientNo);
       formData.append("_method", "PUT");
 
       fetch("controller/master/patientDetailsController.php", {
@@ -599,7 +661,7 @@ $no = $_GET['no'];
       }
 
       const formData = new FormData(formKontakAlamat);
-      formData.append("patient_number", patientNo);
+      formData.append("id_patient", patientNo);
       formData.append("_method", "PUT");
 
       fetch("controller/master/patientDetailsController.php", {
@@ -639,7 +701,7 @@ $no = $_GET['no'];
       }
 
       const formData = new FormData(formEmergency);
-      formData.append("patient_number", patientNo);
+      formData.append("id_patient", patientNo);
       formData.append("_method", "PUT");
 
       fetch("controller/master/patientDetailsController.php", {
@@ -670,5 +732,173 @@ $no = $_GET['no'];
   });
 </script>
 
+<script>
+  const apiWilayah = "controller/master/wilayah.php";
+
+  // LOAD PROVINSI
+  function loadProvinsi(selectedText = null, callback = null) {
+    fetch(`${apiWilayah}?type=provinsi`)
+      .then(res => res.json())
+      .then(data => {
+        let html = '<option value="">PILIH</option>';
+        let selectedId = null;
+
+        data.forEach(d => {
+          if (d.nama.toUpperCase() === selectedText?.toUpperCase()) {
+            selectedId = d.id;
+          }
+          html += `<option value="${d.id}">${d.nama}</option>`;
+        });
+
+        $('#provinsi').html(html);
+
+        if (selectedId) {
+          $('#provinsi').val(selectedId);
+          $('#provinsi_text').val(selectedText);
+
+          if (callback) callback(selectedId); // 🔥 lanjut ke kabupaten
+        }
+      });
+  }
+
+  function loadKabupatenByName(nama, provId, callback = null) {
+    fetch(`${apiWilayah}?type=kabupaten&id=${provId}`)
+      .then(res => res.json())
+      .then(data => {
+        let selectedId = null;
+        let html = '<option value="">PILIH</option>';
+
+        data.forEach(d => {
+          if (d.nama.toUpperCase() === nama?.toUpperCase()) {
+            selectedId = d.id;
+          }
+          html += `<option value="${d.id}">${d.nama}</option>`;
+        });
+
+        $('#kabupaten').html(html);
+
+        if (selectedId) {
+          $('#kabupaten').val(selectedId);
+          $('#kabupaten_text').val(nama);
+
+          if (callback) callback(selectedId); // 🔥 lanjut kecamatan
+        }
+      });
+  }
+
+  function loadKecamatanByName(nama, kabId, callback = null) {
+    fetch(`${apiWilayah}?type=kecamatan&id=${kabId}`)
+      .then(res => res.json())
+      .then(data => {
+        let selectedId = null;
+        let html = '<option value="">PILIH</option>';
+
+        data.forEach(d => {
+          if (d.nama.toUpperCase() === nama?.toUpperCase()) {
+            selectedId = d.id;
+          }
+          html += `<option value="${d.id}">${d.nama}</option>`;
+        });
+
+        $('#kecamatan').html(html);
+
+        if (selectedId) {
+          $('#kecamatan').val(selectedId);
+          $('#kecamatan_text').val(nama);
+
+          if (callback) callback(selectedId); // 🔥 lanjut kelurahan
+        }
+      });
+  }
+
+  function loadKelurahanByName(nama, kecId) {
+    fetch(`${apiWilayah}?type=kelurahan&id=${kecId}`)
+      .then(res => res.json())
+      .then(data => {
+        let selectedId = null;
+        let html = '<option value="">PILIH</option>';
+
+        data.forEach(d => {
+          if (d.nama.toUpperCase() === nama?.toUpperCase()) {
+            selectedId = d.id;
+          }
+          html += `<option value="${d.id}">${d.nama}</option>`;
+        });
+
+        $('#kelurahan').html(html);
+
+        if (selectedId) {
+          $('#kelurahan').val(selectedId);
+          $('#kelurahan_text').val(nama);
+        }
+      });
+  }
+
+  $('#kabupaten').on('change', function() {
+    let id = $(this).val();
+
+    fetch(`${apiWilayah}?type=kecamatan&id=${id}`)
+      .then(res => res.json())
+      .then(data => {
+        let html = '<option value="">PILIH</option>';
+        data.forEach(d => {
+          html += `<option value="${d.id}">${d.nama}</option>`;
+        });
+
+        $('#kecamatan').html(html);
+      });
+
+    $('#kabupaten_text').val($(this).find('option:selected').text());
+
+    // reset bawahnya
+    $('#kelurahan').html('<option value="">PILIH</option>');
+  });
+
+  $('#kecamatan').on('change', function() {
+    let id = $(this).val();
+
+    fetch(`${apiWilayah}?type=kelurahan&id=${id}`)
+      .then(res => res.json())
+      .then(data => {
+        let html = '<option value="">PILIH</option>';
+        data.forEach(d => {
+          html += `<option value="${d.id}">${d.nama}</option>`;
+        });
+
+        $('#kelurahan').html(html);
+      });
+
+    $('#kecamatan_text').val($(this).find('option:selected').text());
+  });
+
+  $('#kelurahan').on('change', function() {
+    $('#kelurahan_text').val($(this).find('option:selected').text());
+  });
+
+  $('#provinsi').on('change', function() {
+    let id = $(this).val();
+
+    // reset semua dulu
+    $('#kabupaten').html('<option value="">PILIH</option>');
+    $('#kecamatan').html('<option value="">PILIH</option>');
+    $('#kelurahan').html('<option value="">PILIH</option>');
+
+    if (!id) return;
+
+    // 🔥 LOAD KABUPATEN (INI YANG KURANG)
+    fetch(`${apiWilayah}?type=kabupaten&id=${id}`)
+      .then(res => res.json())
+      .then(data => {
+        let html = '<option value="">PILIH</option>';
+        data.forEach(d => {
+          html += `<option value="${d.id}">${d.nama}</option>`;
+        });
+
+        $('#kabupaten').html(html);
+      });
+
+    $('#provinsi_text').val($(this).find('option:selected').text());
+  });
+</script>
 
 </html>

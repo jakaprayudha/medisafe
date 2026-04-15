@@ -9,6 +9,18 @@ $datacheeck = mysqli_fetch_assoc($check);
 $doctor = $datacheeck['doctor_name'];
 $id_customer = $_SESSION['id_customer'];
 
+
+function normalizeDoctor($name)
+{
+   $name = strtolower($name);
+   $name = preg_replace('/^dr\.?\s*/i', '', $name);
+   return trim($name);
+}
+
+
+
+$doctorName = normalizeDoctor($datacheeck['doctor_name']);
+
 // ambil range 3 hari
 $start = $_GET['start'];
 $end   = $_GET['end'];
@@ -22,15 +34,17 @@ $query = "SELECT
   v.status_satusehat,
   v.visit_status
 FROM pasien_visit v
-JOIN ms_patient p ON p.id_patient = v.id_patient
-WHERE v.id_doctor = ?
+LEFT JOIN ms_patient p ON p.id_patient = v.id_patient
+WHERE LOWER(v.id_doctor) LIKE ?
 AND v.id_customer = ?
 AND v.visit_date BETWEEN ? AND ?
 ORDER BY v.visit_time ASC
 ";
 
+$likeDoctor = "%" . $doctorName . "%";
+
 $stmt = $koneksi->prepare($query);
-$stmt->bind_param("iiss", $doctor, $id_customer, $start, $end);
+$stmt->bind_param("ssss", $likeDoctor, $id_customer, $start, $end);
 $stmt->execute();
 
 $result = $stmt->get_result();

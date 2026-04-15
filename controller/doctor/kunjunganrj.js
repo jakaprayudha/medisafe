@@ -36,6 +36,7 @@ $(function () {
                         APP.cetak('#diastole', d.diastole || '0');
                         APP.cetak('#respRate', d.respRate || '0');
                         APP.cetak('#heartRate', d.heartRate || '0');
+                        APP.cetak('#suhu', d.suhu || '0');
                         APP.cetak('#saturasi', d.saturasi || '0');
                         APP.cetak('#keluhan_penyerta', d.keluhan || '');
                         APP.hitungBMI();

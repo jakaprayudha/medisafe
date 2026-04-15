@@ -187,6 +187,7 @@ APP.initDiagnosa = function (selector, hiddenNameSelector, idkdspesialis) {
     $(selector).select2({
         placeholder: "Ketik Diagnosa...",
         width: "100%",
+        allowClear: true,
         minimumInputLength: 3,
         ajax: {
             url: "controller/admisi/services/getDiagnosa.php",
@@ -200,7 +201,7 @@ APP.initDiagnosa = function (selector, hiddenNameSelector, idkdspesialis) {
                 return {
                     results: items.map(item => ({
                         id: item.kdDiag,
-                        text: `${item.nmDiag} ${item.nonSpesialis ? ": TACC" : ": NON TACC"}`,
+                        text: `${item.kdDiag} - ${item.nmDiag} ${item.nonSpesialis ? ": TACC" : ": NON TACC"}`,
                         nmDiag: item.nmDiag,
                         idspesialis: item.nonSpesialis
                     })),
@@ -226,7 +227,7 @@ APP.initDiagnosa = function (selector, hiddenNameSelector, idkdspesialis) {
     });
     $(selector).on('select2:select', function (e) {
         let data = e.params.data;
-        $(hiddenNameSelector).val(data.text);
+        $(hiddenNameSelector).val(data.nmDiag);
         $(idkdspesialis).val(data.idspesialis);
         console.log($('#kdStatusPulang').val() + data.idspesialis);
         if (data.idspesialis == true && $('#kdStatusPulang').val() == '4') {
