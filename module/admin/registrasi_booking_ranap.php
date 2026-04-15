@@ -49,12 +49,13 @@ require '../../controller/view.php';
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
+                          <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                           <th class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Lengkap</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">DPJP</th>
                           <th scope="col" class="text-dark fw-normal">Diagnosa Awal</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Actions</th>
+
                         </tr>
                       </thead>
                       <tbody></tbody>
@@ -171,7 +172,15 @@ require '../../controller/view.php';
           .then(resp => {
             if (resp.status === 'success') {
               let opt = '<option value="">-- Pilih Tempat Tidur --</option>';
-              resp.data.forEach(b => opt += `<option value="${b.id_bed}">${b.bed_name}-${b.bed_gender}</option>`);
+              resp.data.forEach(b => {
+                let isUsed = b.is_used == 1;
+                opt += `
+                <option value="${b.id_bed}" ${isUsed ? 'disabled' : ''}>
+                  ${b.bed_name}-${b.bed_gender} 
+                  ${isUsed ? '(Terpakai)' : ''}
+                </option>
+              `;
+              });
               $('#bed_name').html(opt);
             } else {
               $('#bed_name').html('<option value="">Tidak ada data</option>');
@@ -222,6 +231,10 @@ require '../../controller/view.php';
         }
       },
       columns: [{
+          data: "actions",
+          orderable: false,
+          searchable: false
+        }, {
           data: "rm"
         },
         {
@@ -236,11 +249,7 @@ require '../../controller/view.php';
         {
           data: "diagnosa"
         },
-        {
-          data: "actions",
-          orderable: false,
-          searchable: false
-        }
+
       ]
     });
 

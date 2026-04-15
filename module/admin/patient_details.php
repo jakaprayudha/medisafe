@@ -58,9 +58,9 @@ $pt = $_GET['pt'];
                       <button class="nav-link" id="nav-dokumen-tab" data-bs-toggle="tab"
                         data-bs-target="#nav-dokumen" type="button" role="tab" aria-controls="nav-dokumen"
                         aria-selected="false">Dokumen</button>
-                      <button class="nav-link" id="nav-ttd-tab" data-bs-toggle="tab"
+                      <!-- <button class="nav-link" id="nav-ttd-tab" data-bs-toggle="tab"
                         data-bs-target="#nav-ttd" type="button" role="tab" aria-controls="nav-ttd"
-                        aria-selected="false">Tanda Tangan</button>
+                        aria-selected="false">Tanda Tangan</button> -->
                     </div>
                   </nav>
 
@@ -326,16 +326,13 @@ $pt = $_GET['pt'];
                               <p class="mt-1 small" id="statusBpjs"></p>
                             </div>
                           </div>
-                          <div class="col-6">
+                          <!-- <div class="col-6">
                             <div class="mb-3">
                               <label class="form-label">Upload Foto Diri</label>
                               <input type="file" class="form-control" name="foto" accept="image/*">
                               <p class="mt-1 small" id="statusFoto"></p>
                             </div>
-                          </div>
-                        </div>
-                        <div class="text-end">
-                          <button type="submit" class="btn btn-primary">Upload Dokumen</button>
+                          </div> -->
                         </div>
                     </div>
                     <div class="tab-pane fade" id="nav-ttd" role="tabpanel" aria-labelledby="nav-ttd-tab" tabindex="0">
@@ -495,14 +492,14 @@ $pt = $_GET['pt'];
 <script>
   $(document).ready(function() {
     const urlParams = new URLSearchParams(window.location.search);
-    const patientNumber = urlParams.get("no"); // ambil param no dari URL
+    const patientNumber = urlParams.get("pt");
 
     if (patientNumber) {
       $.ajax({
         url: "controller/master/getPatientDocs.php",
         type: "GET",
         data: {
-          patient_number: patientNumber
+          id_patient: patientNumber // 🔥 samakan dengan backend
         },
         success: function(res) {
           let data = JSON.parse(res);
@@ -516,55 +513,34 @@ $pt = $_GET['pt'];
       });
     }
 
+
     function updateStatus(elementId, fileName, label) {
-      const baseUrl = "uploads/patient/";
-      if (fileName) {
-        $("#" + elementId).html(
-          `<a href="${baseUrl + fileName}" target="_blank" class="text-success">
-             <i class="fas fa-check-circle"></i> ${label} sudah diupload (klik untuk lihat)
-           </a>`
-        );
+      const baseUrl = window.location.origin + "/medisafe/uploads/patient/";
+
+      if (fileName && fileName !== "null") {
+        $("#" + elementId).html(`
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-success">${label} sudah upload</span>
+
+        <button class="btn btn-sm btn-primary"
+          onclick="window.open('${baseUrl + fileName}', '_blank')">
+          Lihat
+        </button>
+      </div>
+    `);
       } else {
-        $("#" + elementId).html(
-          `<span class="text-danger"><i class="fas fa-times-circle"></i> Belum upload ${label}</span>`
-        );
+        $("#" + elementId).html(`
+      <span class="text-danger">
+        <i class="fas fa-times-circle"></i> Belum upload ${label}
+      </span>
+    `);
       }
     }
+
+
   });
 </script>
-<script>
-  $(document).ready(function() {
-    // Ambil nomor pasien dari URL (?patient_number=XXXXXX)
-    const urlParams = new URLSearchParams(window.location.search);
-    const patient_number = urlParams.get("pt");
 
-    $("#formDokumen").on("submit", function(e) {
-      e.preventDefault();
-
-      let formData = new FormData(this);
-      formData.append("id_patient", patient_number); // tambahkan manual
-
-      $.ajax({
-        url: "controller/master/uploadPatient.php",
-        type: "POST",
-        data: formData,
-        contentType: false,
-        processData: false,
-        success: function(res) {
-          let data = JSON.parse(res);
-          if (data.status === "success") {
-            alert("Upload berhasil!");
-          } else {
-            alert("Error: " + data.message);
-          }
-        },
-        error: function() {
-          alert("Terjadi kesalahan saat mengirim data.");
-        }
-      });
-    });
-  });
-</script>
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
@@ -898,6 +874,120 @@ $pt = $_GET['pt'];
       });
 
     $('#provinsi_text').val($(this).find('option:selected').text());
+  });
+</script>
+
+<script>
+  $(document).ready(function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const id_patient = urlParams.get("pt");
+
+    // 🔥 semua input file
+    $("input[type='file']").on("change", function() {
+      let input = this;
+      let fieldName = $(this).attr("name"); // ktp / kk / bpjs / foto
+
+      if (!input.files.length) return;
+
+      let formData = new FormData();
+      formData.append("id_patient", id_patient);
+      formData.append(fieldName, input.files[0]);
+
+      showStatus(fieldName, "Uploading...", true);
+      $(input).prop("disabled", true);
+
+      $.ajax({
+        url: "controller/master/uploadPatient.php",
+        type: "POST",
+        data: formData,
+        contentType: false,
+        processData: false,
+
+        success: function(res) {
+          let data = JSON.parse(res);
+
+          if (data.status === "success") {
+
+            let fileName = data.files[fieldName]; // 🔥 dari server
+
+            showStatus(fieldName, fileName, true);
+
+            Swal.fire({
+              toast: true,
+              position: 'top-end',
+              icon: 'success',
+              title: 'Upload berhasil',
+              showConfirmButton: false,
+              timer: 2000
+            });
+
+          } else {
+
+            showStatus(fieldName, data.message, false);
+
+            Swal.fire({
+              toast: true,
+              position: 'top-end',
+              icon: 'error',
+              title: data.message,
+              showConfirmButton: false,
+              timer: 2500
+            });
+
+          }
+
+          $(input).prop("disabled", false);
+        },
+
+        error: function() {
+          showStatus(fieldName, "Upload gagal", false);
+          $(input).prop("disabled", false);
+        }
+      });
+    });
+
+    // 🔥 FUNCTION STATUS FINAL
+    function showStatus(field, fileName, success) {
+      let el = "";
+
+      if (field === "ktp") el = "#statusKtp";
+      if (field === "kk") el = "#statusKk";
+      if (field === "bpjs") el = "#statusBpjs";
+      if (field === "foto") el = "#statusFoto";
+
+      const baseUrl = window.location.origin + "/medisafe/uploads/patient/";
+
+      // 🔥 kondisi loading
+      if (fileName === "Uploading...") {
+        $(el).html(`
+        <span class="text-warning">
+          <i class="fas fa-spinner fa-spin"></i> Uploading...
+        </span>
+      `);
+        return;
+      }
+
+      // 🔥 kalau success dan file ada
+      if (success && fileName && fileName !== "null") {
+        $(el).html(`
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-success">Sudah upload</span>
+
+          <button class="btn btn-sm btn-primary"
+            onclick="window.open('${baseUrl + fileName}', '_blank')">
+            Lihat
+          </button>
+        </div>
+      `);
+      } else {
+        $(el).html(`
+        <span class="text-danger">
+          <i class="fas fa-times-circle"></i> ${fileName}
+        </span>
+      `);
+      }
+    }
+
   });
 </script>
 

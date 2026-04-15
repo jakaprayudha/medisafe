@@ -63,7 +63,8 @@ function createData($id_customer)
       'id_room',
       'bed_name',
       'bed_gender',
-      'bed_notes'
+      'bed_notes',
+      'bed_status'
    ];
 
    $fields = [];
