@@ -1,6 +1,9 @@
 <?php
 include "../../database/connect.php";
 
+header("Content-Type: application/json");
+
+// 🔥 folder upload
 $uploadDir = "../../uploads/patient/";
 if (!is_dir($uploadDir)) {
    mkdir($uploadDir, 0777, true);
@@ -8,6 +11,7 @@ if (!is_dir($uploadDir)) {
 
 $response = ["status" => "error", "message" => ""];
 
+// 🔥 mapping field
 $allowedFiles = [
    "ktp"  => "ktp",
    "kk"   => "kk",
@@ -15,59 +19,117 @@ $allowedFiles = [
    "foto" => "foto"
 ];
 
-// Ambil patient_number dari POST atau URL param
-$patient_number = $_POST['patient_number']
-   ?? ($_GET['patient_number'] ?? null);
+// 🔥 ambil patient_number
+$id_patient = $_POST['id_patient']
+   ?? ($_GET['id_patient'] ?? null);
 
-if (!$patient_number) {
+if (!$id_patient) {
    echo json_encode([
       "status" => "error",
-      "message" => "Nomor pasien tidak ditemukan."
+      "message" => "ID pasien tidak ditemukan."
    ]);
    exit;
 }
+// 🔥 validasi file
+$allowedExt = ['jpg', 'jpeg', 'png'];
+$maxSize = 2 * 1024 * 1024; // 2MB
 
 $uploadedFiles = [];
 
 foreach ($allowedFiles as $field => $prefix) {
+
    if (isset($_FILES[$field]) && $_FILES[$field]['error'] === UPLOAD_ERR_OK) {
-      $ext = pathinfo($_FILES[$field]['name'], PATHINFO_EXTENSION);
-      $filename = $prefix . "_" . $patient_number . "." . $ext;
+
+      $fileTmp  = $_FILES[$field]['tmp_name'];
+      $fileName = $_FILES[$field]['name'];
+      $fileSize = $_FILES[$field]['size'];
+
+      $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+      // 🔥 validasi extension
+      if (!in_array($ext, $allowedExt)) {
+         echo json_encode([
+            "status" => "error",
+            "message" => "Format file $field tidak diizinkan"
+         ]);
+         exit;
+      }
+
+      // 🔥 validasi size
+      if ($fileSize > $maxSize) {
+         echo json_encode([
+            "status" => "error",
+            "message" => "Ukuran file $field terlalu besar (max 2MB)"
+         ]);
+         exit;
+      }
+
+      // 🔥 nama unik (anti overwrite)
+      $filename = $prefix . "_" . $id_patient . "_" . time() . "." . $ext;
       $destination = $uploadDir . $filename;
 
-      if (move_uploaded_file($_FILES[$field]['tmp_name'], $destination)) {
+      if (move_uploaded_file($fileTmp, $destination)) {
          $uploadedFiles[$field] = $filename;
       }
    }
 }
 
-// Simpan info file ke database
-if (!empty($uploadedFiles)) {
-   $stmt = $koneksi->prepare("
-      UPDATE ms_patient 
-      SET patient_ktp_file=?, patient_kk_file=?, patient_bpjs_file=?, patient_foto=? 
-      WHERE patient_number=?
-   ");
-   $ktp  = $uploadedFiles['ktp']  ?? null;
-   $kk   = $uploadedFiles['kk']   ?? null;
-   $bpjs = $uploadedFiles['bpjs'] ?? null;
-   $foto = $uploadedFiles['foto'] ?? null;
-
-   $stmt->bind_param("sssss", $ktp, $kk, $bpjs, $foto, $patient_number);
-
-   if ($stmt->execute()) {
-      $response = [
-         "status" => "success",
-         "message" => "Dokumen berhasil diupload.",
-         "files" => $uploadedFiles
-      ];
-   } else {
-      $response["message"] = "Gagal menyimpan data ke database: " . $stmt->error;
-   }
-
-   $stmt->close();
-} else {
-   $response["message"] = "Tidak ada file yang diupload.";
+// 🔥 kalau tidak ada file
+if (empty($uploadedFiles)) {
+   echo json_encode([
+      "status" => "error",
+      "message" => "Tidak ada file yang diupload"
+   ]);
+   exit;
 }
 
-echo json_encode($response);
+// 🔥 dynamic update (INI YANG PALING PENTING)
+$fields = [];
+$params = [];
+$types  = "";
+
+// mapping DB field
+$dbMap = [
+   "ktp"  => "patient_ktp_file",
+   "kk"   => "patient_kk_file",
+   "bpjs" => "patient_bpjs_file",
+   "foto" => "patient_foto"
+];
+
+foreach ($uploadedFiles as $key => $file) {
+   $fields[] = $dbMap[$key] . "=?";
+   $params[] = $file;
+   $types   .= "s";
+}
+
+// tambah where
+$params[] = $id_patient;
+$types   .= "s";
+
+$sql = "UPDATE ms_patient SET " . implode(",", $fields) . " WHERE id_patient=?";
+$stmt = $koneksi->prepare($sql);
+
+if (!$stmt) {
+   echo json_encode([
+      "status" => "error",
+      "message" => "Prepare gagal: " . $koneksi->error
+   ]);
+   exit;
+}
+
+$stmt->bind_param($types, ...$params);
+
+if ($stmt->execute()) {
+   echo json_encode([
+      "status" => "success",
+      "message" => "Upload berhasil",
+      "files" => $uploadedFiles
+   ]);
+} else {
+   echo json_encode([
+      "status" => "error",
+      "message" => "Gagal update DB: " . $stmt->error
+   ]);
+}
+
+$stmt->close();
