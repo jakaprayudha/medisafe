@@ -95,7 +95,7 @@ $datapatient = mysqli_fetch_array($patient);
   require 'library.php';
   ?>
 </body>
-<div class="modal fade" id="programModal" tabindex="-1">
+<div class="modal fade" id="programModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-xl">
     <form id="programForm" class="modal-content">
       <div class="modal-header">
