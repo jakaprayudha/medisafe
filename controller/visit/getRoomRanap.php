@@ -45,14 +45,37 @@ switch ($type) {
 
    // 🔹 Ambil bed berdasarkan id_room
    case 'bed_name':
-      $stmt = $koneksi->prepare("SELECT id_bed, bed_name, bed_gender FROM ms_room_bed WHERE id_room = ? AND bed_status = 1 AND id_customer = ? ORDER BY bed_name ASC");
+      $stmt = $koneksi->prepare("SELECT 
+         b.id_bed, 
+         b.bed_name, 
+         b.bed_gender,
+
+         CASE 
+            WHEN r.id_bed IS NOT NULL THEN 1
+            ELSE 0
+         END as is_used
+
+      FROM ms_room_bed b
+
+      LEFT JOIN permintaan_ranap r 
+         ON r.id_bed = b.id_bed 
+         AND r.status = 'aktif'
+
+      WHERE b.id_room = ? 
+      AND b.id_customer = ?
+
+      ORDER BY b.bed_name ASC
+   ");
+
       $stmt->bind_param("ii", $value, $id_customer);
       $stmt->execute();
       $result = $stmt->get_result();
+
       $data = [];
       while ($row = $result->fetch_assoc()) {
          $data[] = $row;
       }
+
       echo json_encode(['status' => 'success', 'data' => $data]);
       break;
 

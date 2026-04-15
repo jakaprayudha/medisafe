@@ -133,6 +133,7 @@ $dataroom = mysqli_fetch_array($check);
       </div>
       <div class="modal-body">
         <input type="hidden" name="id_bed" id="id_bed">
+        <input type="hidden" name="bed_status" id="bed_status" value="1">
         <input type="hidden" name="id_room" id="id_room" value="<?= $idroom ?>">
         <div class="row">
           <div class="col-12">
@@ -198,10 +199,8 @@ $dataroom = mysqli_fetch_array($check);
               "bed_gender": row.bed_gender ?? "-",
               "bed_notes": row.bed_notes ?? "-",
               "status": row.bed_status == '0' ?
-                '<span class="badge bg-warning-subtle text-warning d-block text-center">Digunakan</span>' :
-                row.bed_status == '1' ?
-                '<span class="badge bg-success-subtle text-success d-block text-center">Kosong</span>' :
-                '<span class="badge bg-secondary-subtle text-secondary d-block text-center">Tidak Dipakai</span>'
+                '<span class="badge bg-warning-subtle text-warning d-block text-center">Digunakan</span>' : row.bed_status == '1' ?
+                '<span class="badge bg-success-subtle text-success d-block text-center">Kosong</span>' : '<span class="badge bg-secondary-subtle text-secondary d-block text-center">Tidak Dipakai</span>'
             };
           });
         }

@@ -171,7 +171,15 @@ require '../../controller/view.php';
           .then(resp => {
             if (resp.status === 'success') {
               let opt = '<option value="">-- Pilih Tempat Tidur --</option>';
-              resp.data.forEach(b => opt += `<option value="${b.id_bed}">${b.bed_name}-${b.bed_gender}</option>`);
+              resp.data.forEach(b => {
+                let isUsed = b.is_used == 1;
+                opt += `
+                <option value="${b.id_bed}" ${isUsed ? 'disabled' : ''}>
+                  ${b.bed_name}-${b.bed_gender} 
+                  ${isUsed ? '(Terpakai)' : ''}
+                </option>
+              `;
+              });
               $('#bed_name').html(opt);
             } else {
               $('#bed_name').html('<option value="">Tidak ada data</option>');
