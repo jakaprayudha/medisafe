@@ -1,7 +1,7 @@
 <?php
 $title = 'Pasien Details';
 require '../../controller/view.php';
-$no = $_GET['no'];
+$pt = $_GET['pt'];
 ?>
 <!doctype html>
 <html lang="en">
@@ -493,13 +493,13 @@ $no = $_GET['no'];
   $(document).ready(function() {
     // Ambil nomor pasien dari URL (?patient_number=XXXXXX)
     const urlParams = new URLSearchParams(window.location.search);
-    const patient_number = urlParams.get("no");
+    const patient_number = urlParams.get("pt");
 
     $("#formDokumen").on("submit", function(e) {
       e.preventDefault();
 
       let formData = new FormData(this);
-      formData.append("patient_number", patient_number); // tambahkan manual
+      formData.append("id_patient", patient_number); // tambahkan manual
 
       $.ajax({
         url: "controller/master/uploadPatient.php",
@@ -526,11 +526,11 @@ $no = $_GET['no'];
 <script>
   document.addEventListener("DOMContentLoaded", function() {
     const urlParams = new URLSearchParams(window.location.search);
-    const patientNo = urlParams.get("no");
+    const patientNo = urlParams.get("pt");
 
     // Auto fill form
     if (patientNo) {
-      fetch("controller/master/patientDetailsController.php?no=" + patientNo)
+      fetch("controller/master/patientDetailsController.php?pt=" + patientNo)
         .then(res => res.json())
         .then(data => {
           if (data.success) {
@@ -554,12 +554,12 @@ $no = $_GET['no'];
       e.preventDefault();
 
       if (!patientNo) {
-        Swal.fire("Oops!", "Parameter ?no= tidak ditemukan!", "error");
+        Swal.fire("Oops!", "Parameter ?pt= tidak ditemukan!", "error");
         return;
       }
 
       const formData = new FormData(formIdentitas);
-      formData.append("patient_number", patientNo);
+      formData.append("id_patient", patientNo);
       formData.append("_method", "PUT");
 
       fetch("controller/master/patientDetailsController.php", {
@@ -599,7 +599,7 @@ $no = $_GET['no'];
       }
 
       const formData = new FormData(formKontakAlamat);
-      formData.append("patient_number", patientNo);
+      formData.append("id_patient", patientNo);
       formData.append("_method", "PUT");
 
       fetch("controller/master/patientDetailsController.php", {
@@ -639,7 +639,7 @@ $no = $_GET['no'];
       }
 
       const formData = new FormData(formEmergency);
-      formData.append("patient_number", patientNo);
+      formData.append("id_patient", patientNo);
       formData.append("_method", "PUT");
 
       fetch("controller/master/patientDetailsController.php", {

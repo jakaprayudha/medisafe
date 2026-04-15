@@ -272,7 +272,7 @@ require '../../controller/view.php';
                     </button>
 
                     <a class="btn btn-info" 
-                      href="module/admin/patient_details?no=${row.patient_number}&pt=${row.id_patient}" 
+                      href="module/admin/patient_details?pt=${row.id_patient}" 
                       title="Detail">
                       <i class="fas fa-info-circle"></i>
                     </a>
