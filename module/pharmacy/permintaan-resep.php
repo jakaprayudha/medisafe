@@ -35,6 +35,14 @@ $apiUrl = getenv('API_URL');
       <!--  Header End -->
       <div class="body-wrapper-inner">
         <div class="container-fluid">
+          <ul class="nav nav-tabs" id="tabStatus">
+            <li class="nav-item">
+              <a class="nav-link active" data-status="permintaan" href="#">Permintaan</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" data-status="selesai" href="#">Selesai</a>
+            </li>
+          </ul>
           <div class="row">
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
@@ -79,6 +87,7 @@ $apiUrl = getenv('API_URL');
 </body>
 
 <script>
+  let currentFilter = 'permintaan';
   // Mengambil nilai API_URL dari PHP
   const apiUrl = '<?php echo $apiUrl . 'farmasi/' . 'farmasiOrder' ?>';
   $(document).ready(function() {
@@ -90,18 +99,26 @@ $apiUrl = getenv('API_URL');
       "ajax": {
         "url": apiUrl, // Ganti dengan URL API yang sesuai
         "type": "GET",
-        "dataSrc": function(json) {
-          // Format data yang akan ditampilkan dalam tabel
-          return json.data.map(function(row, index) {
+        dataSrc: function(json) {
+
+          let filtered = json.data.filter(function(row) {
+            let status = parseInt(row.status_permintaan);
+            if (currentFilter === 'selesai') {
+              return status === 3;
+            } else {
+              return status !== 3;
+            }
+          });
+
+          return filtered.map(function(row, index) {
             return {
               "actions": `
-                  <div class="text-center">
-                    <a href="module/admin/farmasi_order_detail?no=${row.visit_ID}&rm=${row.nomor_rm}&id=${row.id_permintaan_farmasi}">
-                      <button class="btn btn-primary">Lihat Resep</button>
-                    </a>
-                  </div>
-              `,
-              // "permintaan_number": row.permintaan_number,
+        <div class="text-center">
+          <a href="module/admin/farmasi_order_detail?no=${row.visit_ID}&rm=${row.nomor_rm}&id=${row.id_permintaan_farmasi}">
+            <button class="btn btn-primary">Lihat Resep</button>
+          </a>
+        </div>
+      `,
               "tanggal": row.created_at,
               "nomor_rm": row.nomor_rm,
               "nama_pasien": row.patient_name_pcare,
@@ -165,7 +182,16 @@ $apiUrl = getenv('API_URL');
       ]
     });
 
+    $('#tabStatus .nav-link').on('click', function(e) {
+      e.preventDefault();
 
+      $('#tabStatus .nav-link').removeClass('active');
+      $(this).addClass('active');
+
+      currentFilter = $(this).data('status');
+
+      table.ajax.reload(); // 🔥 reload table
+    });
   });
 </script>
 
