@@ -148,8 +148,8 @@ if ($result['code'] != '200') {
     $hasil = $stmt->execute();
     $stmt->close();
 
-    $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE patient_bpjs = ? OR patient_nik = ?");
-    $stmt->bind_param('ss', $noKartu, $noNIK);
+    $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE (patient_bpjs = ? OR patient_nik = ?) AND id_customer = ?");
+    $stmt->bind_param('sss', $noKartu, $noNIK, $idcustomer);
     $stmt->execute();
     $chackpasien = $stmt->get_result()->fetch_assoc();
 
@@ -221,11 +221,11 @@ if ($result['code'] != '200') {
     );
     $hasil1 = $stmt->execute();
     if (!empty($noNIK)) {
-        $stmt2 = $koneksi->prepare("UPDATE ms_patient SET patient_bpjs = ?, patient_datebirth = ? WHERE patient_nik = ?");
-        $stmt2->bind_param("sss", $noKartu, $tglLahir, $noNIK);
+        $stmt2 = $koneksi->prepare("UPDATE ms_patient SET patient_bpjs = ?, patient_datebirth = ? WHERE patient_nik = ? AND id_customer = ?");
+        $stmt2->bind_param("ssss", $noKartu, $tglLahir, $noNIK, $idcustomer);
     } elseif (!empty($noKartu)) {
-        $stmt2 = $koneksi->prepare("UPDATE ms_patient SET patient_nik = ?, patient_datebirth = ? WHERE patient_bpjs = ?");
-        $stmt2->bind_param("sss", $noNIK, $tglLahir, $noKartu);
+        $stmt2 = $koneksi->prepare("UPDATE ms_patient SET patient_nik = ?, patient_datebirth = ? WHERE patient_bpjs = ? id_customer = ?");
+        $stmt2->bind_param("ssss", $noNIK, $tglLahir, $noKartu, $idcustomer);
     }
     $hasil2 = $stmt2->execute();
     if ($hasil and $hasil1 and $hasil2) {
