@@ -385,15 +385,29 @@ require "../../controller/view.php";
     function saveRow(row) {
 
       let id = row.data('id');
+      let idPharmacy = row.data('id-pharmacy');
+
+      // 🔥 kalau belum ada, ambil dari select
+      if (!idPharmacy) {
+        idPharmacy = row.find('.item-select').val();
+      }
+
+      // 🔥 VALIDASI WAJIB
+      if (!idPharmacy) {
+        console.warn('id_pharmacy kosong, skip save');
+        return;
+      }
 
       let data = {
         id_permintaan_farmasi: "<?= $_GET['id'] ?>",
-        id_pharmacy: row.data('id-pharmacy'),
+        id_pharmacy: idPharmacy, // 🔥 FIX DI SINI
         qty: row.find('.qty').val(),
         signa: row.find('.signa').val(),
         catatan: row.find('.catatan').val(),
         created_user: "<?= $_SESSION['fullname'] ?>"
       };
+
+
 
 
       // 🔥 INSERT
@@ -428,6 +442,8 @@ require "../../controller/view.php";
 
       }
     }
+
+
     $(document).on('click', '.remove-row', function() {
       $(this).closest('tr').remove();
     });
@@ -435,7 +451,12 @@ require "../../controller/view.php";
 
     $(document).on('change', '.item-select', function() {
       let row = $(this).closest('tr');
-      saveRow(row); // 🔥 langsung insert saat pilih obat
+      let val = $(this).val();
+
+      // 🔥 SIMPAN KE ROW
+      row.attr('data-id-pharmacy', val);
+
+      saveRow(row);
     });
     $(document).on('input', '.qty, .signa, .catatan', function() {
 
