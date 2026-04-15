@@ -469,7 +469,11 @@ $data = mysqli_fetch_array($check);
 
             html += `
           <tr>
-            <td>${row.pharmacy_name_generic ?? ''}</td>
+          <td>${
+            row.pharmacy_name_generic 
+              ? row.pharmacy_name_generic 
+              : (row.pharmacy_name_trade ?? '')
+          }</td>
             <td>${row.qty}</td>
             <td>${row.signa}</td>
             <td>${row.catatan_permintaan ?? '-'}</td>
