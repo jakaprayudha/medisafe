@@ -219,9 +219,16 @@ if ($result['code'] != '200') {
         $bmiKet,
         $kdDokter
     );
-
     $hasil1 = $stmt->execute();
-    if ($hasil and $hasil1) {
+    if (!empty($noNIK)) {
+        $stmt2 = $koneksi->prepare("UPDATE ms_patient SET patient_bpjs = ?, patient_datebirth = ? WHERE patient_nik = ?");
+        $stmt2->bind_param("sss", $noKartu, $tglLahir, $noNIK);
+    } elseif (!empty($noKartu)) {
+        $stmt2 = $koneksi->prepare("UPDATE ms_patient SET patient_nik = ?, patient_datebirth = ? WHERE patient_bpjs = ?");
+        $stmt2->bind_param("sss", $noNIK, $tglLahir, $noKartu);
+    }
+    $hasil2 = $stmt2->execute();
+    if ($hasil and $hasil1 and $hasil2) {
         $response = [
             'success'  => true,
             'message'  => "Berhasil Mendaftar Pasien",
