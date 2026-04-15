@@ -88,7 +88,7 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
                             <input
                               type="number"
                               id="sistolik"
-                              class="form-control"
+                              class="form-control bg-light" readonly
                               placeholder="Sistolik"
                               required>
 
@@ -97,7 +97,7 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
                             <input
                               type="number"
                               id="diastolik"
-                              class="form-control"
+                              class="form-control bg-light" readonly
                               placeholder="Diastolik"
                               required>
                           </div>
@@ -111,22 +111,22 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
                         </div>
                         <div class="col-2 mb-3">
                           <label class="form-label">Nadi (x/menit)</label>
-                          <input type="number" id="nadi" value="<?= $datarawapinap['nadi'] ?>" class="form-control">
+                          <input type="number" id="nadi" value="<?= $datarawapinap['nadi'] ?>" class="form-control bg-light" readonly>
                         </div>
 
                         <div class="col-2 mb-3">
                           <label class="form-label">RR (x/menit)</label>
-                          <input type="number" id="rr" value="<?= $datarawapinap['respirasi'] ?>" class="form-control">
+                          <input type="number" id="rr" value="<?= $datarawapinap['respirasi'] ?>" class="form-control bg-light" readonly">
                         </div>
 
                         <div class="col-2 mb-3">
                           <label class="form-label">Suhu (°C)</label>
-                          <input type="number" step="0.1" id="suhu" value="<?= $datarawapinap['suhu'] ?>" class="form-control">
+                          <input type="number" step="0.1" id="suhu" value="<?= $datarawapinap['suhu'] ?>" class="form-control bg-light" readonly">
                         </div>
 
                         <div class="col-2 mb-3">
                           <label class="form-label">Saturasi SpO₂ (%)</label>
-                          <input type="number" id="spo2" value="<?= $datarawapinap['saturasi'] ?>" class="form-control">
+                          <input type="number" id="spo2" value="<?= $datarawapinap['saturasi'] ?>" class="form-control bg-light" readonly>
                         </div>
                       </div>
 

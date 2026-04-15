@@ -6,11 +6,11 @@
      <div class="nav nav-tabs" id="nav-tab" role="tablist">
         <?php
          if ($roles == "dokter") { ?>
-           <a href="module/admin/triase?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
-              <button class="nav-link <?= ($current == 'triase.php') ? 'active' : '' ?>">Triase</button>
-           </a>
            <a href="module/admin/rme_inap?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
               <button class="nav-link <?= ($current == 'rme_inap.php') ? 'active' : '' ?>">Pemeriksaan Medis</button>
+           </a>
+           <a href="module/admin/triase?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+              <button class="nav-link <?= ($current == 'triase.php') ? 'active' : '' ?>">Triase</button>
            </a>
            <!-- <a href="module/admin/instruksi?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
               <button class="nav-link <?= ($current == 'instruksi.php') ? 'active' : '' ?>">Instruksi Dokter</button>
