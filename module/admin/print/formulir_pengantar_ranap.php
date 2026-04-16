@@ -208,12 +208,18 @@
                   d.room_name + " - " + d.bed_name || "-";
 
                // ===============================
+               // TERAPI
+               // ===============================
+               document.getElementById("terapi").innerText =
+                  d.terapi || "-";
+
+               // ===============================
                // TTD DOKTER
                // ===============================
                const ttd = document.getElementById("rinap_ttd");
 
-               if (d.signature_path) {
-                  ttd.src = `../../../uploads/ttd/${d.signature_path}`;
+               if (d.signature_user) {
+                  ttd.src = `../../../uploads/ttd_faskes/${d.signature_user}`;
                }
 
             });
@@ -270,7 +276,8 @@
          <div class="rinap-ttd-wrapper">
             <div class="rinap-ttd-kanan">
                <p class="rinap-ttd-title">DOKTER MERAWAT</p>
-               <img src="../../../uploads/ttd/drdevi.png"
+               <img id="rinap_ttd"
+                  src="../../../uploads/ttd/default.png"
                   class="rinap-ttd-img"
                   alt="TTD Dokter">
 
