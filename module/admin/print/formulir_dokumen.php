@@ -75,10 +75,13 @@
      ========================= */
       .dokmulti-qr-img {
          position: absolute;
-         top: 15px;
+         bottom: 15px;
+         /* ⬅️ pindah ke bawah */
          right: 15px;
-         width: 110px;
-         height: 110px;
+         /* tetap kanan */
+         width: 70px;
+         /* ⬅️ kecil */
+         height: 70px;
          border: 1px solid #000;
          background: #fff;
          object-fit: cover;
@@ -285,7 +288,7 @@
                   `)
                   .join("");
                pPage.innerHTML = `
-                  <div class="dokmulti-watermark">FOTO PERAWATAN</div>
+                  <div class="dokmulti-watermark">PERAWATAN</div>
                   <img class="dokmulti-qr-img" src="${qrURL}">
 
                   <div class='dokmulti-title'>DOKUMENTASI PERAWATAN</div>
