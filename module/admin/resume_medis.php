@@ -2,6 +2,7 @@
 $title = 'Resume Medis';
 $no = $_GET['no'];
 $rm = $_GET['rm'];
+$id_customer = $_SESSION['id_customer'];
 require '../../database/connect.php';
 require '../../controller/view.php';
 $checkvisit = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa WHERE visit_ID='$no' AND nomor_rm='$rm'");
@@ -92,25 +93,14 @@ $dataresume =  mysqli_fetch_array($checkvisit);
                       <textarea id="pemeriksaan_fisik" name="pemeriksaan_fisik" class="form-control" rows="6"></textarea>
                     </div>
                     <?php
-                    $terapi = '';
+                    $terapi = "-";
 
-                    // 🔥 langsung join semua (tidak perlu looping 2x)
-                    $query = mysqli_query($koneksi, "
-   SELECT 
-      mp.pharmacy_name_generic,
-      pd.qty,
-      pd.signa
-   FROM permintaan_pharmacy pp
-   JOIN permintaan_pharmacy_details pd 
-      ON pd.id_permintaan_farmasi = pp.id_permintaan_farmasi
-   JOIN ms_pharmacy mp 
-      ON mp.id_pharmacy = pd.id_pharmacy
-   WHERE pp.id_visit = '$no'
-   AND pp.status_obat_pulang = 0
-");
+                    $query = mysqli_query($koneksi, "SELECT * FROM visit_cppt  WHERE visit_ID='$no'  AND id_customer='$id_customer'  ORDER BY created_at ASC  LIMIT 1");
 
-                    while ($obat = mysqli_fetch_assoc($query)) {
-                      $terapi .= "- {$obat['pharmacy_name_generic']} {$obat['qty']} {$obat['signa']}\n";
+                    $dataresep = mysqli_fetch_assoc($query);
+
+                    if ($dataresep) {
+                      $terapi = $dataresep['planning'] ?? "-";
                     }
                     ?>
                     <div class="col-6 mb-3">
