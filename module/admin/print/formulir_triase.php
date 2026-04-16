@@ -2,6 +2,29 @@
 $title = "FORMULIR TRIASE KEGAWATDARURATAN";
 $subtitle = "Assesmen Medis Awal Pasien IGD";
 require '../../../database/connect.php';
+
+$id_customer = $_SESSION['id_customer'] ?? null;
+$no = $_GET['no'] ?? null;
+
+$terapi = "-";
+
+if ($no && $id_customer) {
+  $query = mysqli_query($koneksi, "
+    SELECT planning 
+    FROM visit_cppt  
+    WHERE visit_ID='$no'  
+    AND id_customer='$id_customer'  
+    ORDER BY created_at ASC  
+    LIMIT 1
+  ");
+
+  $dataresep = mysqli_fetch_assoc($query);
+
+  if ($dataresep && !empty($dataresep['planning'])) {
+    $terapi = $dataresep['planning'];
+  }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -208,6 +231,7 @@ require '../../../database/connect.php';
           Nadi: <span id="nadi"></span> x/menit<br>
           RR: <span id="rr"></span> x/menit<br>
           Suhu: <span id="suhu"></span> °C
+          SpO2: <span id="spo2"></span> %
         </td>
       </tr>
     </table>
@@ -274,8 +298,7 @@ require '../../../database/connect.php';
     <table class="igd-table">
       <tr>
         <th style="width:20%">TERAPI</th>
-        <td>:</td>
-        <td></td>
+        <td><?= nl2br(htmlspecialchars($terapi)) ?></td>
       </tr>
     </table>
 
@@ -285,7 +308,6 @@ require '../../../database/connect.php';
         <th style="width:20%">Perawatan Lanjutan</th>
         <td>
           <label><input type="checkbox" checked> Rawat Inap</label>
-          <label><input type="checkbox"> Rawat Intensive</label>
         </td>
       </tr>
     </table>
@@ -351,7 +373,6 @@ require '../../../database/connect.php';
           rr.innerText = d.rr || "-";
           suhu.innerText = d.suhu || "-";
           spo2.innerText = d.spo2 || "-";
-          tgl_periksa.innerText = d.tgl_periksa || "-";
           nama_petugas.innerText = d.id_doctor || "-";
 
           // =============================
@@ -370,19 +391,34 @@ require '../../../database/connect.php';
           barcode_rm.src =
             `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(d.visit_ID || "")}&code=Code128`;
 
+
           // =============================
-          // ATS BADGE (kalau ada)
+          // ATS BADGE (FIX FINAL)
           // =============================
           const badge = document.getElementById("tri_kategori_badge");
-          const ats = parseInt(d.triase || 0); // dari field triase
+
+          const atsText = (d.triase || "")
+            .toUpperCase()
+            .trim();
 
           badge.className = "badge-triase";
+          console.log("TRIASE:", d.triase);
 
-          if (ats >= 1 && ats <= 5) {
-            badge.innerText = "ATS " + ats;
-            badge.classList.add("ats" + ats);
-          } else {
-            badge.innerText = "-";
+          // tampilkan langsung dari API
+          badge.innerText = atsText || "-";
+
+          // mapping warna
+          if (atsText === "ATS 1") badge.classList.add("ats1");
+          else if (atsText === "ATS 2") badge.classList.add("ats2");
+          else if (atsText === "ATS 3") badge.classList.add("ats3");
+          else if (atsText === "ATS 4") badge.classList.add("ats4");
+          else if (atsText === "ATS 5") badge.classList.add("ats5");
+          let ref = [];
+
+          try {
+            ref = JSON.parse(d.referensi_triase || "[]");
+          } catch (e) {
+            ref = [];
           }
 
           // =============================
@@ -418,6 +454,18 @@ require '../../../database/connect.php';
 
         });
     });
+
+    function checkList(selector, keywords) {
+      document.querySelectorAll(selector).forEach(cb => {
+        cb.checked = false;
+
+        keywords.forEach(k => {
+          if (cb.parentElement.innerText.toLowerCase().includes(k.toLowerCase())) {
+            cb.checked = true;
+          }
+        });
+      });
+    }
   </script>
 
 </body>
