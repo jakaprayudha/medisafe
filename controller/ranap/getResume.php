@@ -23,10 +23,9 @@ $q = mysqli_query($koneksi, "SELECT v.*,
       CONCAT(
          FLOOR(DATEDIFF(CURDATE(), p.patient_datebirth) / 365), ' Tahun'
       ) AS usia,
-      d.doctor_name
+      v.id_doctor
    FROM pasien_visit v
    LEFT JOIN ms_patient p ON p.id_patient = v.id_patient
-   LEFT JOIN ms_doctor d ON d.id_doctor = v.id_doctor
    LEFT JOIN permintaan_ranap pr ON pr.visit_ID_inpatient = v.visit_ID
    LEFT JOIN ms_room r ON r.id_room = pr.id_room
    LEFT JOIN ms_room_bed b ON b.id_bed = pr.id_bed

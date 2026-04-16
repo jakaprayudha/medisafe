@@ -88,7 +88,7 @@ function getData()
    $q = mysqli_query($koneksi, "
       SELECT * FROM pasien_dokumen
       WHERE visit_ID='$no' 
-      AND nomor_rm='$rm'
+      OR nomor_rm='$rm'
       AND jenis_dokumen='FOTO_PERAWATAN'
       ORDER BY id_dokumen DESC
    ");

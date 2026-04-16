@@ -53,27 +53,9 @@ $dataresume =  mysqli_fetch_array($checkvisit);
                   <h4 class="mb-3">Resume Medis</h4>
 
                   <!-- IDENTITAS PASIEN -->
-                  <div class="row">
-                    <div class="col-3 mb-3">
-                      <label class="form-label">Nama Pasien</label>
-                      <input type="text" id="patient_name" class="form-control bg-light" readonly>
-                    </div>
-
-                    <div class="col-3 mb-3">
-                      <label class="form-label">Gender</label>
-                      <input type="text" id="patient_gender" class="form-control bg-light" readonly>
-                    </div>
-
-                    <div class="col-3 mb-3">
-                      <label class="form-label">Usia</label>
-                      <input type="text" id="usia" class="form-control bg-light" readonly>
-                    </div>
-
-                    <div class="col-3 mb-3">
-                      <label class="form-label">Dokter</label>
-                      <input type="text" id="doctor_name" class="form-control bg-light" readonly>
-                    </div>
-                  </div>
+                  <?php
+                  require 'card-pasien.php';
+                  ?>
 
                   <hr>
 
@@ -158,6 +140,11 @@ $dataresume =  mysqli_fetch_array($checkvisit);
                     </div>
 
                     <div class="col-6 mb-3">
+                      <label class="form-label">Rencana Tindak Lanjut</label>
+                      <textarea id="rencana_tindak_lanjut" name="rencana_tindak_lanjut" class="form-control" rows="6" value="<?= $dataresume['rencana_tindak_lanjut'] ?? '' ?> "></textarea>
+                    </div>
+
+                    <div class="col-6 mb-3">
                       <label class="form-label">Kondisi Pasien Saat Pulang</label>
                       <select name="kondisi_pulang" id="kondisi_pulang" class="form-select">
                         <option value="">PILIH</option>
@@ -182,15 +169,12 @@ $dataresume =  mysqli_fetch_array($checkvisit);
                       </select>
                     </div>
 
-                    <div class="col-6 mb-3">
-                      <label class="form-label">Rencana Tindak Lanjut</label>
-                      <textarea id="rencana_tindak_lanjut" name="rencana_tindak_lanjut" class="form-control" rows="6" value="<?= $dataresume['rencana_tindak_lanjut'] ?? '' ?> "></textarea>
-                    </div>
 
+                    <!-- 
                     <div class="col-6 mb-3">
                       <label class="form-label">DPJP</label>
                       <input type="text" id="dokter" class="form-control bg-light" readonly>
-                    </div>
+                    </div> -->
 
                   </div>
 
@@ -269,22 +253,6 @@ $dataresume =  mysqli_fetch_array($checkvisit);
         const p = res.pasien ?? {};
         const i = res.resume ?? {};
 
-        // Isi identitas pasien (aman walaupun null)
-        if (document.getElementById("patient_name"))
-          document.getElementById("patient_name").value = p.nama_pasien ?? "";
-
-        if (document.getElementById("patient_gender"))
-          document.getElementById("patient_gender").value = p.jk ?? "";
-
-        if (document.getElementById("doctor_name"))
-          document.getElementById("doctor_name").value = p.doctor_name ?? "";
-
-        if (document.getElementById("dokter"))
-          document.getElementById("dokter").value = p.doctor_name ?? "";
-
-        if (document.getElementById("usia"))
-          document.getElementById("usia").value = p.usia ?? "";
-
         // ===== SET DATA DARI resume_medis =====
         for (let key in i) {
           if (document.getElementById(key)) {
@@ -355,7 +323,7 @@ $dataresume =  mysqli_fetch_array($checkvisit);
     data.kondisi_pulang = document.getElementById("kondisi_pulang")?.value ?? "";
     data.cara_keluar = document.getElementById("cara_keluar")?.value ?? "";
     data.rencana_tindak_lanjut = document.getElementById("rencana_tindak_lanjut")?.value ?? "";
-    data.dokter = document.getElementById("dokter")?.value ?? "";
+    data.id_doctor = document.getElementById("dokter")?.value ?? "";
     data.tindakan = data.pemeriksaan_fisik;
     data.obat = data.alergi_obat;
 
