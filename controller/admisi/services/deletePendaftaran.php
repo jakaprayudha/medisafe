@@ -3,12 +3,17 @@ require_once __DIR__ . '/view.php';
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/servicebpjs.php';
 header('Content-Type: application/json');
-$consid = $_POST['id'];
-$nomor_kartu = $_POST['nokartu'];
-$tglDB = $_POST['tanggal'];
+$visit = $_POST['novisit'];
+$stmt = $koneksi->prepare("SELECT * FROM pcare_pendaftaran WHERE nomor_visit = ?");
+$stmt->bind_param("s", $visit);
+$stmt->execute();
+$result = $stmt->get_result()->fetch_assoc();
+
+$tglDB = $result['tanggal_daftar'];
+$nomor_kartu = $result['noKartu'];
+$noUrut = $result['noUrut'];
+$kdpoli = $result['kdPoli'];
 $tanggal = date("d-m-Y", strtotime($tglDB));
-$noUrut = $_POST['noUrut'];
-$kdpoli = $_POST['kdpoli'];
 $result = bpjsDelete('/pendaftaran/peserta/' . $nomor_kartu . '/tglDaftar/' . $tanggal . '/noUrut/' . $noUrut . '/kdPoli/' . $kdpoli);
 if ($result['code'] != "200") {
     $msg = $result['message'];
@@ -20,11 +25,17 @@ if ($result['code'] != "200") {
         'message' => $msg,
     ];
 } else {
-    $stmt = $koneksi->prepare("DELETE FROM pcare_pendaftaran WHERE noKartu = ? AND tanggal_daftar = ?");
-    $stmt->bind_param("ss", $nomor_kartu, $tglDB);
+    $stmt = $koneksi->prepare("DELETE FROM pcare_pendaftaran WHERE nomor_visit = ?");
+    $stmt->bind_param("s", $visit);
     $hasil = $stmt->execute();
+
+    $stmt1 = $koneksi->prepare("DELETE FROM pasien_visit WHERE visit_ID = ?");
+    $stmt1->bind_param("s", $visit);
+    $hasil1 = $stmt1->execute();
+
     $stmt->close();
-    if ($hasil) {
+    $stmt1->close();
+    if ($hasil AND $hasil1) {
         $response = [
             'success' => true,
             'message' => "Berhasil Hapus Pendaftaran",
