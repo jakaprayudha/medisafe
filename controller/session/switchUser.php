@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
    $id_customer = $_SESSION['id_customer'];
    $search = isset($_GET['search']) ? mysqli_real_escape_string($koneksi, $_GET['search']) : '';
 
-   $query = "SELECT uid_user, fullname, username, roles FROM ms_users";
+   $query = "SELECT uid_user, fullname, username, roles FROM ms_users WHERE 1=1";
    if ($search !== '') {
       $query .= " AND (fullname LIKE '%$search%' OR username LIKE '%$search%' OR roles LIKE '%$search%')";
    }
