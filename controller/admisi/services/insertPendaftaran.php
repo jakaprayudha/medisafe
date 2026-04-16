@@ -117,7 +117,7 @@ if ($result['code'] != '200') {
     ];
 } else {
     $noUrut = $result['data']['message'];
-    $visit_ID = generateVisitID($koneksi);
+    $visit_ID = generateVisitID($koneksi, $idcustomer);
     $noUrut = (string) $noUrut;
     $sistole      = (int)$sistole;
     $diastole     = (int)$diastole;
@@ -245,12 +245,12 @@ if ($result['code'] != '200') {
     }
 }
 echo json_encode($response);
-function generateVisitID($koneksi)
+function generateVisitID($koneksi, $idcustomer)
 {
     do {
         $date = date('ymd');
         $random = strtoupper(bin2hex(random_bytes(3)));
-        $visitID = "VIS-" . $date . "-" . $random;
+        $visitID = "VIS-" . $idcustomer . "-" . $date . "-" . $random;
         $count = '';
         $check = $koneksi->prepare("SELECT COUNT(*) FROM pasien_visit WHERE visit_ID=?");
         $check->bind_param("s", $visitID);
