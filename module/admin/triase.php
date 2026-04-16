@@ -469,8 +469,7 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
     document.querySelectorAll("." + className + ":checked").forEach(el => {
       list.push(el.value);
     });
-
-    document.getElementById("referensi_triase").value = list.join(" | ");
+    document.getElementById("referensi_triase").value = JSON.stringify(list);
   }
 
 
@@ -481,7 +480,13 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
 
     if (!refString || !kategori) return;
 
-    let items = refString.split(" | ").map(i => i.trim());
+    let items = [];
+
+    try {
+      items = JSON.parse(refString);
+    } catch (e) {
+      items = [];
+    }
 
     // Set kategori triase
     document.getElementById("triase").value = kategori;
