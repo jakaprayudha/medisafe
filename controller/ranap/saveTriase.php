@@ -15,6 +15,7 @@ if (!$data) {
 $visit_ID = $data['visit_ID'] ?? null;
 $nomor_rm = $data['nomor_rm'] ?? null;
 $id_customer = $_SESSION['id_customer'] ?? null;
+$anamnesa_choice = mysqli_real_escape_string($koneksi, $data['anamnesa_choice'] ?? '');
 
 if (!$visit_ID || !$nomor_rm) {
    echo json_encode(["status" => "error", "message" => "Parameter tidak lengkap"]);
@@ -44,6 +45,7 @@ $fields = [
 
    "triase",
    "referensi_triase",
+   "anamnesa_choice",
    "catatan"
 ];
 
@@ -87,6 +89,7 @@ if (mysqli_num_rows($cek) > 0) {
 
          triase = '$triase',
          referensi_triase = '$referensi_triase',
+         anamnesa_choice = '$anamnesa_choice', 
          catatan = '$catatan',
          id_customer = '$id_customer',
          updated_at = NOW()
@@ -102,7 +105,7 @@ if (mysqli_num_rows($cek) > 0) {
          tekanan_darah, nadi, rr, suhu, spo2,
          gcs_e, gcs_v, gcs_m, gcs_total,
          skala_nyeri,
-         triase, referensi_triase,
+         triase, referensi_triase,  anamnesa_choice, 
          catatan, id_customer
       ) VALUES (
          '$visit_ID', '$nomor_rm',
@@ -110,7 +113,7 @@ if (mysqli_num_rows($cek) > 0) {
          '$tekanan_darah', '$nadi', '$rr', '$suhu', '$spo2',
          '$gcs_e', '$gcs_v', '$gcs_m', '$total_gcs',
          '$nyeri',
-         '$triase', '$referensi_triase',
+         '$triase', '$referensi_triase',  '$anamnesa_choice', 
          '$catatan', '$id_customer'
       )
    ";

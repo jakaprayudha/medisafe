@@ -201,26 +201,18 @@ if ($no && $id_customer) {
         <th>Breathing</th>
         <th>Circulation</th>
         <th>Disability</th>
+        <th>Exposure</th>
+        <th>Psikiatri</th>
+        <th>GCS</th>
         <th>Vital Sign</th>
       </tr>
       <tr>
-        <td>
-          <label class="igd-check"><input type="checkbox" checked> Bebas</label>
-          <label class="igd-check"><input type="checkbox"> Gargling</label>
-          <label class="igd-check"><input type="checkbox"> Stridor</label>
-          <label class="igd-check"><input type="checkbox"> Terintubasi</label>
-        </td>
-        <td>
-          <label class="igd-check"><input type="checkbox" checked> Spontan</label>
-          <label class="igd-check"><input type="checkbox"> Tachipneu</label>
-          <label class="igd-check"><input type="checkbox"> Dispneu</label>
-          <label class="igd-check"><input type="checkbox"> Apneu</label>
-        </td>
-        <td>
-          Nadi: <b>Kuat</b><br>
-          CRT: <b>&lt; 2 detik</b><br>
-          Turgor: <b>Baik</b>
-        </td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
         <td>
           GCS E: <span id="gcs_e"></span><br>
           GCS V: <span id="gcs_v"></span><br>
@@ -230,7 +222,7 @@ if ($no && $id_customer) {
           TD: <span id="td"></span> mmHg<br>
           Nadi: <span id="nadi"></span> x/menit<br>
           RR: <span id="rr"></span> x/menit<br>
-          Suhu: <span id="suhu"></span> °C
+          Suhu: <span id="suhu"></span> °C <br>
           SpO2: <span id="spo2"></span> %
         </td>
       </tr>
@@ -240,8 +232,8 @@ if ($no && $id_customer) {
       <tr>
         <th style="width:20%">ANAMNESIS</th>
         <td>
-          <label><input type="checkbox" checked> Auto Anamnesa</label>
-          <label><input type="checkbox"> Allo Anamnesa</label>
+          <label><input type="checkbox" id="chk_auto"> Auto Anamnesa</label>
+          <label><input type="checkbox" id="chk_allo"> Allo Anamnesa</label>
         </td>
       </tr>
     </table>
@@ -384,6 +376,20 @@ if ($no && $id_customer) {
           // DOKTER
           // =============================
           nama_petugas.innerText = d.id_doctor || "-";
+          // =============================
+          // ANAMNESA CHECK (FIX FINAL)
+          // =============================
+          const auto = document.getElementById("chk_auto");
+          const allo = document.getElementById("chk_allo");
+          auto.checked = false;
+          allo.checked = false;
+          if (d.anamnesa_choice) {
+
+            let val = d.anamnesa_choice.toLowerCase().trim();
+
+            if (val.includes("auto")) auto.checked = true;
+            if (val.includes("allo")) allo.checked = true;
+          }
 
           // =============================
           // BARCODE
@@ -421,26 +427,25 @@ if ($no && $id_customer) {
             ref = [];
           }
 
-          // =============================
-          // VITAL SIGN (DINAMIS)
-          // =============================
-          document.querySelectorAll(".igd-table")[0].rows[1].cells[4].innerHTML = `
-        TD: ${d.tekanan_darah || '-'} mmHg<br>
-        Nadi: ${d.nadi || '-'} x/menit<br>
-        RR: ${d.rr || '-'} x/menit<br>
-        Suhu: ${d.suhu || '-'} °C<br>
-        SpO2: ${d.spo2 || '-'} %
-      `;
 
           // =============================
-          // GCS
+          // APPLY CHECKLIST KE CETAKAN
           // =============================
-          document.querySelectorAll(".igd-table")[0].rows[1].cells[3].innerHTML = `
-        GCS E: ${d.gcs_e || '-'}<br>
-        GCS V: ${d.gcs_v || '-'}<br>
-        GCS M: ${d.gcs_m || '-'}
-      `;
+          function checkList(selector, keywords) {
+            document.querySelectorAll(selector).forEach(cb => {
+              cb.checked = false;
 
+              keywords.forEach(k => {
+                if (
+                  cb.parentElement.innerText
+                  .toLowerCase()
+                  .includes(k.toLowerCase())
+                ) {
+                  cb.checked = true;
+                }
+              });
+            });
+          }
           // =============================
           // TTD DOKTER
           // =============================
@@ -465,6 +470,62 @@ if ($no && $id_customer) {
           }
         });
       });
+    }
+
+    checkList(".igd-table td:nth-child(1) input", ref);
+    checkList(".igd-table td:nth-child(2) input", ref);
+    checkList(".igd-table td:nth-child(3) input", ref);
+    checkList(".igd-table td:nth-child(4) input", ref);
+  </script>
+
+  <script>
+    function renderTriaseDetail(ats, ref) {
+      let html = "";
+
+      if (ats === "ATS 1") {
+        html = `
+    <b>ATS 1 (Resusitasi)</b><br>
+    ${renderCheck("Sumbatan jalan nafas", ref)}
+    ${renderCheck("Henti Nafas", ref)}
+    ${renderCheck("Henti Jantung", ref)}
+    ${renderCheck("Kejang berkelanjutan", ref)}
+    `;
+      }
+
+      if (ats === "ATS 2") {
+        html = `
+    <b>ATS 2 (Emergensi)</b><br>
+    ${renderCheck("Tidak ada sumbatan", ref)}
+    ${renderCheck("RR < 10 / Distress berat", ref)}
+    ${renderCheck("Sistolik < 80", ref)}
+    ${renderCheck("Nyeri sedang", ref)}
+    ${renderCheck("Nyeri dada tipikal", ref)}
+    `;
+      }
+
+      if (ats === "ATS 3") {
+        html = `
+    <b>ATS 3 (Urgensi)</b><br>
+    ${renderCheck("Takipnea / distress sedang", ref)}
+    ${renderCheck("Gangguan sirkulasi", ref)}
+    ${renderCheck("Nyeri hebat", ref)}
+    `;
+      }
+
+      if (ats === "ATS 4") {
+        html = `
+    <b>ATS 4 (Non Urgen)</b><br>
+    ${renderCheck("Dipsnea ringan", ref)}
+    ${renderCheck("Luka kecil", ref)}
+    `;
+      }
+
+      document.getElementById("triase_detail").innerHTML = html;
+    }
+
+    function renderCheck(label, ref) {
+      const checked = ref.includes(label) ? "checked" : "";
+      return `<label><input type="checkbox" ${checked}> ${label}</label><br>`;
     }
   </script>
 

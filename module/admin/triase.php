@@ -75,6 +75,14 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
                           <label class="form-label">Keluhan Utama</label>
                           <input type="text" id="keluhan_utama" class="form-control" value="<?= $datarawapinap['anamnesa'] ?>">
                         </div>
+
+                        <div class="col-3 mb-3">
+                          <label class="form-label">Anamnesis</label>
+                          <select name="anamnesa_choice" class="form-select" id="anamnesa_choice">
+                            <option value="Auto Anamnesa">Auto Anamnesa</option>
+                            <option value="Allo Anamnesa">Allo Anamnesa</option>
+                          </select>
+                        </div>
                       </div>
 
                       <h5 class="mt-3">Pemeriksaan Vital Sign</h5>
@@ -493,6 +501,9 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
 
     // Trigger show/hide box
     document.getElementById("triase").dispatchEvent(new Event("change"));
+    if (d.anamnesa_choice) {
+      document.getElementById("anamnesa_choice").value = d.anamnesa_choice;
+    }
 
     let className = kategori.replace(" ", "").toLowerCase();
 
@@ -536,6 +547,7 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
       // TRIASE
       "triase",
       "referensi_triase", // hasil checklist
+      "anamnesa_choice",
 
       // CATATAN
       "catatan"
