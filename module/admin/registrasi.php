@@ -798,7 +798,7 @@ require '../../controller/view.php';
                       <li><hr class="dropdown-divider"></li>
 
                       <li>
-                        <a class="dropdown-item delete-btn text-danger" href="javascript:;" data-id="${row.id_visit}">
+                        <a class="dropdown-item delete-btn text-danger" href="javascript:;" data-id="${row.id_visit}" data-prov="${row.id_provider}" data-visit="${row.visit_ID}">
                           <i class="fas fa-trash me-2"></i> Hapus
                         </a>
                       </li>
@@ -922,6 +922,8 @@ require '../../controller/view.php';
     // 🔹 Delete
     $(document).on('click', '.delete-btn', function() {
       let id = $(this).data('id');
+      let visit = $(this).data('visit');
+      let prov = $(this).data('prov');
       Swal.fire({
         title: 'Hapus Data?',
         icon: 'warning',
@@ -930,16 +932,56 @@ require '../../controller/view.php';
         cancelButtonText: 'Batal'
       }).then((result) => {
         if (result.isConfirmed) {
-          fetch(apiUrl + `?id=${id}`, {
-              method: 'DELETE'
-            })
-            .then(res => res.json())
-            .then(data => {
-              if (data.status === 'success') {
-                Swal.fire('Berhasil!', 'Data dihapus.', 'success');
-                table.ajax.reload(null, false);
+          Swal.fire({
+            title: 'Menghapus...',
+            text: 'Sedang memproses data',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+          });
+          if (prov == '1') {
+            $.ajax({
+              url: 'controller/admisi/services/deletePendaftaran.php',
+              type: "POST",
+              data: {
+                novisit: visit,
+              },
+              dataType: 'json',
+              success: function(res) {
+                if (res.success) {
+                  Swal.close();
+                  Swal.fire({
+                    title: "Berhasil",
+                    html: `
+                            <b>${res.message}</b><br></b>
+                        `,
+                    icon: "success",
+                    confirmButtonText: "Tutup",
+                  });
+                  table.ajax.reload(null, false);
+                } else {
+                  Swal.close();
+                  Swal.fire({
+                    title: "Gagal Hapus",
+                    text: res.message,
+                    icon: "error",
+                    confirmButtonText: "Tutup"
+                  });
+                }
               }
-            });
+            })
+          } else {
+            fetch(apiUrl + `?id=${id}`, {
+                method: 'DELETE'
+              })
+              .then(res => res.json())
+              .then(data => {
+                if (data.status === 'success') {
+                  Swal.close();
+                  Swal.fire('Berhasil!', 'Data dihapus.', 'success');
+                  table.ajax.reload(null, false);
+                }
+              });
+          }
         }
       });
     });
@@ -1022,17 +1064,11 @@ require '../../controller/view.php';
     let id = $(this).data('id');
 
     $('#screening_id_visit').val(id);
-
-    // 🔥 ambil data dari API
     fetch(`controller/visit/getDetailPemeriksaan?id=${id}`)
       .then(res => res.json())
       .then(resp => {
-
         if (resp.status === 'success') {
-
           let d = resp.data;
-
-          // 🔥 isi form
           $('#sc_keluhan').val(d.anamnesa ?? '');
           $('#sc_catatan').val(d.catatan_screening ?? '');
           $('#kondisi_masuk').val(d.kondisi_masuk ?? '');

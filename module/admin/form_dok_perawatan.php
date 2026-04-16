@@ -63,9 +63,9 @@ $datapatient = mysqli_fetch_array($patient);
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
-                          <th class="text-dark fw-normal">Tanggal</th>
+                          <th class="text-dark fw-normal col-4">Tanggal</th>
                           <th>Dokumentasi</th>
-                          <th class="text-center">Actions</th>
+                          <th class="text-center col-1">Actions</th>
                         </tr>
                       </thead>
                       <tbody></tbody>
@@ -112,7 +112,12 @@ $datapatient = mysqli_fetch_array($patient);
               <label for="foto_path" class="form-label">
                 File Dokumentasi Foto <span class="text-danger">*</span>
               </label>
-              <input type="file" name="foto_path" class="form-control" id="foto_path" required>
+              <input type="file"
+                name="foto_path"
+                class="form-control"
+                id="foto_path"
+                accept="image/*"
+                required>
             </div>
           </div>
         </div>

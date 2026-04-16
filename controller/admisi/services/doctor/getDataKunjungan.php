@@ -15,30 +15,7 @@ $result = $stmt->get_result();
 $data = $result->fetch_assoc();
 $status = $data['status_kunjungan'];
 if ($status == '1') {
-    $stmt = $koneksi->prepare("SELECT 
-    pv.visit_ID,
-    pv.id_patient,
-    pv.visit_notes,
-    pv.saturasi,
-    pv.tindakan,
-    p.patient_datebirth,
-
-    -- 🎯 HITUNG UMUR
-    CONCAT(
-        TIMESTAMPDIFF(YEAR, p.patient_datebirth, CURDATE()), ' Tahun ',
-        TIMESTAMPDIFF(MONTH, p.patient_datebirth, CURDATE()) % 12, ' Bulan ',
-        DATEDIFF(
-            CURDATE(),
-            DATE_ADD(
-                DATE_ADD(
-                    p.patient_datebirth,
-                    INTERVAL TIMESTAMPDIFF(YEAR, p.patient_datebirth, CURDATE()) YEAR
-                ),
-                INTERVAL (TIMESTAMPDIFF(MONTH, p.patient_datebirth, CURDATE()) % 12) MONTH
-            )
-        ), ' Hari'
-    ) AS umur, pk.* FROM pasien_visit AS pv INNER JOIN pcare_kunjungan AS pk ON pv.noKunjung = pk.noKunjungan INNER JOIN ms_patient AS p ON p.patient_bpjs = pv.noKartu WHERE pv.visit_ID = ? AND pv.id_customer = ?");
-
+    $stmt = $koneksi->prepare("SELECT pv.visit_ID,pv.id_patient,pv.visit_notes,pv.saturasi,pv.tindakan,p.patient_datebirth,CONCAT(TIMESTAMPDIFF(YEAR, p.patient_datebirth, CURDATE()), ' Tahun ',TIMESTAMPDIFF(MONTH, p.patient_datebirth, CURDATE()) % 12, ' Bulan ',DATEDIFF(CURDATE(),DATE_ADD(DATE_ADD(p.patient_datebirth,INTERVAL TIMESTAMPDIFF(YEAR, p.patient_datebirth, CURDATE()) YEAR),INTERVAL (TIMESTAMPDIFF(MONTH, p.patient_datebirth, CURDATE()) % 12) MONTH)), ' Hari') AS umur, pk.* FROM pasien_visit AS pv INNER JOIN pcare_kunjungan AS pk ON pv.noKunjung = pk.noKunjungan INNER JOIN ms_patient AS p ON p.patient_bpjs = pv.noKartu WHERE pv.visit_ID = ? AND pv.id_customer = ?");
     $stmt->bind_param('ss', $nomor_visit, $idcustomer);
     $stmt->execute();
     $hasil = $stmt->get_result();
