@@ -44,8 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
    }
 
    $id_customer = $_SESSION['id_customer'];
-   $stmt = mysqli_prepare($koneksi, "SELECT * FROM ms_users WHERE uid_user = ? AND id_customer = ? AND status = '1' LIMIT 1");
-   mysqli_stmt_bind_param($stmt, 'ss', $uid_user, $id_customer);
+   $stmt = mysqli_prepare($koneksi, "SELECT * FROM ms_users WHERE uid_user = ? AND status = '1' LIMIT 1");
+   mysqli_stmt_bind_param($stmt, 's', $uid_user);
    mysqli_stmt_execute($stmt);
    $result = mysqli_stmt_get_result($stmt);
    $datauser = mysqli_fetch_assoc($result);
