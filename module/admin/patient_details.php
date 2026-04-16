@@ -11,6 +11,7 @@ $pt = $_GET['pt'];
   <?php
   require '../../assets/template/head.php';
   ?>
+  <base href="<?= 'http://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . '/' ?>">
 </head>
 
 <body>
@@ -584,7 +585,7 @@ $pt = $_GET['pt'];
 
 
     function updateStatus(elementId, fileName, label) {
-      const baseUrl = window.location.origin + "/medisafe/uploads/patient/";
+      const baseUrl = document.querySelector("base").href + "uploads/patient/";
 
       if (fileName && fileName !== "null" && fileName !== null) {
 
@@ -1030,7 +1031,7 @@ $pt = $_GET['pt'];
       if (field === "bpjs") el = "#statusBpjs";
       if (field === "foto") el = "#statusFoto";
 
-      const baseUrl = window.location.origin + "/medisafe/uploads/patient/";
+      const baseUrl = document.querySelector("base").href + "uploads/patient/";
 
       // 🔥 kondisi loading
       if (fileName === "Uploading...") {
