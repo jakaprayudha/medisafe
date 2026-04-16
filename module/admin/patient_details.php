@@ -498,17 +498,24 @@ $pt = $_GET['pt'];
       $.ajax({
         url: "controller/master/getPatientDocs.php",
         type: "GET",
+        dataType: "json", // 🔥 penting
         data: {
-          id_patient: patientNumber // 🔥 samakan dengan backend
+          id_patient: patientNumber
         },
-        success: function(res) {
-          let data = JSON.parse(res);
+        success: function(data) {
+
+          console.log("DATA DOC:", data); // 🔥 debug
+
           if (data.status === "success") {
             updateStatus("statusKtp", data.files.patient_ktp_file, "KTP");
             updateStatus("statusKk", data.files.patient_kk_file, "KK");
             updateStatus("statusBpjs", data.files.patient_bpjs_file, "BPJS");
             updateStatus("statusFoto", data.files.patient_foto, "Foto");
           }
+
+        },
+        error: function(xhr) {
+          console.log("ERROR:", xhr.responseText);
         }
       });
     }
@@ -517,7 +524,8 @@ $pt = $_GET['pt'];
     function updateStatus(elementId, fileName, label) {
       const baseUrl = window.location.origin + "/medisafe/uploads/patient/";
 
-      if (fileName && fileName !== "null") {
+      if (fileName && fileName !== "null" && fileName !== null) {
+
         $("#" + elementId).html(`
       <div class="d-flex align-items-center gap-2">
         <span class="badge bg-success">${label} sudah upload</span>
@@ -528,12 +536,15 @@ $pt = $_GET['pt'];
         </button>
       </div>
     `);
+
       } else {
+
         $("#" + elementId).html(`
       <span class="text-danger">
         <i class="fas fa-times-circle"></i> Belum upload ${label}
       </span>
     `);
+
       }
     }
 
