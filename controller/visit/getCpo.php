@@ -1,8 +1,8 @@
 <?php
 include '../../database/connect.php';
 header("Content-Type: application/json");
-
-$visit = $_GET['visit_ID'] ?? null;
+session_start();
+$visit = $_GET['visit_ID'] ?? $_GET['no'] ?? null;
 $id_customer = $_SESSION['id_customer'] ?? null;
 
 if (!$visit) {

@@ -56,7 +56,15 @@ $data = mysqli_fetch_array($check);
                               <input type="hidden" name="nomor_rm" value="<?= $rm ?>">
                               <input type="hidden" name="nomor_visit" value="<?= $no ?>">
                               <input type="hidden" name="id_patient" id="id_patient" value="<?= $data['id_patient'] ?>" hidden>
-                              <h4 class="mb-3">Form CPO</h4>
+                              <div class="d-flex justify-content-between align-items-center mb-3">
+                                 <h4 class="mb-0">Form CPO</h4>
+
+                                 <a href="module/admin/print/formulir_cpo?no=<?= $no ?>&rm=<?= $rm ?>"
+                                    target="_blank"
+                                    class="btn btn-light">
+                                    🖨 Cetak
+                                 </a>
+                              </div>
                               <hr>
                               <?php
                               require 'card-pasien.php';

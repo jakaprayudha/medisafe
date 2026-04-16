@@ -1,18 +1,30 @@
 <?php
 require '../../../database/connect.php';
+header("Content-Type: application/json");
+session_start();
+$visit = $_GET['visit_ID'] ?? $_GET['no'] ?? null;
+$id_customer = $_SESSION['id_customer'] ?? null;
 
-$no = $_GET['no'] ?? '';
-$rm = $_GET['rm'] ?? '';
+if (!$visit) {
+   echo json_encode([
+      "status" => "error",
+      "message" => "visit kosong"
+   ]);
+   exit;
+}
 
-$q = $koneksi->query("
-    SELECT * FROM cpo_history
-    WHERE visit_ID='$no' AND nomor_rm='$rm'
-    ORDER BY tanggal ASC
+$query = $koneksi->prepare("
+   SELECT * FROM pasien_cpo 
+   WHERE visit_ID=? AND id_customer=? 
+   ORDER BY tanggal ASC
 ");
 
-$data = [];
+$query->bind_param("si", $visit, $id_customer);
+$query->execute();
+$result = $query->get_result();
 
-while ($row = $q->fetch_assoc()) {
+$data = [];
+while ($row = $result->fetch_assoc()) {
    $data[] = $row;
 }
 
