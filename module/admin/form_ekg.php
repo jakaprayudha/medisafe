@@ -134,7 +134,12 @@ $datapatient = mysqli_fetch_array($patient);
               <label for="foto_path" class="form-label">
                 File Dokumen <span class="text-danger">*</span>
               </label>
-              <input type="file" name="foto_path" class="form-control" id="foto_path" required>
+              <input type="file"
+                name="foto_path"
+                class="form-control"
+                id="foto_path"
+                accept="image/png, image/jpeg"
+                required>
             </div>
           </div>
           <div class="col-12">
