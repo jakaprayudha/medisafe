@@ -109,53 +109,44 @@ $data = mysqli_fetch_array($check);
    $(document).ready(function() {
       // kosong dulu, nanti dipanggil dari loadCPO
    });
+
    $('#addRow').on('click', function() {
       let today = new Date().toISOString().split('T')[0];
 
       $('#tableCPO tbody').append(`
-    <tr>
+   <tr>
       <td style="min-width:150px">
-        <input type="date" name="tanggal[]" value="${today}" class="form-control">
+         <input type="date" name="tanggal[]" value="${today}" class="form-control">
       </td>
 
       <td style="min-width:250px">
-        <input type="text" name="nama_obat[]" class="form-control" placeholder="Nama Obat">
+         <input type="text" name="nama_obat[]" class="form-control">
       </td>
 
       <td style="min-width:150px">
-        <input type="text" name="dosis[]" class="form-control" placeholder="Dosis">
+         <input type="text" name="dosis[]" class="form-control">
       </td>
 
       <td style="min-width:150px">
-        <input type="text" name="signature[]" class="form-control" placeholder="Signa">
+         <input type="text" name="signature[]" class="form-control">
       </td>
 
-      <td style="min-width:120px">
-        <input type="time" name="jam_pagi[]" class="form-control">
-      </td>
+      <td style="min-width:120px"><input type="time" name="jam_pagi[]" class="form-control"></td>
+      <td style="min-width:120px"><input type="time" name="jam_siang[]" class="form-control"></td>
+      <td style="min-width:120px"><input type="time" name="jam_sore[]" class="form-control"></td>
+      <td style="min-width:120px"><input type="time" name="jam_malam[]" class="form-control"></td>
 
-      <td style="min-width:120px">
-        <input type="time" name="jam_siang[]" class="form-control">
-      </td>
-
-      <td style="min-width:120px">
-        <input type="time" name="jam_sore[]" class="form-control">
-      </td>
-
-      <td style="min-width:120px">
-        <input type="time" name="jam_malam[]" class="form-control">
-      </td>
-
-      <td style="min-width:120px">
-         <input type="text" value="${petugas}" class="form-control" readonly>
+      <td style="min-width:150px">
+         <input type="text" name="petugas[]" value="${petugas}" class="form-control" readonly>
       </td>
 
       <td style="min-width:80px; text-align:center;">
-        <button type="button" class="btn btn-danger btn-sm remove">X</button>
+         <button type="button" class="btn btn-danger btn-sm remove">X</button>
       </td>
-    </tr>
-  `);
+   </tr>
+   `);
    });
+
 
    $('#formCPO').on('submit', function(e) {
       e.preventDefault();
@@ -262,6 +253,44 @@ $data = mysqli_fetch_array($check);
          }
       }, 'json');
    }
+
+   $(document).on('click', '.btn-update', function() {
+
+      let row = $(this).closest('tr');
+
+      let id = row.data('id');
+
+      let data = {
+         id: id,
+         tanggal: row.find("input[name='tanggal_existing[]']").val(),
+         nama_obat: row.find("input[name='nama_obat_existing[]']").val(),
+         dosis: row.find("input[name='dosis_existing[]']").val(),
+         signature: row.find("input[name='signature_existing[]']").val(),
+         jam_pagi: row.find("input[name='jam_pagi_existing[]']").val(),
+         jam_siang: row.find("input[name='jam_siang_existing[]']").val(),
+         jam_sore: row.find("input[name='jam_sore_existing[]']").val(),
+         jam_malam: row.find("input[name='jam_malam_existing[]']").val()
+      };
+
+      $.ajax({
+         url: 'controller/visit/updateCPO.php',
+         type: 'POST',
+         data: data,
+         dataType: 'json',
+         success: function(res) {
+            if (res.status === 'success') {
+               Swal.fire('Success', 'Data berhasil diupdate', 'success');
+            } else {
+               Swal.fire('Error', res.message, 'error');
+            }
+         }
+      });
+
+   });
+
+   row.find("input").on("change", function() {
+      row.css("background", "#fff3cd"); // kuning
+   });
 </script>
 
 </html>
