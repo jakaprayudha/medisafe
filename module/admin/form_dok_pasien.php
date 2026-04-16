@@ -4,8 +4,10 @@ require '../../database/connect.php';
 require '../../controller/view.php';
 $no = $_GET['no'];
 $rm = $_GET['rm'];
-$patient = mysqli_query($koneksi, "SELECT nomor_rm, id_patient FROM ms_patient WHERE nomor_rm='$rm'");
-$datapatient = mysqli_fetch_array($patient);
+$id_customer = $_SESSION['id_customer'];
+$check = mysqli_query($koneksi, "SELECT * FROM pasien_visit WHERE visit_ID='$no' AND id_customer='$id_customer'");
+$data = mysqli_fetch_array($check);
+$id_patient = $data['id_patient'];
 ?>
 <!doctype html>
 <html lang="en">
@@ -56,22 +58,34 @@ $datapatient = mysqli_fetch_array($patient);
                       <a href="module/admin/print/formulir_dokumen?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
                         <button class="btn btn-outline-primary"><i class="fas fa-print"></i> Cetak</button>
                       </a>
-                      <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
                     </div>
+
                   </div>
-                  <div class="table-responsive" data-simplebar>
-                    <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
-                      <thead>
-                        <tr>
-                          <th class="text-dark fw-normal">Tanggal</th>
-                          <th>Kategori</th>
-                          <th>Dokumentasi</th>
-                          <th class="text-center">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody></tbody>
-                    </table>
+                  <div class="row">
+
+                    <div class="col-md-4">
+                      <div class="border rounded p-3 text-center">
+                        <h6>KTP</h6>
+                        <div id="docKtp"></div>
+                      </div>
+                    </div>
+
+                    <div class="col-md-4">
+                      <div class="border rounded p-3 text-center">
+                        <h6>Kartu Keluarga</h6>
+                        <div id="docKk"></div>
+                      </div>
+                    </div>
+
+                    <div class="col-md-4">
+                      <div class="border rounded p-3 text-center">
+                        <h6>BPJS</h6>
+                        <div id="docBpjs"></div>
+                      </div>
+                    </div>
+
                   </div>
+
                 </div>
               </div>
             </div>
@@ -86,180 +100,99 @@ $datapatient = mysqli_fetch_array($patient);
   <?php
   require 'library.php';
   ?>
-</body>
-<div class="modal fade" id="programModal" tabindex="-1">
-  <div class="modal-dialog">
-    <form id="programForm" class="modal-content" enctype="multipart/form-data">
-      <div class="modal-header">
-        <h5 class="modal-title"></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" name="id_dokumen" id="id_dokumen">
-        <input type="hidden" name="nomor_rm" value="<?= $_GET['rm'] ?>">
-        <input type="hidden" name="visit_ID" value="<?= $_GET['no'] ?>">
 
-        <div class="row">
-          <div class="col-12">
-            <div class="mb-3">
-              <label for="tgl_upload" class="form-label">
-                Tanggal <span class="text-danger">*</span>
-              </label>
-              <input type="date" value="<?= date('Y-m-d') ?>" name="tgl_upload" class="form-control" id="tgl_upload" required>
-            </div>
-          </div>
-          <div class="col-12">
-            <div class="mb-3">
-              <label for="pilih_jenis" class="form-label">
-                Pilih Jenis Dokumen <span class="text-danger">*</span>
-              </label>
-              <select name="pilih_jenis" id="pilih_jenis" class="form-select" required>
-                <option value="KTP">KTP</option>
-                <option value="KK">KK</option>
-                <option value="AKTA_KELAHIRAN">AKTA KELAHIRAN</option>
-                <option value="AKTA_NIKAH">AKTA NIKAH</option>
-                <option value="KARTU_BPJS">KARTU BPJS</option>
-                <option value="SURAT_RUJUKAN">SURAT RUJUKAN</option>
-              </select>
-            </div>
-          </div>
-          <div class="col-12">
-            <div class="mb-3">
-              <label for="foto_path" class="form-label">
-                File Dokumen <span class="text-danger">*</span>
-              </label>
-              <input type="file" name="foto_path" class="form-control" id="foto_path" required>
-            </div>
-          </div>
+  <div class="modal fade" id="modalView" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Preview Dokumen</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center">
+          <img id="previewImg" src="" class="img-fluid d-none" />
+          <iframe id="previewPdf" src="" width="100%" height="500px" class="d-none"></iframe>
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Simpan</button>
-      </div>
-    </form>
+    </div>
   </div>
-</div>
-<?php
-$id_patient = $datapatient['id_patient'];
-?>
-<script>
-  const apiUrl = 'controller/ranap/dokumenPasien?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>';
+</body>
 
-  $(document).ready(function() {
-    var table = $('#periodeTable').DataTable({
-      processing: true,
-      serverSide: false, // 🔹 ubah jadi false
-      ajax: {
-        url: apiUrl,
-        type: "GET",
-        dataSrc: function(json) {
-
-          if (!json || json.status !== "success") {
-            console.warn("API Error:", json);
-            return []; // return kosong agar tidak loading
-          }
-
-          if (!Array.isArray(json.data)) {
-            return [];
-          }
-
-          return json.data.map(row => ({
-            actions: `
-                <div class="text-center">
-                    <div class="btn-group btn-group-sm" role="group">
-                        <a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_dokumen}">
-                            <i class="fas fa-trash"></i>
-                        </a>
-                    </div>
-                </div>
-              `,
-            tanggal: row.tgl_upload ?? "-",
-            jenis_dokumen: row.jenis_dokumen ?? "-",
-            foto_path: row.foto_path ?
-              `<img src="${row.foto_path}" style="max-width:80px">` : "-",
-          }));
-        }
-      },
-      columns: [{
-          data: "tanggal",
-          className: "text-wrap"
-        },
-        {
-          data: "jenis_dokumen",
-          className: "text-wrap"
-        },
-        {
-          data: "foto_path",
-          className: "text-wrap"
-        },
-        {
-          data: "actions",
-          orderable: false,
-          searchable: false
-        }
-      ],
-
-    });
-
-    $('#customSearch').on('keyup', function() {
-      table.search(this.value).draw();
-    });
-
-    // 🔹 Tambah
-    $('#btnTambah').on('click', function() {
-      $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
-      $('#id_dokumen').val('');
-      $('#programModal .modal-title').text('Tambah Data');
-      $('#programModal').modal('show');
-    });
-
-    // 🔹 Submit (Tambah / Update)
-    $('#programForm').on('submit', function(e) {
-      e.preventDefault();
-
-      let formData = new FormData(this); // WAJIB FORM DATA
-      let id = $('#id_dokumen').val();
-
-      fetch(apiUrl + (id ? `&id=${id}` : ''), {
-          method: id ? 'POST' : 'POST', // pakai POST untuk upload
-          body: formData, // JANGAN pakai header Content-Type
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === 'success') {
-            Swal.fire('Berhasil!', data.message, 'success');
-            $('#programModal').modal('hide');
-            table.ajax.reload(null, false);
-          } else {
-            Swal.fire('Gagal!', data.message, 'error');
-          }
-        })
-    });
-    // 🔹 Delete
-    $(document).on('click', '.delete-btn', function() {
-      let id = $(this).data('id');
-      Swal.fire({
-        title: 'Hapus Data?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Hapus',
-        cancelButtonText: 'Batal'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          fetch(apiUrl + `&id=${id}`, {
-              method: 'DELETE'
-            })
-            .then(res => res.json())
-            .then(data => {
-              if (data.status === 'success') {
-                Swal.fire('Berhasil!', 'Data dihapus.', 'success');
-                table.ajax.reload(null, false);
-              }
-            });
-        }
-      });
-    });
-  });
-</script>
 
 </html>
+
+<script>
+  $(document).ready(function() {
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const id_patient = <?= json_encode($id_patient) ?>;
+    console.log(id_patient);
+
+    loadDokumen();
+
+    function loadDokumen() {
+      $.ajax({
+        url: "controller/master/getPatientDocs.php",
+        type: "GET",
+        dataType: "json",
+        data: {
+          id_patient: id_patient
+        },
+        success: function(res) {
+
+          if (res.status === "success") {
+            renderDoc("docKtp", res.files.patient_ktp_file, "KTP");
+            renderDoc("docKk", res.files.patient_kk_file, "KK");
+            renderDoc("docBpjs", res.files.patient_bpjs_file, "BPJS");
+          }
+
+        }
+      });
+    }
+
+    function renderDoc(el, fileName, label) {
+
+      const baseUrl = window.location.origin + "/uploads/patient/";
+
+      if (fileName && fileName !== "null") {
+
+        $("#" + el).html(`
+        <div class="d-flex flex-column gap-2">
+          <span class="badge bg-success">Sudah upload</span>
+
+          <button class="btn btn-sm btn-primary"
+            onclick="viewFile('${baseUrl + fileName}')">
+            Lihat
+          </button>
+        </div>
+      `);
+
+      } else {
+
+        $("#" + el).html(`
+        <span class="text-danger">
+          <i class="fas fa-times-circle"></i> Belum upload
+        </span>
+      `);
+
+      }
+    }
+
+  });
+
+  // 🔥 VIEW FILE MODAL
+  function viewFile(url) {
+
+    let ext = url.split('.').pop().toLowerCase();
+
+    $('#previewImg').addClass('d-none');
+    $('#previewPdf').addClass('d-none');
+
+    if (ext === 'pdf') {
+      $('#previewPdf').attr('src', url).removeClass('d-none');
+    } else {
+      $('#previewImg').attr('src', url).removeClass('d-none');
+    }
+
+    $('#modalView').modal('show');
+  }
+</script>
