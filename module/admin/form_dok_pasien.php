@@ -84,6 +84,17 @@ $id_patient = $data['id_patient'];
                       </div>
                     </div>
 
+                    <div class="col-md-4 mt-3">
+                      <a href="module/admin/print/formulir_pengantar_ranap?no=<?= $no ?>&rm=<?= $rm ?>&rme=c" target="_blank">
+                        <div class="border rounded bg-outline-primary p-3 text-center">
+                          <h6>Surat Pengantar Rawat Inap</h6>
+                          <span class="text-primary">
+                            <i class="fas fa-print"></i> Cetak
+                          </span>
+                        </div>
+                      </a>
+                    </div>
+
                   </div>
 
                 </div>
