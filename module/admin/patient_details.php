@@ -303,6 +303,21 @@ $pt = $_GET['pt'];
                     </div>
                     <!-- Jadwal Prakikt -->
                     <div class="tab-pane fade" id="nav-dokumen" role="tabpanel" aria-labelledby="nav-dokumen-tab" tabindex="0">
+                      <div class="alert alert-info d-flex align-items-start gap-2">
+                        <i class="fas fa-info-circle mt-1"></i>
+                        <div>
+                          <strong>Informasi Upload Dokumen:</strong>
+                          <ul class="mb-0 small">
+                            <li>Format file: JPG, JPEG, PNG</li>
+                            <li>Ukuran maksimal: 2 MB</li>
+                            <li>
+                              Gambar wajib posisi <b>landscape</b>
+                              (<a href="javascript:void(0)" onclick="showSample()">lihat contoh</a>)
+                            </li>
+                            <li>Pastikan dokumen terlihat jelas dan tidak blur</li>
+                          </ul>
+                        </div>
+                      </div>
                       <form id="formDokumen" enctype="multipart/form-data">
                         <div class="row">
                           <div class="col-6">
@@ -373,6 +388,53 @@ $pt = $_GET['pt'];
   <?php
   require 'library.php';
   ?>
+
+  <div class="modal fade" id="modalSample" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Contoh Dokumen Landscape</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body text-center">
+          <img src="assets/images/sample-landscape.jpg"
+            class="img-fluid rounded border"
+            alt="Contoh Landscape">
+
+          <p class="mt-2 text-muted small">
+            Contoh dokumen dengan posisi landscape (lebar lebih besar dari tinggi)
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔥 Modal Preview File -->
+  <div class="modal fade" id="filePreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Preview Dokumen</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body text-center">
+          <!-- image -->
+          <img id="previewImage" src="" class="img-fluid d-none" />
+
+          <!-- pdf -->
+          <iframe id="previewPdf"
+            style="width:100%; height:500px;"
+            class="d-none"></iframe>
+        </div>
+
+      </div>
+    </div>
+  </div>
 </body>
 
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
@@ -530,10 +592,10 @@ $pt = $_GET['pt'];
       <div class="d-flex align-items-center gap-2">
         <span class="badge bg-success">${label} sudah upload</span>
 
-        <button class="btn btn-sm btn-primary"
-          onclick="window.open('${baseUrl + fileName}', '_blank')">
-          Lihat
-        </button>
+     <button type="button" class="btn btn-sm btn-primary"
+  onclick="previewFile('${baseUrl + fileName}')">
+  Lihat
+</button>
       </div>
     `);
 
@@ -983,15 +1045,15 @@ $pt = $_GET['pt'];
       // 🔥 kalau success dan file ada
       if (success && fileName && fileName !== "null") {
         $(el).html(`
-        <div class="d-flex align-items-center gap-2">
-          <span class="badge bg-success">Sudah upload</span>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-success">Sudah upload</span>
 
-          <button class="btn btn-sm btn-primary"
-            onclick="window.open('${baseUrl + fileName}', '_blank')">
-            Lihat
-          </button>
-        </div>
-      `);
+            <button type="button" class="btn btn-sm btn-primary"
+              onclick="previewFile('${baseUrl + fileName}')">
+              Lihat
+            </button>
+          </div>
+        `);
       } else {
         $(el).html(`
         <span class="text-danger">
@@ -1002,6 +1064,34 @@ $pt = $_GET['pt'];
     }
 
   });
+
+  function previewFile(url) {
+    const ext = url.split('.').pop().toLowerCase();
+
+    const img = document.getElementById("previewImage");
+    const pdf = document.getElementById("previewPdf");
+
+    // reset dulu
+    img.classList.add("d-none");
+    pdf.classList.add("d-none");
+
+    if (["jpg", "jpeg", "png"].includes(ext)) {
+      img.src = url;
+      img.classList.remove("d-none");
+    } else if (ext === "pdf") {
+      pdf.src = url;
+      pdf.classList.remove("d-none");
+    }
+
+    // buka modal
+    const modal = new bootstrap.Modal(document.getElementById("filePreviewModal"));
+    modal.show();
+  }
+
+  function showSample() {
+    const modal = new bootstrap.Modal(document.getElementById("modalSample"));
+    modal.show();
+  }
 </script>
 
 </html>
