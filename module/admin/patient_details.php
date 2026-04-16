@@ -902,13 +902,13 @@ $pt = $_GET['pt'];
         data: formData,
         contentType: false,
         processData: false,
+        dataType: "json", // 🔥 WAJIB TAMBAH INI
 
-        success: function(res) {
-          let data = JSON.parse(res);
+        success: function(data) {
 
           if (data.status === "success") {
 
-            let fileName = data.files[fieldName]; // 🔥 dari server
+            let fileName = data.files[fieldName];
 
             showStatus(fieldName, fileName, true);
 
@@ -939,7 +939,9 @@ $pt = $_GET['pt'];
           $(input).prop("disabled", false);
         },
 
-        error: function() {
+        error: function(xhr) {
+          console.log(xhr.responseText); // 🔥 debug penting
+
           showStatus(fieldName, "Upload gagal", false);
           $(input).prop("disabled", false);
         }
