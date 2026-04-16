@@ -207,12 +207,12 @@ if ($no && $id_customer) {
         <th>Vital Sign</th>
       </tr>
       <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
+        <td id="col_airway"></td>
+        <td id="col_breathing"></td>
+        <td id="col_circulation"></td>
+        <td id="col_disability"></td>
+        <td id="col_exposure"></td>
+        <td id="col_psikiatri"></td>
         <td>
           GCS E: <span id="gcs_e"></span><br>
           GCS V: <span id="gcs_v"></span><br>
@@ -343,6 +343,15 @@ if ($no && $id_customer) {
         .then(res => {
 
           const d = res.data || {};
+          // =============================
+          // PARSE REFERENSI (WAJIB DI ATAS)
+          // =============================
+          let ref = [];
+          try {
+            ref = JSON.parse(d.referensi_triase || "[]");
+          } catch (e) {
+            ref = [];
+          }
 
           // =============================
           // DATA UTAMA
@@ -392,6 +401,76 @@ if ($no && $id_customer) {
           }
 
           // =============================
+          // MAPPING HARUS SAMA PERSIS DENGAN FORM
+          // =============================
+          const MAP = {
+            airway: [
+              "Sumbatan jalan nafas",
+              "Tidak ada sumbatan"
+            ],
+            breathing: [
+              "Henti Nafas",
+              "RR < 10 / Distress berat",
+              "Takipnea / distress sedang",
+              "Dipsnea ringan"
+            ],
+            circulation: [
+              "Henti Jantung",
+              "Sistolik < 80",
+              "Gangguan sirkulasi"
+            ],
+            disability: [
+              "Nyeri sedang",
+              "Nyeri berat tidak respon obat",
+              "Cedera kepala ringan"
+            ],
+            exposure: [
+              "Kejang berkelanjutan",
+              "Nyeri dada tipikal",
+              "Luka kecil",
+              "Nyeri hebat"
+            ],
+            psikiatri: [
+              "Gangguan perilaku mengancam jiwa",
+              "Datang dengan restrain",
+              "Agresif fisik",
+              "Ancaman bunuh diri",
+              "Keluhan minor"
+            ]
+          };
+
+          // =============================
+          // RENDER CHECKLIST
+          // =============================
+          function renderCol(id, list, ref) {
+            let html = "";
+
+            list.forEach(label => {
+              const checked = ref.some(r =>
+                r.toLowerCase().trim() === label.toLowerCase().trim()
+              ) ? "checked" : "";
+
+              html += `
+            <label style="display:block">
+              <input type="checkbox" ${checked}> ${label}
+            </label>
+          `;
+            });
+
+            document.getElementById(id).innerHTML = html;
+          }
+
+          // =============================
+          // WAJIB DI DALAM FETCH
+          // =============================
+          renderCol("col_airway", MAP.airway, ref);
+          renderCol("col_breathing", MAP.breathing, ref);
+          renderCol("col_circulation", MAP.circulation, ref);
+          renderCol("col_disability", MAP.disability, ref);
+          renderCol("col_exposure", MAP.exposure, ref);
+          renderCol("col_psikiatri", MAP.psikiatri, ref);
+
+          // =============================
           // BARCODE
           // =============================
           barcode_rm.src =
@@ -419,13 +498,7 @@ if ($no && $id_customer) {
           else if (atsText === "ATS 3") badge.classList.add("ats3");
           else if (atsText === "ATS 4") badge.classList.add("ats4");
           else if (atsText === "ATS 5") badge.classList.add("ats5");
-          let ref = [];
 
-          try {
-            ref = JSON.parse(d.referensi_triase || "[]");
-          } catch (e) {
-            ref = [];
-          }
 
 
           // =============================
@@ -471,63 +544,8 @@ if ($no && $id_customer) {
         });
       });
     }
-
-    checkList(".igd-table td:nth-child(1) input", ref);
-    checkList(".igd-table td:nth-child(2) input", ref);
-    checkList(".igd-table td:nth-child(3) input", ref);
-    checkList(".igd-table td:nth-child(4) input", ref);
   </script>
 
-  <script>
-    function renderTriaseDetail(ats, ref) {
-      let html = "";
-
-      if (ats === "ATS 1") {
-        html = `
-    <b>ATS 1 (Resusitasi)</b><br>
-    ${renderCheck("Sumbatan jalan nafas", ref)}
-    ${renderCheck("Henti Nafas", ref)}
-    ${renderCheck("Henti Jantung", ref)}
-    ${renderCheck("Kejang berkelanjutan", ref)}
-    `;
-      }
-
-      if (ats === "ATS 2") {
-        html = `
-    <b>ATS 2 (Emergensi)</b><br>
-    ${renderCheck("Tidak ada sumbatan", ref)}
-    ${renderCheck("RR < 10 / Distress berat", ref)}
-    ${renderCheck("Sistolik < 80", ref)}
-    ${renderCheck("Nyeri sedang", ref)}
-    ${renderCheck("Nyeri dada tipikal", ref)}
-    `;
-      }
-
-      if (ats === "ATS 3") {
-        html = `
-    <b>ATS 3 (Urgensi)</b><br>
-    ${renderCheck("Takipnea / distress sedang", ref)}
-    ${renderCheck("Gangguan sirkulasi", ref)}
-    ${renderCheck("Nyeri hebat", ref)}
-    `;
-      }
-
-      if (ats === "ATS 4") {
-        html = `
-    <b>ATS 4 (Non Urgen)</b><br>
-    ${renderCheck("Dipsnea ringan", ref)}
-    ${renderCheck("Luka kecil", ref)}
-    `;
-      }
-
-      document.getElementById("triase_detail").innerHTML = html;
-    }
-
-    function renderCheck(label, ref) {
-      const checked = ref.includes(label) ? "checked" : "";
-      return `<label><input type="checkbox" ${checked}> ${label}</label><br>`;
-    }
-  </script>
 
 </body>
 
