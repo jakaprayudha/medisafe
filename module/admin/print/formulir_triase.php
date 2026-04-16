@@ -2,6 +2,29 @@
 $title = "FORMULIR TRIASE KEGAWATDARURATAN";
 $subtitle = "Assesmen Medis Awal Pasien IGD";
 require '../../../database/connect.php';
+
+$id_customer = $_SESSION['id_customer'] ?? null;
+$no = $_GET['no'] ?? null;
+
+$terapi = "-";
+
+if ($no && $id_customer) {
+  $query = mysqli_query($koneksi, "
+    SELECT planning 
+    FROM visit_cppt  
+    WHERE visit_ID='$no'  
+    AND id_customer='$id_customer'  
+    ORDER BY created_at ASC  
+    LIMIT 1
+  ");
+
+  $dataresep = mysqli_fetch_assoc($query);
+
+  if ($dataresep && !empty($dataresep['planning'])) {
+    $terapi = $dataresep['planning'];
+  }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -178,26 +201,18 @@ require '../../../database/connect.php';
         <th>Breathing</th>
         <th>Circulation</th>
         <th>Disability</th>
+        <th>Exposure</th>
+        <th>Psikiatri</th>
+        <th>GCS</th>
         <th>Vital Sign</th>
       </tr>
       <tr>
-        <td>
-          <label class="igd-check"><input type="checkbox" checked> Bebas</label>
-          <label class="igd-check"><input type="checkbox"> Gargling</label>
-          <label class="igd-check"><input type="checkbox"> Stridor</label>
-          <label class="igd-check"><input type="checkbox"> Terintubasi</label>
-        </td>
-        <td>
-          <label class="igd-check"><input type="checkbox" checked> Spontan</label>
-          <label class="igd-check"><input type="checkbox"> Tachipneu</label>
-          <label class="igd-check"><input type="checkbox"> Dispneu</label>
-          <label class="igd-check"><input type="checkbox"> Apneu</label>
-        </td>
-        <td>
-          Nadi: <b>Kuat</b><br>
-          CRT: <b>&lt; 2 detik</b><br>
-          Turgor: <b>Baik</b>
-        </td>
+        <td id="col_airway"></td>
+        <td id="col_breathing"></td>
+        <td id="col_circulation"></td>
+        <td id="col_disability"></td>
+        <td id="col_exposure"></td>
+        <td id="col_psikiatri"></td>
         <td>
           GCS E: <span id="gcs_e"></span><br>
           GCS V: <span id="gcs_v"></span><br>
@@ -207,7 +222,8 @@ require '../../../database/connect.php';
           TD: <span id="td"></span> mmHg<br>
           Nadi: <span id="nadi"></span> x/menit<br>
           RR: <span id="rr"></span> x/menit<br>
-          Suhu: <span id="suhu"></span> °C
+          Suhu: <span id="suhu"></span> °C <br>
+          SpO2: <span id="spo2"></span> %
         </td>
       </tr>
     </table>
@@ -216,8 +232,8 @@ require '../../../database/connect.php';
       <tr>
         <th style="width:20%">ANAMNESIS</th>
         <td>
-          <label><input type="checkbox" checked> Auto Anamnesa</label>
-          <label><input type="checkbox"> Allo Anamnesa</label>
+          <label><input type="checkbox" id="chk_auto"> Auto Anamnesa</label>
+          <label><input type="checkbox" id="chk_allo"> Allo Anamnesa</label>
         </td>
       </tr>
     </table>
@@ -274,8 +290,7 @@ require '../../../database/connect.php';
     <table class="igd-table">
       <tr>
         <th style="width:20%">TERAPI</th>
-        <td>:</td>
-        <td></td>
+        <td><?= nl2br(htmlspecialchars($terapi)) ?></td>
       </tr>
     </table>
 
@@ -285,7 +300,6 @@ require '../../../database/connect.php';
         <th style="width:20%">Perawatan Lanjutan</th>
         <td>
           <label><input type="checkbox" checked> Rawat Inap</label>
-          <label><input type="checkbox"> Rawat Intensive</label>
         </td>
       </tr>
     </table>
@@ -329,6 +343,15 @@ require '../../../database/connect.php';
         .then(res => {
 
           const d = res.data || {};
+          // =============================
+          // PARSE REFERENSI (WAJIB DI ATAS)
+          // =============================
+          let ref = [];
+          try {
+            ref = JSON.parse(d.referensi_triase || "[]");
+          } catch (e) {
+            ref = [];
+          }
 
           // =============================
           // DATA UTAMA
@@ -351,7 +374,6 @@ require '../../../database/connect.php';
           rr.innerText = d.rr || "-";
           suhu.innerText = d.suhu || "-";
           spo2.innerText = d.spo2 || "-";
-          tgl_periksa.innerText = d.tgl_periksa || "-";
           nama_petugas.innerText = d.id_doctor || "-";
 
           // =============================
@@ -363,6 +385,90 @@ require '../../../database/connect.php';
           // DOKTER
           // =============================
           nama_petugas.innerText = d.id_doctor || "-";
+          // =============================
+          // ANAMNESA CHECK (FIX FINAL)
+          // =============================
+          const auto = document.getElementById("chk_auto");
+          const allo = document.getElementById("chk_allo");
+          auto.checked = false;
+          allo.checked = false;
+          if (d.anamnesa_choice) {
+
+            let val = d.anamnesa_choice.toLowerCase().trim();
+
+            if (val.includes("auto")) auto.checked = true;
+            if (val.includes("allo")) allo.checked = true;
+          }
+
+          // =============================
+          // MAPPING HARUS SAMA PERSIS DENGAN FORM
+          // =============================
+          const MAP = {
+            airway: [
+              "Sumbatan jalan nafas",
+              "Tidak ada sumbatan"
+            ],
+            breathing: [
+              "Henti Nafas",
+              "RR < 10 / Distress berat",
+              "Takipnea / distress sedang",
+              "Dipsnea ringan"
+            ],
+            circulation: [
+              "Henti Jantung",
+              "Sistolik < 80",
+              "Gangguan sirkulasi"
+            ],
+            disability: [
+              "Nyeri sedang",
+              "Nyeri berat tidak respon obat",
+              "Cedera kepala ringan"
+            ],
+            exposure: [
+              "Kejang berkelanjutan",
+              "Nyeri dada tipikal",
+              "Luka kecil",
+              "Nyeri hebat"
+            ],
+            psikiatri: [
+              "Gangguan perilaku mengancam jiwa",
+              "Datang dengan restrain",
+              "Agresif fisik",
+              "Ancaman bunuh diri",
+              "Keluhan minor"
+            ]
+          };
+
+          // =============================
+          // RENDER CHECKLIST
+          // =============================
+          function renderCol(id, list, ref) {
+            let html = "";
+
+            list.forEach(label => {
+              const checked = ref.some(r =>
+                r.toLowerCase().trim() === label.toLowerCase().trim()
+              ) ? "checked" : "";
+
+              html += `
+            <label style="display:block">
+              <input type="checkbox" ${checked}> ${label}
+            </label>
+          `;
+            });
+
+            document.getElementById(id).innerHTML = html;
+          }
+
+          // =============================
+          // WAJIB DI DALAM FETCH
+          // =============================
+          renderCol("col_airway", MAP.airway, ref);
+          renderCol("col_breathing", MAP.breathing, ref);
+          renderCol("col_circulation", MAP.circulation, ref);
+          renderCol("col_disability", MAP.disability, ref);
+          renderCol("col_exposure", MAP.exposure, ref);
+          renderCol("col_psikiatri", MAP.psikiatri, ref);
 
           // =============================
           // BARCODE
@@ -370,41 +476,49 @@ require '../../../database/connect.php';
           barcode_rm.src =
             `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(d.visit_ID || "")}&code=Code128`;
 
+
           // =============================
-          // ATS BADGE (kalau ada)
+          // ATS BADGE (FIX FINAL)
           // =============================
           const badge = document.getElementById("tri_kategori_badge");
-          const ats = parseInt(d.triase || 0); // dari field triase
+
+          const atsText = (d.triase || "")
+            .toUpperCase()
+            .trim();
 
           badge.className = "badge-triase";
+          console.log("TRIASE:", d.triase);
 
-          if (ats >= 1 && ats <= 5) {
-            badge.innerText = "ATS " + ats;
-            badge.classList.add("ats" + ats);
-          } else {
-            badge.innerText = "-";
+          // tampilkan langsung dari API
+          badge.innerText = atsText || "-";
+
+          // mapping warna
+          if (atsText === "ATS 1") badge.classList.add("ats1");
+          else if (atsText === "ATS 2") badge.classList.add("ats2");
+          else if (atsText === "ATS 3") badge.classList.add("ats3");
+          else if (atsText === "ATS 4") badge.classList.add("ats4");
+          else if (atsText === "ATS 5") badge.classList.add("ats5");
+
+
+
+          // =============================
+          // APPLY CHECKLIST KE CETAKAN
+          // =============================
+          function checkList(selector, keywords) {
+            document.querySelectorAll(selector).forEach(cb => {
+              cb.checked = false;
+
+              keywords.forEach(k => {
+                if (
+                  cb.parentElement.innerText
+                  .toLowerCase()
+                  .includes(k.toLowerCase())
+                ) {
+                  cb.checked = true;
+                }
+              });
+            });
           }
-
-          // =============================
-          // VITAL SIGN (DINAMIS)
-          // =============================
-          document.querySelectorAll(".igd-table")[0].rows[1].cells[4].innerHTML = `
-        TD: ${d.tekanan_darah || '-'} mmHg<br>
-        Nadi: ${d.nadi || '-'} x/menit<br>
-        RR: ${d.rr || '-'} x/menit<br>
-        Suhu: ${d.suhu || '-'} °C<br>
-        SpO2: ${d.spo2 || '-'} %
-      `;
-
-          // =============================
-          // GCS
-          // =============================
-          document.querySelectorAll(".igd-table")[0].rows[1].cells[3].innerHTML = `
-        GCS E: ${d.gcs_e || '-'}<br>
-        GCS V: ${d.gcs_v || '-'}<br>
-        GCS M: ${d.gcs_m || '-'}
-      `;
-
           // =============================
           // TTD DOKTER
           // =============================
@@ -418,7 +532,20 @@ require '../../../database/connect.php';
 
         });
     });
+
+    function checkList(selector, keywords) {
+      document.querySelectorAll(selector).forEach(cb => {
+        cb.checked = false;
+
+        keywords.forEach(k => {
+          if (cb.parentElement.innerText.toLowerCase().includes(k.toLowerCase())) {
+            cb.checked = true;
+          }
+        });
+      });
+    }
   </script>
+
 
 </body>
 
