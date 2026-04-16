@@ -657,11 +657,13 @@ require '../../controller/view.php';
 
     // ================= DATE =================
     $("#datePicker").on("change", function() {
-      renderTable(new Date($(this).val()));
+      selectedDoctor = $('.doctor-item.active').data('id');
+      loadSchedule(selectedDoctor);
     });
 
     $("#btnToday").on("click", function() {
-      renderTable(new Date());
+      selectedDoctor = $('.doctor-item.active').data('id');
+      loadSchedule(selectedDoctor);
     });
 
     // ================= 🔥 CLICK CELL =================
