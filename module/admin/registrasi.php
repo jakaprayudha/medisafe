@@ -570,6 +570,38 @@ require '../../controller/view.php';
   </div>
 </div>
 
+<div class="modal fade" id="editVisitModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">✏️ Edit Visit</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="edit_id_patient">
+
+        <div class="mb-3">
+          <label>Tanggal</label>
+          <input type="date" id="edit_visit_date" class="form-control">
+        </div>
+
+        <div class="mb-3">
+          <label>Jam</label>
+          <input type="time" id="edit_visit_time" class="form-control">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+        <button class="btn btn-primary" id="btnUpdateVisit">💾 Simpan</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 
 
 <div class="modal fade" id="cameraModal" tabindex="-1">
@@ -796,7 +828,15 @@ require '../../controller/view.php';
                       </li>
                       ${!isSelesai ? `
                       <li><hr class="dropdown-divider"></li>
-
+                      <li>
+                        <a class="dropdown-item edit-visit-btn" 
+                          href="javascript:;" 
+                          data-patient="${row.id_patient}"
+                          data-date="${row.visit_date}"
+                          data-time="${row.visit_time}">
+                          <i class="fas fa-edit me-2 text-warning"></i> Perubahan Waktu
+                        </a>
+                      </li>
                       <li>
                         <a class="dropdown-item delete-btn text-danger" href="javascript:;" data-id="${row.id_visit}" data-prov="${row.id_provider}" data-visit="${row.visit_ID}">
                           <i class="fas fa-trash me-2"></i> Hapus
@@ -1528,6 +1568,46 @@ require '../../controller/view.php';
     $(this).append($menu);
 
     $menu.removeAttr('style');
+  });
+
+  $(document).on('click', '.edit-visit-btn', function() {
+
+    $('#edit_id_patient').val($(this).data('patient'));
+    $('#edit_visit_date').val($(this).data('date'));
+    $('#edit_visit_time').val($(this).data('time'));
+
+    $('#editVisitModal').modal('show');
+
+  });
+
+  $('#btnUpdateVisit').on('click', function() {
+
+    const data = {
+      id_patient: $('#edit_id_patient').val(),
+      visit_date: $('#edit_visit_date').val(),
+      visit_time: $('#edit_visit_time').val()
+    };
+
+    fetch('controller/visit/updateVisitTime.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(resp => {
+
+        if (resp.status === 'success') {
+          alert('✅ Berhasil update');
+          $('#editVisitModal').modal('hide');
+          $('#periodeTable').DataTable().ajax.reload(null, false);
+        } else {
+          alert('❌ ' + resp.message);
+        }
+
+      });
+
   });
 </script>
 

@@ -5,7 +5,7 @@
   <nav>
      <div class="nav nav-tabs" id="nav-tab" role="tablist">
         <?php
-         if ($roles == "dokter") { ?>
+         if ($roles == "dokter" or $roles == "admin") { ?>
            <a href="module/admin/rme_inap?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
               <button class="nav-link <?= ($current == 'rme_inap.php') ? 'active' : '' ?>">Pemeriksaan Medis</button>
            </a>
@@ -86,7 +86,7 @@
            <button class="nav-link <?= ($current == 'cpo.php') ? 'active' : '' ?>">CPO</button>
         </a>
         <?php
-         if ($roles == 'dokter') {
+         if ($roles == 'dokter' or $roles == 'admin') {
             require 'trigger_pulang.php';
          }
          ?>
