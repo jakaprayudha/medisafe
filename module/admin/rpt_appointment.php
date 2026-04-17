@@ -121,12 +121,12 @@ require '../../controller/view.php';
               <div class="card w-100">
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Data Registrasi Poliklinik</h5>
+                    <h5 class="card-title fw-semibold">Data Appointment</h5>
                     <!-- Grup tombol di sisi kanan -->
 
                     <!-- 🔽 Filter + Tombol Kembali -->
                     <div class="d-flex align-items-end gap-2 flex-wrap">
-                      <div class="col-auto">
+                      <!-- <div class="col-auto">
                         <button type="button" data-bs-toggle="modal" data-bs-target="#filterModal" class="btn btn-dark">
                           <i class="fas fa-filter"></i> Filter
                         </button>
@@ -135,7 +135,7 @@ require '../../controller/view.php';
                         <button type="button" id="btnReset" class="btn btn-light">
                           <i class="fas fa-undo"></i> Reset
                         </button>
-                      </div>
+                      </div> -->
                       <!-- Tombol kembali -->
                       <div class="d-flex ms-auto">
                         <!-- <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
