@@ -526,8 +526,8 @@ if ($no && $id_customer) {
           // =============================
           const ttdImg = document.querySelector(".igd-ttd img");
 
-          if (d.signature_path) {
-            ttdImg.src = `../../../uploads/ttd/${d.signature_path}`;
+          if (d.signature_user) {
+            ttdImg.src = `../../../uploads/ttd_faskes/${d.signature_user}`;
           } else {
             ttdImg.src = `../../../assets/img/no-sign.png`;
           }
