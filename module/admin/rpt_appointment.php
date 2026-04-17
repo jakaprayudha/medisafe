@@ -136,11 +136,10 @@ require '../../controller/view.php';
                           <i class="fas fa-undo"></i> Reset
                         </button>
                       </div>
-                      <!-- Tombol kembali -->
-                      <div class="d-flex ms-auto">
-                        <!-- <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
-                            <i class="fas fa-plus"></i> Cetak
-                          </button> -->
+                      <div class="d-flex ms-auto gap-2">
+                        <button id="btnPrint" class="btn btn-primary">
+                          <i class="fas fa-print"></i> Print
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -348,7 +347,16 @@ require '../../controller/view.php';
 
       table.ajax.reload();
     });
+    $('#btnPrint').on('click', function() {
+      let fromDate = $('#fromDate').val();
+      let toDate = $('#toDate').val();
+      let doctor = $('#doctorSelect').val();
+      let provider = $('#providerSelect').val();
 
+      let url = `module/report/print_appointment.php?fromDate=${fromDate}&toDate=${toDate}&doctor=${doctor}&provider=${provider}`;
+
+      window.open(url, '_blank');
+    });
   });
 </script>
 
