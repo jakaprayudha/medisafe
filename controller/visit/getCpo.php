@@ -13,10 +13,10 @@ if (!$visit) {
    exit;
 }
 
-$query = $koneksi->prepare("
-   SELECT * FROM pasien_cpo 
-   WHERE visit_ID=? AND id_customer=? 
-   ORDER BY tanggal ASC
+$query = $koneksi->prepare("SELECT * FROM pasien_cpo 
+   LEFT JOIN ms_users u ON pasien_cpo.petugas = u.id_user
+   WHERE pasien_cpo.visit_ID=? AND pasien_cpo.id_customer=? 
+   ORDER BY pasien_cpo.tanggal ASC
 ");
 
 $query->bind_param("si", $visit, $id_customer);

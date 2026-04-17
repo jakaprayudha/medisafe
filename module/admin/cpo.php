@@ -214,51 +214,36 @@ $data = mysqli_fetch_array($check);
 
             res.data.forEach(row => {
 
-               $('#tableCPO tbody').append(`
-          <tr style="background:#f8f9fa;">
-            
-            <td>
-              <input type="date" value="${row.tanggal}" class="form-control" disabled>
-            </td>
+               let tr = $(`
+   <tr style="background:#f8f9fa;" data-id="${row.id}">
+      
+      <td><input type="date" value="${row.tanggal}" class="form-control" disabled></td>
+      <td><input type="text" value="${row.nama_item}" class="form-control" disabled></td>
+      <td><input type="text" value="${row.dosis}" class="form-control" disabled></td>
+      <td><input type="text" value="${row.signature}" class="form-control" disabled></td>
 
-            <td>
-              <input type="text" value="${row.nama_item}" class="form-control" disabled>
-            </td>
+      <td><input type="time" value="${row.jam_pagi}" class="form-control" disabled></td>
+      <td><input type="time" value="${row.jam_siang}" class="form-control" disabled></td>
+      <td><input type="time" value="${row.jam_sore}" class="form-control" disabled></td>
+      <td><input type="time" value="${row.jam_malam}" class="form-control" disabled></td>
 
-            <td>
-              <input type="text" value="${row.dosis}" class="form-control" disabled>
-            </td>
+      <td>
+         <select class="form-control petugas-select" disabled></select>
+      </td>
 
-            <td>
-              <input type="text" value="${row.signature}" class="form-control" disabled>
-            </td>
+      <td class="text-center">
+         <button class="btn btn-warning btn-sm btn-edit">Edit</button>
+         <button class="btn btn-success btn-sm btn-save d-none">Save</button>
+      </td>
 
-            <td>
-              <input type="time" value="${row.jam_pagi}" class="form-control" disabled>
-            </td>
+   </tr>
+   `);
 
-            <td>
-              <input type="time" value="${row.jam_siang}" class="form-control" disabled>
-            </td>
+               $('#tableCPO tbody').append(tr);
 
-            <td>
-              <input type="time" value="${row.jam_sore}" class="form-control" disabled>
-            </td>
-
-            <td>
-              <input type="time" value="${row.jam_malam}" class="form-control" disabled>
-            </td>
-
-            <td>
-             <select name="petugas[]" class="form-control petugas-select"></select>
-            </td>
-
-            <td class="text-center">
-              <span class="badge bg-success">Tersimpan</span>
-            </td>
-
-          </tr>
-        `);
+               // 🔥 load petugas
+               let select = tr.find('.petugas-select');
+               loadPetugas(select, row.id_user);
 
             });
 
@@ -306,23 +291,76 @@ $data = mysqli_fetch_array($check);
       row.css("background", "#fff3cd"); // kuning
    });
 
-   function loadPetugas(selectElement) {
+   function loadPetugas(selectElement, selected = null) {
       $.get('controller/master/user.php', function(res) {
 
          if (res.status === 'success') {
+
             let option = '<option value="">-- Pilih Petugas --</option>';
 
             res.data.forEach(u => {
-               option += `<option value="${u.id_user}" data-ttd="${u.ttd}">
+               option += `<option value="${u.id_user}">
                ${u.fullname} [${u.roles}]
             </option>`;
             });
 
             selectElement.html(option);
+
+            if (selected) {
+               selectElement.val(selected);
+            }
          }
 
       }, 'json');
    }
+
+   $(document).on('click', '.btn-edit', function() {
+
+      let tr = $(this).closest('tr');
+
+      tr.find('input, select').prop('disabled', false);
+
+      $(this).addClass('d-none');
+      tr.find('.btn-save').removeClass('d-none');
+
+   });
+
+   $(document).on('click', '.btn-save', function() {
+
+      let tr = $(this).closest('tr');
+
+      let data = {
+         id: tr.data('id'),
+         tanggal: tr.find("input[type='date']").val(),
+         nama_obat: tr.find("input[type='text']").eq(0).val(),
+         dosis: tr.find("input[type='text']").eq(1).val(),
+         signature: tr.find("input[type='text']").eq(2).val(),
+         jam_pagi: tr.find("input[type='time']").eq(0).val(),
+         jam_siang: tr.find("input[type='time']").eq(1).val(),
+         jam_sore: tr.find("input[type='time']").eq(2).val(),
+         jam_malam: tr.find("input[type='time']").eq(3).val(),
+         id_user: tr.find("select").val()
+      };
+
+      $.post('controller/visit/updateCPO.php', data, function(res) {
+
+         if (res.status === 'success') {
+
+            Swal.fire('Success', 'Data berhasil diupdate', 'success');
+
+            // disable lagi
+            tr.find('input, select').prop('disabled', true);
+
+            tr.find('.btn-save').addClass('d-none');
+            tr.find('.btn-edit').removeClass('d-none');
+
+         } else {
+            Swal.fire('Error', res.message, 'error');
+         }
+
+      }, 'json');
+
+   });
 </script>
 
 </html>
