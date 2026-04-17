@@ -581,6 +581,7 @@ require '../../controller/view.php';
 
       <div class="modal-body">
         <input type="hidden" id="edit_id_patient">
+        <input type="hidden" id="edit_visit_id">
 
         <div class="mb-3">
           <label>Tanggal</label>
@@ -828,15 +829,16 @@ require '../../controller/view.php';
                       </li>
                       ${!isSelesai ? `
                       <li><hr class="dropdown-divider"></li>
-                      <li>
-                        <a class="dropdown-item edit-visit-btn" 
-                          href="javascript:;" 
-                          data-patient="${row.id_patient}"
-                          data-date="${row.visit_date}"
-                          data-time="${row.visit_time}">
-                          <i class="fas fa-edit me-2 text-warning"></i> Perubahan Waktu
-                        </a>
-                      </li>
+                    <li>
+                      <a class="dropdown-item edit-visit-btn" 
+                        href="javascript:;" 
+                        data-visit="${row.visit_ID}"
+                        data-date="${row.visit_date}"
+                      data-patient="${row.id_patient}"
+                        data-time="${row.visit_time}">
+                        <i class="fas fa-edit me-2 text-warning"></i> Perubahan Waktu
+                      </a>
+                    </li>
                       <li>
                         <a class="dropdown-item delete-btn text-danger" href="javascript:;" data-id="${row.id_visit}" data-prov="${row.id_provider}" data-visit="${row.visit_ID}">
                           <i class="fas fa-trash me-2"></i> Hapus
@@ -1571,7 +1573,7 @@ require '../../controller/view.php';
   });
 
   $(document).on('click', '.edit-visit-btn', function() {
-
+    $('#edit_visit_id').val($(this).data('visit'));
     $('#edit_id_patient').val($(this).data('patient'));
     $('#edit_visit_date').val($(this).data('date'));
     $('#edit_visit_time').val($(this).data('time'));
@@ -1583,6 +1585,7 @@ require '../../controller/view.php';
   $('#btnUpdateVisit').on('click', function() {
 
     const data = {
+      visit_ID: $('#edit_visit_id').val(),
       id_patient: $('#edit_id_patient').val(),
       visit_date: $('#edit_visit_date').val(),
       visit_time: $('#edit_visit_time').val()
