@@ -1,4 +1,6 @@
 <?php
+$title = "Rincian Pembayaran";
+$subtitle = "Invoice Tagihan Perawatan Pasien";
 session_start();
 require '../../database/connect.php';
 $id_customer = $_SESSION['id_customer'];
@@ -119,37 +121,9 @@ $total = 0;
 
 <body onload="window.print()">
    <div class="container">
-      <!-- Logo Klinik -->
-      <img src="../../uploads/<?= $datafaskes['image_clinic'] ?>" alt="Logo Klinik" class="logo">
-
-      <h2><?= $datafaskes['clinic_name'] ?></h2>
-      <div class="clinic-info">
-         <?= $datafaskes['faskes_address'] ?><br>
-         Telp: <?= $datafaskes['faskes_phone'] ?>
-      </div>
-
-      <div class="section">
-         <strong>Data Pasien:</strong>
-         <table>
-            <tr>
-               <td>Nama</td>
-               <td><?= $pasien['patient_name'] ?></td>
-               <td>No. RM</td>
-               <td><?= $pasien['nomor_rm'] ?></td>
-            </tr>
-            <tr>
-               <!-- <td>Tanggal Lahir</td>
-               <td><?= $pasien['patient_place'] ?>/<?= $pasien['patient_datebirth'] ?></td> -->
-               <td>Jenis Kelamin</td>
-               <td colspan="3"><?= $pasien['patient_gender'] ?></td>
-            </tr>
-            <tr>
-               <td>Tanggal Kunjungan</td>
-               <td colspan="3"><?= date('d-m-Y', strtotime($pasien['visit_date'])) ?> <?= $pasien['visit_time'] ?></td>
-            </tr>
-         </table>
-      </div>
-
+      <?php
+      require 'kop-surat.php';
+      ?>
       <div class="section">
          <strong>Rincian Pembayaran:</strong>
          <table>

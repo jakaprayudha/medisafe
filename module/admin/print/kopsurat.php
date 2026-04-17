@@ -4,23 +4,18 @@ require '../../admin/getdataclinic.php';
 ?>
 
 <style>
-  /* ===========================
-   KOP SURAT – GRID SAFE
-=========================== */
-
   .kopsurat-wrapper {
     width: 100%;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
     font-family: "Times New Roman", serif;
   }
 
-  /* GRID UTAMA */
+  /* GRID */
   .kopsurat-grid {
     display: grid;
-    grid-template-columns: 90px 1fr 90px;
-    /* kiri | tengah | kanan */
+    grid-template-columns: 70px 1fr 70px;
     align-items: center;
-    column-gap: 10px;
+    column-gap: 8px;
   }
 
   /* LOGO */
@@ -29,36 +24,30 @@ require '../../admin/getdataclinic.php';
   }
 
   .kopsurat-logo img {
-    width: 80px;
+    width: 60px;
     height: auto;
   }
 
-  /* TENGAH */
+  /* CENTER (JUDUL + ALAMAT JADI 1 BLOK) */
   .kopsurat-center {
     text-align: center;
+    line-height: 1.1;
   }
 
+  /* NAMA KLINIK */
   .kopsurat-center h1 {
-    font-size: 28px;
+    font-size: 19px;
     margin: 0;
     font-weight: bold;
     letter-spacing: 1px;
   }
 
-  .kopsurat-center h2 {
-    font-size: 20px;
-    margin: 0;
-    font-weight: bold;
-  }
-
   /* ALAMAT */
   .kopsurat-address {
-    font-size: 12px;
-    margin-top: 8px;
-    line-height: 1.4;
+    font-size: 11px;
+    margin-top: 3px;
+    line-height: 1.2;
     text-align: center;
-
-    /* KUNCI UTAMA */
     word-wrap: break-word;
     overflow-wrap: break-word;
   }
@@ -67,7 +56,7 @@ require '../../admin/getdataclinic.php';
   .kopsurat-divider {
     border: 0;
     border-top: 2px solid #000;
-    margin-top: 10px;
+    margin-top: 6px;
   }
 </style>
 
@@ -77,26 +66,25 @@ require '../../admin/getdataclinic.php';
 
     <!-- LOGO KIRI -->
     <div class="kopsurat-logo">
-      <img src="../../../assets/images/logos/logodeliserdang.png" alt="Logo Daerah">
+      <img src="../../../assets/images/logos/logodeliserdang.png">
     </div>
 
-    <!-- JUDUL -->
+    <!-- JUDUL + ALAMAT (DIGABUNG) -->
     <div class="kopsurat-center">
       <h1><?= strtoupper($datafaskes['clinic_name']) ?></h1>
+
+      <div class="kopsurat-address">
+        <?= htmlspecialchars($datafaskes['faskes_address']) ?> |
+        Telp. <?= htmlspecialchars($datafaskes['faskes_phone']) ?><br>
+        Email: <i><?= htmlspecialchars($datafaskes['pic_email']) ?></i>
+      </div>
     </div>
 
     <!-- LOGO KANAN -->
     <div class="kopsurat-logo">
-      <img src="../../../uploads/<?= $datafaskes['image_clinic'] ?>" alt="Logo Klinik">
+      <img src="../../../uploads/<?= $datafaskes['image_clinic'] ?>">
     </div>
 
-  </div>
-
-  <!-- ALAMAT (DI BARIS SENDIRI, AMAN PANJANG) -->
-  <div class="kopsurat-address">
-    <?= htmlspecialchars($datafaskes['faskes_address']) ?> |
-    Telp. <?= htmlspecialchars($datafaskes['faskes_phone']) ?><br>
-    Email: <i><?= htmlspecialchars($datafaskes['pic_email']) ?></i>
   </div>
 
   <hr class="kopsurat-divider">
