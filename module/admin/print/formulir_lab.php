@@ -1,6 +1,6 @@
-<body class="cpo-body">
+<body class="lab-body">
 
-  <div class="cpo-container">
+  <div class="lab-container">
 
     <style>
       @page {
@@ -11,7 +11,7 @@
       /* =========================
    BODY KHUSUS LAB (CPO STYLE)
 ========================= */
-      body.cpo-body {
+      body.lab-body {
         font-family: "Times New Roman", serif;
         font-size: 11pt;
         margin: 0;
@@ -23,24 +23,24 @@
       /* =========================
    CONTAINER
 ========================= */
-      .cpo-container {
+      .lab-container {
         width: 100%;
         max-width: 760px;
         margin: auto;
       }
 
-      .cpo-info .label {
+      .lab-info .label {
         width: 15%;
         font-weight: bold;
         white-space: nowrap;
         vertical-align: top;
       }
 
-      .cpo-info .value {
+      .lab-info .value {
         width: 35%;
       }
 
-      .cpo-info .wrap {
+      .lab-info .wrap {
         word-break: break-word;
         white-space: normal;
       }
@@ -48,7 +48,7 @@
       /* =========================
    TITLE
 ========================= */
-      .cpo-title {
+      .lab-title {
         text-align: center;
         font-size: 14pt;
         font-weight: bold;
@@ -59,7 +59,7 @@
       /* =========================
    INFO PASIEN
 ========================= */
-      .cpo-info td {
+      .lab-info td {
         border: none !important;
         padding: 3px 6px;
         font-size: 11pt;
@@ -68,21 +68,21 @@
       /* =========================
    TABLE GENERAL
 ========================= */
-      .cpo-table {
+      .lab-table {
         width: 100%;
         border-collapse: collapse;
         margin-top: 10px;
       }
 
-      .cpo-table th,
-      .cpo-table td {
+      .lab-table th,
+      .lab-table td {
         border: 1px solid #000;
         padding: 6px;
         vertical-align: top;
         font-size: 11pt;
       }
 
-      .cpo-table th {
+      .lab-table th {
         background: #f2f2f2;
         font-weight: bold;
         text-align: center;
@@ -91,7 +91,7 @@
       /* =========================
    SECTION HEADER
 ========================= */
-      .cpo-section {
+      .lab-section {
         background: #f4f4f4;
         font-weight: bold;
       }
@@ -99,7 +99,7 @@
       /* =========================
    ABNORMAL
 ========================= */
-      .cpo-abnormal {
+      .lab-abnormal {
         color: #c00;
         font-weight: bold;
       }
@@ -107,47 +107,47 @@
       /* =========================
    HELPER
 ========================= */
-      .cpo-center {
+      .lab-center {
         text-align: center;
       }
 
-      .cpo-right {
+      .lab-right {
         text-align: right;
       }
 
       /* =========================
    FOOTER
 ========================= */
-      .cpo-footer {
+      .lab-footer {
         display: flex;
         justify-content: space-between;
         margin-top: 35px;
         align-items: flex-end;
       }
 
-      .cpo-qr {
+      .lab-qr {
         text-align: center;
         width: 140px;
         font-size: 9pt;
       }
 
-      .cpo-qr img {
+      .lab-qr img {
         width: 120px;
         height: 120px;
       }
 
-      .cpo-ttd {
+      .lab-ttd {
         width: 220px;
         text-align: center;
         font-size: 10pt;
       }
 
-      .cpo-ttd img {
+      .lab-ttd img {
         width: 80px;
         margin: 5px 0;
       }
 
-      .cpo-ttd-line {
+      .lab-ttd-line {
         border-top: 1px solid #000;
         margin-top: 5px;
         padding-top: 3px;
@@ -158,7 +158,7 @@
    PRINT
 ========================= */
       @media print {
-        .cpo-noprint {
+        .lab-noprint {
           display: none !important;
         }
       }
@@ -166,10 +166,10 @@
 
     <?php require 'kopsurat.php'; ?>
 
-    <div class="cpo-title">HASIL LABORATORIUM</div>
+    <div class="lab-title">HASIL LABORATORIUM</div>
 
     <!-- ================= INFO PASIEN ================= -->
-    <table class="cpo-table cpo-info">
+    <table class="lab-table lab-info">
       <tr>
         <td class="label">Nama</td>
         <td class="value">: <span id="lab_nama"></span></td>
@@ -187,7 +187,7 @@
       </tr>
     </table>
     <!-- ================= TABEL LAB ================= -->
-    <table class="cpo-table">
+    <table class="lab-table">
       <thead>
         <tr>
           <th>PEMERIKSAAN</th>
@@ -200,16 +200,16 @@
     </table>
 
     <!-- ================= FOOTER ================= -->
-    <div class="cpo-footer">
-      <div class="cpo-qr">
+    <div class="lab-footer">
+      <div class="lab-qr">
         <div id="lab_qr"></div>
         Scan untuk verifikasi hasil
       </div>
 
-      <div class="cpo-ttd">
+      <div class="lab-ttd">
         Pengisi Data<br>
         <img src="../../../uploads/ttd/lab.png" alt="TTD">
-        <div class="cpo-ttd-line" id="lab_petugas"></div>
+        <div class="lab-ttd-line" id="lab_petugas"></div>
         Petugas Laboratorium
       </div>
     </div>
@@ -247,14 +247,14 @@
           set("lab_petugas", d.petugas);
 
           // ================= TABLE DINAMIS =================
-          const tbody = document.querySelectorAll(".cpo-table")[1].querySelector("tbody");
+          const tbody = document.querySelectorAll(".lab-table")[1].querySelector("tbody");
           tbody.innerHTML = "";
 
           for (let group in hasil) {
 
             // HEADER GROUP
             tbody.innerHTML += `
-          <tr class="cpo-section">
+          <tr class="lab-section">
             <td colspan="3">${group}</td>
           </tr>
         `;
@@ -267,16 +267,16 @@
               let max = parseFloat((item.normal.split('-')[1] || '').trim());
 
               let cls = (!isNaN(val) && (!isNaN(min) && !isNaN(max)) && (val < min || val > max)) ?
-                'cpo-abnormal' :
+                'lab-abnormal' :
                 '';
 
               tbody.innerHTML += `
             <tr>
               <td>${item.nama}</td>
-              <td class="cpo-center ${cls}">
+              <td class="lab-center ${cls}">
                 ${item.hasil ?? '-'} ${item.satuan ?? ''}
               </td>
-              <td class="cpo-center">${item.normal}</td>
+              <td class="lab-center">${item.normal}</td>
             </tr>
           `;
             });

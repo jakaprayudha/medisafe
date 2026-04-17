@@ -131,100 +131,7 @@
       }
    </style>
 
-   <script>
-      document.addEventListener("DOMContentLoaded", function() {
 
-         const url = new URLSearchParams(window.location.search);
-         const no = url.get("no");
-         const rm = url.get("rm");
-
-         if (!no || !rm) return;
-
-         fetch(`getpasien.php?no=${no}&rm=${rm}`)
-            .then(res => res.json())
-            .then(res => {
-
-               const d = res.data || res; // 🔥 fleksibel
-
-               // ===============================
-               // NAMA
-               // ===============================
-               document.getElementById("rinap_nama").innerText =
-                  d.patient_name_pcare || d.patient_name || "-";
-
-               // ===============================
-               // DOKTER
-               // ===============================
-               document.getElementById("rinap_dokter").innerText =
-                  d.id_doctor || "-";
-
-               document.getElementById("rinap_dokter2").innerText =
-                  d.id_doctor || "-";
-
-               // ===============================
-               // UMUR (FIX EXCEL DATE BUG 🔥)
-               // ===============================
-               let umur = "-";
-
-               if (d.patient_datebirth) {
-
-                  let dob;
-
-                  // 🔥 kalau format excel number
-                  if (!isNaN(d.patient_datebirth)) {
-                     dob = new Date((d.patient_datebirth - 25569) * 86400 * 1000);
-                  } else {
-                     dob = new Date(d.patient_datebirth);
-                  }
-
-                  let today = new Date(d.visit_date || new Date());
-                  let diff = today - dob;
-
-                  let years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
-
-                  umur = years + " Tahun";
-               }
-
-               document.getElementById("rinap_umur").innerText = umur;
-
-               // ===============================
-               // DIAGNOSA (UTAMA + SEKUNDER)
-               // ===============================
-               let diagnosa = d.code + " - " + d.icd10 || "-";
-
-               if (d.diagnosa_sekunder) {
-                  diagnosa += " + " + d.diagnosa_sekunder;
-               }
-
-               document.getElementById("rinap_diagnosa").innerText = diagnosa;
-
-               // ===============================
-               // INDIKASI (ambil dari anamnesa)
-               // ===============================
-               document.getElementById("rinap_indikasi").innerText =
-                  d.anamnesa || "-";
-
-               document.getElementById("kamar").innerText =
-                  d.room_name + " - " + d.bed_name || "-";
-
-               // ===============================
-               // TERAPI
-               // ===============================
-               document.getElementById("terapi").innerText =
-                  d.terapi || "-";
-
-               // ===============================
-               // TTD DOKTER
-               // ===============================
-               const ttd = document.getElementById("rinap_ttd");
-
-               if (d.signature_user) {
-                  ttd.src = `../../../uploads/ttd_faskes/${d.signature_user}`;
-               }
-
-            });
-      });
-   </script>
 
    <!-- ================== SURAT ================== -->
    <div class="rinap-container">
@@ -291,3 +198,122 @@
    </div>
 
 </body>
+
+<script>
+   document.addEventListener("DOMContentLoaded", function() {
+
+      const url = new URLSearchParams(window.location.search);
+      const no = url.get("no");
+      const rm = url.get("rm");
+
+      if (!no || !rm) return;
+
+      fetch(`getpasien.php?no=${no}&rm=${rm}`)
+         .then(res => res.json())
+         .then(res => {
+
+            const d = res.data || res; // 🔥 fleksibel
+
+            // ===============================
+            // NAMA
+            // ===============================
+            document.getElementById("rinap_nama").innerText =
+               d.patient_name_pcare || d.patient_name || "-";
+
+            // ===============================
+            // DOKTER
+            // ===============================
+            document.getElementById("rinap_dokter").innerText =
+               d.id_doctor || "-";
+
+            document.getElementById("rinap_dokter2").innerText =
+               d.id_doctor || "-";
+
+
+            function parseDate(dateStr) {
+               if (!dateStr) return null;
+
+               // 🔥 format DD-MM-YYYY
+               if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+                  const [day, month, year] = dateStr.split("-");
+                  return new Date(`${year}-${month}-${day}`);
+               }
+
+               // 🔥 format MySQL datetime
+               if (dateStr.includes(" ")) {
+                  return new Date(dateStr.replace(" ", "T"));
+               }
+
+               return new Date(dateStr);
+            }
+            // ===============================
+            // UMUR (FIX EXCEL DATE BUG 🔥)
+            // ===============================
+            let umur = "-";
+
+            if (d.patient_datebirth) {
+
+               let dob;
+
+               // excel number
+               if (!isNaN(d.patient_datebirth)) {
+                  dob = new Date((d.patient_datebirth - 25569) * 86400 * 1000);
+               } else {
+                  dob = parseDate(d.patient_datebirth);
+               }
+
+               let today = parseDate(d.visit_date) || new Date();
+
+               // 🔥 VALIDASI
+               if (dob && !isNaN(dob) && today && !isNaN(today)) {
+
+                  let diff = today - dob;
+                  let years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
+
+                  umur = years + " Tahun";
+               }
+            }
+
+            document.getElementById("rinap_umur").innerText = umur;
+            // console.log("DOB:", d.patient_datebirth);
+            // console.log("VISIT:", d.visit_date);
+            // console.log("VISIT:", umur);
+
+            // ===============================
+            // DIAGNOSA (UTAMA + SEKUNDER)
+            // ===============================
+            let diagnosa = d.code + " - " + d.icd10 || "-";
+
+            if (d.diagnosa_sekunder) {
+               diagnosa += " + " + d.diagnosa_sekunder;
+            }
+
+            document.getElementById("rinap_diagnosa").innerText = diagnosa;
+
+            // ===============================
+            // INDIKASI (ambil dari anamnesa)
+            // ===============================
+            document.getElementById("rinap_indikasi").innerText =
+               d.anamnesa || "-";
+
+            document.getElementById("kamar").innerText =
+               d.room_name + " - " + d.bed_name || "-";
+
+            // ===============================
+            // TERAPI
+            // ===============================
+            document.getElementById("terapi").innerText =
+               d.tindakan || "-";
+
+            // ===============================
+            // TTD DOKTER
+            // ===============================
+            const ttd = document.getElementById("rinap_ttd");
+
+            if (d.signature_user) {
+               ttd.src = `../../../uploads/ttd_faskes/${d.signature_user}`;
+            }
+
+         });
+   });
+</script>
