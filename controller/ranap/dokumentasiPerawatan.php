@@ -4,7 +4,11 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
    case 'POST':
-      uploadPerawatan();
+      if (isset($_GET['id'])) {
+         updateTanggal($_GET['id']); // 🔥 EDIT
+      } else {
+         uploadPerawatan(); // 🔥 INSERT
+      }
       break;
 
    case 'GET':
@@ -144,5 +148,40 @@ function deleteData()
       echo json_encode(["status" => "success", "message" => "Data dihapus"]);
    } else {
       echo json_encode(["status" => "error", "message" => "Gagal menghapus"]);
+   }
+}
+
+// ======================================================
+// UPDATE TANGGAL SAJA
+// ======================================================
+function updateTanggal($id)
+{
+   global $koneksi;
+
+   $tgl = $_POST['tgl_upload'] ?? null;
+
+   if (!$tgl) {
+      echo json_encode(["status" => "error", "message" => "Tanggal wajib diisi"]);
+      exit;
+   }
+
+   $st = $koneksi->prepare("
+      UPDATE pasien_dokumen 
+      SET rilis = ? 
+      WHERE id_dokumen = ?
+   ");
+
+   $st->bind_param("si", $tgl, $id);
+
+   if ($st->execute()) {
+      echo json_encode([
+         "status" => "success",
+         "message" => "Tanggal berhasil diupdate"
+      ]);
+   } else {
+      echo json_encode([
+         "status" => "error",
+         "message" => "Gagal update"
+      ]);
    }
 }
