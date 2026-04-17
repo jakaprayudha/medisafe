@@ -73,11 +73,12 @@ function filePath($file)
 
       .kk-img {
          width: 100%;
-         height: 260px;
+         height: auto;
+         /* 🔥 jangan paksa stretch */
          /* 🔥 disesuaikan biar muat */
          border: 1px solid #ccc;
          display: flex;
-         align-items: center;
+         align-items: flex-start;
          justify-content: center;
          overflow: hidden;
       }
