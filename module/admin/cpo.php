@@ -113,15 +113,15 @@ $data = mysqli_fetch_array($check);
 </body>
 
 <script>
-   const petugas = "<?= $_SESSION['fullname'] ?? '' ?>";
    $(document).ready(function() {
       // kosong dulu, nanti dipanggil dari loadCPO
    });
 
    $('#addRow').on('click', function() {
+
       let today = new Date().toISOString().split('T')[0];
 
-      $('#tableCPO tbody').append(`
+      let html = `
    <tr>
       <td style="min-width:150px">
          <input type="date" name="tanggal[]" value="${today}" class="form-control">
@@ -145,16 +145,22 @@ $data = mysqli_fetch_array($check);
       <td style="min-width:120px"><input type="time" name="jam_malam[]" class="form-control"></td>
 
       <td style="min-width:150px">
-         <input type="text" name="petugas[]" value="${petugas}" class="form-control" readonly>
+         <select name="petugas[]" class="form-control petugas-select"></select>
       </td>
 
       <td style="min-width:80px; text-align:center;">
          <button type="button" class="btn btn-danger btn-sm remove">X</button>
       </td>
    </tr>
-   `);
-   });
+   `;
 
+      $('#tableCPO tbody').append(html);
+
+      // 🔥 ambil select terakhir (tanpa ubah struktur)
+      let select = $('#tableCPO tbody tr:last .petugas-select');
+
+      loadPetugas(select);
+   });
 
    $('#formCPO').on('submit', function(e) {
       e.preventDefault();
@@ -244,7 +250,7 @@ $data = mysqli_fetch_array($check);
             </td>
 
             <td>
-               <input type="text" value="${row.petugas}" class="form-control" disabled>
+             <select name="petugas[]" class="form-control petugas-select"></select>
             </td>
 
             <td class="text-center">
@@ -299,6 +305,24 @@ $data = mysqli_fetch_array($check);
    row.find("input").on("change", function() {
       row.css("background", "#fff3cd"); // kuning
    });
+
+   function loadPetugas(selectElement) {
+      $.get('controller/master/user.php', function(res) {
+
+         if (res.status === 'success') {
+            let option = '<option value="">-- Pilih Petugas --</option>';
+
+            res.data.forEach(u => {
+               option += `<option value="${u.id_user}" data-ttd="${u.ttd}">
+               ${u.fullname} [${u.roles}]
+            </option>`;
+            });
+
+            selectElement.html(option);
+         }
+
+      }, 'json');
+   }
 </script>
 
 </html>
