@@ -55,7 +55,7 @@ $id_patient = $data['id_patient'];
                     <h5 class="card-title fw-semibold">Dokumen Pasien</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
-                      <a href="module/admin/print/formulir_dokumen?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                      <a href="module/admin/print/formulir_pasien?id_patient=<?= $id_patient ?>&no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
                         <button class="btn btn-outline-primary"><i class="fas fa-print"></i> Cetak</button>
                       </a>
                     </div>

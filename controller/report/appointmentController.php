@@ -15,15 +15,9 @@ $sql = "
 SELECT pv.*, mp.provider_name
 FROM pasien_visit pv
 LEFT JOIN ms_provider mp ON mp.id_provider = pv.id_provider
-WHERE 1=1
+WHERE pv.id_customer = '$id_customer'
 ";
 
-// =============================
-// FILTER CUSTOMER
-// =============================
-if ($id_customer) {
-   $sql .= " AND pv.id_customer = '$id_customer' ";
-}
 
 // =============================
 // FILTER TANGGAL
