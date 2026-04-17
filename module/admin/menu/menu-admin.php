@@ -48,6 +48,18 @@
          </ul>
       </li>
 
+      <li class="sidebar-item has-sub">
+         <a href="javascript:void(0)" class="sidebar-link" onclick="toggleSidebarMenu(this)">
+            <iconify-icon icon="solar:folder-bold"></iconify-icon>
+            <span class="hide-menu">Laporan</span>
+            <i class="ti ti-chevron-down arrow"></i>
+         </a>
+
+         <ul class="collapse-menu">
+            <li><a href="module/admin/rpt_appointment">Appointment</a></li>
+         </ul>
+      </li>
+
       <li class="sidebar-item">
          <a class="sidebar-link" href="module/admin/signature" aria-expanded="false">
             <iconify-icon icon="mdi:signature-freehand"></iconify-icon>
