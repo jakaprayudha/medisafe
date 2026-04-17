@@ -107,7 +107,7 @@ $datapatient = mysqli_fetch_array($patient);
               <input type="date" value="<?= date('Y-m-d') ?>" name="tgl_upload" class="form-control" id="tgl_upload" required>
             </div>
           </div>
-          <div class="col-12">
+          <div class="col-12" id="fileWrapper">
             <div class="mb-3">
               <label for="foto_path" class="form-label">
                 File Dokumentasi Foto <span class="text-danger">*</span>
@@ -116,8 +116,7 @@ $datapatient = mysqli_fetch_array($patient);
                 name="foto_path"
                 class="form-control"
                 id="foto_path"
-                accept="image/*"
-                required>
+                accept="image/*">
             </div>
           </div>
         </div>
@@ -156,13 +155,19 @@ $id_patient = $datapatient['id_patient'];
             actions: `
                 <div class="text-center">
                     <div class="btn-group btn-group-sm" role="group">
+                      <a class="btn btn-warning edit-btn" 
+                        href="javascript:;" 
+                        data-id="${row.id_dokumen}"
+                        data-tanggal="${row.rilis}">
+                        <i class="fas fa-edit"></i>
+                      </a>
                         <a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_dokumen}">
                             <i class="fas fa-trash"></i>
                         </a>
                     </div>
                 </div>
               `,
-            tanggal: row.tgl_upload ?? "-",
+            tanggal: row.rilis ?? "-",
             foto_path: row.foto_path ?
               `<img src="${row.foto_path}" style="max-width:80px">` : "-",
           }));
@@ -191,8 +196,13 @@ $id_patient = $datapatient['id_patient'];
 
     // 🔹 Tambah
     $('#btnTambah').on('click', function() {
-      $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
+
+      $('#programForm')[0].reset();
       $('#id_dokumen').val('');
+
+      $('#fileWrapper').show(); // 🔥 tampilkan file
+      $('#foto_path').attr('required', true);
+
       $('#programModal .modal-title').text('Tambah Data');
       $('#programModal').modal('show');
     });
@@ -243,6 +253,22 @@ $id_patient = $datapatient['id_patient'];
         }
       });
     });
+  });
+  $(document).on('click', '.edit-btn', function() {
+
+    let id = $(this).data('id');
+    let tanggal = $(this).data('tanggal');
+
+    $('#id_dokumen').val(id);
+    $('#tgl_upload').val(tanggal);
+
+    // 🔥 sembunyikan file
+    $('#fileWrapper').hide();
+    $('#foto_path').removeAttr('required');
+    $('#foto_path').val('');
+
+    $('#programModal .modal-title').text('Edit Tanggal');
+    $('#programModal').modal('show');
   });
 </script>
 
