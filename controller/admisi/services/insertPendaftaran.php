@@ -3,6 +3,7 @@ require_once __DIR__ . '/view.php';
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/servicebpjs.php';
 header('Content-Type: application/json');
+date_default_timezone_set('Asia/Jakarta');
 
 $kdProviderPeserta = $_POST['kdProviderPeserta'];
 $tglDaftarDB = $_POST['tglDaftar'];
