@@ -239,7 +239,10 @@
          return;
       }
 
-      const baseURL = window.location.origin + window.location.pathname.split('/').slice(0, 2).join('/') + '/';
+      const baseURL =
+         window.location.hostname === "localhost" ?
+         window.location.origin + "/medisafe/" :
+         window.location.origin + "/";
       const container = document.getElementById("dokmulti_container");
 
       fetch("get_dokumen.php?rm=" + rm + "&no=" + no)
