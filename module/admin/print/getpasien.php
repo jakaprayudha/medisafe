@@ -22,57 +22,57 @@ $result = $koneksi->query($query);
 $data = $result->fetch_assoc();
 
 
-// ===============================
-// TERAPI (AMBIL OBAT PERTAMA)
-// ===============================
-$qFirst = mysqli_query($koneksi, "
-   SELECT id_permintaan_farmasi
-   FROM permintaan_pharmacy
-   WHERE id_visit = '$no'
-   ORDER BY created_at ASC
-   LIMIT 1
-");
+// // ===============================
+// // TERAPI (AMBIL OBAT PERTAMA)
+// // ===============================
+// $qFirst = mysqli_query($koneksi, "
+//    SELECT id_permintaan_farmasi
+//    FROM permintaan_pharmacy
+//    WHERE id_visit = '$no'
+//    ORDER BY created_at ASC
+//    LIMIT 1
+// ");
 
-$first = mysqli_fetch_assoc($qFirst);
-$id_permintaan = $first['id_permintaan_farmasi'] ?? null;
-$terapi = "-";
+// $first = mysqli_fetch_assoc($qFirst);
+// $id_permintaan = $first['id_permintaan_farmasi'] ?? null;
+// $terapi = "-";
 
-if ($id_permintaan) {
+// if ($id_permintaan) {
 
-   $qDetail = mysqli_query($koneksi, "SELECT *
-      FROM permintaan_pharmacy_details
-      INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy_details.id_pharmacy
-      WHERE permintaan_pharmacy_details.id_permintaan_farmasi = '$id_permintaan'
-      ORDER BY permintaan_pharmacy_details.created_at ASC
-   ");
+//    $qDetail = mysqli_query($koneksi, "SELECT *
+//       FROM permintaan_pharmacy_details
+//       INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy_details.id_pharmacy
+//       WHERE permintaan_pharmacy_details.id_permintaan_farmasi = '$id_permintaan'
+//       ORDER BY permintaan_pharmacy_details.created_at ASC
+//    ");
 
-   $list = [];
+//    $list = [];
 
-   while ($row = mysqli_fetch_assoc($qDetail)) {
+//    while ($row = mysqli_fetch_assoc($qDetail)) {
 
-      $nama = $row['pharmacy_name_trade'] ?: "-";
+//       $nama = $row['pharmacy_name_trade'] ?: "-";
 
-      $text = $nama;
+//       $text = $nama;
 
-      if (!empty($row['signa'])) {
-         $text .= " (" . $row['signa'] . ")";
-      }
+//       if (!empty($row['signa'])) {
+//          $text .= " (" . $row['signa'] . ")";
+//       }
 
-      if (!empty($row['qty'])) {
-         $text .= " x " . $row['qty'];
-      }
+//       if (!empty($row['qty'])) {
+//          $text .= " x " . $row['qty'];
+//       }
 
-      $list[] = $text;
-   }
+//       $list[] = $text;
+//    }
 
-   if (!empty($list)) {
-      $terapi = implode(", ", $list);
-   }
-}
+//    if (!empty($list)) {
+//       $terapi = implode(", ", $list);
+//    }
+// }
 
 
-// inject terapi ke response
-$data['terapi'] = $terapi;
+// // inject terapi ke response
+// $data['terapi'] = $terapi;
 
 // ===============================
 // OUTPUT (HARUS TERAKHIR)

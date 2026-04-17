@@ -18,6 +18,9 @@
            <a href="module/admin/permintaan_farmasi?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
               <button class="nav-link <?= ($current == 'permintaan_farmasi.php') ? 'active' : '' ?>">Permintaan Farmasi</button>
            </a>
+           <a href="module/admin/cpo?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+              <button class="nav-link <?= ($current == 'cpo.php') ? 'active' : '' ?>">CPO</button>
+           </a>
            <a href="module/admin/resep?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
               <button class="nav-link <?= ($current == 'resep.php') ? 'active' : '' ?>">Resep Luar</button>
            </a>
@@ -67,6 +70,7 @@
            <!-- <a href="module/admin/form_kb?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
            <button class="nav-link <?= ($current == 'form_kb.php') ? 'active' : '' ?>">Status KB</button>
         </a> -->
+
            <a href="module/admin/resume_medis?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
               <button class="nav-link <?= ($current == 'resume_medis.php') ? 'active' : '' ?>">Resume Medis</button>
            </a>
@@ -82,9 +86,7 @@
            </a>
         <?php  }
          ?>
-        <a href="module/admin/cpo?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
-           <button class="nav-link <?= ($current == 'cpo.php') ? 'active' : '' ?>">CPO</button>
-        </a>
+
         <?php
          if ($roles == 'dokter' or $roles == 'admin') {
             require 'trigger_pulang.php';
