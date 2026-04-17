@@ -232,8 +232,8 @@ $data = mysqli_fetch_array($check);
       </td>
 
       <td class="text-center">
-         <button class="btn btn-warning btn-sm btn-edit">Edit</button>
-         <button class="btn btn-success btn-sm btn-save d-none">Save</button>
+         <button type="button" class="btn btn-warning btn-sm btn-edit">Edit</button>
+         <button type="button" class="btn btn-success btn-sm btn-save d-none">Save</button>
       </td>
 
    </tr>
@@ -287,8 +287,17 @@ $data = mysqli_fetch_array($check);
 
    });
 
-   row.find("input").on("change", function() {
-      row.css("background", "#fff3cd"); // kuning
+   // row.find("input").on("change", function() {
+   //    row.css("background", "#fff3cd"); // kuning
+   // });
+
+   $(document).on("change", "#tableCPO input, #tableCPO select", function() {
+      let tr = $(this).closest("tr");
+      // 🔥 hanya jalan kalau memang sedang edit
+      if (tr.attr("data-editing") === "true") {
+         tr.css("background", "#fff3cd");
+      }
+
    });
 
    function loadPetugas(selectElement, selected = null) {
@@ -315,16 +324,13 @@ $data = mysqli_fetch_array($check);
    }
 
    $(document).on('click', '.btn-edit', function() {
-
       let tr = $(this).closest('tr');
-
+      tr.attr("data-editing", "true"); // 🔥 FLAG
       tr.find('input, select').prop('disabled', false);
-
+      tr.css("background", "#fff3cd");
       $(this).addClass('d-none');
       tr.find('.btn-save').removeClass('d-none');
-
    });
-
    $(document).on('click', '.btn-save', function() {
 
       let tr = $(this).closest('tr');
@@ -348,18 +354,18 @@ $data = mysqli_fetch_array($check);
 
             Swal.fire('Success', 'Data berhasil diupdate', 'success');
 
-            // disable lagi
             tr.find('input, select').prop('disabled', true);
+
+            tr.removeAttr("data-editing"); // 🔥 penting
 
             tr.find('.btn-save').addClass('d-none');
             tr.find('.btn-edit').removeClass('d-none');
 
-         } else {
-            Swal.fire('Error', res.message, 'error');
+            tr.css("background", "#f8f9fa"); // balik normal
+
          }
 
       }, 'json');
-
    });
 </script>
 
