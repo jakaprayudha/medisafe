@@ -11,6 +11,8 @@ LEFT JOIN ms_room_bed ON permintaan_ranap.id_bed = ms_room_bed.id_bed
 LEFT JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa
 WHERE pasien_visit.visit_ID='$no' AND pasien_visit.id_customer='$id_customer'");
 $dataruangan = mysqli_fetch_array($checkruangan);
+$checkpetugas = mysqli_query($koneksi, "SELECT fullname,signature_user FROM ms_users WHERE id_customer='$id_customer' AND roles='apoteker' LIMIT 1");
+$datapetugas = mysqli_fetch_array($checkpetugas);
 ?>
 
 <body class="cpo-body">
@@ -197,8 +199,8 @@ $dataruangan = mysqli_fetch_array($checkruangan);
 
       <div class="cpo-ttd">
         Pengisi Data<br>
-        <img src="../../../uploads/ttd/farmasi.png" alt="TTD">
-        <div class="cpo-ttd-line">Petugas Farmasi</div>
+        <img src="../../../uploads/ttd_faskes/<?= $datapetugas['signature_user'] ?? '' ?>" alt="TTD">
+        <div class="cpo-ttd-line"><?= $datapetugas['fullname'] ?></div>
       </div>
     </div>
 
