@@ -42,6 +42,7 @@ $stmt = $koneksi->prepare("SELECT
    v.diagnosa_sekunder,
    v.signature_path,
    v.id_doctor,
+   u.signature_user,
 
    i.code,
    i.icd10 as icd10
@@ -54,6 +55,9 @@ LEFT JOIN pasien_visit v
 
 LEFT JOIN icd_10 i 
    ON i.code = v.diagnosa
+
+LEFT JOIN ms_users u
+   ON u.fullname = v.id_doctor
 
 WHERE t.visit_ID = ?
 ORDER BY t.id_triase DESC
