@@ -1,6 +1,7 @@
 <?php
 $title = "Formulir Catatan Pemberian Obat (CPO)";
 $subtitle = "";
+require '../../../database/connect.php';
 ?>
 
 <body class="cpo-body">
@@ -167,16 +168,12 @@ $subtitle = "";
           <th width="70">Paraf<br>Petugas</th>
         </tr>
         <tr>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
+          <th colspan="4"></th>
           <th>Pagi</th>
           <th>Siang</th>
           <th>Sore</th>
           <th>Malam</th>
-          <th></th>
-          <th></th>
+          <th colspan="2"></th>
         </tr>
       </thead>
       <tbody id="cpo_body"></tbody>
@@ -215,10 +212,7 @@ $subtitle = "";
           if (res.status !== "success") return;
 
           const data = res.data;
-          if (data.length > 0) {
-            cpo_ruangan.innerText = data[0].ruangan || "-";
-            cpo_diagnosa.innerText = data[0].diagnosa || "-";
-          }
+          if (data.length > 0) {}
 
           const tbody = document.getElementById("cpo_body");
           tbody.innerHTML = "";
@@ -242,7 +236,7 @@ $subtitle = "";
               }
 
               tr.innerHTML += `
-            <td>${o.nama_obat || ""}</td>
+            <td>${o.nama_item || ""}</td>
             <td class="cpo-center">${o.dosis || ""}</td>
             <td class="cpo-center">${o.signature || ""}</td>
             <td class="cpo-center">${o.jam_pagi || ""}</td>
