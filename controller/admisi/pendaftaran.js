@@ -1,7 +1,308 @@
 window.APP = window.APP || {};
+let type = 'BPJS';
 $(function () {
+    $('#pasienSelect').select2({
+        placeholder: 'Ketik nama pasien (min. 2 huruf)...',
+        minimumInputLength: 2,
+        width: '100%',
+        ajax: {
+            url: 'controller/admisi/services/getPatient.php',
+            dataType: 'json',
+            delay: 300,
+            cache: true,
+            data: function (params) {
+                return {
+                    nama: params.term || ''
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: (data || []).map(item => ({
+                        id: item.id,
+                        text: item.nama || '-',
+                        rm: item.no_rm || '-',
+                        nik: item.nik || '-',
+                        tgl_lahir: item.tgl_lahir || '-',
+                        bpjs: item.no_bpjs || '-'
+                    }))
+                };
+            }
+        },
+        templateResult: function (data) {
+            if (!data.id) return data.text;
+            return $(`
+            <div class="select2-result-item">
+                <div class="nama">${data.text}</div>
+                <div class="detail">
+                    RM: ${data.rm} • ${data.tgl_lahir} • ${data.nik}
+                </div>
+            </div>
+        `);
+        },
+        templateSelection: function (data) {
+            return data.text || 'Pilih pasien';
+        },
+        language: {
+            inputTooShort: function (args) {
+                let sisa = args.minimum - args.input.length;
+                return sisa === 1
+                    ? 'Masukkan 1 karakter lagi'
+                    : `Masukkan ${sisa} karakter lagi`;
+            },
+            noResults: function () {
+                return `
+                    <div class="d-flex justify-content-between align-items-center" style="gap:10px;">
+                        <span>Pasien tidak ditemukan</span>
+                        <button type="button" id="btnCariBPJS" class="btn btn-sm btn-primary">
+                            Pasien Baru
+                        </button>
+                    </div>
+                `;
+            },
+            searching: function () {
+                return 'Sedang mencari data pasien...';
+            },
+            errorLoading: function () {
+                return 'Gagal mengambil data';
+            }
+        },
+        escapeMarkup: function (markup) {
+            return markup;
+        }
+    });
+    $('#pasienSelect').on('select2:select', function (e) {
+        resetSemuaForm();
+        let data = e.params.data;
+        const nomor = data.nik;
+        loadPasien(nomor, 'BPJS');
+    });
+    function loadPasien(nomor, tipe) {
+        const url = tipe === 'BPJS'
+            ? "controller/admisi/services/getPasien.php"
+            : "controller/admisi/services/getPasienUmum.php";
+        type = tipe === "BPJS" ? "BPJS" : "UMUM";
+        $('#tampilan').html(`
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary"></div>
+                <div class="mt-2 text-muted">Memuat data pasien...</div>
+            </div>
+        `);
+        $.ajax({
+            url: url,
+            type: 'GET',
+            data: {
+                tipe: 'nik',
+                nokartu: nomor
+            },
+            dataType: 'json',
+            success: function (response) {
+                if (response.success) {
+                    $('#tampilan').load("controller/admisi/pages/viewpendaftaran.php", function () {
+                        APP.initLoadfunction();
+                        if (tipe === "BPJS") {
+                            $('.viewBpjs').removeClass('d-none');
+                        }
+                        APP.cetak('#typePatient', tipe);
+                        APP.cetakhtml('#noK', response.data.noKartu || '-');
+                        APP.cetakhtml('#nama', response.data.nama || '-');
+                        APP.cetakhtml('#tglLahir', response.data.tglLahir || '-');
+                        APP.cetakhtml('#kelamin', response.data.sex === "P" ? "Perempuan" : "Laki - Laki"
+                        );
+                        APP.cetakhtml('#ppkumum', response.data.kdProviderPst?.nmProvider || '-');
+                        APP.cetakhtml('#noTelp', response.data.noHP || '-');
+                        APP.cetak('#noKartu', response.data.noKartu || '-');
+                        APP.cetak('#namapatient', response.data.nama || '-');
+                        APP.cetak('#Kelamin',
+                            response.data.sex === "P" ? "Perempuan" : "Laki - Laki"
+                        );
+                        APP.cetak('#tgllahir', response.data.tglLahir || '-');
+                        APP.cetak("#typePasien", tipe);
+                        let nik = response.data.noKTP || nomor;
+                        APP.cetak('#noNIK', nik);
+                        APP.cetakhtml('#nonik', nik);
+
+                        APP.cetak('#kdProviderPeserta',
+                            response.data.kdProviderPst?.kdProvider || ''
+                        );
+                    });
+                } else {
+                    resetTampilan();
+                    if (tipe === 'BPJS') {
+                        Swal.fire({
+                            title: "Data BPJS Bermasalah",
+                            text: response.message,
+                            icon: "warning",
+                            showDenyButton: true,
+                            confirmButtonText: "Daftar Umum",
+                            denyButtonText: "Tutup"
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                loadPasien(nomor, 'UMUM');
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: "Tidak Ditemukan",
+                            text: "Data pasien umum juga tidak ditemukan",
+                            icon: "error"
+                        });
+                    }
+                }
+            },
+            error: function () {
+                resetTampilan();
+                Swal.fire({
+                    title: "Opss..",
+                    text: "Terjadi Kesalahan Server",
+                    icon: "error"
+                });
+            }
+        });
+    }
+    function resetTampilan() {
+        $('#tampilan').html(`
+        <div class="text-muted text-center py-4">
+            <iconify-icon icon="solar:info-circle-linear" width="22"></iconify-icon>
+            <p class="mb-0 mt-2">
+                Data pasien akan ditampilkan di sini
+            </p>
+        </div>
+    `);
+    }
+    $(document).on('click', '#btnCariBPJS', function () {
+        $('#pasienSelect').select2('close');
+        $('#modalCariBPJS').modal('show');
+    });
+    $(document).on('select2:open', () => {
+        document.querySelector('.select2-container--open .select2-search__field')?.focus();
+    });
+    $('#btnSearchBPJS').on('click', function () {
+        let noKartu = $('#inputNIK').val();
+        const btn = $(this);
+        $.ajax({
+            url: "controller/admisi/services/getPasien.php",
+            type: 'GET',
+            data: {
+                tipe: 'nik',
+                nokartu: noKartu
+            },
+            dataType: 'json',
+            beforeSend() {
+                APP.load_btn_aktif(btn);
+                $('#formBPJS')[0].reset();
+                $('#formBPJS').find('input').val('');
+                $('#formBPJS, #btnTambahPasien').addClass('d-none');
+            },
+            success: function (response) {
+                let hasil = null;
+                if (response.success && response.data) {
+                    hasil = response;
+                }
+                else if (response.result && response.result.success && response.result.data) {
+                    hasil = response.result;
+                }
+                if (hasil) {
+                    let d = hasil.data;
+                    $('#btnTambahPasien, #formBPJS').removeClass('d-none');
+                    APP.cetak('#regNoBPJS', d.noKartu);
+                    APP.cetak('#regNama', d.nama);
+                    APP.cetak('#regJnsKelamin', d.sex == "P" ? "Perempuan" : "Laki - Laki");
+                    APP.cetak('#regTglLahir', d.tglLahir);
+                    APP.cetak('#noKartuDaftar', noKartu);
+                    APP.cetak("#typePasien", "BPJS");
+                    if (d.aktif === false) {
+                        Swal.fire({
+                            title: "Perhatian",
+                            text: "Peserta tidak aktif: " + d.ketAktif,
+                            icon: "warning"
+                        });
+                    }
+                } else {
+                    $('#formBPJS').addClass('d-none');
+                    Swal.fire({
+                        title: "Warning",
+                        text: response.message || "Peserta tidak ditemukan",
+                        icon: "error",
+                        showDenyButton: true,
+                        confirmButtonText: "Daftar",
+                        denyButtonText: "Kembali"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = "module/admisi/registrasi-new";
+                        }
+                    });
+                }
+            },
+            complete: function () {
+                APP.load_btn_non(btn, "Cari");
+            },
+            error: function (xhr, status, error) {
+                Swal.fire({
+                    title: "Opss..",
+                    text: "Terjadi Kesalahan",
+                    icon: "error"
+                });
+                APP.load_btn_non(btn, 'Cari');
+            }
+        })
+    })
+    $(document).on('click', '#btnTambahPasien', function () {
+        const btn = $(this);
+        let data = $('#formBPJS').serialize();
+        $.ajax({
+            url: 'controller/admisi/services/addDataPatient.php',
+            type: "POST",
+            data: data,
+            dataType: 'json',
+            beforeSend: function () {
+                APP.load_btn_aktif(btn);
+            },
+            success: function (res) {
+                if (res.success) {
+                    Swal.fire({
+                        title: "Success",
+                        text: "Berhasil Menambahkan Peserta",
+                        icon: "success",
+                        confirmButtonText: "OK",
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        allowEnterKey: false,
+                        showLoaderOnConfirm: true,
+                        preConfirm: () => {
+                            Swal.disableButtons();
+                            return new Promise((resolve) => {
+                                setTimeout(() => {
+                                    resolve();
+                                    location.reload();
+                                }, 800);
+                            });
+                        }
+                    });
+                } else {
+                    APP.load_btn_non(btn, '+ Tambah Pasien');
+                    Swal.fire({
+                        title: "Perhatian",
+                        text: res.message,
+                        icon: "warning"
+                    });
+                }
+            },
+            error: function () {
+                APP.load_btn_non(btn, '+ Tambah Pasien');
+                Swal.fire({
+                    title: "Error",
+                    text: "Terjadi kesalahan server",
+                    icon: "error"
+                });
+            }
+        });
+    });
     $('#cari').on('click', function () {
         const btn = $(this);
+        let url = "controller/admisi/services/getPasien.php";
+        if (type == "UMUM") {
+            url = "controller/admisi/services/getPasienUmum.php";
+        }
         APP.load_btn_aktif(btn);
         const nomor = $('#nomor').val();
         if (nomor.length != "") {
@@ -12,7 +313,7 @@ $(function () {
                 pilih = "noka";
             }
             $.ajax({
-                url: 'controller/admisi/services/getPasien.php',
+                url: url,
                 type: 'GET',
                 data: {
                     tipe: pilih,
@@ -23,16 +324,30 @@ $(function () {
                     if (response.success) {
                         $('#tampilan').load("controller/admisi/pages/viewpendaftaran.php", function () {
                             APP.initLoadfunction();
-                            APP.cetakhtml('#noK', response.data.noKartu);
-                            APP.cetakhtml('#nama', response.data.nama);
-                            APP.cetakhtml('#tglLahir', response.data.tglLahir);
-                            APP.cetakhtml('#kelamin', response.data.sex == "P" ? "Perempuan" : "Laki - Laki");
-                            APP.cetakhtml('#ppkumum', response.data.kdProviderPst['nmProvider']);
-                            APP.cetakhtml('#noTelp', response.data.noHP);
-                            APP.cetak('#noKartu', response.data.noKartu);
-                            APP.cetak('#namapatient', response.data.nama);
-                            APP.cetak('#Kelamin', response.data.sex == "P" ? "Perempuan" : "Laki - Laki");
-                            APP.cetak('#tgllahir', response.data.tglLahir);
+                            if (type == "BPJS") {
+                                $('.viewBpjs').removeClass('d-none');
+                                APP.cetakhtml('#noK', response.data.noKartu);
+                                APP.cetakhtml('#nama', response.data.nama);
+                                APP.cetakhtml('#tglLahir', response.data.tglLahir);
+                                APP.cetakhtml('#kelamin', response.data.sex == "P" ? "Perempuan" : "Laki - Laki");
+                                APP.cetakhtml('#ppkumum', response.data.kdProviderPst['nmProvider']);
+                                APP.cetakhtml('#noTelp', response.data.noHP);
+                                APP.cetak('#noKartu', response.data.noKartu);
+                                APP.cetak('#namapatient', response.data.nama);
+                                APP.cetak('#Kelamin', response.data.sex == "P" ? "Perempuan" : "Laki - Laki");
+                                APP.cetak('#tgllahir', response.data.tglLahir);
+                                APP.cetak("#typePasien", "BPJS");
+                            } else {
+                                APP.cetakhtml('#nama', response.data.nama);
+                                APP.cetakhtml('#tglLahir', response.data.tglLahir);
+                                APP.cetakhtml('#kelamin', response.data.sex);
+                                APP.cetakhtml('#noTelp', response.data.noHP);
+                                APP.cetak('#noKartu', response.data.noKartu);
+                                APP.cetak('#namapatient', response.data.nama);
+                                APP.cetak('#Kelamin', response.data.sex);
+                                APP.cetak('#tgllahir', response.data.tglLahir);
+                                APP.cetak("#typePasien", "UMUM");
+                            }
                             if (response.data.noKTP == null || response.data.noKTP == "") {
                                 let nomor = $('#nomor').val();
                                 APP.cetak('#noNIK', nomor);
@@ -87,7 +402,7 @@ $(function () {
             maxDate: "today"
         });
         $.ajax({
-            url: 'controller/admisi/services/get_provider.php',
+            url: 'controller/admisi/services/get_provider.php?type=' + type,
             dataType: 'json',
             success: function (data) {
                 let options = '';
@@ -246,5 +561,27 @@ $(function () {
                 APP.load_btn_non('#create', "Simpan Kunjungan");
             }
         })
+    }
+    function resetSemuaForm() {
+
+        // kosongkan tampilan utama
+        $('#tampilan').html(`
+            <div class="text-muted text-center py-4">
+                <iconify-icon icon="solar:info-circle-linear" width="22"></iconify-icon>
+                <p class="mb-0 mt-2">
+                    Data pasien akan ditampilkan di sini
+                </p>
+            </div>
+        `);
+        $('#nik').val('');
+        $('#no_bpjs').val('');
+        $('#noKartu').val('');
+        $('#namapatient').val('');
+        $('#Kelamin').val('');
+        $('#tgllahir').val('');
+        $('#typePasien').val('');
+        $('#noNIK').val('');
+        $('#kdProviderPeserta').val('');
+        $('#isiform')[0]?.reset();
     }
 })
