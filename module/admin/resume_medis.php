@@ -63,9 +63,14 @@ $dataresume =  mysqli_fetch_array($checkvisit);
                   <!-- FORM RESUM MEDIS -->
                   <div class="row">
 
-                    <div class="col-6 mb-3">
+                    <div class="col-3 mb-3">
                       <label class="form-label">Tanggal Pulang</label>
-                      <input type="date" class="form-control" required value="">
+                      <input type="date" id="tanggal_pulang" class="form-control" required>
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Jam Pulang</label>
+                      <input type="time" id="jam_pulang" class="form-control" required>
                     </div>
 
                     <div class="col-6 mb-3">
@@ -316,6 +321,9 @@ $dataresume =  mysqli_fetch_array($checkvisit);
     data.id_doctor = document.getElementById("dokter")?.value ?? "";
     data.tindakan = data.pemeriksaan_fisik;
     data.obat = data.alergi_obat;
+    data.tanggal_pulang = document.getElementById("tanggal_pulang")?.value ?? "";
+    data.jam_pulang = document.getElementById("jam_pulang")?.value ?? "";
+
 
     fetch("controller/ranap/saveResumeMedis.php", {
         method: "POST",

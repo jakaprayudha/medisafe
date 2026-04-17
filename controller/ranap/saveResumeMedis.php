@@ -30,6 +30,8 @@ $cara_keluar = $data['cara_keluar'] ?? "";
 $rencana_tindak_lanjut = $data['rencana_tindak_lanjut'] ?? "";
 $petugas = $data['petugas'] ?? "";
 $dokter = $data['dokter'] ?? "";
+$tanggal_pulang = $data['tanggal_pulang'] ?? "";
+$jam_pulang = $data['jam_pulang'] ?? "";
 
 function normalize_codes($value)
 {
@@ -128,17 +130,19 @@ try {
             obat='$obat',
             instruksi='$instruksi',
             petugas='$petugas',
-            dokter='$dokter'
+            dokter='$dokter',
+            tanggal_pulang='$tanggal_pulang',
+            jam_pulang='$jam_pulang'
          WHERE visit_ID='$no' AND nomor_rm='$rm'
       ";
       $msg = "Data berhasil diperbarui";
    } else {
       // INSERT resume_medis
       $sql = "INSERT INTO resume_medis (
-            visit_ID, nomor_rm, diagnosa, tindakan, pemeriksaan_penunjang, obat, instruksi, petugas, dokter
+            visit_ID, nomor_rm, diagnosa, tindakan, pemeriksaan_penunjang, obat, instruksi, petugas, dokter, tanggal_pulang, jam_pulang
          )
          VALUES (
-            '$no', '$rm', '$diagnosa', '$tindakan', '$pemeriksaan_penunjang', '$obat', '$instruksi', '$petugas', '$dokter'
+            '$no', '$rm', '$diagnosa', '$tindakan', '$pemeriksaan_penunjang', '$obat', '$instruksi', '$petugas', '$dokter', '$tanggal_pulang', '$jam_pulang'
          );
       ";
       $msg = "Data berhasil disimpan";

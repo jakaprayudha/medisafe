@@ -80,14 +80,16 @@ $dataresume = mysqli_fetch_array($checkdata);
          <td class="resume-label">Nama Pasien</td>
          <td id="rm_name"><?php echo $dataresume['patient_name'] ?? ''; ?></td>
          <td class="resume-label">Tanggal Masuk</td>
-         <td id="rm_tgl_masuk"><?php echo $dataresume['visit_date'] ?? ''; ?></td>
+         <td id="rm_tgl_masuk">
+            <?= $dataresume['visit_date'] . ' ' . substr($dataresume['visit_time'], 0, 5); ?>
+         </td>
       </tr>
 
       <tr>
          <td class="resume-label">Jenis Kelamin</td>
          <td id="rm_jk"><?php echo $dataresume['patient_gender'] ?? ''; ?></td>
          <td class="resume-label">Tanggal Keluar</td>
-         <td id="rm_tgl_keluar"><?php echo $dataresume['visit_date_out'] ?? ''; ?></td>
+         <td id="rm_tgl_keluar"><?php echo $dataresume['tanggal_pulang'] . ' ' . $dataresume['jam_pulang'] ?? ''; ?></td>
       </tr>
       </tr>
 
