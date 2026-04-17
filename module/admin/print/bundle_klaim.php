@@ -22,8 +22,8 @@ $files = [
    // "formulir_resume.php",
    "formulir_resume_v2.php",
    // "formulir_lbp.php",
-   "formulir_sep.php",
-   "formulir_fkpp.php"
+   // "formulir_sep.php",
+
 ];
 
 if (!$dataekg) {

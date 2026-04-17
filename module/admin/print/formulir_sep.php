@@ -1,111 +1,71 @@
 <div class="sepprint-wrapper">
 
    <style>
-      @page {
-         margin: 0;
-         size: A4;
-      }
-
-      /* ================= RESET AMAN ================= */
-      .sepprint-wrapper img,
-      .sepprint-wrapper iframe {
-         border: none !important;
-         outline: none !important;
-         box-shadow: none !important;
-      }
-
-      /* Hilangkan gambar kosong */
-      .sepprint-wrapper img[src=""],
-      .sepprint-wrapper img:not([src]) {
-         display: none !important;
-      }
-
-      /* ================= LAYOUT CETAK ================= */
-
-      .sepprint-wrapper {
-         width: 210mm;
-         height: 297mm;
-         background: #fff;
-         margin: 0 auto;
-         overflow: hidden;
-      }
-
-      .sepprint-page {
-         width: 100%;
-         height: 100%;
-         position: relative;
-         overflow: hidden;
-         background: #fff;
-      }
-
       .sepprint-content-box {
-         width: 100%;
-         height: 100%;
          display: flex;
          justify-content: center;
-         align-items: center;
+         align-items: flex-start;
+      }
+
+      /* 🔥 WRAPPER SCALE */
+      .pdf-wrapper {
+         width: 210mm;
+         height: 297mm;
          overflow: hidden;
+
+         display: flex;
+         justify-content: center;
       }
 
-      /* ===== GAMBAR ===== */
-      .sepprint-photo {
-         width: 100%;
-         height: 100%;
-         object-fit: contain;
-         display: none;
-      }
-
-      /* ===== PDF ===== */
+      /* 🔥 SCALE DI DALAM */
       .sepprint-pdf {
-         width: 100%;
-         height: 100%;
-         border: none !important;
+         width: 210mm;
+         height: 297mm;
+         border: none;
          display: none;
+
+         transform: scale(0.85);
+         /* 🔥 TURUNKAN LAGI */
+         transform-origin: top center;
       }
 
-      /* ===== ALERT ===== */
-      .sepprint-alert {
-         position: absolute;
-         top: 50%;
-         left: 50%;
-         transform: translate(-50%, -50%);
-         background: #fff3cd;
-         border: 1px solid #ffecb5;
-         padding: 16px 20px;
-         font-size: 14pt;
-         font-weight: bold;
-         color: #7a5a2b;
-         border-radius: 5px;
-         width: 70%;
-         text-align: center;
-         display: none;
-         z-index: 99;
+      @media print {
+         .sepprint-pdf {
+            transform: scale(0.85) !important;
+         }
       }
    </style>
-
    <div class="sepprint-page">
 
-      <div id="sepprint_alert" class="sepprint-alert">Loading...</div>
+      <div class="sepprint-alert">Loading...</div>
 
       <div class="sepprint-content-box">
-         <img id="sepprint_img" class="sepprint-photo">
-         <iframe id="sepprint_pdf" class="sepprint-pdf"></iframe>
+         <img class="sepprint-photo">
+
+         <div class="pdf-wrapper">
+            <iframe class="sepprint-pdf"></iframe>
+         </div>
       </div>
 
    </div>
 </div>
 
-
 <script>
-   document.addEventListener("DOMContentLoaded", () => {
+   (function() {
+
+      const isBundle = <?= defined('IS_BUNDLE') ? 'true' : 'false' ?>;
+
+      const wrapper = document.currentScript.previousElementSibling;
+
+      const alertBox = wrapper.querySelector(".sepprint-alert");
+      const img = wrapper.querySelector(".sepprint-photo");
+      const pdf = wrapper.querySelector(".sepprint-pdf");
 
       const url = new URLSearchParams(window.location.search);
       const no = url.get("no");
       const rm = url.get("rm");
 
-      const alertBox = document.getElementById("sepprint_alert");
-      const img = document.getElementById("sepprint_img");
-      const pdf = document.getElementById("sepprint_pdf");
+      const base = window.location.origin + "/medisafe/";
 
       const showAlert = (msg) => {
          alertBox.style.display = "block";
@@ -126,35 +86,37 @@
                return showAlert("Data SEP belum diupload.");
             }
 
-            const sep = result.data[0];
-            const file = sep.sep_file;
-
+            const file = result.data[0].file_spp;
             if (!file) return showAlert("File SEP tidak ditemukan.");
 
             const ext = file.split('.').pop().toLowerCase();
-            const path = "../../../uploads/sep/" + file;
+            const path = base + "uploads/dokumen/" + file;
 
-            // ================== PDF MODE ==================
             if (ext === "pdf") {
-               pdf.src = path;
-               pdf.style.display = "block";
-               alertBox.style.display = "none";
-               img.style.display = "none";
+
+               if (isBundle) {
+                  // ✅ bundle → embed
+                  pdf.src = path + "#zoom=90";
+                  pdf.style.display = "block";
+               } else {
+                  // ✅ standalone → direct open
+                  window.location.href = path;
+               }
+
                return;
             }
-
-            // ================== IMAGE MODE ==================
-            img.onerror = () => showAlert("File SEP rusak atau tidak ditemukan.");
 
             img.onload = () => {
                img.style.display = "block";
                alertBox.style.display = "none";
-               pdf.style.display = "none";
             };
+
+            img.onerror = () => showAlert("File rusak");
 
             img.src = path;
 
          })
-         .catch(() => showAlert("Gagal mengambil data dari server."));
-   });
+         .catch(() => showAlert("Gagal load data"));
+
+   })();
 </script>

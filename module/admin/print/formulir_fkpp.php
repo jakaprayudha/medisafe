@@ -127,12 +127,12 @@
             }
 
             const fkpp = result.data[0];
-            const file = fkpp.fkpp_file;
+            const file = fkpp.file_fkpp;
 
             if (!file) return showAlert("File fkpp tidak ditemukan.");
 
             const ext = file.split('.').pop().toLowerCase();
-            const path = "../../../uploads/fkpp/" + file;
+            const path = "../../../uploads/dokumen/" + file;
 
             // ================== PDF MODE ==================
             if (ext === "pdf") {

@@ -3,9 +3,10 @@ require '../../../database/connect.php';
 
 $visit = $_GET['no'] ?? '';
 $rm    = $_GET['rm'] ?? '';
+$id_customer = $_SESSION['id_customer'] ?? null;
 
-$q = $koneksi->query("SELECT * FROM pasien_sep pv 
-   WHERE nomor_rm = '$rm' AND visit_ID = '$visit' LIMIT 1");
+$q = $koneksi->query("SELECT file_spp FROM pasien_visit pv 
+   WHERE id_customer = '$id_customer' AND visit_ID = '$visit' LIMIT 1");
 
 $data = [];
 while ($row = $q->fetch_assoc()) {
