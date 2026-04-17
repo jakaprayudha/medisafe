@@ -482,10 +482,10 @@ require '../../controller/view.php';
     function generateTimeSlots() {
       let times = [];
       let current = new Date();
-      current.setHours(8, 0, 0);
+      current.setHours(0, 0, 0, 0); // mulai dari 00:00
 
       let end = new Date();
-      end.setHours(23, 59, 0);
+      end.setHours(23, 45, 0, 0); // sampai 23:45
 
       while (current <= end) {
         let hh = String(current.getHours()).padStart(2, '0');
