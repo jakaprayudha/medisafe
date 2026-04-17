@@ -107,9 +107,9 @@ $dataresume = mysqli_fetch_array($checkdata);
 
       <tr>
          <td class="resume-label">Cara Bayar</td>
-         <td id="rm_cara_bayar"><?php echo $dataresume['payment_method'] ?? ''; ?></td>
-         <td class="resume-label">DPJP</td>
-         <td id="rm_dpjp"><?php echo $dataresume['doctor_name'] ?? ''; ?></td>
+         <td id="rm_cara_bayar"><?php echo $dataresume['provider_name'] ?? ''; ?></td>
+         <td class="resume-label">Dokter</td>
+         <td id="rm_dpjp"><?php echo $dataresume['id_doctor'] ?? ''; ?></td>
       </tr>
    </table>
 
