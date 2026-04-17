@@ -10,7 +10,6 @@ $toDate   = $_GET['toDate'] ?? null;
 $doctor   = $_GET['doctor'] ?? null;
 $provider = $_GET['provider'] ?? null;
 $poli     = $_GET['poli'] ?? null;
-$tipe     = $_GET['tipe_pasien'] ?? null;
 
 $sql = "
 SELECT pv.*, mp.provider_name
@@ -54,12 +53,6 @@ if (!empty($poli)) {
    $sql .= " AND pv.id_poli = '$poli' ";
 }
 
-// =============================
-// FILTER TIPE
-// =============================
-if (!empty($tipe)) {
-   $sql .= " AND pv.source_hub = '$tipe' ";
-}
 
 // =============================
 $sql .= " ORDER BY pv.visit_date DESC, pv.visit_time DESC ";
