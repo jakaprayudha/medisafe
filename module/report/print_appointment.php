@@ -11,25 +11,16 @@ $id_customer = $_SESSION['id_customer'] ?? null;
 if (!$id_customer) {
    die("Session tidak ditemukan");
 }
-// =====================
-// QUERY
-// =====================
-$where = "WHERE pasien_visit.id_customer = '$id_customer'
-          AND DATE(visit_date) BETWEEN '$fromDate' AND '$toDate'";
-
-if ($doctor != '') {
-   $where .= " AND id_doctor = '$doctor'";
-}
-
-if ($provider != '') {
-   $where .= " AND id_provider = '$provider'";
-}
-
 $query = mysqli_query($koneksi, "
   SELECT *
-  FROM pasien_visit INNER JOIN ms_provider ON pasien_visit.id_provider = ms_provider.id_provider
-  $where
-  ORDER BY visit_date DESC
+  FROM pasien_visit 
+  INNER JOIN ms_provider 
+    ON pasien_visit.id_provider = ms_provider.id_provider
+  WHERE pasien_visit.id_customer = '$id_customer'
+    AND DATE(pasien_visit.visit_date) BETWEEN '$fromDate' AND '$toDate'
+    " . ($doctor ? " AND pasien_visit.id_doctor = '$doctor'" : "") . "
+    " . ($provider ? " AND pasien_visit.id_provider = '$provider'" : "") . "
+  ORDER BY pasien_visit.visit_date DESC
 ");
 
 ?>
