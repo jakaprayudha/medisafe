@@ -5,11 +5,17 @@ $fromDate = $_GET['fromDate'] ?? date('Y-m-d');
 $toDate   = $_GET['toDate'] ?? date('Y-m-d');
 $doctor   = $_GET['doctor'] ?? '';
 $provider = $_GET['provider'] ?? '';
+session_start();
+$id_customer = $_SESSION['id_customer'] ?? null;
 
+if (!$id_customer) {
+   die("Session tidak ditemukan");
+}
 // =====================
 // QUERY
 // =====================
-$where = "WHERE DATE(visit_date) BETWEEN '$fromDate' AND '$toDate'";
+$where = "WHERE pasien_visit.id_customer = '$id_customer'
+          AND DATE(visit_date) BETWEEN '$fromDate' AND '$toDate'";
 
 if ($doctor != '') {
    $where .= " AND id_doctor = '$doctor'";
