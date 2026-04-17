@@ -46,6 +46,16 @@ if ($no && $id_customer) {
       }
     }
 
+    .page-break {
+      page-break-before: always;
+    }
+
+    @media print {
+      .page-break {
+        page-break-before: always;
+      }
+    }
+
     /* =================================================
    TRIAGE STYLE (AMAN)
 ================================================= */
@@ -287,7 +297,7 @@ if ($no && $id_customer) {
     <!-- =====================================================
      IGD – ABCDE (DIGABUNG DARI FORM IGD)
 ===================================================== -->
-    <table class="igd-table">
+    <table class="igd-table page-break">
       <tr>
         <th style="width:20%">TERAPI</th>
         <td><?= nl2br(htmlspecialchars($terapi)) ?></td>
