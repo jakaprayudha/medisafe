@@ -11,6 +11,8 @@ $no = $_GET['no'];
   <?php
   require '../../assets/template/head.php';
   ?>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </head>
 
 <body>
@@ -314,13 +316,13 @@ $no = $_GET['no'];
                           <div class="col-4">
                             <div class="mb-3">
                               <label class="form-label">Jam Mulai</label>
-                              <input type="time" class="form-control" name="start_time" required>
+                              <input type="text" class="form-control timepicker" name="start_time" required>
                             </div>
                           </div>
                           <div class="col-4">
                             <div class="mb-3">
                               <label class="form-label">Jam Selesai</label>
-                              <input type="time" class="form-control" name="end_time" required>
+                              <input type="text" class="form-control timepicker" name="end_time" required>
                             </div>
                           </div>
                         </div>
@@ -556,6 +558,14 @@ $no = $_GET['no'];
     }
 
     if (doctorNo) loadJadwal();
+  });
+</script>
+<script>
+  flatpickr(".timepicker", {
+    enableTime: true,
+    noCalendar: true,
+    dateFormat: "H:i", // 🔥 24 jam paksa
+    time_24hr: true
   });
 </script>
 
