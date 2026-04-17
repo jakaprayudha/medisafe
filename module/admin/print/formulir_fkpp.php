@@ -1,160 +1,88 @@
-<div class="fkppprint-wrapper">
+<div class="fkpp-a4-wrapper">
 
    <style>
-      @page {
-         margin: 0;
-         size: A4;
-      }
-
-      /* ================= RESET AMAN ================= */
-      .fkppprint-wrapper img,
-      .fkppprint-wrapper iframe {
-         border: none !important;
-         outline: none !important;
-         box-shadow: none !important;
-      }
-
-      /* Hilangkan gambar kosong */
-      .fkppprint-wrapper img[src=""],
-      .fkppprint-wrapper img:not([src]) {
-         display: none !important;
-      }
-
-      /* ================= LAYOUT CETAK ================= */
-
-      .fkppprint-wrapper {
+      /* ===== A4 CANVAS ===== */
+      .fkpp-a4-wrapper {
          width: 210mm;
          height: 297mm;
-         background: #fff;
          margin: 0 auto;
-         overflow: hidden;
-      }
-
-      .fkppprint-page {
-         width: 100%;
-         height: 100%;
-         position: relative;
-         overflow: hidden;
          background: #fff;
-      }
-
-      .fkppprint-content-box {
-         width: 100%;
-         height: 100%;
-         display: flex;
-         justify-content: center;
-         align-items: center;
          overflow: hidden;
+         position: relative;
       }
 
-      /* ===== GAMBAR ===== */
-      .fkppprint-photo {
+      .fkpp-a4-wrapper {
+         background: white !important;
+      }
+
+      .pdf-frame {
+         background: white !important;
+      }
+
+      .pdf-frame {
+         display: block;
+      }
+
+      /* ===== IFRAME FULL ===== */
+      .pdf-frame {
          width: 100%;
          height: 100%;
-         object-fit: contain;
-         display: none;
+         border: none;
       }
 
-      /* ===== PDF ===== */
-      .fkppprint-pdf {
-         width: 100%;
-         height: 100%;
-         border: none !important;
-         display: none;
-      }
+      /* ===== PRINT FIX ===== */
+      @media print {
 
-      /* ===== ALERT ===== */
-      .fkppprint-alert {
-         position: absolute;
-         top: 50%;
-         left: 50%;
-         transform: translate(-50%, -50%);
-         background: #fff3cd;
-         border: 1px solid #ffecb5;
-         padding: 16px 20px;
-         font-size: 14pt;
-         font-weight: bold;
-         color: #7a5a2b;
-         border-radius: 5px;
-         width: 70%;
-         text-align: center;
-         display: none;
-         z-index: 99;
+         html,
+         body {
+            margin: 0 !important;
+            padding: 0 !important;
+         }
+
+         .fkpp-a4-wrapper {
+            width: 210mm !important;
+            height: 297mm !important;
+            page-break-after: always;
+         }
+
+         .pdf-frame {
+            width: 100% !important;
+            height: 100% !important;
+         }
       }
    </style>
 
-   <div class="fkppprint-page">
+   <iframe class="pdf-frame"></iframe>
 
-      <div id="fkppprint_alert" class="fkppprint-alert">Loading...</div>
-
-      <div class="fkppprint-content-box">
-         <img id="fkppprint_img" class="fkppprint-photo">
-         <iframe id="fkppprint_pdf" class="fkppprint-pdf"></iframe>
-      </div>
-
-   </div>
 </div>
 
-
 <script>
-   document.addEventListener("DOMContentLoaded", () => {
+   (function() {
+
+      const wrapper = document.currentScript.previousElementSibling;
+      const iframe = wrapper.querySelector(".pdf-frame");
 
       const url = new URLSearchParams(window.location.search);
       const no = url.get("no");
       const rm = url.get("rm");
 
-      const alertBox = document.getElementById("fkppprint_alert");
-      const img = document.getElementById("fkppprint_img");
-      const pdf = document.getElementById("fkppprint_pdf");
-
-      const showAlert = (msg) => {
-         alertBox.style.display = "block";
-         alertBox.textContent = msg;
-         img.style.display = "none";
-         pdf.style.display = "none";
-      };
-
-      if (!no || !rm) {
-         return showAlert("Parameter tidak lengkap.");
-      }
+      const base = window.location.origin + window.location.pathname.split('/module')[0] + "/";
 
       fetch(`getfkpp.php?no=${no}&rm=${rm}`)
          .then(r => r.json())
-         .then(result => {
+         .then(res => {
 
-            if (result.status !== "success" || result.data.length === 0) {
-               return showAlert("Data FKPP belum diupload.");
-            }
+            if (!res.data || !res.data[0]) return;
 
-            const fkpp = result.data[0];
-            const file = fkpp.file_fkpp;
+            const file = res.data[0].file_fkpp;
+            if (!file) return;
 
-            if (!file) return showAlert("File fkpp tidak ditemukan.");
+            const path = base + "uploads/dokumen/" + file;
 
-            const ext = file.split('.').pop().toLowerCase();
-            const path = "../../../uploads/dokumen/" + file;
+            // 🔥 KUNCI: pakai zoom fit width
+            iframe.src = path + "#zoom=49";
 
-            // ================== PDF MODE ==================
-            if (ext === "pdf") {
-               pdf.src = path;
-               pdf.style.display = "block";
-               alertBox.style.display = "none";
-               img.style.display = "none";
-               return;
-            }
+         });
 
-            // ================== IMAGE MODE ==================
-            img.onerror = () => showAlert("File fkpp rusak atau tidak ditemukan.");
-
-            img.onload = () => {
-               img.style.display = "block";
-               alertBox.style.display = "none";
-               pdf.style.display = "none";
-            };
-
-            img.src = path;
-
-         })
-         .catch(() => showAlert("Gagal mengambil data dari server."));
-   });
+   })();
 </script>

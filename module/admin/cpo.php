@@ -113,15 +113,15 @@ $data = mysqli_fetch_array($check);
 </body>
 
 <script>
-   const petugas = "<?= $_SESSION['fullname'] ?? '' ?>";
    $(document).ready(function() {
       // kosong dulu, nanti dipanggil dari loadCPO
    });
 
    $('#addRow').on('click', function() {
+
       let today = new Date().toISOString().split('T')[0];
 
-      $('#tableCPO tbody').append(`
+      let html = `
    <tr>
       <td style="min-width:150px">
          <input type="date" name="tanggal[]" value="${today}" class="form-control">
@@ -145,16 +145,22 @@ $data = mysqli_fetch_array($check);
       <td style="min-width:120px"><input type="time" name="jam_malam[]" class="form-control"></td>
 
       <td style="min-width:150px">
-         <input type="text" name="petugas[]" value="${petugas}" class="form-control" readonly>
+         <select name="petugas[]" class="form-control petugas-select"></select>
       </td>
 
       <td style="min-width:80px; text-align:center;">
          <button type="button" class="btn btn-danger btn-sm remove">X</button>
       </td>
    </tr>
-   `);
-   });
+   `;
 
+      $('#tableCPO tbody').append(html);
+
+      // 🔥 ambil select terakhir (tanpa ubah struktur)
+      let select = $('#tableCPO tbody tr:last .petugas-select');
+
+      loadPetugas(select);
+   });
 
    $('#formCPO').on('submit', function(e) {
       e.preventDefault();
@@ -208,51 +214,36 @@ $data = mysqli_fetch_array($check);
 
             res.data.forEach(row => {
 
-               $('#tableCPO tbody').append(`
-          <tr style="background:#f8f9fa;">
-            
-            <td>
-              <input type="date" value="${row.tanggal}" class="form-control" disabled>
-            </td>
+               let tr = $(`
+   <tr style="background:#f8f9fa;" data-id="${row.id}">
+      
+      <td><input type="date" value="${row.tanggal}" class="form-control" disabled></td>
+      <td><input type="text" value="${row.nama_item}" class="form-control" disabled></td>
+      <td><input type="text" value="${row.dosis}" class="form-control" disabled></td>
+      <td><input type="text" value="${row.signature}" class="form-control" disabled></td>
 
-            <td>
-              <input type="text" value="${row.nama_item}" class="form-control" disabled>
-            </td>
+      <td><input type="time" value="${row.jam_pagi}" class="form-control" disabled></td>
+      <td><input type="time" value="${row.jam_siang}" class="form-control" disabled></td>
+      <td><input type="time" value="${row.jam_sore}" class="form-control" disabled></td>
+      <td><input type="time" value="${row.jam_malam}" class="form-control" disabled></td>
 
-            <td>
-              <input type="text" value="${row.dosis}" class="form-control" disabled>
-            </td>
+      <td>
+         <select class="form-control petugas-select" disabled></select>
+      </td>
 
-            <td>
-              <input type="text" value="${row.signature}" class="form-control" disabled>
-            </td>
+      <td class="text-center">
+         <button type="button" class="btn btn-warning btn-sm btn-edit">Edit</button>
+         <button type="button" class="btn btn-success btn-sm btn-save d-none">Save</button>
+      </td>
 
-            <td>
-              <input type="time" value="${row.jam_pagi}" class="form-control" disabled>
-            </td>
+   </tr>
+   `);
 
-            <td>
-              <input type="time" value="${row.jam_siang}" class="form-control" disabled>
-            </td>
+               $('#tableCPO tbody').append(tr);
 
-            <td>
-              <input type="time" value="${row.jam_sore}" class="form-control" disabled>
-            </td>
-
-            <td>
-              <input type="time" value="${row.jam_malam}" class="form-control" disabled>
-            </td>
-
-            <td>
-               <input type="text" value="${row.petugas}" class="form-control" disabled>
-            </td>
-
-            <td class="text-center">
-              <span class="badge bg-success">Tersimpan</span>
-            </td>
-
-          </tr>
-        `);
+               // 🔥 load petugas
+               let select = tr.find('.petugas-select');
+               loadPetugas(select, row.id_user);
 
             });
 
@@ -296,8 +287,85 @@ $data = mysqli_fetch_array($check);
 
    });
 
-   row.find("input").on("change", function() {
-      row.css("background", "#fff3cd"); // kuning
+   // row.find("input").on("change", function() {
+   //    row.css("background", "#fff3cd"); // kuning
+   // });
+
+   $(document).on("change", "#tableCPO input, #tableCPO select", function() {
+      let tr = $(this).closest("tr");
+      // 🔥 hanya jalan kalau memang sedang edit
+      if (tr.attr("data-editing") === "true") {
+         tr.css("background", "#fff3cd");
+      }
+
+   });
+
+   function loadPetugas(selectElement, selected = null) {
+      $.get('controller/master/user.php', function(res) {
+
+         if (res.status === 'success') {
+
+            let option = '<option value="">-- Pilih Petugas --</option>';
+
+            res.data.forEach(u => {
+               option += `<option value="${u.id_user}">
+               ${u.fullname} [${u.roles}]
+            </option>`;
+            });
+
+            selectElement.html(option);
+
+            if (selected) {
+               selectElement.val(selected);
+            }
+         }
+
+      }, 'json');
+   }
+
+   $(document).on('click', '.btn-edit', function() {
+      let tr = $(this).closest('tr');
+      tr.attr("data-editing", "true"); // 🔥 FLAG
+      tr.find('input, select').prop('disabled', false);
+      tr.css("background", "#fff3cd");
+      $(this).addClass('d-none');
+      tr.find('.btn-save').removeClass('d-none');
+   });
+   $(document).on('click', '.btn-save', function() {
+
+      let tr = $(this).closest('tr');
+
+      let data = {
+         id: tr.data('id'),
+         tanggal: tr.find("input[type='date']").val(),
+         nama_obat: tr.find("input[type='text']").eq(0).val(),
+         dosis: tr.find("input[type='text']").eq(1).val(),
+         signature: tr.find("input[type='text']").eq(2).val(),
+         jam_pagi: tr.find("input[type='time']").eq(0).val(),
+         jam_siang: tr.find("input[type='time']").eq(1).val(),
+         jam_sore: tr.find("input[type='time']").eq(2).val(),
+         jam_malam: tr.find("input[type='time']").eq(3).val(),
+         id_user: tr.find("select").val()
+      };
+
+      $.post('controller/visit/updateCPO.php', data, function(res) {
+
+         if (res.status === 'success') {
+
+            Swal.fire('Success', 'Data berhasil diupdate', 'success');
+
+            tr.find('input, select').prop('disabled', true);
+
+            tr.removeAttr("data-editing"); // 🔥 penting
+
+            tr.find('.btn-save').addClass('d-none');
+            tr.find('.btn-edit').removeClass('d-none');
+
+            tr.css("background", "#f8f9fa"); // balik normal
+
+         }
+
+      }, 'json');
    });
 </script>
 
