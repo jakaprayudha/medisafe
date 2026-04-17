@@ -2,7 +2,7 @@ window.APP = window.APP || {};
 let type = 'BPJS';
 $(function () {
     $('#pasienSelect').select2({
-        placeholder: 'Ketik nama pasien (min. 2 huruf)...',
+        placeholder: 'Ketik nama,nik,bpjs pasien (min. 2 karakter)...',
         minimumInputLength: 2,
         width: '100%',
         ajax: {
@@ -34,7 +34,7 @@ $(function () {
             <div class="select2-result-item">
                 <div class="nama">${data.text}</div>
                 <div class="detail">
-                    RM: ${data.rm} • ${data.tgl_lahir} • ${data.nik}
+                    RM: ${data.rm} • ${data.tgl_lahir} • ${data.nik} • ${data.bpjs} 
                 </div>
             </div>
         `);
@@ -563,8 +563,6 @@ $(function () {
         })
     }
     function resetSemuaForm() {
-
-        // kosongkan tampilan utama
         $('#tampilan').html(`
             <div class="text-muted text-center py-4">
                 <iconify-icon icon="solar:info-circle-linear" width="22"></iconify-icon>

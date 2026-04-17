@@ -87,7 +87,7 @@ require '../../controller/view.php';
                                     <form class="row g-3 align-items-end">
                                         <div class="col-md-6">
                                             <label class="form-label fw-medium">
-                                                Cari Pasien (Nama)
+                                                Cari Pasien (Nama / NIK / BPJS)
                                             </label>
                                             <select id="pasienSelect" class="form-control" style="width:100%"></select>
                                         </div>
