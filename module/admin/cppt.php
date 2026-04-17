@@ -16,9 +16,14 @@ $datapatient = mysqli_fetch_array($patient);
   require '../../assets/template/head.php';
   ?>
   <style>
-    .cppt-text {
+    /* .cppt-text {
       max-width: 400px;
       white-space: normal;
+    } */
+    .cppt-text {
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.5;
     }
   </style>
 </head>
@@ -230,19 +235,19 @@ $id_patient = $datapatient['id_patient'];
 <script>
   const apiUrl = 'controller/visit/cpptController?no=<?= $_GET['no'] ?>&id_patient=<?= $id_patient ?>';
 
-  function readMore(text, limit = 30) {
-    if (!text) return "-";
+  // function readMore(text, limit = 30) {
+  //   if (!text) return "-";
 
-    if (text.length <= limit) return text;
+  //   if (text.length <= limit) return text;
 
-    const shortText = text.substring(0, limit);
+  //   const shortText = text.substring(0, limit);
 
-    return `
-    <span class="short-text">${shortText}...</span>
-    <span class="full-text d-none">${text}</span>
-    <a href="javascript:;" class="read-more text-primary"> Selengkapnya</a>
-  `;
-  }
+  //   return `
+  //   <span class="short-text">${shortText}...</span>
+  //   <span class="full-text d-none">${text}</span>
+  //   <a href="javascript:;" class="read-more text-primary"> Selengkapnya</a>
+  // `;
+  // }
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
       processing: true,
@@ -268,13 +273,13 @@ $id_patient = $datapatient['id_patient'];
               "tanggal": row.cppt_date + " " + row.cppt_time ?? "-",
               "profesi": row.cppt_profesi ?? "-",
               "cppt": `
-                <div class="cppt-text">
-                  <strong>S : </strong>${readMore(row.subjective)}<br>
-                  <strong>O : </strong>${readMore(row.objective)}<br>
-                  <strong>A : </strong>${readMore(row.analysis)}<br>
-                  <strong>P : </strong>${readMore(row.planning)}
-                </div>
-              `,
+                  <div class="cppt-text">
+                    <strong>S : </strong>${row.subjective ?? "-"}<br>
+                    <strong>O : </strong>${row.objective ?? "-"}<br>
+                    <strong>A : </strong>${row.analysis ?? "-"}<br>
+                    <strong>P : </strong>${row.planning ?? "-"}
+                  </div>
+                `,
               "instruksi": row.instruction ?? "-",
               "verifikasi": (() => {
 
@@ -458,20 +463,20 @@ $id_patient = $datapatient['id_patient'];
 
     });
 
-    $(document).on("click", ".read-more", function() {
+    // $(document).on("click", ".read-more", function() {
 
-      const parent = $(this).closest("div");
+    //   const parent = $(this).closest("div");
 
-      parent.find(".short-text").toggleClass("d-none");
-      parent.find(".full-text").toggleClass("d-none");
+    //   parent.find(".short-text").toggleClass("d-none");
+    //   parent.find(".full-text").toggleClass("d-none");
 
-      if ($(this).text().includes("Selengkapnya")) {
-        $(this).text(" Sembunyikan");
-      } else {
-        $(this).text(" Selengkapnya");
-      }
+    //   if ($(this).text().includes("Selengkapnya")) {
+    //     $(this).text(" Sembunyikan");
+    //   } else {
+    //     $(this).text(" Selengkapnya");
+    //   }
 
-    });
+    // });
   });
 </script>
 
