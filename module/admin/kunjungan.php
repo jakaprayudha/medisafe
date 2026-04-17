@@ -66,6 +66,7 @@ $rm = $_GET['rm'];
                     <input type="hidden" name="nmDokter" id="nmDokter">
                     <input type="hidden" name="noKunjungan" id="noKunjungan">
                     <input type="hidden" name="kdTkp" value="10">
+                    <input type="hidden" name="status_pasien" id="status_pasien">
                     <h4 class="mb-3">Form Pemeriksaan Medis</h4>
                     <!-- Data Pasien -->
                     <?php
@@ -229,12 +230,12 @@ $rm = $_GET['rm'];
                         </div>
                       </div>
 
-                      <div class="col-md-6">
+                      <div class="col-md-6 statuspasien">
                         <label for="kondisi_masuk" class="form-label"> Prognosa <span class="text-danger">*</span></label>
                         <select name="kondisi_masuk" id="kondisi_masuk" class="form-select" required>
                         </select>
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-md-6 statuspasien">
                         <label for="kdSadar" class="form-label">Kesadaran <span class="text-danger">*</span></label>
                         <select class="form-select" name="kdSadar" id="kdSadar" required>
                         </select>
@@ -358,8 +359,6 @@ $rm = $_GET['rm'];
                           </div>
                         </div>
                       </div>
-                    </div>
-                    <div class="col-12 d-none" id="formrujukanvertikal">
                       <!-- Kategori -->
                       <div class="row mb-3">
                         <div class="col-2">

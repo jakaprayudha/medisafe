@@ -1,6 +1,7 @@
 window.APP = window.APP || {};
 $(function () {
     statusEdit = false;
+    let StatusPasien = 'BPJS';
     $('select').select2({
         width: '100%'
     });
@@ -21,96 +22,129 @@ $(function () {
             success: function (res) {
                 if (res.status === 'success' && res.data.length > 0) {
                     let d = res.data[0];
-                    if (res.kunjung == '0') {
-                        APP.cetak('#kode_poli', d.kdPoli);
-                        APP.cetak('#nama_poli', d.nmPoli);
-                        APP.cetak('#id_patient', d.id_patient);
-                        APP.cetak('#tglDaftar', d.tanggal_daftar);
-                        APP.cetak('#noKartu', d.noKartu);
-                        APP.cetak('#kdDokter', d.code_doctor);
-                        APP.cetak('#nmDokter', d.id_doctor);
-                        APP.cetak('#tinggiBadan', d.tinggiBadan);
-                        APP.cetak('#beratBadan', d.beratBadan);
-                        APP.cetak('#lingkarPerut', d.lingkarPerut || '0');
-                        APP.cetak('#sistole', d.sistole || '0');
-                        APP.cetak('#diastole', d.diastole || '0');
-                        APP.cetak('#respRate', d.respRate || '0');
-                        APP.cetak('#heartRate', d.heartRate || '0');
-                        APP.cetak('#suhu', d.suhu || '0');
-                        APP.cetak('#saturasi', d.saturasi || '0');
-                        APP.cetak('#keluhan_penyerta', d.keluhan || '');
-                        APP.hitungBMI();
-                        APP.ambil_data('#kdStatusPulang', 'statuspulang/rawatInap/false', 'kdStatusPulang', 'nmStatusPulang', true);
+                    StatusPasien = res.pasienStatus == "UMUM" ? "UMUM" : "BPJS";
+                    if (res.pasienStatus == "UMUM") {
+                        APP.ambil_data('#kdStatusPulang', 'statuspulang/rawatInap/false', 'kdStatusPulang', 'nmStatusPulang', true).then(function () {
+                            $('.statuspasien').addClass('d-none');
+                            APP.cetak('#nama_poli', d.nmPoli);
+                            APP.cetak('#id_patient', d.id_patient);
+                            APP.cetak('#kdDokter', d.code_doctor);
+                            APP.cetak('#nmDokter', d.id_doctor);
+                            APP.cetak('#tinggiBadan', d.tinggi_badan);
+                            APP.cetak('#beratBadan', d.berat_badan);
+                            APP.cetak('#lingkar_perut', d.lingkar_perut || '0');
+                            APP.cetak('#sistole', d.sistole || '0');
+                            APP.cetak('#diastole', d.diastole || '0');
+                            APP.cetak('#respRate', d.resp_rate || '0');
+                            APP.cetak('#heartRate', d.heart_rate || '0');
+                            APP.cetak('#suhu', d.suhu || '0');
+                            APP.cetak('#saturasi', d.saturasi || '0');
+                            APP.cetak('#keluhan_penyerta', d.keluhan || '');
+                            APP.cetak('#keluhan_utama', d.anamnesa || '');
+                            APP.cetak('#status_pasien', "UMUM");
+                            APP.hitungBMI();
+                            if (d.kdDiag1 != null) {
+                                APP.addValueSelect('#diag1', d.kdDiag1, d.kdDiag1 + ' - ' + d.nmDiag1);
+                                APP.addValueInput('#nmDiag1', d.nmDiag1);
+                            }
+                            if (d.kdDiag2 != null) {
+                                APP.addValueSelect('#diag2', d.kdDiag2, d.kdDiag2 + ' - ' + d.nmDiag2);
+                                APP.addValueInput('#nmDiag2', d.nmDiag2);
+                            }
+                            if (d.kdDiag3 != null) {
+                                APP.addValueSelect('#diag3', d.kdDiag3, d.kdDiag3 + ' - ' + d.nmDiag3);
+                                APP.addValueInput('#nmDiag3', d.nmDiag3);
+                            }
+                            $('#kdStatusPulang').val(d.kdStatusPulang).trigger('change');
+                        })
                     } else {
-                        APP.ambil_data('#kdStatusPulang', 'statuspulang/rawatInap/false', 'kdStatusPulang', 'nmStatusPulang', true)
-                            .then(function () {
-                                APP.cetak('#noKunjungan', d.noKunjungan);
-                                APP.cetak('#kode_poli', d.kdPoli);
-                                APP.cetak('#nama_poli', d.nmPoli);
-                                APP.cetak('#id_patient', d.id_patient);
-                                APP.cetak('#tglDaftar', d.tglDaftar);
-                                APP.cetak('#noKartu', d.noKartu);
-                                APP.cetak('#kdDokter', d.kdDokter);
-                                APP.cetak('#nmDokter', d.nmDokter);
-                                APP.cetak('#visit_notes', d.catatan_screening || '');
-                                APP.cetak('#tinggiBadan', d.tinggiBadan);
-                                APP.cetak('#beratBadan', d.beratBadan);
-                                APP.cetak('#lingkarPerut', d.lingkarPerut);
-                                APP.cetak('#sistole', d.sistole || '0');
-                                APP.cetak('#diastole', d.diastole || '0');
-                                APP.cetak('#respRate', d.respRate || '0');
-                                APP.cetak('#heartRate', d.heartRate || '0');
-                                APP.cetak('#suhu', d.suhu);
-                                APP.cetak('#saturasi', d.saturasi);
-                                APP.cetak('#keluhan_penyerta', d.keluhan || '');
-                                APP.cetak('#keluhan_utama', d.anamnesa || '');
-                                APP.cetak('#tindakan', d.tindakan || '');
-                                APP.cetakhtml('#idUmur', d.umur);
-                                APP.hitungBMI();
-                                $('#alergiMakan').val(d.alergiMakan).trigger('change');
-                                $('#alergiUdara').val(d.alergiUdara).trigger('change');
-                                $('#alergiObat').val(d.alergiObat).trigger('change');
-                                $('#kondisi_masuk').val(d.kdPrognosa).trigger('change');
-                                $('#kdSadar').val(d.kdSadar).trigger('change');
-                                if (d.kdDiag1 != null) {
-                                    APP.addValueSelect('#diag1', d.kdDiag1, d.nmDiag1);
-                                    APP.addValueInput('#nmDiag1', d.nmDiag1);
-                                }
-                                if (d.kdDiag2 != null) {
-                                    APP.addValueSelect('#diag2', d.kdDiag2, d.nmDiag2);
-                                    APP.addValueInput('#nmDiag2', d.nmDiag2);
-                                }
-                                if (d.kdDiag3 != null) {
-                                    APP.addValueSelect('#diag3', d.kdDiag3, d.nmDiag3);
-                                    APP.addValueInput('#nmDiag3', d.nmDiag3);
-                                }
-                                $('#kdStatusPulang').val(d.kdStatusPulang).trigger('change');
-                                $('#simpan_pemeriksaan').text('Update Pemeriksaan').removeClass('btn-primary').addClass('btn-danger');
-                                if (d.noKunjungan != null) {
-                                    statusEdit = true;
-                                }
-                                loadRujukan();
-                                async function loadRujukan() {
-                                    await APP.ambil_data('#kdKategori', '/spesialis', 'kdSpesialis', 'nmSpesialis', true);
-                                    $('#kdKategori').val(d.kdKhusus).trigger('change');
-                                    $('#kdsubspesialis').val(d.subSpesialis).trigger('change');
-                                    $('#kdSarana').val(d.kdSarana).trigger('change');
-                                    $('#kdSaranaHidden').val(d.kdSarana);
-                                    $('#tglRujukan').val(d.tglEstRujuk);
-                                    $('#kdfaskes').val(d.kdfaskes);
-                                    $('#nmfaskes').val(d.nmfaskes);
-                                }
-                                checkRujuk(d.subSpesialis, d.kdkhSpesialis);
-                                window.kdTacc = d.kdTacc;
-                                window.alasanTacc = d.alasanTacc;
-                                if (d.tglEstRujuk != null){
-                                    $('.btn-print').removeClass('d-none');
-                                }
-                            })
-                            .catch(err => {
-                                console.error('Error ambil_data:', err);
-                            },
-                            );
+                        if (d.noKunjungan == null) {
+                            APP.cetak('#kode_poli', d.kdPoli);
+                            APP.cetak('#nama_poli', d.nmPoli);
+                            APP.cetak('#id_patient', d.id_patient);
+                            APP.cetak('#tglDaftar', d.tanggal_daftar);
+                            APP.cetak('#noKartu', d.noKartu);
+                            APP.cetak('#kdDokter', d.code_doctor);
+                            APP.cetak('#nmDokter', d.id_doctor);
+                            APP.cetak('#tinggiBadan', d.tinggiBadan);
+                            APP.cetak('#beratBadan', d.beratBadan);
+                            APP.cetak('#lingkarPerut', d.lingkarPerut || '0');
+                            APP.cetak('#sistole', d.sistole || '0');
+                            APP.cetak('#diastole', d.diastole || '0');
+                            APP.cetak('#respRate', d.respRate || '0');
+                            APP.cetak('#heartRate', d.heartRate || '0');
+                            APP.cetak('#suhu', d.suhu || '0');
+                            APP.cetak('#saturasi', d.saturasi || '0');
+                            APP.cetak('#keluhan_penyerta', d.keluhan || '');
+                            APP.hitungBMI();
+                            APP.ambil_data('#kdStatusPulang', 'statuspulang/rawatInap/false', 'kdStatusPulang', 'nmStatusPulang', true);
+                        } else {
+                            APP.ambil_data('#kdStatusPulang', 'statuspulang/rawatInap/false', 'kdStatusPulang', 'nmStatusPulang', true)
+                                .then(function () {
+                                    APP.cetak('#noKunjungan', d.noKunjungan);
+                                    APP.cetak('#kode_poli', d.kdPoli);
+                                    APP.cetak('#nama_poli', d.nmPoli);
+                                    APP.cetak('#id_patient', d.id_patient);
+                                    APP.cetak('#tglDaftar', d.tglDaftar);
+                                    APP.cetak('#noKartu', d.noKartu);
+                                    APP.cetak('#kdDokter', d.kdDokter);
+                                    APP.cetak('#nmDokter', d.nmDokter);
+                                    APP.cetak('#visit_notes', d.catatan_screening || '');
+                                    APP.cetak('#tinggiBadan', d.tinggiBadan);
+                                    APP.cetak('#beratBadan', d.beratBadan);
+                                    APP.cetak('#lingkarPerut', d.lingkarPerut);
+                                    APP.cetak('#sistole', d.sistole || '0');
+                                    APP.cetak('#diastole', d.diastole || '0');
+                                    APP.cetak('#respRate', d.respRate || '0');
+                                    APP.cetak('#heartRate', d.heartRate || '0');
+                                    APP.cetak('#suhu', d.suhu);
+                                    APP.cetak('#saturasi', d.saturasi);
+                                    APP.cetak('#keluhan_penyerta', d.keluhan || '');
+                                    APP.cetak('#keluhan_utama', d.anamnesa || '');
+                                    APP.cetak('#tindakan', d.tindakan || '');
+                                    APP.cetakhtml('#idUmur', d.umur);
+                                    APP.hitungBMI();
+                                    $('#alergiMakan').val(d.alergiMakan).trigger('change');
+                                    $('#alergiUdara').val(d.alergiUdara).trigger('change');
+                                    $('#alergiObat').val(d.alergiObat).trigger('change');
+                                    $('#kondisi_masuk').val(d.kdPrognosa).trigger('change');
+                                    $('#kdSadar').val(d.kdSadar).trigger('change');
+                                    if (d.kdDiag1 != null) {
+                                        APP.addValueSelect('#diag1', d.kdDiag1, d.kdDiag1 + ' - ' + d.nmDiag1);
+                                        APP.addValueInput('#nmDiag1', d.nmDiag1);
+                                    }
+                                    if (d.kdDiag2 != null) {
+                                        APP.addValueSelect('#diag2', d.kdDiag2, d.kdDiag2 + ' - ' + d.nmDiag2);
+                                        APP.addValueInput('#nmDiag2', d.nmDiag2);
+                                    }
+                                    if (d.kdDiag3 != null) {
+                                        APP.addValueSelect('#diag3', d.kdDiag3, d.kdDiag3 + ' - ' + d.nmDiag3);
+                                        APP.addValueInput('#nmDiag3', d.nmDiag3);
+                                    }
+                                    $('#kdStatusPulang').val(d.kdStatusPulang).trigger('change');
+                                    $('#simpan_pemeriksaan').text('Update Pemeriksaan').removeClass('btn-primary').addClass('btn-danger');
+                                    if (d.noKunjungan != null) {
+                                        statusEdit = true;
+                                    }
+                                    checkRujuk(d.subSpesialis, d.kdkhSpesialis);
+                                    window.kdTacc = d.kdTacc;
+                                    window.alasanTacc = d.alasanTacc;
+                                    window.kdKhusus = d.kdKhusus;
+                                    window.subSpesialis = d.subSpesialis;
+                                    window.kdSarana = d.kdSarana;
+                                    window.tglEstRujuk = d.tglEstRujuk;
+                                    window.kdfaskes = d.kdfaskes;
+                                    window.nmfaskes = d.nmfaskes;
+
+                                    if (d.kdppk == null) {
+                                        $('.btn-print').removeClass('d-none');
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error('Error ambil_data:', err);
+                                },
+                                );
+                        }
                     }
                 }
             }
@@ -311,19 +345,22 @@ $(function () {
     // action Rujuk
     $('#kdStatusPulang').on('change', function () {
         const idstatus = $(this).val();
-        if (idstatus == "4") {
+        if (idstatus == "4" && StatusPasien == "BPJS") {
             APP.hideSmoot('#rujukhorizontal')
             APP.showSmoot('#rujukvertikal');
             APP.hideSmoot('#noLaporanPolisi');
             console.log($('#kdnonSpesialis1').val());
             chackTacc();
-        } else if (idstatus == "6") {
+            loadRujukan();
+        } else if (idstatus == "6" && StatusPasien == "BPJS") {
             APP.hideSmoot('#rujukvertikal');
             APP.hideSmoot('#formrujukanvertikal');
             APP.showSmoot('#rujukhorizontal');
             APP.hideSmoot('#noLaporanPolisi');
-        } else if (idstatus == "1") {
+            APP.hideSmoot('#formTacc');
+        } else if (idstatus == "1" && StatusPasien == "BPJS") {
             APP.hideSmoot('#rujukvertikal');
+            APP.hideSmoot('#formTacc');
             APP.hideSmoot('#rujukhorizontal')
             APP.hideSmoot('#formrujukanvertikal');
             $('input[name="kdStatusPulang"]').prop('checked', false);
@@ -332,6 +369,7 @@ $(function () {
         }
         else {
             APP.hideSmoot('#noLaporanPolisi');
+            APP.hideSmoot('#formTacc');
             APP.hideSmoot('#rujukvertikal');
             APP.hideSmoot('#rujukhorizontal')
             APP.hideSmoot('#formrujukanvertikal');
@@ -481,11 +519,11 @@ $(function () {
             .addClass(newCol);
     }
     function checkRujuk(subSpesialis, kdkhSpesialis) {
-        if (subSpesialis != "" && statusEdit == true) {
+        if (subSpesialis != null && statusEdit == true) {
             $('input[name="kdStatusRujuk"][value="SP"]').prop('checked', true).trigger('change');
             // console.log('masuk')
             TrigerSP()
-        } else if (kdkhSpesialis != "" && statusEdit == true) {
+        } else if (kdkhSpesialis != null && statusEdit == true) {
             $('input[name="kdStatusRujuk"][value="KH"]').prop('checked', true).trigger('change');
             triggerKH()
         }
@@ -503,5 +541,15 @@ $(function () {
             $('#kdTacc').val(kdTacc).trigger('change');
             $('#alasanTacc').val(alasanTacc);
         }
+    }
+    async function loadRujukan() {
+        await APP.ambil_data('#kdKategori', '/spesialis', 'kdSpesialis', 'nmSpesialis', true);
+        $('#kdKategori').val(kdKhusus).trigger('change');
+        $('#kdsubspesialis').val(subSpesialis).trigger('change');
+        $('#kdSarana').val(kdSarana).trigger('change');
+        $('#kdSaranaHidden').val(kdSarana);
+        $('#tglRujukan').val(tglEstRujuk);
+        $('#kdfaskes').val(kdfaskes);
+        $('#nmfaskes').val(nmfaskes);
     }
 })

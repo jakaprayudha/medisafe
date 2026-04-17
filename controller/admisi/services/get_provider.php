@@ -1,7 +1,32 @@
 <?php
 require_once __DIR__ . '/view.php';
 header('Content-Type: application/json');
-$stmt = $koneksi->prepare("SELECT provider_name AS id, provider_name AS text FROM ms_provider ORDER BY provider_name ASC LIMIT 100");
+$type = $_GET['type'];
+$status = '1';
+if ($type === 'BPJS') {
+    $sql = "
+        SELECT id_provider AS id, provider_name AS text
+        FROM ms_provider
+        WHERE id_customer = ?
+        AND provider_status = ?
+        ORDER BY provider_name ASC
+        LIMIT 100
+    ";
+
+} else {
+
+    $sql = "
+        SELECT id_provider AS id, provider_name AS text
+        FROM ms_provider
+        WHERE id_customer = ?
+        AND provider_name NOT LIKE '%BPJS%'
+        AND provider_status = ?
+        ORDER BY provider_name ASC
+        LIMIT 100
+    ";
+}
+$stmt = $koneksi->prepare($sql);
+$stmt->bind_param('ss', $idcustomer, $status);
 $stmt->execute();
 $result = $stmt->get_result();
 $data = [];

@@ -57,7 +57,9 @@ if (!in_array($lengthkartu, [13, 16, 19])) {
         $msg = $result['message'] ?? "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
         $response = [
             'success' => false,
-            'message' => $result['data']['ketAktif']
+            'code' => $result['data']['aktif'],
+            'message' => $result['data']['ketAktif'],
+            'result' => $result
         ];
     } else {
         $response = $result;

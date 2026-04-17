@@ -122,9 +122,6 @@ require '../../controller/view.php';
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="card-title fw-semibold">Data Registrasi Poliklinik</h5>
-                    <!-- Grup tombol di sisi kanan -->
-
-                    <!-- 🔽 Filter + Tombol Kembali -->
                     <div class="d-flex align-items-end gap-2 flex-wrap">
                       <div class="col-auto">
                         <button type="button" data-bs-toggle="modal" data-bs-target="#filterModal" class="btn btn-dark">
@@ -150,12 +147,7 @@ require '../../controller/view.php';
                             </li>
                             <li>
                               <a class="dropdown-item" href="module/admisi/pendaftaran">
-                                <i class="fas fa-stethoscope me-2 text-success"></i> Pasien BPJS
-                              </a>
-                            </li>
-                            <li>
-                              <a class="dropdown-item poli-btn" href="javascript:;">
-                                <i class="fas fa-user-plus me-2 text-success"></i> Pasien Umum
+                                <i class="fas fa-stethoscope me-2 text-success"></i> Poliklinik
                               </a>
                             </li>
                           </ul>
