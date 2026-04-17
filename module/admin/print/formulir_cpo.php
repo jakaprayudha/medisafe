@@ -2,6 +2,15 @@
 $title = "Formulir Catatan Pemberian Obat (CPO)";
 $subtitle = "";
 require '../../../database/connect.php';
+$no = $_GET['no'];
+$id_customer = $_SESSION['id_customer'];
+$checkruangan = mysqli_query($koneksi, "SELECT ms_room.room_name, ms_room_bed.bed_name, pasien_visit.diagnosa, icd_10.icd10 FROM pasien_visit
+LEFT JOIN permintaan_ranap ON pasien_visit.visit_ID = permintaan_ranap.visit_ID_inpatient 
+LEFT JOIN ms_room ON permintaan_ranap.id_room = ms_room.id_room
+LEFT JOIN ms_room_bed ON permintaan_ranap.id_bed = ms_room_bed.id_bed
+LEFT JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa
+WHERE pasien_visit.visit_ID='$no' AND pasien_visit.id_customer='$id_customer'");
+$dataruangan = mysqli_fetch_array($checkruangan);
 ?>
 
 <body class="cpo-body">
@@ -149,9 +158,9 @@ require '../../../database/connect.php';
     <table class="cpo-table cpo-info">
       <tr>
         <td width="15%">Ruangan</td>
-        <td width="35%">: <span id="cpo_ruangan"></span></td>
+        <td width="35%">: <?= $dataruangan['room_name'] ?> Bed <?= $dataruangan['bed_name'] ?></td>
         <td width="15%">Diagnosa</td>
-        <td width="35%">: <span id="cpo_diagnosa"></span></td>
+        <td width="35%">: <?= $dataruangan['diagnosa'] ?> - <?= $dataruangan['icd10'] ?></td>
       </tr>
     </table>
 
