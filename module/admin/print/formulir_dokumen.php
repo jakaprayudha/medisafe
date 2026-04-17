@@ -31,7 +31,7 @@
      ========================= */
       .dokmulti-page {
          border: 1px solid #000;
-         padding: 18px;
+         padding: 2px;
          min-height: 100%;
          background: #fff;
          position: relative;
@@ -188,7 +188,7 @@
 
       .dokmulti-grid-item {
          width: 100%;
-         height: 300px;
+         height: 450px;
          overflow: hidden;
          border: 1px solid #ccc;
          background: #fafafa;
@@ -201,7 +201,9 @@
       .dokmulti-grid-item img {
          width: 100%;
          height: 100%;
-         object-fit: cover;
+         object-fit: contain;
+         /* ✅ tidak crop */
+         background: #fff;
       }
 
       /* =========================
@@ -228,6 +230,15 @@
 </div>
 
 <script>
+   function formatTanggal(tgl) {
+      if (!tgl) return '-';
+      const d = new Date(tgl);
+      return d.toLocaleDateString('id-ID', {
+         day: '2-digit',
+         month: 'long',
+         year: 'numeric'
+      });
+   }
    document.addEventListener("DOMContentLoaded", () => {
 
       const url = new URLSearchParams(window.location.search);
@@ -285,7 +296,7 @@
                            <img src="${baseURL + p.foto_path}" style="width:100%;height:100%;object-fit:cover;">
                         </div>
                        <div class="dokmulti-photo-date">
-                        Tanggal: ${(p.tgl_upload || '-').split(' ')[0]}
+                      Tanggal: ${formatTanggal(p.rilis)}
                         </div>
                      </div>
                   `)
