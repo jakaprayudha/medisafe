@@ -254,8 +254,8 @@ $datapetugas = mysqli_fetch_array($checkpetugas);
             <td class="cpo-center">${o.jam_siang || ""}</td>
             <td class="cpo-center">${o.jam_sore || ""}</td>
             <td class="cpo-center">${o.jam_malam || ""}</td>
-            <td class="cpo-center">${o.paraf_keluarga ? `<img src="../../../uploads/ttd/${o.paraf_keluarga}" height="35">` : ""}</td>
-            <td class="cpo-center">${o.paraf_petugas ? `<img src="../../../uploads/ttd/${o.paraf_petugas}" height="35">` : ""}</td>
+            <td class="cpo-center">${o.signature_path ? `<img src="../../../uploads/ttd/${o.signature_path}" height="35">` : ""}</td>
+            <td class="cpo-center">${o.signature_user ? `<img src="../../../uploads/ttd_faskes/${o.signature_user}" height="35">` : ""}</td>
           `;
               tbody.appendChild(tr);
             });
