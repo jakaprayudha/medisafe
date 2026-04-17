@@ -20,31 +20,29 @@ if ($result['code'] != "200") {
     if ($msg == null) {
         $msg = "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
     }
+    $msg = ". [Pcare Error]: " . $msg;
+}
+
+$stmt = $koneksi->prepare("DELETE FROM pcare_pendaftaran WHERE nomor_visit = ?");
+$stmt->bind_param("s", $visit);
+$hasil = $stmt->execute();
+
+$stmt1 = $koneksi->prepare("DELETE FROM pasien_visit WHERE visit_ID = ?");
+$stmt1->bind_param("s", $visit);
+$hasil1 = $stmt1->execute();
+
+$stmt->close();
+$stmt1->close();
+if ($hasil and $hasil1) {
     $response = [
-        'success' => false,
-        'message' => $msg,
+        'success' => true,
+        'message' => "Berhasil Hapus Pendaftaran" . $msg,
     ];
 } else {
-    $stmt = $koneksi->prepare("DELETE FROM pcare_pendaftaran WHERE nomor_visit = ?");
-    $stmt->bind_param("s", $visit);
-    $hasil = $stmt->execute();
-
-    $stmt1 = $koneksi->prepare("DELETE FROM pasien_visit WHERE visit_ID = ?");
-    $stmt1->bind_param("s", $visit);
-    $hasil1 = $stmt1->execute();
-
-    $stmt->close();
-    $stmt1->close();
-    if ($hasil AND $hasil1) {
-        $response = [
-            'success' => true,
-            'message' => "Berhasil Hapus Pendaftaran",
-        ];
-    } else {
-        $response = [
-            'success' => false,
-            'message' => "Gagal Hapus Pendaftaran" . mysqli_error($koneksi),
-        ];
-    }
+    $response = [
+        'success' => false,
+        'message' => "Gagal Hapus Pendaftaran" . mysqli_error($koneksi) . $msg,
+    ];
 }
+
 echo json_encode($response);
