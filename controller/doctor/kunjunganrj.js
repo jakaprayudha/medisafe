@@ -42,6 +42,7 @@ $(function () {
                             APP.cetak('#keluhan_penyerta', d.keluhan || '');
                             APP.cetak('#keluhan_utama', d.anamnesa || '');
                             APP.cetak('#status_pasien', "UMUM");
+                            APP.cetakhtml('#idUmur', d.umur);
                             APP.hitungBMI();
                             if (d.kdDiag1 != null) {
                                 APP.addValueSelect('#diag1', d.kdDiag1, d.kdDiag1 + ' - ' + d.nmDiag1);

@@ -44,7 +44,7 @@ if ($exist) {
         "data" => $data,
     ]);
 } else {
-    $stmt = $koneksi->prepare("SELECT * FROM pasien_visit WHERE id_customer = ? AND visit_ID = ?");
+    $stmt = $koneksi->prepare("SELECT pv.*,p.patient_datebirth, CONCAT(TIMESTAMPDIFF(YEAR, p.patient_datebirth, CURDATE()), ' Tahun ',TIMESTAMPDIFF(MONTH, p.patient_datebirth, CURDATE()) % 12, ' Bulan ',DATEDIFF(CURDATE(),DATE_ADD(DATE_ADD(p.patient_datebirth,INTERVAL TIMESTAMPDIFF(YEAR, p.patient_datebirth, CURDATE()) YEAR),INTERVAL (TIMESTAMPDIFF(MONTH, p.patient_datebirth, CURDATE()) % 12) MONTH)), ' Hari') AS umur FROM pasien_visit pv INNER JOIN ms_patient p ON p.id_patient = pv.id_patient WHERE pv.id_customer = ? AND pv.visit_ID = ?");
     $stmt->bind_param('ss', $idcustomer, $nomor_visit);
     $stmt->execute();
     $hasil = $stmt->get_result()->fetch_assoc();
@@ -57,8 +57,8 @@ if ($exist) {
                 "id_patient" => $hasil['id_patient'],
                 "saturasi" => $hasil['saturasi'],
                 "tindakan" => $hasil['tindakan'],
-                "sistole" =>$hasil['sistole'],
-                "diastole" =>$hasil['diastole'],
+                "sistole" => $hasil['sistole'],
+                "diastole" => $hasil['diastole'],
                 "resp_rate" => $hasil['nadi'],
                 "heart_rate" => $hasil['respirasi'],
                 "suhu" => $hasil['suhu'],
@@ -77,10 +77,11 @@ if ($exist) {
                 "nmDiag3" => $hasil['nmDiag3'],
                 "kdDokter" => $hasil['code_doctor'],
                 "nmDokter" => $hasil['id_doctor'],
-                "kdStatusPulang"=> $hasil['status_pulang'],
+                "kdStatusPulang" => $hasil['status_pulang'],
                 "alergiMakan" => $hasil['alergiMakan'],
                 "alergiUdara" => $hasil['alergiUdara'],
                 "alergiObat" => $hasil['alergiObat'],
+                "umur" => $hasil['umur'],
             ]
         ]
     ];
