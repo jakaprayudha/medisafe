@@ -206,7 +206,7 @@ $data = mysqli_fetch_array($check);
 
    function loadCPO() {
       $('#tableCPO tbody').html('');
-      $.get('controller/visit/getCPO.php', {
+      $.get('controller/visit/getCpo.php', {
          visit_ID: visitID
       }, function(res) {
 
