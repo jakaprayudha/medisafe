@@ -126,7 +126,7 @@ require '../../controller/view.php';
 
                     <!-- 🔽 Filter + Tombol Kembali -->
                     <div class="d-flex align-items-end gap-2 flex-wrap">
-                      <!-- <div class="col-auto">
+                      <div class="col-auto">
                         <button type="button" data-bs-toggle="modal" data-bs-target="#filterModal" class="btn btn-dark">
                           <i class="fas fa-filter"></i> Filter
                         </button>
@@ -135,12 +135,11 @@ require '../../controller/view.php';
                         <button type="button" id="btnReset" class="btn btn-light">
                           <i class="fas fa-undo"></i> Reset
                         </button>
-                      </div> -->
-                      <!-- Tombol kembali -->
-                      <div class="d-flex ms-auto">
-                        <!-- <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
-                            <i class="fas fa-plus"></i> Cetak
-                          </button> -->
+                      </div>
+                      <div class="d-flex ms-auto gap-2">
+                        <button id="btnPrint" class="btn btn-primary">
+                          <i class="fas fa-print"></i> Print
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -148,7 +147,6 @@ require '../../controller/view.php';
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
-                          <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
                           <th scope="col" class="text-dark fw-normal">No.BPJS</th>
                           <th class="text-dark fw-normal">Tanggal</th>
@@ -173,12 +171,93 @@ require '../../controller/view.php';
   <?php
   require 'library.php';
   ?>
+  <div class="modal fade" id="filterModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Filter Data</h5>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label for="fromDate" class="form-label mb-0">Dari</label>
+              <input type="date" id="fromDate" name="fromDate" class="form-control">
+            </div>
+            <div class="col-6 mb-3">
+              <label for="toDate" class="form-label mb-0">Sampai</label>
+              <input type="date" id="toDate" name="toDate" class="form-control">
+            </div>
+            <div class="col-12 mb-3">
+              <label for="doctorSelect" class="form-label mb-0">Dokter</label>
+              <select name="doctorSelect" class="form-select" id="doctorSelect">
+                <option value="">Semua Dokter</option>
+              </select>
+            </div>
+            <div class="col-12 mb-3">
+              <label for="providerSelect" class="form-label mb-0">Provider</label>
+              <select name="providerSelect" class="form-select" id="providerSelect">
+                <option value="">Semua Metode Pembayaran</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
+        <div class="modal-footer">
+          <button class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
+          <button class="btn btn-primary" id="btnApplyFilter">Terapkan Filter</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
 </body>
 
 <script>
   $(document).ready(function() {
+    $('#filterModal').on('show.bs.modal', function() {
+      loadDoctors();
+      loadProviders();
+    });
 
+    function loadDoctors() {
+      $.ajax({
+        url: 'controller/visit/getdoctor',
+        method: 'GET',
+        dataType: 'json',
+        success: function(res) {
+          let html = '<option value="">Semua Dokter</option>';
+
+          res.forEach(d => {
+            html += `<option value="${d.id_doctor}">${d.doctor_name}</option>`;
+          });
+
+          $('#doctorSelect').html(html);
+        }
+      });
+    }
+
+    function loadProviders() {
+      $.ajax({
+        url: 'controller/visit/getprovider',
+        method: 'GET',
+        dataType: 'json',
+        success: function(res) {
+          let html = '<option value="">Semua Metode Pembayaran</option>';
+
+          res.forEach(p => {
+            html += `<option value="${p.id_provider}">${p.provider_name}</option>`;
+          });
+
+          $('#providerSelect').html(html);
+        }
+      });
+    }
+
+
+    $('#btnApplyFilter').on('click', function() {
+      table.ajax.reload();
+      $('#filterModal').modal('hide');
+    });
     var today = new Date().toISOString().split('T')[0];
 
     // default tanggal
@@ -204,23 +283,19 @@ require '../../controller/view.php';
           d.doctor = $('#doctorSelect').val();
           d.provider = $('#providerSelect').val();
           d.poli = $('#poliSelect').val();
-          d.tipe_pasien = "Poliklinik";
         },
         dataSrc: function(json) {
           return json.data || [];
         }
       },
       columns: [{
-          data: "visit_ID"
-        },
-        {
           data: "visit_status",
           render: function(data) {
 
             if (data == 4) {
-              return '<span class="badge bg-success">Selesai</span>';
+              return '<span class="badge bg-success col-12">Selesai</span>';
             } else {
-              return '<span class="badge bg-warning text-dark">Belum Selesai</span>';
+              return '<span class="badge bg-warning col-12 text-dark">Belum Selesai</span>';
             }
 
           }
@@ -272,7 +347,16 @@ require '../../controller/view.php';
 
       table.ajax.reload();
     });
+    $('#btnPrint').on('click', function() {
+      let fromDate = $('#fromDate').val();
+      let toDate = $('#toDate').val();
+      let doctor = $('#doctorSelect').val();
+      let provider = $('#providerSelect').val();
 
+      let url = `module/report/print_appointment.php?fromDate=${fromDate}&toDate=${toDate}&doctor=${doctor}&provider=${provider}`;
+
+      window.open(url, '_blank');
+    });
   });
 </script>
 

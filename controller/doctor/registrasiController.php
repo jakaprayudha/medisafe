@@ -31,6 +31,7 @@ switch ($method) {
 function getData()
 {
    global $koneksi;
+   $role = $_SESSION['roles'] ?? null;
 
    // 🔥 ambil session
    $id_customer = $_SESSION['id_customer'] ?? null;
@@ -86,15 +87,10 @@ function getData()
    //    $types   .= "s";
    // }
 
-   if (!empty($doctorName)) {
-
-      // 🔥 normalisasi nama (hapus "dr." dll)
+   if ($role != 'admin' && !empty($doctorName)) {
       $doctorNameClean = preg_replace('/^dr\.?\s*/i', '', $doctorName);
-
       $query .= " AND (
-        REPLACE(LOWER(pasien_visit.id_doctor), 'dr. ', '') LIKE ?
-    )";
-
+      REPLACE(LOWER(pasien_visit.id_doctor), 'dr. ', '') LIKE ?)";
       $params[] = "%" . strtolower($doctorNameClean) . "%";
       $types   .= "s";
    }
