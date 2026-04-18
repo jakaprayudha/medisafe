@@ -226,7 +226,7 @@ if ($status_pasien == "UMUM") {
         $method = "PUT";
     }
     // echo json_encode($payload, JSON_PRETTY_PRINT);die();
-    $result = bpjsPost("/kunjungan", $payload, $method);
+    $result = bpjsPost("/kunjungan/v1", $payload, $method);
     // $result = testingBPJS_POST("https://app.medisafe.id/controller/admisi/api/getpeserta.php", $payload);
     if ($result['code'] != "200") {
         $msg = $result['message'];
