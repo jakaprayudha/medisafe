@@ -87,6 +87,7 @@ $(function () {
                 <div class="mt-2 text-muted">Memuat data pasien...</div>
             </div>
         `);
+
         $.ajax({
             url: url,
             type: 'GET',
@@ -118,8 +119,8 @@ $(function () {
                         APP.cetak('#tgllahir', response.data.tglLahir || '-');
                         APP.cetak("#typePasien", tipe);
                         let nik = response.data.noKTP || nomor;
-                        APP.cetak('#noNIK', nik);
-                        APP.cetakhtml('#nonik', nik);
+                        APP.cetak('#noNIK', nomor);
+                        APP.cetakhtml('#nonik', nomor);
 
                         APP.cetak('#kdProviderPeserta',
                             response.data.kdProviderPst?.kdProvider || ''
@@ -353,8 +354,8 @@ $(function () {
                                 APP.cetak('#noNIK', nomor);
                                 APP.cetakhtml('#nonik', nomor);
                             } else {
-                                APP.cetak('#noNIK', response.data.noKTP);
-                                APP.cetakhtml('#nonik', response.data.noKTP);
+                                APP.cetak('#noNIK', response.nomor);
+                                APP.cetakhtml('#nonik', response.nomor);
                             }
                             APP.cetak('#kdProviderPeserta', response.data.kdProviderPst['kdProvider']);
                         })
