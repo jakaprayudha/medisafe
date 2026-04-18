@@ -524,7 +524,9 @@ $(function () {
         $('#tinggiBadan, #beratBadan').on('input', function () {
             APP.hitungBMI();
         });
-        setTypePasien();
+        $('#kodeprov').on('change', function () {
+            setTypePasien();
+        });
     }
     APP.createpeserta = function () {
         var data = $('#isiform').serialize();
