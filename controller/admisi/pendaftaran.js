@@ -523,6 +523,15 @@ $(function () {
         $('#tinggiBadan, #beratBadan').on('input', function () {
             APP.hitungBMI();
         });
+        $('#kodeprov').on('select2:select', function (e) {
+            let data = e.params.data;
+            let namaProvider = (data.text || '').toLowerCase();
+            let tipe = 'UMUM';
+            if (namaProvider.includes('bpjs')) {
+                tipe = 'BPJS';
+            }
+            $('#typePasien').val(tipe);
+        });
     }
     APP.createpeserta = function () {
         var data = $('#isiform').serialize();
