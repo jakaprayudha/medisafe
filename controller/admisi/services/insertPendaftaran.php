@@ -58,8 +58,8 @@ if (empty($kdDokter)) {
 }
 $visit_ID = generateVisitID($koneksi, $idcustomer);
 if ($type == "BPJS") {
-    echo json_encode($payload, JSON_PRETTY_PRINT);die();
-    // $result = bpjsPost("/pendaftaran", $payload);
+    // echo json_encode($payload, JSON_PRETTY_PRINT);die();
+    $result = bpjsPost("/pendaftaran", $payload);
     // echo json_encode($result);die();
     // $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
     if ($result['code'] != '200') {
