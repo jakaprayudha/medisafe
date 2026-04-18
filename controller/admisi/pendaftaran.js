@@ -410,6 +410,7 @@ $(function () {
                     options += `<option value="${item.id}">${item.text}</option>`;
                 });
                 $('#kodeprov').html(options).trigger('change');
+                setTypePasien();
             }
         });
         APP.ambil_data_dokter('#kodedokter', 'dokter/0/100', 'nmDokter', 'kdDokter', true);
@@ -523,15 +524,7 @@ $(function () {
         $('#tinggiBadan, #beratBadan').on('input', function () {
             APP.hitungBMI();
         });
-        $('#kodeprov').on('select2:select', function (e) {
-            let data = e.params.data;
-            let namaProvider = (data.text || '').toLowerCase();
-            let tipe = 'UMUM';
-            if (namaProvider.includes('bpjs')) {
-                tipe = 'BPJS';
-            }
-            $('#typePasien').val(tipe);
-        });
+        setTypePasien();
     }
     APP.createpeserta = function () {
         var data = $('#isiform').serialize();
@@ -590,5 +583,12 @@ $(function () {
         $('#noNIK').val('');
         $('#kdProviderPeserta').val('');
         $('#isiform')[0]?.reset();
+    }
+    function setTypePasien() {
+        let selected = $('#kodeprov').find(':selected');
+        let nama = (selected.text() || '').toLowerCase();
+
+        let tipe = nama.includes('bpjs') ? 'BPJS' : 'UMUM';
+        $('#typePasien').val(tipe);
     }
 })
