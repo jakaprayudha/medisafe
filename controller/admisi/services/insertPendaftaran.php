@@ -56,7 +56,7 @@ if (empty($kdDokter)) {
     ]);
     exit;
 }
-$visit_ID = generateVisitID($koneksi);
+$visit_ID = generateVisitID($koneksi, $idcustomer);
 if ($type == "BPJS") {
     echo json_encode($payload, JSON_PRETTY_PRINT);die();
     // $result = bpjsPost("/pendaftaran", $payload);
