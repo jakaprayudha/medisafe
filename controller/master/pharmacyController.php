@@ -16,11 +16,8 @@ if (!isset($_SESSION['id_customer'])) {
    ]);
    exit;
 }
-
 $id_customer = $_SESSION['id_customer'];
-
 $method = $_SERVER['REQUEST_METHOD'];
-
 switch ($method) {
    case 'POST':
       createData($id_customer);
@@ -47,7 +44,6 @@ switch ($method) {
 function createData($id_customer)
 {
    global $koneksi;
-
    if (empty($_POST)) {
       $raw = file_get_contents("php://input");
       if (!empty($raw)) {
@@ -69,8 +65,15 @@ function createData($id_customer)
       'pharmcy_jenis_drugs'
    ];
 
+   if (!empty($_POST['pharmacy_code'])) {
+      $pharmacy_number = $_POST['pharmacy_code'];
+   } else {
+      $pharmacy_number = generatePharmacyNumber($koneksi);
+   }
+
    $fields = ['pharmacy_number', 'id_customer'];
-   $values = [generatePharmacyNumber($koneksi), $id_customer];
+   $values = [$pharmacy_number, $id_customer];
+   $types  = "si";
    $types  = "si";
 
    foreach ($allowedFields as $f) {
@@ -100,7 +103,6 @@ function createData($id_customer)
 function generatePharmacyNumber($koneksi)
 {
    $count = 0;
-
    do {
       $random = mt_rand(100000, 999999);
       $number = "PHR-" . $random;

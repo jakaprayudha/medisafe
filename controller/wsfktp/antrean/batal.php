@@ -25,22 +25,42 @@ $kodepoli   = $data['kodepoli'] ?? null;
 $tanggal    = $data['tanggalperiksa'] ?? null;
 $keterangan = $data['keterangan'] ?? null;
 
-$stmt = $koneksi->prepare("DELETE FROM pasien_visit WHERE noKartu = ? AND id_poli = ? AND visit_date = ? AND id_customer = ?");
-$stmt->bind_param("ssss", $noKartu, $kodepoli, $tanggal, $id_customer);
-$result = $stmt->execute();
 
-if ($result){
+$stmt = $koneksi->prepare("SELECT COUNT(*) as total FROM pasien_visit WHERE noKartu = ? AND id_poli = ? AND visit_date = ? AND id_customer = ?");
+$stmt->bind_param("ssss", $noKartu, $kodepoli, $tanggal, $id_customer);
+$stmt->execute();
+$result = $stmt->get_result()->fetch_assoc();
+$total = (int)$result['total'];
+$stmt->close();
+if ($total > 0) {
+    $stmt = $koneksi->prepare("DELETE FROM pasien_visit WHERE noKartu = ? AND id_poli = ? AND visit_date = ? AND id_customer = ?");
+    $stmt->bind_param("ssss", $noKartu, $kodepoli, $tanggal, $id_customer);
+    $result = $stmt->execute();
+
+    $stmt1 = $koneksi->prepare("UPDATE antrian_poli SET status = ? WHERE id_customer = ? AND id_poli = ? AND visit_date = ?");
+    $stmt1->bind_param("ssss", $noKartu, $kodepoli, $tanggal, $id_customer);
+    $result1 = $stmt1->execute();
+
+    if ($result) {
+        echo json_encode([
+            "metadata" => [
+                "message" => "Ok",
+                "code" => 200
+            ]
+        ]);
+    } else {
+        echo json_encode([
+            "metadata" => [
+                "message" => "Error",
+                "code" => 201
+            ]
+        ]);
+    }
+} else {
     echo json_encode([
-    "metadata" => [
-        "message" => "Ok",
-        "code" => 200
-    ]
-]);
-}else{
-    echo json_encode([
-    "metadata" => [
-        "message" => "Error",
-        "code" => 201
-    ]
-]);
+        "metadata" => [
+            "message" => "Antrian tidak ditemukan",
+            "code" => 201
+        ]
+    ]);
 }

@@ -1,8 +1,8 @@
 <?php
 header("Content-Type: application/json");
 
-require_once __DIR__ . '/../../../database/connect.php';
-require_once __DIR__ . '/../validateToken.php';
+require_once __DIR__ . '/../../../../../database/connect.php';
+require_once __DIR__ . '/../../../validateToken.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     echo json_encode([
@@ -22,8 +22,10 @@ $data = json_decode($json, true);
 
 $url = $_SERVER['REQUEST_URI'];
 $segments = explode('/', trim(parse_url($url, PHP_URL_PATH), '/'));
-$kodepoli = $segments[4] ?? null;
-$tanggalperiksa = $segments[5] ?? null;
+// $kodepoli = $segments[6] ?? null;
+// $tanggalperiksa = $segments[7] ?? null;
+$kodepoli = $segments[7] ?? null;
+$tanggalperiksa = $segments[8] ?? null;
 if (!$kodepoli || !$tanggalperiksa) {
     http_response_code(400);
     echo json_encode([
@@ -44,29 +46,32 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggalperiksa)) {
     exit;
 }
 $status = "selesai";
-$stmt = $koneksi->prepare("SELECT COUNT(*) as total, ms_poli.poli_name FROM pasien_visit INNER JOIN ms_poli ON ms_poli.poli_code = pasien_visit.id_poli WHERE pasien_visit.id_customer = ? AND ms_poli.id_customer = ? AND pasien_visit.id_poli = ? AND visit_date = ?");
-$stmt->bind_param("ssss", $id_customer, $id_customer, $kodepoli, $tanggalperiksa);
+$stmt = $koneksi->prepare("SELECT COUNT(*) as total,SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) as total_panggil,COUNT(*) - SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) as sisa_antrean,MAX(CASE WHEN ap.status != 0 THEN ap.nomor END) as antrean_terakhir, p.id_poli FROM antrian_poli AS ap INNER JOIN pasien_visit AS p ON p.visit_ID = ap.nomor_visit WHERE ap.id_customer = ? AND ap.poli = ? AND ap.tanggal = ? GROUP BY p.id_poli");
+$stmt->bind_param("sss", $id_customer, $kodepoli, $tanggalperiksa);
 $stmt->execute();
 $result = $stmt->get_result()->fetch_assoc();
-
-$stmt1 = $koneksi->prepare("SELECT COUNT(*) as total FROM transaction_queue WHERE id_customer = ? AND id_poli = ? AND DATE(created_at) = ? AND `status` = ?");
-$stmt1->bind_param("ssss", $id_customer, $kodepoli, $tanggalperiksa, $status);
-$stmt1->execute();
-$result1 = $stmt1->get_result()->fetch_assoc();
-
 // response
-echo json_encode([
-    "response" => [
-        [
-            "namapoli" => $result['poli_name'],
-            "totalantrean" => $result['total'],
-            "sisaantrean" => $result['total'] - $result1['total'],
-            "antreanpanggil" => $result1['counter'] ?? 0,
-            "keterangan" => ""
+if ($result) {
+    echo json_encode([
+        "response" => [
+            [
+                "namapoli" => $result['id_poli'],
+                "totalantrean" => (string)$result['total'],
+                "sisaantrean" => $result['total_panggil'],
+                "antreanpanggil" => $result['antrean_terakhir'],
+                "keterangan" => ""
+            ],
         ],
-    ],
-    "metadata" => [
-        "message" => "Ok",
-        "code" => 200
-    ]
-]);
+        "metadata" => [
+            "message" => "Ok",
+            "code" => 200
+        ]
+    ]);
+} else {
+    echo json_encode([
+        "metadata" => [
+            "message" => "tidak ada antrian",
+            "code" => 201
+        ]
+    ]);
+}
