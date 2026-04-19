@@ -38,7 +38,6 @@ require '../../controller/view.php';
                     <h5 class="card-title fw-semibold">Data Farmasi</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
-                      <!-- Tombol -->
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
                     </div>
                   </div>
@@ -80,28 +79,53 @@ require '../../controller/view.php';
   <div class="modal-dialog">
     <form id="programForm" class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title"></h5>
+        <h5 class="modal-title">Tambah Obat</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
+
       <div class="modal-body">
+        <input type="hidden" name="pharmacy_code" id="pharmacy_code">
         <input type="hidden" name="id_pharmacy" id="id_pharmacy">
         <div class="row">
           <div class="col-12">
             <div class="mb-3">
-              <label class="form-label required" id="pharmacy_name_generic">Nama Generic</label>
-              <input type="text" id="pharmacy_name_generic" name="pharmacy_name_generic" class="form-control" required>
+              <label class="form-label required">Nama Generic</label>
+
+              <!-- Checkbox -->
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="use_bpjs">
+                <label class="form-check-label" for="use_bpjs">
+                  Ambil dari BPJS
+                </label>
+              </div>
+
+              <!-- Input Manual -->
+              <input type="text"
+                id="pharmacy_name_generic"
+                name="pharmacy_name_generic"
+                class="form-control"
+                required>
+
+              <!-- Select BPJS -->
+              <select id="kdObat" class="form-select d-none">
+                <option value="">Pilih Obat BPJS</option>
+              </select>
             </div>
           </div>
+
+          <!-- NAMA DAGANG -->
           <div class="col-12">
             <div class="mb-3">
-              <label class="form-label required" id="pharmacy_name_trade">Nama Pabrikan/Dagang</label>
+              <label class="form-label required">Nama Pabrikan/Dagang</label>
               <input type="text" id="pharmacy_name_trade" name="pharmacy_name_trade" class="form-control" required>
             </div>
           </div>
+
+          <!-- KATEGORI -->
           <div class="col-6">
             <div class="mb-3">
               <label class="form-label required">Kategori</label>
-              <select name="pharmacy_category" class="form-select" id="pharmacy_category" required>
+              <select name="pharmacy_category" class="form-select" required>
                 <option value="">PILIH</option>
                 <option value="Obat">Obat</option>
                 <option value="BMHP">BMHP</option>
@@ -109,16 +133,20 @@ require '../../controller/view.php';
               </select>
             </div>
           </div>
+
+          <!-- SUB -->
           <div class="col-6">
             <div class="mb-3">
               <label class="form-label">Sub Kategori</label>
-              <input type="text" id="pharmacy_sub_category" name="pharmacy_sub_category" class="form-control">
+              <input type="text" name="pharmacy_sub_category" class="form-control">
             </div>
           </div>
+
+          <!-- GOLONGAN -->
           <div class="col-6">
             <div class="mb-3">
               <label class="form-label required">Golongan</label>
-              <select name="pharmcy_golongan" class="form-select" id="pharmcy_golongan" required>
+              <select name="pharmcy_golongan" class="form-select" required>
                 <option value="">PILIH</option>
                 <option value="Bebas">Bebas</option>
                 <option value="Bebas Terbatas">Bebas Terbatas</option>
@@ -128,10 +156,12 @@ require '../../controller/view.php';
               </select>
             </div>
           </div>
+
+          <!-- JENIS -->
           <div class="col-6">
             <div class="mb-3">
               <label class="form-label required">Jenis</label>
-              <select name="pharmcy_jenis_drugs" class="form-select" id="pharmcy_jenis_drugs" required>
+              <select name="pharmcy_jenis_drugs" class="form-select" required>
                 <option value="">PILIH</option>
                 <option value="Generik">Generik</option>
                 <option value="Paten">Paten</option>
@@ -139,11 +169,14 @@ require '../../controller/view.php';
               </select>
             </div>
           </div>
+
         </div>
       </div>
+
       <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Simpan</button>
+        <button type="submit" class="btn btn-primary" id="btnSimpanObat">Simpan</button>
       </div>
+
     </form>
   </div>
 </div>
@@ -258,7 +291,6 @@ require '../../controller/view.php';
       e.preventDefault();
       let formData = new URLSearchParams(new FormData(this));
       let id = $('#id_pharmacy').val();
-
       fetch(apiUrl + (id ? `?id=${id}` : ''), {
           method: id ? 'PUT' : 'POST',
           headers: {
@@ -277,6 +309,7 @@ require '../../controller/view.php';
           }
         });
     });
+
     // 🔹 Edit
     $(document).on('click', '.edit-btn', function() {
       let id = $(this).data('id');
@@ -321,6 +354,97 @@ require '../../controller/view.php';
         }
       });
     });
+    $('#kdObat').select2({
+      dropdownParent: $('#programModal'),
+      placeholder: 'Cari obat...',
+      minimumInputLength: 3,
+      language: {
+        inputTooShort: function(args) {
+          return 'Ketik minimal ' + args.minimum + ' karakter';
+        },
+        searching: function() {
+          return 'Sedang mencari obat...';
+        },
+        noResults: function() {
+          return 'Obat tidak ditemukan';
+        }
+      },
+      ajax: {
+        url: 'controller/admisi/services/getObat.php',
+        dataType: 'json',
+        delay: 300,
+        data: function(params) {
+          return {
+            keyword: params.term
+          };
+        },
+        processResults: function(data) {
+          return {
+            results: data.data.map(item => ({
+              id: item.kdObat,
+              text: item.nmObat
+            }))
+          };
+        },
+        cache: true
+      }
+    });
+
+    function toggleBPJS() {
+      if ($('#use_bpjs').is(':checked')) {
+        $('#pharmacy_name_generic').val('');
+        $('#pharmacy_name_generic').addClass('d-none');
+        $('#kdObat').removeClass('d-none');
+        $('#kdObat').next('.select2').show();
+      } else {
+        $('#kdObat').val(null).trigger('change');
+        $('#pharmacy_name_generic').removeClass('d-none');
+        $('#kdObat').addClass('d-none');
+        $('#kdObat').next('.select2').hide();
+      }
+    }
+    $('#use_bpjs').on('change', toggleBPJS);
+    $('#programModal').on('shown.bs.modal', function() {
+      toggleBPJS();
+    });
+    $('#kdObat').on('select2:select', function(e) {
+      let data = e.params.data;
+      console.log(data);
+      $('#pharmacy_code').val(data.id);
+      $('#pharmacy_name_generic').val(data.text);
+    });
+    // $(document).on('click', '#btnSimpanObat', function(e) {
+    //   e.preventDefault();
+    //   const btn = $(this);
+    //   let id = $('#id_pharmacy').val();
+    //   let data = $('#programForm').serialize();
+    //   data += '&id=' + id;
+    //   $.ajax({
+    //     url: 'controller/admisi/services/insertObatMaster.php',
+    //     type: "POST",
+    //     data: data,
+    //     dataType: 'json',
+    //     beforeSend: function() {
+    //       btn.prop('disabled', true).text('Menyimpan...');
+    //     },
+    //     success: function(res) {
+    //       console.log(res);
+    //       if (res.status === 'success') {
+    //         alert('Data berhasil disimpan');
+    //         $('#programModal').modal('hide');
+    //       } else {
+    //         alert(res.message || 'Gagal menyimpan');
+    //       }
+    //     },
+    //     error: function(xhr) {
+    //       console.error(xhr.responseText);
+    //       alert('Terjadi error di server');
+    //     },
+    //     complete: function() {
+    //       btn.prop('disabled', false).text('Simpan');
+    //     }
+    //   });
+    // });
   });
 </script>
 

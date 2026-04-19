@@ -131,12 +131,12 @@ require '../../controller/view.php';
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body pt-2">
-                    <label class="form-label fw-medium">Nomor NIK</label>
+                    <label class="form-label fw-medium">Nomor NIK/BPJS</label>
                     <div class="input-group mb-2">
                         <input type="text"
                             id="inputNIK"
                             class="form-control form-control-lg"
-                            placeholder="Masukkan NIK (16 digit)">
+                            placeholder="Masukkan NIK (16 digit) BPJS (13 digit)">
                         <button id="btnSearchBPJS" class="btn btn-primary px-4">
                             <span id="textCari">Cari</span>
                         </button>

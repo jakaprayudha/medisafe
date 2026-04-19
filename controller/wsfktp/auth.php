@@ -76,7 +76,7 @@ $now = new DateTimeImmutable();
 // 🔥 GENERATE TOKEN
 $token = $config->builder()
     ->issuedAt($now)
-    ->expiresAt($now->modify('+5 minutes'))
+    ->expiresAt($now->modify('+60 minutes'))
     ->withClaim('id', $user['id'])
     ->withClaim('username', $user['username'])
     ->getToken($config->signer(), $config->signingKey());
