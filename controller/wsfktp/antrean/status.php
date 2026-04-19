@@ -47,7 +47,7 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggalperiksa)) {
     exit;
 }
 $status = "selesai";
-$stmt = $koneksi->prepare("SELECT COUNT(*) as total,SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) as total_panggil,COUNT(*) - SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) as sisa_antrean,MAX(CASE WHEN ap.status != 0 THEN ap.nomor END) as antrean_terakhir, p.id_poli FROM antrian_poli AS ap INNER JOIN pasien_visit AS p ON p.visit_ID = ap.nomor_visit WHERE ap.id_customer = ? AND ap.poli = ? AND ap.tanggal = ? GROUP BY p.id_poli");
+$stmt = $koneksi->prepare("SELECT COUNT(*) as total,SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) as total_panggil,COUNT(*) - SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) as sisa_antrean,COALESCE(MAX(CASE WHEN ap.status = 1 THEN ap.nomor END),MAX(ap.nomor)) as antrean_terakhir FROM antrian_poli ap WHERE ap.id_customer = ? AND ap.poli = ? AND ap.tanggal = ?");
 $stmt->bind_param("sss", $id_customer, $kodepoli, $tanggalperiksa);
 $stmt->execute();
 $result = $stmt->get_result()->fetch_assoc();

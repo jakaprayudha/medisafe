@@ -21,28 +21,39 @@ $json = file_get_contents("php://input");
 $data = json_decode($json, true);
 $url = $_SERVER['REQUEST_URI'];
 $segments = explode('/', trim(parse_url($url, PHP_URL_PATH), '/'));
-$nokartu = $segments[4] ?? null;
-$kdpoli = $segments[5] ?? null;
-$tanggalperiksa = $segments[6] ?? null;
+$nokartu = $segments[5] ?? null;
+$kodepoli = $segments[6] ?? null;
+$tanggalperiksa = $segments[7] ?? null;
+// $nokartu = $segments[4] ?? null;
+// $kdpoli = $segments[5] ?? null;
+// $tanggalperiksa = $segments[6] ?? null;
 
-$stmt = $koneksi->prepare("SELECT pasien_visit.*, ms_poli.poli_name FROM pasien_visit INNER JOIN ms_poli ON ms_poli.poli_code = pasien_visit.id_poli WHERE pasien_visit.id_customer = ? AND ms_poli.id_customer = ? AND pasien_visit.id_poli = ? AND visit_date = ? AND noKartu = ?");
-$stmt->bind_param("sssss", $id_customer, $id_customer, $kdpoli, $tanggalperiksa, $nokartu);
+$stmt = $koneksi->prepare("SELECT COUNT(*) as total,pasien_visit.id_poli,pasien_visit.noKartu,SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) as total_panggil,COUNT(*) - SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) as sisa_antrean,COALESCE(MAX(CASE WHEN ap.status = 1 THEN ap.nomor END),MAX(ap.nomor)) as antrean_terakhir FROM antrian_poli AS ap INNER JOIN pasien_visit ON pasien_visit.visit_ID = ap.nomor_visit WHERE ap.id_customer = ? AND ap.poli = ? AND ap.tanggal = ? AND pasien_visit.noKartu = ?");
+$stmt->bind_param("ssss", $id_customer, $kodepoli, $tanggalperiksa, $nokartu);
 $stmt->execute();
 $result = $stmt->get_result()->fetch_assoc();
-
-
-echo json_encode([
-    "response" => [
-        [
-            "nomorantrean" => $result['visit_antrian'],
-            "namapoli" => $result['poli_name'],
-            "sisaantrean" => "19",
-            "antreanpanggil" => '1',
-            "keterangan" => ""
+$adaData = ($result['total'] > 0);
+if ($adaData) {
+    echo json_encode([
+        "response" => [
+            [
+                "nomorantrean" => $result['noKartu'],
+                "namapoli" => $result['id_poli'],
+                "sisaantrean" => $result['sisa_antrean'],
+                "antreanpanggil" => $result['antrean_terakhir'],
+                "keterangan" => ""
+            ],
         ],
-    ],
-    "metadata" => [
-        "message" => "Ok",
-        "code" => 200
-    ]
-]);
+        "metadata" => [
+            "message" => "Ok",
+            "code" => 200
+        ]
+    ]);
+} else {
+    echo json_encode([
+        "metadata" => [
+            "message" => "Gagal",
+            "code" => 201
+        ]
+    ]);
+}
