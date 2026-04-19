@@ -119,8 +119,8 @@ $(function () {
                         APP.cetak('#tgllahir', response.data.tglLahir || '-');
                         APP.cetak("#typePasien", tipe);
                         let nik = response.data.noKTP || nomor;
-                        APP.cetak('#noNIK', nomor);
-                        APP.cetakhtml('#nonik', nomor);
+                        APP.cetak('#noNIK', nik);
+                        APP.cetakhtml('#nonik', nik);
 
                         APP.cetak('#kdProviderPeserta',
                             response.data.kdProviderPst?.kdProvider || ''
