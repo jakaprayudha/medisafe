@@ -22,11 +22,11 @@ $data = json_decode($json, true);
 
 $url = $_SERVER['REQUEST_URI'];
 $segments = explode('/', trim(parse_url($url, PHP_URL_PATH), '/'));
-// $kodepoli = $segments[4] ?? null;
-// $tanggalperiksa = $segments[5] ?? null;
+$kodepoli = $segments[4] ?? null;
+$tanggalperiksa = $segments[5] ?? null;
 
-$kodepoli = $segments[5] ?? null;
-$tanggalperiksa = $segments[6] ?? null;
+// $kodepoli = $segments[5] ?? null;
+// $tanggalperiksa = $segments[6] ?? null;
 if (!$kodepoli || !$tanggalperiksa) {
     http_response_code(400);
     echo json_encode([
