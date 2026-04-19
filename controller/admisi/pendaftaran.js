@@ -73,7 +73,7 @@ $(function () {
     $('#pasienSelect').on('select2:select', function (e) {
         resetSemuaForm();
         let data = e.params.data;
-        const nomor = data.nik;
+        const nomor = data.nik?.trim() ? data.bpjs : data.nik;
         loadPasien(nomor, 'BPJS');
     });
     function loadPasien(nomor, tipe) {
@@ -87,12 +87,12 @@ $(function () {
                 <div class="mt-2 text-muted">Memuat data pasien...</div>
             </div>
         `);
-
+        let pilih = nomor.length === 16 ? 'nik' : 'noka';
         $.ajax({
             url: url,
             type: 'GET',
             data: {
-                tipe: 'nik',
+                tipe: pilih,
                 nokartu: nomor
             },
             dataType: 'json',
@@ -180,11 +180,12 @@ $(function () {
     $('#btnSearchBPJS').on('click', function () {
         let noKartu = $('#inputNIK').val();
         const btn = $(this);
+        let pilih = noKartu.length === 16 ? 'nik' : 'noka';
         $.ajax({
             url: "controller/admisi/services/getPasien.php",
             type: 'GET',
             data: {
-                tipe: 'nik',
+                tipe: pilih,
                 nokartu: noKartu
             },
             dataType: 'json',
