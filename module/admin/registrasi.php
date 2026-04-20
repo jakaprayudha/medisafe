@@ -150,6 +150,11 @@ require '../../controller/view.php';
                                 <i class="fas fa-stethoscope me-2 text-success"></i> Poliklinik
                               </a>
                             </li>
+                            <li>
+                              <a class="dropdown-item poli-btn" href="javascript:;">
+                                <i class="fas fa-stethoscope me-2 text-danger"></i> Tanpa Identitas
+                              </a>
+                            </li>
                           </ul>
                         </div>
                       </div>
@@ -594,9 +599,6 @@ require '../../controller/view.php';
     </div>
   </div>
 </div>
-
-
-
 <div class="modal fade" id="cameraModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -620,8 +622,76 @@ require '../../controller/view.php';
     </div>
   </div>
 </div>
+<div class="modal fade" id="poliModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
 
+      <div class="modal-header">
+        <h5 class="modal-title">🩺 Registrasi Poliklinik</h5>
+        <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <form id="formPoli">
+          <!-- Pasien -->
+          <div class="mb-3">
+            <label class="form-label">👤 Nama Pasien</label>
+            <select name="id_patient_select" id="id_patient_select"
+              class="form-select js-example-basic-item" required>
+            </select>
+          </div>
+          <div class="row">
+            <div class="col">
+              <!-- Tanggal -->
+              <div class="mb-3">
+                <label class="form-label">📅 Tanggal</label>
+                <input type="date" id="poli_date" class="form-control">
+              </div>
+            </div>
+            <div class="col">
+              <!-- Jam -->
+              <div class="mb-3">
+                <label class="form-label">⏰ Jam Kunjungan</label>
+                <input type="time" id="poli_time" class="form-control">
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">👨‍⚕️ Dokter</label>
+            <select id="poli_doctor" class="form-select"></select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">🏥 Poliklinik</label>
+            <select id="poli_poli" class="form-select"></select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">💳 Provider</label>
+            <select id="poli_provider" class="form-select"></select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+        <button class="btn btn-success" id="btnSavePoli">💾 Simpan</button>
+      </div>
+
+    </div>
+  </div>
+</div>
 <script>
+  $(document).on('click', '.poli-btn', function() {
+    $('#poliModal').modal('show');
+
+    const now = new Date();
+    $('#poli_date').val(now.toISOString().split('T')[0]);
+    $('#poli_time').val(now.toTimeString().slice(0, 5));
+    APP.ambil_data('#poli_doctor', 'dokter/0/15', 'nmDokter', 'nmDokter', true);
+    // loadDoctors();
+    loadPoli();
+    loadProvider();
+  });
+
   function hitungBMI() {
     const tinggi = parseFloat(document.getElementById('tinggi').value);
     const berat = parseFloat(document.getElementById('berat').value);
@@ -1240,12 +1310,12 @@ require '../../controller/view.php';
   }
 
   function loadProvider() {
-    fetch('controller/visit/getprovider')
+    fetch('controller/admisi/services/get_provider')
       .then(res => res.json())
       .then(res => {
         let html = '<option value="">Pilih Provider</option>';
         res.forEach(p => {
-          html += `<option value="${p.id_provider}">${p.provider_name}</option>`;
+          html += `<option value="${p.id}">${p.text}</option>`;
         });
         $('#poli_provider').html(html);
       });
@@ -1291,7 +1361,7 @@ require '../../controller/view.php';
         if (resp.status === 'success') {
 
           // 🔥 ALERT LEBIH INFORMATIVE
-          alert(`✅ Registrasi berhasil\nNo Antrian: ${resp.data.antrian}`);
+          alert(`Registrasi berhasil`);
 
           $('#poliModal').modal('hide');
 
