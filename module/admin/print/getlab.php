@@ -20,6 +20,15 @@ $qPasien = mysqli_query($koneksi, "
 
 $p = mysqli_fetch_assoc($qPasien);
 
+
+// ================== PASIEN ==================
+$quser = mysqli_query($koneksi, "SELECT fullname, signature_user
+  FROM ms_users
+  WHERE id_customer='$id_customer' AND roles ='analislab'
+  LIMIT 1
+");
+$puser = mysqli_fetch_assoc($quser);
+
 // ================== INSPECTION ==================
 $qIns = mysqli_query($koneksi, "
   SELECT * FROM visit_inspection 
@@ -74,19 +83,14 @@ $data = [
       "alamat" => $p['patient_address'] ?? '',
    ],
    "hasil" => $group,
-   "petugas" => "Laboratorium"
+   // 🔥 USER
+   "petugas" => $puser['fullname'] ?? 'Laboratorium',
+   "ttd" => !empty($puser['signature_user'])
+      ? "../../../uploads/ttd_faskes/" . $puser['signature_user']
+      : "../../../uploads/ttd/default.png"
 ];
 
 echo json_encode([
    "status" => "success",
    "data" => $data
 ]);
-
-// ================== HELPER ==================
-// function hitungUmur($tgl)
-// {
-//    if (!$tgl) return '';
-//    $birth = new DateTime($tgl);
-//    $today = new DateTime();
-//    return $today->diff($birth)->y;
-// }

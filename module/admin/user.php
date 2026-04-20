@@ -99,6 +99,7 @@ require '../../controller/view.php';
                 <option value="receptionis">Receptionis</option>
                 <option value="kasir">Kasir</option>
                 <option value="apoteker">Apoteker</option>
+                <option value="analislab">Analis Laboratorium</option>
               </select>
             </div>
           </div>
