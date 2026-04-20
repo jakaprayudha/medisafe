@@ -1,44 +1,30 @@
 <div class="card shadow-sm border-0 mb-3" id="patientCard">
    <div class="card-body">
-
       <div class="d-flex align-items-center justify-content-between">
-
-         <!-- LEFT -->
          <div class="d-flex align-items-center gap-3">
-
             <div class="avatar-circle bg-primary text-white">
                <span id="pc_initial">-</span>
             </div>
-
             <div>
                <h5 class="mb-0 fw-semibold" id="pc_name">-</h5>
                <small class="text-muted" id="pc_rm">No RM: -</small>
             </div>
-
          </div>
-
-         <!-- RIGHT -->
          <div>
+            <span id="logobpjs" class="d-none"><img src="assets/icon/bpjs.png" width="30" height="30"></span>
             <span id="pc_status" class="badge bg-secondary">-</span>
          </div>
-
       </div>
-
       <hr class="my-3">
-
-      <!-- DETAIL -->
       <div class="row text-sm">
-
          <div class="col-md-2">
             <div class="text-muted">Gender</div>
             <div class="fw-semibold" id="pc_gender">-</div>
          </div>
-
          <div class="col-md-2">
             <div class="text-muted">Dokter</div>
             <div class="fw-semibold" id="pc_dokter">-</div>
          </div>
-
          <div class="col-md-2">
             <div class="text-muted">Pembayaran</div>
             <div class="fw-semibold" id="pc_provider">-</div>
@@ -47,7 +33,7 @@
             <div class="text-muted">BPJS</div>
             <div class="fw-semibold" id="nomor_bpjs">-</div>
          </div>
-           <div class="col-md-2">
+         <div class="col-md-2">
             <div class="text-muted">NIK</div>
             <div class="fw-semibold" id="nomor_nik">-</div>
          </div>
@@ -55,12 +41,9 @@
             <div class="text-muted">Umur</div>
             <div class="fw-semibold"><span id="idUmur"></span></div>
          </div>
-
       </div>
-
    </div>
 </div>
-
 <style>
    .avatar-circle {
       width: 45px;
