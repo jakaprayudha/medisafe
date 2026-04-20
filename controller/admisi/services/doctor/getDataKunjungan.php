@@ -44,7 +44,7 @@ if ($exist) {
         "data" => $data,
     ]);
 } else {
-    $stmt = $koneksi->prepare("SELECT pv.*,p.patient_nik,p.patient_datebirth, CONCAT(TIMESTAMPDIFF(YEAR, p.patient_datebirth, CURDATE()), ' Tahun ',TIMESTAMPDIFF(MONTH, p.patient_datebirth, CURDATE()) % 12, ' Bulan ',DATEDIFF(CURDATE(),DATE_ADD(DATE_ADD(p.patient_datebirth,INTERVAL TIMESTAMPDIFF(YEAR, p.patient_datebirth, CURDATE()) YEAR),INTERVAL (TIMESTAMPDIFF(MONTH, p.patient_datebirth, CURDATE()) % 12) MONTH)), ' Hari') AS umur FROM pasien_visit pv INNER JOIN ms_patient p ON p.id_patient = pv.id_patient WHERE pv.id_customer = ? AND pv.visit_ID = ?");
+    $stmt = $koneksi->prepare("SELECT pv.*,p.patient_nik,p.patient_bpjs,p.patient_datebirth, CONCAT(TIMESTAMPDIFF(YEAR, p.patient_datebirth, CURDATE()), ' Tahun ',TIMESTAMPDIFF(MONTH, p.patient_datebirth, CURDATE()) % 12, ' Bulan ',DATEDIFF(CURDATE(),DATE_ADD(DATE_ADD(p.patient_datebirth,INTERVAL TIMESTAMPDIFF(YEAR, p.patient_datebirth, CURDATE()) YEAR),INTERVAL (TIMESTAMPDIFF(MONTH, p.patient_datebirth, CURDATE()) % 12) MONTH)), ' Hari') AS umur FROM pasien_visit pv INNER JOIN ms_patient p ON p.id_patient = pv.id_patient WHERE pv.id_customer = ? AND pv.visit_ID = ?");
     $stmt->bind_param('ss', $idcustomer, $nomor_visit);
     $stmt->execute();
     $hasil = $stmt->get_result()->fetch_assoc();
@@ -82,7 +82,6 @@ if ($exist) {
                 "alergiUdara" => $hasil['alergiUdara'],
                 "alergiObat" => $hasil['alergiObat'],
                 "umur" => $hasil['umur'],
-                "patient_nik" => $hasil['patient_nik']
             ]
         ]
     ];
