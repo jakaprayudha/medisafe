@@ -29,7 +29,7 @@
       <!-- DETAIL -->
       <div class="row text-sm">
 
-         <div class="col-md-1">
+         <div class="col-md-2">
             <div class="text-muted">Gender</div>
             <div class="fw-semibold" id="pc_gender">-</div>
          </div>
@@ -51,7 +51,7 @@
             <div class="text-muted">NIK</div>
             <div class="fw-semibold" id="nomor_nik">-</div>
          </div>
-         <div class="col-md-3">
+         <div class="col-md-2">
             <div class="text-muted">Umur</div>
             <div class="fw-semibold"><span id="idUmur"></span></div>
          </div>
