@@ -77,7 +77,7 @@ $(function () {
         loadPasien(nomor, 'BPJS');
     });
     function loadPasien(nomor, tipe) {
-        const url = `tipe` === 'BPJS'
+        const url = tipe === 'BPJS'
             ? "controller/admisi/services/getPasien.php"
             : "controller/admisi/services/getPasienUmum.php";
         type = tipe === "BPJS" ? "BPJS" : "UMUM";

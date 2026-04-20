@@ -14,6 +14,7 @@ $nomor_kartu = $result['noKartu'];
 $noUrut = $result['noUrut'];
 $kdpoli = $result['kdPoli'];
 $tanggal = date("d-m-Y", strtotime($tglDB));
+die();
 $result = bpjsDelete('/pendaftaran/peserta/' . $nomor_kartu . '/tglDaftar/' . $tanggal . '/noUrut/' . $noUrut . '/kdPoli/' . $kdpoli);
 if ($result['code'] != "200") {
     $msg = $result['message'];
