@@ -43,6 +43,8 @@ $(function () {
                             APP.cetak('#keluhan_utama', d.anamnesa || '');
                             APP.cetak('#status_pasien', "UMUM");
                             APP.cetakhtml('#idUmur', d.umur);
+                            APP.cetakhtml('#nomor_bpjs', d.noKartu);
+                            APP.cetakhtml('#nomor_nik', d.patient_nik);
                             APP.hitungBMI();
                             if (d.kdDiag1 != null) {
                                 APP.addValueSelect('#diag1', d.kdDiag1, d.kdDiag1 + ' - ' + d.nmDiag1);
@@ -77,6 +79,9 @@ $(function () {
                             APP.cetak('#suhu', d.suhu || '0');
                             APP.cetak('#saturasi', d.saturasi || '0');
                             APP.cetak('#keluhan_penyerta', d.keluhan || '');
+                            APP.cetakhtml('#idUmur', d.umur);
+                            APP.cetakhtml('#nomor_bpjs', d.noKartu);
+                            APP.cetakhtml('#nomor_nik', d.patient_nik);
                             APP.hitungBMI();
                             APP.ambil_data('#kdStatusPulang', 'statuspulang/rawatInap/false', 'kdStatusPulang', 'nmStatusPulang', true);
                         } else {
@@ -104,6 +109,8 @@ $(function () {
                                     APP.cetak('#keluhan_utama', d.anamnesa || '');
                                     APP.cetak('#tindakan', d.tindakan || '');
                                     APP.cetakhtml('#idUmur', d.umur);
+                                    APP.cetakhtml('#nomor_bpjs', d.noKartu);
+                                    APP.cetakhtml('#nomor_nik', d.patient_nik);
                                     APP.hitungBMI();
                                     $('#alergiMakan').val(d.alergiMakan).trigger('change');
                                     $('#alergiUdara').val(d.alergiUdara).trigger('change');
