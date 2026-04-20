@@ -61,6 +61,7 @@ $(function () {
                             $('#kdStatusPulang').val(d.kdStatusPulang).trigger('change');
                         })
                     } else {
+                        $('#logobpjs').removeClass('d-none');
                         if (d.noKunjungan == null) {
                             APP.cetak('#kode_poli', d.kdPoli);
                             APP.cetak('#nama_poli', d.nmPoli);
