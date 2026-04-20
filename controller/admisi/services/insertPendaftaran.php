@@ -213,7 +213,7 @@ if ($type == "BPJS") {
         }
     }
 } else {
-    $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE (patient_nik = ? OR patient_bpjs) AND id_customer = ?");
+    $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE (patient_nik = ? OR patient_bpjs = ?) AND id_customer = ?");
     $stmt->bind_param('sss', $noNIK, $noKartu, $idcustomer);
     $stmt->execute();
     $chackpasien = $stmt->get_result()->fetch_assoc();
