@@ -368,7 +368,7 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
-
+    loadTriase();
     const td = document.getElementById("tekanan_darah").value;
 
     if (td && td.includes("/")) {
@@ -496,22 +496,14 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
       items = [];
     }
 
-    // Set kategori triase
+    // set ATS
     document.getElementById("triase").value = kategori;
-
-    // Trigger show/hide box
     document.getElementById("triase").dispatchEvent(new Event("change"));
-    if (d.anamnesa_choice) {
-      document.getElementById("anamnesa_choice").value = d.anamnesa_choice;
-    }
 
     let className = kategori.replace(" ", "").toLowerCase();
 
-    // Centang checkbox berdasarkan referensi
-    items.forEach(val => {
-      document.querySelectorAll("." + className).forEach(cb => {
-        if (cb.value.trim() === val) cb.checked = true;
-      });
+    document.querySelectorAll("." + className).forEach(cb => {
+      cb.checked = items.includes(cb.value.trim());
     });
   }
 
@@ -585,6 +577,66 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
       });
 
   });
+
+  function loadTriase() {
+
+    const no = "<?= $_GET['no'] ?>";
+
+    fetch(`controller/ranap/getTriase.php?no=${no}`)
+      .then(res => res.json())
+      .then(res => {
+
+        if (res.status !== 'success' || !res.data) return;
+
+        let d = res.data;
+
+        // =========================
+        // INPUT BIASA
+        // =========================
+        document.getElementById("keluhan_utama").value = d.keluhan_utama ?? '';
+        document.getElementById("catatan").value = d.catatan ?? '';
+
+        // =========================
+        // DROPDOWN
+        // =========================
+        if (d.anamnesa_choice) {
+          document.getElementById("anamnesa_choice").value = d.anamnesa_choice;
+        }
+
+        if (d.triase) {
+          document.getElementById("triase").value = d.triase;
+          document.getElementById("triase").dispatchEvent(new Event("change"));
+        }
+
+        // =========================
+        // GCS
+        // =========================
+        document.getElementById("gcs_e").value = d.gcs_e ?? 4;
+        document.getElementById("gcs_v").value = d.gcs_v ?? 5;
+        document.getElementById("gcs_m").value = d.gcs_m ?? 6;
+        // ✅ BENAR
+        document.getElementById("total_gcs").value = d.gcs_total ?? '';
+
+        // =========================
+        // NYERI (SLIDER)
+        // =========================
+        // ✅ FIX
+        if (d.skala_nyeri !== null) {
+          document.getElementById("nyeri").value = d.skala_nyeri;
+          document.getElementById("nyeri_value").value = d.skala_nyeri;
+        }
+
+        // =========================
+        // CHECKBOX ATS
+        // =========================
+        // 🔥 HARUS SEBELUM applyChecklist
+        document.getElementById("triase").value = d.triase;
+        document.getElementById("triase").dispatchEvent(new Event("change"));
+        // baru
+        applyChecklist(d.referensi_triase, d.triase);
+
+      });
+  }
 </script>
 
 </html>
