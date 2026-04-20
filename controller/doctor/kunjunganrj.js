@@ -357,7 +357,8 @@ $(function () {
             APP.hideSmoot('#rujukhorizontal')
             APP.showSmoot('#rujukvertikal');
             APP.hideSmoot('#noLaporanPolisi');
-            console.log($('#kdnonSpesialis1').val());
+            // console.log($('#kdnonSpesialis1').val());
+            $('input[name="kdStatusRujuk"][value="SP"]').prop('checked', true).trigger('change');
             chackTacc();
             loadRujukan();
         } else if (idstatus == "6" && StatusPasien == "BPJS") {
