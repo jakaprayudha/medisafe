@@ -337,6 +337,7 @@ $(function () {
                         title: "Berhasil",
                         text: res.message,
                     });
+                    location.reload();
                 } else {
                     Swal.fire({
                         icon: "error",
