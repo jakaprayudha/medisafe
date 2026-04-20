@@ -145,7 +145,7 @@ $(function () {
                                     window.kdfaskes = d.kdfaskes;
                                     window.nmfaskes = d.nmfaskes;
 
-                                    if (d.kdppk != null || d.kdppk == "") {
+                                    if (d.kdppk != "") {
                                         $('.btn-print').removeClass('d-none');
                                     }
                                 })
