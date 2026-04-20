@@ -85,6 +85,8 @@ $amount = $data['total'] ?? 0;
             require '../dashboard/dashboard-kasir.php';
           } else if ($role == 'superadmin') {
             require '../dashboard/dashboard-administrator.php';
+          } else if ($role == 'analislab') {
+            require '../dashboard/dashboard-analislab.php';
           } ?>
           <?php
           require '../../assets/template/footer.php';

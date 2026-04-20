@@ -40,6 +40,8 @@ $statusfarmasikasir = $datafaskes['status_farmasi_kasir'];
          require 'menu/menu-administrator.php';
       } else if ($role == 'perawat' or $role == 'bidan') {
          require 'menu/menu-perawat.php';
+      } else if ($role == 'analislab') {
+         require 'menu/menu-analislab.php';
       } else {
          require 'menu/menu-admin.php';
       }

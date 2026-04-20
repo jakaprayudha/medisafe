@@ -246,6 +246,12 @@
           set("lab_alamat", pasien.alamat);
           set("lab_petugas", d.petugas);
 
+          // 🔥 set TTD
+          const ttdImg = document.querySelector(".lab-ttd img");
+          if (ttdImg) {
+            ttdImg.src = d.ttd ?? "../../../uploads/ttd/default.png";
+          }
+
           // ================= TABLE DINAMIS =================
           const tbody = document.querySelectorAll(".lab-table")[1].querySelector("tbody");
           tbody.innerHTML = "";
