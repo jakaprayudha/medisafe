@@ -29,7 +29,7 @@ if ($exist) {
         $stmt->execute();
         $hasil = $stmt->get_result();
     } else {
-        $stmt = $koneksi->prepare("SELECT pp.*, pv.id_patient, pv.id_doctor, pv.code_doctor FROM pcare_pendaftaran AS pp INNER JOIN pasien_visit AS pv ON pp.nomor_visit = pv.visit_ID WHERE nomor_visit = ? AND pv.id_customer = ?");
+        $stmt = $koneksi->prepare("SELECT pp.*, p.patient_nik, pv.id_patient, pv.id_doctor, pv.code_doctor, CONCAT(TIMESTAMPDIFF(YEAR, p.patient_datebirth, CURDATE()), ' Tahun ',TIMESTAMPDIFF(MONTH, p.patient_datebirth, CURDATE()) % 12, ' Bulan ',DATEDIFF(CURDATE(),DATE_ADD(DATE_ADD(p.patient_datebirth,INTERVAL TIMESTAMPDIFF(YEAR, p.patient_datebirth, CURDATE()) YEAR),INTERVAL (TIMESTAMPDIFF(MONTH, p.patient_datebirth, CURDATE()) % 12) MONTH)), ' Hari') AS umur FROM pcare_pendaftaran AS pp INNER JOIN pasien_visit AS pv ON pp.nomor_visit = pv.visit_ID INNER JOIN ms_patient AS p ON p.patient_bpjs = pv.noKartu  WHERE nomor_visit = ? AND pv.id_customer = ?");
         $stmt->bind_param('ss', $nomor_visit, $idcustomer);
         $stmt->execute();
         $hasil = $stmt->get_result();
