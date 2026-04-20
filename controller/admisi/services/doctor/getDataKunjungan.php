@@ -82,6 +82,8 @@ if ($exist) {
                 "alergiUdara" => $hasil['alergiUdara'],
                 "alergiObat" => $hasil['alergiObat'],
                 "umur" => $hasil['umur'],
+                "patient_nik" => $hasil['patient_nik'],
+                "noKartu" => $hasil['patient_bpjs']
             ]
         ]
     ];
