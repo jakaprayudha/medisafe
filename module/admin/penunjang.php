@@ -135,11 +135,17 @@ $rm = $_GET['rm'];
     <div class="modal-content">
 
       <div class="modal-header">
-        <h5 class="modal-title">Input Hasil Lab</h5>
+        <h5 class="modal-title" id="hasilModalTitle">Input Hasil Lab</h5>
         <button class="btn-close" data-bs-dismiss="modal"></button>
       </div>
 
       <div class="modal-body">
+        <div id="previewContainer" style="display:none;">
+          <iframe
+            id="previewFrame"
+            style="width:100%; height:75vh; border:none;">
+          </iframe>
+        </div>
         <table class="table table-bordered">
           <thead>
             <tr>
@@ -155,7 +161,9 @@ $rm = $_GET['rm'];
       </div>
 
       <div class="modal-footer">
-        <button class="btn btn-primary" id="saveHasil">Simpan</button>
+        <div class="modal-footer" id="hasilFooter">
+          <button class="btn btn-primary" id="saveHasil">Simpan</button>
+        </div>
       </div>
 
     </div>
@@ -174,22 +182,38 @@ $rm = $_GET['rm'];
         dataSrc: function(json) {
           return json.data.map(function(row) {
             return {
-              "actions": `
-            <div class="text-center">
-              <div class="btn-group btn-group-sm" role="group">
-                <a class="btn btn-info hasil-btn" data-id="${row.id_inspection}"
-                data-kode="${row.inspection_name}">
-                  <i class="fas fa-flask"></i>
-                </a>
-                <a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_inspection}">
-                  <i class="fas fa-edit"></i>
-                </a>
-                <a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_inspection}">
-                  <i class="fas fa-trash"></i>
-                </a>
-              </div>
-            </div>
-          `,
+              "actions": (() => {
+                let name = (row.inspection_name || '').toLowerCase();
+
+                let isLabKhusus =
+                  name.includes('ureum / kreatinin') ||
+                  name.includes('darah lengkap') ||
+                  name.includes('widal');
+
+                let btnClass = isLabKhusus ? 'btn-light' : 'btn-info';
+                let icon = isLabKhusus ? 'fas fa-eye' : 'fas fa-flask';
+                let title = isLabKhusus ? 'Lihat Hasil' : 'Input Hasil';
+                return `
+                  <div class="text-center">
+                    <div class="btn-group btn-group-sm" role="group">
+                      <a class="btn ${btnClass} hasil-btn"
+                        title="${title}"
+                        data-id="${row.id_inspection}"
+                        data-kode="${row.inspection_name}">
+                        <i class="${icon}"></i>
+                      </a>
+
+                      <a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_inspection}">
+                        <i class="fas fa-edit"></i>
+                      </a>
+
+                      <a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_inspection}">
+                        <i class="fas fa-trash"></i>
+                      </a>
+                    </div>
+                  </div>
+                `;
+              })(),
               "name": row.inspection_name ?? "-",
               "tanggal": row.inspection_date ?? "-",
               "sumber": row.inspection_source ?? "-",
@@ -368,25 +392,73 @@ $rm = $_GET['rm'];
 
   $(document).on('click', '.hasil-btn', function() {
 
-    let kode = $(this).data('kode');
+    let kode = ($(this).data('kode') || '').toLowerCase();
     let id = $(this).data('id');
 
+    let isPreview =
+      kode.includes('darah lengkap') ||
+      kode.includes('widal') ||
+      kode.includes('ureum / kreatinin');
 
-    // console.log('KODE:', kode);
-    // console.log('ID:', id);
+    let no = new URLSearchParams(window.location.search).get('no');
+    let rm = new URLSearchParams(window.location.search).get('rm');
 
+    // =========================
+    // 🔥 MODE PREVIEW (IFRAME)
+    // =========================
+    if (isPreview) {
+
+      $('#hasilModalTitle').text('Preview Hasil Laboratorium');
+
+      // hide input table
+      $('#hasilBody').closest('table').hide();
+
+      // hide tombol simpan
+      $('#hasilFooter').hide();
+
+      // tampilkan iframe
+      $('#previewContainer').show();
+
+      // set source iframe
+      $('#previewFrame').attr(
+        'src',
+        `module/admin/print/formulir_lab_id?no=${no}&rm=${rm}&id_inspection=${id}`
+      );
+
+      $('#hasilModal').modal('show');
+      return;
+    }
+
+    // =========================
+    // 🧪 MODE INPUT
+    // =========================
+
+    $('#previewContainer').hide();
+    $('#hasilBody').closest('table').show();
+    $('#hasilFooter').show();
+
+    let title = 'Input Hasil Lab';
+
+    if (kode.includes('darah lengkap')) {
+      title = 'Hasil Pemeriksaan Darah Lengkap';
+    } else if (kode.includes('widal')) {
+      title = 'Hasil Pemeriksaan Widal Test';
+    } else if (kode.includes('ureum / kreatinin')) {
+      title = 'Hasil Pemeriksaan Ureum / Kreatinin';
+    }
+
+    $('#hasilModalTitle').text(title);
     currentInspectionId = id;
 
     $('#hasilBody').html('<tr><td colspan="5">Loading...</td></tr>');
 
-    fetch(`controller/lab/getLabItem?kode=${kode}&id_inspection=${id}`)
+    fetch(`controller/lab/getLabItem?kode=${encodeURIComponent(kode)}&id_inspection=${id}`)
       .then(res => res.json())
       .then(res => {
 
         let html = '';
 
         res.data.forEach(item => {
-
           html += `
         <tr>
           <td>${item.assemen}</td>
@@ -410,6 +482,9 @@ $rm = $_GET['rm'];
 
       });
 
+  });
+  $('#hasilModal').on('hidden.bs.modal', function() {
+    $('#previewFrame').attr('src', '');
   });
   $('#saveHasil').on('click', function() {
 
