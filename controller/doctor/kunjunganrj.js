@@ -333,11 +333,15 @@ $(function () {
             success: function (res) {
                 if (res.success) {
                     Swal.fire({
-                        icon: "success",
                         title: "Berhasil",
                         text: res.message,
+                        icon: "success",
+                        confirmButtonText: "Ok"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            location.reload();
+                        }
                     });
-                    location.reload();
                 } else {
                     Swal.fire({
                         icon: "error",

@@ -80,6 +80,7 @@ $data = mysqli_fetch_array($check);
                                  <table class="table table-bordered" id="tableCPO" style="min-width:1200px;">
                                     <thead>
                                        <tr>
+                                          <th>Aksi</th>
                                           <th>Tanggal</th>
                                           <th>Nama Obat</th>
                                           <th>Dosis</th>
@@ -89,7 +90,6 @@ $data = mysqli_fetch_array($check);
                                           <th>Sore</th>
                                           <th>Malam</th>
                                           <th>Petugas</th>
-                                          <th>Aksi</th>
                                        </tr>
                                     </thead>
                                     <tbody></tbody>
@@ -123,6 +123,9 @@ $data = mysqli_fetch_array($check);
 
       let html = `
    <tr>
+    <td style="min-width:80px; text-align:center;">
+         <button type="button" class="btn btn-danger btn-sm btn-remove">X</button>
+      </td>
       <td style="min-width:150px">
          <input type="date" name="tanggal[]" value="${today}" class="form-control">
       </td>
@@ -148,9 +151,7 @@ $data = mysqli_fetch_array($check);
          <select name="petugas[]" class="form-control petugas-select"></select>
       </td>
 
-      <td style="min-width:80px; text-align:center;">
-         <button type="button" class="btn btn-danger btn-sm remove">X</button>
-      </td>
+    
    </tr>
    `;
 
@@ -215,29 +216,30 @@ $data = mysqli_fetch_array($check);
             res.data.forEach(row => {
 
                let tr = $(`
-   <tr style="background:#f8f9fa;" data-id="${row.id}">
-      
-      <td><input type="date" value="${row.tanggal}" class="form-control" disabled></td>
-      <td><input type="text" value="${row.nama_item}" class="form-control" disabled></td>
-      <td><input type="text" value="${row.dosis}" class="form-control" disabled></td>
-      <td><input type="text" value="${row.signature}" class="form-control" disabled></td>
+                     <tr style="background:#f8f9fa;" data-id="${row.id}">
+                           <td class="text-center">
+                           <button type="button" class="btn btn-warning btn-sm btn-edit">Edit</button>
+                           <button type="button" class="btn btn-success btn-sm btn-save d-none">Save</button>
+                           <button class="btn btn-danger btn-sm btn-delete" data-id="${row.id}">Hapus</button>
+                        </td>
+                        <td><input type="date" value="${row.tanggal}" class="form-control" disabled></td>
+                        <td><input type="text" value="${row.nama_item}" class="form-control" disabled></td>
+                        <td><input type="text" value="${row.dosis}" class="form-control" disabled></td>
+                        <td><input type="text" value="${row.signature}" class="form-control" disabled></td>
 
-      <td><input type="time" value="${row.jam_pagi}" class="form-control" disabled></td>
-      <td><input type="time" value="${row.jam_siang}" class="form-control" disabled></td>
-      <td><input type="time" value="${row.jam_sore}" class="form-control" disabled></td>
-      <td><input type="time" value="${row.jam_malam}" class="form-control" disabled></td>
+                        <td><input type="time" value="${row.jam_pagi}" class="form-control" disabled></td>
+                        <td><input type="time" value="${row.jam_siang}" class="form-control" disabled></td>
+                        <td><input type="time" value="${row.jam_sore}" class="form-control" disabled></td>
+                        <td><input type="time" value="${row.jam_malam}" class="form-control" disabled></td>
 
-      <td>
-         <select class="form-control petugas-select" disabled></select>
-      </td>
+                        <td>
+                           <select class="form-control petugas-select" disabled></select>
+                        </td>
 
-      <td class="text-center">
-         <button type="button" class="btn btn-warning btn-sm btn-edit">Edit</button>
-         <button type="button" class="btn btn-success btn-sm btn-save d-none">Save</button>
-      </td>
+                     
 
-   </tr>
-   `);
+                     </tr>
+                     `);
 
                $('#tableCPO tbody').append(tr);
 
@@ -366,6 +368,85 @@ $data = mysqli_fetch_array($check);
          }
 
       }, 'json');
+   });
+
+   $(document).on('click', '.btn-remove', function(e) {
+      e.stopPropagation(); // 🔥 WAJIB
+      let tr = $(this).closest('tr');
+      Swal.fire({
+         title: 'Hapus baris ini?',
+         icon: 'warning',
+         showCancelButton: true,
+         confirmButtonText: 'Hapus'
+      }).then((result) => {
+         if (result.isConfirmed) {
+            tr.remove();
+         }
+      });
+   });
+
+   $(document).on('click', '.btn-delete', function(e) {
+      e.preventDefault(); // 🔥 hindari submit/refresh
+      e.stopPropagation(); // 🔥 cegah bentrok event
+
+      const btn = $(this);
+      const tr = btn.closest('tr');
+      const id = btn.data('id') || tr.data('id'); // fallback aman
+
+      console.log("DELETE CLICK ID:", id); // 🔍 debug
+
+      if (!id) {
+         Swal.fire('Error', 'ID tidak ditemukan', 'error');
+         return;
+      }
+
+      Swal.fire({
+         title: 'Hapus data?',
+         text: 'Data akan dihapus permanen',
+         icon: 'warning',
+         showCancelButton: true,
+         confirmButtonText: 'Hapus',
+         cancelButtonText: 'Batal'
+      }).then((result) => {
+
+         if (!result.isConfirmed) return;
+
+         // 🔥 disable tombol biar gak double click
+         btn.prop('disabled', true).text('...');
+
+         $.ajax({
+            url: 'controller/visit/deleteCpo', // ⚠️ cek path jika perlu ../
+            type: 'POST',
+            data: {
+               id: id
+            },
+            dataType: 'json',
+
+            success: function(res) {
+               console.log("DELETE RESPONSE:", res); // 🔍 debug
+
+               if (res && res.status === 'success') {
+
+                  tr.fadeOut(200, function() {
+                     $(this).remove();
+                  });
+
+                  Swal.fire('Berhasil', res.message || 'Data dihapus', 'success');
+
+               } else {
+                  btn.prop('disabled', false).text('Hapus');
+                  Swal.fire('Error', res?.message || 'Gagal menghapus', 'error');
+               }
+            },
+
+            error: function(xhr) {
+               console.log("DELETE ERROR:", xhr.responseText); // 🔍 penting
+               btn.prop('disabled', false).text('Hapus');
+               Swal.fire('Error', 'Server error / path salah', 'error');
+            }
+         });
+
+      });
    });
 </script>
 
