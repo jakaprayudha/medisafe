@@ -183,7 +183,7 @@ if ($type == "BPJS") {
             $stmt2 = $koneksi->prepare("UPDATE ms_patient SET patient_bpjs = ?, patient_datebirth = ? WHERE patient_nik = ? AND id_customer = ?");
             $stmt2->bind_param("ssss", $noKartu, $tglLahir, $noNIK, $idcustomer);
         } elseif (!empty($noKartu)) {
-            $stmt2 = $koneksi->prepare("UPDATE ms_patient SET patient_nik = ?, patient_datebirth = ? WHERE patient_bpjs = ? id_customer = ?");
+            $stmt2 = $koneksi->prepare("UPDATE ms_patient SET patient_nik = ?, patient_datebirth = ? WHERE patient_bpjs = ? AND id_customer = ?");
             $stmt2->bind_param("ssss", $noNIK, $tglLahir, $noKartu, $idcustomer);
         }
         $hasil2 = $stmt2->execute();
