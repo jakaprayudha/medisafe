@@ -25,23 +25,48 @@ $kodepoli   = $data['kodepoli'] ?? null;
 $tanggal    = $data['tanggalperiksa'] ?? null;
 $keterangan = $data['keterangan'] ?? null;
 
+$status_visit = '99';
 
-$stmt = $koneksi->prepare("SELECT COUNT(*) as total FROM pasien_visit WHERE noKartu = ? AND id_poli = ? AND visit_date = ? AND id_customer = ?");
-$stmt->bind_param("ssss", $noKartu, $kodepoli, $tanggal, $id_customer);
+$stmt = $koneksi->prepare("
+  SELECT pp.nomor_visit 
+  FROM pcare_pendaftaran AS pp 
+  INNER JOIN pasien_visit AS pv 
+    ON pp.nomor_visit = pv.visit_ID 
+  WHERE pv.noKartu = ? 
+    AND pp.tanggal_daftar = ? 
+    AND pp.kdPoli = ? 
+    AND (pv.visit_status IS NULL OR pv.visit_status != ?)
+  LIMIT 1
+");
+$stmt->bind_param("ssss", $noKartu, $tanggal, $kodepoli, $status_visit);
 $stmt->execute();
-$result = $stmt->get_result()->fetch_assoc();
-$total = (int)$result['total'];
-$stmt->close();
-if ($total > 0) {
-    $stmt = $koneksi->prepare("DELETE FROM pasien_visit WHERE noKartu = ? AND id_poli = ? AND visit_date = ? AND id_customer = ?");
-    $stmt->bind_param("ssss", $noKartu, $kodepoli, $tanggal, $id_customer);
+$res = $stmt->get_result();
+if ($res->num_rows > 0) {
+    $row = $res->fetch_assoc();
+    $nomor_visit = $row['nomor_visit'];
+    $stmt = $koneksi->prepare("
+        UPDATE pasien_visit 
+        SET visit_status = ? 
+        WHERE noKartu = ? 
+        AND visit_date = ? 
+        AND id_customer = ?
+        AND visit_ID = ?
+    ");
+    $stmt->bind_param("sssss", $status_visit, $noKartu, $tanggal, $id_customer, $nomor_visit);
     $result = $stmt->execute();
 
-    $stmt1 = $koneksi->prepare("UPDATE antrian_poli SET status = ? WHERE id_customer = ? AND id_poli = ? AND visit_date = ?");
-    $stmt1->bind_param("ssss", $noKartu, $kodepoli, $tanggal, $id_customer);
+    $status = '9';
+    $stmt1 = $koneksi->prepare("
+        UPDATE antrian_poli 
+        SET status = ? 
+        WHERE id_customer = ? 
+        AND poli = ? 
+        AND tanggal = ? 
+        AND nomor_visit = ?
+    ");
+    $stmt1->bind_param("sssss", $status, $id_customer, $kodepoli, $tanggal, $nomor_visit);
     $result1 = $stmt1->execute();
-
-    if ($result) {
+    if ($result && $result1) {
         echo json_encode([
             "metadata" => [
                 "message" => "Ok",
@@ -51,8 +76,8 @@ if ($total > 0) {
     } else {
         echo json_encode([
             "metadata" => [
-                "message" => "Error",
-                "code" => 201
+                "message" => "Gagal update",
+                "code" => 500
             ]
         ]);
     }

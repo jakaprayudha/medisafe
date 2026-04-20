@@ -245,6 +245,8 @@ require "../../controller/view.php";
         type: "GET",
         dataSrc: function(json) {
           return json.data.map(function(row) {
+            let tipe = (tipeObatGlobal || '').toString().trim().toLowerCase();
+            let signaDisplay = (tipe === 'racikan') ? '-' : (row.signa ?? '-');
             return {
               "actions": (function() {
 
@@ -282,13 +284,14 @@ require "../../controller/view.php";
               })(),
               "nama": row.pharmacy_name_generic + '/' + row.pharmacy_name_trade ?? "-",
               "qty": row.qty ?? "-",
-              "signa": row.signa ?? "-",
+              "signa": signaDisplay,
               "catatan": row.catatan ?? "-",
               "id_pharmacy": row.id_pharmacy
             };
           });
         }
       },
+
 
       // 🔥 INI TEMPATNYA
       createdRow: function(row, data) {
@@ -335,11 +338,18 @@ require "../../controller/view.php";
     });
 
     $('#btnTambah').on('click', async function() {
+      let tipe = (tipeObatGlobal || '').toString().trim().toLowerCase();
+      let isRacikan = tipe === 'racikan';
+      let signaInput = isRacikan ?
+        `<input type="hidden" class="signa" value="-"> <span class="text-muted">-</span>` :
+        `<input type="text" class="form-control form-control-sm signa">`;
       let rows = $('#periodeTable tbody tr.new-row');
       // 🔥 save dulu semua row lama
       for (let i = 0; i < rows.length; i++) {
         await saveRow($(rows[i]));
       }
+
+
 
       // 🔥 TAMBAH ROW BARU (TANPA DATA-ID)
       let html = `
@@ -356,7 +366,7 @@ require "../../controller/view.php";
             </td>
 
             <td><input type="number" class="form-control form-control-sm qty" value="1"></td>
-            <td><input type="text" class="form-control form-control-sm signa"></td>
+            <td>${signaInput}</td>
             <td><input type="text" class="form-control form-control-sm catatan"></td>
 
             <td class="text-center">
@@ -383,6 +393,12 @@ require "../../controller/view.php";
     });
 
     function saveRow(row) {
+      let signaVal = row.find('.signa').val();
+      // 🔥 FORCE RACIKAN
+      let tipe = (tipeObatGlobal || '').toString().trim().toLowerCase();
+      if (tipe === 'racikan') {
+        signaVal = '-';
+      }
 
       let id = row.data('id');
       let idPharmacy = row.data('id-pharmacy');
@@ -402,12 +418,10 @@ require "../../controller/view.php";
         id_permintaan_farmasi: "<?= $_GET['id'] ?>",
         id_pharmacy: idPharmacy, // 🔥 FIX DI SINI
         qty: row.find('.qty').val(),
-        signa: row.find('.signa').val(),
+        signa: signaVal, // 🔥 pakai ini
         catatan: row.find('.catatan').val(),
         created_user: "<?= $_SESSION['fullname'] ?>"
       };
-
-
 
 
       // 🔥 INSERT
@@ -495,10 +509,14 @@ require "../../controller/view.php";
       row.find('td:eq(1)').html(`
     <input type="number" class="form-control form-control-sm qty" value="${qty}">
   `);
-
-      row.find('td:eq(2)').html(`
+      let tipe = (tipeObatGlobal || '').toString().trim().toLowerCase();
+      if (tipe === 'racikan') {
+        row.find('td:eq(2)').html(`<span class="text-muted">-</span>`);
+      } else {
+        row.find('td:eq(2)').html(`
     <input type="text" class="form-control form-control-sm signa" value="${signa}">
   `);
+      }
 
       row.find('td:eq(3)').html(`
     <input type="text" class="form-control form-control-sm catatan" value="${catatan}">
