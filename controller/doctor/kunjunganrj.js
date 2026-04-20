@@ -43,7 +43,7 @@ $(function () {
                             APP.cetak('#keluhan_utama', d.anamnesa || '');
                             APP.cetak('#status_pasien', "UMUM");
                             APP.cetakhtml('#idUmur', d.umur);
-                            APP.cetakhtml('#nomor_bpjs', d.noKartu);
+                            APP.cetakhtml('#nomor_bpjs', d.noKartu || '-');
                             APP.cetakhtml('#nomor_nik', d.patient_nik);
                             APP.hitungBMI();
                             if (d.kdDiag1 != null) {
