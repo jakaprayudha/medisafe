@@ -245,7 +245,7 @@ $data = mysqli_fetch_array($check);
 
                // 🔥 load petugas
                let select = tr.find('.petugas-select');
-               loadPetugas(select, row.id_user);
+               loadPetugas(select, row.petugas);
 
             });
 
