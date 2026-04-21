@@ -74,11 +74,11 @@ $datapatient = mysqli_fetch_array($patient);
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
-                          <th class="text-dark fw-normal">Tanggal</th>
-                          <th>Profesi</th>
-                          <th scope="col" class="text-dark fw-normal">CPPT</th>
+                          <th class="text-dark fw-normal col-2">Tanggal</th>
+                          <th>User</th>
+                          <th scope="col-3" class="text-dark fw-normal">CPPT</th>
                           <th scope="col" class="text-dark fw-normal">Instruksi</th>
-                          <th>Verifikasi</th>
+                          <th class="col-1 text-center">Verifikasi</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                         </tr>
                       </thead>
@@ -128,7 +128,7 @@ $datapatient = mysqli_fetch_array($patient);
               <input type="time" value="<?= date('H:i') ?>" name="cppt_time" class="form-control" id="cppt_time" required>
             </div>
           </div>
-          <div class="col-3">
+          <!-- <div class="col-3">
             <div class="mb-3">
               <label for="cppt_profesi" class="form-label">
                 Profesi <span class="text-danger">*</span>
@@ -143,8 +143,8 @@ $datapatient = mysqli_fetch_array($patient);
                 <option value="Tenaga Kesehatan Lainnya">Tenaga Kesehatan Lainnya</option>
               </select>
             </div>
-          </div>
-          <div class="col-3">
+          </div> -->
+          <div class="col-6">
             <div class="mb-3">
               <label for="users_entry" class="form-label">
                 User Entry <span class="text-danger">*</span>
@@ -156,15 +156,20 @@ $datapatient = mysqli_fetch_array($patient);
               ?>
               <select name="users_entry" class="form-select" id="users_entry" required>
                 <option value="">-- Pilih Petugas --</option>
+
                 <?php while ($datauser = mysqli_fetch_assoc($getuser)): ?>
-                  <option value="<?= $datauser['id_user'] ?>"
+                  <option
+                    value="<?= $datauser['id_user'] ?>"
+                    data-role="<?= htmlspecialchars($datauser['roles']) ?>"
                     <?= ($datauser['id_user'] == $current_user) ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($datauser['fullname']) ?> [<?= htmlspecialchars($datauser['roles']) ?>]
+                    <?= htmlspecialchars($datauser['fullname']) ?>
+                    [<?= strtoupper($datauser['roles']) ?>]
                   </option>
                 <?php endwhile; ?>
               </select>
             </div>
           </div>
+          <input type="hidden" hidden name="cppt_profesi" id="cppt_profesi">
           <!-- Subjective -->
           <div class="col-6">
             <div class="mb-3">
@@ -284,7 +289,7 @@ $id_patient = $datapatient['id_patient'];
 							</div>
                     `,
               "tanggal": row.cppt_date + " " + row.cppt_time ?? "-",
-              "profesi": row.cppt_profesi ?? "-",
+              "user": `${row.fullname ?? '-'}<br>${(row.roles ?? '-').toUpperCase()}`,
               "cppt": `
                   <div class="cppt-text">
                     <strong>S : </strong>${row.subjective ?? "-"}<br>
@@ -298,12 +303,12 @@ $id_patient = $datapatient['id_patient'];
 
                 // ✅ kalau sudah diverifikasi
                 if (row.verifikasi == 1) {
-                  return '<span class="badge bg-success">✔️ Sudah Diverifikasi</span>';
+                  return '<span class="badge bg-success col-12">✅Sudah Diverifikasi</span>';
                 }
 
                 // ❌ kalau yang input dokter → tidak perlu tombol
-                if (row.cppt_profesi === "Dokter") {
-                  return '<span class="badge bg-info">Input Dokter</span>';
+                if (row.cppt_profesi === "dokter") {
+                  return '<span class="badge bg-info col-12">🩺 Input Dokter</span>';
                 }
 
                 // 🔥 selain dokter → tampil tombol verifikasi
@@ -311,7 +316,7 @@ $id_patient = $datapatient['id_patient'];
                   <div class="d-flex flex-column gap-1">
                     <span class="badge bg-danger">❌ Belum Diverifikasi</span>
                     <button class="btn btn-sm btn-success verify-btn" data-id="${row.id_cppt}">
-                      ✔️ Verifikasi
+                      ✅ Verifikasi
                     </button>
                   </div>
                 `;
@@ -326,7 +331,7 @@ $id_patient = $datapatient['id_patient'];
           className: "text-wrap"
         },
         {
-          data: "profesi",
+          data: "user",
           className: "text-wrap"
         },
         {
@@ -491,6 +496,23 @@ $id_patient = $datapatient['id_patient'];
 
     // });
   });
+
+  function setProfesi() {
+    let select = document.getElementById("users_entry");
+    let selected = select.options[select.selectedIndex];
+
+    let role = selected.getAttribute("data-role") || '';
+
+    document.getElementById("cppt_profesi").value = role;
+
+    console.log("SET PROFESI:", role); // debug
+  }
+
+  // saat change
+  document.getElementById("users_entry").addEventListener("change", setProfesi);
+
+  // saat load (edit mode)
+  document.addEventListener("DOMContentLoaded", setProfesi);
 </script>
 
 </html>
