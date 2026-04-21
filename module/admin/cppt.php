@@ -76,7 +76,7 @@ $datapatient = mysqli_fetch_array($patient);
                         <tr>
                           <th class="text-dark fw-normal col-2">Tanggal</th>
                           <th>User</th>
-                          <th scope="col-3" class="text-dark fw-normal">CPPT</th>
+                          <th scope="col-8" class="text-dark fw-normal">CPPT</th>
                           <th scope="col" class="text-dark fw-normal">Instruksi</th>
                           <th class="col-1 text-center">Verifikasi</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
@@ -291,7 +291,7 @@ $id_patient = $datapatient['id_patient'];
               "tanggal": row.cppt_date + " " + row.cppt_time ?? "-",
               "user": `${row.fullname ?? '-'}<br>${(row.roles ?? '-').toUpperCase()}`,
               "cppt": `
-                  <div class="cppt-text">
+                  <div class="cppt-text col-8">
                     <strong>S : </strong>${row.subjective ?? "-"}<br>
                     <strong>O : </strong>${row.objective ?? "-"}<br>
                     <strong>A : </strong>${row.analysis ?? "-"}<br>

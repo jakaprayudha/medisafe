@@ -296,7 +296,9 @@ if ($no && $id_customer) {
       </tr>
     </table>
 
-
+    <br><br><br> <br><br><br>
+    <br><br><br> <br><br><br>
+    <br><br><br> <br><br><br>
     <table class="igd-table">
       <tr>
         <th style="width:20%">Perawatan Lanjutan</th>

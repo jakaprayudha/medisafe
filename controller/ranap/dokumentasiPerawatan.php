@@ -88,11 +88,10 @@ function getData()
 
    $no = $_GET['no'] ?? '';
    $rm = $_GET['rm'] ?? '';
+   $id_customer = $_SESSION['id_customer'] ?? '';
 
-   $q = mysqli_query($koneksi, "
-      SELECT * FROM pasien_dokumen
-      WHERE visit_ID='$no' 
-      OR nomor_rm='$rm'
+   $q = mysqli_query($koneksi, "SELECT * FROM pasien_dokumen
+      WHERE visit_ID='$no'
       AND jenis_dokumen='FOTO_PERAWATAN'
       ORDER BY id_dokumen DESC
    ");

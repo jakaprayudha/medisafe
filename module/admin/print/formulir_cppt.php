@@ -83,7 +83,7 @@ require '../../../database/connect.php';
       /* =========================
    TTD
 ========================= */
-      .cpo-ttd img {
+      .cppt-ttd img {
         height: 35px;
         object-fit: contain;
         display: block;

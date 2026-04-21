@@ -127,14 +127,18 @@ $datapetugas = mysqli_fetch_array($checkpetugas);
       }
 
       .cpo-ttd {
-        width: 220px;
+        width: 280px;
         text-align: center;
         font-size: 10pt;
       }
 
       .cpo-ttd img {
-        width: 80px;
-        margin: 5px 0;
+        width: 180px;
+        /* 🔥 lebih besar */
+        max-width: 100%;
+        height: auto;
+        margin: 10px auto;
+        display: block;
       }
 
       .cpo-ttd-line {
@@ -254,8 +258,8 @@ $datapetugas = mysqli_fetch_array($checkpetugas);
             <td class="cpo-center">${o.jam_siang || ""}</td>
             <td class="cpo-center">${o.jam_sore || ""}</td>
             <td class="cpo-center">${o.jam_malam || ""}</td>
-            <td class="cpo-center">${o.signature_path ? `<img src="../../../uploads/ttd/${o.signature_path}" height="35">` : ""}</td>
-            <td class="cpo-center">${o.signature_user ? `<img src="../../../uploads/ttd_faskes/${o.signature_user}" height="35">` : ""}</td>
+            <td class="cpo-center">${o.signature_path ? `<img src="../../../uploads/ttd/${o.signature_path}" height="45">` : ""}</td>
+            <td class="cpo-center">${o.signature_user ? `<img src="../../../uploads/ttd_faskes/${o.signature_user}" height="45">` : ""}</td>
           `;
               tbody.appendChild(tr);
             });
