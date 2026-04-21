@@ -6,7 +6,7 @@ require '../../../database/connect.php';
 $id_customer = $_SESSION['id_customer'] ?? null;
 $no = $_GET['no'] ?? null;
 
-$terapi = "-";
+$terapii = "-";
 
 if ($no && $id_customer) {
   $query = mysqli_query($koneksi, "
@@ -21,7 +21,7 @@ if ($no && $id_customer) {
   $dataresep = mysqli_fetch_assoc($query);
 
   if ($dataresep && !empty($dataresep['planning'])) {
-    $terapi = $dataresep['planning'];
+    $terapii = $dataresep['planning'];
   }
 }
 
@@ -291,8 +291,8 @@ if ($no && $id_customer) {
 ===================================================== -->
     <table class="igd-table">
       <tr>
-        <th style="width:20%">TERAPI</th>
-        <td><?= nl2br(htmlspecialchars($terapi)) ?></td>
+        <th style="width:20%">terapiI</th>
+        <td><?= nl2br(htmlspecialchars($terapiii)) ?></td>
       </tr>
     </table>
 
