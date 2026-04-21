@@ -149,7 +149,20 @@ $datapatient = mysqli_fetch_array($patient);
               <label for="users_entry" class="form-label">
                 User Entry <span class="text-danger">*</span>
               </label>
-              <input type="text" value="<?= $_SESSION['fullname'] ?>" name="users_entry" class="form-control" id="users_entry" required>
+              <?php
+              $id_customer = $_SESSION['id_customer'];
+              $getuser = mysqli_query($koneksi, "SELECT id_user, fullname, roles FROM ms_users WHERE id_customer='$id_customer' AND roles != 'admin'");
+              $current_user = $data['users_entry'] ?? '';
+              ?>
+              <select name="users_entry" class="form-select" id="users_entry" required>
+                <option value="">-- Pilih Petugas --</option>
+                <?php while ($datauser = mysqli_fetch_assoc($getuser)): ?>
+                  <option value="<?= $datauser['id_user'] ?>"
+                    <?= ($datauser['id_user'] == $current_user) ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($datauser['fullname']) ?> [<?= htmlspecialchars($datauser['roles']) ?>]
+                  </option>
+                <?php endwhile; ?>
+              </select>
             </div>
           </div>
           <!-- Subjective -->
