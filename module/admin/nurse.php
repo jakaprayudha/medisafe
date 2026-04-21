@@ -94,6 +94,7 @@ require '../../controller/view.php';
                 <option value="">PILIH</option>
                 <option value="Perawat">Perawat</option>
                 <option value="Farmasi">Farmasi</option>
+                <option value="Analis Laboratorium">Analis Laboratorium</option>
                 <option value="Apoteker">Apoteker</option>
                 <option value="Psikolog">Psikolog</option>
                 <option value="Bidan">Bidan</option>
