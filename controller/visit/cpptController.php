@@ -134,10 +134,10 @@ function getData($id_customer)
    $no = $_GET['no'] ?? '';
    $id_patient = $_GET['id_patient'] ?? '';
 
-   $stmt = $koneksi->prepare("
-      SELECT * FROM visit_cppt 
-      WHERE visit_ID=? AND id_patient=? AND id_customer=?
-      ORDER BY cppt_date ASC
+   $stmt = $koneksi->prepare("SELECT * FROM visit_cppt 
+      LEFT JOIN ms_users ON visit_cppt.users_entry = ms_users.id_user
+      WHERE visit_cppt.visit_ID=? AND visit_cppt.id_patient=? AND visit_cppt.id_customer=?
+      ORDER BY visit_cppt.cppt_date ASC
    ");
 
    $stmt->bind_param("ssi", $no, $id_patient, $id_customer);
