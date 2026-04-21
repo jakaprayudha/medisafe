@@ -291,8 +291,8 @@ if ($no && $id_customer) {
 ===================================================== -->
     <table class="igd-table">
       <tr>
-        <th style="width:20%">terapiI</th>
-        <td><?= nl2br(htmlspecialchars($terapiii)) ?></td>
+        <th style="width:20%">terapi</th>
+        <td><?= nl2br(htmlspecialchars($terapi)) ?></td>
       </tr>
     </table>
 
