@@ -41,7 +41,7 @@
            </a>
            <!-- <a href="module/admin/form_capture_patient?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
            <button class="nav-link <?= ($current == 'form_capture_patient.php') ? 'active' : '' ?>">Foto Pasien</button>
-        </a> -->
+            </a> -->
            <a href="module/admin/form_dok_perawatan?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
               <button class="nav-link <?= ($current == 'form_dok_perawatan.php') ? 'active' : '' ?>">Foto Perawatan</button>
            </a>
@@ -53,23 +53,23 @@
            </a>
 
            <!-- <a href="module/admin/form_usg?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
-           <button class="nav-link <?= ($current == 'form_usg.php') ? 'active' : '' ?>">USG</button>
-        </a> -->
+               <button class="nav-link <?= ($current == 'form_usg.php') ? 'active' : '' ?>">USG</button>
+            </a> -->
            <!-- <a href="module/admin/form_io_ranap?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
            <button class="nav-link <?= ($current == 'form_io_ranap.php') ? 'active' : '' ?>">Form Masuk Keluar Rawat Inap</button>
-        </a> -->
+             </a> -->
            <!-- <a href="module/admin/form_lbp?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
            <button class="nav-link <?= ($current == 'form_lbp.php') ? 'active' : '' ?>">LBP</button>
-        </a> -->
+            </a> -->
            <!-- <a href="module/admin/form_rekap_persalinan?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
-           <button class="nav-link <?= ($current == 'form_rekap_persalinan.php') ? 'active' : '' ?>">Pelayanan Persalinan</button>
-        </a> -->
+               <button class="nav-link <?= ($current == 'form_rekap_persalinan.php') ? 'active' : '' ?>">Pelayanan Persalinan</button>
+            </a> -->
            <!-- <a href="module/admin/form_upload_buku_kia?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
-           <button class="nav-link <?= ($current == 'form_upload_buku_kia.php') ? 'active' : '' ?>">Buku KIA</button>
-        </a> -->
+               <button class="nav-link <?= ($current == 'form_upload_buku_kia.php') ? 'active' : '' ?>">Buku KIA</button>
+            </a> -->
            <!-- <a href="module/admin/form_kb?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
-           <button class="nav-link <?= ($current == 'form_kb.php') ? 'active' : '' ?>">Status KB</button>
-        </a> -->
+               <button class="nav-link <?= ($current == 'form_kb.php') ? 'active' : '' ?>">Status KB</button>
+            </a> -->
 
            <a href="module/admin/resume_medis?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
               <button class="nav-link <?= ($current == 'resume_medis.php') ? 'active' : '' ?>">Resume Medis</button>
@@ -83,6 +83,9 @@
            </a>
            <a href="module/admin/cppt?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
               <button class="nav-link <?= ($current == 'cppt.php') ? 'active' : '' ?>">CPPT</button>
+           </a>
+           <a href="module/admin/cpo?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+              <button class="nav-link <?= ($current == 'cpo.php') ? 'active' : '' ?>">CPO</button>
            </a>
         <?php  }
          ?>
