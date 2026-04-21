@@ -237,7 +237,7 @@ if ($type == "BPJS") {
                 id_customer,
                 id_doctor,
                 visit_time,
-                anamnesa,
+                keluhan_penyerta,
                 tekanan_darah, 
                 nadi,
                 respirasi, 

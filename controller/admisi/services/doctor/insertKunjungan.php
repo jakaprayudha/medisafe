@@ -86,7 +86,6 @@ if ($status_pasien == "UMUM") {
                 anamnesa = ?,
                 keluhan_penyerta = ?,
                 tindakan = ?,
-                edukasi = ?,
                 saturasi = ?,
                 diagnosa_sekunder = ?,
                 noKunjung = ?,
@@ -107,7 +106,7 @@ if ($status_pasien == "UMUM") {
         ");
 
     $stmt1->bind_param(
-        "ssssssssssssssssssssssssssssss",
+        "sssssssssssssssssssssssssssss",
         $tekanandarah,
         $suhu,
         $heartRate,
@@ -119,7 +118,6 @@ if ($status_pasien == "UMUM") {
         $anamnesa,
         $keluhan,
         $tindakan,
-        $edukasi,
         $saturasi,
         $diagnosa_sekunder,
         $noKunjungan,
