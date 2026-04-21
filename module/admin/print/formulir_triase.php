@@ -10,18 +10,17 @@ $terapii = "-";
 
 if ($no && $id_customer) {
   $query = mysqli_query($koneksi, "
-    SELECT planning 
-    FROM visit_cppt  
+    SELECT tindakan 
+    FROM pasien_visit  
     WHERE visit_ID='$no'  
     AND id_customer='$id_customer'  
-    ORDER BY created_at ASC  
     LIMIT 1
   ");
 
   $dataresep = mysqli_fetch_assoc($query);
 
-  if ($dataresep && !empty($dataresep['planning'])) {
-    $terapii = $dataresep['planning'];
+  if ($dataresep && !empty($dataresep['tindakan'])) {
+    $terapii = $dataresep['tindakan'];
   }
 }
 
@@ -292,7 +291,7 @@ if ($no && $id_customer) {
     <table class="igd-table">
       <tr>
         <th style="width:20%">terapi</th>
-        <td><?= nl2br(htmlspecialchars($terapi)) ?></td>
+        <td><?= nl2br(htmlspecialchars($terapii)) ?></td>
       </tr>
     </table>
 
