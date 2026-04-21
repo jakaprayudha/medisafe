@@ -78,16 +78,13 @@ $terapiObat = implode(', ', $terapiObatArr);
 
 // ================== JIKA BUKAN BPJS ==================
 if ($id_provider != 1) {
-
    $stmt3 = $koneksi->prepare("
       UPDATE permintaan_pharmacy 
       SET status_permintaan = 1 
       WHERE id_permintaan_farmasi = ? 
       AND id_customer = ?
    ");
-
    $stmt3->bind_param("ii", $id, $id_customer);
-
    if ($stmt3->execute()) {
       echo json_encode([
          'status' => 'success',
@@ -99,7 +96,6 @@ if ($id_provider != 1) {
          'message' => $stmt3->error
       ]);
    }
-
    // close
    $stmt->close();
    $stmt2->close();
@@ -154,16 +150,16 @@ if ($result['code'] != "200") {
 }
 
 // ================== UPDATE STATUS ==================
-$stmt3 = $koneksi->prepare("
+$stmt4 = $koneksi->prepare("
    UPDATE permintaan_pharmacy 
    SET status_permintaan = 1 
    WHERE id_permintaan_farmasi = ? 
    AND id_customer = ?
 ");
 
-$stmt3->bind_param("ii", $id, $id_customer);
+$stmt4->bind_param("ii", $id, $id_customer);
 
-if ($stmt3->execute()) {
+if ($stmt4->execute()) {
    echo json_encode([
       'status' => 'success',
       'message' => 'Berhasil kirim ke farmasi & BPJS'
@@ -171,7 +167,7 @@ if ($stmt3->execute()) {
 } else {
    echo json_encode([
       'status' => 'error',
-      'message' => $stmt3->error
+      'message' => $stmt4->error
    ]);
 }
 
@@ -179,8 +175,6 @@ if ($stmt3->execute()) {
 $stmt->close();
 $stmt1->close();
 $stmt2->close();
+$stmt3->close();
+$stmt4->close();
 $stmtProv->close();
-
-if (isset($stmt3)) {
-   $stmt3->close();
-}
