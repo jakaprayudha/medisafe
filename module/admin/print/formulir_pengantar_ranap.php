@@ -115,7 +115,7 @@
       }
 
       .rinap-ttd-img {
-         width: 90px;
+         width: 160px;
          /* TTD diperkecil */
          height: auto;
          margin: 4px auto;

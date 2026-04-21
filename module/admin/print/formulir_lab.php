@@ -143,7 +143,7 @@
       }
 
       .lab-ttd img {
-        width: 80px;
+        width: 100px;
         margin: 5px 0;
       }
 

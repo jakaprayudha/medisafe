@@ -80,7 +80,7 @@
             const path = base + "uploads/dokumen/" + file;
 
             // 🔥 KUNCI: pakai zoom fit width
-            iframe.src = path + "#zoom=49";
+            iframe.src = path + "#zoom=55";
 
          });
 
