@@ -39,8 +39,10 @@ $(function () {
                             APP.cetak('#heartRate', d.heart_rate || '0');
                             APP.cetak('#suhu', d.suhu || '0');
                             APP.cetak('#saturasi', d.saturasi || '0');
+                            APP.cetak('#lingkarPerut', d.lingkar_perut || '0');
                             APP.cetak('#keluhan_penyerta', d.keluhan || '');
                             APP.cetak('#keluhan_utama', d.anamnesa || '');
+                            APP.cetak('#tindakan', d.tindakan);
                             APP.cetak('#status_pasien', "UMUM");
                             APP.cetakhtml('#idUmur', d.umur);
                             APP.cetakhtml('#nomor_bpjs', d.noKartu || '-');
