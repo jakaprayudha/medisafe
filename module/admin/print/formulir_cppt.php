@@ -144,15 +144,27 @@ require '../../../database/connect.php';
           resp.data.forEach(cppt => {
             let ttd = "";
 
-            if (cppt.cppt_profesi) {
-              const profesi = cppt.cppt_profesi.toLowerCase();
-              if (profesi.includes("perawat")) {
-                ttd = `<img src="../../../uploads/ttd/farmasi.png" alt="TTD Perawat">`;
-              } else if (profesi.includes("dokter")) {
-                ttd = `<img src="../../../uploads/ttd/drdevi.png" alt="TTD Dokter">`;
-              }
+            if (cppt.signature_user && cppt.signature_user !== '') {
+              ttd = `
+                <div style="font-weight:bold;">
+                  <img 
+                    src="../../../uploads/ttd_faskes/${cppt.signature_user}" 
+                    width="60"
+                    style="display:block; margin:auto;"
+                    onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                  >
+                  <small style="display:none; color:red;">
+                    User belum upload TTD
+                  </small>
+                </div>
+              `;
+            } else {
+              ttd = `
+                <div style="font-weight:bold; color:red;">
+                  User belum TTD di master
+                </div>
+              `;
             }
-
             html += `
           <tr>
             <td class="cpo-center">
@@ -167,8 +179,8 @@ require '../../../database/connect.php';
             <td>${cppt.instruction || "-"}</td>
             <td class="cpo-center cpo-ttd">
               ${ttd}
-              <b>${cppt.users_entry || "-"}</b><br>
-              <small>(${cppt.cppt_profesi || "-"})</small>
+              <b>${cppt.fullname || "-"}</b><br>
+              <small>(${cppt.roles || "-"})</small>
             </td>
           </tr>
         `;
