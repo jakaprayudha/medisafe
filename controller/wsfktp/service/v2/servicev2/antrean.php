@@ -2,7 +2,7 @@
 header("Content-Type: application/json");
 require_once __DIR__ . '/../../../../../database/connect.php';
 require_once __DIR__ . '/../../../validateToken.php';
-
+date_default_timezone_set('Asia/Jakarta');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode([
@@ -66,6 +66,16 @@ $cekpoli->bind_param('sss', $kodedokter, $id_customer, $hariIndonesia);
 $cekpoli->execute();
 $status_antrian = $cekpoli->get_result()->fetch_assoc();
 $cekpoli->close();
+if (!$status_antrian) {
+    http_response_code(201);
+    echo json_encode([
+        "metadata" => [
+            "message" => "Jadwal dokter tidak ditemukan",
+            "code" => 201
+        ]
+    ]);
+    exit;
+}
 if ($status_antrian['sch_status'] == '0') {
     http_response_code(201);
     echo json_encode([
@@ -85,13 +95,24 @@ if ($jamMulai_user != $jamMulai_db || $jamSelesai_user != $jamSelesai_db) {
     http_response_code(201);
     echo json_encode([
         "metadata" => [
-            "message" => "Pendaftaran Ke Poli Ini Sedang Tutup",
+            "message" => "Jadwal Dokter " . $status_antrian['doctor_name'] . " tersebut Belum tersedia, Silahkan Reschedule Tanggal dan Jam Praktek Lainnya",
             "code" => 201
         ]
     ]);
     exit;
 }
-
+$jamsekarang = "19:00";
+// $jamsekarang = date('H:i');
+if (strtotime($jamsekarang) > strtotime($jamSelesai_db)) {
+    http_response_code(201);
+    echo json_encode([
+        "metadata" => [
+            "message" => "Pendaftaran Ke Poli " . $nmPoli . " Sudah Tutup Jam " . $jamSelesai_db,
+            "code" => 201,
+        ]
+    ]);
+    exit;
+}
 $cekkuota = $koneksi->prepare("SELECT COUNT(*) FROM pasien_visit WHERE id_customer = ? AND id_poli = ? AND code_doctor = ? AND visit_date = ?");
 $cekkuota->bind_param('ssss', $id_customer, $nmPoli, $kodedokter, $tanggal);
 $cekkuota->execute();
