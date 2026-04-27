@@ -101,8 +101,8 @@ if ($jamMulai_user != $jamMulai_db || $jamSelesai_user != $jamSelesai_db) {
     ]);
     exit;
 }
-$jamsekarang = "19:00";
-// $jamsekarang = date('H:i');
+// $jamsekarang = "19:00";
+$jamsekarang = date('H:i');
 if (strtotime($jamsekarang) > strtotime($jamSelesai_db)) {
     http_response_code(201);
     echo json_encode([
@@ -133,7 +133,7 @@ if ($kuota == 0 || $total >= $kuota) {
     ]);
     exit;
 }
-die();
+// die();
 $stmt1 = $koneksi->prepare("SELECT * FROM pasien_visit WHERE visit_date = ? AND noKartu = ? AND id_customer = ? AND id_poli = ?");
 $stmt1->bind_param("ssss", $tanggal, $noKartu, $id_customer, $nmPoli);
 $stmt1->execute();
