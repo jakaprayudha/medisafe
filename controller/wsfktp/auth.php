@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     echo json_encode([
         "metadata" => [
             "message" => "Method not allowed",
-            "code" => 405
+            "code" => 201
         ]
     ]);
     exit;
@@ -27,7 +27,7 @@ if (!$username || !$password) {
     echo json_encode([
         "metadata" => [
             "message" => "Header tidak lengkap",
-            "code" => 400
+            "code" => 201
         ]
     ]);
     exit;
@@ -45,7 +45,7 @@ if (!$user) {
     echo json_encode([
         "metadata" => [
             "message" => "Username tidak ditemukan",
-            "code" => 401
+            "code" => 201
         ]
     ]);
     exit;
@@ -57,7 +57,7 @@ if (!password_verify($password, $user['password'])) {
     echo json_encode([
         "metadata" => [
             "message" => "Username atau password salah",
-            "code" => 401
+            "code" => 201
         ]
     ]);
     exit;
