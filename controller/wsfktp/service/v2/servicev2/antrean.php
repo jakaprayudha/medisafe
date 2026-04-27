@@ -49,12 +49,39 @@ $result1 = $stmt->get_result()->fetch_assoc();
 $nmPoli = $result1['nmPoli'];
 $stmt->close();
 
-$cekpoli = $koneksi->prepare("SELECT mds.sch_status, mds.kuota, md.doctor_name FROM ms_doctor_schedule AS mds INNER JOIN ms_doctor AS md ON mds.id_doctor = md.id_doctor WHERE mds.id_customer = ? AND md.doctor_code = ?");
-$cekpoli->bind_param('ss', $id_customer, $kodedokter);
+$hariInggris = date('l', strtotime($tanggal));
+$mapHari = [
+    'Sunday' => 'Minggu',
+    'Monday' => 'Senin',
+    'Tuesday' => 'Selasa',
+    'Wednesday' => 'Rabu',
+    'Thursday' => 'Kamis',
+    'Friday' => 'Jumat',
+    'Saturday' => 'Sabtu'
+];
+$hariIndonesia = $mapHari[$hariInggris];
+
+$cekpoli = $koneksi->prepare("SELECT d.doctor_name, mds.day_of_week, mds.start_time, mds.end_time, mds.sch_status, mds.kuota FROM ms_doctor AS d INNER JOIN ms_doctor_schedule AS mds ON d.id_doctor = mds.id_doctor AND d.id_customer = mds.id_customer WHERE d.doctor_code = ? AND d.id_customer = ? AND mds.day_of_week = ?");
+$cekpoli->bind_param('sss', $kodedokter, $id_customer, $hariIndonesia);
 $cekpoli->execute();
 $status_antrian = $cekpoli->get_result()->fetch_assoc();
 $cekpoli->close();
 if ($status_antrian['sch_status'] == '0') {
+    http_response_code(201);
+    echo json_encode([
+        "metadata" => [
+            "message" => "Pendaftaran Ke Poli Ini Sedang Tutup",
+            "code" => 201
+        ]
+    ]);
+    exit;
+}
+$pecah_jam = explode('-', $jampraktek);
+$jamMulai_db = $status_antrian['start_time'];
+$jamSelesai_db = $status_antrian['end_time'];
+$jamMulai_user = $pecah_jam[0];
+$jamSelesai_user = $pecah_jam[1];
+if ($jamMulai_user != $jamMulai_db || $jamSelesai_user != $jamSelesai_db) {
     http_response_code(201);
     echo json_encode([
         "metadata" => [
@@ -71,7 +98,11 @@ $cekkuota->execute();
 $cekkuota->bind_result($total_antrian);
 $cekkuota->fetch();
 $cekkuota->close();
-if ($total_antrian >= $status_antrian['kuota']) {
+
+$kuota = (int)$status_antrian['kuota'];
+$total = (int)$total_antrian;
+
+if ($kuota == 0 || $total >= $kuota) {
     http_response_code(201);
     echo json_encode([
         "metadata" => [
@@ -81,7 +112,7 @@ if ($total_antrian >= $status_antrian['kuota']) {
     ]);
     exit;
 }
-
+die();
 $stmt1 = $koneksi->prepare("SELECT * FROM pasien_visit WHERE visit_date = ? AND noKartu = ? AND id_customer = ? AND id_poli = ?");
 $stmt1->bind_param("ssss", $tanggal, $noKartu, $id_customer, $nmPoli);
 $stmt1->execute();
