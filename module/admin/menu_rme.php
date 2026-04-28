@@ -7,6 +7,9 @@
         <a href="module/admin/kunjungan?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=a">
            <button class="nav-link <?= ($current == 'kunjungan.php') ? 'active' : '' ?>">Pemeriksaan Medis</button>
         </a>
+        <a href="module/admin/odontogram?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=a">
+           <button class="nav-link <?= ($current == 'odontogram.php') ? 'active' : '' ?>">Odontogram</button>
+        </a>
         <a href="module/admin/permintaan_farmasi?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=a">
            <button class="nav-link <?= ($current == 'permintaan_farmasi.php') ? 'active' : '' ?>">Permintaan Farmasi</button>
         </a>

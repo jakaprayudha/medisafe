@@ -6,7 +6,6 @@ $id = $_GET['rm'] ?? 0;
 $no = $_GET['no'] ?? 0;
 $id_customer = $_SESSION['id_customer'] ?? null;
 $q = mysqli_query($koneksi, "SELECT * FROM pasien_dokumen pd
-LEFT JOIN ms_patient mp ON pd.nomor_rm = mp.nomor_rm
 LEFT JOIN pasien_visit pv ON pd.visit_ID = pv.visit_ID
 WHERE pv.id_customer ='$id_customer' AND pv.visit_ID = '$no' 
 AND (
