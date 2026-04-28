@@ -272,7 +272,7 @@ $data = mysqli_fetch_array($check);
           <div class="col-6">
             <div class="mb-3">
               <label class="form-label required">Harga Dasar</label>
-              <input type="number" id="harga" name="harga" class="form-control" required>
+              <input type="number" value="0" id="harga" name="harga" class="form-control" required>
             </div>
           </div>
           <div class="col-6">
@@ -290,7 +290,7 @@ $data = mysqli_fetch_array($check);
           <div class="col-12">
             <div class="mb-3">
               <label class="form-label">Catatan</label>
-              <textarea name="catatan_permintaan" id="catatan_permintaan" class="form-control" rows="5"></textarea>
+              <textarea name="catatan" id="catatan" class="form-control" rows="5"></textarea>
             </div>
           </div>
         </div>
@@ -631,4 +631,66 @@ $data = mysqli_fetch_array($check);
 
     $('#selectedStatus').text(label);
   }
+$(document).on('click', '.edit-btn', function () {
+   const id = $(this).data('id');
+
+   fetch(`controller/visit/permintaanFarmasiDetails?id=${id}`)
+      .then(res => res.json())
+      .then(res => {
+
+         const d = res.data;
+
+         $('#id_pharmacy_details').val(d.id_pharmacy_details);
+         $('#id_pharmacy').val(d.id_pharmacy).trigger('change');
+         $('#qty').val(d.qty);
+         $('#signa').val(d.signa);
+         $('#catatan_permintaan').val(d.catatan);
+
+         $('#programModal .modal-title').text('Edit Data');
+         $('#programModal').modal('show');
+
+      });
+});
+$(document).on('click', '.delete-btn', function () {
+   const id = $(this).data('id');
+
+   if (!confirm('Yakin mau hapus data ini?')) return;
+
+   fetch(`controller/visit/permintaanFarmasiDetails?id=${id}`, {
+      method: 'DELETE'
+   })
+   .then(res => res.json())
+   .then(res => {
+      if (res.status === 'success') {
+         alert('Data berhasil dihapus');
+         loadTiket(); // reload
+      }
+   });
+});
+$('#programForm').on('submit', function (e) {
+   e.preventDefault();
+
+   const formData = $(this).serialize();
+   const id = $('#id_pharmacy_details').val();
+
+   let method = id ? 'PUT' : 'POST';
+   let url = 'controller/visit/permintaanFarmasiDetails';
+
+   fetch(url, {
+      method: method,
+      headers: {
+         'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: formData
+   })
+   .then(res => res.json())
+   .then(res => {
+      if (res.status === 'success') {
+         $('#programModal').modal('hide');
+         loadTiket();
+      } else {
+         alert(res.message);
+      }
+   });
+});
 </script>
