@@ -25,6 +25,11 @@ $nokartu = $segments[4] ?? null;
 $kodepoli = $segments[5] ?? null;
 $tanggalperiksa = $segments[6] ?? null;
 
+// $nokartu = $segments[5] ?? null;
+// $kodepoli = $segments[6] ?? null;
+// $tanggalperiksa = $segments[7] ?? null;
+
+// var_dump($segments);die();
 if (!$nokartu || !$kodepoli || !$tanggalperiksa) {
     echo json_encode([
         "metadata" => [
@@ -37,26 +42,24 @@ if (!$nokartu || !$kodepoli || !$tanggalperiksa) {
 
 $stmt = $koneksi->prepare("
     SELECT 
-        COUNT(ap.id) AS total,
-        p.id_poli,
-        p.noKartu,
+    COUNT(ap.id) AS total,
+    p.id_poli,
+    p.noKartu,
 
-        SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) AS total_panggil,
+    SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) AS total_panggil,
 
-        COUNT(ap.id) - SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) AS sisa_antrean,
+    COUNT(ap.id) - SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) AS sisa_antrean,
 
-        COALESCE(
-            MAX(CASE WHEN ap.status = 1 THEN ap.nomor END),
-            MIN(ap.nomor),
-            1
-        ) AS antrean_terakhir,
+    IFNULL(
+        CAST(MAX(CASE WHEN ap.status = 1 THEN ap.nomor END) AS CHAR),
+        '0'
+    ) AS antrean_terakhir,
 
-        MIN(ap.nomor) AS nomor_antrean
+    COALESCE(MIN(ap.nomor), 0) AS nomor_antrean
 
-    FROM antrian_poli ap
-    INNER JOIN pasien_visit p 
-        ON p.visit_ID = ap.nomor_visit
-
+FROM antrian_poli ap
+INNER JOIN pasien_visit p 
+    ON p.visit_ID = ap.nomor_visit
     WHERE ap.id_customer = ?
     AND ap.poli = ?
     AND ap.tanggal = ?
@@ -65,20 +68,17 @@ $stmt = $koneksi->prepare("
 
 $stmt->bind_param("ssss", $id_customer, $kodepoli, $tanggalperiksa, $nokartu);
 $stmt->execute();
-
 $result = $stmt->get_result()->fetch_assoc();
-
 $adaData = ($result && (int)$result['total'] > 0);
 
 if ($adaData) {
-
     echo json_encode([
         "response" => [
             [
                 "nomorantrean" => $result['nomor_antrean'] ?? 1,
                 "namapoli" => $result['id_poli'],
                 "sisaantrean" => (int)$result['sisa_antrean'],
-                "antreanpanggil" => $result['antrean_terakhir'] ?? 1,
+                "antreanpanggil" =>  $antrean_terakhir = ($result['antrean_terakhir'] == 0) ? '-' : $result['antrean_terakhir'],
                 "keterangan" => ""
             ],
         ],
@@ -91,7 +91,7 @@ if ($adaData) {
 
     echo json_encode([
         "metadata" => [
-            "message" => "Gagal",
+            "message" => "Antrean Tidak Ditemukan",
             "code" => 201
         ]
     ]);

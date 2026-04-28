@@ -28,7 +28,7 @@ function validateBpjsToken($usernameParam)
         echo json_encode([
             "metadata" => [
                 "message" => "User configuration not found",
-                "code" => 401
+                "code" => 201
             ]
         ]);
         exit;
@@ -45,7 +45,7 @@ function validateBpjsToken($usernameParam)
         echo json_encode([
             "metadata" => [
                 "message" => "Missing required headers",
-                "code" => 400
+                "code" => 201
             ]
         ]);
         exit;
@@ -80,7 +80,7 @@ function validateBpjsToken($usernameParam)
             echo json_encode([
                 "metadata" => [
                     "message" => "Username claim missing in token",
-                    "code" => 401
+                    "code" => 201
                 ]
             ]);
             exit;
@@ -91,7 +91,7 @@ function validateBpjsToken($usernameParam)
             echo json_encode([
                 "metadata" => [
                     "message" => "Username does not match token",
-                    "code" => 401
+                    "code" => 201
                 ]
             ]);
             exit;
@@ -103,7 +103,7 @@ function validateBpjsToken($usernameParam)
         echo json_encode([
             "metadata" => [
                 "message" => "Invalid or expired token",
-                "code" => 401,
+                "code" => 201,
                 "error" => $e->getMessage()
             ]
         ]);
