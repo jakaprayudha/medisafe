@@ -101,7 +101,8 @@ require '../../controller/view.php';
               <select name="billing_item" id="billing_item" class="form-select js-example-basic-item" required>
                 <option value="">Select Option</option>
                 <?php
-                $getbarang = tampildata("SELECT * FROM ms_tarif WHERE tarif_status='1'");
+                $id_customer = $_SESSION['id_customer'];
+                $getbarang = tampildata("SELECT * FROM ms_tarif WHERE tarif_status='1' AND id_customer='$id_customer' ORDER BY tarif_name ASC");
                 ?>
                 <?php foreach ($getbarang as $barang): ?>
                   <option value="<?= $barang['tarif_name']; ?>" data-harga="<?= $barang['tarif_amount']; ?>"><?= $barang['tarif_name']; ?>[<?= $barang['tarif_services']; ?>]</option>

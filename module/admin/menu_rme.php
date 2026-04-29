@@ -23,7 +23,7 @@
            <button class="nav-link <?= ($current == 'vaksin.php') ? 'active' : '' ?>">Vaksin</button>
         </a>
         <a href="module/admin/billing?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=a">
-           <button class="nav-link <?= ($current == 'billing.php') ? 'active' : '' ?>">Biaya</button>
+           <button class="nav-link <?= ($current == 'billing.php') ? 'active' : '' ?>">Tindakan</button>
         </a>
         <a href="module/admin/riwayat?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=a">
            <button class="nav-link <?= ($current == 'riwayat.php') ? 'active' : '' ?>">Riwayat Pengobatan</button>
