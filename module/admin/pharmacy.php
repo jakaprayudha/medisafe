@@ -200,10 +200,7 @@ require '../../controller/view.php';
                 	<a class="btn btn-info" href="module/admin/pharmacy_details?no=${row.pharmacy_number}">
 											<i class="fas fa-info-circle"></i>
 									</a>
-									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_pharmacy}">
-											<i class="fas fa-edit"></i>
-									</a>
-									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_pharmacy}">
+									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_pharmacy} data-parrent="${row.id_customer}">
 											<i class="fas fa-trash"></i>
 									</a>
 								</div>
@@ -310,29 +307,11 @@ require '../../controller/view.php';
         });
     });
 
-    // 🔹 Edit
-    $(document).on('click', '.edit-btn', function() {
-      let id = $(this).data('id');
-      fetch(apiUrl + `?id=${id}`)
-        .then(res => res.json())
-        .then(resp => {
-          if (resp.status === 'success') {
-            let d = resp.data;
-
-            // isi otomatis berdasarkan name field
-            for (let key in d) {
-              $(`[name="${key}"]`).val(d[key]);
-            }
-
-            $('#programModal .modal-title').text('Edit Data');
-            $('#programModal').modal('show');
-          }
-        });
-    });
 
     // 🔹 Delete
     $(document).on('click', '.delete-btn', function() {
       let id = $(this).data('id');
+      let parent = $(this).data('parent');
       Swal.fire({
         title: 'Hapus Data?',
         icon: 'warning',
@@ -341,7 +320,7 @@ require '../../controller/view.php';
         cancelButtonText: 'Batal'
       }).then((result) => {
         if (result.isConfirmed) {
-          fetch(apiUrl + `?id=${id}`, {
+          fetch(apiUrl + `?id=${id}&parent=${parent}`, {
               method: 'DELETE'
             })
             .then(res => res.json())

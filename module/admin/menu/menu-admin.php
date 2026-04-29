@@ -45,6 +45,7 @@
             <li><a href="module/admin/setting_bpjs">Integrasi BPJS</a></li>
             <li><a href="module/admin/setting_satusehat">Integrasi Satu Sehat</a></li>
             <li><a href="module/admin/setting_faskes">Faskes</a></li>
+            <li><a href="module/admin/setting_margin">Margin Farmasi</a></li>
          </ul>
       </li>
 
