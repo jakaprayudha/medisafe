@@ -50,11 +50,14 @@ function createData($id_customer)
    }
 
    $allowedFields = [
-      'tarif_code',
       'tarif_services',
       'tarif_name',
       'tarif_amount',
-      'tarif_provider'
+      'tarif_provider',
+      'tarif_share_doctor',
+      'tarif_share_nurse',
+      'tarif_share_admin'
+
    ];
 
    $fields = ['tarif_number', 'id_customer'];
