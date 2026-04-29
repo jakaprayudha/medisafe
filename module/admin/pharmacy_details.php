@@ -2,6 +2,10 @@
 $title = 'Farmasi Details';
 require '../../controller/view.php';
 $no = $_GET['no'];
+$id_customer = $_SESSION['id_customer'];
+$checkmargin = mysqli_query($koneksi, "SELECT * FROM setting_clinic WHERE id_customer = '$id_customer' LIMIT 1");
+$datamargin = mysqli_fetch_array($checkmargin);
+
 ?>
 <!doctype html>
 <html lang="en">
@@ -165,7 +169,18 @@ $no = $_GET['no'];
                     <!-- Profil -->
                     <div class="tab-pane fade" id="nav-profile" role="tabpanel"
                       aria-labelledby="nav-profile-tab" tabindex="0">
+                      <?php
+                      if ($datamargin == NULL) { ?>
+                        <div class="alert alert-danger" role="alert">
+                          Margin Farmasi Belum Dilengkapi silahkan akses menu master - setting margin untuk melengkapi data margin farmasi <a href="module/admin/setting_margin" class="alert-link">
+                            <span class='badge bg-primary'>Klik Disini</span>
+                          </a>
+                        </div>
+                      <?php  }
+                      ?>
                       <form id="formPersediaan">
+                        <input type="hidden" name="margin_obat" value="<?= $datamargin['margin_obat'] ?>">
+                        <input type="hidden" name="margin_bmhp" value="<?= $datamargin['margin_bmhp'] ?>">
                         <div class="row">
                           <div class="col-6">
                             <div class="mb-3">
@@ -175,8 +190,8 @@ $no = $_GET['no'];
                           </div>
                           <div class="col-6">
                             <div class="mb-3">
-                              <label class="form-label">Harga JUal</label>
-                              <input type="number" class="form-control" name="pharmacy_sale" id="pharmacy_sale">
+                              <label class="form-label">Harga Jual</label>
+                              <input type="number" class="form-control bg-light" readonly name="pharmacy_sale" id="pharmacy_sale">
                             </div>
                           </div>
                           <div class="col-6">
@@ -513,6 +528,25 @@ $no = $_GET['no'];
         });
     });
   });
+</script>
+
+<script>
+  const hargaBeli = document.getElementById('pharmacy_buy');
+  const hargaJual = document.getElementById('pharmacy_sale');
+
+  // ambil margin dari hidden input
+  const marginObat = parseFloat(document.querySelector('[name="margin_obat"]').value || 0);
+
+  function hitungHargaJual() {
+    let beli = parseFloat(hargaBeli.value) || 0;
+
+    let jual = beli * (1 + (marginObat / 100));
+
+    hargaJual.value = Math.round(jual); // pembulatan
+  }
+
+  // trigger saat input berubah
+  hargaBeli.addEventListener('input', hitungHargaJual);
 </script>
 
 </html>

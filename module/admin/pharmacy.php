@@ -197,7 +197,7 @@ require '../../controller/view.php';
               "actions": `
                       <div class="text-center">
 								<div class="btn-group btn-group-sm" role="group">
-                	<a class="btn btn-info" href="module/admin/pharmacy_details?no=${row.pharmacy_number}">
+                	<a class="btn btn-info" href="module/admin/pharmacy_details?no=${row.id_pharmacy}">
 											<i class="fas fa-info-circle"></i>
 									</a>
 									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_pharmacy} data-parrent="${row.id_customer}">

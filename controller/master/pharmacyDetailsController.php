@@ -13,7 +13,7 @@ switch ($method) {
    case 'GET': // get data by pharmacy_number
       if (isset($_GET['no'])) {
          $no = $koneksi->real_escape_string($_GET['no']);
-         $sql = "SELECT * FROM ms_pharmacy WHERE pharmacy_number = '$no' LIMIT 1";
+         $sql = "SELECT * FROM ms_pharmacy  WHERE id_pharmacy = '$no' LIMIT 1";
          $result = $koneksi->query($sql);
 
          if ($result && $result->num_rows > 0) {
