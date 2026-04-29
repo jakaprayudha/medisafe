@@ -149,6 +149,16 @@
          <span class="hide-menu">Farmasi</span>
       </li>
       <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Farmasi') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/admin/pharmacy"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:drugs"></iconify-icon>
+            <span class="hide-menu">Master Obat & BMHP</span>
+         </a>
+      </li>
+      <li class="sidebar-item">
          <a class="sidebar-link <?php if ($title == 'Farmasi Order') {
                                     echo 'active';
                                  } ?>"
