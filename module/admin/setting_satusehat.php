@@ -88,6 +88,24 @@ require '../../controller/view.php';
                             </script>
                           </div>
                         </div>
+                        <div class="col-12">
+                          <div class="mb-3">
+                            <label for="latitude" class="form-label">Latitude</label>
+                            <input type="text" class="form-control" id="latitude" name="latitude">
+                          </div>
+                        </div>
+                        <div class="col-12">
+                          <div class="mb-3">
+                            <label for="longitude" class="form-label">Longitude</label>
+                            <input type="text" class="form-control" id="longitude" name="longitude">
+                          </div>
+                        </div>
+                        <div class="col-12">
+                          <div class="mb-3">
+                            <label for="address" class="form-label">Address</label>
+                            <textarea class="form-control" id="address" name="address" rows="3"></textarea>
+                          </div>
+                        </div>
                       </div>
                       <button class="btn btn-primary col-12">Simpan</button>
                     </div>
@@ -259,6 +277,54 @@ require '../../controller/view.php';
       client_id: $('#client_id').val(),
       client_secret: $('#client_secret').val(),
       organization_id: $('#organization_id').val()
+    });
+
+    fetch(apiSatusehat, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: formData
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === 'success') {
+          Swal.fire('Berhasil', res.message, 'success');
+        } else {
+          Swal.fire('Gagal', res.message, 'error');
+        }
+      });
+  });
+
+  const apiSatusehat = 'controller/master/settingSatusehatController.php';
+
+  // 🔹 Load data saat halaman dibuka
+  $(document).ready(function() {
+    fetch(apiSatusehat)
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === 'success' && res.data) {
+          $('#client_id').val(res.data.client_id);
+          $('#client_secret').val(res.data.client_secret);
+          $('#organization_id').val(res.data.organization_id);
+          $('#latitude').val(res.data.latitude);
+          $('#longitude').val(res.data.longitude);
+          $('#address').val(res.data.address);
+        }
+      });
+  });
+
+
+  // 🔹 Submit
+  $('button.btn-primary').on('click', function() {
+
+    let formData = new URLSearchParams({
+      client_id: $('#client_id').val(),
+      client_secret: $('#client_secret').val(),
+      organization_id: $('#organization_id').val(),
+      latitude: $('#latitude').val(),
+      longitude: $('#longitude').val(),
+      address: $('#address').val()
     });
 
     fetch(apiSatusehat, {

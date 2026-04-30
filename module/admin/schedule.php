@@ -401,8 +401,9 @@ require '../../controller/view.php';
 
       $("#bodyRow").html(`<tr><td colspan="5">Loading...</td></tr>`);
 
-      let today = new Date();
-      let endDate = new Date();
+      let pickerVal = $('#datePicker').val();
+      let today = pickerVal ? new Date(pickerVal + 'T00:00:00') : new Date();
+      let endDate = new Date(today);
       endDate.setDate(today.getDate() + 3);
 
       let start = today.toISOString().split('T')[0];
@@ -418,8 +419,7 @@ require '../../controller/view.php';
         .then(res => {
 
           visits = Array.isArray(res.data) ? res.data : [];
-
-          renderTable(currentBaseDate);
+          renderTable(today);
         })
         .catch(err => {
           console.error(err);
@@ -662,6 +662,8 @@ require '../../controller/view.php';
     });
 
     $("#btnToday").on("click", function() {
+      let today = new Date();
+      $('#datePicker').val(today.toISOString().split('T')[0]);
       selectedDoctor = $('.doctor-item.active').data('id');
       loadSchedule(selectedDoctor);
     });

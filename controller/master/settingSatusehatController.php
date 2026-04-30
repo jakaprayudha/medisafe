@@ -46,6 +46,9 @@ switch ($method) {
       $organization_id = $_POST['organization_id'] ?? '';
       $client_id       = $_POST['client_id'] ?? '';
       $client_secret   = $_POST['client_secret'] ?? '';
+      $latitude        = $_POST['latitude'] ?? '';
+      $longitude       = $_POST['longitude'] ?? '';
+      $address         = $_POST['address'] ?? '';
       $user            = $_SESSION['username'] ?? 'system';
 
       // cek apakah sudah ada
@@ -62,6 +65,9 @@ switch ($method) {
                     organization_id = '$organization_id',
                     client_id = '$client_id',
                     client_secret = '$client_secret',
+                    latitude = '$latitude',
+                    longitude = '$longitude',
+                    address = '$address',
                     user = '$user'
                 WHERE id_customer = '$id_customer'
             ");
@@ -79,12 +85,18 @@ switch ($method) {
                     organization_id,
                     client_id,
                     client_secret,
+                    latitude,
+                    longitude,
+                    address,
                     user
                 ) VALUES (
                     '$id_customer',
                     '$organization_id',
                     '$client_id',
                     '$client_secret',
+                    '$latitude',
+                    '$longitude',
+                    '$address',
                     '$user'
                 )
             ");

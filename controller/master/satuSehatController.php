@@ -70,7 +70,10 @@ function getID($id)
          sc.clinic_name,
          sh.organization_id,
          sh.client_id,
-         sh.client_secret
+         sh.client_secret,
+         sh.latitude,
+         sh.longitude,
+         sh.address
       FROM setting_clinic sc
       LEFT JOIN setting_satusehat sh 
          ON sc.id = sh.id_customer
@@ -120,6 +123,9 @@ function updateData()
    $organization_id = $_PUT['organization_id'] ?? null;
    $client_id       = $_PUT['client_id'] ?? null;
    $client_secret   = $_PUT['client_secret'] ?? null;
+   $latitude        = $_PUT['latitude'] ?? null;
+   $longitude       = $_PUT['longitude'] ?? null;
+   $address         = $_PUT['address'] ?? null;
 
    // cek sudah ada atau belum
    $cek = $koneksi->prepare("SELECT * FROM setting_satusehat WHERE id_customer=?");
@@ -132,21 +138,21 @@ function updateData()
 
       // UPDATE
       $stmt = $koneksi->prepare("UPDATE setting_satusehat 
-         SET organization_id=?, client_id=?, client_secret=? 
+         SET organization_id=?, client_id=?, client_secret=?, latitude=?, longitude=?, address=? 
          WHERE id_customer=?
       ");
 
-      $stmt->bind_param("sssi", $organization_id, $client_id, $client_secret, $id);
+      $stmt->bind_param("ssssssi", $organization_id, $client_id, $client_secret, $latitude, $longitude, $address, $id_customer);
    } else {
 
       // INSERT
       $stmt = $koneksi->prepare("
          INSERT INTO setting_satusehat 
-         (id_customer, organization_id, client_id, client_secret)
-         VALUES (?, ?, ?, ?)
+         (id_customer, organization_id, client_id, client_secret, latitude, longitude, address)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
       ");
 
-      $stmt->bind_param("isss", $id_customer, $organization_id, $client_id, $client_secret);
+      $stmt->bind_param("issssss", $id_customer, $organization_id, $client_id, $client_secret, $latitude, $longitude, $address);
    }
 
    if ($stmt->execute()) {
