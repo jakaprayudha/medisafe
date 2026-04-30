@@ -564,7 +564,7 @@ require '../../controller/view.php';
           });
           if (found) {
 
-            let dateStr = date.toISOString().split('T')[0];
+            let dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
 
             let visitList = visits.filter(v =>
               v.visit_date === dateStr &&
