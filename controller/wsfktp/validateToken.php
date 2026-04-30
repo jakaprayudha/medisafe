@@ -104,7 +104,6 @@ function validateBpjsToken($usernameParam)
             "metadata" => [
                 "message" => "Invalid or expired token",
                 "code" => 201,
-                "error" => $e->getMessage()
             ]
         ]);
         exit;

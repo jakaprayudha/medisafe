@@ -48,6 +48,9 @@ require '../../controller/view.php';
                           <th class="text-dark fw-normal">Layanan</th>
                           <th scope="col" class="text-dark fw-normal">Nama Tarif</th>
                           <th scope="col" class="text-dark fw-normal">Harga</th>
+                          <th scope="col" class="text-dark fw-normal">Fee Dokter</th>
+                          <th scope="col" class="text-dark fw-normal">Fee Perawat</th>
+                          <th scope="col" class="text-dark fw-normal">Fee Admin</th>
                           <th scope="col" class="text-dark fw-normal">Jaminan</th>
                           <th scope="col" class="text-dark fw-normal text-center col-1">Status</th>
                           <th scope="col" class="text-dark fw-normal text-center col-1">Actions</th>
@@ -80,17 +83,20 @@ require '../../controller/view.php';
       </div>
       <div class="modal-body">
         <input type="hidden" name="id_tarif" id="id_tarif">
+        <div class="alert alert-danger" role="alert">
+          Tarif layanan ini yang akan dikenakan kepada pasien. Pastikan untuk mengisi data dengan benar. dan untuk Fee Dokter, Perawat dan Admin ini untuk kebutuhan proses pembayaran ke Tenaga Medis.
+        </div>
         <div class="row">
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label required" id="tarif_code">Kode</label>
-              <input type="text" id="tarif_code" name="tarif_code" class="form-control" required>
-            </div>
-          </div>
           <div class="col-6">
             <div class="mb-3">
               <label class="form-label required" id="tarif_name">Nama Tarif</label>
               <input type="text" id="tarif_name" name="tarif_name" class="form-control" required>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="mb-3">
+              <label class="form-label required">Tarif (IDR)</label>
+              <input type="number" id="tarif_amount" name="tarif_amount" class="form-control" required>
             </div>
           </div>
           <div class="col-6">
@@ -119,10 +125,22 @@ require '../../controller/view.php';
               </select>
             </div>
           </div>
-          <div class="col-12">
+          <div class="col-6">
             <div class="mb-3">
-              <label class="form-label required">Amount (IDR)</label>
-              <input type="number" id="tarif_amount" name="tarif_amount" class="form-control" required>
+              <label class="form-label">Fee Dokter (IDR)</label>
+              <input type="number" id="tarif_share_doctor" value="0" name="tarif_share_doctor" class="form-control">
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="mb-3">
+              <label class="form-label">Fee Perawat (IDR)</label>
+              <input type="number" id="tarif_share_nurse" value="0" name="tarif_share_nurse" class="form-control">
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="mb-3">
+              <label class="form-label">Fee Admin (IDR)</label>
+              <input type="number" id="tarif_share_admin" value="0" name="tarif_share_admin" class="form-control">
             </div>
           </div>
         </div>
@@ -166,6 +184,21 @@ require '../../controller/view.php';
                   style: 'currency',
                   currency: 'IDR'
                 }).format(row.tarif_amount) : "-",
+              "feedokter": row.tarif_share_doctor ?
+                new Intl.NumberFormat('id-ID', {
+                  style: 'currency',
+                  currency: 'IDR'
+                }).format(row.tarif_share_doctor) : "-",
+              "feeperawat": row.tarif_share_nurse ?
+                new Intl.NumberFormat('id-ID', {
+                  style: 'currency',
+                  currency: 'IDR'
+                }).format(row.tarif_share_nurse) : "-",
+              "feeadmin": row.tarif_share_admin ?
+                new Intl.NumberFormat('id-ID', {
+                  style: 'currency',
+                  currency: 'IDR'
+                }).format(row.tarif_share_admin) : "-",
               "provider": row.provider_name ?? "-",
               "status": `
               <label class="switch">
@@ -187,6 +220,15 @@ require '../../controller/view.php';
         },
         {
           data: "idr"
+        },
+        {
+          data: "feedokter"
+        },
+        {
+          data: "feeperawat"
+        },
+        {
+          data: "feeadmin"
         },
         {
           data: "provider"

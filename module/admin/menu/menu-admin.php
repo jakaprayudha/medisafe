@@ -45,6 +45,7 @@
             <li><a href="module/admin/setting_bpjs">Integrasi BPJS</a></li>
             <li><a href="module/admin/setting_satusehat">Integrasi Satu Sehat</a></li>
             <li><a href="module/admin/setting_faskes">Faskes</a></li>
+            <li><a href="module/admin/setting_margin">Margin Farmasi</a></li>
          </ul>
       </li>
 
@@ -57,6 +58,7 @@
 
          <ul class="collapse-menu">
             <li><a href="module/admin/rpt_appointment">Appointment</a></li>
+            <li><a href="module/admin/rpt_prosedur">Tindakan (Prosedur)</a></li>
          </ul>
       </li>
 
@@ -147,6 +149,16 @@
       <li class="nav-small-cap">
          <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
          <span class="hide-menu">Farmasi</span>
+      </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Farmasi') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/admin/pharmacy"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:drugs"></iconify-icon>
+            <span class="hide-menu">Master Obat & BMHP</span>
+         </a>
       </li>
       <li class="sidebar-item">
          <a class="sidebar-link <?php if ($title == 'Farmasi Order') {

@@ -72,6 +72,7 @@ function createData($id_customer)
    }
 
    $fields = ['pharmacy_number', 'id_customer'];
+   $status_log = "INSERT";
    $values = [$pharmacy_number, $id_customer];
    $types  = "si";
    $types  = "si";
@@ -123,23 +124,45 @@ function getData($id_customer)
 {
    global $koneksi;
 
-   $stmt = $koneksi->prepare(
-      "SELECT * FROM ms_pharmacy 
-    WHERE id_customer = ? 
-       OR id_customer =0
-    ORDER BY pharmacy_name_generic DESC"
-   );
+   $stmt = $koneksi->prepare("
+      SELECT p.*
+      FROM ms_pharmacy p
 
-   $stmt->bind_param("i", $id_customer);
+      LEFT JOIN ms_pharmacy_parrent log 
+         ON log.parent_id = p.id_pharmacy 
+         AND log.id_customer_real = ?
+
+      WHERE 
+         (
+            p.id_customer = ? 
+
+            OR (
+               p.id_customer = 0
+               AND log.id IS NULL
+            )
+         )
+
+         -- 🔥 filter DELETE dari log table
+         AND (
+            log.status_log IS NULL 
+            OR log.status_log != 'DELETE'
+         )
+
+      ORDER BY p.pharmacy_name_generic DESC
+   ");
+
+   $stmt->bind_param("ii", $id_customer, $id_customer);
    $stmt->execute();
 
    $data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-   echo json_encode(['status' => 'success', 'data' => $data]);
+   echo json_encode([
+      'status' => 'success',
+      'data' => $data
+   ]);
 
    $stmt->close();
 }
-
 // ================= READ BY ID =================
 function getID($id, $id_customer)
 {
@@ -181,6 +204,19 @@ function updateData($id_customer)
 
    $id = $_PUT['id_pharmacy'];
 
+   // ambil data
+   $check = $koneksi->prepare("SELECT * FROM ms_pharmacy WHERE id_pharmacy=?");
+   $check->bind_param("i", $id);
+   $check->execute();
+   $row = $check->get_result()->fetch_assoc();
+   $check->close();
+
+   if (!$row) {
+      echo json_encode(['status' => 'error', 'message' => 'Data tidak ditemukan']);
+      return;
+   }
+
+   // field update
    $allowedFields = [
       'pharmacy_name_generic',
       'pharmacy_name_trade',
@@ -201,20 +237,74 @@ function updateData($id_customer)
    }
 
    if (empty($fields)) {
-      echo json_encode(['status' => 'error', 'message' => 'Tidak ada update']);
+      echo json_encode(['status' => 'error', 'message' => 'Tidak ada perubahan']);
       return;
    }
 
-   $values[] = $id;
-   $values[] = $id_customer;
+   // =============================
+   // 🔥 GLOBAL → INSERT LOG UPDATE
+   // =============================
+   if ($row['id_customer'] == 0) {
 
-   $types = str_repeat('s', count($values) - 2) . "ii";
+      $cek = $koneksi->prepare("
+         SELECT id FROM ms_pharmacy_parrent
+         WHERE parent_id=? AND id_customer_real=?
+      ");
+      $cek->bind_param("ii", $id, $id_customer);
+      $cek->execute();
+      $exist = $cek->get_result()->fetch_assoc();
+      $cek->close();
 
-   $query = "UPDATE ms_pharmacy SET " . implode(',', $fields) . " 
-             WHERE id_pharmacy=? AND id_customer=?";
+      if ($exist) {
+         // update log
+         $stmt = $koneksi->prepare("
+            UPDATE ms_pharmacy_parrent 
+            SET status_log='UPDATE'
+            WHERE id=? 
+         ");
+         $stmt->bind_param("i", $exist['id']);
+      } else {
+         // insert log
+         $stmt = $koneksi->prepare("
+            INSERT INTO ms_pharmacy_parrent 
+            (id_customer_real, parent_id, status_log)
+            VALUES (?, ?, 'UPDATE')
+         ");
+         $stmt->bind_param("ii", $id_customer, $id);
+      }
 
-   $stmt = $koneksi->prepare($query);
-   $stmt->bind_param($types, ...$values);
+      $stmt->execute();
+      $stmt->close();
+
+      // 🔥 clone ke ms_pharmacy (data actual override)
+      $columns = implode(',', $fields);
+      $placeholders = implode(',', array_fill(0, count($fields), '?'));
+
+      $query = "UPDATE ms_pharmacy SET $columns WHERE id_pharmacy=? AND id_customer=?";
+      $values[] = $id;
+      $values[] = $id_customer;
+
+      $types = str_repeat('s', count($values) - 2) . "ii";
+
+      $stmt = $koneksi->prepare($query);
+      $stmt->bind_param($types, ...$values);
+   }
+
+   // =============================
+   // ✏️ CUSTOMER → UPDATE DIRECT
+   // =============================
+   else {
+      $values[] = $id;
+      $values[] = $id_customer;
+
+      $types = str_repeat('s', count($values) - 2) . "ii";
+
+      $query = "UPDATE ms_pharmacy SET " . implode(',', $fields) . "
+                WHERE id_pharmacy=? AND id_customer=?";
+
+      $stmt = $koneksi->prepare($query);
+      $stmt->bind_param($types, ...$values);
+   }
 
    if ($stmt->execute()) {
       echo json_encode(['status' => 'success']);
@@ -225,7 +315,7 @@ function updateData($id_customer)
    $stmt->close();
 }
 
-// ================= DELETE =================
+
 function deleteData($id_customer)
 {
    global $koneksi;
@@ -237,17 +327,49 @@ function deleteData($id_customer)
       return;
    }
 
-   $stmt = $koneksi->prepare(
-      "DELETE FROM ms_pharmacy 
-       WHERE id_pharmacy=? AND id_customer=?"
-   );
+   // cek data
+   $check = $koneksi->prepare("SELECT id_customer FROM ms_pharmacy WHERE id_pharmacy=?");
+   $check->bind_param("i", $id);
+   $check->execute();
+   $row = $check->get_result()->fetch_assoc();
+   $check->close();
 
-   $stmt->bind_param("ii", $id, $id_customer);
+   if (!$row) {
+      echo json_encode(['status' => 'error', 'message' => 'Data tidak ditemukan']);
+      return;
+   }
+
+   // =============================
+   // 🔥 SEMUA DELETE MASUK KE LOG
+   // =============================
+   $cek = $koneksi->prepare("
+      SELECT id FROM ms_pharmacy_parrent
+      WHERE parent_id=? 
+      AND id_customer_real=? 
+      AND status_log='DELETE'
+   ");
+   $cek->bind_param("ii", $id, $id_customer);
+   $cek->execute();
+   $exist = $cek->get_result()->fetch_assoc();
+   $cek->close();
+
+   if (!$exist) {
+      $user = $_SESSION['fullname'];
+      $stmt = $koneksi->prepare("
+         INSERT INTO ms_pharmacy_parrent 
+         (id_customer_real, parent_id, status_log, user)
+         VALUES (?, ?, 'DELETE',?)
+      ");
+      $stmt->bind_param("iis", $id_customer, $id, $user);
+   } else {
+      echo json_encode(['status' => 'success']);
+      return;
+   }
 
    if ($stmt->execute()) {
       echo json_encode(['status' => 'success']);
    } else {
-      echo json_encode(['status' => 'error']);
+      echo json_encode(['status' => 'error', 'message' => $stmt->error]);
    }
 
    $stmt->close();

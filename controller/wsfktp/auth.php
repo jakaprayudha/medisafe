@@ -56,7 +56,7 @@ if (!$user) {
 if (!password_verify($password, $user['password'])) {
     echo json_encode([
         "metadata" => [
-            "message" => "Username atau password salah",
+            "message" => "Username atau Password Tidak Sesuai",
             "code" => 201
         ]
     ]);

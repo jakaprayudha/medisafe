@@ -42,11 +42,11 @@ $listPoli = [
 ];
 $url = $_SERVER['REQUEST_URI'];
 $segments = explode('/', trim(parse_url($url, PHP_URL_PATH), '/'));
-$kodepoli = $segments[4] ?? null;
-$tanggalperiksa = $segments[5] ?? null;
+// $kodepoli = $segments[4] ?? null;
+// $tanggalperiksa = $segments[5] ?? null;
 
-// $kodepoli = $segments[5] ?? null;
-// $tanggalperiksa = $segments[6] ?? null;
+$kodepoli = $segments[count($segments) - 2] ?? null;
+$tanggalperiksa = $segments[count($segments) - 1] ?? null;
 if (!$kodepoli || !$tanggalperiksa) {
     http_response_code(400);
     echo json_encode([
@@ -86,19 +86,20 @@ if (!in_array($kodepoli, $validKodePoli)) {
     exit;
 }
 $status = "selesai";
-$stmt = $koneksi->prepare("SELECT COUNT(*) as total,SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) as total_panggil,COUNT(*) - SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) as sisa_antrean,IFNULL(CAST(MAX(CASE WHEN ap.status = 1 THEN ap.nomor END) AS CHAR),'0') AS antrean_terakhir, p.id_poli FROM antrian_poli AS ap INNER JOIN pasien_visit AS p ON p.visit_ID = ap.nomor_visit WHERE ap.id_customer = ? AND ap.poli = ? AND ap.tanggal = ? GROUP BY p.id_poli");
+$stmt = $koneksi->prepare("SELECT COUNT(*) as total,SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) as total_panggil,COUNT(*) - SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) as sisa_antrean,IFNULL(CAST(MAX(CASE WHEN ap.status = 1 THEN ap.nomor END) AS CHAR),'0') AS antrean_terakhir, p.id_poli, ap.kode_antri FROM antrian_poli AS ap INNER JOIN pasien_visit AS p ON p.visit_ID = ap.nomor_visit WHERE ap.id_customer = ? AND ap.poli = ? AND ap.tanggal = ? GROUP BY p.id_poli");
 $stmt->bind_param("sss", $id_customer, $kodepoli, $tanggalperiksa);
 $stmt->execute();
 $result = $stmt->get_result()->fetch_assoc();
 // response
 if ($result) {
+    $antrean_terakhir = ($result['antrean_terakhir'] == 0 ? '-' : $result['kode_antri'].$result['antrean_terakhir']);
     echo json_encode([
         "response" => [
             [
                 "namapoli" => $result['id_poli'],
                 "totalantrean" => (string)$result['total'],
                 "sisaantrean" => $result['sisa_antrean'],
-                "antreanpanggil" => $antrean_terakhir = ($result['antrean_terakhir'] == 0) ? '-' : $result['antrean_terakhir'],
+                "antreanpanggil" => $antrean_terakhir,
                 "keterangan" => ""
             ],
         ],

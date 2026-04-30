@@ -14,6 +14,29 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     exit;
 }
 
+$listPoli = [
+    ["kdPoli" => "001"],
+    ["kdPoli" => "002"],
+    ["kdPoli" => "003"],
+    ["kdPoli" => "004"],
+    ["kdPoli" => "005"],
+    ["kdPoli" => "008"],
+    ["kdPoli" => "010"],
+    ["kdPoli" => "011"],
+    ["kdPoli" => "012"],
+    ["kdPoli" => "020"],
+    ["kdPoli" => "021"],
+    ["kdPoli" => "023"],
+    ["kdPoli" => "024"],
+    ["kdPoli" => "025"],
+    ["kdPoli" => "026"],
+    ["kdPoli" => "027"],
+    ["kdPoli" => "036"],
+    ["kdPoli" => "037"],
+    ["kdPoli" => "999"],
+    ["kdPoli" => "998"],
+];
+
 /* HEADER */
 $headers = array_change_key_case(getallheaders(), CASE_LOWER);
 $username = $headers['x-username'] ?? null;
@@ -46,6 +69,25 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggalperiksa)) {
     ]);
     exit;
 }
+if (strtotime($tanggalperiksa) < strtotime(date('Y-m-d'))) {
+    echo json_encode([
+        "metadata" => [
+            "message" => "Tanggal Periksa Tidak Berlaku",
+            "code" => 201
+        ]
+    ]);
+    exit;
+}
+$validKodePoli = array_column($listPoli, 'kdPoli');
+if (!in_array($kodepoli, $validKodePoli)) {
+    echo json_encode([
+        "metadata" => [
+            "message" => "Poli tidak ditemukan",
+            "code" => 201
+        ]
+    ]);
+    exit;
+}
 
 /* HARI INDONESIA */
 $hari = strtolower(date('l', strtotime($tanggalperiksa)));
@@ -70,26 +112,32 @@ $stmt = $koneksi->prepare("SELECT
     ) AS antrean_panggil,
 
     ap.poli,
-    jd.id_dokter,
-    md.doctor_name,
-    jd.jam_mulai,
-    jd.jam_selesai
+    d.doctor_code,
+    d.doctor_name,
+    jd.start_time,
+    jd.end_time,
+    mp.nmPoli,
+    ap.kode_antri
 
-FROM jadwal_dokter jd
+FROM ms_doctor_schedule AS jd
 
-LEFT JOIN antrian_poli ap 
-    ON ap.poli = jd.id_poli
+INNER JOIN ms_doctor AS d
+	ON d.id_doctor = jd.id_doctor
+	
+LEFT JOIN antrian_poli AS ap 
+    ON ap.poli = d.id_poli
     AND ap.tanggal = ?
     AND ap.id_customer = ?
+    AND ap.kode_antri = d.doctor_antrean
+    
+INNER JOIN master_poli AS mp
+	ON ap.poli = mp.kdPoli
 
-INNER JOIN ms_doctor md 
-    ON md.doctor_code = jd.id_dokter
+WHERE d.id_poli = ?
+AND LOWER(jd.day_of_week) = ?
+AND jd.sch_status = 1
 
-WHERE jd.id_poli = ?
-AND LOWER(jd.hari) = ?
-AND jd.status = 1
-
-GROUP BY jd.id_dokter, jd.jam_mulai, jd.jam_selesai;");
+GROUP BY jd.id_doctor, jd.start_time, jd.end_time");
 $stmt->bind_param(
     "ssss",
     $tanggalperiksa,
@@ -102,18 +150,17 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 $data = [];
-
+// $antrean_terakhir = ($row['antrean_panggil'] == 0 ? '-' : $row['kode_antri'].$row['antrean_panggil']);
 while ($row = $result->fetch_assoc()) {
-
     $data[] = [
-        "namapoli" => $row['poli'],
+        "namapoli" => $row['nmPoli'],
         "totalantrean" => (string)$row['total'],
-        "sisaantrean" => $row['sisa_antrean'],
-        "antreanpanggil" => $row['antrean_panggil'] ?? 1,
+        "sisaantrean" => (int)$row['sisa_antrean'],
+        "antreanpanggil" => $row['kode_antri'] . $row['antrean_panggil'],
         "keterangan" => "",
-        "kodedokter" => $row['id_dokter'],
+        "kodedokter" => $row['doctor_code'],
         "namadokter" => $row['doctor_name'],
-        "jampraktek" => $row['jam_mulai'] . '-' . $row['jam_selesai']
+        "jampraktek" => $row['start_time'] . '-' . $row['end_time']
     ];
 }
 
