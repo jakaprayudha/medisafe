@@ -46,6 +46,16 @@
             <span class="hide-menu">Master Data</span>
          </a>
       </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Master Satu Sehat') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/administrator/master-satu-sehat"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:link"></iconify-icon>
+            <span class="hide-menu">Satu Sehat </span>
+         </a>
+      </li>
    </ul>
 </nav>
 
