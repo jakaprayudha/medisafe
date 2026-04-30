@@ -71,11 +71,11 @@ function createData($id_customer)
       $pharmacy_number = generatePharmacyNumber($koneksi);
    }
 
-   $fields = ['pharmacy_number', 'id_customer', 'id_customer_real', 'status_log'];
+   $fields = ['pharmacy_number', 'id_customer'];
    $status_log = "INSERT";
-   $values = [$pharmacy_number, $id_customer, $id_customer, $status_log];
-   $types  = "siis";
-   $types  = "siis";
+   $values = [$pharmacy_number, $id_customer];
+   $types  = "si";
+   $types  = "si";
 
    foreach ($allowedFields as $f) {
       if (isset($_POST[$f])) {
@@ -124,23 +124,32 @@ function getData($id_customer)
 {
    global $koneksi;
 
-   $stmt = $koneksi->prepare("SELECT *FROM ms_pharmacy p
-WHERE 
-(
-    p.id_customer = ?
-    OR (
-        p.id_customer = 0
-        AND NOT EXISTS (
-    SELECT 1 
-    FROM ms_pharmacy c
-    WHERE c.id_customer_real = ?
-      AND c.parent_id = p.id_pharmacy
-)
-    )
-)
-AND (p.status_log IS NULL OR p.status_log != 'DELETE')
-ORDER BY p.pharmacy_name_generic DESC
-");
+   $stmt = $koneksi->prepare("
+      SELECT p.*
+      FROM ms_pharmacy p
+
+      LEFT JOIN ms_pharmacy_parrent log 
+         ON log.parent_id = p.id_pharmacy 
+         AND log.id_customer_real = ?
+
+      WHERE 
+         (
+            p.id_customer = ? 
+
+            OR (
+               p.id_customer = 0
+               AND log.id IS NULL
+            )
+         )
+
+         -- 🔥 filter DELETE dari log table
+         AND (
+            log.status_log IS NULL 
+            OR log.status_log != 'DELETE'
+         )
+
+      ORDER BY p.pharmacy_name_generic DESC
+   ");
 
    $stmt->bind_param("ii", $id_customer, $id_customer);
    $stmt->execute();
@@ -186,7 +195,6 @@ function updateData($id_customer)
 {
    global $koneksi;
 
-   // ambil input PUT
    parse_str(file_get_contents("php://input"), $_PUT);
 
    if (empty($_PUT['id_pharmacy'])) {
@@ -196,8 +204,8 @@ function updateData($id_customer)
 
    $id = $_PUT['id_pharmacy'];
 
-   // 🔍 ambil data existing
-   $check = $koneksi->prepare("SELECT * FROM ms_pharmacy WHERE id_pharmacy = ?");
+   // ambil data
+   $check = $koneksi->prepare("SELECT * FROM ms_pharmacy WHERE id_pharmacy=?");
    $check->bind_param("i", $id);
    $check->execute();
    $row = $check->get_result()->fetch_assoc();
@@ -208,7 +216,7 @@ function updateData($id_customer)
       return;
    }
 
-   // field yang boleh diupdate
+   // field update
    $allowedFields = [
       'pharmacy_name_generic',
       'pharmacy_name_trade',
@@ -234,88 +242,56 @@ function updateData($id_customer)
    }
 
    // =============================
-   // 🔥 CASE 1: DATA GLOBAL → CLONE
+   // 🔥 GLOBAL → INSERT LOG UPDATE
    // =============================
    if ($row['id_customer'] == 0) {
 
-      // cek sudah ada override belum
-      $cekOverride = $koneksi->prepare("
-         SELECT id_pharmacy 
-         FROM ms_pharmacy 
-         WHERE parent_id=? AND id_customer=?
+      $cek = $koneksi->prepare("
+         SELECT id FROM ms_pharmacy_parrent
+         WHERE parent_id=? AND id_customer_real=?
       ");
-      $cekOverride->bind_param("ii", $id, $id_customer);
-      $cekOverride->execute();
-      $exist = $cekOverride->get_result()->fetch_assoc();
-      $cekOverride->close();
+      $cek->bind_param("ii", $id, $id_customer);
+      $cek->execute();
+      $exist = $cek->get_result()->fetch_assoc();
+      $cek->close();
 
       if ($exist) {
-         // ✅ update override yang sudah ada
-         $values[] = $exist['id_pharmacy'];
-         $values[] = $id_customer;
-
-         $types = str_repeat('s', count($values) - 2) . "ii";
-
-         $query = "UPDATE ms_pharmacy SET " . implode(',', $fields) . " 
-                   WHERE id_pharmacy=? AND id_customer=?";
-
-         $stmt = $koneksi->prepare($query);
-         $stmt->bind_param($types, ...$values);
-      } else {
-
-         // 🔥 clone dari global
-         $clone = $koneksi->prepare("
-            INSERT INTO ms_pharmacy (
-               pharmacy_name_generic,
-               pharmacy_name_trade,
-               pharmacy_category,
-               pharmacy_sub_category,
-               pharmcy_golongan,
-               pharmcy_jenis_drugs,
-               id_customer,
-               id_customer_real,
-               parent_id,
-               status_log
-            )
-            SELECT 
-               pharmacy_name_generic,
-               pharmacy_name_trade,
-               pharmacy_category,
-               pharmacy_sub_category,
-               pharmcy_golongan,
-               pharmcy_jenis_drugs,
-               ?, ?, id_pharmacy, 'UPDATE'
-            FROM ms_pharmacy
-            WHERE id_pharmacy=?
+         // update log
+         $stmt = $koneksi->prepare("
+            UPDATE ms_pharmacy_parrent 
+            SET status_log='UPDATE'
+            WHERE id=? 
          ");
-
-         $clone->bind_param("iii", $id_customer, $id_customer, $id);
-
-         if (!$clone->execute()) {
-            echo json_encode(['status' => 'error', 'message' => $clone->error]);
-            return;
-         }
-
-         // ambil id baru hasil clone
-         $newId = $clone->insert_id;
-         $clone->close();
-
-         // lanjut update field dari input user
-         $values[] = $newId;
-         $values[] = $id_customer;
-
-         $types = str_repeat('s', count($values) - 2) . "ii";
-
-         $query = "UPDATE ms_pharmacy SET " . implode(',', $fields) . " 
-                   WHERE id_pharmacy=? AND id_customer=?";
-
-         $stmt = $koneksi->prepare($query);
-         $stmt->bind_param($types, ...$values);
+         $stmt->bind_param("i", $exist['id']);
+      } else {
+         // insert log
+         $stmt = $koneksi->prepare("
+            INSERT INTO ms_pharmacy_parrent 
+            (id_customer_real, parent_id, status_log)
+            VALUES (?, ?, 'UPDATE')
+         ");
+         $stmt->bind_param("ii", $id_customer, $id);
       }
+
+      $stmt->execute();
+      $stmt->close();
+
+      // 🔥 clone ke ms_pharmacy (data actual override)
+      $columns = implode(',', $fields);
+      $placeholders = implode(',', array_fill(0, count($fields), '?'));
+
+      $query = "UPDATE ms_pharmacy SET $columns WHERE id_pharmacy=? AND id_customer=?";
+      $values[] = $id;
+      $values[] = $id_customer;
+
+      $types = str_repeat('s', count($values) - 2) . "ii";
+
+      $stmt = $koneksi->prepare($query);
+      $stmt->bind_param($types, ...$values);
    }
 
    // =============================
-   // ✏️ CASE 2: DATA CUSTOMER
+   // ✏️ CUSTOMER → UPDATE DIRECT
    // =============================
    else {
       $values[] = $id;
@@ -323,18 +299,15 @@ function updateData($id_customer)
 
       $types = str_repeat('s', count($values) - 2) . "ii";
 
-      $query = "UPDATE ms_pharmacy SET " . implode(',', $fields) . " 
+      $query = "UPDATE ms_pharmacy SET " . implode(',', $fields) . "
                 WHERE id_pharmacy=? AND id_customer=?";
 
       $stmt = $koneksi->prepare($query);
       $stmt->bind_param($types, ...$values);
    }
 
-   // =============================
-   // 🚀 EKSEKUSI
-   // =============================
    if ($stmt->execute()) {
-      echo json_encode(['status' => 'success', 'message' => 'Data berhasil diupdate']);
+      echo json_encode(['status' => 'success']);
    } else {
       echo json_encode(['status' => 'error', 'message' => $stmt->error]);
    }
@@ -342,7 +315,7 @@ function updateData($id_customer)
    $stmt->close();
 }
 
-// ================= DELETE =================
+
 function deleteData($id_customer)
 {
    global $koneksi;
@@ -367,43 +340,30 @@ function deleteData($id_customer)
    }
 
    // =============================
-   // GLOBAL → INSERT DELETE OVERRIDE (ANTI DUPLIKAT)
+   // 🔥 SEMUA DELETE MASUK KE LOG
    // =============================
-   if ($row['id_customer'] == 0) {
+   $cek = $koneksi->prepare("
+      SELECT id FROM ms_pharmacy_parrent
+      WHERE parent_id=? 
+      AND id_customer_real=? 
+      AND status_log='DELETE'
+   ");
+   $cek->bind_param("ii", $id, $id_customer);
+   $cek->execute();
+   $exist = $cek->get_result()->fetch_assoc();
+   $cek->close();
 
-      // cek sudah pernah delete belum
-      $cek = $koneksi->prepare("
-         SELECT id_pharmacy FROM ms_pharmacy
-         WHERE parent_id=? AND id_customer=? AND status_log='DELETE'
-      ");
-      $cek->bind_param("ii", $id, $id_customer);
-      $cek->execute();
-      $exist = $cek->get_result()->fetch_assoc();
-      $cek->close();
-
-      if (!$exist) {
-         $stmt = $koneksi->prepare("
-            INSERT INTO ms_pharmacy (
-               id_customer, id_customer_real, parent_id, status_log
-            ) VALUES (?, ?, ?, 'DELETE')
-         ");
-         $stmt->bind_param("iii", $id_customer, $id_customer, $id);
-      } else {
-         echo json_encode(['status' => 'success']);
-         return;
-      }
-   }
-
-   // =============================
-   // CUSTOMER → SOFT DELETE
-   // =============================
-   else {
+   if (!$exist) {
+      $user = $_SESSION['fullname'];
       $stmt = $koneksi->prepare("
-         UPDATE ms_pharmacy 
-         SET status_log='DELETE'
-         WHERE id_pharmacy=? AND id_customer=?
+         INSERT INTO ms_pharmacy_parrent 
+         (id_customer_real, parent_id, status_log, user)
+         VALUES (?, ?, 'DELETE',?)
       ");
-      $stmt->bind_param("ii", $id, $id_customer);
+      $stmt->bind_param("iis", $id_customer, $id, $user);
+   } else {
+      echo json_encode(['status' => 'success']);
+      return;
    }
 
    if ($stmt->execute()) {

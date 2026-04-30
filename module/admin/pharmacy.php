@@ -187,6 +187,7 @@ require '../../controller/view.php';
     var table = $('#periodeTable').DataTable({
       processing: true,
       serverSide: false, // 🔹 ubah jadi false
+      scrollX: true,
       ajax: {
         url: apiUrl,
         type: "GET",
