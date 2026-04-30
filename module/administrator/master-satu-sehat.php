@@ -97,6 +97,24 @@ require '../../controller/view.php';
               <input type="text" id="client_secret" name="client_secret" class="form-control" required>
             </div>
           </div>
+                  <div class="col-12">
+            <div class="mb-3">
+              <label class="form-label">Latitude</label>
+              <input type="text" id="latitude" name="latitude" class="form-control">
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="mb-3">
+              <label class="form-label">Longitude</label>
+              <input type="text" id="longitude" name="longitude" class="form-control">
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="mb-3">
+              <label class="form-label">Address</label>
+              <textarea id="address" name="address" class="form-control" rows="3"></textarea>
+            </div>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -222,6 +240,10 @@ require '../../controller/view.php';
             $('#organization_id').val(d.organization_id);
             $('#client_id').val(d.client_id);
             $('#client_secret').val(d.client_secret);
+
+            $('#latitude').val(d.latitude);
+            $('#longitude').val(d.longitude);
+            $('#address').val(d.address);
 
             $('#programModal .modal-title').text('Edit Data');
             $('#programModal').modal('show');
