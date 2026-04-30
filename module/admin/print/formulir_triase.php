@@ -421,7 +421,7 @@ if ($no && $id_customer) {
               "Henti Jantung",
               " Sistolik < 80 mmHg",
               "Gangguan sirkulasi (akral dingin, nadi <50 atau>150)",
-              "Muntah / diare tanda dehidrasi"
+              "Muntah / diare tanda dehidrasi ringan"
             ],
             disability: [
               "Nyeri sedang",

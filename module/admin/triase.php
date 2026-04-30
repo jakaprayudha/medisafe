@@ -321,7 +321,7 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
                               <div class="form-check"><input class="form-check-input ats4" type="checkbox" value="Dipsnea ringan"> Dipsnea ringan</div>
 
                               <label class="fw-bold mt-2">C. Circulation</label>
-                              <div class="form-check"><input class="form-check-input ats4" type="checkbox" value="Muntah / diare tanda dehidrasi ringan"> Muntah / diare tanda dehidrasi</div>
+                              <div class="form-check"><input class="form-check-input ats4" type="checkbox" value="Muntah / diare tanda dehidrasi ringan">Muntah / diare tanda dehidrasi ringan</div>
 
                               <label class="fw-bold mt-2">E. Exposure</label>
                               <div class="form-check"><input class="form-check-input ats4" type="checkbox" value="Luka kecil"> Luka kecil</div>
