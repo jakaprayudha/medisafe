@@ -183,20 +183,20 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
               let pemeriksaanFile = (rmeType == 1) ? 'kunjungan' : 'pemeriksaan_b';
 
               let callButton = '';
-              if (row.source_hub === 'Poliklinik') {
+              // 🔥 hanya tampil di tab BELUM
+              if (row.source_hub === 'Poliklinik' && activeTab === 'belum') {
                 callButton = `
-                  <button class="btn btn-sm btn-warning btn-call"
-                    data-antrian="${row.visit_antrian}"
-                    data-nama="${row.patient_name}"
-                    data-poli="${row.poli_name}"
-                    data-visit="${row.visit_ID}"
-                    data-dokter="${row.id_doctor}"
-                    title="Panggil Pasien">
-                    <i class="ti ti-volume"></i>
-                  </button>
+                    <button class="btn btn-sm btn-warning btn-call"
+                      data-antrian="${row.visit_antrian}"
+                      data-nama="${row.patient_name}"
+                      data-poli="${row.poli_name}"
+                      data-visit="${row.visit_ID}"
+                      data-dokter="${row.id_doctor}"
+                      title="Panggil Pasien">
+                      <i class="ti ti-volume"></i>
+                    </button>
                 `;
               }
-
               return {
                 actions: `
                   <div class="text-center">

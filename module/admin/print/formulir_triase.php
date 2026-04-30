@@ -408,19 +408,20 @@ if ($no && $id_customer) {
           // =============================
           const MAP = {
             airway: [
-              "Sumbatan jalan nafas",
+              "Sumbatan Jalan Nafas",
               "Tidak ada sumbatan"
             ],
             breathing: [
               "Henti Nafas",
-              "RR < 10 / Distress berat",
+              "RR < 10 x/menit, distress napas berat",
               "Takipnea / distress sedang",
               "Dipsnea ringan"
             ],
             circulation: [
               "Henti Jantung",
-              "Sistolik < 80",
-              "Gangguan sirkulasi"
+              " Sistolik < 80 mmHg",
+              "Gangguan sirkulasi (akral dingin, nadi <50 atau>150)",
+              "Muntah / diare tanda dehidrasi ringan"
             ],
             disability: [
               "Nyeri sedang",
@@ -431,10 +432,12 @@ if ($no && $id_customer) {
               "Kejang berkelanjutan",
               "Nyeri dada tipikal",
               "Luka kecil",
+              "Multiple trauma",
+              "Defisit neurologis",
               "Nyeri hebat"
             ],
             psikiatri: [
-              "Gangguan perilaku mengancam jiwa",
+              "Gangguan perilaku berat mengancam diri & orang lain",
               "Datang dengan restrain",
               "Agresif fisik",
               "Ancaman bunuh diri",

@@ -231,7 +231,7 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
                         <h6 class="fw-bold text-danger">🔴 ATS 1 (Resusitasi)</h6>
 
                         <label class="fw-bold mt-2">A. Airway</label>
-                        <div class="form-check"><input class="form-check-input ats1" type="checkbox" value="Sumbatan jalan nafas"> Sumbatan Jalan Nafas</div>
+                        <div class="form-check"><input class="form-check-input ats1" type="checkbox" value="Sumbatan Jalan Nafas"> Sumbatan Jalan Nafas</div>
 
                         <label class="fw-bold mt-2">B. Breathing</label>
                         <div class="form-check"><input class="form-check-input ats1" type="checkbox" value="Henti Nafas"> Henti Nafas</div>
@@ -240,13 +240,13 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
                         <div class="form-check"><input class="form-check-input ats1" type="checkbox" value="Henti Jantung"> Henti Jantung</div>
 
                         <label class="fw-bold mt-2">D. Disability</label>
-                        <div class="form-check"><input class="form-check-input ats1" type="checkbox" value="Nyeri berat tidak respon obat"> Nyeri berat yang tidak respon obat</div>
+                        <div class="form-check"><input class="form-check-input ats1" type="checkbox" value="Nyeri berat tidak respon obat"> Nyeri berat tidak respon obat</div>
 
                         <label class="fw-bold mt-2">E. Exposure</label>
                         <div class="form-check"><input class="form-check-input ats1" type="checkbox" value="Kejang berkelanjutan"> Kejang berkelanjutan</div>
 
                         <label class="fw-bold mt-2">F. Psikiatri</label>
-                        <div class="form-check"><input class="form-check-input ats1" type="checkbox" value="Gangguan perilaku mengancam jiwa"> Gangguan perilaku berat mengancam diri & orang lain</div>
+                        <div class="form-check"><input class="form-check-input ats1" type="checkbox" value="Gangguan perilaku berat mengancam diri & orang lain"> Gangguan perilaku berat mengancam diri & orang lain</div>
                       </div>
 
 
@@ -261,10 +261,10 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
                         <div class="form-check"><input class="form-check-input ats2" type="checkbox" value="Tidak ada sumbatan"> Tidak ada sumbatan</div>
 
                         <label class="fw-bold mt-2">B. Breathing</label>
-                        <div class="form-check"><input class="form-check-input ats2" type="checkbox" value="RR < 10 / Distress berat"> RR < 10 x/menit, distress napas berat</div>
+                        <div class="form-check"><input class="form-check-input ats2" type="checkbox" value="RR < 10 x/menit, distress napas berat"> RR < 10 x/menit, distress napas berat</div>
 
                             <label class="fw-bold mt-2">C. Circulation</label>
-                            <div class="form-check"><input class="form-check-input ats2" type="checkbox" value="Sistolik < 80"> Sistolik < 80 mmHg</div>
+                            <div class="form-check"><input class="form-check-input ats2" type="checkbox" value=" Sistolik < 80 mmHg"> Sistolik < 80 mmHg</div>
 
                                 <label class="fw-bold mt-2">D. Disability</label>
                                 <div class="form-check"><input class="form-check-input ats2" type="checkbox" value="Nyeri sedang"> Nyeri sedang</div>
@@ -292,7 +292,7 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
                               <div class="form-check"><input class="form-check-input ats3" type="checkbox" value="Takipnea / distress sedang"> Takipnea / distress sedang</div>
 
                               <label class="fw-bold mt-2">C. Circulation</label>
-                              <div class="form-check"><input class="form-check-input ats3" type="checkbox" value="Gangguan sirkulasi"> Gangguan sirkulasi (akral dingin, nadi <50 atau>150)</div>
+                              <div class="form-check"><input class="form-check-input ats3" type="checkbox" value="Gangguan sirkulasi (akral dingin, nadi <50 atau>150)"> Gangguan sirkulasi (akral dingin, nadi <50 atau>150)</div>
 
                               <label class="fw-bold mt-2">D. Disability</label>
                               <div class="form-check"><input class="form-check-input ats3" type="checkbox" value="Cedera kepala ringan"> Cedera kepala ringan</div>
@@ -318,10 +318,10 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
                               <div class="form-check"><input class="form-check-input ats4" type="checkbox" value="Tidak ada sumbatan"> Tidak ada sumbatan</div>
 
                               <label class="fw-bold mt-2">B. Breathing</label>
-                              <div class="form-check"><input class="form-check-input ats4" type="checkbox" value="Dipsnea ringan"> Dispnea ringan</div>
+                              <div class="form-check"><input class="form-check-input ats4" type="checkbox" value="Dipsnea ringan"> Dipsnea ringan</div>
 
                               <label class="fw-bold mt-2">C. Circulation</label>
-                              <div class="form-check"><input class="form-check-input ats4" type="checkbox" value="Muntah diare dehidrasi ringan"> Muntah / diare tanda dehidrasi</div>
+                              <div class="form-check"><input class="form-check-input ats4" type="checkbox" value="Muntah / diare tanda dehidrasi ringan">Muntah / diare tanda dehidrasi ringan</div>
 
                               <label class="fw-bold mt-2">E. Exposure</label>
                               <div class="form-check"><input class="form-check-input ats4" type="checkbox" value="Luka kecil"> Luka kecil</div>
