@@ -53,19 +53,39 @@ require '../../controller/view.php';
                         <div class="col-12">
                           <div class="mb-3">
                             <label for="client_id" class="form-label">Client ID</label>
-                            <input type="text" class="form-control" id="client_id" name="client_id" required>
+                            <input type="text" class="form-control" id="client_id" name="client_id" required readonly>
                           </div>
                         </div>
                         <div class="col-12">
                           <div class="mb-3">
                             <label for="client_secret" class="form-label">Client Secret</label>
-                            <input type="text" class="form-control" id="client_secret" name="client_secret" required>
+                            <input type="text" class="form-control" id="client_secret" name="client_secret" required readonly>
                           </div>
                         </div>
                         <div class="col-12">
                           <div class="mb-3">
                             <label for="organization_id" class="form-label">Organization ID</label>
-                            <input type="text" class="form-control" id="organization_id" name="organization_id" required>
+                            <input type="text" class="form-control" id="organization_id" name="organization_id" required readonly>
+                            <script>
+                              // Make fields readonly if already filled
+                              $(document).ready(function() {
+                                if ($('#client_id').val()) {
+                                  $('#client_id').prop('readonly', true);
+                                } else {
+                                  $('#client_id').prop('readonly', false);
+                                }
+                                if ($('#client_secret').val()) {
+                                  $('#client_secret').prop('readonly', true);
+                                } else {
+                                  $('#client_secret').prop('readonly', false);
+                                }
+                                if ($('#organization_id').val()) {
+                                  $('#organization_id').prop('readonly', true);
+                                } else {
+                                  $('#organization_id').prop('readonly', false);
+                                }
+                              });
+                            </script>
                           </div>
                         </div>
                       </div>
