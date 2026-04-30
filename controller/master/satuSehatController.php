@@ -101,6 +101,21 @@ function updateData()
       return;
    }
    $id = $_PUT['id_clinic'];
+   $check = $koneksi->prepare("SELECT id_customer FROM setting_clinic WHERE id = ?");
+   $check->bind_param("i", $id);
+   $check->execute();
+
+   $result = $check->get_result();
+   $data = $result->fetch_assoc();
+
+   $check->close();
+
+   if (!$data) {
+      echo json_encode(['status' => 'error', 'message' => 'ID tidak ditemukan']);
+      return;
+   }
+
+   $id_customer = $data['id_customer'];
 
    $organization_id = $_PUT['organization_id'] ?? null;
    $client_id       = $_PUT['client_id'] ?? null;
@@ -108,7 +123,7 @@ function updateData()
 
    // cek sudah ada atau belum
    $cek = $koneksi->prepare("SELECT * FROM setting_satusehat WHERE id_customer=?");
-   $cek->bind_param("i", $id);
+   $cek->bind_param("i", $id_customer);
    $cek->execute();
    $exist = $cek->get_result()->fetch_assoc();
    $cek->close();
@@ -131,7 +146,7 @@ function updateData()
          VALUES (?, ?, ?, ?)
       ");
 
-      $stmt->bind_param("isss", $id, $organization_id, $client_id, $client_secret);
+      $stmt->bind_param("isss", $id_customer, $organization_id, $client_id, $client_secret);
    }
 
    if ($stmt->execute()) {
