@@ -66,26 +66,6 @@ require '../../controller/view.php';
                           <div class="mb-3">
                             <label for="organization_id" class="form-label">Organization ID</label>
                             <input type="text" class="form-control" id="organization_id" name="organization_id" required readonly>
-                            <script>
-                              // Make fields readonly if already filled
-                              $(document).ready(function() {
-                                if ($('#client_id').val()) {
-                                  $('#client_id').prop('readonly', true);
-                                } else {
-                                  $('#client_id').prop('readonly', false);
-                                }
-                                if ($('#client_secret').val()) {
-                                  $('#client_secret').prop('readonly', true);
-                                } else {
-                                  $('#client_secret').prop('readonly', false);
-                                }
-                                if ($('#organization_id').val()) {
-                                  $('#organization_id').prop('readonly', true);
-                                } else {
-                                  $('#organization_id').prop('readonly', false);
-                                }
-                              });
-                            </script>
                           </div>
                         </div>
                         <div class="col-12">
@@ -184,6 +164,12 @@ require '../../controller/view.php';
           $('#latitude').val(res.data.latitude);
           $('#longitude').val(res.data.longitude);
           $('#address').val(res.data.address);
+
+
+          // Make fields readonly if already filled
+          ['#client_id', '#client_secret', '#organization_id', '#latitude', '#longitude', '#address'].forEach(id => {
+            $(id).prop('readonly', !!$(id).val());
+          });
         }
       });
   });
