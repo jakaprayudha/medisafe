@@ -67,7 +67,7 @@ switch ($method) {
                     client_secret = '$client_secret',
                     latitude = '$latitude',
                     longitude = '$longitude',
-                    address = '$address',
+                    location_display = '$address',
                     user = '$user'
                 WHERE id_customer = '$id_customer'
             ");
@@ -87,7 +87,7 @@ switch ($method) {
                     client_secret,
                     latitude,
                     longitude,
-                    address,
+                    location_display,
                     user
                 ) VALUES (
                     '$id_customer',
