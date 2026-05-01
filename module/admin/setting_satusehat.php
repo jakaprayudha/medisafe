@@ -94,6 +94,7 @@ require '../../controller/view.php';
                           <thead>
                             <tr>
                               <th class="text-dark fw-normal">Nama Dokter</th>
+                              <th>ID Satu Sehat</th>
                               <th scope="col" class="text-dark fw-normal">No.Handphone</th>
                               <th scope="col" class="text-dark fw-normal text-center col-1">NIK</th>
                               <th scope="col" class="text-dark fw-normal text-center col-1">Actions</th>
@@ -201,6 +202,7 @@ require '../../controller/view.php';
 
             return res.data.map(row => ({
               nama: row.doctor_name || '-',
+              idsh: row.idsh || '-',
               hp: row.doctor_phone || '-',
               nik: row.doctor_nik || '-',
               actions: `
@@ -213,6 +215,9 @@ require '../../controller/view.php';
         },
         columns: [{
             data: 'nama'
+          },
+          {
+            data: 'idsh'
           },
           {
             data: 'hp'
