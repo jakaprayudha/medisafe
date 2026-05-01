@@ -32,8 +32,9 @@ switch ($method) {
       $query = mysqli_query($koneksi, "
          SELECT *
          FROM ms_room_bed
-         WHERE id_customer = '$id_customer'
-         ORDER BY id_bed DESC
+         LEFT JOIN ms_room ON ms_room.id_room = ms_room_bed.id_room
+         WHERE ms_room_bed.id_customer = '$id_customer'
+         ORDER BY ms_room_bed.id_bed DESC
       ");
 
       $data = [];
