@@ -142,7 +142,7 @@ require '../../controller/view.php';
                 <th>Gender</th>
                 <th>Status</th>
                 <th>Pengaturan</th> <!-- 🔥 kolom baru -->
-                <th>Catatan</th>
+                <th>Pasien</th>
               </tr>
             </thead>
             <tbody id="bedTableBody">
@@ -394,7 +394,7 @@ require '../../controller/view.php';
 
     $('#bedModal').modal('show');
 
-    fetch('controller/master/bedController')
+    fetch('controller/master/bedControllerPatient')
       .then(res => res.json())
       .then(res => {
 
@@ -403,6 +403,8 @@ require '../../controller/view.php';
         if (res.data.length > 0) {
 
           res.data.forEach((bed, i) => {
+
+
 
             let statusBadge = bed.bed_status == 1 ?
               '<span class="badge bg-warning-subtle text-warning d-block text-center">Digunakan</span>' :
@@ -418,6 +420,17 @@ require '../../controller/view.php';
                 </label>
               `;
 
+            let patientName = bed.patient_name_pcare || '-';
+
+            let genderBadge = '';
+
+            if (bed.patient_gender === 'L' || bed.patient_gender?.toLowerCase().includes('laki')) {
+              genderBadge = `<span class="badge bg-primary ms-1">L</span>`;
+            } else if (bed.patient_gender === 'P' || bed.patient_gender?.toLowerCase().includes('perempuan')) {
+              genderBadge = `<span class="badge bg-danger ms-1">P</span>`;
+            }
+
+
             html += `
             <tr>
               <td>${i + 1}</td>
@@ -427,7 +440,9 @@ require '../../controller/view.php';
               <td>${bed.bed_gender || '-'}</td>
               <td>${statusBadge}</td>
                <td>${statusSwitch}</td>
-              <td>${bed.bed_notes || '-'}</td>
+             <td>
+              ${patientName !== '-' ? patientName + ' ' + genderBadge : '-'}
+            </td>
             </tr>
           `;
           });
