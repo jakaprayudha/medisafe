@@ -419,7 +419,7 @@ $datamargin = mysqli_fetch_array($checkmargin);
       }
 
       const formData = new FormData(formIdentitas);
-      formData.append("pharmacy_number", pharmacyNo);
+      formData.append("id_pharmacy", pharmacyNo);
       formData.append("_method", "PUT");
 
       fetch("controller/master/pharmacyDetailsController.php", {
