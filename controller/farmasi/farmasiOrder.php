@@ -23,6 +23,9 @@ function getData()
 {
    global $koneksi;
 
+   $fromDate = $_GET['fromDate'] ?? date('Y-m-d');
+   $toDate   = $_GET['toDate'] ?? date('Y-m-d');
+
    // 🔥 ambil session
    $id_customer = $_SESSION['id_customer'] ?? null;
 
@@ -52,6 +55,8 @@ function getData()
       LEFT JOIN ms_patient 
          ON ms_patient.id_patient = pasien_visit.id_patient  
       WHERE pasien_visit.id_customer = ? 
+        -- 🔥 FILTER TANGGAL
+      AND DATE(permintaan_pharmacy.created_at) BETWEEN ? AND ?
       GROUP BY permintaan_pharmacy.id_visit
       ORDER BY permintaan_pharmacy.id_permintaan_farmasi ASC
    ");
@@ -65,7 +70,7 @@ function getData()
    }
 
    // 🔥 bind param
-   $stmt->bind_param("i", $id_customer);
+   $stmt->bind_param("iss", $id_customer, $fromDate, $toDate);
 
    $stmt->execute();
    $result = $stmt->get_result();

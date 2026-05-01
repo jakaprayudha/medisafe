@@ -124,8 +124,7 @@ function getData($id_customer)
 {
    global $koneksi;
 
-   $stmt = $koneksi->prepare("
-      SELECT p.*
+   $stmt = $koneksi->prepare("SELECT p.*
       FROM ms_pharmacy p
 
       LEFT JOIN ms_pharmacy_parrent log 
@@ -147,6 +146,9 @@ function getData($id_customer)
             log.status_log IS NULL 
             OR log.status_log != 'DELETE'
          )
+
+         AND p.pharmacy_name_generic IS NOT NULL
+         AND TRIM(p.pharmacy_name_generic) != ''
 
       ORDER BY p.pharmacy_name_generic DESC
    ");
