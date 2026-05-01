@@ -5,17 +5,6 @@ require '../../database/connect.php';
 require '../../controller/visit/assesmen.php';
 $no = $_GET['no'];
 $rm = $_GET['rm'];
-// $check = mysqli_query($koneksi, "SELECT * FROM pasien_visit LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient WHERE pasien_visit.visit_ID='$no' AND ms_patient.nomor_rm='$rm'");
-// $data = mysqli_fetch_array($check);
-
-// Hitung usia jika data ditemukan
-// if ($data) {
-//   $tanggal_lahir = new DateTime($data['patient_datebirth']);
-//   $tanggal_visit = new DateTime($data['visit_date']);
-
-//   $usia = $tanggal_lahir->diff($tanggal_visit);
-// }
-
 ?>
 <!doctype html>
 <html lang="en">

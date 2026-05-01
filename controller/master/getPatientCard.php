@@ -20,6 +20,9 @@ $stmt = $koneksi->prepare("SELECT
       p.nomor_rm,
       p.patient_gender,
       pr.provider_name,
+      p.patient_datebirth,
+p.patient_bpjs, 
+p.patient_nik,
       v.id_doctor,
       CONCAT(
         FLOOR(DATEDIFF(CURDATE(), p.patient_datebirth)/365),
