@@ -49,7 +49,6 @@ switch ($type) {
          b.id_bed, 
          b.bed_name, 
          b.bed_gender,
-
          CASE 
             WHEN r.id_bed IS NOT NULL THEN 1
             ELSE 0
@@ -63,7 +62,7 @@ switch ($type) {
 
       WHERE b.id_room = ? 
       AND b.id_customer = ?
-
+      GROUP BY b.id_bed
       ORDER BY b.bed_name ASC
    ");
 
