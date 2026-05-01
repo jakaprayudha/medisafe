@@ -12,6 +12,25 @@ $pt = $_GET['pt'];
   require '../../assets/template/head.php';
   ?>
   <base href="<?= 'http://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . '/' ?>">
+  <style>
+    .vital-box {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 8px;
+      background: #f9fafb;
+    }
+
+    .vital-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .vital-label {
+      font-size: 11px;
+      color: #6b7280;
+    }
+  </style>
 </head>
 
 <body>
@@ -59,6 +78,9 @@ $pt = $_GET['pt'];
                       <button class="nav-link" id="nav-dokumen-tab" data-bs-toggle="tab"
                         data-bs-target="#nav-dokumen" type="button" role="tab" aria-controls="nav-dokumen"
                         aria-selected="false">Dokumen</button>
+                      <button class="nav-link bg-success" id="nav-riwayat-tab" data-bs-toggle="tab"
+                        data-bs-target="#nav-riwayat" type="button" role="tab" aria-controls="nav-riwayat"
+                        aria-selected="false">Riwayat Pengobatan</button>
                       <!-- <button class="nav-link" id="nav-ttd-tab" data-bs-toggle="tab"
                         data-bs-target="#nav-ttd" type="button" role="tab" aria-controls="nav-ttd"
                         aria-selected="false">Tanda Tangan</button> -->
@@ -368,6 +390,483 @@ $pt = $_GET['pt'];
                         <button type="button" class="btn btn-light" id="clear-signature">Hapus</button>
                         <button type="button" class="btn btn-primary" id="save-signature">Simpan Tanda Tangan</button>
                       </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="nav-riwayat" role="tabpanel" aria-labelledby="nav-riwayat-tab" tabindex="0">
+                      <div class="alert alert-info d-flex align-items-start justify-content-between">
+
+                        <!-- 🔹 LEFT (icon + text) -->
+                        <div class="d-flex align-items-start gap-2">
+
+                          <i class="fas fa-info-circle mt-1"></i>
+
+                          <div>
+                            <strong>Informasi Riwayat Pengobatan:</strong>
+                            <ul class="mb-0 small">
+                              <li>
+                                Riwayat pengobatan pada daftar ini merupakan data kunjungan pasien yang terdaftar dengan
+                                <strong>MEDISAFE</strong>
+                              </li>
+                            </ul>
+                          </div>
+
+                        </div>
+
+                        <!-- 🔹 RIGHT BUTTON -->
+                        <div>
+                          <a href="module/admin/icareInternal" target="_blank">
+                            <button type="button" class="btn btn-sm btn-primary d-flex align-items-center gap-1">
+                              <i class="fas fa-print"></i> Review RME
+                            </button>
+                          </a>
+                        </div>
+
+                      </div>
+                      <div class="row">
+                        <div class="col-12">
+
+                          <!-- 🔥 WRAPPER SCROLL -->
+                          <div style="max-height: 500px; overflow-y: auto; padding-right: 5px;">
+
+                            <?php
+                            $pt = $_GET['pt'] ?? '';
+                            $getquery = tampildata("SELECT * FROM pasien_visit WHERE id_patient='$pt' ORDER BY visit_date DESC");
+                            ?>
+                            <?php if (!empty($getquery)): ?>
+                              <div class="accordion" id="accordionExample">
+                                <?php foreach ($getquery as $index => $row): ?>
+                                  <?php
+                                  $collapseId = "collapse" . $index;
+                                  $headingId = "heading" . $index;
+                                  ?>
+
+                                  <div class="accordion-item">
+                                    <h2 class="accordion-header" id="<?= $headingId ?>">
+                                      <button class="accordion-button <?= $index != 0 ? 'collapsed' : '' ?>"
+                                        type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#<?= $collapseId ?>"
+                                        aria-expanded="<?= $index == 0 ? 'true' : 'false' ?>">
+
+                                        <?= $row['patient_name'] ?? 'Tanggal : ' ?> <?= $row['visit_date'] ?> <?= $row['visit_time'] ?>
+                                      </button>
+                                    </h2>
+
+                                    <div id="<?= $collapseId ?>"
+                                      class="accordion-collapse collapse <?= $index == 0 ? 'show' : '' ?>"
+                                      data-bs-parent="#accordionExample">
+
+                                      <div class="accordion-body p-3">
+
+                                        <!-- HEADER INFO -->
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                          <div>
+                                            <div class="fw-semibold">Detail Kunjungan</div>
+                                            <small class="text-muted">
+                                              <?= date('d M Y', strtotime($row['visit_date'])) ?> • <?= $row['visit_ID'] ?>
+                                            </small>
+                                          </div>
+                                          <span class="badge bg-light text-dark border">
+                                            <?= $row['id_poli'] ?>
+                                          </span>
+                                        </div>
+
+                                        <!-- INFO GRID -->
+                                        <div class="row g-2 mb-3">
+                                          <div class="col-md-6">
+                                            <div class="p-2 border rounded small">
+                                              <div class="text-muted">Dokter</div>
+                                              <div class="fw-semibold"><?= $row['id_doctor'] ?></div>
+                                            </div>
+                                          </div>
+
+                                          <div class="col-md-6">
+                                            <div class="p-2 border rounded small">
+                                              <div class="text-muted">Poli</div>
+                                              <div class="fw-semibold"><?= $row['id_poli'] ?></div>
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        <!-- TABS EMR -->
+                                        <ul class="nav nav-tabs mb-3" id="tab<?= $index ?>" role="tablist">
+
+                                          <li class="nav-item">
+                                            <button type="button" class="nav-link active"
+                                              data-bs-toggle="tab"
+                                              data-bs-target="#pemeriksaan<?= $index ?>">
+                                              🩺 Pemeriksaan
+                                            </button>
+                                          </li>
+
+                                          <li class="nav-item">
+                                            <button type="button" class="nav-link"
+                                              data-bs-toggle="tab"
+                                              data-bs-target="#obat<?= $index ?>">
+                                              💊 Obat
+                                            </button>
+                                          </li>
+
+                                          <li class="nav-item">
+                                            <button type="button" class="nav-link"
+                                              data-bs-toggle="tab"
+                                              data-bs-target="#lab<?= $index ?>">
+                                              🧪 Lab
+                                            </button>
+                                          </li>
+
+
+                                        </ul>
+
+                                        <div class="tab-content">
+
+                                          <!-- 🩺 PEMERIKSAAN -->
+                                          <div class="tab-pane fade show active" id="pemeriksaan<?= $index ?>">
+
+                                            <!-- 🩺 VITAL SIGN -->
+                                            <div class="border rounded p-3 mb-3">
+                                              <div class="fw-semibold mb-2">🩺 Vital Sign</div>
+
+                                              <div class="row g-2 text-center small">
+
+                                                <div class="col-6 col-md-3">
+                                                  <div class="vital-box">
+                                                    <div class="vital-value"><?= $row['tekanan_darah'] ?? '-' ?></div>
+                                                    <div class="vital-label">Tekanan Darah</div>
+                                                  </div>
+                                                </div>
+
+                                                <div class="col-6 col-md-3">
+                                                  <div class="vital-box">
+                                                    <div class="vital-value"><?= $row['nadi'] ?? '-' ?></div>
+                                                    <div class="vital-label">Nadi</div>
+                                                  </div>
+                                                </div>
+
+                                                <div class="col-6 col-md-3">
+                                                  <div class="vital-box">
+                                                    <div class="vital-value"><?= $row['suhu'] ?? '-' ?></div>
+                                                    <div class="vital-label">Suhu (°C)</div>
+                                                  </div>
+                                                </div>
+
+                                                <div class="col-6 col-md-3">
+                                                  <div class="vital-box">
+                                                    <div class="vital-value"><?= $row['respirasi'] ?? '-' ?></div>
+                                                    <div class="vital-label">Respirasi</div>
+                                                  </div>
+                                                </div>
+
+                                                <div class="col-6 col-md-3">
+                                                  <div class="vital-box">
+                                                    <div class="vital-value"><?= $row['saturasi'] ?? '-' ?></div>
+                                                    <div class="vital-label">SpO₂</div>
+                                                  </div>
+                                                </div>
+
+                                                <div class="col-6 col-md-3">
+                                                  <div class="vital-box">
+                                                    <div class="vital-value"><?= $row['berat_badan'] ?? '-' ?></div>
+                                                    <div class="vital-label">Berat (kg)</div>
+                                                  </div>
+                                                </div>
+
+                                                <div class="col-6 col-md-3">
+                                                  <div class="vital-box">
+                                                    <div class="vital-value"><?= $row['tinggi_badan'] ?? '-' ?></div>
+                                                    <div class="vital-label">Tinggi (cm)</div>
+                                                  </div>
+                                                </div>
+
+                                              </div>
+                                            </div>
+
+                                            <!-- 📋 PEMERIKSAAN -->
+                                            <div class="border rounded p-3 small">
+
+                                              <div class="mb-2">
+                                                <strong>Keluhan Utama</strong>
+                                                <div class="text-muted"><?= $row['keluhan_penyerta'] ?? '-' ?></div>
+                                              </div>
+
+                                              <div class="mb-2">
+                                                <strong>Anamnesa</strong>
+                                                <div class="text-muted"><?= $row['anamnesa'] ?? '-' ?></div>
+                                              </div>
+
+                                              <div class="mb-2">
+                                                <strong>Diagnosa Utama</strong>
+                                                <div class="text-muted"><?= $row['kdDiag1'] . ' - ' . $row['nmDiag1'] ?? '-' ?></div>
+                                              </div>
+
+                                              <div class="mb-2">
+                                                <strong>Diagnosa Sekunder</strong>
+                                                <div class="text-muted"><?= $row['kdDiag2'] . ' - ' . $row['nmDiag2'] ?? '-' ?></div> <br>
+                                                <div class="text-muted"><?= $row['kdDiag3'] . ' - ' . $row['nmDiag3'] ?? '-' ?></div>
+                                              </div>
+
+                                              <div class="mb-2">
+                                                <strong>Tindakan / Terapi</strong>
+                                                <div class="text-muted"><?= $row['tindakan'] ?? '-' ?></div>
+                                              </div>
+
+                                              <div>
+                                                <strong>Status Pulang</strong>
+                                                <div>
+                                                  <span class="badge bg-success">
+                                                    <?= $row['status_pulang'] ?? '-' ?>
+                                                  </span>
+                                                </div>
+                                              </div>
+
+                                            </div>
+
+                                          </div>
+
+                                          <!-- 💊 OBAT -->
+                                          <div class="tab-pane fade" id="obat<?= $index ?>">
+                                            <div class="table-responsive small">
+                                              <table class="table table-sm mb-0">
+                                                <thead class="bg-light">
+                                                  <tr>
+                                                    <th>Nama Obat</th>
+                                                    <th>Dosis</th>
+                                                    <th>Jumlah</th>
+                                                  </tr>
+                                                </thead>
+                                                <tbody>
+
+                                                  <?php
+                                                  $obat = tampildata("SELECT * 
+                                                  FROM permintaan_pharmacy 
+                                                  WHERE id_visit = '" . $row['visit_ID'] . "'
+                                                  ORDER BY id_permintaan_farmasi ASC
+                                                ");
+
+                                                  if ($obat) {
+
+                                                    foreach ($obat as $o) {
+
+                                                      // 🔥 ambil detail tiap tiket
+                                                      $detail = tampildata("SELECT * 
+                                                        FROM permintaan_pharmacy_details LEFT JOIN ms_pharmacy ON permintaan_pharmacy_details.id_pharmacy = ms_pharmacy.id_pharmacy 
+                                                        WHERE id_permintaan_farmasi = '" . $o['id_permintaan_farmasi'] . "'
+                                                      ");
+                                                  ?>
+
+                                                      <!-- 🔹 HEADER TIKET -->
+                                                      <tr class="ticket-header">
+                                                        <td colspan="4">
+                                                          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                                            <div>
+                                                              <strong>🧾 Resep #<?= $o['id_permintaan_farmasi'] ?></strong>
+                                                              <div class="small text-muted">
+                                                                <?= date('d M Y H:i', strtotime($o['created_at'])) ?>
+                                                              </div>
+                                                            </div>
+
+                                                            <div>
+                                                              <span class="badge bg-primary col-12"><?= $o['tipe_obat'] ?></span>
+                                                            </div>
+                                                          </div>
+                                                        </td>
+                                                      </tr>
+
+                                                      <?php if (strtolower($o['tipe_obat']) == 'racikan') { ?>
+                                                        <!-- 🔥 RACIKAN INFO -->
+                                                        <tr class="racikan-box">
+                                                          <td colspan="4">
+                                                            <div class="racikan-content">
+
+                                                              <div class="racikan-title">🧪 Racikan</div>
+
+                                                              <div class="racikan-grid">
+                                                                <div>
+                                                                  <span class="label">Jumlah:</span>
+                                                                  <span><?= $o['rck_jumlah'] ?? '-' ?></span>
+                                                                </div>
+
+                                                                <div>
+                                                                  <span class="label">Satuan:</span>
+                                                                  <span><?= $o['rck_satuan'] ?? '-' ?></span>
+                                                                </div>
+
+                                                                <div>
+                                                                  <span class="label">Signa:</span>
+                                                                  <span><?= $o['rck_signa'] ?? '-' ?></span>
+                                                                </div>
+                                                              </div>
+
+                                                            </div>
+                                                          </td>
+                                                        </tr>
+                                                      <?php } ?>
+
+                                                      <?php if ($detail) { ?>
+
+                                                        <?php foreach ($detail as $d) { ?>
+                                                          <tr>
+                                                            <td><?= $d['pharmacy_name_generic'] ?></td>
+                                                            <td><?= $d['signa'] ?></td>
+                                                            <td><?= $d['qty'] ?></td>
+                                                            <td>Rp <?= number_format($d['pharmacy_price_item'] * $d['qty'], 0, ',', '.') ?></td>
+                                                          </tr>
+                                                        <?php } ?>
+
+                                                      <?php } else { ?>
+                                                        <tr>
+                                                          <td colspan="4" class="text-center text-muted">
+                                                            Tidak ada detail obat
+                                                          </td>
+                                                        </tr>
+                                                      <?php } ?>
+
+                                                    <?php
+                                                    }
+                                                  } else {
+                                                    ?>
+
+                                                    <tr>
+                                                      <td colspan="4" class="text-center text-muted">
+                                                        Tidak ada data obat
+                                                      </td>
+                                                    </tr>
+
+                                                  <?php } ?>
+
+                                                </tbody>
+                                              </table>
+                                            </div>
+                                          </div>
+
+                                          <!-- 🧪 LAB -->
+                                          <div class="tab-pane fade" id="lab<?= $index ?>">
+
+                                            <?php
+                                            $lab = tampildata("
+                                                SELECT * 
+                                                FROM visit_inspection 
+                                                WHERE id_visit='" . $row['visit_ID'] . "'
+                                                ORDER BY inspection_date DESC
+                                              ");
+
+                                            if ($lab) {
+                                              foreach ($lab as $l) {
+                                                // 🔥 ambil hasil + join item
+                                                $hasil = tampildata("
+                                              SELECT 
+                                                  lr.*, 
+                                                  li.assemen, 
+                                                  li.satuan, 
+                                                  li.minimum, 
+                                                  li.maksimum
+                                              FROM laboratorium_result lr
+                                              LEFT JOIN laboratorium_item li 
+                                                  ON li.id = lr.id_item
+                                              WHERE lr.id_inspection = '" . $l['id'] . "'
+                                              ORDER BY li.urutan ASC
+                                            ");
+                                            ?>
+                                                <!-- 🔹 HEADER LAB -->
+                                                <div class="lab-card mb-3">
+
+                                                  <div class="lab-header">
+                                                    🧪 <?= $l['inspection_name'] ?>
+                                                    <span class="lab-date">
+                                                      <?= date('d M Y H:i', strtotime($l['inspection_date'])) ?>
+                                                    </span>
+                                                  </div>
+
+                                                  <?php if ($hasil) { ?>
+
+                                                    <div class="table-responsive">
+                                                      <table class="table table-sm table-bordered mb-0 small">
+                                                        <thead class="table-light">
+                                                          <tr>
+                                                            <th>Pemeriksaan</th>
+                                                            <th>Hasil</th>
+                                                            <th>Satuan</th>
+                                                            <th>Nilai Normal</th>
+                                                            <th>Keterangan</th>
+                                                          </tr>
+                                                        </thead>
+
+                                                        <tbody>
+                                                          <?php foreach ($hasil as $h) {
+
+                                                            // 🔥 highlight abnormal
+                                                            $flag = '';
+                                                            if ($h['minimum'] && $h['maksimum'] && is_numeric($h['hasil'])) {
+                                                              if ($h['hasil'] < $h['minimum'] || $h['hasil'] > $h['maksimum']) {
+                                                                $flag = 'text-danger fw-bold';
+                                                              }
+                                                            }
+                                                          ?>
+                                                            <tr>
+                                                              <td><?= $h['assemen'] ?></td>
+                                                              <td class="<?= $flag ?>"><?= $h['hasil'] ?></td>
+                                                              <td><?= $h['satuan'] ?></td>
+                                                              <td><?= $h['minimum'] ?> - <?= $h['maksimum'] ?></td>
+                                                              <td><?= $h['keterangan'] ?? '-' ?></td>
+                                                            </tr>
+                                                          <?php } ?>
+                                                        </tbody>
+                                                      </table>
+                                                    </div>
+
+                                                  <?php } else { ?>
+
+                                                    <div class="text-muted small p-2">
+                                                      Tidak ada hasil lab
+                                                    </div>
+
+                                                  <?php } ?>
+
+                                                </div>
+
+                                              <?php
+                                              }
+                                            } else {
+                                              ?>
+
+                                              <div class="text-center text-muted py-3">
+                                                🧪 Tidak ada data laboratorium
+                                              </div>
+
+                                            <?php } ?>
+
+                                          </div>
+
+                                        </div>
+
+                                      </div>
+
+                                    </div>
+                                  </div>
+
+                                <?php endforeach; ?>
+
+                              </div>
+
+                            <?php else: ?>
+
+                              <!-- 🚨 ALERT KOSONG -->
+                              <div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
+                                <i class="ti ti-info-circle"></i>
+                                <div>
+                                  <strong>Belum ada riwayat kunjungan</strong><br>
+                                  <small>Pasien ini belum memiliki data kunjungan yang tercatat di sistem.</small>
+                                </div>
+                              </div>
+
+                            <?php endif; ?>
+
+                          </div>
+                          <!-- END SCROLL -->
+
+                        </div>
+                      </div>
+
                     </div>
 
                     </form>
