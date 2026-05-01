@@ -135,6 +135,8 @@ require '../../controller/view.php';
             <thead class="table-light">
               <tr>
                 <th>No</th>
+                <th>Kelas</th>
+                <th>Nama Kamar</th>
                 <th>Nama Bed</th>
                 <th>Gender</th>
                 <th>Status</th>
@@ -399,6 +401,8 @@ require '../../controller/view.php';
             html += `
             <tr>
               <td>${i + 1}</td>
+              <td>${bed.service_class}</td>
+              <td>${bed.room_name}</td>
               <td>${bed.bed_name}</td>
               <td>${bed.bed_gender || '-'}</td>
               <td>${statusBadge}</td>

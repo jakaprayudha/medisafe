@@ -47,7 +47,7 @@ if ($stmt->execute()) {
    // === Step 1: Update permintaan_ranap ===
    $update = $koneksi->prepare("
       UPDATE permintaan_ranap 
-      SET ranap_booking = 1, id_room = ?, id_bed = ?
+      SET ranap_booking = 1, id_room = ?, id_bed = ?, status = 'aktif'
       WHERE id_ranap = ?
    ");
    $update->bind_param("iii", $id_room, $id_bed, $id_ranap);
