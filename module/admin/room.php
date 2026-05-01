@@ -38,6 +38,7 @@ require '../../controller/view.php';
                     <h5 class="card-title fw-semibold">Data Ruangan Rawat Inap</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
+                      <button class="btn btn-light" id="btnLihatTempatTidur"><i class="fas fa-bed"></i> Lihat Tempat Tidur</button>
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
                     </div>
                   </div>
@@ -115,6 +116,43 @@ require '../../controller/view.php';
         <button type="submit" class="btn btn-primary">Simpan</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="modal fade" id="bedModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">🛏️ Data Tempat Tidur</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="table-responsive">
+          <table class="table table-bordered table-sm align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>No</th>
+                <th>Nama Bed</th>
+                <th>Gender</th>
+                <th>Status</th>
+                <th>Pengaturan</th> <!-- 🔥 kolom baru -->
+                <th>Catatan</th>
+              </tr>
+            </thead>
+            <tbody id="bedTableBody">
+              <tr>
+                <td colspan="5" class="text-center text-muted">Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </div>
   </div>
 </div>
 
@@ -326,6 +364,90 @@ require '../../controller/view.php';
         });
     });
 
+
+  });
+</script>
+<script>
+  $('#btnLihatTempatTidur').on('click', function() {
+
+    $('#bedModal').modal('show');
+
+    fetch('controller/master/bedController')
+      .then(res => res.json())
+      .then(res => {
+
+        let html = '';
+
+        if (res.data.length > 0) {
+
+          res.data.forEach((bed, i) => {
+
+            let statusBadge = bed.bed_status == 1 ?
+              '<span class="badge bg-warning-subtle text-warning d-block text-center">Digunakan</span>' :
+              '<span class="badge bg-success-subtle text-success d-block text-center">Kosong</span>';
+
+            let statusSwitch = `
+                <label class="switch">
+                  <input type="checkbox" 
+                    class="toggle-status-bed"
+                    data-id="${bed.id_bed}"
+                    ${bed.bed_status == 1 ? 'checked' : ''}>
+                  <span class="slider"></span>
+                </label>
+              `;
+
+            html += `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${bed.bed_name}</td>
+              <td>${bed.bed_gender || '-'}</td>
+              <td>${statusBadge}</td>
+               <td>${statusSwitch}</td>
+              <td>${bed.bed_notes || '-'}</td>
+            </tr>
+          `;
+          });
+
+        } else {
+          html = `<tr><td colspan="5" class="text-center text-muted">Tidak ada data</td></tr>`;
+        }
+
+        $('#bedTableBody').html(html);
+
+      });
+
+    $(document).on('change', '.toggle-status-bed', function() {
+
+      let el = $(this);
+      let id = el.data('id');
+      let status = el.is(':checked') ? 1 : 0;
+
+      fetch('controller/master/bedController?toggle_status=1', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: `id_bed=${id}&bed_status=${status}`
+        })
+        .then(res => res.json())
+        .then(res => {
+
+          if (res.status === 'success') {
+
+            // 🔥 update badge tanpa reload
+            let badge = status == 1 ?
+              '<span class="badge bg-success">Terisi</span>' :
+              '<span class="badge bg-secondary">Kosong</span>';
+
+            el.closest('tr').find('td:eq(3)').html(badge);
+
+          } else {
+            Swal.fire('Gagal!', res.message, 'error');
+          }
+
+        });
+
+    });
 
   });
 </script>
