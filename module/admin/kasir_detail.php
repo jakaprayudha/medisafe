@@ -45,6 +45,27 @@ $totalKeseluruhan = $totalObat + $totalBilling;
   <?php
   require '../../assets/template/head.php';
   ?>
+  <style>
+    .avatar-circle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .table-custom tbody tr {
+      transition: all 0.2s ease;
+    }
+
+    .table-custom tbody tr:hover {
+      background: #f8f9fa;
+      transform: scale(1.002);
+    }
+  </style>
 </head>
 
 <body>
@@ -67,29 +88,44 @@ $totalKeseluruhan = $totalObat + $totalBilling;
         <div class="container-fluid">
           <div class="row">
             <div class="col-12">
-              <div class="card">
-                <div class="card-body d-flex justify-content-between align-items-start">
-                  <div>
-                    <h5 class="card-title">
-                      <?= $data['patient_name'] ?>
-                      <span class="badge bg-warning">RM : <?= $data['nomor_rm'] ?></span>
-                    </h5>
-                    <!-- <p class="card-text">Tanggal Lahir : <?= $data['patient_datebirth'] ?> <?= $data['patient_gender'] ?></p> -->
+              <div class="card shadow-sm border-0 mb-3">
+                <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+                  <!-- LEFT -->
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="avatar-circle bg-primary text-white">
+                      <?= strtoupper(substr($data['patient_name'], 0, 1)) ?>
+                    </div>
+
+                    <div>
+                      <h5 class="mb-0 fw-semibold">
+                        <?= $data['patient_name'] ?>
+                      </h5>
+                      <small class="text-muted">
+                        No RM: <?= $data['nomor_rm'] ?>
+                      </small>
+                    </div>
                   </div>
+
+                  <!-- RIGHT -->
                   <div class="text-end">
-                    <h1 class="text-danger" style="font-size: 24px;">
-                      Rp <?= number_format($totalKeseluruhan, 0, ',', '.') ?>
-                    </h1>
+                    <div class="fs-3 text-muted">Total Tagihan</div>
+                    <div class="fs-8 fw-bold text-danger">
+                      <strong> Rp <?= number_format($totalKeseluruhan, 0, ',', '.') ?></strong>
+                    </div>
+                    <a href="module/print/struk_billing?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                      <button class="btn mt-2 btn-info shadow-sm"><i class="fas fa-print"></i> Cetak</button>
+                    </a>
                     <?php if ($data['status_bayar'] == 1): ?>
-                      <button class="btn btn-success mt-2" disabled>
-                        ✔️ Sudah Lunas
-                      </button>
+                      <span class="badge bg-success mt-2 px-3 py-2">✔️ Lunas</span>
                     <?php else: ?>
-                      <button class="btn btn-success mt-2" data-bs-toggle="modal" data-bs-target="#bayar">
-                        <i class="fas fa-coins"></i> Bayar
+                      <button class="btn btn-primary mt-2 px-4"
+                        data-bs-toggle="modal" data-bs-target="#bayar">
+                        <i class="fas fa-coins me-1"></i> Bayar Sekarang
                       </button>
                     <?php endif; ?>
                   </div>
+
                 </div>
               </div>
             </div>
@@ -97,13 +133,12 @@ $totalKeseluruhan = $totalObat + $totalBilling;
               <div class="card w-100">
                 <div class="card-body p-4 " class="">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Tindakan & Administrasi</h5>
+                    <h5 class="fw-semibold d-flex align-items-center gap-2">
+                      💼 Tindakan & Administrasi
+                    </h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
-                      <a href="module/print/struk_billing?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
-                        <button class="btn btn-info"><i class="fas fa-print"></i> Cetak</button>
-                      </a>
-                      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add"><i class="fas fa-plus"></i> Tambah</button>
+                      <button class="btn btn-outline-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#add"><i class="fas fa-plus"></i> Tambah</button>
                     </div>
                   </div>
                   <div class="table-responsive" data-simplebar>
@@ -130,7 +165,7 @@ $totalKeseluruhan = $totalObat + $totalBilling;
               <div class="card w-100">
                 <div class="card-body p-4 ">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Rincian Farmasi</h5>
+                    <h5 class="card-title fw-semibold">💊 Rincian Farmasi</h5>
                     <div class="d-flex ms-auto gap-2"></div>
                   </div>
 
@@ -147,8 +182,7 @@ $totalKeseluruhan = $totalObat + $totalBilling;
                       <tbody>
 
                         <?php
-                        $getobat = tampildata("
-              SELECT pd.*, mp.*
+                        $getobat = tampildata("SELECT pd.*, mp.*
               FROM permintaan_pharmacy_details pd
               INNER JOIN permintaan_pharmacy p 
                 ON p.id_permintaan_farmasi = pd.id_permintaan_farmasi
@@ -161,7 +195,7 @@ $totalKeseluruhan = $totalObat + $totalBilling;
 
                         <?php foreach ($getobat as $obat): ?>
                           <tr>
-                            <td><?= $obat['pharmacy_name_generic'] ?>/<?= $obat['pharmacy_name_trade'] ?></td>
+                            <td><?= $obat['pharmacy_name_generic'] ?></td>
                             <td><?= number_format($obat['qty']) ?></td>
                             <td><?= number_format($obat['harga']) ?></td>
                             <td><?= number_format($obat['harga'] * $obat['qty']) ?></td>
@@ -287,8 +321,11 @@ $totalKeseluruhan = $totalObat + $totalBilling;
         <input type="hidden" name="total" id="total" value="<?= $totalKeseluruhan ?>">
         <input type="hidden" name="nomor_visit" id="nomor_visit" value="<?= $no ?>">
         <div class="modal-body">
-          <div class="alert alert-primary" role="alert">
-            <h1> Rp <?= number_format($totalKeseluruhan, 0, ',', '.') ?></h1>
+          <div class="alert alert-success text-center shadow-sm">
+            <div class="fs-3">Total Pembayaran</div>
+            <div class="fs-8 fw-bold">
+              <strong> Rp <?= number_format($totalKeseluruhan, 0, ',', '.') ?></strong>
+            </div>
           </div>
           <div class="mb-3">
             <label for="metode_bayar" class="form-label">Metode Bayar <span class="text-danger">*</span> </label>
@@ -307,20 +344,25 @@ $totalKeseluruhan = $totalObat + $totalBilling;
             <div class="col-6">
               <div class="mb-3">
                 <label class="form-label">Uang Diterima</label>
-                <input type="text" id="uang_diterima" name="uang_diterima" class="form-control">
+                <input type="text" id="uang_diterima" name="uang_diterima" class="form-control w-bold fs-5">
               </div>
             </div>
             <div class="col-6">
               <div class="mb-3">
                 <label class="form-label">Kembalian</label>
-                <input type="text" id="kembalian" name="kembalian" class="form-control bg-light" readonly>
+                <input type="text" id="kembalian" name="kembalian" class="form-control w-bold fs-5 bg-light" readonly>
               </div>
+            </div>
+            <div class="col-12">
+              <small id="warningBayar" class="text-danger d-none">
+                ⚠️ Uang kurang dari total pembayaran
+              </small>
             </div>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-primary">Simpan</button>
+          <button type="submit" id="btnBayar" class="btn btn-primary">Simpan</button>
         </div>
       </form>
     </div>
@@ -598,6 +640,20 @@ $totalKeseluruhan = $totalObat + $totalBilling;
   document.getElementById("bayarForm").addEventListener("submit", function(e) {
     e.preventDefault();
 
+
+    const uang = parseInt(document.getElementById("uang_diterima").value.replace(/\D/g, '')) || 0;
+    const total = <?= $totalKeseluruhan ?>;
+
+    // 🔥 BLOCK
+    if (uang < total) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Pembayaran Kurang',
+        text: 'Uang diterima belum mencukupi total pembayaran!',
+      });
+      return;
+    }
+
     const id_visit = document.getElementById("nomor_visit").value;
     const metode = document.getElementById("metode_bayar").value;
     const total = document.getElementById("total").value;
@@ -667,5 +723,43 @@ $totalKeseluruhan = $totalObat + $totalBilling;
 
     // tampilkan
     kembalianInput.value = kembali >= 0 ? formatRupiah(kembali) : 0;
+  });
+</script>
+<script>
+  const totalBayar = <?= $totalKeseluruhan ?>;
+  const btnBayar = document.getElementById('btnBayar');
+  const warning = document.getElementById('warningBayar');
+
+  function formatRupiah(angka) {
+    return new Intl.NumberFormat('id-ID').format(angka);
+  }
+
+  uangInput.addEventListener('input', function() {
+
+    let uang = this.value.replace(/\D/g, '');
+    uang = parseInt(uang) || 0;
+
+    let kembali = uang - totalBayar;
+
+    // tampil kembalian
+    kembalianInput.value = kembali >= 0 ? formatRupiah(kembali) : 0;
+
+    // 🔥 VALIDASI + WARNING
+    if (uang < totalBayar) {
+
+      btnBayar.disabled = true;
+      btnBayar.classList.add('btn-light');
+      btnBayar.classList.remove('btn-primary');
+
+      warning.classList.remove('d-none'); // 🔥 INI YANG KAMU MAU
+
+    } else {
+      btnBayar.disabled = false;
+      btnBayar.classList.remove('btn-light');
+      btnBayar.classList.add('btn-primary');
+
+      warning.classList.add('d-none');
+    }
+
   });
 </script>
