@@ -172,13 +172,29 @@ require "../../controller/view.php";
                 <?php
                 $id_cust = $_SESSION['id_customer'];
                 $getbarang = tampildata("
-                SELECT * FROM ms_pharmacy 
-                WHERE pharmacy_status='1'
-                AND (id_customer = '$id_cust' OR id_customer = '0')
-              ");
+                  SELECT *
+                  FROM ms_pharmacy p
+                  WHERE pharmacy_status = '1'
+                  AND (
+                      p.id_customer = '$id_cust'
+
+                      OR (
+
+                        p.id_customer = '0'
+                        AND NOT EXISTS (
+                            SELECT 1 
+                            FROM ms_pharmacy c
+                            WHERE c.id_customer = '$id_cust'
+                            AND TRIM(LOWER(c.pharmacy_name_generic)) = TRIM(LOWER(p.pharmacy_name_generic))
+                        )
+
+                      )
+                  )
+                  AND TRIM(p.pharmacy_name_generic) != ''
+                ");
                 ?>
                 <?php foreach ($getbarang as $barang): ?>
-                  <option value="<?= $barang['id_pharmacy']; ?>" data-harga="<?= $barang['pharmacy_sale']; ?>"><?= $barang['pharmacy_name_generic']; ?>/<?= $barang['pharmacy_name_trade']; ?></option>
+                  <option value="<?= $barang['id_pharmacy']; ?>" data-harga="<?= $barang['pharmacy_sale']; ?>"><?= $barang['pharmacy_name_generic']; ?></option>
                 <?php endforeach ?>
               </select>
             </div>
@@ -282,7 +298,7 @@ require "../../controller/view.php";
                 `;
 
               })(),
-              "nama": row.pharmacy_name_generic + '/' + row.pharmacy_name_trade ?? "-",
+              "nama": row.pharmacy_name_generic ?? "-",
               "qty": row.qty ?? "-",
               "signa": signaDisplay,
               "catatan": row.catatan ?? "-",
@@ -358,8 +374,12 @@ require "../../controller/view.php";
               <select class="form-select form-select-sm item-select select2-item" style="width:100%">
                 <option value="">Pilih Item</option>
                 <?php foreach ($getbarang as $barang): ?>
-                  <option value="<?= $barang['id_pharmacy']; ?>">
-                    <?= $barang['pharmacy_name_generic']; ?>/<?= $barang['pharmacy_name_trade']; ?>
+                <option value="<?= $barang['id_pharmacy']; ?>"
+                    <?= empty($barang['pharmacy_name_generic']) ? 'data-invalid="1"' : '' ?>>
+                    
+                    <?= !empty($barang['pharmacy_name_generic'])
+                      ? $barang['pharmacy_name_generic']
+                      : '[❗ GENERIC BELUM DIISI] ' ?>
                   </option>
                 <?php endforeach ?>
               </select>
