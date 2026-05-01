@@ -75,6 +75,18 @@ LEFT JOIN ms_provider
 
 WHERE pasien_visit.status_rawatinap = 1 AND pasien_visit.id_customer = ?";
 
+
+   // =============================
+   // 🔥 FILTER TAB (STATUS PULANG)
+   // =============================
+   $tab = $_GET['tab'] ?? 'belum';
+
+   if ($tab === 'belum') {
+      $query .= " AND pasien_visit.visit_date_out IS NULL";
+   } elseif ($tab === 'selesai') {
+      $query .= " AND pasien_visit.visit_date_out IS NOT NULL";
+   }
+
    // =========================
    // PREPARED PARAM
    // =========================

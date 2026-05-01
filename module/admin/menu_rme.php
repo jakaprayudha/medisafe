@@ -30,7 +30,7 @@
         </a>
         <?php
          $roles = $_SESSION['roles'];
-         if ($roles == "dokter") { ?>
+         if ($roles == "dokter" or $roles == "admin") { ?>
            <a href="module/admin/rawat_inap?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=a">
               <button class="nav-link <?= ($current == 'rawat_inap.php') ? 'active' : '' ?>">Rawat Inap</button>
            </a>

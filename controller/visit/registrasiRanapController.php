@@ -70,6 +70,20 @@ function getData()
       $query .= " AND DATE(pasien_visit.visit_date) BETWEEN ? AND ?";
    }
 
+
+   // =============================
+   // 🔥 FILTER TAB (INI KUNCI)
+   // =============================
+   $tab = $_GET['tab'] ?? null;
+
+   if ($tab == 'belum') {
+      $query .= " AND pasien_visit.visit_status NOT IN (3,4)";
+   }
+
+   if ($tab == 'selesai') {
+      $query .= " AND pasien_visit.visit_status IN (3,4)";
+   }
+
    $query .= " ORDER BY pasien_visit.visit_date ASC";
 
    if ($stmt = $koneksi->prepare($query)) {
