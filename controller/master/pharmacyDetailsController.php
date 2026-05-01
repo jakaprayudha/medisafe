@@ -35,11 +35,12 @@ switch ($method) {
       }
       break;
 
-   case 'PUT': // update data
-      if (isset($_POST['pharmacy_number'])) {
-         $pharmacyNo = $koneksi->real_escape_string($_POST['pharmacy_number']);
+   case 'PUT':
 
-         // daftar field yang boleh diupdate
+      if (isset($_POST['id_pharmacy'])) {
+
+         $id = $koneksi->real_escape_string($_POST['id_pharmacy']);
+
          $allowedFields = [
             'pharmacy_code',
             'pharmacy_name_generic',
@@ -66,6 +67,7 @@ switch ($method) {
          ];
 
          $updates = [];
+
          foreach ($allowedFields as $field) {
             if (isset($_POST[$field])) {
                $value = $koneksi->real_escape_string($_POST[$field]);
@@ -74,32 +76,35 @@ switch ($method) {
          }
 
          if (!empty($updates)) {
-            $updates[] = "updated_at = NOW()";
-            $sql = "UPDATE ms_pharmacy SET " . implode(", ", $updates) . " WHERE pharmacy_number = '$pharmacyNo'";
+
+            $sql = "UPDATE ms_pharmacy 
+                 SET " . implode(", ", $updates) . " 
+                 WHERE id_pharmacy = '$id'";
 
             if ($koneksi->query($sql)) {
                echo json_encode([
                   "success" => true,
-                  "message" => "Data Pharmacy berhasil diperbarui"
+                  "message" => "Data berhasil diupdate"
                ]);
             } else {
                echo json_encode([
                   "success" => false,
-                  "message" => "Gagal update: " . $koneksi->error
+                  "message" => $koneksi->error
                ]);
             }
          } else {
             echo json_encode([
                "success" => false,
-               "message" => "Tidak ada field yang dikirim"
+               "message" => "Tidak ada data diupdate"
             ]);
          }
       } else {
          echo json_encode([
             "success" => false,
-            "message" => "pharmacy_number tidak ditemukan"
+            "message" => "id_pharmacy tidak ditemukan"
          ]);
       }
+
       break;
 
    default:

@@ -283,7 +283,7 @@
                let pPage = document.createElement("div");
                pPage.className = "dokmulti-page";
 
-               let verifyURL = baseURL + "verify_dokumen_perawatan.php?rm=" + rm;
+               let verifyURL = baseURL + "verify_dokumen.php?rm=" + rm;
                let qrURL =
                   "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" +
                   encodeURIComponent(verifyURL);
