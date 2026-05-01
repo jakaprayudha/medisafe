@@ -37,10 +37,10 @@ $apiUrl = getenv('API_URL');
         <div class="container-fluid">
           <ul class="nav nav-tabs" id="tabStatus">
             <li class="nav-item">
-              <a class="nav-link active" data-status="permintaan" href="#">Permintaan</a>
+              <a class="nav-link active" data-status="permintaan" href="javascript:void(0)">Permintaan</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" data-status="selesai" href="#">Selesai</a>
+              <a class="nav-link" data-status="selesai" href="javascript:void(0)">Selesai</a>
             </li>
           </ul>
           <div class="row">
@@ -49,9 +49,33 @@ $apiUrl = getenv('API_URL');
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="card-title fw-semibold">Farmasi Order</h5>
-                    <!-- Grup tombol di sisi kanan -->
-                    <div class="d-flex ms-auto gap-2">
+                    <!-- 🔽 Filter + Tombol Kembali -->
+                    <div class="d-flex align-items-end gap-2 flex-wrap">
+                      <form id="filterForm" class="row g-2 align-items-end">
+                        <div class="col-auto">
+                          <label for="fromDate" class="form-label mb-0">Dari</label>
+                          <input type="date" id="fromDate" name="fromDate" class="form-control">
+                        </div>
+                        <div class="col-auto">
+                          <label for="toDate" class="form-label mb-0">Sampai</label>
+                          <input type="date" id="toDate" name="toDate" class="form-control">
+                        </div>
+                        <div class="col-auto">
+                          <button type="button" id="btnFilter" class="btn btn-dark">
+                            <i class="fas fa-filter"></i> Filter
+                          </button>
+                        </div>
+                        <div class="col-auto">
+                          <button type="button" id="btnReset" class="btn btn-light">
+                            <i class="fas fa-undo"></i> Reset
+                          </button>
+                        </div>
+                      </form>
 
+                      <!-- Tombol kembali -->
+                      <div class="d-flex ms-auto gap-2">
+
+                      </div>
                     </div>
                   </div>
                   <div class="table-responsive" data-simplebar>
@@ -66,7 +90,6 @@ $apiUrl = getenv('API_URL');
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th class="text-dark fw-normal">Dokter</th>
                           <th class="text-dark fw-normal">Poliklinik</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Status</th>
                         </tr>
                       </thead>
                       <tbody></tbody>
@@ -87,100 +110,104 @@ $apiUrl = getenv('API_URL');
 </body>
 
 <script>
+  $(document).ready(function() {
+
+    let today = new Date().toISOString().split('T')[0];
+
+    $('#fromDate').val(today);
+    $('#toDate').val(today);
+
+  });
+  let table;
   let currentFilter = 'permintaan';
   // Mengambil nilai API_URL dari PHP
   const apiUrl = '<?php echo $apiUrl . 'farmasi/' . 'farmasiOrder' ?>';
   $(document).ready(function() {
-    // Initialize DataTable
-    var table = $('#zero_config').DataTable({
-      "processing": true,
-      "serverSide": false,
+
+    let today = new Date().toISOString().split('T')[0];
+
+    $('#fromDate').val(today);
+    $('#toDate').val(today);
+
+    table = $('#zero_config').DataTable({
+      processing: true,
+      serverSide: false,
       scrollX: true,
-      "ajax": {
-        "url": apiUrl, // Ganti dengan URL API yang sesuai
-        "type": "GET",
+      ajax: {
+        url: apiUrl,
+        type: "GET",
+        data: function(d) {
+          d.fromDate = $('#fromDate').val();
+          d.toDate = $('#toDate').val();
+        },
         dataSrc: function(json) {
 
           let filtered = json.data.filter(function(row) {
             let status = parseInt(row.status_permintaan);
-            if (currentFilter === 'selesai') {
-              return status === 3;
-            } else {
-              return status !== 3;
-            }
+            return currentFilter === 'selesai' ?
+              status === 3 :
+              status !== 3;
           });
 
-          return filtered.map(function(row, index) {
+          return filtered.map(function(row) {
             return {
-              "actions": `
-        <div class="text-center">
-          <a href="module/admin/farmasi_order_detail?no=${row.visit_ID}&rm=${row.nomor_rm}&id=${row.id_permintaan_farmasi}">
-            <button class="btn btn-primary">Lihat Resep</button>
-          </a>
-        </div>
-      `,
-              "tanggal": row.created_at,
-              "nomor_rm": row.nomor_rm,
-              "nama_pasien": row.patient_name_pcare,
-              "gender": row.patient_gender,
-              "dokter": row.id_doctor,
-              "layanan": row.id_poli,
-              "status_visit": (function() {
-                let status = row.status_permintaan;
-
-                let badgeClass = '';
-                let label = '';
-
-                if (status == 1) {
-                  badgeClass = 'bg-danger';
-                  label = 'Belum';
-                } else if (status == 2) {
-                  badgeClass = 'bg-primary';
-                  label = 'Persiapan';
-                } else if (status == 3) {
-                  badgeClass = 'bg-success';
-                  label = 'Selesai';
-                } else {
-                  badgeClass = 'bg-secondary';
-                  label = 'Unknown';
-                }
-
-                return `<span class="badge ${badgeClass} d-block text-center">${label}</span>`;
-              })()
+              actions: `
+              <div class="text-center">
+                <a href="module/admin/farmasi_order_detail?no=${row.visit_ID}&rm=${row.nomor_rm}&id=${row.id_permintaan_farmasi}">
+                  <button class="btn btn-sm btn-primary">
+                    <i class="fas fa-file"></i> Lihat Resep
+                  </button>
+                </a>
+              </div>
+            `,
+              tanggal: row.created_at,
+              nomor_rm: row.nomor_rm,
+              nama_pasien: row.patient_name_pcare,
+              gender: row.patient_gender,
+              dokter: row.id_doctor,
+              layanan: row.id_poli
             };
           });
         }
       },
-      "columns": [{
-          "data": "actions"
-        },
-        // {
-        //   "data": "permintaan_number"
-        // },
-        {
-          "data": "tanggal"
+      columns: [{
+          data: "actions"
         },
         {
-          "data": "nomor_rm"
+          data: "tanggal"
         },
         {
-          "data": "nama_pasien"
+          data: "nomor_rm"
         },
         {
-          "data": "gender"
+          data: "nama_pasien"
         },
         {
-          "data": "dokter"
+          data: "gender"
         },
         {
-          "data": "layanan"
+          data: "dokter"
         },
         {
-          "data": "status_visit"
+          data: "layanan"
         }
-
       ]
     });
+
+  });
+  $('#btnFilter').on('click', function() {
+    table.ajax.reload();
+  });
+  $('#btnReset').on('click', function() {
+
+    let today = new Date().toISOString().split('T')[0];
+
+    $('#fromDate').val(today);
+    $('#toDate').val(today);
+
+    table.ajax.reload();
+  });
+  $(document).ready(function() {
 
     $('#tabStatus .nav-link').on('click', function(e) {
       e.preventDefault();
@@ -190,8 +217,11 @@ $apiUrl = getenv('API_URL');
 
       currentFilter = $(this).data('status');
 
-      table.ajax.reload(); // 🔥 reload table
+      console.log("TAB:", currentFilter);
+
+      table.ajax.reload();
     });
+
   });
 </script>
 
