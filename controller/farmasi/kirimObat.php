@@ -57,12 +57,12 @@ $prov = $stmtProv->get_result()->fetch_assoc();
 $id_provider = $prov['id_provider'] ?? null;
 
 
-$stmt_statusRI = $koneksi->prepare("SELECT status_perawatan_inap FROM pasien_visit WHERE id_customer = ? AND visit_ID = ?");
+$stmt_statusRI = $koneksi->prepare("SELECT status_rawatinap FROM pasien_visit WHERE id_customer = ? AND visit_ID = ?");
 $stmt_statusRI->bind_param("ss", $id_customer, $nomor_visit);
 $stmt_statusRI->execute();
 $resultRI = $stmt_statusRI->get_result()->fetch_assoc();
 
-$status_RI = $resultRI['status_perawatan_inap'];
+$status_RI = $resultRI['status_rawatinap'];
 
 // ================== DETAIL OBAT ==================
 $stmt2 = $koneksi->prepare("
