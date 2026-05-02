@@ -303,7 +303,9 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 
       speechSynthesis.cancel();
 
-      const text = `Nomor antrean ${noAntrian}, atas nama ${namaPasien}, silakan menuju ruangan  ${id_doctor}`;
+      // const text = `Nomor antrean ${noAntrian}, atas nama ${namaPasien}, silakan menuju ruangan  ${id_doctor}`; --HIDE UNTUK ANTREAN ONLINE AKTIF BARU PAKAI INI
+
+      const text = `pasien atas nama ${namaPasien}, di persilahkan masuk ke ruangan dokter  ${id_doctor}`;
       const utterance = new SpeechSynthesisUtterance(text);
 
       utterance.lang = 'id-ID';
