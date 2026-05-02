@@ -5,6 +5,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 if ($method == 'POST' && isset($_POST['_method'])) {
    $method = $_POST['_method'];
 }
+$id_customer = $_SESSION['id_customer'];
 
 switch ($method) {
    case 'GET':
@@ -34,8 +35,8 @@ switch ($method) {
       $dataid = mysqli_fetch_array($checkid);
       $id_doctor = $dataid['id_doctor'];
 
-      $stmt = $koneksi->prepare("INSERT INTO ms_doctor_schedule (id_doctor, day_of_week, start_time, end_time) VALUES (?,?,?,?)");
-      $stmt->bind_param("ssss", $id_doctor, $day_of_week, $start_time, $end_time);
+      $stmt = $koneksi->prepare("INSERT INTO ms_doctor_schedule (id_doctor, day_of_week, start_time, end_time, id_customer) VALUES (?,?,?,?,?)");
+      $stmt->bind_param("sssss", $id_doctor, $day_of_week, $start_time, $end_time, $id_customer);
       if ($stmt->execute()) {
          echo json_encode(['success' => true]);
       } else {

@@ -107,24 +107,21 @@ $(function () {
                         APP.cetakhtml('#noK', response.data.noKartu || '-');
                         APP.cetakhtml('#nama', response.data.nama || '-');
                         APP.cetakhtml('#tglLahir', response.data.tglLahir || '-');
-                        APP.cetakhtml('#kelamin', response.data.sex === "P" ? "Perempuan" : "Laki - Laki"
-                        );
-                        APP.cetakhtml('#ppkumum', response.data.kdProviderPst?.nmProvider || '-');
+                        APP.cetakhtml('#kelamin', response.data.sex === "P" ? "Perempuan" : "Laki - Laki");
+                        APP.cetakhtml('#ppkumum', response.data.nmProvider || '-');
+                        APP.cetak('#nohp', response.data.noHP || '080000000000');
                         APP.cetakhtml('#noTelp', response.data.noHP || '-');
                         APP.cetak('#noKartu', response.data.noKartu || '-');
                         APP.cetak('#namapatient', response.data.nama || '-');
-                        APP.cetak('#Kelamin',
-                            response.data.sex === "P" ? "Perempuan" : "Laki - Laki"
-                        );
+                        APP.cetak('#Kelamin', response.data.sex === "P" ? "Perempuan" : "Laki - Laki");
                         APP.cetak('#tgllahir', response.data.tglLahir || '-');
+                        APP.cetakhtml('#no_rekammedis', response.data.rm || '-');
+                        APP.cetak('#norm', response.data.rm || '-');
                         APP.cetak("#typePasien", tipe);
                         let nik = response.data.noKTP || nomor;
                         APP.cetak('#noNIK', nik);
                         APP.cetakhtml('#nonik', nik);
-
-                        APP.cetak('#kdProviderPeserta',
-                            response.data.kdProviderPst?.kdProvider || ''
-                        );
+                        APP.cetak('#kdProviderPeserta', response.data.kdProvider || '');
                     });
                 } else {
                     resetTampilan();
@@ -415,7 +412,6 @@ $(function () {
                 setTypePasien();
             }
         });
-        APP.ambil_data_dokter('#kodedokter', 'dokter/0/100', 'nmDokter', 'kdDokter', true);
         APP.updatePoliOptions = function (poliSakit) {
             poliSakit = (poliSakit === true || poliSakit === 'true');
             var select = $('#kodepoli');
@@ -446,9 +442,51 @@ $(function () {
                 }
             });
         }
+        // APP.ambil_data_dokter('#kodedokter', 'dokter/0/100', 'nmDokter', 'kdDokter', true);
+        function loadDokter(status = true) {
+            const $select = $('#kodedokter');
+            const tgl = $('#tanggalKunjung').val();
+            const poli = $('#kodepoli').val();
+            $select.html('<option value="">Loading...</option>').trigger('change.select2');
+            $.ajax({
+                url: 'controller/wsbpjs/getDokter.php',
+                type: 'GET',
+                data: {
+                    kdpoli: poli,
+                    tanggal: tgl
+                },
+                dataType: 'json',
+                success: function (response) {
+                    $select.empty();
+                    if (status) {
+                        $select.append('<option value="">- Pilih -</option>');
+                    }
+                    response.forEach(function (item) {
+                        $select.append(
+                            '<option value="' + item.kodedokter + '" ' +
+                            'data-nama="' + item.namadokter + '" ' +
+                            'data-jam="' + item.jampraktek + '">' +
+                            item.namadokter + ' (' + item.jampraktek + ')' +
+                            '</option>'
+                        );
+                    });
+                    $select.trigger('change.select2');
+                },
+                error: function (err) {
+                    console.error(err);
+                    $select.html('<option value="">Error loading data</option>').trigger('change.select2');
+                }
+            });
+        }
+        $('#kodedokter').on('change', function () {
+            let selected = $(this).find('option:selected');
+            $('#namadokter').val(selected.data('nama') || '');
+            $('#jampraktek').val(selected.data('jam') || '');
+        });
         $("#kodepoli").on("change", function () {
             let nmPoli = $("#kodepoli option:selected").text();
             $("#nmPoli").val(nmPoli);
+            loadDokter();
         });
         const knjsakit = [
             {
@@ -529,45 +567,103 @@ $(function () {
         $('#kodeprov').on('change', function () {
             setTypePasien();
         });
+        $('#tanggalKunjung').on('change', function () {
+            loadDokter();
+        })
+
     }
     APP.createpeserta = function () {
         var data = $('#isiform').serialize();
+
         $.ajax({
             type: "POST",
             data: data,
             dataType: "json",
             url: 'controller/admisi/services/insertPendaftaran.php',
             success: function (response) {
-                if (response.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil',
-                        text: response.message,
-                        confirmButtonColor: '#3085d6',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Ok'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.assign("module/admisi/registrasi-poliklinik");
-                        }
-                    })
-                } else {
+
+                if (!response.success) {
                     Swal.fire({
                         icon: "error",
                         title: "Oops...",
                         text: response.message,
                     });
+                    APP.load_btn_non('#create', "Simpan Kunjungan");
+                    return;
+                } else {
+                    if (response.type == "UMUM") {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: response.message,
+                            confirmButtonText: 'Ok'
+                        }).then(() => {
+                            window.location.assign("module/admisi/registrasi-poliklinik");
+                        });
+                    }
+                }
+                if (response.type == 'BPJS') {
+                    $.ajax({
+                        type: "POST",
+                        url: 'controller/wsbpjs/addAntrian.php',
+                        dataType: "json",
+                        data: {
+                            nomorkartu: response.nomorkartu,
+                            nik: response.nik,
+                            nohp: response.nohp,
+                            kodepoli: response.kodepoli,
+                            namapoli: response.namapoli,
+                            norm: response.norm,
+                            tanggalperiksa: response.tanggalperiksa,
+                            kodedokter: response.kodedokter,
+                            namadokter: response.namadokter,
+                            jampraktek: response.jampraktek,
+                            nomorantrean: response.nomorantrean,
+                            angkaantrean: response.angkaantrean
+                        },
+                        success: function (res) {
+
+                            if (res.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil',
+                                    text: res.message,
+                                    confirmButtonText: 'Ok'
+                                }).then(() => {
+                                    window.location.assign("module/admisi/registrasi-poliklinik");
+                                });
+
+                            } else {
+                                Swal.fire({
+                                    icon: "error",
+                                    title: "Oops...",
+                                    text: res.message,
+                                });
+                            }
+                        },
+                        error: function (xhr) {
+                            Swal.fire({
+                                icon: "error",
+                                title: "BPJS Error",
+                                text: xhr.responseText || "Gagal menghubungi server BPJS"
+                            });
+                        },
+                        complete: function () {
+                            APP.load_btn_non('#create', "Simpan Kunjungan");
+                        }
+                    });
                 }
             },
             error: function (xhr, status, error) {
-                alert('Terjadi kesalahan saat melakukan AJAX request: ' + error);
-                APP.load_btn_non('#create', "Simpan kunjungan");
-            },
-            complete: function () {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: error
+                });
                 APP.load_btn_non('#create', "Simpan Kunjungan");
             }
-        })
-    }
+        });
+    };
     function resetSemuaForm() {
         $('#tampilan').html(`
             <div class="text-muted text-center py-4">

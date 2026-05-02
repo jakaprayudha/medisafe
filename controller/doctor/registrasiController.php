@@ -58,12 +58,15 @@ function getData()
    $query = "SELECT 
             pasien_visit.*, 
             ms_patient.*, 
-            ms_provider.provider_name
+            ms_provider.provider_name,
+            ap.status AS status_panggil
         FROM pasien_visit
         LEFT JOIN ms_patient 
             ON ms_patient.id_patient = pasien_visit.id_patient
       LEFT JOIN ms_provider ON ms_provider.id_provider = pasien_visit.id_provider
-        WHERE 1=1 AND pasien_visit.source_hub != 'Rawat Inap' AND pasien_visit.id_customer = '$id_customer'
+      INNER JOIN antrian_poli AS ap
+      		ON ap.nomor_visit = pasien_visit.visit_ID
+        WHERE 1=1 AND pasien_visit.source_hub != 'Rawat Inap' AND pasien_visit.id_customer = '$id_customer' AND ap.id_customer = '$id_customer'
     ";
 
    // =========================

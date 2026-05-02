@@ -29,7 +29,7 @@
                         <div class="col-7" id="noTelp">-</div>
 
                         <div class="col-5 text-muted">No. Rekam Medis</div>
-                        <div class="col-7" id="noRm">-</div>
+                        <div class="col-7" id="no_rekammedis">-</div>
                     </div>
                 </div>
             </div>
@@ -41,6 +41,8 @@
                 <input type="hidden" name="jnsKlamin" id="Kelamin">
                 <input type="hidden" name="tglLahir" id="tgllahir">
                 <input type="hidden" name="typePatient" id="typePasien">
+                <input type="hidden" name="noHp" id="nohp">
+                <input type="hidden" name="norm" id="norm">
                 <div class="card shadow-sm">
                     <div class="card-header bg-light fw-semibold">
                         Form Kunjungan Pasien
@@ -70,6 +72,7 @@
                                 <label class="form-label">Dokter <span class="text-danger">*</span></label>
                                 <select class="form-select" id="kodedokter" name="kdDokter"></select>
                                 <input type="hidden" name="nmDokter" id="namadokter">
+                                <input type="hidden" name="jampraktek" id="jampraktek">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Provider <span class="text-danger">*</span></label>

@@ -64,12 +64,19 @@ function createData($id_customer)
       'id_poli',
       'doctor_category',
       'doctor_phone',
-      'doctor_address'
+      'doctor_address',
+      'doctor_code'
    ];
 
    $fields = ['doctor_number'];
    $values = [generateDoctorNumber($koneksi)];
-
+   if (isset($_POST['doctor_name'])) {
+      $name = $_POST['doctor_name'];
+      $name = preg_replace('/^dr\.?\s*/i', '', $name);
+      $name = trim($name);
+      $name = strtoupper($name);
+      $_POST['doctor_name'] = $name;
+   }
    foreach ($allowedFields as $f) {
       if (isset($_POST[$f])) {
          $fields[] = $f;
@@ -133,11 +140,10 @@ function getData($id_customer)
 {
    global $koneksi;
 
-   $query = "SELECT d.*, p.poli_name 
+   $query = "SELECT d.*, p.nmPoli 
              FROM ms_doctor d
-             LEFT JOIN ms_poli p 
-             ON p.id_poli = d.id_poli 
-             AND p.id_customer = d.id_customer
+             LEFT JOIN master_poli p 
+             ON p.kdPoli = d.id_poli 
              WHERE d.id_customer = ?
              ORDER BY d.doctor_name DESC";
 

@@ -31,6 +31,9 @@ $suhu    =  $_POST['suhu'];
 $saturasi    =  $_POST['saturasiOksigen'];
 $type = $_POST['typePatient'];
 $kdProv = $_POST['kdProv'];
+$norm = $_POST['norm'];
+$noHp = $_POST['noHp'];
+$jampraktek = $_POST['jampraktek'];
 $payload = [
     "kdProviderPeserta" => $kdProviderPeserta,
     "tglDaftar" => $tglDaftar,
@@ -70,6 +73,7 @@ if ($type == "BPJS") {
         $response = [
             'success' => false,
             'message' => $msg,
+            'result' => $result
         ];
     } else {
         $noUrut = $result['data']['message'];
@@ -81,9 +85,9 @@ if ($type == "BPJS") {
         $respRate     = (int)$respRate;
         $lingkarPerut = (int)$lingkarPerut;
         $heartRate    = (int)$heartRate;
-        $stmt = $koneksi->prepare("INSERT INTO `pcare_pendaftaran` (`tanggal_daftar`, `noKartu`, `kdPoli`, `nmPoli`, `keluhan`, `kunjSakit`, `sistole`, `diastole`, `beratBadan`, `tinggiBadan`, `respRate`, `lingkarPerut`, `heartRate`, `rujukBalik`, `kdTkp`, `noUrut`, `nomor_visit`, `saturasi`, `suhu`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+        $stmt = $koneksi->prepare("INSERT INTO `pcare_pendaftaran` (`tanggal_daftar`, `noKartu`, `kdPoli`, `nmPoli`, `keluhan`, `kunjSakit`, `sistole`, `diastole`, `beratBadan`, `tinggiBadan`, `respRate`, `lingkarPerut`, `heartRate`, `rujukBalik`, `kdTkp`, `noUrut`, `nomor_visit`, `saturasi`, `suhu`, `jamperaktek`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
         $stmt->bind_param(
-            "ssssssiiiiiiissssss",
+            "ssssssiiiiiiisssssss",
             $tglDaftarDB,
             $noKartu,
             $kdPoli,
@@ -102,7 +106,8 @@ if ($type == "BPJS") {
             $noUrut,
             $visit_ID,
             $saturasi,
-            $suhu
+            $suhu,
+            $jampraktek
         );
         $hasil = $stmt->execute();
         $stmt->close();
@@ -118,6 +123,10 @@ if ($type == "BPJS") {
         $visit_time = date('H:i:s');
         $bmi = $_POST['bmi'];
         $bmiKet = $_POST['bmiKet'];
+        $resultAntrian = createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tglDaftarDB, $jampraktek);
+        $nomorantrean = $resultAntrian['display'];
+        $angkaantrean = $resultAntrian['nomor'];
+        $kodeAntri       = $resultAntrian['kode'];
         $stmt = $koneksi->prepare("
             INSERT INTO pasien_visit (
                 id_patient,
@@ -158,7 +167,7 @@ if ($type == "BPJS") {
             $nmPoli,
             $source_hub,
             $created_user,
-            $noUrut,
+            $nomorantrean,
             $status_antrian,
             $idcustomer,
             $nmDokter,
@@ -179,31 +188,29 @@ if ($type == "BPJS") {
             $kdProv
         );
         $hasil1 = $stmt->execute();
-        $fieldWhere = '';
-        $valueWhere = '';
-        // if (!empty($noNIK)) {
-        //     $fieldWhere = 'patient_nik';
-        //     $valueWhere = $noNIK;
-        // } elseif (!empty($noKartu)) {
-        //     $fieldWhere = 'patient_bpjs';
-        //     $valueWhere = $noKartu;
-        // }
-
-        // if (!empty($noKartu)) {
-        //     $fieldWhere = 'patient_bpjs';
-        //     $valueWhere = $noKartu;
-        // } elseif (!empty($noNIK)) {
-        //     $fieldWhere = 'patient_nik';
-        //     $valueWhere = $noNIK;
-        // }
-        $stmt2 = $koneksi->prepare("UPDATE ms_patient SET patient_nik = ?, patient_bpjs = ?, patient_datebirth = ? WHERE (patient_bpjs = ? OR patient_nik = ?) AND id_customer = ?");
-        $stmt2->bind_param("ssssss", $noNIK, $noKartu, $tglLahir, $noKartu, $noNIK, $idcustomer);
-        $hasil2 = $stmt2->execute();
-        if ($hasil and $hasil1 and $hasil2) {
+        // $stmt2 = $koneksi->prepare("UPDATE ms_patient SET patient_nik = ?, patient_bpjs = ?, patient_datebirth = ? WHERE (patient_bpjs = ? OR patient_nik = ?) AND id_customer = ?");
+        // $stmt2->bind_param("ssssss", $noNIK, $noKartu, $tglLahir, $noKartu, $noNIK, $idcustomer);
+        // $hasil2 = $stmt2->execute();
+        if ($hasil and $hasil1) {
             $response = [
                 'success'  => true,
                 'message'  => "Berhasil Mendaftar Pasien",
-                'result' => $result
+                'result' => $result,
+                "nomorkartu"      => $noKartu,
+                "nik"             => $noNIK,
+                "nohp"            => $noHp ?? '0',
+                "kodepoli"        => $kdPoli,
+                "namapoli"        => $nmPoli,
+                "norm"            => $norm,
+                "tanggalperiksa"  => $tglDaftarDB,
+                "kodedokter"      => $kdDokter,
+                "namadokter"      => $nmDokter,
+                "jampraktek"      => $jampraktek,
+                "nomorantrean"    => $nomorantrean,
+                "angkaantrean"    => $angkaantrean,
+                "kodeAntri"       => $kodeAntri,
+                "keterangan"      => "",
+                'type'            => "BPJS"
             ];
         } else {
             $response = [
@@ -218,6 +225,10 @@ if ($type == "BPJS") {
     $stmt->execute();
     $chackpasien = $stmt->get_result()->fetch_assoc();
 
+    $resultAntrian = createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tglDaftarDB, $jampraktek);
+    $nomorantrean = $resultAntrian['display'];
+    $angkaantrean = $resultAntrian['nomor'];
+    $kodeAntri       = $resultAntrian['kode'];
     $created_user = "User";
     $source_hub = "Poliklinik";
     $id_patient = $chackpasien['id_patient'];
@@ -263,7 +274,7 @@ if ($type == "BPJS") {
         $nmPoli,
         $source_hub,
         $created_user,
-        $noUrut,
+        $nomorantrean,
         $status_antrian,
         $idcustomer,
         $nmDokter,
@@ -287,7 +298,8 @@ if ($type == "BPJS") {
         $response = [
             'success'  => true,
             'message'  => "Berhasil Mendaftar Pasien",
-            'result' => $result
+            'result' => $result,
+            'type' => 'UMUM'
         ];
     } else {
         $response = [
@@ -313,4 +325,41 @@ function generateVisitID($koneksi, $idcustomer)
     } while ($count > 0);
 
     return $visitID;
+}
+function createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tglDaftarDB, $jampraktek)
+{
+    $cekantrian = $koneksi->prepare("SELECT 
+                                    COALESCE(MAX(a.nomor), 0) AS last,
+                                    (
+                                        SELECT d.doctor_antrean
+                                        FROM ms_doctor d
+                                        WHERE d.doctor_code = ?
+                                        AND d.id_customer = ?
+                                        LIMIT 1
+                                    ) AS kode_antrian
+                                FROM antrian_poli a
+                                WHERE a.poli = ?
+                                AND a.tanggal = ?
+                                AND a.id_customer = ?
+                                AND a.kode_antri = (
+                                    SELECT d.doctor_antrean
+                                    FROM ms_doctor d
+                                    WHERE d.doctor_code = ?
+                                    AND d.id_customer = ?
+                                    LIMIT 1
+                                )
+                                FOR UPDATE");
+    $cekantrian->bind_param("sssssss", $kdDokter, $idcustomer, $kdPoli, $tglDaftarDB, $idcustomer, $kdDokter, $idcustomer);
+    $cekantrian->execute();
+    $rowantrian = $cekantrian->get_result()->fetch_assoc();
+    $next = (int)$rowantrian['last'] + 1;
+    $kode_antrian = $rowantrian['kode_antrian'];
+    $createantrian = $koneksi->prepare("INSERT INTO antrian_poli (nomor, poli, tanggal, id_customer, nomor_visit,id_dokter, kode_antri, jampraktek)VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $createantrian->bind_param("isssssss", $next, $kdPoli, $tglDaftarDB, $idcustomer, $visit_ID, $kdDokter, $kode_antrian, $jampraktek);
+    $createantrian->execute();
+    return [
+        'nomor' => $next,
+        'kode' => $kode_antrian,
+        'display' => $kode_antrian . $next
+    ];
 }

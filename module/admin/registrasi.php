@@ -12,89 +12,75 @@ require '../../controller/view.php';
   ?>
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <style id="fixcss">
-    /* =========================
-   🎯 DROPDOWN (PRIORITAS)
-========================= */
-    .dropdown-menu {
-      z-index: 999999 !important;
-      min-width: 200px;
-      max-width: 250px;
-      width: auto;
-      white-space: normal;
-    }
+      .dropdown-menu {
+        z-index: 999999 !important;
+        min-width: 200px;
+        max-width: 250px;
+        width: auto;
+        white-space: normal;
+      }
 
-    /* =========================
-   🎯 DATATABLE FIX (INTI MASALAH)
-========================= */
+      /* wrapper utama */
+      .dataTables_wrapper {
+        overflow: visible !important;
+      }
 
-    /* wrapper utama */
-    .dataTables_wrapper {
-      overflow: visible !important;
-    }
+      /* scroll container */
+      .dataTables_scroll {
+        overflow: visible !important;
+      }
 
-    /* scroll container */
-    .dataTables_scroll {
-      overflow: visible !important;
-    }
-
-    /* biarkan scroll tetap jalan */
-    .dataTables_scrollBody {
-      overflow-x: auto !important;
-      overflow-y: hidden !important;
-    }
+      /* biarkan scroll tetap jalan */
+      .dataTables_scrollBody {
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+      }
 
 
 
-    /* responsive table */
-    .table-responsive {
-      overflow: visible !important;
-    }
+      /* responsive table */
+      .table-responsive {
+        overflow: visible !important;
+      }
 
-    /* card container */
-    .card {
-      overflow: visible !important;
-    }
+      /* card container */
+      .card {
+        overflow: visible !important;
+      }
 
-    /* =========================
-   🎯 DROPUP POSITION FIX
-========================= */
-    .dropup .dropdown-menu {
-      top: auto !important;
-      bottom: 100% !important;
-      margin-bottom: 5px;
-      transform: none !important;
-    }
+      .dropup .dropdown-menu {
+        top: auto !important;
+        bottom: 100% !important;
+        margin-bottom: 5px;
+        transform: none !important;
+      }
+      #cameraModal .modal-body {
+        position: relative;
+      }
 
-    /* =========================
-   🎯 CAMERA MODAL (JANGAN DIUBAH)
-========================= */
-    #cameraModal .modal-body {
-      position: relative;
-    }
+      #cameraModal video {
+        width: 100%;
+      }
 
-    #cameraModal video {
-      width: 100%;
-    }
+      #cameraModal canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
 
-    #cameraModal canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
+      /* 🔥 freeze kolom pertama */
+      #periodeTable th:first-child,
+      #periodeTable td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 5;
+        background: #fff;
+      }
 
-    /* 🔥 freeze kolom pertama */
-    #periodeTable th:first-child,
-    #periodeTable td:first-child {
-      position: sticky;
-      left: 0;
-      z-index: 5;
-      background: #fff;
-    }
-
-    /* header lebih tinggi z-index */
-    #periodeTable thead th:first-child {
-      z-index: 6;
-    }
+      /* header lebih tinggi z-index */
+      #periodeTable thead th:first-child {
+        z-index: 6;
+      }
   </style>
 </head>
 
@@ -1060,14 +1046,29 @@ require '../../controller/view.php';
       let id = $(this).data('id');
       let visit = $(this).data('visit');
       let prov = $(this).data('prov');
+
       Swal.fire({
         title: 'Hapus Data?',
+        text: 'Masukkan alasan pembatalan',
         icon: 'warning',
+        input: 'textarea', // 🔥 ini kuncinya
+        inputPlaceholder: 'Tulis alasan...',
+        inputAttributes: {
+          'aria-label': 'Alasan'
+        },
         showCancelButton: true,
         confirmButtonText: 'Hapus',
-        cancelButtonText: 'Batal'
+        cancelButtonText: 'Batal',
+        preConfirm: (alasan) => {
+          if (!alasan) {
+            Swal.showValidationMessage('Alasan wajib diisi');
+          }
+          return alasan;
+        }
       }).then((result) => {
         if (result.isConfirmed) {
+
+          let alasan = result.value;
           Swal.fire({
             title: 'Menghapus...',
             text: 'Sedang memproses data',
@@ -1080,44 +1081,50 @@ require '../../controller/view.php';
               type: "POST",
               data: {
                 novisit: visit,
+                alasan: alasan
               },
               dataType: 'json',
               success: function(res) {
+                Swal.close();
                 if (res.success) {
-                  Swal.close();
                   Swal.fire({
                     title: "Berhasil",
-                    html: `
-                            <b>${res.message}</b><br></b>
-                        `,
-                    icon: "success",
-                    confirmButtonText: "Tutup",
+                    text: res.message,
+                    icon: "success"
                   });
                   table.ajax.reload(null, false);
                 } else {
-                  Swal.close();
                   Swal.fire({
                     title: "Gagal Hapus",
                     text: res.message,
-                    icon: "error",
-                    confirmButtonText: "Tutup"
+                    icon: "error"
                   });
                 }
               }
-            })
+            });
           } else {
             fetch(apiUrl + `?id=${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  alasan: alasan
+                })
               })
               .then(res => res.json())
               .then(data => {
+                Swal.close();
+
                 if (data.status === 'success') {
-                  Swal.close();
                   Swal.fire('Berhasil!', 'Data dihapus.', 'success');
                   table.ajax.reload(null, false);
+                } else {
+                  Swal.fire('Gagal!', data.message, 'error');
                 }
               });
           }
+
         }
       });
     });

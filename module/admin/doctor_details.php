@@ -14,6 +14,12 @@ $no = $_GET['no'];
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </head>
+<style>
+  .switch-lg {
+    transform: scale(1.5);
+    cursor: pointer;
+  }
+</style>
 
 <body>
   <!--  Body Wrapper -->
@@ -98,9 +104,13 @@ $no = $_GET['no'];
                             <div class="mb-3">
                               <label class="form-label">Kategori Dokter</label>
                               <select class="form-select" name="doctor_category">
-                                <option value="Umum">Umum</option>
-                                <option value="Dokter Gigi">Dokter Gigi</option>
-                                <!-- <option value="Spesialis">Spesialis</option> -->
+                                <option value="">PILIH</option>
+                                <?php
+                                $getpoli = tampildata("SELECT * FROM master_poli WHERE status_poli='1'");
+                                ?>
+                                <?php foreach ($getpoli as $poli) : ?>
+                                  <option value="<?= $poli['kdPoli'] ?>"><?= $poli['nmPoli'] ?></option>
+                                <?php endforeach ?>
                               </select>
                             </div>
                           </div>
@@ -110,10 +120,10 @@ $no = $_GET['no'];
                               <select name="id_poli" id="id_poli" class="form-select" required>
                                 <option value="">PILIH</option>
                                 <?php
-                                $getpoli = tampildata("SELECT * FROM ms_poli WHERE poli_status='1'");
+                                $getpoli = tampildata("SELECT * FROM master_poli WHERE status_poli='1'");
                                 ?>
                                 <?php foreach ($getpoli as $poli) : ?>
-                                  <option value="<?= $poli['id_poli'] ?>"><?= $poli['poli_name'] ?></option>
+                                  <option value="<?= $poli['kdPoli'] ?>"><?= $poli['nmPoli'] ?></option>
                                 <?php endforeach ?>
                               </select>
                             </div>
@@ -338,6 +348,7 @@ $no = $_GET['no'];
                           <tr>
                             <th>Hari</th>
                             <th>Jam</th>
+                            <th>Kuota</th>
                             <th class="col-1">Aksi</th>
                           </tr>
                         </thead>
@@ -490,26 +501,65 @@ $no = $_GET['no'];
 
     // Load Jadwal
     function loadJadwal() {
-      fetch("controller/master/dokterJadwalController.php?no=" + doctorNo)
+      const tbody = document.querySelector("#jadwalTable tbody");
+
+      // loading state
+      tbody.innerHTML = `<tr><td colspan="3" class="text-center">Loading...</td></tr>`;
+
+      fetch("controller/master/dokterJadwalController.php?no=" + encodeURIComponent(doctorNo))
         .then(res => res.json())
         .then(data => {
-          const tbody = document.querySelector("#jadwalTable tbody");
           tbody.innerHTML = "";
-          if (data.success) {
-            data.data.forEach(j => {
-              const tr = document.createElement("tr");
-              tr.innerHTML = `
-              <td>${j.day_of_week}</td>
-              <td>${j.start_time} - ${j.end_time}</td>
-              <td>
-                <button class="btn btn-danger btn-sm" onclick="deleteJadwal(${j.id_schedule})">Hapus</button>
-              </td>
-            `;
-              tbody.appendChild(tr);
-            });
+
+          if (!data.success || !Array.isArray(data.data)) {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center">Data tidak tersedia</td></tr>`;
+            return;
           }
+
+          data.data.forEach(j => {
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+          <td>${j.day_of_week ?? '-'}</td>
+          <td>${j.start_time ?? '-'} - ${j.end_time ?? '-'}</td>
+          <td>
+            <input 
+              type="number" 
+              class="form-control form-control-sm text-center kuota-input"
+              value="${j.kuota ?? 30}"
+              min="0"
+              style="width:80px;"
+              data-id="${j.id_schedule}"
+            >
+          </td>
+          <td>
+            <div class="d-flex align-items-center justify-content-center gap-2">
+              
+              <div class="form-check form-switch m-0">
+                <input 
+                  class="form-check-input switch-lg toggle-status" 
+                  type="checkbox"
+                  data-id="${j.id_schedule}"
+                  ${j.sch_status == 1 ? 'checked' : ''}
+                >
+              </div>
+
+              <button class="btn btn-outline-danger btn-sm delete-btn" 
+                data-id="${j.id_schedule}">
+                <i class="bi bi-trash"></i>
+              </button>
+
+            </div>
+          </td>
+        `;
+
+            tbody.appendChild(tr);
+          });
         })
-        .catch(err => console.error("Error:", err));
+        .catch(err => {
+          console.error("Error:", err);
+          tbody.innerHTML = `<tr><td colspan="3" class="text-center text-danger">Gagal load data</td></tr>`;
+        });
     }
 
     // Submit Form Jadwal
@@ -556,7 +606,138 @@ $no = $_GET['no'];
           }
         });
     }
+    document.addEventListener("change", function(e) {
+      if (e.target.classList.contains("toggle-status")) {
+        const id = e.target.dataset.id;
+        toggleStatus(id, e.target);
+      }
+    });
 
+    function toggleStatus(id, el) {
+      let newStatus = el.checked ? 1 : 0;
+      let text = newStatus ? "mengaktifkan" : "menonaktifkan";
+
+      Swal.fire({
+        title: "Yakin?",
+        text: `Ingin ${text} jadwal ini?`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Ya",
+        cancelButtonText: "Batal"
+      }).then((result) => {
+
+        if (result.isConfirmed) {
+
+          el.disabled = true;
+
+          // 🔥 tampilkan loading popup
+          Swal.fire({
+            title: "Memproses...",
+            text: "Mohon tunggu",
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+
+          fetch("controller/master/updateStatusJadwal.php", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                id: id,
+                status: newStatus
+              })
+            })
+            .then(res => res.json())
+            .then(res => {
+
+              if (res.success) {
+                Swal.fire("Berhasil", "Status diperbarui", "success");
+              } else {
+                Swal.fire("Gagal", res.message, "error");
+                el.checked = !el.checked;
+              }
+
+            })
+            .catch(() => {
+              Swal.fire("Error", "Terjadi kesalahan", "error");
+              el.checked = !el.checked;
+            })
+            .finally(() => {
+              el.disabled = false;
+            });
+
+        } else {
+          el.checked = !el.checked;
+        }
+
+      });
+    }
+
+    document.addEventListener("change", function(e) {
+
+      if (e.target.classList.contains("kuota-input")) {
+
+        let input = e.target;
+        let id = input.dataset.id;
+        let value = parseInt(input.value);
+
+        if (value < 0 || isNaN(value)) {
+          alert("Kuota tidak valid");
+          input.value = 0;
+          return;
+        }
+
+        let oldValue = input.getAttribute("data-old") || value;
+
+        // loading style
+        input.disabled = true;
+        input.style.backgroundColor = "#ffeeba";
+
+        fetch("controller/master/updateKuota.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              id: id,
+              kuota: value
+            })
+          })
+          .then(res => res.json())
+          .then(res => {
+
+            if (res.success) {
+              input.setAttribute("data-old", value);
+              input.style.backgroundColor = "#d4edda"; // hijau sukses
+            } else {
+              alert(res.message);
+              input.value = oldValue; // rollback
+            }
+
+          })
+          .catch(() => {
+            alert("Terjadi kesalahan");
+            input.value = oldValue;
+          })
+          .finally(() => {
+            input.disabled = false;
+
+            setTimeout(() => {
+              input.style.backgroundColor = "";
+            }, 800);
+          });
+
+      }
+
+    });
+    $(document).on('click', '.delete-btn', function() {
+      let id = $(this).data('id');
+
+      deleteJadwal(id);
+    });
     if (doctorNo) loadJadwal();
   });
 </script>

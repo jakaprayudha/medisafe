@@ -74,7 +74,7 @@ function getData()
    $types  = "";
 
    // 🔹 tenant/clinic
-   $query .= " AND pasien_visit.id_customer = ?";
+   $query .= " AND pasien_visit.id_customer = ? AND visit_status != '10'";
    $params[] = $id_customer;
    $types .= "i";
 

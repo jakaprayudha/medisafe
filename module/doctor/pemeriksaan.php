@@ -197,14 +197,41 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                     </button>
                 `;
               }
+              let actionBtn = '';
+              if (row.status_panggil == 0) {
+                actionBtn = `
+            <button type="button"
+              class="btn btn-sm btn-secondary btn-hadir"
+              data-visit="${row.visit_ID}" 
+              data-jnsbyr="${row.provider_name}"
+              data-status="1"
+              title="Hadir">
+              <i class="ti ti-check"></i>
+            </button>
+
+            <button type="button"
+              class="btn btn-sm btn-danger btn-hadir"
+              data-visit="${row.visit_ID}" 
+              data-jnsbyr="${row.provider_name}"
+              data-status="2"
+              title="Tidak hadir">
+              <i class="ti ti-x"></i>
+            </button> 
+              `;
+              } else {
+                actionBtn = `
+                  <a href="module/admin/${pemeriksaanFile}?no=${row.visit_ID}&rm=${row.nomor_rm}"
+                    class="btn btn-sm btn-primary"
+                    title="Pemeriksaan">
+                    <i class="ti ti-stethoscope"></i>
+                  </a>
+                `;
+              }
+
               return {
                 actions: `
                   <div class="text-center">
-                    <a href="module/admin/${pemeriksaanFile}?no=${row.visit_ID}&rm=${row.nomor_rm}"
-                      class="btn btn-sm btn-primary"
-                      title="Pemeriksaan">
-                      <i class="ti ti-stethoscope"></i>
-                    </a>
+                    ${actionBtn}
                     ${callButton}
                   </div>
                 `,
@@ -337,6 +364,60 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
         }
       });
   }
+  $(document).on('click', '.btn-hadir', function() {
+    let visitID = $(this).data('visit');
+    let bayar = $(this).data('jnsbyr');
+    let status = $(this).data('status');
+    let konfirmasi = status == '1' ? "Konfirmasi pasien hadir?" : "Konfirmasi pasien tidak hadir?";
+    Swal.fire({
+      title: 'Konfirmasi pasien hadir?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Ya'
+    }).then((result) => {
+      if (result.isConfirmed) {
+
+        $.ajax({
+          url: 'controller/wsbpjs/setHadir.php',
+          type: 'POST',
+          dataType: 'json',
+          data: {
+            visit_id: visitID,
+            type: bayar,
+            statushadir: status
+          },
+
+          success: function(res) {
+            if (res.success) {
+
+              Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: res.message
+              });
+              $('#zero_config').DataTable().ajax.reload(null, false);
+
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: res.message
+              });
+            }
+          },
+
+          error: function() {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'Server tidak merespon'
+            });
+          }
+        });
+
+      }
+    });
+  });
 </script>
 
 <script>
