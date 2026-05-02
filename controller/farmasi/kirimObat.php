@@ -56,6 +56,14 @@ $prov = $stmtProv->get_result()->fetch_assoc();
 
 $id_provider = $prov['id_provider'] ?? null;
 
+
+$stmt_statusRI = $koneksi->prepare("SELECT status_perawatan_inap FROM pasien_visit WHERE id_customer = ? AND visit_ID = ?");
+$stmt_statusRI->bind_param("ss", $id_customer, $nomor_visit);
+$stmt_statusRI->execute();
+$resultRI = $stmt_statusRI->get_result()->fetch_assoc();
+
+$status_RI = $resultRI['status_perawatan_inap'];
+
 // ================== DETAIL OBAT ==================
 $stmt2 = $koneksi->prepare("
    SELECT p.pharmacy_name_generic, pd.qty, pd.signa 
@@ -77,7 +85,7 @@ foreach ($data_detailobat as $row) {
 $terapiObat = implode(', ', $terapiObatArr);
 
 // ================== JIKA BUKAN BPJS ==================
-if ($id_provider != 1) {
+if ($id_provider != 1 || $status_RI == '1') {
    $stmt3 = $koneksi->prepare("
       UPDATE permintaan_pharmacy 
       SET status_permintaan = 1 
