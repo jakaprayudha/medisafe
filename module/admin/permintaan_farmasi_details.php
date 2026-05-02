@@ -724,7 +724,7 @@ require "../../controller/view.php";
 
       if (result.isConfirmed) {
 
-        fetch('controller/farmasi/kirimObatRI.php', {
+        fetch('controller/farmasi/kirimObat.php', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
