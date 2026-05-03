@@ -8,7 +8,6 @@
  */
 
 require '../../../vendor/autoload.php';
-// Load instance database dan data faskes di tingkat Global
 require_once '../../../database/connect.php';
 require_once '../../admin/getdataclinic.php';
 
@@ -28,14 +27,17 @@ if (empty($visit) || empty($rm)) {
 }
 
 // =============================================================================
-// TEMP DIRECTORY (Aman dari isu permission)
+// TEMP DIRECTORY
 // =============================================================================
 
-/* 
- * Menggunakan temporary directory bawaan OS (misal: /tmp pada Linux/Mac)
- * Mencegah error 'Folder temp tidak bisa ditulis' pada lingkungan production.
- */
-$tempDir = rtrim(sys_get_temp_dir(), '/') . '/medisafe_pdf_' . md5(__DIR__) . '/';
+$tempBase = '/tmp';
+if (!is_dir($tempBase) || !is_writable($tempBase)) {
+    $tempBase = rtrim(sys_get_temp_dir(), '/');
+}
+if (!is_dir($tempBase) || !is_writable($tempBase)) {
+    $tempBase = rtrim(__DIR__ . '/../../../storage/tmp', '/');
+}
+$tempDir = $tempBase . '/medisafe_pdf_' . md5(__DIR__) . '/';
 $fontDir = $tempDir . 'fonts/';
 
 if (!is_dir($tempDir)) {
@@ -49,14 +51,11 @@ if (!is_dir($fontDir)) {
     }
 }
 
-// Daftarkan cleanup
 $tempPaths = [];
 register_shutdown_function(function () use (&$tempPaths, $tempDir) {
-    // Hapus file yang baru saja digenerate di request ini
     foreach ($tempPaths as $path) {
         if (is_file($path)) @unlink($path);
     }
-    // Garbage collection rutin: Hapus sisa file PDF usang (lebih dari 1 jam)
     foreach (glob($tempDir . '*.pdf') as $stale) {
         if (is_file($stale) && filemtime($stale) < time() - 3600) {
             @unlink($stale);
@@ -91,22 +90,19 @@ $debugMode  = !empty($_GET['debug']);
 $fpdiErrors = [];
 
 // =============================================================================
-// HELPER: Flatten PDF ke 1.4 agar kompatibel dengan FPDI free parser
-// PDF upload dari BPJS (SEP/FKPP) menggunakan compressed streams (PDF 1.5+)
-// yang tidak didukung FPDI free — ghostscript men-downgrade ke PDF 1.4
+// HELPER: Flatten PDF ke 1.4 via ghostscript agar kompatibel FPDI free parser
 // =============================================================================
 
 function flattenPdfForFpdi(string $inputPath, string $tempDir, array &$tempPaths): string
 {
-    $gsCandidates = [
-        '/opt/homebrew/bin/gs',
-        '/usr/local/bin/gs',
-        '/usr/bin/gs',
-        trim(shell_exec('which gs 2>/dev/null') ?: ''),
-    ];
+    $canExec = function_exists('exec') && !in_array('exec', array_map('trim', explode(',', ini_get('disable_functions'))));
+    if (!$canExec) {
+        return $inputPath;
+    }
+
     $gsBin = '';
-    foreach ($gsCandidates as $candidate) {
-        if ($candidate && is_executable($candidate)) {
+    foreach (['/opt/homebrew/bin/gs', '/usr/local/bin/gs', '/usr/bin/gs'] as $candidate) {
+        if (@is_executable($candidate)) {
             $gsBin = $candidate;
             break;
         }
@@ -120,10 +116,8 @@ function flattenPdfForFpdi(string $inputPath, string $tempDir, array &$tempPaths
         return $outputPath;
     }
 
-    $cmd = escapeshellcmd($gsBin)
-        . ' -dBATCH -dNOPAUSE -dQUIET'
-        . ' -sDEVICE=pdfwrite'
-        . ' -dCompatibilityLevel=1.4'
+    $cmd = $gsBin
+        . ' -dBATCH -dNOPAUSE -dQUIET -sDEVICE=pdfwrite -dCompatibilityLevel=1.4'
         . ' -sOutputFile=' . escapeshellarg($outputPath)
         . ' ' . escapeshellarg($inputPath)
         . ' 2>/dev/null';
@@ -147,7 +141,7 @@ function renderFormulirToPdf(string $file, string $tempDir, string $fontDir, str
     extract($GLOBALS);
 
     if (!file_exists($file)) {
-        error_log("[bundle_klaim_pdf] File tidak ditemukan: $file");
+        error_log("[bundle_klaim] File tidak ditemukan: $file");
         return null;
     }
 
@@ -155,11 +149,6 @@ function renderFormulirToPdf(string $file, string $tempDir, string $fontDir, str
     include $file;
     $html = ob_get_clean();
 
-    /*
-     * MENCEGAH STYLING ERROR PADA DOMPDF:
-     * 1. Ekstrak tag <style> yang ada di dalam body formulir.
-     * 2. Hapus tag <style> dari body.
-     */
     preg_match_all('/<style[^>]*>(.*?)<\/style>/is', $html, $matches);
     $extractedStyles = implode("\n", $matches[1] ?? []);
     $html = preg_replace('/<style[^>]*>.*?<\/style>/is', '', $html);
@@ -171,18 +160,12 @@ function renderFormulirToPdf(string $file, string $tempDir, string $fontDir, str
         iframe { display: none !important; }
     ';
 
-    /*
-     * Normalisasi Path menggunakan Regex agar lebih spesifik (hanya href dan src), 
-     * mencegah str_replace merusak teks string di dalam body HTML.
-     */
     $fileUri = rtrim($siteRoot, '/') . '/';
     $html = preg_replace('/(src|href)=["\']\.\.\/\.\.\/\.\.\/(.*?)["\']/i', '$1="' . $fileUri . '$2"', $html);
     $html = preg_replace('/(src|href)=["\']\.\.\/\.\.\/(.*?)["\']/i', '$1="' . $fileUri . 'module/$2"', $html);
     $html = preg_replace('/(src|href)=["\']\.\.\/(.*?)["\']/i', '$1="' . $fileUri . 'module/admin/$2"', $html);
 
-    // Normalisasi struktur dokumen HTML
     if (stripos($html, '<!DOCTYPE') === false && stripos($html, '<html') === false) {
-        // Konversi tag <body> pada include file menjadi <div> untuk menghindari nested <body>
         $html = preg_replace('/<body(.*?)>/i', '<div$1>', $html);
         $html = str_ireplace('</body>', '</div>', $html);
 
@@ -214,7 +197,7 @@ $pdfOnlyCss
         $opt->set('tempDir', $tempDir);
         $opt->set('fontDir', $fontDir);
         $opt->set('fontCache', $fontDir);
-        $opt->set('chroot', '/'); // Izinkan akses environment base path penuh
+        $opt->set('chroot', $siteRoot);
 
         $dom = new Dompdf($opt);
         $dom->setBasePath($siteRoot);
@@ -227,7 +210,7 @@ $pdfOnlyCss
 
         return $tempPath;
     } catch (Exception $e) {
-        error_log("[bundle_klaim_pdf] Gagal render $file: " . $e->getMessage());
+        error_log("[bundle_klaim] Gagal render $file: " . $e->getMessage());
         return null;
     }
 }
@@ -289,11 +272,10 @@ foreach (['file_spp' => 'SEP', 'file_fkpp' => 'FKPP'] as $col => $label) {
         if (is_readable($fullPath)) {
             $allPdfs[] = flattenPdfForFpdi($fullPath, $tempDir, $tempPaths);
         } else {
-            error_log("[bundle_klaim_pdf] $label tidak ditemukan atau tidak bisa dibaca: $fullPath");
+            error_log("[bundle_klaim] $label tidak ditemukan: $fullPath");
         }
     }
 }
-
 
 // =============================================================================
 // MERGE SEMUA PDF MENGGUNAKAN FPDI
@@ -316,7 +298,7 @@ foreach ($allPdfs as $filePath) {
         }
     } catch (Exception $e) {
         $msg = basename($filePath) . ': ' . $e->getMessage();
-        error_log("[bundle_klaim_pdf] Gagal merge $msg");
+        error_log("[bundle_klaim] Gagal merge $msg");
         $fpdiErrors[] = $msg;
     }
 }
