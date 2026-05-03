@@ -119,43 +119,36 @@ function flattenPdfForFpdi(string $inputPath, string $tempDir, array &$tempPaths
         }
     }
 
-    // Method 2: Imagick — convert tiap halaman ke PNG, rebuild sebagai PDF baru
+    // Method 2: Imagick (fallback ketika gs tidak tersedia)
     if (extension_loaded('imagick')) {
         try {
             $im = new \Imagick();
             $im->setResolution(150, 150);
             $im->readImage($inputPath);
-
-            $fpdf = new \setasign\Fpdi\Fpdi();
+            $fpdf      = new \setasign\Fpdi\Fpdi();
             $pageCount = $im->getNumberImages();
-
             for ($i = 0; $i < $pageCount; $i++) {
                 $im->setIteratorIndex($i);
                 $page = $im->getImage();
                 $page->setImageFormat('png');
-
-                $geo   = $page->getImageGeometry();
-                $wMm   = $geo['width']  * 25.4 / 150;
-                $hMm   = $geo['height'] * 25.4 / 150;
-
+                $geo  = $page->getImageGeometry();
+                $wMm  = $geo['width']  * 25.4 / 150;
+                $hMm  = $geo['height'] * 25.4 / 150;
                 $imgPath = $tempDir . 'img_' . md5($inputPath) . '_' . $i . '.png';
                 $page->writeImage($imgPath);
                 $tempPaths[] = $imgPath;
                 $page->destroy();
-
                 $fpdf->AddPage($wMm > $hMm ? 'L' : 'P', [$wMm, $hMm]);
                 $fpdf->Image($imgPath, 0, 0, $wMm, $hMm);
             }
-
             $im->clear();
             $im->destroy();
-
             if (file_put_contents($outputPath, $fpdf->Output('S')) !== false) {
                 $tempPaths[] = $outputPath;
                 return $outputPath;
             }
         } catch (Exception $e) {
-            error_log("[bundle_klaim] Imagick flatten gagal: " . $e->getMessage());
+            error_log('[bundle_klaim] Imagick flatten gagal: ' . $e->getMessage());
         }
     }
 
