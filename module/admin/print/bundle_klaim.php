@@ -90,43 +90,73 @@ $debugMode  = !empty($_GET['debug']);
 $fpdiErrors = [];
 
 // =============================================================================
-// HELPER: Flatten PDF ke 1.4 via ghostscript agar kompatibel FPDI free parser
+// HELPER: Flatten PDF ke format kompatibel FPDI free parser
+// Coba ghostscript dulu, fallback ke Imagick (PDF → PNG per halaman → PDF baru)
 // =============================================================================
 
 function flattenPdfForFpdi(string $inputPath, string $tempDir, array &$tempPaths): string
 {
-    $canExec = function_exists('exec') && !in_array('exec', array_map('trim', explode(',', ini_get('disable_functions'))));
-    if (!$canExec) {
-        return $inputPath;
-    }
-
-    $gsBin = '';
-    foreach (['/opt/homebrew/bin/gs', '/usr/local/bin/gs', '/usr/bin/gs'] as $candidate) {
-        if (@is_executable($candidate)) {
-            $gsBin = $candidate;
-            break;
-        }
-    }
-    if (!$gsBin) {
-        return $inputPath;
-    }
-
     $outputPath = $tempDir . 'flat_' . md5($inputPath) . '.pdf';
     if (is_file($outputPath)) {
         return $outputPath;
     }
 
-    $cmd = $gsBin
-        . ' -dBATCH -dNOPAUSE -dQUIET -sDEVICE=pdfwrite -dCompatibilityLevel=1.4'
-        . ' -sOutputFile=' . escapeshellarg($outputPath)
-        . ' ' . escapeshellarg($inputPath)
-        . ' 2>/dev/null';
+    // Method 1: Ghostscript
+    $canExec = function_exists('exec') && !in_array('exec', array_map('trim', explode(',', ini_get('disable_functions'))));
+    if ($canExec) {
+        $gsBin = '';
+        foreach (['/opt/homebrew/bin/gs', '/usr/local/bin/gs', '/usr/bin/gs'] as $c) {
+            if (@is_executable($c)) { $gsBin = $c; break; }
+        }
+        if ($gsBin) {
+            exec($gsBin . ' -dBATCH -dNOPAUSE -dQUIET -sDEVICE=pdfwrite -dCompatibilityLevel=1.4'
+                . ' -sOutputFile=' . escapeshellarg($outputPath)
+                . ' ' . escapeshellarg($inputPath) . ' 2>/dev/null', $out, $rc);
+            if ($rc === 0 && is_readable($outputPath)) {
+                $tempPaths[] = $outputPath;
+                return $outputPath;
+            }
+        }
+    }
 
-    exec($cmd, $out, $rc);
+    // Method 2: Imagick — convert tiap halaman ke PNG, rebuild sebagai PDF baru
+    if (extension_loaded('imagick')) {
+        try {
+            $im = new \Imagick();
+            $im->setResolution(150, 150);
+            $im->readImage($inputPath);
 
-    if ($rc === 0 && is_readable($outputPath)) {
-        $tempPaths[] = $outputPath;
-        return $outputPath;
+            $fpdf = new \setasign\Fpdi\Fpdi();
+            $pageCount = $im->getNumberImages();
+
+            for ($i = 0; $i < $pageCount; $i++) {
+                $im->setIteratorIndex($i);
+                $page = $im->getImage();
+                $page->setImageFormat('png');
+
+                $geo   = $page->getImageGeometry();
+                $wMm   = $geo['width']  * 25.4 / 150;
+                $hMm   = $geo['height'] * 25.4 / 150;
+
+                $imgPath = $tempDir . 'img_' . md5($inputPath) . '_' . $i . '.png';
+                $page->writeImage($imgPath);
+                $tempPaths[] = $imgPath;
+                $page->destroy();
+
+                $fpdf->AddPage($wMm > $hMm ? 'L' : 'P', [$wMm, $hMm]);
+                $fpdf->Image($imgPath, 0, 0, $wMm, $hMm);
+            }
+
+            $im->clear();
+            $im->destroy();
+
+            if (file_put_contents($outputPath, $fpdf->Output('S')) !== false) {
+                $tempPaths[] = $outputPath;
+                return $outputPath;
+            }
+        } catch (Exception $e) {
+            error_log("[bundle_klaim] Imagick flatten gagal: " . $e->getMessage());
+        }
     }
 
     return $inputPath;
