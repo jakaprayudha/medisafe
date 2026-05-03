@@ -100,57 +100,38 @@ function flattenPdfForFpdi(string $inputPath, string $tempDir, array &$tempPaths
         return $outputPath;
     }
 
-    // Method 1: Ghostscript
     $canExec = function_exists('exec') && !in_array('exec', array_map('trim', explode(',', ini_get('disable_functions'))));
-    if ($canExec) {
-        $gsBin = '';
-        foreach (['/opt/homebrew/bin/gs', '/usr/local/bin/gs', '/usr/bin/gs'] as $c) {
-            if (@is_executable($c)) { $gsBin = $c; break; }
-        }
-        if ($gsBin) {
-            exec($gsBin . ' -dBATCH -dNOPAUSE -dQUIET -sDEVICE=pdfwrite -dCompatibilityLevel=1.4'
-                . ' -dPrinted=false'
-                . ' -sOutputFile=' . escapeshellarg($outputPath)
-                . ' ' . escapeshellarg($inputPath) . ' 2>/dev/null', $out, $rc);
-            if ($rc === 0 && is_readable($outputPath)) {
-                $tempPaths[] = $outputPath;
-                return $outputPath;
-            }
-        }
+    if (!$canExec) return $inputPath;
+
+    $gsBin = '';
+    foreach (['/opt/homebrew/bin/gs', '/usr/local/bin/gs', '/usr/bin/gs'] as $c) {
+        if (@is_executable($c)) { $gsBin = $c; break; }
+    }
+    if (!$gsBin) return $inputPath;
+
+    // Rasterisasi tiap halaman ke PNG agar annotation (tanda tangan) ikut ter-render
+    $pngPattern = $tempDir . 'raster_' . md5($inputPath) . '_%04d.png';
+    exec($gsBin . ' -dBATCH -dNOPAUSE -dQUIET -sDEVICE=png16m -r200 -dPrinted=false'
+        . ' -sOutputFile=' . escapeshellarg($pngPattern)
+        . ' ' . escapeshellarg($inputPath) . ' 2>/dev/null', $out, $rc);
+
+    $pngFiles = glob($tempDir . 'raster_' . md5($inputPath) . '_*.png');
+    if ($rc !== 0 || empty($pngFiles)) return $inputPath;
+
+    sort($pngFiles);
+    $fpdf = new \setasign\Fpdi\Fpdi();
+    foreach ($pngFiles as $png) {
+        $tempPaths[] = $png;
+        [$wPx, $hPx] = getimagesize($png);
+        $wMm = $wPx * 25.4 / 200;
+        $hMm = $hPx * 25.4 / 200;
+        $fpdf->AddPage($wMm > $hMm ? 'L' : 'P', [$wMm, $hMm]);
+        $fpdf->Image($png, 0, 0, $wMm, $hMm);
     }
 
-    // Method 2: Imagick (fallback ketika gs tidak tersedia)
-    if (extension_loaded('imagick')) {
-        try {
-            /** @phpstan-ignore-next-line */
-            $im = new \Imagick();
-            $im->setResolution(200, 200);
-            $im->readImage($inputPath);
-            $fpdf      = new \setasign\Fpdi\Fpdi();
-            $pageCount = $im->getNumberImages();
-            for ($i = 0; $i < $pageCount; $i++) {
-                $im->setIteratorIndex($i);
-                $page = $im->getImage();
-                $page->setImageFormat('png');
-                $geo  = $page->getImageGeometry();
-                $wMm  = $geo['width']  * 25.4 / 200;
-                $hMm  = $geo['height'] * 25.4 / 200;
-                $imgPath = $tempDir . 'img_' . md5($inputPath) . '_' . $i . '.png';
-                $page->writeImage($imgPath);
-                $tempPaths[] = $imgPath;
-                $page->destroy();
-                $fpdf->AddPage($wMm > $hMm ? 'L' : 'P', [$wMm, $hMm]);
-                $fpdf->Image($imgPath, 0, 0, $wMm, $hMm);
-            }
-            $im->clear();
-            $im->destroy();
-            if (file_put_contents($outputPath, $fpdf->Output('S')) !== false) {
-                $tempPaths[] = $outputPath;
-                return $outputPath;
-            }
-        } catch (Exception $e) {
-            error_log('[bundle_klaim] Imagick flatten gagal: ' . $e->getMessage());
-        }
+    if (file_put_contents($outputPath, $fpdf->Output('S')) !== false) {
+        $tempPaths[] = $outputPath;
+        return $outputPath;
     }
 
     return $inputPath;
