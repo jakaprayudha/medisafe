@@ -316,7 +316,7 @@ $totalKeseluruhan = $totalObat + $totalBilling;
         <h1 class="modal-title fs-5" id="exampleModalLabel">Pembayaran</h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form id="bayarForm">
+      <form id="bayarForm" onsubmit="return false;">
         <input type="hidden" name="nomor_rm" id="nomor_rm" value="<?= $rm ?>">
         <input type="hidden" name="total" id="total" value="<?= $totalKeseluruhan ?>">
         <input type="hidden" name="nomor_visit" id="nomor_visit" value="<?= $no ?>">
@@ -362,7 +362,7 @@ $totalKeseluruhan = $totalObat + $totalBilling;
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" id="btnBayar" class="btn btn-primary">Simpan</button>
+          <button type="button" id="btnBayar" class="btn btn-primary">Simpan</button>
         </div>
       </form>
     </div>
@@ -379,6 +379,9 @@ $totalKeseluruhan = $totalObat + $totalBilling;
   });
 </script>
 <script>
+  document.getElementById("btnBayar").addEventListener("click", function() {
+    document.getElementById("bayarForm").dispatchEvent(new Event('submit'));
+  });
   // Mengambil nilai API_URL dari PHP
   const apiUrl = 'controller/visit/tindakan?no=<?= $_GET['no'] ?>';
   $(document).ready(function() {
@@ -547,7 +550,6 @@ $totalKeseluruhan = $totalObat + $totalBilling;
       });
     });
 
-
     // Handle klik tombol edit
     $(document).on('click', '.edit-btn', function() {
       const userId = $(this).data('id');
@@ -632,75 +634,82 @@ $totalKeseluruhan = $totalObat + $totalBilling;
         });
     });
 
+    document.getElementById("btnBayar").addEventListener("click", function() {
 
+      const rawInput = document.getElementById("uang_diterima").value.trim();
 
-  });
-</script>
-<script>
-  document.getElementById("bayarForm").addEventListener("submit", function(e) {
-    e.preventDefault();
-
-
-    const uang = parseInt(document.getElementById("uang_diterima").value.replace(/\D/g, '')) || 0;
-    const total = <?= $totalKeseluruhan ?>;
-
-    // 🔥 BLOCK
-    if (uang < total) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Pembayaran Kurang',
-        text: 'Uang diterima belum mencukupi total pembayaran!',
-      });
-      return;
-    }
-
-    const id_visit = document.getElementById("nomor_visit").value;
-    const metode = document.getElementById("metode_bayar").value;
-    const total = document.getElementById("total").value;
-    const bayar = document.getElementById("uang_diterima").value;
-    const kembalian = document.getElementById("kembalian").value;
-
-
-    Swal.fire({
-      title: "Konfirmasi Pembayaran?",
-      text: "Data akan disimpan sebagai Lunas",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Bayar",
-      cancelButtonText: "Batal"
-    }).then((result) => {
-
-      if (result.isConfirmed) {
-
-        fetch("controller/visit/bayar.php", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              id_visit: id_visit,
-              metode_bayar: metode,
-              total: total,
-              bayar: bayar,
-              kembalian: kembalian
-            })
-          })
-          .then(res => res.json())
-          .then(res => {
-            if (res.status === "success") {
-              Swal.fire("Berhasil!", res.message, "success")
-                .then(() => location.reload());
-            } else {
-              Swal.fire("Gagal!", res.message, "error");
-            }
-          });
-
+      if (rawInput === '') {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Input Kosong',
+          text: 'Masukkan jumlah uang terlebih dahulu'
+        });
+        return;
       }
+
+      const uang = parseInt(rawInput.replace(/\D/g, '')) || 0;
+      const total = <?= $totalKeseluruhan ?>;
+
+      if (uang < total) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Pembayaran Kurang',
+          text: 'Uang diterima belum mencukupi total pembayaran!',
+        });
+        return;
+      }
+
+      const id_visit = document.getElementById("nomor_visit").value;
+      const metode = document.getElementById("metode_bayar").value;
+      const totalClean = document.getElementById("total").value.replace(/\D/g, '');
+      const bayar = document.getElementById("uang_diterima").value.replace(/\D/g, '');
+      const kembalian = document.getElementById("kembalian").value.replace(/\D/g, '');
+
+      Swal.fire({
+        title: "Konfirmasi Pembayaran?",
+        text: "Data akan disimpan sebagai Lunas",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Bayar",
+        cancelButtonText: "Batal"
+      }).then((result) => {
+
+        if (result.isConfirmed) {
+
+          fetch("controller/visit/bayar.php", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                id_visit: id_visit,
+                metode_bayar: metode,
+                total: totalClean,
+                bayar: bayar,
+                kembalian: kembalian
+              })
+            })
+            .then(res => res.json())
+            .then(res => {
+              if (res.status === "success") {
+                Swal.fire("Berhasil!", res.message, "success")
+                  .then(() => location.reload());
+              } else {
+                Swal.fire("Gagal!", res.message, "error");
+              }
+            });
+
+        }
+
+      });
 
     });
 
+
+
   });
 </script>
+
 <script>
   const total = <?= $totalKeseluruhan ?>;
 
@@ -743,7 +752,39 @@ $totalKeseluruhan = $totalObat + $totalBilling;
 
     // tampil kembalian
     kembalianInput.value = kembali >= 0 ? formatRupiah(kembali) : 0;
+    if (total == 0) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Tidak Ada Tagihan',
+        text: 'Pasien tidak memiliki tagihan, langsung diset lunas',
+        confirmButtonText: 'OK'
+      }).then(() => {
 
+        fetch("controller/visit/bayar.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              id_visit: document.getElementById("nomor_visit").value,
+              metode_bayar: "AUTO",
+              total: 0,
+              bayar: 0,
+              kembalian: 0
+            })
+          })
+          .then(res => res.json())
+          .then(res => {
+            if (res.status === "success") {
+              Swal.fire("Berhasil!", res.message, "success")
+                .then(() => location.reload());
+            }
+          });
+
+      });
+
+      return;
+    }
     // 🔥 VALIDASI + WARNING
     if (uang < totalBayar) {
 
