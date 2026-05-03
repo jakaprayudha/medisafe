@@ -122,6 +122,16 @@
             <span class="hide-menu">Display Antrean</span>
          </a>
       </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Status Pulang Ranap') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/admin/status_pulang"
+            aria-expanded="false">
+            <iconify-icon icon="solar:logout-linear"></iconify-icon>
+            <span class="hide-menu">Status Pulang Ranap</span>
+         </a>
+      </li>
       <li class="nav-small-cap">
          <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
          <span class="hide-menu">RME</span>
