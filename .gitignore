@@ -20,3 +20,6 @@ models/proto/
 
 # macOS directory cache
 .DS_Store
+
+# Local IDE settings
+.vscode/
