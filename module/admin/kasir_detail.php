@@ -108,22 +108,43 @@ $totalKeseluruhan = $totalObat + $totalBilling;
                   </div>
 
                   <!-- RIGHT -->
-                  <div class="text-end">
-                    <div class="fs-3 text-muted">Total Tagihan</div>
-                    <div class="fs-8 fw-bold text-danger">
-                      <strong> Rp <?= number_format($totalKeseluruhan, 0, ',', '.') ?></strong>
+                  <!-- RIGHT -->
+                  <div class="d-flex flex-column align-items-end text-end">
+
+                    <div class="fs-6 text-muted">Total Tagihan</div>
+
+                    <div class="fs-4 fw-bold text-danger">
+                      Rp <?= number_format($totalKeseluruhan, 0, ',', '.') ?>
                     </div>
-                    <a href="module/print/struk_billing?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
-                      <button class="btn mt-2 btn-info shadow-sm"><i class="fas fa-print"></i> Cetak</button>
-                    </a>
-                    <?php if ($data['status_bayar'] == 1): ?>
-                      <span class="badge bg-success mt-2 px-3 py-2">✔️ Lunas</span>
-                    <?php else: ?>
-                      <button class="btn btn-primary mt-2 px-4"
-                        data-bs-toggle="modal" data-bs-target="#bayar">
-                        <i class="fas fa-coins me-1"></i> Bayar Sekarang
-                      </button>
-                    <?php endif; ?>
+
+                    <div class="d-flex align-items-center gap-2 mt-2">
+
+                      <a href="module/print/struk_billing?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                        <button class="btn btn-info shadow-sm">
+                          <i class="fas fa-print"></i>
+                        </button>
+                      </a>
+
+                      <?php if ($data['status_bayar'] == 1): ?>
+
+                        <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-pill bg-success-subtle border border-success text-success shadow-sm">
+
+                          <i class="fas fa-check-circle"></i>
+                          <span class="fw-semibold">Lunas</span>
+
+                        </div>
+
+                      <?php else: ?>
+
+                        <button class="btn btn-primary px-3"
+                          data-bs-toggle="modal" data-bs-target="#bayar">
+                          <i class="fas fa-coins me-1"></i> Bayar
+                        </button>
+
+                      <?php endif; ?>
+
+                    </div>
+
                   </div>
 
                 </div>
