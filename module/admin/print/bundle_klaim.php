@@ -109,6 +109,7 @@ function flattenPdfForFpdi(string $inputPath, string $tempDir, array &$tempPaths
         }
         if ($gsBin) {
             exec($gsBin . ' -dBATCH -dNOPAUSE -dQUIET -sDEVICE=pdfwrite -dCompatibilityLevel=1.4'
+                . ' -dPrinted=false'
                 . ' -sOutputFile=' . escapeshellarg($outputPath)
                 . ' ' . escapeshellarg($inputPath) . ' 2>/dev/null', $out, $rc);
             if ($rc === 0 && is_readable($outputPath)) {
@@ -123,7 +124,7 @@ function flattenPdfForFpdi(string $inputPath, string $tempDir, array &$tempPaths
         try {
             /** @phpstan-ignore-next-line */
             $im = new \Imagick();
-            $im->setResolution(150, 150);
+            $im->setResolution(200, 200);
             $im->readImage($inputPath);
             $fpdf      = new \setasign\Fpdi\Fpdi();
             $pageCount = $im->getNumberImages();
@@ -132,8 +133,8 @@ function flattenPdfForFpdi(string $inputPath, string $tempDir, array &$tempPaths
                 $page = $im->getImage();
                 $page->setImageFormat('png');
                 $geo  = $page->getImageGeometry();
-                $wMm  = $geo['width']  * 25.4 / 150;
-                $hMm  = $geo['height'] * 25.4 / 150;
+                $wMm  = $geo['width']  * 25.4 / 200;
+                $hMm  = $geo['height'] * 25.4 / 200;
                 $imgPath = $tempDir . 'img_' . md5($inputPath) . '_' . $i . '.png';
                 $page->writeImage($imgPath);
                 $tempPaths[] = $imgPath;
