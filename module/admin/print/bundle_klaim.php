@@ -121,6 +121,7 @@ function flattenPdfForFpdi(string $inputPath, string $tempDir, array &$tempPaths
     // Method 2: Imagick (fallback ketika gs tidak tersedia)
     if (extension_loaded('imagick')) {
         try {
+            /** @phpstan-ignore-next-line */
             $im = new \Imagick();
             $im->setResolution(150, 150);
             $im->readImage($inputPath);

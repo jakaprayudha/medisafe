@@ -6,3 +6,4 @@
 .env
 models/uncompressed/
 models/proto/
+.vscode/
