@@ -168,7 +168,7 @@ if ($cek->num_rows > 0) {
     if ($status_pasien_baru == true) {
         echo json_encode([
             "metadata" => [
-                "message" => "Anda belum terdaftar di sistem klinik. Silakan ke bagian administrasi untuk melengkapi data.",
+                "message" => "Data pasien ini tidak ditemukan, silahkan Melakukan Registrasi Pasien Baru",
                 "code" => 202
             ]
         ]);
