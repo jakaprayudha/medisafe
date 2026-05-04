@@ -79,7 +79,9 @@ function bpjsGet($endpoint){
     ]);
     $response = curl_exec($ch);
     $err = curl_error($ch);
-    echo $response;die();
+    // echo $url;
+    // echo $response;
+    // die();
     curl_close($ch);
     if ($err) {
         return bpjsError("cURL Error: " . $err);
