@@ -58,7 +58,7 @@ $apiUrl = getenv('API_URL');
                       <form id="filterForm" class="row g-2 align-items-end">
                         <div class="col-auto">
                           <label for="fromDate" class="form-label mb-0">Dari</label>
-                          <input type="date" id="fromDate" name="fromDate" class="form-control">
+                          <input type="date" id="fromDate" name="fromDate" max="" class="form-control">
                         </div>
                         <div class="col-auto">
                           <label for="toDate" class="form-label mb-0">Sampai</label>
@@ -127,9 +127,8 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
   });
   const doctorName = <?= json_encode($_SESSION['fullname'] ?? '') ?>;
   const rmeType = '<?php echo $rme_type ?>';
-
-  $("#fromDate").val(today);
-  $("#toDate").val(today);
+  $('#fromDate').attr('max', today);
+  $('#toDate').val();
 
   $(document).ready(function() {
 

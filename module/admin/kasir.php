@@ -128,7 +128,7 @@ require '../../controller/view.php';
         <div class="row">
           <div class="col-6 mb-3">
             <label for="fromDate" class="form-label mb-0">Dari</label>
-            <input type="date" id="fromDate" name="fromDate" class="form-control">
+            <input type="date" id="fromDate" name="fromDate" max="" class="form-control">
           </div>
           <div class="col-6 mb-3">
             <label for="toDate" class="form-label mb-0">Sampai</label>
@@ -232,7 +232,7 @@ require '../../controller/view.php';
     });
 
     var today = new Date().toISOString().split("T")[0];
-    $("#fromDate").val(today);
+    $('#fromDate').attr('max', today);
     $("#toDate").val(today);
 
     const apiUrl = 'controller/visit/kasirController';

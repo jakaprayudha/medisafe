@@ -58,7 +58,7 @@ $apiUrl = getenv('API_URL');
                       <form id="filterForm" class="row g-2 align-items-end">
                         <div class="col-auto">
                           <label for="fromDate" class="form-label mb-0">Dari</label>
-                          <input type="date" id="fromDate" name="fromDate" class="form-control">
+                          <input type="date" id="fromDate" name="fromDate" max="" class="form-control">
                         </div>
                         <div class="col-auto">
                           <label for="toDate" class="form-label mb-0">Sampai</label>
@@ -147,8 +147,8 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
   let today = now.toISOString().split("T")[0];
 
   let firstDayStr = firstDay.toISOString().split("T")[0];
-
-  $("#fromDate").val(firstDayStr);
+  $('#fromDate').attr('max', today);
+  // $("#fromDate").val(firstDayStr);
   $("#toDate").val(today);
   const rmeType = '<?php echo $rme_type ?>'; // ambil dari PHP
   $(document).ready(function() {
