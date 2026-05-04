@@ -295,16 +295,23 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 
   function callPatient(noAntrian, namaPasien, poli, visitID, id_doctor) {
 
-    /* =========================
-       1. SUARA (LANGSUNG - USER GESTURE)
-    ========================= */
     if ('speechSynthesis' in window) {
 
       speechSynthesis.cancel();
 
-      // const text = `Nomor antrean ${noAntrian}, atas nama ${namaPasien}, silakan menuju ruangan  ${id_doctor}`; --HIDE UNTUK ANTREAN ONLINE AKTIF BARU PAKAI INI
+      // 🔥 DETEKSI PRESISI
+      let isDoctorName = /\b(dr\.?|dokter)\b/i.test(id_doctor || '');
 
-      const text = `pasien atas nama ${namaPasien}, di persilahkan masuk ke ruangan dokter  ${id_doctor}`;
+      let text;
+
+      if (isDoctorName) {
+        // ✅ sudah ada dr → jangan tambah "dokter"
+        text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan ${id_doctor}`;
+      } else {
+        // ❗ tidak ada dr → tambahkan
+        text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan dokter ${id_doctor}`;
+      }
+
       const utterance = new SpeechSynthesisUtterance(text);
 
       utterance.lang = 'id-ID';
@@ -319,24 +326,16 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
       speechSynthesis.speak(utterance);
     }
 
-    /* =========================
-       2. UPDATE DISPLAY (ASYNC)
-    ========================= */
+    // update display tetap
     fetch('controller/queue/poliCall.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          visit_ID: visitID
-        })
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        visit_ID: visitID
       })
-      .then(res => res.json())
-      .then(res => {
-        if (res.status !== 'success') {
-          console.warn('Update display gagal');
-        }
-      });
+    });
   }
 </script>
 

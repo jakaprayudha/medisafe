@@ -3,6 +3,7 @@ header("Content-Type: application/json");
 
 require_once __DIR__ . '/../../../../../database/connect.php';
 require_once __DIR__ . '/../../../validateToken.php';
+require_once __DIR__ . '/../../../../wsbpjs/serviceantrian.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     echo json_encode([
@@ -101,6 +102,15 @@ $map = [
     'sunday' => 'minggu'
 ];
 $hari_indonesia = $map[$hari] ?? '';
+
+$config = getConfigBPJS($id_customer, $koneksi);
+$bpjsResult = bpjsGet('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggal, $config);
+// echo json_encode($bpjsResult);die();
+$mapDokter = [];
+foreach ($bpjsResult as $d) {
+    $mapDokter[(string)$d['kodedokter']] = $d;
+}
+
 $stmt = $koneksi->prepare("SELECT 
     COUNT(ap.id) AS total,
     COALESCE(SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END), 0) AS total_panggil,
@@ -153,15 +163,22 @@ $result = $stmt->get_result();
 $data = [];
 $antrean_terakhir = ($row['antrean_panggil'] == 0 ? '-' : $row['kode_antri'].$row['antrean_panggil']);
 while ($row = $result->fetch_assoc()) {
+    $kode = (string)$row['doctor_code'];
+    $nama = $row['doctor_name'];
+    $jam  = $row['start_time'] . '-' . $row['end_time'];
+    if (isset($mapDokter[$kode])) {
+        $nama = $mapDokter[$kode]['namadokter'];
+        $jam  = $mapDokter[$kode]['jampraktek'];
+    }
     $data[] = [
         "namapoli" => $row['nmPoli'],
         "totalantrean" => (string)$row['total'],
         "sisaantrean" => (int)$row['sisa_antrean'],
         "antreanpanggil" => $antrean_terakhir,
         "keterangan" => "",
-        "kodedokter" => $row['doctor_code'],
-        "namadokter" => $row['doctor_name'],
-        "jampraktek" => $row['start_time'] . '-' . $row['end_time']
+        "kodedokter" => $kode,
+        "namadokter" => $nama,
+        "jampraktek" => $jam 
     ];
 }
 
