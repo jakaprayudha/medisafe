@@ -56,6 +56,16 @@
             <span class="hide-menu">Satu Sehat </span>
          </a>
       </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Master Laboratorium') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/administrator/master-lab"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:test-tube"></iconify-icon>
+            <span class="hide-menu">Laboratorium </span>
+         </a>
+      </li>
    </ul>
 </nav>
 
