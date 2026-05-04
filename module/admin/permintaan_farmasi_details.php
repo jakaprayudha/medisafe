@@ -1,7 +1,49 @@
 <?php
 $title = 'Permintan Farmasi';
 require "../../controller/view.php";
+$id_cust = $_SESSION['id_customer'];
+
+$getbarang = tampildata("
+SELECT p.*
+FROM ms_pharmacy p
+LEFT JOIN ms_pharmacy_parrent log 
+  ON log.parent_id = p.id_pharmacy 
+  AND log.id_customer_real = '$id_cust'
+
+WHERE
+(
+    p.id_customer = '$id_cust'
+
+    OR
+
+    (
+        p.id_customer = 0
+        AND NOT EXISTS (
+            SELECT 1 
+            FROM ms_pharmacy_parrent l2
+            WHERE l2.parent_id = p.id_pharmacy
+            AND l2.id_customer_real = '$id_cust'
+        )
+    )
+)
+
+AND NOT EXISTS (
+    SELECT 1 
+    FROM ms_pharmacy_parrent l3
+    WHERE l3.parent_id = p.id_pharmacy
+    AND l3.id_customer_real = '$id_cust'
+    AND l3.status_log = 'DELETE'
+)
+
+AND p.pharmacy_name_generic IS NOT NULL
+AND TRIM(p.pharmacy_name_generic) != ''
+
+ORDER BY p.pharmacy_name_generic ASC
+");
+
 ?>
+
+
 <!doctype html>
 <html lang="en">
 
@@ -152,85 +194,7 @@ require "../../controller/view.php";
   require 'library.php';
   ?>
 </body>
-<div class="modal fade" id="programModal" tabindex="-1">
-  <div class="modal-dialog">
-    <form id="programForm" class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title"></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" name="id_permintaan_farmasi" id="id_permintaan_farmasi" value="<?= $_GET['id'] ?>">
-        <input type="hidden" name="id_pharmacy_details" id="id_pharmacy_details">
-        <input type="hidden" name="created_user" id="created_user" value="<?= $_SESSION['fullname'] ?>">
-        <div class="row">
-          <div class="col-12">
-            <div class="mb-3">
-              <label for="id_pharmacy" class="form-label">Nama Item <span class="text-danger">*</span> </label>
-              <select name="id_pharmacy" id="id_pharmacy" class="form-select js-example-basic-item" required>
-                <option value="">Select Option</option>
-                <?php
-                $id_cust = $_SESSION['id_customer'];
-                $getbarang = tampildata("
-                  SELECT *
-                  FROM ms_pharmacy p
-                  WHERE pharmacy_status = '1'
-                  AND (
-                      p.id_customer = '$id_cust'
 
-                      OR (
-
-                        p.id_customer = '0'
-                        AND NOT EXISTS (
-                            SELECT 1 
-                            FROM ms_pharmacy c
-                            WHERE c.id_customer = '$id_cust'
-                            AND TRIM(LOWER(c.pharmacy_name_generic)) = TRIM(LOWER(p.pharmacy_name_generic))
-                        )
-
-                      )
-                  )
-                  AND TRIM(p.pharmacy_name_generic) != ''
-                ");
-                ?>
-                <?php foreach ($getbarang as $barang): ?>
-                  <option value="<?= $barang['id_pharmacy']; ?>" data-harga="<?= $barang['pharmacy_sale']; ?>"><?= $barang['pharmacy_name_generic']; ?></option>
-                <?php endforeach ?>
-              </select>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label">Harga Dasar</label>
-              <input type="number" id="harga" name="harga" class="form-control">
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label required">Qty</label>
-              <input type="number" id="qty" name="qty" class="form-control" required>
-            </div>
-          </div>
-          <div class="col-12" id="group_signa">
-            <div class="mb-3">
-              <label class="form-label">Signa</label>
-              <input type="text" id="signa" name="signa" class="form-control">
-            </div>
-          </div>
-          <div class="col-12">
-            <div class="mb-3">
-              <label class="form-label">Catatan</label>
-              <textarea name="catatan" id="catatan" class="form-control" rows="5"></textarea>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Simpan</button>
-      </div>
-    </form>
-  </div>
-</div>
 <script>
   $(document).ready(function() {
     $('#id_pharmacy').select2({
