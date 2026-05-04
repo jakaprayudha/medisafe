@@ -299,17 +299,29 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 
       speechSynthesis.cancel();
 
-      // 🔥 DETEKSI PRESISI
-      let isDoctorName = /\b(dr\.?|dokter)\b/i.test(id_doctor || '');
+      let dokterRaw = (id_doctor || '').trim();
+
+      // 🔥 DETEKSI "dr di depan"
+      let isPrefixDr = /^dr\.?\s/i.test(dokterRaw);
+
+      // 🔥 DETEKSI "dr di belakang" (contoh: nama, dr)
+      let isSuffixDr = /,\s*dr\.?$/i.test(dokterRaw);
 
       let text;
 
-      if (isDoctorName) {
-        // ✅ sudah ada dr → jangan tambah "dokter"
-        text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan ${id_doctor}`;
+      if (isPrefixDr) {
+        // ✅ contoh: dr. Andi
+        text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan ${dokterRaw}`;
+
+      } else if (isSuffixDr) {
+        // ✅ contoh: Maharani Siregar, dr
+        let cleanName = dokterRaw.replace(/,\s*dr\.?$/i, '').trim();
+
+        text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan dokter ${cleanName}`;
+
       } else {
-        // ❗ tidak ada dr → tambahkan
-        text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan dokter ${id_doctor}`;
+        // ❗ tidak ada dr sama sekali
+        text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan dokter ${dokterRaw}`;
       }
 
       const utterance = new SpeechSynthesisUtterance(text);
@@ -326,7 +338,6 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
       speechSynthesis.speak(utterance);
     }
 
-    // update display tetap
     fetch('controller/queue/poliCall.php', {
       method: 'POST',
       headers: {
