@@ -1,6 +1,7 @@
 <?php
 header("Content-Type: application/json");
 require_once __DIR__ . '/../../../../../database/connect.php';
+require_once __DIR__ . '/../../../../wsbpjs/serviceantrian.php';
 require_once __DIR__ . '/../../../validateToken.php';
 date_default_timezone_set('Asia/Jakarta');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -61,12 +62,17 @@ $mapHari = [
 ];
 $hariIndonesia = $mapHari[$hariInggris];
 
-$cekpoli = $koneksi->prepare("SELECT d.doctor_name, mds.day_of_week, mds.start_time, mds.end_time, mds.sch_status, mds.kuota FROM ms_doctor AS d INNER JOIN ms_doctor_schedule AS mds ON d.id_doctor = mds.id_doctor AND d.id_customer = mds.id_customer WHERE d.doctor_code = ? AND d.id_customer = ? AND mds.day_of_week = ?");
-$cekpoli->bind_param('sss', $kodedokter, $id_customer, $hariIndonesia);
-$cekpoli->execute();
-$status_antrian = $cekpoli->get_result()->fetch_assoc();
-$cekpoli->close();
-if (!$status_antrian) {
+$config = getConfigBPJS($id_customer, $koneksi);
+$result = bpjsGet('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggal, $config);
+// echo json_encode($result);
+foreach ($result as $dokter) {
+    if ((int)$dokter['kodedokter'] === (int)$kodedokter) {
+        $dokterDipilih = $dokter;
+        break;
+    }
+}
+
+if (!$dokterDipilih) {
     http_response_code(201);
     echo json_encode([
         "metadata" => [
@@ -76,6 +82,17 @@ if (!$status_antrian) {
     ]);
     exit;
 }
+
+$namaDokter = $dokterDipilih['namadokter'];
+$kodeDokter = $dokterDipilih['kodedokter'];
+$jamPraktek = $dokterDipilih['jampraktek'];
+
+$cekpoli = $koneksi->prepare("SELECT d.doctor_name, mds.day_of_week, mds.start_time, mds.end_time, mds.sch_status, mds.kuota FROM ms_doctor AS d INNER JOIN ms_doctor_schedule AS mds ON d.id_doctor = mds.id_doctor AND d.id_customer = mds.id_customer WHERE d.doctor_code = ? AND d.id_customer = ? AND mds.day_of_week = ?");
+$cekpoli->bind_param('sss', $kodedokter, $id_customer, $hariIndonesia);
+$cekpoli->execute();
+$status_antrian = $cekpoli->get_result()->fetch_assoc();
+$cekpoli->close();
+
 if ($status_antrian['sch_status'] == '0') {
     http_response_code(201);
     echo json_encode([
@@ -113,6 +130,7 @@ if (strtotime($jamsekarang) > strtotime($jamSelesai_db)) {
     ]);
     exit;
 }
+// die();
 $cekkuota = $koneksi->prepare("SELECT COUNT(*) FROM pasien_visit WHERE id_customer = ? AND id_poli = ? AND code_doctor = ? AND visit_date = ?");
 $cekkuota->bind_param('ssss', $id_customer, $nmPoli, $kodedokter, $tanggal);
 $cekkuota->execute();
