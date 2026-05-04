@@ -102,8 +102,9 @@ if ($jamMulai_user != $jamMulai_db || $jamSelesai_user != $jamSelesai_db) {
     exit;
 }
 // $jamsekarang = "19:00";
-$jamsekarang = date('H:i');
-if (strtotime($jamsekarang) > strtotime($jamSelesai_db)) {
+$now = new DateTime();
+$jadwal_selesai = new DateTime($tanggal . ' ' . $jamSelesai_db);
+if ($now > $jadwal_selesai) {
     http_response_code(201);
     echo json_encode([
         "metadata" => [
@@ -113,6 +114,18 @@ if (strtotime($jamsekarang) > strtotime($jamSelesai_db)) {
     ]);
     exit;
 }
+
+
+// if (strtotime($jamsekarang) > strtotime($jamSelesai_db)) {
+//     http_response_code(201);
+//     echo json_encode([
+//         "metadata" => [
+//             "message" => "Pendaftaran Ke Poli " . $nmPoli . " Sudah Tutup Jam " . $jamSelesai_db,
+//             "code" => 201,
+//         ]
+//     ]);
+//     exit;
+// }
 $cekkuota = $koneksi->prepare("SELECT COUNT(*) FROM pasien_visit WHERE id_customer = ? AND id_poli = ? AND code_doctor = ? AND visit_date = ?");
 $cekkuota->bind_param('ssss', $id_customer, $nmPoli, $kodedokter, $tanggal);
 $cekkuota->execute();
