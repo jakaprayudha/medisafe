@@ -103,41 +103,42 @@ $map = [
 $hari_indonesia = $map[$hari] ?? '';
 $stmt = $koneksi->prepare("SELECT 
     COUNT(ap.id) AS total,
-    SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) AS total_panggil,
-    COUNT(ap.id) - SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) AS sisa_antrean,
+    COALESCE(SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END), 0) AS total_panggil,
+    COUNT(ap.id) - COALESCE(SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END), 0) AS sisa_antrean,
 
     COALESCE(
         MAX(CASE WHEN ap.status = 1 THEN ap.nomor END),
         MIN(ap.nomor)
     ) AS antrean_panggil,
 
-    ap.poli,
+    d.id_poli AS poli,
     d.doctor_code,
     d.doctor_name,
     jd.start_time,
     jd.end_time,
     mp.nmPoli,
-    ap.kode_antri
+    d.doctor_antrean AS kode_antri
 
 FROM ms_doctor_schedule AS jd
 
 INNER JOIN ms_doctor AS d
-	ON d.id_doctor = jd.id_doctor
-	
+    ON d.id_doctor = jd.id_doctor
+
+INNER JOIN master_poli AS mp
+    ON d.id_poli = mp.kdPoli
+
 LEFT JOIN antrian_poli AS ap 
     ON ap.poli = d.id_poli
     AND ap.tanggal = ?
     AND ap.id_customer = ?
     AND ap.kode_antri = d.doctor_antrean
-    
-INNER JOIN master_poli AS mp
-	ON ap.poli = mp.kdPoli
 
 WHERE d.id_poli = ?
 AND LOWER(jd.day_of_week) = ?
 AND jd.sch_status = 1
 
-GROUP BY jd.id_doctor, jd.start_time, jd.end_time");
+GROUP BY jd.id_doctor, jd.start_time, jd.end_time
+ORDER BY jd.start_time ASC;");
 $stmt->bind_param(
     "ssss",
     $tanggalperiksa,

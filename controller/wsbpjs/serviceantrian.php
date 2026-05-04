@@ -58,8 +58,7 @@ function getHeaders($const_id, $tStamp, $signature, $userkey)
     ];
 }
 
-function bpjsGet($endpoint)
-{
+function bpjsGet($endpoint){
     global $base_url, $service, $const_id, $secretKey, $userkey;
     $url = rtrim($base_url, '/') . '/' . trim($service, '/') . '/' . ltrim($endpoint, '/');
     $auth = generateSignature($const_id, $secretKey);
@@ -80,7 +79,7 @@ function bpjsGet($endpoint)
     ]);
     $response = curl_exec($ch);
     $err = curl_error($ch);
-    // echo $response;die();
+    echo $response;die();
     curl_close($ch);
     if ($err) {
         return bpjsError("cURL Error: " . $err);
@@ -96,8 +95,7 @@ function bpjsGet($endpoint)
     );
 }
 
-function bpjsPost($endpoint, array $payload, $method = "POST")
-{
+function bpjsPost($endpoint, array $payload, $method = "POST"){
     global $base_url, $service, $const_id, $secretKey, $userkey;
     $url = rtrim($base_url, '/') . '/' . trim($service, '/') . '/' . ltrim($endpoint, '/');
     $auth = generateSignature($const_id, $secretKey);
