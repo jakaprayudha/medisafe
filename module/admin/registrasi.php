@@ -823,8 +823,8 @@ require '../../controller/view.php';
     var today = new Date().toLocaleDateString("sv-SE", {
       timeZone: "Asia/Jakarta"
     });
-    $("#fromDate").val(today);
-    $("#toDate").val(today);
+    $('#fromDate').attr('max', today);
+    $('#toDate').val();
     const tipePasien = "Poliklinik";
     const apiUrl = 'controller/visit/registrasiController';
     var table = $('#periodeTable').DataTable({
