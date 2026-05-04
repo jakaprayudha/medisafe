@@ -71,7 +71,6 @@ foreach ($result as $dokter) {
         break;
     }
 }
-
 if (!$dokterDipilih) {
     http_response_code(201);
     echo json_encode([
@@ -82,7 +81,6 @@ if (!$dokterDipilih) {
     ]);
     exit;
 }
-
 $namaDokter = $dokterDipilih['namadokter'];
 $kodeDokter = $dokterDipilih['kodedokter'];
 $jamPraktek = $dokterDipilih['jampraktek'];
@@ -171,7 +169,7 @@ if ($cek->num_rows > 0) {
         echo json_encode([
             "metadata" => [
                 "message" => "Anda belum terdaftar di sistem klinik. Silakan ke bagian administrasi untuk melengkapi data.",
-                "code" => 201
+                "code" => 202
             ]
         ]);
     } else {
@@ -241,8 +239,7 @@ if ($cek->num_rows > 0) {
         }
     }
 }
-function generateVisitID($koneksi, $idcustomer)
-{
+function generateVisitID($koneksi, $idcustomer){
     do {
         $date = date('ymd');
         $random = strtoupper(bin2hex(random_bytes(3)));
@@ -258,8 +255,7 @@ function generateVisitID($koneksi, $idcustomer)
 
     return $visitID;
 }
-function createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tglDaftarDB, $jampraktek)
-{
+function createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tglDaftarDB, $jampraktek){
     $cekantrian = $koneksi->prepare("SELECT 
                                     COALESCE(MAX(a.nomor), 0) AS last,
                                     (
