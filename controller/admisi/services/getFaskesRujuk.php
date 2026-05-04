@@ -11,7 +11,7 @@ $tgl = date("d-m-Y", strtotime($_GET['estRujuk']));
 
 $poliKhusus = ["IGD", "HDL", "JIW", "KLT", "PAR", "KEM", "RAT", "HIV"];
 
-if (in_array(strtoupper($kategori), $poliKhusus) && empty($kdSarana) && !empty($nokartu)) {
+if (in_array(strtoupper($kategori), $poliKhusus) && empty($kdspel)) {
     $url = "/spesialis/rujuk/khusus/" . $kategori . "/noKartu/" . $nokartu . "/tglEstRujuk/" . $tgl;
 } else {
     // $url = "/spesialis/rujuk/subspesialis/" . $kdspel . "/sarana/" . $kdSarana . "/tglEstRujuk/" . $tgl;
