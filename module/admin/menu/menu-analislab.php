@@ -18,7 +18,7 @@
            <span class="hide-menu">Aktivitas</span>
         </li>
         <li class="sidebar-item">
-           <a class="sidebar-link <?php if ($title == 'Farmasi Order') {
+           <a class="sidebar-link <?php if ($title == 'Lab Order') {
                                        echo 'active';
                                     } ?>"
               href="module/lab/permintaan-lab"

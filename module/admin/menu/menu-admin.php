@@ -192,6 +192,20 @@
       </li>
       <li class="nav-small-cap">
          <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
+         <span class="hide-menu">Laboratorium</span>
+      </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Lab Order') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/lab/permintaan-lab"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:test-tube"></iconify-icon>
+            <span class="hide-menu">Permintaan Pemeriksaan</span>
+         </a>
+      </li>
+      <li class="nav-small-cap">
+         <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
          <span class="hide-menu">Kasir</span>
       </li>
       <li class="sidebar-item">
