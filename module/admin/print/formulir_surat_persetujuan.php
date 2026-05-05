@@ -155,16 +155,15 @@ require '../../admin/getdataclinic.php';
          <div class="ttd-box"><span id="sp_dokter"></span></div>
       </div>
 
+
       <div class="kolom-ttd ttd-kanan">
-
          <p>Yang Membuat Pernyataan</p>
-
-         <img src="../../../uploads/ttd/regina.png" style="height:100px;" alt="">
-
+         <div id="ttdPersetujuan">
+            <!-- TTD image will be loaded here -->
+         </div>
          <div class="ttd-box">
             <span id="sp_nama_penyetuju_ttd"></span>
          </div>
-
       </div>
 
    </div>
@@ -217,8 +216,24 @@ require '../../admin/getdataclinic.php';
                   "<?= $datafaskes['faskes_district'] ?>, " + tanggal;
             }
          });
-   });
 
+      // ttd pasien
+      fetch(`../../../controller/visit/getTTD.php?no=${no}`)
+         .then(res => res.json())
+         .then(resp => {
+            let d = resp.data;
+            let ttdContainer = document.getElementById('ttdPersetujuan');
+            if (d && d.ttd && d.ttd !== 'null' && d.ttd !== '') {
+               ttdContainer.innerHTML = `<img src="${d.ttd}" style="height:100px; border:1px solid #ccc; border-radius:6px; background:#fff;" alt="TTD">`;
+            } else {
+               ttdContainer.innerHTML = `<span class="text-danger">Belum ada tanda tangan</span>`;
+            }
+         })
+         .catch(err => {
+            let ttdContainer = document.getElementById('ttdPersetujuan');
+            ttdContainer.innerHTML = `<span class="text-danger">Error mengambil tanda tangan</span>`;
+         });
+   });
 
    // 🔥 FORMAT TANGGAL INDONESIA
    function formatTanggal(tgl) {
