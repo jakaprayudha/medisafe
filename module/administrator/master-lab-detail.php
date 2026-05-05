@@ -1,6 +1,9 @@
 <?php
 $title = 'Data Lab';
 require '../../controller/view.php';
+$kode = $_GET['kode'];
+$checklab = mysqli_query($koneksi, "SELECT * FROM  laboratorium_detail WHERE kode = '$kode'");
+$datalab = mysqli_fetch_array($checklab);
 ?>
 <!doctype html>
 <html lang="en">
@@ -30,6 +33,37 @@ require '../../controller/view.php';
       <!--  Header End -->
       <div class="body-wrapper-inner">
         <div class="container-fluid">
+          <div class="card mb-3 shadow-sm border-0">
+            <div class="card-body d-flex justify-content-between align-items-center">
+
+              <!-- LEFT: NAMA PEMERIKSAAN -->
+              <div>
+                <h5 class="fw-bold mb-1">
+                  <i class="fas fa-vial me-2 text-primary"></i>
+                  <?= $datalab['assemen'] ?>
+                </h5>
+                <div class="text-muted small">
+                  Detail Parameter Pemeriksaan
+                </div>
+              </div>
+
+              <!-- RIGHT: STATUS -->
+              <?php
+              $status = $datalab['status'];
+              if ($status == 1) { ?>
+                <span class="badge bg-success px-3 py-2">
+                  AKTIF
+                </span>
+              <?php  } else { ?>
+                <span class="badge bg-danger px-3 py-2">
+                  TIDAK AKTIF
+                </span>
+              <?php   }
+              ?>
+
+
+            </div>
+          </div>
           <div class="row">
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
