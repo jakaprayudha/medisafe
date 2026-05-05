@@ -27,14 +27,21 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 if ($row = $result->fetch_assoc()) {
-   $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
-   $base_url .= "://" . $_SERVER['HTTP_HOST'];
+   $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+   $host = $_SERVER['HTTP_HOST'];
 
-   // kalau project di subfolder (medisafe)
-   $base_url .= "/medisafe";
+   $scriptPath = $_SERVER['PHP_SELF'];
+
+   $basePathSegments = explode('/', $scriptPath);
+   for ($i = 0; $i < 4; $i++) {
+      array_pop($basePathSegments);
+   }
+   $webRootRelativePath = implode('/', $basePathSegments);
+
+   $baseUrl = $protocol . "://" . $host . rtrim($webRootRelativePath, '/') . '/';
 
    $ttd_url = !empty($row['signature_path'])
-      ? $base_url . "/uploads/ttd/" . $row['signature_path']
+      ? $baseUrl . "uploads/ttd/" . $row['signature_path']
       : null;
    echo json_encode([
       'status' => 'success',
