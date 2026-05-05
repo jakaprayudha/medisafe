@@ -302,8 +302,12 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 
       let dokterRaw = (id_doctor || '').trim();
 
+      // 🔥 NORMALISASI: paksa "dr." selalu ada spasi
+      dokterRaw = dokterRaw.replace(/^dr\.?/i, 'dr. ');
+      dokterRaw = dokterRaw.replace(/\s+/g, ' ').trim();
+
       // 🔥 DETEKSI "dr di depan"
-      let isPrefixDr = /^dr\.?\s/i.test(dokterRaw);
+      let isPrefixDr = /^dr\./i.test(dokterRaw);
 
       // 🔥 DETEKSI "dr di belakang" (contoh: nama, dr)
       let isSuffixDr = /,\s*dr\.?$/i.test(dokterRaw);
