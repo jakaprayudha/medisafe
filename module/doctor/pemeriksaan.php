@@ -127,9 +127,10 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
   });
   const doctorName = <?= json_encode($_SESSION['fullname'] ?? '') ?>;
   const rmeType = '<?php echo $rme_type ?>';
+
+  $('#fromDate').val(today);
   $('#fromDate').attr('max', today);
   $('#toDate').val();
-
   $(document).ready(function() {
 
     var table = $('#zero_config').DataTable({
@@ -273,7 +274,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
     // 🔄 RESET
     $('#btnReset').on('click', function() {
       $('#fromDate').val(today);
-      $('#toDate').val(today);
+      $('#toDate').val('');
       table.ajax.reload();
     });
 

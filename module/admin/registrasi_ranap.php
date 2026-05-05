@@ -620,6 +620,7 @@ require '../../controller/view.php';
       $('#filterModal').modal('hide');
     });
     var today = new Date().toISOString().split("T")[0];
+    $('#fromDate').val(today);
     $('#fromDate').attr('max', today);
     $("#toDate").val(today);
     const tipePasien = "Rawat Inap";
