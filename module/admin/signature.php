@@ -261,6 +261,11 @@ require '../../controller/view.php';
 
   // save
   document.getElementById('saveSignature').onclick = function() {
+    const saveBtn = document.getElementById('saveSignature');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Menyimpan...';
+
     const image = canvas.toDataURL('image/png');
 
     fetch('controller/master/saveSignatureFaskes.php', {
@@ -294,6 +299,17 @@ require '../../controller/view.php';
             text: resp.message || 'Terjadi kesalahan'
           });
         }
+      })
+      .catch(() => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal menyimpan tanda tangan',
+          text: 'Terjadi kesalahan jaringan'
+        });
+      })
+      .finally(() => {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
       });
   };
 </script>
