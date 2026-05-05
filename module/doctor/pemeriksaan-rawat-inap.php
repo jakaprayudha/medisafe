@@ -147,9 +147,10 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
   let today = now.toISOString().split("T")[0];
 
   let firstDayStr = firstDay.toISOString().split("T")[0];
+
+  $('#fromDate').val(today);
   $('#fromDate').attr('max', today);
-  // $("#fromDate").val(firstDayStr);
-  $("#toDate").val(today);
+  $('#toDate').val();
   const rmeType = '<?php echo $rme_type ?>'; // ambil dari PHP
   $(document).ready(function() {
     // Initialize DataTable
@@ -262,7 +263,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
     // reset filter ke today
     $('#btnReset').on('click', function() {
       $('#fromDate').val(today);
-      $('#toDate').val(today);
+      $('#toDate').val();
       table.ajax.reload();
     });
 
