@@ -2,7 +2,7 @@
 require '../../../database/connect.php';
 require '../../admin/getdataclinic.php';
 
-$saksi = mysqli_query($koneksi, "SELECT signature_user FROM ms_users WHERE id_user = " . $_SESSION['uid_user']);
+$saksi = mysqli_query($koneksi, "SELECT signature_user FROM ms_users WHERE id_user = '" . $_SESSION['uid_user'] . "'");
 $saksi = mysqli_fetch_assoc($saksi);
 $signatureSaksi = $saksi['signature_user'] ?? null;
 ?>
