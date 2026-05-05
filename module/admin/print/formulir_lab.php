@@ -37,6 +37,8 @@ if ($no && $id_customer) {
     $pasien = mysqli_fetch_assoc(mysqli_stmt_get_result($stmtPasien)) ?? [];
     mysqli_stmt_close($stmtPasien);
 
+
+
     $qUser = "
         SELECT fullname, signature_user
         FROM ms_users
@@ -91,7 +93,9 @@ if ($no && $id_customer) {
         $resLab = mysqli_stmt_get_result($stmtLab);
 
         while ($row = mysqli_fetch_assoc($resLab)) {
-            $grupHasil[$row['group_name']][] = [
+            $tanggal = date('Y-m-d', strtotime($ins['created_at'] ?? $pasien['visit_date']));
+            $grupHasil[$tanggal][$row['group_name']][] = [
+
                 'nama'   => $row['nama'],
                 'hasil'  => $row['hasil'],
                 'satuan' => $row['satuan'],
@@ -101,6 +105,10 @@ if ($no && $id_customer) {
         mysqli_stmt_close($stmtLab);
     }
     mysqli_stmt_close($stmtIns);
+    // 🔥 SORT TANGGAL ASC (AWAL → AKHIR)
+    if (!empty($grupHasil)) {
+        ksort($grupHasil);
+    }
 }
 
 // ============================================================
@@ -326,8 +334,8 @@ $qrApiUrl  = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . 
                 <td class="label">Nama</td>
                 <td class="val">: <?= val($pasien['patient_name'] ?? null) ?></td>
 
-                <td class="label">Tgl Periksa</td>
-                <td class="val">: <?= val($tglPeriksa) ?></td>
+                <!-- <td class="label">Tgl Periksa</td>
+                <td class="val">: <?= val($tglPeriksa) ?></td> -->
             </tr>
             <tr>
                 <td class="label">Jenis Kelamin</td>
@@ -355,26 +363,67 @@ $qrApiUrl  = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . 
             </thead>
 
             <tbody>
+
                 <?php if (empty($grupHasil)): ?>
+
                     <tr>
-                        <td colspan="3" style="text-align:center; color:#999; padding: 20px 0;">
+                        <td colspan="3" style="text-align:center; color:#999; padding:20px;">
                             Tidak ada data laboratorium
                         </td>
                     </tr>
-                <?php else: ?>
-                    <?php
-                    $lastGroupKey = array_key_last($grupHasil);
-                    foreach ($grupHasil as $grupNama => $items):
-                        $isLastGroup = ($grupNama === $lastGroupKey);
-                        $totalItemsInGroup = count($items);
 
-                        /* 
-                             * TRIK TABLE SPLIT 1:
-                             * Jika grup terakhir HANYA memiliki 1 item, kita potong tabel di sini
-                             * dan masukkan Header Grup + 1 Item ke dalam <div> pelindung bersama TTD.
-                             */
-                        if ($isLastGroup && $totalItemsInGroup === 1):
-                    ?>
+                <?php else: ?>
+
+                    <?php foreach ($grupHasil as $tanggal => $groups): ?>
+
+                        <!-- 🔥 UPDATE TANGGAL SAJA -->
+                        <tr>
+                            <td colspan="3" style="border:none; font-weight:bold;">
+                                Tanggal Pemeriksaan: <?= date('d-m-Y', strtotime($tanggal)) ?>
+                            </td>
+                        </tr>
+
+                        <?php foreach ($groups as $grupNama => $items): ?>
+
+                            <tr class="lab-section">
+                                <td colspan="3"><?= val($grupNama) ?></td>
+                            </tr>
+
+                            <?php foreach ($items as $item): ?>
+
+                                <?php
+                                $valHasil = (float)($item['hasil'] ?? 0);
+                                $parts = explode('-', $item['normal']);
+                                $min = is_numeric(trim($parts[0] ?? null)) ? (float)$parts[0] : null;
+                                $max = is_numeric(trim($parts[1] ?? null)) ? (float)$parts[1] : null;
+
+                                $abnormal = ($min !== null && $max !== null && $item['hasil'] !== null)
+                                    ? ($valHasil < $min || $valHasil > $max)
+                                    : false;
+                                ?>
+
+                                <tr>
+                                    <td><?= val($item['nama']) ?></td>
+                                    <td class="lab-center <?= $abnormal ? 'lab-abnormal' : '' ?>">
+                                        <?= val($item['hasil']) ?> <?= val($item['satuan']) ?>
+                                    </td>
+                                    <td class="lab-center"><?= val($item['normal']) ?></td>
+                                </tr>
+
+                            <?php endforeach; ?>
+                        <?php endforeach; ?>
+
+                        <!-- 🔥 PAGE BREAK PER TANGGAL -->
+                        <tr>
+                            <td colspan="3" style="border:none;">
+                                <div style="page-break-after: always;"></div>
+                            </td>
+                        </tr>
+
+                    <?php endforeach; ?>
+
+                <?php endif; ?>
+
             </tbody>
         </table>
         <div style="page-break-inside: avoid;">
@@ -384,38 +433,7 @@ $qrApiUrl  = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . 
                     <col style="width: 25%;">
                     <col style="width: 30%;">
                 </colgroup>
-                <tbody>
-                <?php endif; ?>
 
-                <tr class="lab-section">
-                    <td colspan="3"><?= val($grupNama) ?></td>
-                </tr>
-
-                <?php
-                        $lastItemKey = array_key_last($items);
-                        foreach ($items as $idx => $item):
-                            $valHasil = (float)($item['hasil'] ?? 0);
-                            $parts    = explode('-', $item['normal']);
-                            $min      = isset($parts[0]) && is_numeric(trim($parts[0])) ? (float)trim($parts[0]) : null;
-                            $max      = isset($parts[1]) && is_numeric(trim($parts[1])) ? (float)trim($parts[1]) : null;
-
-                            $abnormal = false;
-                            if ($min !== null && $max !== null && !empty($item['hasil'])) {
-                                if ($valHasil < $min || $valHasil > $max) {
-                                    $abnormal = true;
-                                }
-                            }
-
-                            $isAbsoluteLast = ($isLastGroup && $idx === $lastItemKey);
-
-                            /*
-                                 * TRIK TABLE SPLIT 2:
-                                 * Jika grup terakhir memiliki LEBIH dari 1 item, kita potong tabel
-                                 * tepat sebelum item yang paling terakhir.
-                                 */
-                            if ($isAbsoluteLast && $totalItemsInGroup > 1):
-                ?>
-                </tbody>
             </table>
             <div style="page-break-inside: avoid;">
                 <table class="lab-table" style="margin-top: -1px;">
@@ -424,21 +442,7 @@ $qrApiUrl  = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . 
                         <col style="width: 25%;">
                         <col style="width: 30%;">
                     </colgroup>
-                    <tbody>
-                    <?php endif; ?>
 
-                    <tr>
-                        <td><?= val($item['nama']) ?></td>
-                        <td class="lab-center <?= $abnormal ? 'lab-abnormal' : '' ?>">
-                            <?= val($item['hasil']) ?>
-                            <?= val($item['satuan']) ?>
-                        </td>
-                        <td class="lab-center"><?= val($item['normal']) ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            <?php endforeach; ?>
-        <?php endif; ?>
-                    </tbody>
                 </table>
 
                 <!-- ================= FOOTER TTD & QR ================= -->
