@@ -153,9 +153,35 @@ $signatureSaksi = $saksi['signature_user'] ?? null;
 
       </div>
 
+
+      <?php
+      // Default signatureDokter
+      $signatureDokter = null;
+      $doctorName = null;
+      // Try to get doctor name from GET param or fallback to JS fill
+      if (isset($_GET['no']) && isset($_GET['rm'])) {
+         // Try to get doctor name from pasien_visit
+         $no = $_GET['no'];
+         $rm = $_GET['rm'];
+         $q = mysqli_query($koneksi, "SELECT id_doctor FROM pasien_visit WHERE visit_ID='" . mysqli_real_escape_string($koneksi, $no) . "' LIMIT 1");
+         if ($row = mysqli_fetch_assoc($q)) {
+            $doctorName = $row['id_doctor'];
+         }
+      }
+      if ($doctorName) {
+         // Find signature by fullname LIKE
+         $dokter = mysqli_query($koneksi, "SELECT signature_user FROM ms_users WHERE fullname LIKE '%" . mysqli_real_escape_string($koneksi, $doctorName) . "%'");
+         $dokter = mysqli_fetch_assoc($dokter);
+         $signatureDokter = $dokter['signature_user'] ?? null;
+      }
+      ?>
       <div class="kolom-ttd">
          <p>Dokter yang Merawat</p>
-         <img src="../../../uploads/ttd/drdevi.png" style="height:100px;" alt="">
+         <?php if ($signatureDokter): ?>
+            <img src="../../../uploads/ttd/<?= $signatureDokter ?>" style="height:100px;" alt="">
+         <?php else: ?>
+            <span class="text-danger">Belum ada tanda tangan dokter</span>
+         <?php endif; ?>
          <div class="ttd-box"><span id="sp_dokter"></span></div>
       </div>
 
@@ -206,6 +232,7 @@ $signatureSaksi = $saksi['signature_user'] ?? null;
             document.getElementById("sp_bpjs").innerText = data.patient_bpjs ?? "-";
 
             document.getElementById("sp_nama_penyetuju_ttd").innerText = data.opname_keluarga_name;
+
 
             // Dokter
             document.getElementById("sp_dokter").innerText = data.id_doctor;
