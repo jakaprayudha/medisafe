@@ -1,6 +1,10 @@
 <?php
 require '../../../database/connect.php';
 require '../../admin/getdataclinic.php';
+
+$saksi = mysqli_query($koneksi, "SELECT signature_user FROM ms_users WHERE id_user = " . $_SESSION['uid_user']);
+$saksi = mysqli_fetch_assoc($saksi);
+$signatureSaksi = $saksi['signature_user'] ?? null;
 ?>
 <div class="form-surat-persetujuan">
 
@@ -144,7 +148,7 @@ require '../../admin/getdataclinic.php';
    <div class="ttd-wrapper">
       <div class="kolom-ttd">
          <p>Saksi</p>
-         <img src="../../../uploads/ttd/fitri.png" style="height:100px;" alt="">
+         <img src="uploads/ttd_faskes/<?= $signatureSaksi ?>" style="height:100px;" alt="">
          <div class="ttd-box"><?= $_SESSION['fullname'] ?></div>
 
       </div>
