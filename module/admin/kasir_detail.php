@@ -118,7 +118,11 @@ $totalKeseluruhan = $totalObat + $totalBilling;
                     </div>
 
                     <div class="d-flex align-items-center gap-2 mt-2">
-
+                      <a href="module/admin/kasir">
+                        <button class="btn btn-light shadow-sm">
+                          <i class="fas fa-arrow-left"></i> Kembali
+                        </button>
+                      </a>
                       <a href="module/print/struk_billing?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
                         <button class="btn btn-info shadow-sm">
                           <i class="fas fa-print"></i>

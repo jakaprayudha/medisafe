@@ -221,6 +221,31 @@ require '../../controller/view.php';
     }
 
     // =========================
+    // 🔥 LOAD FILTER DARI STORAGE
+    // =========================
+    let savedFrom = localStorage.getItem('filter_fromDate');
+    let savedTo = localStorage.getItem('filter_toDate');
+    let savedDoctor = localStorage.getItem('filter_doctor');
+    let savedProvider = localStorage.getItem('filter_provider');
+    let savedPoli = localStorage.getItem('filter_poli');
+    let savedStatus = localStorage.getItem('filter_status');
+
+    if (savedFrom) $('#fromDate').val(savedFrom);
+    if (savedTo !== null) $('#toDate').val(savedTo);
+
+    if (savedDoctor) $('#doctorSelect').val(savedDoctor);
+    if (savedProvider) $('#providerSelect').val(savedProvider);
+    if (savedPoli) $('#poliSelect').val(savedPoli);
+
+    if (savedStatus) {
+      currentFilter = savedStatus;
+
+      // set tab aktif
+      $('#tabStatus .nav-link').removeClass('active');
+      $(`#tabStatus .nav-link[data-status="${savedStatus}"]`).addClass('active');
+    }
+
+    // =========================
     // 🔥 DATATABLE
     // =========================
     const apiUrl = 'controller/visit/kasirController';
@@ -343,6 +368,13 @@ require '../../controller/view.php';
     // 🔥 FILTER BUTTON
     // =========================
     $('#btnApplyFilter, #btnFilter').on('click', function() {
+      // 🔥 simpan ke storage
+      localStorage.setItem('filter_fromDate', $('#fromDate').val());
+      localStorage.setItem('filter_toDate', $('#toDate').val());
+      localStorage.setItem('filter_doctor', $('#doctorSelect').val());
+      localStorage.setItem('filter_provider', $('#providerSelect').val());
+      localStorage.setItem('filter_poli', $('#poliSelect').val());
+      localStorage.setItem('filter_status', currentFilter);
       table.ajax.reload();
       $('#filterModal').modal('hide');
     });
@@ -351,14 +383,19 @@ require '../../controller/view.php';
     // 🔄 RESET
     // =========================
     $('#btnReset').on('click', function() {
+
+      localStorage.clear(); // 🔥 hapus semua filter
+
       $('#fromDate').val(today);
       $('#toDate').val('');
       $('#doctorSelect').val('');
       $('#providerSelect').val('');
       $('#poliSelect').val('');
+
+      currentFilter = 'belum';
+
       table.ajax.reload();
     });
-
     // =========================
     // 🔥 TAB FILTER
     // =========================
