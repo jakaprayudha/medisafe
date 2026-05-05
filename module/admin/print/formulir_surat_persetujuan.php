@@ -148,7 +148,7 @@ $signatureSaksi = $saksi['signature_user'] ?? null;
    <div class="ttd-wrapper">
       <div class="kolom-ttd">
          <p>Saksi</p>
-         <img src="uploads/ttd_faskes/<?= $signatureSaksi ?>" style="height:100px;" alt="">
+         <img src="../../../uploads/ttd_faskes/<?= $signatureSaksi ?>" style="height:100px;" alt="">
          <div class="ttd-box"><?= $_SESSION['fullname'] ?></div>
 
       </div>
