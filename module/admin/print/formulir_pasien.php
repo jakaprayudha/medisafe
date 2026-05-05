@@ -212,7 +212,7 @@ $bpjsSrc = getFilePath($data['patient_bpjs_file'] ?? null);
         <div class="kk-box">
             <div class="kk-img">
                 <?php if ($kkSrc): ?>
-                    <img src="<?= htmlspecialchars($kkSrc) ?>" alt="Kartu Keluarga" class="rotate-left-lg">
+                    <img src="<?= htmlspecialchars($kkSrc) ?>" alt="Kartu Keluarga">
                 <?php else: ?>
                     <span class="empty">KK belum diupload</span>
                 <?php endif; ?>
@@ -226,7 +226,7 @@ $bpjsSrc = getFilePath($data['patient_bpjs_file'] ?? null);
                 <td>
                     <div class="img-box">
                         <?php if ($ktpSrc): ?>
-                            <img src="<?= htmlspecialchars($ktpSrc) ?>" alt="KTP" class="rotate-left-sm">
+                            <img src="<?= htmlspecialchars($ktpSrc) ?>" alt="KTP">
                         <?php else: ?>
                             <span class="empty">KTP belum diupload</span>
                         <?php endif; ?>
@@ -236,7 +236,7 @@ $bpjsSrc = getFilePath($data['patient_bpjs_file'] ?? null);
                 <td>
                     <div class="img-box">
                         <?php if ($bpjsSrc): ?>
-                            <img src="<?= htmlspecialchars($bpjsSrc) ?>" alt="BPJS" class="rotate-left-sm">
+                            <img src="<?= htmlspecialchars($bpjsSrc) ?>" alt="BPJS">
                         <?php else: ?>
                             <span class="empty">BPJS belum diupload</span>
                         <?php endif; ?>
