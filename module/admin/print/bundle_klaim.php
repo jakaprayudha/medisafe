@@ -105,7 +105,10 @@ function flattenPdfForFpdi(string $inputPath, string $tempDir, array &$tempPaths
 
     $gsBin = '';
     foreach (['/opt/homebrew/bin/gs', '/usr/local/bin/gs', '/usr/bin/gs'] as $c) {
-        if (@is_executable($c)) { $gsBin = $c; break; }
+        if (@is_executable($c)) {
+            $gsBin = $c;
+            break;
+        }
     }
     if (!$gsBin) return $inputPath;
 
@@ -318,13 +321,17 @@ if ($debugMode) {
     echo "visit       : $visit\n";
     echo "rm          : $rm\n";
     echo "id_customer : $id_customer\n\n";
-    echo "--- visitInfo ---\n"; print_r($visitInfo);
+    echo "--- visitInfo ---\n";
+    print_r($visitInfo);
     echo "\nfile_spp    : " . ($visitInfo['file_spp']  ?? '(null/kosong)') . "\n";
     echo "file_fkpp   : " . ($visitInfo['file_fkpp'] ?? '(null/kosong)') . "\n";
     echo "\nuploadDir   : $uploadDir\n";
     $gsCheck = '';
     foreach (['/opt/homebrew/bin/gs', '/usr/local/bin/gs', '/usr/bin/gs'] as $g) {
-        if (is_executable($g)) { $gsCheck = $g; break; }
+        if (is_executable($g)) {
+            $gsCheck = $g;
+            break;
+        }
     }
     echo "\ngs binary   : " . ($gsCheck ?: '(tidak ditemukan)') . "\n";
     echo "\n--- allPdfs (" . count($allPdfs) . ") ---\n";
@@ -336,6 +343,13 @@ if ($debugMode) {
 }
 
 header('Content-Type: application/pdf');
-header('Content-Disposition: inline; filename="Bundle_Klaim_' . $rm . '_' . $visit . '.pdf"');
+$download = $_GET['download'] ?? '';
+
+if ($download == 1) {
+    header('Content-Disposition: attachment; filename="Bundle_Klaim_' . $rm . '_' . $visit . '.pdf"');
+} else {
+    header('Content-Disposition: inline; filename="Bundle_Klaim_' . $rm . '_' . $visit . '.pdf"');
+}
+// header('Content-Disposition: inline; filename="Bundle_Klaim_' . $rm . '_' . $visit . '.pdf"');
 echo $pdf->Output('S');
 exit;
