@@ -178,7 +178,7 @@ $signatureSaksi = $saksi['signature_user'] ?? null;
       <div class="kolom-ttd">
          <p>Dokter yang Merawat</p>
          <?php if ($signatureDokter): ?>
-            <img src="../../../uploads/ttd/<?= $signatureDokter ?>" style="height:100px;" alt="">
+            <img src="../../../uploads/ttd_faskes/<?= $signatureDokter ?>" style="height:100px;" alt="">
          <?php else: ?>
             <span class="text-danger">Belum ada tanda tangan dokter</span>
          <?php endif; ?>
