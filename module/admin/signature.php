@@ -287,6 +287,12 @@ require '../../controller/view.php';
           });
           $('#ttdModal').modal('hide');
           $('#periodeTable').DataTable().ajax.reload(null, false);
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal menyimpan tanda tangan',
+            text: resp.message || 'Terjadi kesalahan'
+          });
         }
       });
   };
