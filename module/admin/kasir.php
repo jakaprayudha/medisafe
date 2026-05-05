@@ -232,7 +232,7 @@ require '../../controller/view.php';
     });
 
     var today = new Date().toISOString().split("T")[0];
-    $("#fromDate").val(today);
+    $("#fromDateule/lab/permintaan-lab").val(today);
     $('#fromDate').attr('max', today);
     $("#toDate").val(today);
 
