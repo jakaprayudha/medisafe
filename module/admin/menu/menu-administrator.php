@@ -66,6 +66,16 @@
             <span class="hide-menu">Laboratorium </span>
          </a>
       </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'IDSH Satu Sehat') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/administrator/doctor-idsh"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:file-outline"></iconify-icon>
+            <span class="hide-menu">IDSH Dokter </span>
+         </a>
+      </li>
    </ul>
 </nav>
 
