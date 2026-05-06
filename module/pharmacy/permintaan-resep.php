@@ -124,11 +124,24 @@ $apiUrl = getenv('API_URL');
   const apiUrl = '<?php echo $apiUrl . 'farmasi/' . 'farmasiOrder' ?>';
   $(document).ready(function() {
 
+    // 🔥 LOAD FILTER DARI STORAGE
+    let savedFrom = localStorage.getItem('filter_fromDate');
+    let savedTo = localStorage.getItem('filter_toDate');
+    let savedStatus = localStorage.getItem('filter_status');
+
     let today = new Date().toISOString().split('T')[0];
 
-    $('#fromDate').val(today);
-    $('#toDate').val(today);
+    // default fallback
+    $('#fromDate').val(savedFrom || today);
+    $('#toDate').val(savedTo || today);
 
+    // status tab
+    if (savedStatus) {
+      currentFilter = savedStatus;
+
+      $('#tabStatus .nav-link').removeClass('active');
+      $(`#tabStatus .nav-link[data-status="${savedStatus}"]`).addClass('active');
+    }
     table = $('#zero_config').DataTable({
       processing: true,
       serverSide: false,
@@ -196,10 +209,17 @@ $apiUrl = getenv('API_URL');
 
   });
   $('#btnFilter').on('click', function() {
+    // 🔥 simpan ke storage
+    localStorage.setItem('filter_fromDate', $('#fromDate').val());
+    localStorage.setItem('filter_toDate', $('#toDate').val());
+    localStorage.setItem('filter_doctor', $('#doctorSelect').val());
+    localStorage.setItem('filter_provider', $('#providerSelect').val());
+    localStorage.setItem('filter_poli', $('#poliSelect').val());
+    localStorage.setItem('filter_status', currentFilter);
     table.ajax.reload();
   });
   $('#btnReset').on('click', function() {
-
+    localStorage.clear(); // 🔥 hapus semua filter
     let today = new Date().toISOString().split('T')[0];
 
     $('#fromDate').val(today);
