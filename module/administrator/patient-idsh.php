@@ -1,5 +1,5 @@
 <?php
-$title = 'Data Dokter';
+$title = 'Data Pasien';
 require '../../controller/view.php';
 ?>
 <!doctype html>
@@ -64,7 +64,7 @@ require '../../controller/view.php';
               <div class="card w-100">
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Data IDSH Dokter</h5>
+                    <h5 class="card-title fw-semibold">Data IDSH Pasien</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
                     </div>
@@ -74,7 +74,7 @@ require '../../controller/view.php';
                       <thead>
                         <tr>
                           <th scope="col" class="text-dark fw-normal">Nama Faskes (Klinik)</th>
-                          <th scope="col" class="text-dark fw-normal">Total Dokter</th>
+                          <th scope="col" class="text-dark fw-normal">Total Pasien</th>
                           <th scope="col" class="text-dark fw-normal">NIK</th>
                           <th scope="col" class="text-dark fw-normal">IDSH</th>
                           <th scope="col" class="text-dark fw-normal">Kekurangan Data</th>
@@ -100,12 +100,12 @@ require '../../controller/view.php';
   ?>
 </body>
 
-<div class="modal fade" id="modalDokter" tabindex="-1">
+<div class="modal fade" id="modalPatient" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
 
       <div class="modal-header">
-        <h5 class="modal-title">Detail Dokter</h5>
+        <h5 class="modal-title">Detail Pasien</h5>
         <button class="btn-close" data-bs-dismiss="modal"></button>
       </div>
 
@@ -113,7 +113,7 @@ require '../../controller/view.php';
         <table class="table table-sm table-bordered">
           <thead>
             <tr>
-              <th>Nama Dokter</th>
+              <th>Nama Pasien</th>
               <th>NIK</th>
               <th>IDSH</th>
               <th>Status</th>
@@ -127,7 +127,7 @@ require '../../controller/view.php';
   </div>
 </div>
 <script>
-  const apiUrl = 'controller/master/doctorIDSHController';
+  const apiUrl = 'controller/master/patientIDSHController';
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
       processing: true,
@@ -149,8 +149,8 @@ require '../../controller/view.php';
 							</div>
                     `,
               "name": row.clinic_name,
-              total_doctor: `<span class="badge-box badge-blue">
-                ${row.total_doctor}
+              total_patient: `<span class="badge-box badge-blue">
+                ${row.total_patient}
               </span>`,
 
               total_nik: `<span class="badge-box badge-green">
@@ -173,7 +173,7 @@ require '../../controller/view.php';
           data: "name"
         },
         {
-          data: "total_doctor"
+          data: "total_patient"
         },
         {
           data: "total_nik"
@@ -218,7 +218,7 @@ require '../../controller/view.php';
 
       $('#dokterBody').html('<tr><td colspan="4" class="text-center">Loading...</td></tr>');
 
-      fetch(`controller/master/doctorIDSHDetailController.php?id_customer=${id_customer}`)
+      fetch(`controller/master/patientIDSHDetailController.php?id_customer=${id_customer}`)
         .then(res => res.json())
         .then(res => {
 
@@ -245,8 +245,8 @@ require '../../controller/view.php';
 
             html += `
           <tr>
-            <td>${d.doctor_name}</td>
-            <td>${d.doctor_nik ?? '-'}</td>
+            <td>${d.patient_name}</td>
+            <td>${d.patient_nik ?? '-'}</td>
             <td>${d.idsh ?? '-'}</td>
             <td><span class="${badge}">${status}</span></td>
           </tr>
@@ -255,7 +255,7 @@ require '../../controller/view.php';
 
           $('#dokterBody').html(html);
 
-          $('#modalDokter').modal('show');
+          $('#modalPatient').modal('show');
 
         });
 

@@ -76,6 +76,16 @@
             <span class="hide-menu">IDSH Dokter </span>
          </a>
       </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'IDSH Satu Sehat') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/administrator/patient-idsh"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:file-outline"></iconify-icon>
+            <span class="hide-menu">IDSH Pasien </span>
+         </a>
+      </li>
    </ul>
 </nav>
 
