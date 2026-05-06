@@ -19,15 +19,13 @@ $koneksi->begin_transaction();
 
 try {
 
-   $date = date('Y-m-d H:i:s');
-
    // 1. update status pasien visit
    $stmt = $koneksi->prepare("
       UPDATE pasien_visit 
-      SET visit_status = 4, visit_out = ? 
+      SET visit_status = 4
       WHERE visit_ID = ?
    ");
-   $stmt->bind_param("ss", $date, $visit_ID);
+   $stmt->bind_param("s", $visit_ID);
    $stmt->execute();
 
    // 2. update status ranap -> pulang

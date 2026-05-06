@@ -29,35 +29,39 @@ switch ($method) {
    // =============================
    case 'GET':
 
-      $query = mysqli_query($koneksi, "SELECT 
-      b.*,
-      r.room_name,
-      v.visit_ID,
-      v.patient_name_pcare,
-      r.service_class,
-      v.patient_name_pcare,
-      mp.patient_gender
+      $query = mysqli_query($koneksi, "
+SELECT 
+    b.*,
+    r.room_name,
+    r.service_class,
 
-   FROM ms_room_bed b
+    -- hanya ambil pasien aktif
+    v.visit_ID,
+    v.patient_name_pcare,
+    v.visit_date_out,
 
-   LEFT JOIN ms_room r 
-      ON r.id_room = b.id_room
+    mp.patient_gender
 
-   LEFT JOIN permintaan_ranap pr 
-      ON pr.id_bed = b.id_bed
+FROM ms_room_bed b
 
-   LEFT JOIN pasien_visit v 
-      ON pr.visit_ID_inpatient = v.visit_ID
+LEFT JOIN ms_room r 
+    ON r.id_room = b.id_room
 
-   LEFT JOIN ms_patient mp 
-      ON mp.id_patient = v.id_patient 
+LEFT JOIN permintaan_ranap pr 
+    ON pr.id_bed = b.id_bed
 
+LEFT JOIN pasien_visit v 
+    ON pr.visit_ID_inpatient = v.visit_ID
+    AND v.visit_date_out IS NULL
 
-   WHERE b.id_customer = '$id_customer'
+LEFT JOIN ms_patient mp 
+    ON mp.id_patient = v.id_patient
 
-   GROUP BY b.id_bed  -- 🔥 KUNCI KE-2
+WHERE b.id_customer = '$id_customer'
 
-   ORDER BY b.id_bed DESC
+GROUP BY b.id_bed
+
+ORDER BY b.id_bed DESC
 ");
       $data = [];
 
