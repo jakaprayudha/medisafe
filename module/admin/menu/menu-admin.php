@@ -72,7 +72,7 @@
          <ul class="collapse-menu">
             <li><a href="module/admin/doctor-idsh">Dokter IDSH</a></li>
             <li><a href="module/admin/patient-idsh">Patient IDSH</a></li>
-            <li><a href="module/admin/patient-idsh">RME Visit Pasien</a></li>
+            <li><a href="module/admin/monitoring-visit">RME Visit Pasien</a></li>
          </ul>
       </li>
 
