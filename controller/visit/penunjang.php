@@ -52,7 +52,8 @@ function createData()
       'id_visit',
       'inspection_name',
       'inspection_date',
-      'inspection_source'
+      'inspection_source',
+      'inspection_note'
    ];
 
    $fields = ['inspection_number', 'id_customer'];
@@ -167,7 +168,8 @@ function updateData()
       'id_visit',
       'inspection_name',
       'inspection_date',
-      'inspection_source'
+      'inspection_source',
+      'inspection_note'
    ];
 
    $fields = [];
