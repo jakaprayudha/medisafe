@@ -104,7 +104,7 @@ $map = [
 $hari_indonesia = $map[$hari] ?? '';
 
 $config = getConfigBPJS($id_customer, $koneksi);
-$bpjsResult = bpjsGet('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggal, $config);
+$bpjsResult = bpjsGet('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggalperiksa, $config);
 // echo json_encode($bpjsResult);die();
 $mapDokter = [];
 foreach ($bpjsResult as $d) {
@@ -168,7 +168,6 @@ while ($row = $result->fetch_assoc()) {
     $jam  = $row['start_time'] . '-' . $row['end_time'];
     if (isset($mapDokter[$kode])) {
         $nama = $mapDokter[$kode]['namadokter'];
-        // $jam  = $mapDokter[$kode]['jampraktek'];
     }
     $data[] = [
         "namapoli" => $row['nmPoli'],

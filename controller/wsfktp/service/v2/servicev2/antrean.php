@@ -64,7 +64,7 @@ $hariIndonesia = $mapHari[$hariInggris];
 
 $config = getConfigBPJS($id_customer, $koneksi);
 $result = bpjsGet('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggal, $config);
-// echo json_encode($result);
+// echo json_encode($result);die();
 foreach ($result as $dokter) {
     if ((int)$dokter['kodedokter'] === (int)$kodedokter) {
         $dokterDipilih = $dokter;
