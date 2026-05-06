@@ -62,6 +62,20 @@
          </ul>
       </li>
 
+      <li class="sidebar-item has-sub">
+         <a href="javascript:void(0)" class="sidebar-link" onclick="toggleSidebarMenu(this)">
+            <iconify-icon icon="solar:folder-bold"></iconify-icon>
+            <span class="hide-menu">Monitoring RME</span>
+            <i class="ti ti-chevron-down arrow"></i>
+         </a>
+
+         <ul class="collapse-menu">
+            <li><a href="module/admin/doctor-idsh">Dokter IDSH</a></li>
+            <li><a href="module/admin/patient-idsh">Patient IDSH</a></li>
+            <li><a href="module/admin/patient-idsh">RME Visit Pasien</a></li>
+         </ul>
+      </li>
+
       <li class="sidebar-item">
          <a class="sidebar-link" href="module/admin/signature" aria-expanded="false">
             <iconify-icon icon="mdi:signature-freehand"></iconify-icon>
