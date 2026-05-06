@@ -168,7 +168,7 @@ while ($row = $result->fetch_assoc()) {
     $jam  = $row['start_time'] . '-' . $row['end_time'];
     if (isset($mapDokter[$kode])) {
         $nama = $mapDokter[$kode]['namadokter'];
-        $jam  = $mapDokter[$kode]['jampraktek'];
+        // $jam  = $mapDokter[$kode]['jampraktek'];
     }
     $data[] = [
         "namapoli" => $row['nmPoli'],
