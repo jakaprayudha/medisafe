@@ -101,7 +101,7 @@ require '../../controller/view.php';
 </body>
 
 <div class="modal fade" id="modalPatient" tabindex="-1">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
 
       <div class="modal-header">
@@ -229,10 +229,10 @@ require '../../controller/view.php';
             let status = '';
             let badge = '';
 
-            if (!d.doctor_nik && !d.idsh) {
+            if (!d.patient_nik && !d.idsh) {
               status = 'Belum Lengkap';
               badge = 'badge bg-danger';
-            } else if (!d.doctor_nik) {
+            } else if (!d.patient_nik) {
               status = 'NIK kosong';
               badge = 'badge bg-warning';
             } else if (!d.idsh) {
