@@ -86,6 +86,16 @@
             <span class="hide-menu">IDSH Pasien </span>
          </a>
       </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Monitoring RME') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/administrator/monitoring-visit"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:monitor-dashboard"></iconify-icon>
+            <span class="hide-menu">Monitoring RME</span>
+         </a>
+      </li>
    </ul>
 </nav>
 
