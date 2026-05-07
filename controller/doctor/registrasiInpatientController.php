@@ -39,10 +39,12 @@ function getData()
    $id_customer = $_SESSION['id_customer'] ?? null;
 
    if (!$id_customer) {
+
       echo json_encode([
          'status' => 'error',
          'message' => 'Session tidak ditemukan'
       ]);
+
       exit;
    }
 
@@ -94,30 +96,53 @@ function getData()
    if ($tab === 'belum') {
 
       // 🔴 BELUM DILAYANI
+      // belum ada CPPT + belum ada resume pulang
       $query .= "
-         AND pasien_visit.visit_date_out IS NULL
          AND NOT EXISTS (
             SELECT 1
             FROM visit_cppt vc
             WHERE vc.visit_ID = pasien_visit.visit_ID
          )
+
+         AND NOT EXISTS (
+            SELECT 1
+            FROM resume_medis rm
+            WHERE rm.visit_ID = pasien_visit.visit_ID
+            AND rm.tanggal_pulang IS NOT NULL
+            AND rm.tanggal_pulang != ''
+         )
       ";
    } elseif ($tab === 'selesai') {
 
       // 🟢 SUDAH DILAYANI
+      // sudah ada CPPT + belum pulang
       $query .= "
-         AND pasien_visit.visit_date_out IS NULL
          AND EXISTS (
             SELECT 1
             FROM visit_cppt vc
             WHERE vc.visit_ID = pasien_visit.visit_ID
          )
+
+         AND NOT EXISTS (
+            SELECT 1
+            FROM resume_medis rm
+            WHERE rm.visit_ID = pasien_visit.visit_ID
+            AND rm.tanggal_pulang IS NOT NULL
+            AND rm.tanggal_pulang != ''
+         )
       ";
    } elseif ($tab === 'pulang') {
 
       // 🏠 PASIEN PULANG
+      // resume medis ada + tanggal pulang terisi
       $query .= "
-         AND pasien_visit.visit_date_out IS NOT NULL
+         AND EXISTS (
+            SELECT 1
+            FROM resume_medis rm
+            WHERE rm.visit_ID = pasien_visit.visit_ID
+            AND rm.tanggal_pulang IS NOT NULL
+            AND rm.tanggal_pulang != ''
+         )
       ";
    }
 
