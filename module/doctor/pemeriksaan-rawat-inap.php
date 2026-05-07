@@ -42,10 +42,27 @@ $apiUrl = getenv('API_URL');
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Sudah Dilayani</button>
             </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="pulang-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#pulang-tab-pane"
+                type="button"
+                role="tab"
+                aria-controls="pulang-tab-pane"
+                aria-selected="false">
+                Pasien Pulang
+              </button>
+            </li>
           </ul>
           <div class="tab-content" id="myTabContent">
             <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0"></div>
             <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0"></div>
+            <div class="tab-pane fade"
+              id="pulang-tab-pane"
+              role="tabpanel"
+              aria-labelledby="pulang-tab"
+              tabindex="0">
+            </div>
           </div>
           <div class="row">
             <div class="col-lg-12 d-flex align-items-stretch">
@@ -118,21 +135,25 @@ $setting = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT rme_type FROM setti
 $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 ?>
 <script>
-  let currentTab = 'belum'; // default tab saat halaman pertama kali dimuat
+  let currentTab = 'belum';
+
   $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
 
     const target = $(e.target).attr("id");
 
     if (target === 'home-tab') {
       currentTab = 'belum';
+
     } else if (target === 'profile-tab') {
       currentTab = 'selesai';
+
+    } else if (target === 'pulang-tab') {
+      currentTab = 'pulang';
     }
 
     console.log("TAB AKTIF:", currentTab);
 
     $('#zero_config').DataTable().ajax.reload(null, false);
-
   });
 </script>
 <script>
