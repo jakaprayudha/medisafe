@@ -22,7 +22,6 @@ $data = json_decode($json, true);
 $noKartu = $data['nomorkartu'] ?? null;
 $kodepoli   = $data['kodepoli'] ?? null;
 $tanggal    = $data['tanggalperiksa'] ?? null;
-$status_visit_batal = '10';
 $status_antrian_batal = '99';
 
 try {
@@ -82,7 +81,7 @@ try {
         SET visit_status = ? 
         WHERE visit_ID = ?
     ");
-    $stmtUpdateVisit->bind_param("ss", $status_visit_batal, $nomor_visit);
+    $stmtUpdateVisit->bind_param("ss", $status_antrian_batal, $nomor_visit);
     $resultVisit = $stmtUpdateVisit->execute();
     $stmtUpdateAntrian = $koneksi->prepare("
         UPDATE antrian_poli 
