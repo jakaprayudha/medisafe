@@ -170,7 +170,7 @@ while ($row = $result->fetch_assoc()) {
         $nama = $mapDokter[$kode]['namadokter'];
     }
     $data[] = [
-        "namapoli" => $row['nmPoli'],
+        "namapoli" => ucwords(strtolower($row['nmPoli'])),
         "totalantrean" => (string)$row['total'],
         "sisaantrean" => (int)$row['sisa_antrean'],
         "antreanpanggil" => $antrean_terakhir,
