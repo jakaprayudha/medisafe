@@ -38,16 +38,43 @@ if (!$nokartu || !$kodepoli || !$tanggalperiksa) {
 
 $stmt = $koneksi->prepare("
     SELECT 
-    COUNT(*) as total,
+    COUNT(
+        CASE 
+            WHEN COALESCE(p.visit_status, '') != '99'
+            THEN 1
+        END
+    ) as total,
 
-    SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) as total_panggil,
+    SUM(
+        CASE 
+            WHEN ap.status = 1 
+            AND COALESCE(p.visit_status, '') != '99'
+            THEN 1 
+            ELSE 0 
+        END
+    ) as total_panggil,
 
-    COUNT(*) - SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) as sisa_antrean,
+    COUNT(
+        CASE 
+            WHEN COALESCE(p.visit_status, '') != '99'
+            THEN 1
+        END
+    ) 
+    -
+    SUM(
+        CASE 
+            WHEN ap.status = 1 
+            AND COALESCE(p.visit_status, '') != '99'
+            THEN 1 
+            ELSE 0 
+        END
+    ) as sisa_antrean,
 
     IFNULL(
         MAX(
             CASE 
                 WHEN ap.status = 1 
+                AND COALESCE(p.visit_status, '') != '99'
                 THEN CONCAT(ap.kode_antri, ap.nomor)
             END
         ),
