@@ -32,7 +32,7 @@ try {
         WHERE noKartu = ?
         AND visit_date = ?
         AND id_customer = ?
-        AND (visit_status = '10')
+        AND visit_status = '10'
         LIMIT 1
     ");
     $stmt->bind_param("sss", $noKartu, $tanggal, $id_customer);
