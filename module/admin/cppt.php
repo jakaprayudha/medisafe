@@ -251,6 +251,7 @@ $datapatient = mysqli_fetch_array($patient);
 $id_patient = $datapatient['id_patient'];
 ?>
 <script>
+  const currentRole = '<?= strtolower($_SESSION['roles'] ?? '') ?>';
   const apiUrl = 'controller/visit/cpptController?no=<?= $_GET['no'] ?>&id_patient=<?= $id_patient ?>';
 
   // function readMore(text, limit = 30) {
@@ -276,18 +277,44 @@ $id_patient = $datapatient['id_patient'];
         dataSrc: function(json) {
           return json.data.map(function(row) {
             return {
-              "actions": `
-                      <div class="text-center">
-								<div class="btn-group btn-group-sm" role="group">
-									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_cppt}">
-											<i class="fas fa-edit"></i>
-									</a>
-									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_cppt}">
-											<i class="fas fa-trash"></i>
-									</a>
-								</div>
-							</div>
-                    `,
+              "actions": (() => {
+
+                let profesi = (row.cppt_profesi || '').toLowerCase();
+
+                // 🔥 kalau login perawat & data dokter
+                if (currentRole === 'perawat' && profesi === 'dokter') {
+
+                  return `
+      <div class="text-center">
+        <span class="badge bg-light">
+          🔒 Hidden
+        </span>
+      </div>
+    `;
+                }
+
+                // ✅ selain itu tampil normal
+                return `
+    <div class="text-center">
+      <div class="btn-group btn-group-sm" role="group">
+
+        <a class="btn btn-warning edit-btn"
+           href="javascript:;"
+           data-id="${row.id_cppt}">
+          <i class="fas fa-edit"></i>
+        </a>
+
+        <a class="btn btn-danger delete-btn"
+           href="javascript:;"
+           data-id="${row.id_cppt}">
+          <i class="fas fa-trash"></i>
+        </a>
+
+      </div>
+    </div>
+  `;
+
+              })(),
               "tanggal": row.cppt_date + " " + row.cppt_time ?? "-",
               "user": `${row.fullname ?? '-'}<br>${(row.roles ?? '-').toUpperCase()}`,
               "cppt": `
