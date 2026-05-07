@@ -38,7 +38,7 @@
 
                   if (res.status === "success") {
                      setTimeout(() => {
-                        window.location.href = "module/admin/index"; // redirect opsional
+                        window.location.href = "module/doctor/pemeriksaan-rawat-inap"; // redirect opsional
                      }, 1500);
                   }
 
