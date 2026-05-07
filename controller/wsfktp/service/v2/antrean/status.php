@@ -112,13 +112,58 @@ foreach ($bpjsResult as $d) {
 }
 
 $stmt = $koneksi->prepare("SELECT 
-    COUNT(ap.id) AS total,
-    COALESCE(SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END), 0) AS total_panggil,
-    COUNT(ap.id) - COALESCE(SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END), 0) AS sisa_antrean,
+    COUNT(
+        CASE 
+            WHEN COALESCE(p.visit_status, '') != '99'
+            THEN ap.id
+        END
+    ) AS total,
 
     COALESCE(
-        MAX(CASE WHEN ap.status = 1 THEN ap.nomor END),
-        MIN(ap.nomor)
+        SUM(
+            CASE 
+                WHEN ap.status = 1 
+                AND COALESCE(p.visit_status, '') != '99'
+                THEN 1 
+                ELSE 0 
+            END
+        ), 
+        0
+    ) AS total_panggil,
+
+    COUNT(
+        CASE 
+            WHEN COALESCE(p.visit_status, '') != '99'
+            THEN ap.id
+        END
+    ) 
+    - 
+    COALESCE(
+        SUM(
+            CASE 
+                WHEN ap.status = 1 
+                AND COALESCE(p.visit_status, '') != '99'
+                THEN 1 
+                ELSE 0 
+            END
+        ),
+        0
+    ) AS sisa_antrean,
+
+    COALESCE(
+        MAX(
+            CASE 
+                WHEN ap.status = 1 
+                AND COALESCE(p.visit_status, '') != '99'
+                THEN ap.nomor 
+            END
+        ),
+        MIN(
+            CASE 
+                WHEN COALESCE(p.visit_status, '') != '99'
+                THEN ap.nomor
+            END
+        )
     ) AS antrean_panggil,
 
     d.id_poli AS poli,
@@ -142,6 +187,9 @@ LEFT JOIN antrian_poli AS ap
     AND ap.tanggal = ?
     AND ap.id_customer = ?
     AND ap.kode_antri = d.doctor_antrean
+
+LEFT JOIN pasien_visit AS p
+    ON p.visit_ID = ap.nomor_visit
 
 WHERE d.id_poli = ?
 AND LOWER(jd.day_of_week) = ?
@@ -170,7 +218,7 @@ while ($row = $result->fetch_assoc()) {
         $nama = $mapDokter[$kode]['namadokter'];
     }
     $data[] = [
-        "namapoli" => $row['nmPoli'],
+        "namapoli" => ucwords(strtolower($row['nmPoli'])),
         "totalantrean" => (string)$row['total'],
         "sisaantrean" => (int)$row['sisa_antrean'],
         "antreanpanggil" => $antrean_terakhir,

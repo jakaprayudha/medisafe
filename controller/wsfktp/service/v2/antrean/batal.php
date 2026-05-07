@@ -19,72 +19,100 @@ $username = $headers['x-username'] ?? null;
 $id_customer = validateBpjsToken($username);
 $json = file_get_contents("php://input");
 $data = json_decode($json, true);
-
 $noKartu = $data['nomorkartu'] ?? null;
 $kodepoli   = $data['kodepoli'] ?? null;
 $tanggal    = $data['tanggalperiksa'] ?? null;
-$keterangan = $data['keterangan'] ?? null;
+$status_antrian_batal = '99';
 
-$status_visit = '99';
-
-$stmt = $koneksi->prepare("
-  SELECT pp.nomor_visit 
-  FROM pcare_pendaftaran AS pp 
-  INNER JOIN pasien_visit AS pv 
-    ON pp.nomor_visit = pv.visit_ID 
-  WHERE pv.noKartu = ? 
-    AND pp.tanggal_daftar = ? 
-    AND pp.kdPoli = ? 
-    AND (pv.visit_status IS NULL OR pv.visit_status != ?)
-  LIMIT 1
-");
-$stmt->bind_param("ssss", $noKartu, $tanggal, $kodepoli, $status_visit);
-$stmt->execute();
-$res = $stmt->get_result();
-if ($res->num_rows > 0) {
-    $row = $res->fetch_assoc();
-    $nomor_visit = $row['nomor_visit'];
+try {
     $stmt = $koneksi->prepare("
-        UPDATE pasien_visit 
-        SET visit_status = ? 
-        WHERE noKartu = ? 
-        AND visit_date = ? 
+        SELECT visit_ID, visit_status 
+        FROM pasien_visit
+        WHERE noKartu = ?
+        AND visit_date = ?
         AND id_customer = ?
-        AND visit_ID = ?
+        AND visit_status = '10'
+        LIMIT 1
     ");
-    $stmt->bind_param("sssss", $status_visit, $noKartu, $tanggal, $id_customer, $nomor_visit);
-    $result = $stmt->execute();
+    $stmt->bind_param("sss", $noKartu, $tanggal, $id_customer);
+    $stmt->execute();
+    $res = $stmt->get_result();
 
-    $status = '9';
-    $stmt1 = $koneksi->prepare("
-        UPDATE antrian_poli 
-        SET status = ? 
-        WHERE id_customer = ? 
-        AND poli = ? 
-        AND tanggal = ? 
-        AND nomor_visit = ?
-    ");
-    $stmt1->bind_param("sssss", $status, $id_customer, $kodepoli, $tanggal, $nomor_visit);
-    $result1 = $stmt1->execute();
-    if ($result && $result1) {
+    if ($res->num_rows == 0) {
         echo json_encode([
             "metadata" => [
-                "message" => "Ok",
+                "message" => "Antrean Tidak Ditemukan atau Sudah Dibatalkan",
+                "code" => 201
+            ]
+        ]);
+        exit;
+    }
+    $row = $res->fetch_assoc();
+    $nomor_visit = $row['visit_ID'];
+    $visit_status_db = $row['visit_status'];
+    $stmtCek = $koneksi->prepare("
+        SELECT 1 FROM pcare_pendaftaran 
+        WHERE nomor_visit = ?
+        LIMIT 1
+    ");
+    $stmtCek->bind_param("s", $nomor_visit);
+    $stmtCek->execute();
+    $cekPcare = $stmtCek->get_result();
+    if ($cekPcare->num_rows > 0) {
+        echo json_encode([
+            "metadata" => [
+                "message" => "Pasien Sudah Dilayani, Antrean Tidak Dapat Dibatalkan",
+                "code" => 201
+            ]
+        ]);
+        exit;
+    }
+    if ($visit_status_db != '10') {
+        echo json_encode([
+            "metadata" => [
+                "message" => "Pasien Sudah Dilayani, Antrean Tidak Dapat Dibatalkan",
+                "code" => 201
+            ]
+        ]);
+        exit;
+    }
+    $stmtUpdateVisit = $koneksi->prepare("
+        UPDATE pasien_visit 
+        SET visit_status = ? 
+        WHERE visit_ID = ?
+    ");
+    $stmtUpdateVisit->bind_param("ss", $status_antrian_batal, $nomor_visit);
+    $resultVisit = $stmtUpdateVisit->execute();
+    $stmtUpdateAntrian = $koneksi->prepare("
+        UPDATE antrian_poli 
+        SET status = ? 
+        WHERE nomor_visit = ?
+        AND id_customer = ?
+        AND poli = ?
+        AND tanggal = ?
+    ");
+    $stmtUpdateAntrian->bind_param("sssss", $status_antrian_batal, $nomor_visit, $id_customer, $kodepoli, $tanggal);
+    $resultAntrian = $stmtUpdateAntrian->execute();
+    if ($resultVisit && $resultAntrian) {
+        echo json_encode([
+            "metadata" => [
+                "message" => "OK",
                 "code" => 200
             ]
         ]);
     } else {
         echo json_encode([
             "metadata" => [
-                "message" => "Gagal update",
-                "code" => 500
+                "message" => "Gagal",
+                "code" => 201
             ]
         ]);
     }
-} else {
+
+} catch (Exception $e) {
     echo json_encode([
         "metadata" => [
-            "message" => "Antrian tidak ditemukan",
+            "message" => "Error",
             "code" => 201
         ]
     ]);

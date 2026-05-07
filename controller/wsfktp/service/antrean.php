@@ -113,14 +113,12 @@ if ($result->num_rows > 0) {
                 $koneksi->commit();
                 echo json_encode([
                     "response" => [
-                        [
                             "nomorantrean" => $next,
                             "angkaantrean" => $next,
                             "namapoli" => $nmPoli,
                             "sisaantrean" => $dataAntrian['sisa_antrean'],
                             "antreanpanggil" => $dataAntrian['antrean_terakhir'],
                             "keterangan" => "Apabila antrean terlewat harap mengambil antrean kembali."
-                        ]
                     ],
                     "metadata" => [
                         "message" => "Ok",

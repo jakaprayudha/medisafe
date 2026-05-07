@@ -188,7 +188,7 @@ function getData($id_customer)
    
    if (!empty($searchValue)) {
       $searchValue = "%{$searchValue}%";
-      $whereClause .= " AND (nomor_rm LIKE ? OR patient_name LIKE ? OR patient_phone LIKE ?)";
+      $whereClause .= " AND (patient_nik LIKE ? OR patient_name LIKE ? OR patient_bpjs LIKE ?)";
       $bindType .= "sss";
       $bindParams[] = $searchValue;
       $bindParams[] = $searchValue;

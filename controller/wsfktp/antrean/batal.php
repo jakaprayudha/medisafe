@@ -22,7 +22,6 @@ $data = json_decode($json, true);
 $noKartu = $data['nomorkartu'] ?? null;
 $kodepoli   = $data['kodepoli'] ?? null;
 $tanggal    = $data['tanggalperiksa'] ?? null;
-$keterangan = $data['keterangan'] ?? null;
 $status_visit_batal = '10';
 $status_antrian_batal = '99';
 
