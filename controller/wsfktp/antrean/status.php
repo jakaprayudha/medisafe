@@ -97,13 +97,11 @@ if ($result) {
     $antrean_terakhir = ($result['antrean_terakhir'] == 0 ? '-' : $result['kode_antri'].$result['antrean_terakhir']);
     echo json_encode([
         "response" => [
-            [
                 "namapoli" => $result['id_poli'],
                 "totalantrean" => (string)$result['total'],
                 "sisaantrean" => $result['sisa_antrean'],
                 "antreanpanggil" => $antrean_terakhir,
                 "keterangan" => ""
-            ],
         ],
         "metadata" => [
             "message" => "Ok",
