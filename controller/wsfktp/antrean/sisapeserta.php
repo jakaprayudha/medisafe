@@ -90,13 +90,11 @@ $adaData = ($result && (int)$result['total'] > 0);
 if ($adaData) {
     echo json_encode([
         "response" => [
-            [
                 "nomorantrean" => $result['nomorantrean'] ?? 1,
                 "namapoli" => ucwords(strtolower($result['id_poli'])),
                 "sisaantrean" => $result['sisa_antrean'],
                 "antreanpanggil" =>  $result['antrean_terakhir'],
                 "keterangan" => ""
-            ],
         ],
         "metadata" => [
             "message" => "Ok",
