@@ -1,8 +1,8 @@
 <?php
 header("Content-Type: application/json");
 
-require_once __DIR__ . '/../../../database/connect.php';
-require_once __DIR__ . '/../validateToken.php';
+require_once __DIR__ . '/../../../../../database/connect.php';
+require_once __DIR__ . '/../../../validateToken.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
     echo json_encode([
@@ -22,7 +22,6 @@ $data = json_decode($json, true);
 $noKartu = $data['nomorkartu'] ?? null;
 $kodepoli   = $data['kodepoli'] ?? null;
 $tanggal    = $data['tanggalperiksa'] ?? null;
-$keterangan = $data['keterangan'] ?? null;
 $status_visit_batal = '10';
 $status_antrian_batal = '99';
 
