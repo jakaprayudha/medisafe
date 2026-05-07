@@ -50,7 +50,7 @@ $apiUrl = getenv('API_URL');
                 role="tab"
                 aria-controls="pulang-tab-pane"
                 aria-selected="false">
-                Pasien Pulang
+                Selesai
               </button>
             </li>
           </ul>
