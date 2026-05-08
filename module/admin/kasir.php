@@ -128,7 +128,7 @@ require '../../controller/view.php';
         <div class="row">
           <div class="col-6 mb-3">
             <label for="fromDate" class="form-label mb-0">Dari</label>
-            <input type="date" id="fromDate" name="fromDate" class="form-control">
+            <input type="date" id="fromDate" name="fromDate" max="" class="form-control">
           </div>
           <div class="col-6 mb-3">
             <label for="toDate" class="form-label mb-0">Sampai</label>
@@ -167,8 +167,23 @@ require '../../controller/view.php';
 
 
 <script>
-  let currentFilter = 'belum'; // default
+  let currentFilter = 'belum';
+
   $(document).ready(function() {
+
+    // =========================
+    // 🔥 INIT DATE
+    // =========================
+    var today = new Date().toISOString().split("T")[0];
+
+    $('#fromDate').val(today);
+    $('#toDate').val('');
+
+    $('#fromDate').attr('max', today);
+
+    // =========================
+    // 🔥 LOAD FILTER OPTION
+    // =========================
     $('#filterModal').on('show.bs.modal', function() {
       loadDoctors();
       loadProviders();
@@ -176,70 +191,69 @@ require '../../controller/view.php';
     });
 
     function loadDoctors() {
-      $.ajax({
-        url: 'controller/visit/getdoctor',
-        method: 'GET',
-        dataType: 'json',
-        success: function(res) {
-          let html = '<option value="">Semua Dokter</option>';
-
-          res.forEach(d => {
-            html += `<option value="${d.id_doctor}">${d.doctor_name}</option>`;
-          });
-
-          $('#doctorSelect').html(html);
-        }
+      $.getJSON('controller/visit/getdoctor', function(res) {
+        let html = '<option value="">Semua Dokter</option>';
+        res.forEach(d => {
+          html += `<option value="${d.id_doctor}">${d.doctor_name}</option>`;
+        });
+        $('#doctorSelect').html(html);
       });
     }
 
     function loadProviders() {
-      $.ajax({
-        url: 'controller/visit/getprovider',
-        method: 'GET',
-        dataType: 'json',
-        success: function(res) {
-          let html = '<option value="">Semua Metode Pembayaran</option>';
-
-          res.forEach(p => {
-            html += `<option value="${p.id_provider}">${p.provider_name}</option>`;
-          });
-
-          $('#providerSelect').html(html);
-        }
+      $.getJSON('controller/visit/getprovider', function(res) {
+        let html = '<option value="">Semua Metode Pembayaran</option>';
+        res.forEach(p => {
+          html += `<option value="${p.id_provider}">${p.provider_name}</option>`;
+        });
+        $('#providerSelect').html(html);
       });
     }
 
     function loadPoli() {
-      $.ajax({
-        url: 'controller/visit/getpoli',
-        method: 'GET',
-        dataType: 'json',
-        success: function(res) {
-          let html = '<option value="">Semua Poliklinik</option>';
-
-          res.forEach(p => {
-            html += `<option value="${p.id_poli}">${p.poli_name}</option>`;
-          });
-
-          $('#poliSelect').html(html);
-        }
+      $.getJSON('controller/visit/getpoli', function(res) {
+        let html = '<option value="">Semua Poliklinik</option>';
+        res.forEach(p => {
+          html += `<option value="${p.id_poli}">${p.poli_name}</option>`;
+        });
+        $('#poliSelect').html(html);
       });
     }
 
-    $('#btnApplyFilter').on('click', function() {
-      table.ajax.reload();
-      $('#filterModal').modal('hide');
-    });
+    // =========================
+    // 🔥 LOAD FILTER DARI STORAGE
+    // =========================
+    let savedFrom = localStorage.getItem('filter_fromDate');
+    let savedTo = localStorage.getItem('filter_toDate');
+    let savedDoctor = localStorage.getItem('filter_doctor');
+    let savedProvider = localStorage.getItem('filter_provider');
+    let savedPoli = localStorage.getItem('filter_poli');
+    let savedStatus = localStorage.getItem('filter_status');
 
-    var today = new Date().toISOString().split("T")[0];
-    $("#fromDate").val(today);
-    $("#toDate").val(today);
+    if (savedFrom) $('#fromDate').val(savedFrom);
+    if (savedTo !== null) $('#toDate').val(savedTo);
 
+    if (savedDoctor) $('#doctorSelect').val(savedDoctor);
+    if (savedProvider) $('#providerSelect').val(savedProvider);
+    if (savedPoli) $('#poliSelect').val(savedPoli);
+
+    if (savedStatus) {
+      currentFilter = savedStatus;
+
+      // set tab aktif
+      $('#tabStatus .nav-link').removeClass('active');
+      $(`#tabStatus .nav-link[data-status="${savedStatus}"]`).addClass('active');
+    }
+
+    // =========================
+    // 🔥 DATATABLE
+    // =========================
     const apiUrl = 'controller/visit/kasirController';
+
     var table = $('#periodeTable').DataTable({
       processing: true,
-      serverSide: false, // 🔹 ubah jadi false
-      scrollX: true, // ✅ ini wajib
+      serverSide: false,
+      scrollX: true,
       scrollCollapse: true,
       ajax: {
         url: apiUrl,
@@ -251,79 +265,84 @@ require '../../controller/view.php';
           d.provider = $('#providerSelect').val();
           d.poli = $('#poliSelect').val();
         },
-        dataSrc: function(json) {
-          let filtered = json.data.filter(function(row) {
-            let status = parseInt(row.status_bayar || 0);
 
-            return currentFilter === 'lunas' ?
-              status === 1 // ✅ sudah bayar
-              :
-              status !== 1; // ❌ belum bayar
+        dataSrc: function(json) {
+
+          let fromDate = $('#fromDate').val();
+          let toDate = $('#toDate').val();
+
+          let filtered = json.data.filter(function(row) {
+
+            let status = Number(row.status_bayar);
+
+            let statusMatch = false;
+
+            if (currentFilter === 'lunas') {
+              statusMatch = status === 1;
+            } else {
+              statusMatch = status !== 1;
+            }
+
+            // 🔥 FILTER TANGGAL
+            let rowDate = row.visit_date ?
+              row.visit_date.substring(0, 10) :
+              '';
+
+            let dateMatch = true;
+
+            if (fromDate && rowDate < fromDate) dateMatch = false;
+            if (toDate && rowDate > toDate) dateMatch = false;
+
+            return statusMatch && dateMatch;
           });
 
           return filtered.map(function(row) {
 
-            function hitungUmur(tglLahir, tglKunjungan) {
-              if (!tglLahir || !tglKunjungan) return "-";
-
-              const birth = new Date(tglLahir);
-              const visit = new Date(tglKunjungan);
-
-              let tahun = visit.getFullYear() - birth.getFullYear();
-              let bulan = visit.getMonth() - birth.getMonth();
-              let hari = visit.getDate() - birth.getDate();
-
-              if (hari < 0) {
-                bulan--;
-                const lastMonth = new Date(visit.getFullYear(), visit.getMonth(), 0);
-                hari += lastMonth.getDate();
-              }
-
-              if (bulan < 0) {
-                tahun--;
-                bulan += 12;
-              }
-
-              return `${tahun} th ${bulan} bln ${hari} hr`;
-            }
             return {
               "actions": `
-              <div class="text-center">
-                ${
-                  row.status_bayar == 1
-                    ? `<button class="btn btn-sm btn-success" disabled>
-                        <i class="fas fa-check-circle me-2"></i> Lunas
-                      </button>`
-                    : `<a href="module/admin/kasir_detail?no=${row.visit_ID}&rm=${row.nomor_rm}" 
-                        class="btn btn-sm btn-primary">
-                        <i class="fas fa-file me-2"></i> Bayar
-                      </a>`
-                }
-              </div>
-            `,
-              "registrasi": row.visit_date + ' ' + row.visit_time ?? "-",
-              "nomor_rm": row.nomor_rm ?? "-",
-              "nama": `
-                ${row.patient_name ?? "-"}
+                <div class="text-center">
+                  ${
+                    row.status_bayar == 1
+                      ? `
+                      <div class="d-flex justify-content-center gap-1">
+                        <button class="btn btn-sm btn-success" disabled>
+                          <i class="fas fa-check-circle"></i>
+                        </button>
+
+                        <a href="module/print/struk_billing?no=${row.visit_ID}&rm=${row.nomor_rm}"
+                          target="_blank"
+                          class="btn btn-sm btn-dark">
+                          <i class="fas fa-receipt me-1"></i> Invoice
+                        </a>
+                      </div>
+                    `
+                      : `<a href="module/admin/kasir_detail?no=${row.visit_ID}&rm=${row.nomor_rm}" 
+                          class="btn btn-sm btn-primary">
+                          <i class="fas fa-file me-2"></i> Bayar
+                        </a>`
+                  }
+                </div>
               `,
+              "registrasi": (row.visit_date ?? '-') + ' ' + (row.visit_time ?? ''),
+              "nomor_rm": row.nomor_rm ?? "-",
+              "nama": row.patient_name ?? "-",
               "gender": row.patient_gender ?? "-",
               "dokter": row.id_doctor ?? "-",
               "layanan": row.id_poli ?? "-",
-              "provider": row.provider_name ?? "-",
-              "status": row.status_bayar == 1 ?
-                '<span class="badge bg-success text-center d-block">Lunas</span>' : '<span class="badge bg-danger text-center d-block">Belum Bayar</span>'
+              "provider": row.provider_name ?? "-"
             };
           });
         }
       },
+
       columns: [{
           data: "actions",
           orderable: false,
           searchable: false
-        }, {
+        },
+        {
           data: "registrasi"
         },
-
         {
           data: "nomor_rm"
         },
@@ -341,72 +360,55 @@ require '../../controller/view.php';
         },
         {
           data: "provider"
-        },
-      ],
-      footerCallback: function(row, data, start, end, display) {
-        var api = this.api();
-
-        // Hitung total bobot
-        let total = api
-          .column(3, {
-            page: 'current'
-          })
-          .data()
-          .reduce((a, b) => {
-            return (parseFloat(a) || 0) + (parseFloat(b) || 0);
-          }, 0);
-
-        // Tampilkan di footer
-        $(api.column(3).footer()).html(total.toFixed(2) + " %");
-      }
+        }
+      ]
     });
 
-    $('#customSearch').on('keyup', function() {
-      table.search(this.value).draw();
-    });
-
-    // 🔹 Tambah
-    $('#btnTambah').on('click', function() {
-      $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
-      $('#id_visit').val('');
-      $('#programModal .modal-title').text('Tambah Data');
-      $('#programModal').modal('show');
-    });
-
-
-
-    // filter manual
-    $('#btnFilter').on('click', function() {
+    // =========================
+    // 🔥 FILTER BUTTON
+    // =========================
+    $('#btnApplyFilter, #btnFilter').on('click', function() {
+      // 🔥 simpan ke storage
+      localStorage.setItem('filter_fromDate', $('#fromDate').val());
+      localStorage.setItem('filter_toDate', $('#toDate').val());
+      localStorage.setItem('filter_doctor', $('#doctorSelect').val());
+      localStorage.setItem('filter_provider', $('#providerSelect').val());
+      localStorage.setItem('filter_poli', $('#poliSelect').val());
+      localStorage.setItem('filter_status', currentFilter);
       table.ajax.reload();
+      $('#filterModal').modal('hide');
     });
 
+    // =========================
+    // 🔄 RESET
+    // =========================
     $('#btnReset').on('click', function() {
+
+      localStorage.clear(); // 🔥 hapus semua filter
+
       $('#fromDate').val(today);
-      $('#toDate').val(today);
+      $('#toDate').val('');
       $('#doctorSelect').val('');
       $('#providerSelect').val('');
       $('#poliSelect').val('');
+
+      currentFilter = 'belum';
+
       table.ajax.reload();
     });
-
+    // =========================
+    // 🔥 TAB FILTER
+    // =========================
     $('#tabStatus .nav-link').on('click', function(e) {
       e.preventDefault();
 
-      // reset active
       $('#tabStatus .nav-link').removeClass('active');
       $(this).addClass('active');
 
-      // ambil status
-      let status = $(this).data('status');
-
-      // mapping
-      currentFilter = (status === 'selesai') ? 'lunas' : 'belum';
-
-      console.log("FILTER:", currentFilter);
+      currentFilter = $(this).data('status'); // 🔥 langsung pakai
 
       table.ajax.reload();
     });
-
 
   });
 </script>

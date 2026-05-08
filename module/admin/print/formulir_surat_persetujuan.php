@@ -1,6 +1,10 @@
 <?php
 require '../../../database/connect.php';
 require '../../admin/getdataclinic.php';
+
+$saksi = mysqli_query($koneksi, "SELECT signature_user FROM ms_users WHERE uid_user = '" . $_SESSION['uid_user'] . "'");
+$saksi = mysqli_fetch_assoc($saksi);
+$signatureSaksi = $saksi['signature_user'] ?? null;
 ?>
 <div class="form-surat-persetujuan">
 
@@ -144,27 +148,52 @@ require '../../admin/getdataclinic.php';
    <div class="ttd-wrapper">
       <div class="kolom-ttd">
          <p>Saksi</p>
-         <img src="../../../uploads/ttd/fitri.png" style="height:100px;" alt="">
+         <img src="../../../uploads/ttd_faskes/<?= $signatureSaksi ?>" style="height:100px;" alt="">
          <div class="ttd-box"><?= $_SESSION['fullname'] ?></div>
 
       </div>
 
+
+      <?php
+      // Default signatureDokter
+      $signatureDokter = null;
+      $doctorName = null;
+      // Try to get doctor name from GET param or fallback to JS fill
+      if (isset($_GET['no']) && isset($_GET['rm'])) {
+         // Try to get doctor name from pasien_visit
+         $no = $_GET['no'];
+         $rm = $_GET['rm'];
+         $q = mysqli_query($koneksi, "SELECT id_doctor FROM pasien_visit WHERE visit_ID='" . mysqli_real_escape_string($koneksi, $no) . "' LIMIT 1");
+         if ($row = mysqli_fetch_assoc($q)) {
+            $doctorName = $row['id_doctor'];
+         }
+      }
+      if ($doctorName) {
+         // Find signature by fullname LIKE
+         $dokter = mysqli_query($koneksi, "SELECT signature_user FROM ms_users WHERE fullname LIKE '%" . mysqli_real_escape_string($koneksi, $doctorName) . "%'");
+         $dokter = mysqli_fetch_assoc($dokter);
+         $signatureDokter = $dokter['signature_user'] ?? null;
+      }
+      ?>
       <div class="kolom-ttd">
          <p>Dokter yang Merawat</p>
-         <img src="../../../uploads/ttd/drdevi.png" style="height:100px;" alt="">
+         <?php if ($signatureDokter): ?>
+            <img src="../../../uploads/ttd_faskes/<?= $signatureDokter ?>" style="height:100px;" alt="">
+         <?php else: ?>
+            <span class="text-danger">Belum ada tanda tangan dokter</span>
+         <?php endif; ?>
          <div class="ttd-box"><span id="sp_dokter"></span></div>
       </div>
 
+
       <div class="kolom-ttd ttd-kanan">
-
          <p>Yang Membuat Pernyataan</p>
-
-         <img src="../../../uploads/ttd/regina.png" style="height:100px;" alt="">
-
+         <div id="ttdPersetujuan">
+            <!-- TTD image will be loaded here -->
+         </div>
          <div class="ttd-box">
             <span id="sp_nama_penyetuju_ttd"></span>
          </div>
-
       </div>
 
    </div>
@@ -204,6 +233,7 @@ require '../../admin/getdataclinic.php';
 
             document.getElementById("sp_nama_penyetuju_ttd").innerText = data.opname_keluarga_name;
 
+
             // Dokter
             document.getElementById("sp_dokter").innerText = data.id_doctor;
 
@@ -217,8 +247,24 @@ require '../../admin/getdataclinic.php';
                   "<?= $datafaskes['faskes_district'] ?>, " + tanggal;
             }
          });
-   });
 
+      // ttd pasien
+      fetch(`../../../controller/visit/getTTD.php?no=${no}`)
+         .then(res => res.json())
+         .then(resp => {
+            let d = resp.data;
+            let ttdContainer = document.getElementById('ttdPersetujuan');
+            if (d && d.ttd && d.ttd !== 'null' && d.ttd !== '') {
+               ttdContainer.innerHTML = `<img src="${d.ttd}" style="height:100px; border:1px solid #ccc; border-radius:6px; background:#fff;" alt="TTD">`;
+            } else {
+               ttdContainer.innerHTML = `<span class="text-danger">Belum ada tanda tangan</span>`;
+            }
+         })
+         .catch(err => {
+            let ttdContainer = document.getElementById('ttdPersetujuan');
+            ttdContainer.innerHTML = `<span class="text-danger">Error mengambil tanda tangan</span>`;
+         });
+   });
 
    // 🔥 FORMAT TANGGAL INDONESIA
    function formatTanggal(tgl) {

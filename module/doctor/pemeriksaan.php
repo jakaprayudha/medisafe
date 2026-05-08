@@ -58,7 +58,7 @@ $apiUrl = getenv('API_URL');
                       <form id="filterForm" class="row g-2 align-items-end">
                         <div class="col-auto">
                           <label for="fromDate" class="form-label mb-0">Dari</label>
-                          <input type="date" id="fromDate" name="fromDate" class="form-control">
+                          <input type="date" id="fromDate" name="fromDate" max="" class="form-control">
                         </div>
                         <div class="col-auto">
                           <label for="toDate" class="form-label mb-0">Sampai</label>
@@ -128,9 +128,9 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
   const doctorName = <?= json_encode($_SESSION['fullname'] ?? '') ?>;
   const rmeType = '<?php echo $rme_type ?>';
 
-  $("#fromDate").val(today);
-  $("#toDate").val(today);
-
+  $('#fromDate').val(today);
+  $('#fromDate').attr('max', today);
+  $('#toDate').val();
   $(document).ready(function() {
 
     var table = $('#zero_config').DataTable({
@@ -301,7 +301,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
     // 🔄 RESET
     $('#btnReset').on('click', function() {
       $('#fromDate').val(today);
-      $('#toDate').val(today);
+      $('#toDate').val('');
       table.ajax.reload();
     });
 
@@ -323,14 +323,39 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 
   function callPatient(noAntrian, namaPasien, poli, visitID, id_doctor) {
 
-    /* =========================
-       1. SUARA (LANGSUNG - USER GESTURE)
-    ========================= */
     if ('speechSynthesis' in window) {
 
       speechSynthesis.cancel();
 
-      const text = `Nomor antrean ${noAntrian}, atas nama ${namaPasien}, silakan menuju ruangan  ${id_doctor}`;
+      let dokterRaw = (id_doctor || '').trim();
+
+      // 🔥 NORMALISASI: paksa "dr." selalu ada spasi
+      dokterRaw = dokterRaw.replace(/^dr\.?/i, 'dr. ');
+      dokterRaw = dokterRaw.replace(/\s+/g, ' ').trim();
+
+      // 🔥 DETEKSI "dr di depan"
+      let isPrefixDr = /^dr\./i.test(dokterRaw);
+
+      // 🔥 DETEKSI "dr di belakang" (contoh: nama, dr)
+      let isSuffixDr = /,\s*dr\.?$/i.test(dokterRaw);
+
+      let text;
+
+      if (isPrefixDr) {
+        // ✅ contoh: dr. Andi
+        text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan ${dokterRaw}`;
+
+      } else if (isSuffixDr) {
+        // ✅ contoh: Maharani Siregar, dr
+        let cleanName = dokterRaw.replace(/,\s*dr\.?$/i, '').trim();
+
+        text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan dokter ${cleanName}`;
+
+      } else {
+        // ❗ tidak ada dr sama sekali
+        text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan dokter ${dokterRaw}`;
+      }
+
       const utterance = new SpeechSynthesisUtterance(text);
 
       utterance.lang = 'id-ID';
@@ -345,24 +370,15 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
       speechSynthesis.speak(utterance);
     }
 
-    /* =========================
-       2. UPDATE DISPLAY (ASYNC)
-    ========================= */
     fetch('controller/queue/poliCall.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          visit_ID: visitID
-        })
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        visit_ID: visitID
       })
-      .then(res => res.json())
-      .then(res => {
-        if (res.status !== 'success') {
-          console.warn('Update display gagal');
-        }
-      });
+    });
   }
   $(document).on('click', '.btn-hadir', function() {
     let visitID = $(this).data('visit');

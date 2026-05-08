@@ -62,17 +62,12 @@ $mapHari = [
 ];
 $hariIndonesia = $mapHari[$hariInggris];
 
-$config = getConfigBPJS($id_customer, $koneksi);
-$result = bpjsGet('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggal, $config);
-// echo json_encode($result);
-foreach ($result as $dokter) {
-    if ((int)$dokter['kodedokter'] === (int)$kodedokter) {
-        $dokterDipilih = $dokter;
-        break;
-    }
-}
-
-if (!$dokterDipilih) {
+$cekpoli = $koneksi->prepare("SELECT d.doctor_name, mds.day_of_week, mds.start_time, mds.end_time, mds.sch_status, mds.kuota FROM ms_doctor AS d INNER JOIN ms_doctor_schedule AS mds ON d.id_doctor = mds.id_doctor AND d.id_customer = mds.id_customer WHERE d.doctor_code = ? AND d.id_customer = ? AND mds.day_of_week = ?");
+$cekpoli->bind_param('sss', $kodedokter, $id_customer, $hariIndonesia);
+$cekpoli->execute();
+$status_antrian = $cekpoli->get_result()->fetch_assoc();
+$cekpoli->close();
+if (!$status_antrian) {
     http_response_code(201);
     echo json_encode([
         "metadata" => [
@@ -82,17 +77,6 @@ if (!$dokterDipilih) {
     ]);
     exit;
 }
-
-$namaDokter = $dokterDipilih['namadokter'];
-$kodeDokter = $dokterDipilih['kodedokter'];
-$jamPraktek = $dokterDipilih['jampraktek'];
-
-$cekpoli = $koneksi->prepare("SELECT d.doctor_name, mds.day_of_week, mds.start_time, mds.end_time, mds.sch_status, mds.kuota FROM ms_doctor AS d INNER JOIN ms_doctor_schedule AS mds ON d.id_doctor = mds.id_doctor AND d.id_customer = mds.id_customer WHERE d.doctor_code = ? AND d.id_customer = ? AND mds.day_of_week = ?");
-$cekpoli->bind_param('sss', $kodedokter, $id_customer, $hariIndonesia);
-$cekpoli->execute();
-$status_antrian = $cekpoli->get_result()->fetch_assoc();
-$cekpoli->close();
-
 if ($status_antrian['sch_status'] == '0') {
     http_response_code(201);
     echo json_encode([
@@ -119,8 +103,9 @@ if ($jamMulai_user != $jamMulai_db || $jamSelesai_user != $jamSelesai_db) {
     exit;
 }
 // $jamsekarang = "19:00";
-$jamsekarang = date('H:i');
-if (strtotime($jamsekarang) > strtotime($jamSelesai_db)) {
+$now = new DateTime();
+$jadwal_selesai = new DateTime($tanggal . ' ' . $jamSelesai_db);
+if ($now > $jadwal_selesai) {
     http_response_code(201);
     echo json_encode([
         "metadata" => [
@@ -152,7 +137,7 @@ if ($kuota == 0 || $total >= $kuota) {
     exit;
 }
 // die();
-$stmt1 = $koneksi->prepare("SELECT * FROM pasien_visit WHERE visit_date = ? AND noKartu = ? AND id_customer = ? AND id_poli = ?");
+$stmt1 = $koneksi->prepare("SELECT * FROM pasien_visit WHERE visit_date = ? AND noKartu = ? AND id_customer = ? AND id_poli = ? AND visit_status != '99'");
 $stmt1->bind_param("ssss", $tanggal, $noKartu, $id_customer, $nmPoli);
 $stmt1->execute();
 $cek = $stmt1->get_result();
@@ -169,8 +154,8 @@ if ($cek->num_rows > 0) {
     if ($status_pasien_baru == true) {
         echo json_encode([
             "metadata" => [
-                "message" => "Anda belum terdaftar di sistem klinik. Silakan ke bagian administrasi untuk melengkapi data.",
-                "code" => 201
+                "message" => "Data pasien ini tidak ditemukan, silahkan Melakukan Registrasi Pasien Baru",
+                "code" => 202
             ]
         ]);
     } else {
@@ -207,21 +192,49 @@ if ($cek->num_rows > 0) {
             if (!$stmt4->execute()) {
                 throw new Exception($stmt4->error);
             }
-            $stmt = $koneksi->prepare("SELECT COUNT(*) as total,SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) as total_panggil,COUNT(*) - SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) as sisa_antrean,COALESCE(MAX(CASE WHEN ap.status = 1 THEN ap.nomor END),MAX(ap.nomor)) as antrean_terakhir FROM antrian_poli ap WHERE ap.id_customer = ? AND ap.poli = ? AND ap.tanggal = ?");
+            $stmt = $koneksi->prepare("SELECT 
+                    COUNT(*) as total,
+
+                    SUM(
+                        CASE 
+                            WHEN ap.status = 1 THEN 1 
+                            ELSE 0 
+                        END
+                    ) as total_panggil,
+
+                    COUNT(*) - SUM(
+                        CASE 
+                            WHEN ap.status = 1 THEN 1 
+                            ELSE 0 
+                        END
+                    ) as sisa_antrean,
+
+                    COALESCE(
+                        MAX(
+                            CASE 
+                                WHEN ap.status = 1 
+                                THEN CONCAT(ap.kode_antri, ap.nomor)
+                            END
+                        ),
+                        '0'
+                    ) as antrean_terakhir
+                FROM antrian_poli ap
+                WHERE ap.id_customer = ?
+                AND ap.poli = ?
+                AND ap.tanggal = ?
+                AND ap.status != '99'");
             $stmt->bind_param("sss", $id_customer, $kodepoli, $tanggal);
             $stmt->execute();
             $dataAntrian = $stmt->get_result()->fetch_assoc();
             $koneksi->commit();
             echo json_encode([
                 "response" => [
-                    [
-                        "nomorantrean" => $nomorantrean,
-                        "angkaantrean" => $angkaantrean,
-                        "namapoli" => $nmPoli,
-                        "sisaantrean" => $dataAntrian['sisa_antrean'],
-                        "antreanpanggil" => $dataAntrian['antrean_terakhir'],
-                        "keterangan" => "Apabila antrean terlewat harap mengambil antrean kembali."
-                    ]
+                    "nomorantrean" => $nomorantrean,
+                    "angkaantrean" => $angkaantrean,
+                    "namapoli" => $nmPoli,
+                    "sisaantrean" => $dataAntrian['sisa_antrean'],
+                    "antreanpanggil" => $dataAntrian['antrean_terakhir'],
+                    "keterangan" => "Apabila antrean terlewat harap mengambil antrean kembali."
                 ],
                 "metadata" => [
                     "message" => "Ok",

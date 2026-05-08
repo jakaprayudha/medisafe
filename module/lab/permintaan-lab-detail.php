@@ -183,7 +183,7 @@ $rm = $_GET['rm'];
               "name": row.inspection_name ?? "-",
               "tanggal": row.inspection_date ?? "-",
               "sumber": row.inspection_source ?? "-",
-              "kesimpulan": row.inspection_summary ?? "-"
+              "kesimpulan": row.inspection_note ?? "-"
             };
           });
         }

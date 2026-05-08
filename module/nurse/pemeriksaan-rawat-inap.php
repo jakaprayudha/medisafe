@@ -35,6 +35,35 @@ $apiUrl = getenv('API_URL');
       <!--  Header End -->
       <div class="body-wrapper-inner">
         <div class="container-fluid">
+          <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-pane" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">Belum Dilayani</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Sudah Dilayani</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="pulang-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#pulang-tab-pane"
+                type="button"
+                role="tab"
+                aria-controls="pulang-tab-pane"
+                aria-selected="false">
+                Selesai
+              </button>
+            </li>
+          </ul>
+          <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0"></div>
+            <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0"></div>
+            <div class="tab-pane fade"
+              id="pulang-tab-pane"
+              role="tabpanel"
+              aria-labelledby="pulang-tab"
+              tabindex="0">
+            </div>
+          </div>
           <div class="row">
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
@@ -46,7 +75,7 @@ $apiUrl = getenv('API_URL');
                       <form id="filterForm" class="row g-2 align-items-end">
                         <div class="col-auto">
                           <label for="fromDate" class="form-label mb-0">Dari</label>
-                          <input type="date" id="fromDate" name="fromDate" class="form-control">
+                          <input type="date" id="fromDate" name="fromDate" max="" class="form-control">
                         </div>
                         <div class="col-auto">
                           <label for="toDate" class="form-label mb-0">Sampai</label>
@@ -106,6 +135,28 @@ $setting = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT rme_type FROM setti
 $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 ?>
 <script>
+  let currentTab = 'belum';
+
+  $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+
+    const target = $(e.target).attr("id");
+
+    if (target === 'home-tab') {
+      currentTab = 'belum';
+
+    } else if (target === 'profile-tab') {
+      currentTab = 'selesai';
+
+    } else if (target === 'pulang-tab') {
+      currentTab = 'pulang';
+    }
+
+    console.log("TAB AKTIF:", currentTab);
+
+    $('#zero_config').DataTable().ajax.reload(null, false);
+  });
+</script>
+<script>
   // Mengambil nilai API_URL dari PHP
   const apiUrl = 'controller/doctor/registrasiInpatientController';
   let now = new Date();
@@ -118,8 +169,9 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 
   let firstDayStr = firstDay.toISOString().split("T")[0];
 
-  $("#fromDate").val(firstDayStr);
-  $("#toDate").val(today);
+  $('#fromDate').val(today);
+  $('#fromDate').attr('max', today);
+  $('#toDate').val();
   const rmeType = '<?php echo $rme_type ?>'; // ambil dari PHP
   $(document).ready(function() {
     // Initialize DataTable
@@ -134,6 +186,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
           // kirim tanggal filter ke backend
           d.fromDate = $('#fromDate').val();
           d.toDate = $('#toDate').val();
+          d.tab = currentTab;
         },
         "dataSrc": function(json) {
           // Format data yang akan ditampilkan dalam tabel
@@ -149,7 +202,8 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                   </button>
                   <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="z-index:1055; min-width: 180px;">
                     <li>
-                      <a class="dropdown-item" target="_blank" href="module/admin/print/bundle_klaim?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
+                     <a class="dropdown-item" target="_blank"
+                        href="module/admin/print/bundle_klaim?id_patient=${row.id_patient}&no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
                         <i class="bi bi-clipboard2-pulse me-2"></i>Preview RME Klaim
                       </a>
                     </li>
@@ -166,6 +220,17 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                           </a>
                         </li>
                         ` : ''}
+
+                        <!-- 🔥 Divider -->
+                        <li><hr class="dropdown-divider"></li>
+
+                        <!-- 🔥 DOWNLOAD -->
+                        <li>
+                         <a class="dropdown-item text-success"
+                            href="module/admin/print/bundle_klaim?id_patient=${row.id_patient}&no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c&download=1">
+                            <i class="bi bi-download me-2"></i>Download PDF Klaim
+                          </a>
+                        </li>
                   </ul>
                 </div>
               `,
@@ -219,7 +284,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
     // reset filter ke today
     $('#btnReset').on('click', function() {
       $('#fromDate').val(today);
-      $('#toDate').val(today);
+      $('#toDate').val();
       table.ajax.reload();
     });
 

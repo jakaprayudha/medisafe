@@ -21,13 +21,19 @@ $id_customer = validateBpjsToken($username);
 $url = $_SERVER['REQUEST_URI'];
 $segments = explode('/', trim(parse_url($url, PHP_URL_PATH), '/'));
 
-$nokartu = $segments[4] ?? null;
-$kodepoli = $segments[5] ?? null;
-$tanggalperiksa = $segments[6] ?? null;
+$nokartu = $segments[count($segments) - 3] ?? null;
+$kodepoli = $segments[count($segments) - 2] ?? null;
+$tanggalperiksa = $segments[count($segments) - 1] ?? null;
 
-// $nokartu = $segments[5] ?? null;
-// $kodepoli = $segments[6] ?? null;
-// $tanggalperiksa = $segments[7] ?? null;
+if (strtotime($tanggalperiksa) < strtotime(date('Y-m-d'))) {
+    echo json_encode([
+        "metadata" => [
+            "message" => "Tanggal Periksa Tidak Berlaku",
+            "code" => 201
+        ]
+    ]);
+    exit;
+}
 
 // var_dump($segments);die();
 if (!$nokartu || !$kodepoli || !$tanggalperiksa) {
@@ -40,33 +46,95 @@ if (!$nokartu || !$kodepoli || !$tanggalperiksa) {
     exit;
 }
 
+$stmtCekPatient = $koneksi->prepare("SELECT * FROM pasien_visit WHERE noKartu = ? AND visit_date = ? AND id_customer = ? AND visit_status != '99'");
+$stmtCekPatient->bind_param('sss', $nokartu, $tanggalperiksa, $id_customer);
+$stmtCekPatient->execute();
+$cekPasien = $stmtCekPatient->get_result();
+
+if ($cekPasien->num_rows == 0) {
+    echo json_encode([
+        "metadata" => [
+            "message" => "Antrean Tidak Ditemukan",
+            "code" => 201
+        ]
+    ]);
+    exit;
+}
+
 $stmt = $koneksi->prepare("
     SELECT 
-    COUNT(ap.id) AS total,
-    p.id_poli,
-    p.noKartu,
+    COUNT(
+        CASE 
+            WHEN COALESCE(p.visit_status, '') != '99'
+            THEN 1
+        END
+    ) as total,
 
-    SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) AS total_panggil,
+    SUM(
+        CASE 
+            WHEN ap.status = 1 
+            AND COALESCE(p.visit_status, '') != '99'
+            THEN 1 
+            ELSE 0 
+        END
+    ) as total_panggil,
 
-    COUNT(ap.id) - SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) AS sisa_antrean,
+    COUNT(
+        CASE 
+            WHEN COALESCE(p.visit_status, '') != '99'
+            THEN 1
+        END
+    ) 
+    -
+    SUM(
+        CASE 
+            WHEN ap.status = 1 
+            AND COALESCE(p.visit_status, '') != '99'
+            THEN 1 
+            ELSE 0 
+        END
+    ) as sisa_antrean,
 
     IFNULL(
-        CAST(MAX(CASE WHEN ap.status = 1 THEN ap.nomor END) AS CHAR),
+        MAX(
+            CASE 
+                WHEN ap.status = 1 
+                AND COALESCE(p.visit_status, '') != '99'
+                THEN CONCAT(ap.kode_antri, ap.nomor)
+            END
+        ),
         '0'
     ) AS antrean_terakhir,
 
-    COALESCE(MIN(ap.nomor), 0) AS nomor_antrean
+    MAX(
+        CASE 
+            WHEN p.noKartu = ?
+            THEN CONCAT(ap.kode_antri, ap.nomor)
+        END
+    ) AS nomorantrean,
 
-FROM antrian_poli ap
-INNER JOIN pasien_visit p 
-    ON p.visit_ID = ap.nomor_visit
+    MAX(
+        CASE 
+            WHEN p.noKartu = ?
+            THEN ap.nomor
+        END
+    ) AS angkaantrean,
+
+    p.id_poli
+
+    FROM antrian_poli AS ap
+
+    INNER JOIN pasien_visit AS p 
+        ON p.visit_ID = ap.nomor_visit
+
     WHERE ap.id_customer = ?
     AND ap.poli = ?
     AND ap.tanggal = ?
-    AND p.noKartu = ?
+
+    GROUP BY p.id_poli
 ");
 
-$stmt->bind_param("ssss", $id_customer, $kodepoli, $tanggalperiksa, $nokartu);
+$stmt->bind_param("sssss", $nokartu, $nokartu, $id_customer, $kodepoli, $tanggalperiksa);
 $stmt->execute();
 $result = $stmt->get_result()->fetch_assoc();
 $adaData = ($result && (int)$result['total'] > 0);
@@ -74,13 +142,11 @@ $adaData = ($result && (int)$result['total'] > 0);
 if ($adaData) {
     echo json_encode([
         "response" => [
-            [
-                "nomorantrean" => $result['nomor_antrean'] ?? 1,
-                "namapoli" => $result['id_poli'],
-                "sisaantrean" => (int)$result['sisa_antrean'],
-                "antreanpanggil" =>  $antrean_terakhir = ($result['antrean_terakhir'] == 0) ? '-' : $result['antrean_terakhir'],
-                "keterangan" => ""
-            ],
+            "nomorantrean" => $result['nomorantrean'] ?? 1,
+            "namapoli" => ucwords(strtolower($result['id_poli'])),
+            "sisaantrean" => $result['sisa_antrean'],
+            "antreanpanggil" =>  $result['antrean_terakhir'],
+            "keterangan" => ""
         ],
         "metadata" => [
             "message" => "Ok",
@@ -88,7 +154,6 @@ if ($adaData) {
         ]
     ]);
 } else {
-
     echo json_encode([
         "metadata" => [
             "message" => "Antrean Tidak Ditemukan",

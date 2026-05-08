@@ -25,6 +25,52 @@ $data = mysqli_fetch_array($check);
    <?php
    require '../../assets/template/head.php';
    ?>
+   <style>
+      .sticky-table th,
+      .sticky-table td {
+         white-space: nowrap;
+      }
+
+      /* sticky columns */
+      .sticky-table th:nth-child(1),
+      .sticky-table td:nth-child(1) {
+         position: sticky;
+         left: 0;
+         background: #fff;
+         z-index: 3;
+      }
+
+      .sticky-table th:nth-child(2),
+      .sticky-table td:nth-child(2) {
+         position: sticky;
+         left: 80px;
+         background: #fff;
+         z-index: 2;
+      }
+
+      .sticky-table th:nth-child(3),
+      .sticky-table td:nth-child(3) {
+         position: sticky;
+         left: 230px;
+         background: #fff;
+         z-index: 2;
+      }
+
+      /* header */
+      .sticky-table thead th {
+         position: sticky;
+         top: 0;
+         z-index: 10;
+         background: #f8f9fa;
+      }
+
+      /* input fix */
+      .sticky-table input,
+      .sticky-table select {
+         position: relative;
+         z-index: 1;
+      }
+   </style>
 </head>
 
 <body>
@@ -77,7 +123,7 @@ $data = mysqli_fetch_array($check);
 
                               <!-- TABLE INPUT -->
                               <div class="table-responsive" style="overflow-x:auto;">
-                                 <table class="table table-bordered" id="tableCPO" style="min-width:1200px;">
+                                 <table class="table table-bordered sticky-table" id="tableCPO" style="min-width:1200px;">
                                     <thead>
                                        <tr>
                                           <th>Aksi</th>

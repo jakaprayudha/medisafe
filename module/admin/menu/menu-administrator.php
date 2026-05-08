@@ -56,6 +56,46 @@
             <span class="hide-menu">Satu Sehat </span>
          </a>
       </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Master Laboratorium') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/administrator/master-lab"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:test-tube"></iconify-icon>
+            <span class="hide-menu">Laboratorium </span>
+         </a>
+      </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'IDSH Satu Sehat') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/administrator/doctor-idsh"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:file-outline"></iconify-icon>
+            <span class="hide-menu">IDSH Dokter </span>
+         </a>
+      </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'IDSH Satu Sehat') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/administrator/patient-idsh"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:file-outline"></iconify-icon>
+            <span class="hide-menu">IDSH Pasien </span>
+         </a>
+      </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Monitoring RME') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/administrator/monitoring-visit"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:monitor-dashboard"></iconify-icon>
+            <span class="hide-menu">Monitoring RME</span>
+         </a>
+      </li>
    </ul>
 </nav>
 

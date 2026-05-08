@@ -58,7 +58,22 @@
 
          <ul class="collapse-menu">
             <li><a href="module/admin/rpt_appointment">Appointment</a></li>
+            <li><a href="module/admin/rpt_ranap">Rawat Inap</a></li>
             <li><a href="module/admin/rpt_prosedur">Tindakan (Prosedur)</a></li>
+         </ul>
+      </li>
+
+      <li class="sidebar-item has-sub">
+         <a href="javascript:void(0)" class="sidebar-link" onclick="toggleSidebarMenu(this)">
+            <iconify-icon icon="solar:folder-bold"></iconify-icon>
+            <span class="hide-menu">Monitoring RME</span>
+            <i class="ti ti-chevron-down arrow"></i>
+         </a>
+
+         <ul class="collapse-menu">
+            <li><a href="module/admin/doctor-idsh">Dokter IDSH</a></li>
+            <li><a href="module/admin/patient-idsh">Patient IDSH</a></li>
+            <li><a href="module/admin/monitoring-visit">RME Visit Pasien</a></li>
          </ul>
       </li>
 
@@ -122,6 +137,16 @@
             <span class="hide-menu">Display Antrean</span>
          </a>
       </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Status Pulang Ranap') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/admin/status_pulang"
+            aria-expanded="false">
+            <iconify-icon icon="solar:logout-linear"></iconify-icon>
+            <span class="hide-menu">Status Pulang Ranap</span>
+         </a>
+      </li>
       <li class="nav-small-cap">
          <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
          <span class="hide-menu">RME</span>
@@ -178,6 +203,20 @@
             aria-expanded="false">
             <iconify-icon icon="mdi:monitor"></iconify-icon>
             <span class="hide-menu">Display Farmasi</span>
+         </a>
+      </li>
+      <li class="nav-small-cap">
+         <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
+         <span class="hide-menu">Laboratorium</span>
+      </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Lab Order') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/lab/permintaan-lab"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:test-tube"></iconify-icon>
+            <span class="hide-menu">Permintaan Pemeriksaan</span>
          </a>
       </li>
       <li class="nav-small-cap">

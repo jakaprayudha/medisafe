@@ -1,5 +1,5 @@
 <?php
-$title = 'Farmasi Order';
+$title = 'Lab Order';
 require '../../controller/view.php';
 require '../../utility/env.php';
 // Memuat file .env
@@ -50,8 +50,32 @@ $apiUrl = getenv('API_URL');
                   <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="card-title fw-semibold">Laboratorium Order</h5>
                     <!-- Grup tombol di sisi kanan -->
-                    <div class="d-flex ms-auto gap-2">
+                    <div class="d-flex align-items-end gap-2 flex-wrap">
+                      <form id="filterForm" class="row g-2 align-items-end">
+                        <div class="col-auto">
+                          <label for="fromDate" class="form-label mb-0">Dari</label>
+                          <input type="date" id="fromDate" name="fromDate" max="" class="form-control">
+                        </div>
+                        <div class="col-auto">
+                          <label for="toDate" class="form-label mb-0">Sampai</label>
+                          <input type="date" id="toDate" name="toDate" class="form-control">
+                        </div>
+                        <div class="col-auto">
+                          <button type="button" id="btnFilter" class="btn btn-dark">
+                            <i class="fas fa-filter"></i> Filter
+                          </button>
+                        </div>
+                        <div class="col-auto">
+                          <button type="button" id="btnReset" class="btn btn-light">
+                            <i class="fas fa-undo"></i> Reset
+                          </button>
+                        </div>
+                      </form>
 
+                      <!-- Tombol kembali -->
+                      <div class="d-flex ms-auto gap-2">
+
+                      </div>
                     </div>
                   </div>
                   <div class="table-responsive" data-simplebar>
@@ -90,6 +114,8 @@ $apiUrl = getenv('API_URL');
   // Mengambil nilai API_URL dari PHP
   const apiUrl = '<?php echo $apiUrl . 'lab/' . 'pemeriksaanOrder' ?>';
   $(document).ready(function() {
+
+
     // Initialize DataTable
     var table = $('#zero_config').DataTable({
       "processing": true,
@@ -100,13 +126,32 @@ $apiUrl = getenv('API_URL');
         "type": "GET",
         dataSrc: function(json) {
 
+          let fromDate = $('#fromDate').val();
+          let toDate = $('#toDate').val();
+
           let filtered = json.data.filter(function(row) {
+
             let status = parseInt(row.status_permintaan);
-            if (currentFilter === 'selesai') {
-              return status === 3;
-            } else {
-              return status !== 3;
+
+            // 🔥 FILTER STATUS
+            let statusMatch = (currentFilter === 'selesai') ?
+              status === 3 :
+              status !== 3;
+
+            // 🔥 FILTER TANGGAL
+            let rowDate = row.created_at ? row.created_at.substring(0, 10) : null;
+
+            let dateMatch = true;
+
+            if (fromDate && rowDate < fromDate) {
+              dateMatch = false;
             }
+
+            if (toDate && rowDate > toDate) {
+              dateMatch = false;
+            }
+
+            return statusMatch && dateMatch;
           });
 
           return filtered.map(function(row, index) {
@@ -114,7 +159,7 @@ $apiUrl = getenv('API_URL');
               "actions": `
         <div class="text-center">
           <a href="module/lab/permintaan-lab-detail?no=${row.visit_ID}&rm=${row.nomor_rm}&id=${row.id_inspection}">
-            <button class="btn btn-primary">Lihat Pemeriksaan</button>
+            <button class="btn btn-sm btn-primary">Lihat Pemeriksaan</button>
           </a>
         </div>
       `,
@@ -181,6 +226,19 @@ $apiUrl = getenv('API_URL');
       ]
     });
 
+
+    var today = new Date().toLocaleDateString("sv-SE", {
+      timeZone: "Asia/Jakarta"
+    });
+
+    // default
+    $('#fromDate').val(today);
+    $('#toDate').val('');
+
+    // limit
+    $('#fromDate').attr('max', today);
+    $('#toDate').attr('max', today);
+
     $('#tabStatus .nav-link').on('click', function(e) {
       e.preventDefault();
 
@@ -190,6 +248,15 @@ $apiUrl = getenv('API_URL');
       currentFilter = $(this).data('status');
 
       table.ajax.reload(); // 🔥 reload table
+    });
+
+    $('#btnFilter').on('click', function() {
+      table.ajax.reload();
+    });
+    $('#btnReset').on('click', function() {
+      $('#fromDate').val(today);
+      $('#toDate').val('');
+      table.ajax.reload();
     });
   });
 </script>

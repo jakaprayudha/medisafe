@@ -104,7 +104,11 @@ $map = [
 $hari_indonesia = $map[$hari] ?? '';
 
 $config = getConfigBPJS($id_customer, $koneksi);
+<<<<<<< HEAD
 $bpjsResult = bpjsGet('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggal, $config);
+=======
+$bpjsResult = bpjsGet('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggalperiksa, $config);
+>>>>>>> bpjs_pcare
 // echo json_encode($bpjsResult);die();
 $mapDokter = [];
 foreach ($bpjsResult as $d) {
@@ -112,13 +116,64 @@ foreach ($bpjsResult as $d) {
 }
 
 $stmt = $koneksi->prepare("SELECT 
+<<<<<<< HEAD
     COUNT(ap.id) AS total,
     COALESCE(SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END), 0) AS total_panggil,
     COUNT(ap.id) - COALESCE(SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END), 0) AS sisa_antrean,
+=======
+    COUNT(
+        CASE 
+            WHEN COALESCE(p.visit_status, '') != '99'
+            THEN ap.id
+        END
+    ) AS total,
+>>>>>>> bpjs_pcare
 
     COALESCE(
-        MAX(CASE WHEN ap.status = 1 THEN ap.nomor END),
-        MIN(ap.nomor)
+        SUM(
+            CASE 
+                WHEN ap.status = 1 
+                AND COALESCE(p.visit_status, '') != '99'
+                THEN 1 
+                ELSE 0 
+            END
+        ), 
+        0
+    ) AS total_panggil,
+
+    COUNT(
+        CASE 
+            WHEN COALESCE(p.visit_status, '') != '99'
+            THEN ap.id
+        END
+    ) 
+    - 
+    COALESCE(
+        SUM(
+            CASE 
+                WHEN ap.status = 1 
+                AND COALESCE(p.visit_status, '') != '99'
+                THEN 1 
+                ELSE 0 
+            END
+        ),
+        0
+    ) AS sisa_antrean,
+
+    COALESCE(
+        MAX(
+            CASE 
+                WHEN ap.status = 1 
+                AND COALESCE(p.visit_status, '') != '99'
+                THEN ap.nomor 
+            END
+        ),
+        MIN(
+            CASE 
+                WHEN COALESCE(p.visit_status, '') != '99'
+                THEN ap.nomor
+            END
+        )
     ) AS antrean_panggil,
 
     d.id_poli AS poli,
@@ -143,12 +198,15 @@ LEFT JOIN antrian_poli AS ap
     AND ap.id_customer = ?
     AND ap.kode_antri = d.doctor_antrean
 
+LEFT JOIN pasien_visit AS p
+    ON p.visit_ID = ap.nomor_visit
+
 WHERE d.id_poli = ?
 AND LOWER(jd.day_of_week) = ?
 AND jd.sch_status = 1
 
 GROUP BY jd.id_doctor, jd.start_time, jd.end_time
-ORDER BY jd.start_time ASC;");
+ORDER BY jd.start_time ASC");
 $stmt->bind_param(
     "ssss",
     $tanggalperiksa,
@@ -161,20 +219,19 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 $data = [];
-// $antrean_terakhir = ($row['antrean_panggil'] == 0 ? '-' : $row['kode_antri'].$row['antrean_panggil']);
+$antrean_terakhir = ($row['antrean_panggil'] == 0 ? '-' : $row['kode_antri'].$row['antrean_panggil']);
 while ($row = $result->fetch_assoc()) {
     $kode = (string)$row['doctor_code'];
     $nama = $row['doctor_name'];
     $jam  = $row['start_time'] . '-' . $row['end_time'];
     if (isset($mapDokter[$kode])) {
         $nama = $mapDokter[$kode]['namadokter'];
-        // $jam  = $mapDokter[$kode]['jampraktek'];
     }
     $data[] = [
-        "namapoli" => $row['nmPoli'],
+        "namapoli" => ucwords(strtolower($row['nmPoli'])),
         "totalantrean" => (string)$row['total'],
         "sisaantrean" => (int)$row['sisa_antrean'],
-        "antreanpanggil" => $row['kode_antri'] . $row['antrean_panggil'],
+        "antreanpanggil" => $antrean_terakhir,
         "keterangan" => "",
         "kodedokter" => $kode,
         "namadokter" => $nama,

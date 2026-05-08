@@ -118,8 +118,8 @@ $rm = $_GET['rm'];
           </div>
 
           <div class="mb-3">
-            <label for="inspection_summary" class="form-label">Catatan</label>
-            <textarea class="form-control" id="inspection_summary" name="inspection_summary" rows="5"></textarea>
+            <label for="inspection_note" class="form-label">Catatan</label>
+            <textarea class="form-control" id="inspection_note" name="inspection_note" rows="5"></textarea>
           </div>
         </div>
       </div>
@@ -217,7 +217,7 @@ $rm = $_GET['rm'];
               "name": row.inspection_name ?? "-",
               "tanggal": row.inspection_date ?? "-",
               "sumber": row.inspection_source ?? "-",
-              "kesimpulan": row.inspection_summary ?? "-"
+              "kesimpulan": row.inspection_note ?? "-"
             };
           });
         }

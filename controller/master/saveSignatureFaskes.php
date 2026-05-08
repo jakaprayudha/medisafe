@@ -38,13 +38,17 @@ if ($oldFile) {
 }
 
 // ================== SIMPAN FILE BARU ==================
+
 $filename = 'ttd_' . time() . '.png';
 $filePath = $folder . $filename;
 
-if (!file_put_contents($filePath, $data)) {
+// Handle error simpan file
+if (file_put_contents($filePath, $data) === false) {
+   $error = error_get_last();
    echo json_encode([
       'status' => 'error',
-      'message' => 'Gagal menyimpan file'
+      'message' => 'Gagal menyimpan file',
+      'error_detail' => $error['message'] ?? 'Unknown error'
    ]);
    exit;
 }

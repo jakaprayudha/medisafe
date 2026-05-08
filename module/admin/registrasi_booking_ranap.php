@@ -131,7 +131,22 @@ require '../../controller/view.php';
 
       <div class="modal-body">
 
-        <div class="table-responsive">
+        <!-- 🔍 FILTER -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <select id="filterClass" class="form-select">
+              <option value="">Semua Kelas</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <select id="filterRoom" class="form-select">
+              <option value="">Semua Ruangan</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 🧱 SCROLL -->
+        <div style="max-height:400px; overflow-y:auto;">
           <table class="table table-bordered table-sm align-middle">
             <thead class="table-light">
               <tr>
@@ -141,15 +156,11 @@ require '../../controller/view.php';
                 <th>Nama Bed</th>
                 <th>Gender</th>
                 <th>Status</th>
-                <th>Pengaturan</th> <!-- 🔥 kolom baru -->
+                <th>Pengaturan</th>
                 <th>Pasien</th>
               </tr>
             </thead>
-            <tbody id="bedTableBody">
-              <tr>
-                <td colspan="5" class="text-center text-muted">Loading...</td>
-              </tr>
-            </tbody>
+            <tbody id="bedTableBody"></tbody>
           </table>
         </div>
 
@@ -160,6 +171,7 @@ require '../../controller/view.php';
 </div>
 
 <script>
+  let allBeds = [];
   $(document).ready(function() {
     // 🔹 Load data kelas saat modal dibuka
     $('#programModal').on('show.bs.modal', function() {
@@ -398,94 +410,103 @@ require '../../controller/view.php';
       .then(res => res.json())
       .then(res => {
 
-        let html = '';
+        allBeds = res.data;
 
-        if (res.data.length > 0) {
-
-          res.data.forEach((bed, i) => {
-
-
-
-            let statusBadge = bed.bed_status == 1 ?
-              '<span class="badge bg-warning-subtle text-warning d-block text-center">Digunakan</span>' :
-              '<span class="badge bg-success-subtle text-success d-block text-center">Kosong</span>';
-
-            let statusSwitch = `
-                <label class="switch">
-                  <input type="checkbox" 
-                    class="toggle-status-bed"
-                    data-id="${bed.id_bed}"
-                    ${bed.bed_status == 1 ? 'checked' : ''}>
-                  <span class="slider"></span>
-                </label>
-              `;
-
-            let patientName = bed.patient_name_pcare || '-';
-
-            let genderBadge = '';
-
-            if (bed.patient_gender === 'L' || bed.patient_gender?.toLowerCase().includes('laki')) {
-              genderBadge = `<span class="badge bg-primary ms-1">L</span>`;
-            } else if (bed.patient_gender === 'P' || bed.patient_gender?.toLowerCase().includes('perempuan')) {
-              genderBadge = `<span class="badge bg-danger ms-1">P</span>`;
-            }
-
-
-            html += `
-            <tr>
-              <td>${i + 1}</td>
-              <td>${bed.service_class}</td>
-              <td>${bed.room_name}</td>
-              <td>${bed.bed_name}</td>
-              <td>${bed.bed_gender || '-'}</td>
-              <td>${statusBadge}</td>
-               <td>${statusSwitch}</td>
-             <td>
-              ${patientName !== '-' ? patientName + ' ' + genderBadge : '-'}
-            </td>
-            </tr>
-          `;
-          });
-
-        } else {
-          html = `<tr><td colspan="5" class="text-center text-muted">Tidak ada data</td></tr>`;
-        }
-
-        $('#bedTableBody').html(html);
+        renderBedTable(allBeds);
+        buildFilter(allBeds);
 
       });
 
-    $(document).on('change', '.toggle-status-bed', function() {
+  });
 
-      let el = $(this);
-      let id = el.data('id');
-      let status = el.is(':checked') ? 1 : 0;
+  function renderBedTable(data) {
 
-      fetch('controller/master/bedController?toggle_status=1', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: `id_bed=${id}&bed_status=${status}`
-        })
-        .then(res => res.json())
-        .then(res => {
+    let html = '';
 
-          if (res.status === 'success') {
+    if (data.length > 0) {
 
-            // 🔥 update badge tanpa reload
-            let badge = status == 1 ?
-              '<span class="badge bg-success">Terisi</span>' :
-              '<span class="badge bg-secondary">Kosong</span>';
+      data.forEach((bed, i) => {
 
-            el.closest('tr').find('td:eq(3)').html(badge);
+        let statusBadge = bed.bed_status == 1 ?
+          '<span class="badge bg-warning-subtle text-warning d-block text-center">Digunakan</span>' :
+          '<span class="badge bg-success-subtle text-success d-block text-center">Kosong</span>';
 
-          } else {
-            Swal.fire('Gagal!', res.message, 'error');
-          }
+        let statusSwitch = `
+        <label class="switch">
+          <input type="checkbox" class="toggle-status-bed"
+            data-id="${bed.id_bed}"
+            ${bed.bed_status == 1 ? 'checked' : ''}>
+          <span class="slider"></span>
+        </label>
+      `;
 
-        });
+        let patientName = bed.patient_name_pcare || '-';
 
+        let genderBadge = '';
+        if (bed.patient_gender === 'L' || bed.patient_gender?.toLowerCase().includes('laki')) {
+          genderBadge = `<span class="badge bg-primary ms-1">L</span>`;
+        } else if (bed.patient_gender === 'P' || bed.patient_gender?.toLowerCase().includes('perempuan')) {
+          genderBadge = `<span class="badge bg-danger ms-1">P</span>`;
+        }
+
+        html += `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${bed.service_class}</td>
+          <td>${bed.room_name}</td>
+          <td>${bed.bed_name}</td>
+          <td>${bed.bed_gender || '-'}</td>
+          <td>${statusBadge}</td>
+          <td>${statusSwitch}</td>
+          <td>${patientName !== '-' ? patientName + ' ' + genderBadge : '-'}</td>
+        </tr>
+      `;
+      });
+
+    } else {
+      html = `<tr><td colspan="8" class="text-center text-muted">Tidak ada data</td></tr>`;
+    }
+
+    $('#bedTableBody').html(html);
+  }
+
+  function buildFilter(data) {
+
+    let classes = [...new Set(data.map(x => x.service_class))];
+    let rooms = [...new Set(data.map(x => x.room_name))];
+
+    $('#filterClass').html('<option value="">Semua Kelas</option>');
+    $('#filterRoom').html('<option value="">Semua Ruangan</option>');
+
+    classes.forEach(c => {
+      $('#filterClass').append(`<option value="${c}">${c}</option>`);
+    });
+
+    rooms.forEach(r => {
+      $('#filterRoom').append(`<option value="${r}">${r}</option>`);
+    });
+  }
+  $('#filterClass, #filterRoom').on('change', function() {
+
+    let selectedClass = $('#filterClass').val();
+    let selectedRoom = $('#filterRoom').val();
+
+    let filtered = allBeds.filter(bed => {
+
+      let matchClass = selectedClass ?
+        bed.service_class?.trim().toLowerCase() === selectedClass.trim().toLowerCase() :
+        true;
+
+      let matchRoom = selectedRoom ?
+        bed.room_name?.trim().toLowerCase() === selectedRoom.trim().toLowerCase() :
+        true;
+
+      return matchClass && matchRoom;
+    });
+
+    $('#bedTableBody').fadeOut(100, function() {
+      renderBedTable(filtered);
+      $(this).fadeIn(150);
     });
 
   });
