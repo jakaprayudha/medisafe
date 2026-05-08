@@ -48,12 +48,15 @@ function getData()
          pasien_visit.id_poli,
          ms_patient.patient_place,
          ms_patient.patient_datebirth,
-         pasien_visit.source_hub
+         pasien_visit.source_hub,
+         ms_provider.provider_name
       FROM permintaan_pharmacy 
       LEFT JOIN pasien_visit 
          ON pasien_visit.visit_ID = permintaan_pharmacy.id_visit 
       LEFT JOIN ms_patient 
          ON ms_patient.id_patient = pasien_visit.id_patient  
+      LEFT JOIN ms_provider 
+         ON ms_provider.id_provider = pasien_visit.id_provider
       WHERE pasien_visit.id_customer = ? 
         -- 🔥 FILTER TANGGAL
       AND DATE(permintaan_pharmacy.created_at) BETWEEN ? AND ?

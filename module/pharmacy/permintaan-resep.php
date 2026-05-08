@@ -85,7 +85,7 @@ $apiUrl = getenv('API_URL');
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                           <!-- <th class="text-dark fw-normal">ID</th> -->
                           <th class="text-dark fw-normal">Registrasi</th>
-                          <th scope="col" class="text-dark fw-normal">Nomor RM</th>
+                          <th scope="col" class="text-dark fw-normal">Provider</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th class="text-dark fw-normal">Dokter</th>
@@ -174,7 +174,7 @@ $apiUrl = getenv('API_URL');
               </div>
             `,
               tanggal: row.created_at,
-              nomor_rm: row.nomor_rm,
+              provider: row.provider_name,
               nama_pasien: row.patient_name_pcare,
               gender: row.patient_gender,
               dokter: row.id_doctor,
@@ -190,7 +190,7 @@ $apiUrl = getenv('API_URL');
           data: "tanggal"
         },
         {
-          data: "nomor_rm"
+          data: "provider"
         },
         {
           data: "nama_pasien"
