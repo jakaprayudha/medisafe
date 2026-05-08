@@ -594,5 +594,6 @@ $(function () {
 
         let tipe = nama == 'bpjs kesehatan' || nama == 'bpjs' ? 'BPJS' : 'UMUM';
         $('#typePasien').val(tipe);
+        console.log(type);
     }
 })
