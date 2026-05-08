@@ -58,54 +58,46 @@ function getHeaders($const_id, $tStamp, $signature, $userkey)
     ];
 }
 
-// function bpjsGet($endpoint)
-// {
-//     global $base_url, $service, $const_id, $secretKey, $userkey;
-//     $url = rtrim($base_url, '/') . '/' . trim($service, '/') . '/' . ltrim($endpoint, '/');
-//     $auth = generateSignature($const_id, $secretKey);
-//     $headers = getHeaders(
-//         $const_id,
-//         $auth['timestamp'],
-//         $auth['signature'],
-//         $userkey
-//     );
+function bpjsGetService($endpoint){
+    global $base_url, $service, $const_id, $secretKey, $userkey;
+    $url = rtrim($base_url, '/') . '/' . trim($service, '/') . '/' . ltrim($endpoint, '/');
+    $auth = generateSignature($const_id, $secretKey);
+    $headers = getHeaders(
+        $const_id,
+        $auth['timestamp'],
+        $auth['signature'],
+        $userkey
+    );
 
-//     echo "<pre>";
-//     print_r($headers);
-//     echo "</pre>";
-//     die();
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $url,
+        CURLOPT_CUSTOMREQUEST => 'GET',
+        CURLOPT_HTTPHEADER => $headers,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 15,
+        CURLOPT_SSL_VERIFYPEER => false
+    ]);
+    $response = curl_exec($ch);
+    $err = curl_error($ch);
+    // echo $url;
+    // echo $response;die();
+    curl_close($ch);
+    if ($err) {
+        return bpjsError("cURL Error: " . $err);
+    }
+    if (!$response) {
+        return bpjsError("Tidak ada response dari server BPJS");
+    }
+    return bpjsDecryptResponse(
+        $response,
+        $const_id,
+        $secretKey,
+        $auth['timestamp']
+    );
+}
 
-//     $ch = curl_init();
-//     curl_setopt_array($ch, [
-//         CURLOPT_URL => $url,
-//         CURLOPT_CUSTOMREQUEST => 'GET',
-//         CURLOPT_HTTPHEADER => $headers,
-//         CURLOPT_RETURNTRANSFER => true,
-//         CURLOPT_TIMEOUT => 15,
-//         CURLOPT_SSL_VERIFYPEER => false
-//     ]);
-//     $response = curl_exec($ch);
-//     $err = curl_error($ch);
-//     // echo $url;
-//     echo $response;
-//     die();
-//     curl_close($ch);
-//     if ($err) {
-//         return bpjsError("cURL Error: " . $err);
-//     }
-//     if (!$response) {
-//         return bpjsError("Tidak ada response dari server BPJS");
-//     }
-//     return bpjsDecryptResponse(
-//         $response,
-//         $const_id,
-//         $secretKey,
-//         $auth['timestamp']
-//     );
-// }
-
-function bpjsGet($endpoint, $config)
-{
+function bpjsGet($endpoint, $config){
     $url = rtrim($config['base_url'], '/') . '/' . trim($config['service'], '/') . '/' . ltrim($endpoint, '/');
 
     $auth = generateSignature($config['const_id'], $config['secretKey']);
@@ -130,7 +122,8 @@ function bpjsGet($endpoint, $config)
 
     $response = curl_exec($ch);
     $err = curl_error($ch);
-
+    echo $response;
+    die();
     curl_close($ch);
 
     if ($err) {

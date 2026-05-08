@@ -168,8 +168,11 @@ require '../../controller/view.php';
                         let statusClass = '';
                         let statusText = '';
                         if (row.visit_status == '10') {
-                            statusClass = 'bg-danger';
+                            statusClass = 'bg-warning';
                             statusText = 'Belum Check-in';
+                        } else if (row.visit_status == '99') {
+                            statusClass = 'bg-danger';
+                            statusText = 'Batal';
                         } else {
                             statusClass = 'bg-success';
                             statusText = 'Sudah Check-in';

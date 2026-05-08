@@ -46,6 +46,16 @@
               <span class="hide-menu">Poliklinik</span>
            </a>
         </li>
+        <li class="sidebar-item">
+           <a class="sidebar-link <?php if ($title == 'Pasien JKN' or $title == 'Pasien JKN') {
+                                       echo 'active';
+                                    } ?>"
+              href="module/admisi/listPasien.php"
+              aria-expanded="false">
+              <iconify-icon icon="solar:checklist-minimalistic-broken"></iconify-icon>
+              <span class="hide-menu">Pasien JKN</span>
+           </a>
+        </li>
         <!-- <li class="sidebar-item">
            <a class="sidebar-link <?php if ($title == 'Registrasi UGD' or $title == 'List Pasien' and $_GET['type'] == 'UGD') {
                                        echo 'active';

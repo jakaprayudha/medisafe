@@ -1,4 +1,4 @@
-<?php
+admin/registrasi.php<?php
 $title = 'Dashboard';
 require '../../controller/view.php';
 $checkvisit = mysqli_query($koneksi, "SELECT visit_ID FROM pasien_visit");

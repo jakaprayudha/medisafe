@@ -386,7 +386,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
     let status = $(this).data('status');
     let konfirmasi = status == '1' ? "Konfirmasi pasien hadir?" : "Konfirmasi pasien tidak hadir?";
     Swal.fire({
-      title: 'Konfirmasi pasien hadir?',
+      title: konfirmasi,
       icon: 'question',
       showCancelButton: true,
       confirmButtonText: 'Ya'
