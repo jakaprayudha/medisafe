@@ -31,7 +31,7 @@ try {
         WHERE noKartu = ?
         AND visit_date = ?
         AND id_customer = ?
-        AND visit_status = '10'
+        AND visit_status != '99'
         LIMIT 1
     ");
     $stmt->bind_param("sss", $noKartu, $tanggal, $id_customer);
@@ -48,6 +48,15 @@ try {
         exit;
     }
     $row = $res->fetch_assoc();
+    if ($row['visit_status'] == '99') {
+        echo json_encode([
+            "metadata" => [
+                "message" => "Antrean Tidak Ditemukan atau Sudah Dibatalkan",
+                "code" => 201
+            ]
+        ]);
+        exit;
+    }
     $nomor_visit = $row['visit_ID'];
     $visit_status_db = $row['visit_status'];
     $stmtCek = $koneksi->prepare("

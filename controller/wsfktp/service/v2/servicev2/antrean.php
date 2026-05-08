@@ -151,7 +151,7 @@ if ($kuota == 0 || $total >= $kuota) {
     exit;
 }
 // die();
-$stmt1 = $koneksi->prepare("SELECT * FROM pasien_visit WHERE visit_date = ? AND noKartu = ? AND id_customer = ? AND id_poli = ?");
+$stmt1 = $koneksi->prepare("SELECT * FROM pasien_visit WHERE visit_date = ? AND noKartu = ? AND id_customer = ? AND id_poli = ? AND visit_status != '99'");
 $stmt1->bind_param("ssss", $tanggal, $noKartu, $id_customer, $nmPoli);
 $stmt1->execute();
 $cek = $stmt1->get_result();
@@ -206,7 +206,37 @@ if ($cek->num_rows > 0) {
             if (!$stmt4->execute()) {
                 throw new Exception($stmt4->error);
             }
-            $stmt = $koneksi->prepare("SELECT COUNT(*) as total,SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) as total_panggil,COUNT(*) - SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END) as sisa_antrean,COALESCE(MAX(CASE WHEN ap.status = 1 THEN ap.nomor END),MAX(ap.nomor)) as antrean_terakhir FROM antrian_poli ap WHERE ap.id_customer = ? AND ap.poli = ? AND ap.tanggal = ?");
+            $stmt = $koneksi->prepare("SELECT 
+                    COUNT(*) as total,
+
+                    SUM(
+                        CASE 
+                            WHEN ap.status = 1 THEN 1 
+                            ELSE 0 
+                        END
+                    ) as total_panggil,
+
+                    COUNT(*) - SUM(
+                        CASE 
+                            WHEN ap.status = 1 THEN 1 
+                            ELSE 0 
+                        END
+                    ) as sisa_antrean,
+
+                    COALESCE(
+                        MAX(
+                            CASE 
+                                WHEN ap.status = 1 
+                                THEN CONCAT(ap.kode_antri, ap.nomor)
+                            END
+                        ),
+                        '0'
+                    ) as antrean_terakhir
+                FROM antrian_poli ap
+                WHERE ap.id_customer = ?
+                AND ap.poli = ?
+                AND ap.tanggal = ?
+                AND ap.status != '99'");
             $stmt->bind_param("sss", $id_customer, $kodepoli, $tanggal);
             $stmt->execute();
             $dataAntrian = $stmt->get_result()->fetch_assoc();
