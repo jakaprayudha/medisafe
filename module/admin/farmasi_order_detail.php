@@ -8,7 +8,7 @@ $env = loadEnv();
 // Mengambil nilai API_URL dari environment
 $apiUrl = getenv('API_URL');
 $no = $_GET['no'];
-$check = mysqli_query($koneksi, "SELECT * FROM pasien_visit LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient LEFT JOIN permintaan_pharmacy ON permintaan_pharmacy.id_visit = pasien_visit.visit_ID  WHERE pasien_visit.visit_ID='$no'");
+$check = mysqli_query($koneksi, "SELECT * FROM pasien_visit LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient LEFT JOIN permintaan_pharmacy ON permintaan_pharmacy.id_visit = pasien_visit.visit_ID LEFT JOIN ms_provider ON ms_provider.id_provider = pasien_visit.id_provider  WHERE pasien_visit.visit_ID='$no'");
 $data = mysqli_fetch_array($check);
 
 // Hitung usia jika data ditemukan
@@ -168,29 +168,153 @@ $data = mysqli_fetch_array($check);
                   </div>
 
                   <hr class="my-3">
-
                   <!-- INFO GRID -->
                   <div class="row g-3">
 
+                    <!-- Nama Pasien -->
                     <div class="col-md-6">
-                      <div class="info-item">
-                        <div class="label text-muted">Nama Pasien</div>
-                        <div class="value">
-                          <?= $data['patient_name_pcare'] ?? '-' ?>
+                      <div class="info-card">
+                        <div class="icon bg-primary-subtle text-primary">
+                          <i class="bi bi-person"></i>
+                        </div>
+                        <div class="content">
+                          <div class="label">Nama Pasien</div>
+                          <div class="value">
+                            <?= $data['patient_name_pcare'] ?? '-' ?>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Nomor RM -->
+                    <div class="col-md-3">
+                      <div class="info-card">
+                        <div class="icon bg-success-subtle text-success">
+                          <i class="bi bi-folder2-open"></i>
+                        </div>
+                        <div class="content">
+                          <div class="label">Nomor RM</div>
+                          <div class="value">
+                            <?= $data['nomor_rm'] ?? '-' ?>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Gender -->
+                    <div class="col-md-3">
+                      <div class="info-card">
+                        <div class="icon bg-secondary-subtle text-secondary">
+                          <i class="bi bi-gender-ambiguous"></i>
+                        </div>
+                        <div class="content">
+                          <div class="label">Gender</div>
+                          <div class="value">
+                            <?= $data['patient_gender'] ?? '-' ?>
+                          </div>
                         </div>
                       </div>
                     </div>
 
 
+                    <!-- Nama Dokter -->
                     <div class="col-md-6">
-                      <div class="info-item">
-                        <div class="label text-muted">Nama Dokter</div>
-                        <div class="value">
-                          <?= $data['id_doctor'] ?? '-' ?>
+                      <div class="info-card">
+                        <div class="icon bg-info-subtle text-info">
+                          <i class="bi bi-person-badge"></i>
+                        </div>
+                        <div class="content">
+                          <div class="label">Nama Dokter</div>
+                          <div class="value">
+                            <?= $data['id_doctor'] ?? '-' ?>
+                          </div>
                         </div>
                       </div>
                     </div>
+
+                    <!-- Provider -->
+                    <div class="col-md-3">
+                      <div class="info-card">
+                        <div class="icon bg-warning-subtle text-warning">
+                          <i class="bi bi-hospital"></i>
+                        </div>
+                        <div class="content">
+                          <div class="label">Provider</div>
+                          <div class="value">
+                            <?= $data['provider_name'] ?? '-' ?>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Tanggal Lahir -->
+                    <div class="col-md-3">
+                      <div class="info-card">
+                        <div class="icon bg-danger-subtle text-danger">
+                          <i class="bi bi-calendar-date"></i>
+                        </div>
+                        <div class="content">
+                          <div class="label">Tanggal Lahir</div>
+                          <div class="value">
+                            <?= !empty($data['patient_datebirth']) ? date('d M Y', strtotime($data['patient_datebirth'])) : '-' ?>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+
                   </div>
+
+                  <style>
+                    .info-card {
+                      display: flex;
+                      align-items: center;
+                      gap: 14px;
+                      background: #fff;
+                      border-radius: 16px;
+                      padding: 16px;
+                      border: 1px solid #e9ecef;
+                      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+                      transition: all .2s ease;
+                      height: 100%;
+                    }
+
+                    .info-card:hover {
+                      transform: translateY(-2px);
+                      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+                    }
+
+                    .info-card .icon {
+                      width: 52px;
+                      height: 52px;
+                      border-radius: 14px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      font-size: 22px;
+                      flex-shrink: 0;
+                    }
+
+                    .info-card .content {
+                      flex: 1;
+                      min-width: 0;
+                    }
+
+                    .info-card .label {
+                      font-size: 12px;
+                      color: #6c757d;
+                      margin-bottom: 4px;
+                      text-transform: uppercase;
+                      letter-spacing: .5px;
+                    }
+
+                    .info-card .value {
+                      font-size: 15px;
+                      font-weight: 600;
+                      color: #212529;
+                      word-break: break-word;
+                    }
+                  </style>
 
 
                   <!-- CATATAN -->
@@ -631,66 +755,66 @@ $data = mysqli_fetch_array($check);
 
     $('#selectedStatus').text(label);
   }
-$(document).on('click', '.edit-btn', function () {
-   const id = $(this).data('id');
+  $(document).on('click', '.edit-btn', function() {
+    const id = $(this).data('id');
 
-   fetch(`controller/visit/permintaanFarmasiDetails?id=${id}`)
+    fetch(`controller/visit/permintaanFarmasiDetails?id=${id}`)
       .then(res => res.json())
       .then(res => {
 
-         const d = res.data;
+        const d = res.data;
 
-         $('#id_pharmacy_details').val(d.id_pharmacy_details);
-         $('#id_pharmacy').val(d.id_pharmacy).trigger('change');
-         $('#qty').val(d.qty);
-         $('#signa').val(d.signa);
-         $('#catatan_permintaan').val(d.catatan);
+        $('#id_pharmacy_details').val(d.id_pharmacy_details);
+        $('#id_pharmacy').val(d.id_pharmacy).trigger('change');
+        $('#qty').val(d.qty);
+        $('#signa').val(d.signa);
+        $('#catatan_permintaan').val(d.catatan);
 
-         $('#programModal .modal-title').text('Edit Data');
-         $('#programModal').modal('show');
+        $('#programModal .modal-title').text('Edit Data');
+        $('#programModal').modal('show');
 
       });
-});
-$(document).on('click', '.delete-btn', function () {
-   const id = $(this).data('id');
+  });
+  $(document).on('click', '.delete-btn', function() {
+    const id = $(this).data('id');
 
-   if (!confirm('Yakin mau hapus data ini?')) return;
+    if (!confirm('Yakin mau hapus data ini?')) return;
 
-   fetch(`controller/visit/permintaanFarmasiDetails?id=${id}`, {
-      method: 'DELETE'
-   })
-   .then(res => res.json())
-   .then(res => {
-      if (res.status === 'success') {
-         alert('Data berhasil dihapus');
-         loadTiket(); // reload
-      }
-   });
-});
-$('#programForm').on('submit', function (e) {
-   e.preventDefault();
+    fetch(`controller/visit/permintaanFarmasiDetails?id=${id}`, {
+        method: 'DELETE'
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === 'success') {
+          alert('Data berhasil dihapus');
+          loadTiket(); // reload
+        }
+      });
+  });
+  $('#programForm').on('submit', function(e) {
+    e.preventDefault();
 
-   const formData = $(this).serialize();
-   const id = $('#id_pharmacy_details').val();
+    const formData = $(this).serialize();
+    const id = $('#id_pharmacy_details').val();
 
-   let method = id ? 'PUT' : 'POST';
-   let url = 'controller/visit/permintaanFarmasiDetails';
+    let method = id ? 'PUT' : 'POST';
+    let url = 'controller/visit/permintaanFarmasiDetails';
 
-   fetch(url, {
-      method: method,
-      headers: {
-         'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: formData
-   })
-   .then(res => res.json())
-   .then(res => {
-      if (res.status === 'success') {
-         $('#programModal').modal('hide');
-         loadTiket();
-      } else {
-         alert(res.message);
-      }
-   });
-});
+    fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: formData
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === 'success') {
+          $('#programModal').modal('hide');
+          loadTiket();
+        } else {
+          alert(res.message);
+        }
+      });
+  });
 </script>
