@@ -374,7 +374,13 @@ $qrApiUrl  = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . 
 
                 <?php else: ?>
 
+                    <?php
+                    $totalTanggal = count($grupHasil);
+                    $indexTanggal = 0;
+                    ?>
+
                     <?php foreach ($grupHasil as $tanggal => $groups): ?>
+                        <?php $indexTanggal++; ?>
 
                         <!-- 🔥 UPDATE TANGGAL SAJA -->
                         <tr>
@@ -413,12 +419,13 @@ $qrApiUrl  = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . 
                             <?php endforeach; ?>
                         <?php endforeach; ?>
 
-                        <!-- 🔥 PAGE BREAK PER TANGGAL -->
-                        <tr>
-                            <td colspan="3" style="border:none;">
-                                <div style="page-break-after: always;"></div>
-                            </td>
-                        </tr>
+                        <?php if ($indexTanggal < $totalTanggal): ?>
+                            <tr>
+                                <td colspan="3" style="border:none; padding:0;">
+                                    <div style="page-break-after: always;"></div>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
 
                     <?php endforeach; ?>
 
@@ -426,53 +433,31 @@ $qrApiUrl  = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . 
 
             </tbody>
         </table>
-        <div style="page-break-inside: avoid;">
-            <table class="lab-table" style="margin-top: -1px;">
-                <colgroup>
-                    <col style="width: 45%;">
-                    <col style="width: 25%;">
-                    <col style="width: 30%;">
-                </colgroup>
-
+        <div style="page-break-inside: avoid; margin-top: 10px;">
+            <!-- ================= FOOTER TTD & QR ================= -->
+            <table class="lab-footer-table">
+                <tr>
+                    <td style="width: 50%; text-align: left;">
+                        <div class="lab-qr">
+                            <img src="<?= $qrApiUrl ?>" alt="QR Code Verifikasi">
+                            <div class="baseline-align-qr">
+                                Scan untuk verifikasi hasil
+                            </div>
+                        </div>
+                    </td>
+                    <td style="width: 50%; text-align: right;">
+                        <div class="lab-ttd">
+                            Pengisi Data<br>
+                            <img src="<?= $ttdLabSrc ?>" alt="Tanda Tangan">
+                            <div class="baseline-align-text">
+                                <?= val($puser['fullname'] ?? 'Petugas Laboratorium') ?>
+                            </div>
+                            <span style="font-weight: normal; font-size: 10pt;">Petugas Laboratorium</span>
+                        </div>
+                    </td>
+                </tr>
             </table>
-            <div style="page-break-inside: avoid;">
-                <table class="lab-table" style="margin-top: -1px;">
-                    <colgroup>
-                        <col style="width: 45%;">
-                        <col style="width: 25%;">
-                        <col style="width: 30%;">
-                    </colgroup>
-
-                </table>
-
-                <!-- ================= FOOTER TTD & QR ================= -->
-                <!-- Jika ada data, footer ini sudah otomatis masuk ke dalam <div page-break-inside: avoid;> -->
-                <table class="lab-footer-table">
-                    <tr>
-                        <td style="width: 50%; text-align: left;">
-                            <div class="lab-qr">
-                                <img src="<?= $qrApiUrl ?>" alt="QR Code Verifikasi">
-                                <div class="baseline-align-qr">
-                                    Scan untuk verifikasi hasil
-                                </div>
-                            </div>
-                        </td>
-                        <td style="width: 50%; text-align: right;">
-                            <div class="lab-ttd">
-                                Pengisi Data<br>
-                                <img src="<?= $ttdLabSrc ?>" alt="Tanda Tangan">
-                                <div class="baseline-align-text">
-                                    <?= val($puser['fullname'] ?? 'Petugas Laboratorium') ?>
-                                </div>
-                                <span style="font-weight: normal; font-size: 10pt;">Petugas Laboratorium</span>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-
-                <?php if (!empty($grupHasil)): ?>
-            </div> <!-- Menutup div pelindung page-break -->
-        <?php endif; ?>
+        </div>
 
         <!-- ================= PRINT BUTTON ================= -->
         <div class="lab-noprint" style="text-align:center; margin-top:20px; margin-bottom:20px;">
