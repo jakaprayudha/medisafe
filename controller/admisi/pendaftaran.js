@@ -592,7 +592,7 @@ $(function () {
         let selected = $('#kodeprov').find(':selected');
         let nama = (selected.text() || '').toLowerCase();
 
-        let tipe = nama.includes('bpjs') ? 'BPJS' : 'UMUM';
+        let tipe = nama == 'bpjs kesehatan' || nama == 'bpjs' ? 'BPJS' : 'UMUM';
         $('#typePasien').val(tipe);
     }
 })
