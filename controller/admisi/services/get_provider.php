@@ -11,9 +11,7 @@ if ($type === 'BPJS') {
         ORDER BY provider_name ASC
         LIMIT 100
     ";
-
 } else {
-
     $sql = "
         SELECT id_provider AS id, provider_name AS text
         FROM ms_provider
