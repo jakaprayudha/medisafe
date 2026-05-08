@@ -104,11 +104,7 @@ $map = [
 $hari_indonesia = $map[$hari] ?? '';
 
 $config = getConfigBPJS($id_customer, $koneksi);
-<<<<<<< HEAD
-$bpjsResult = bpjsGet('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggal, $config);
-=======
 $bpjsResult = bpjsGet('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggalperiksa, $config);
->>>>>>> bpjs_pcare
 // echo json_encode($bpjsResult);die();
 $mapDokter = [];
 foreach ($bpjsResult as $d) {
@@ -116,18 +112,12 @@ foreach ($bpjsResult as $d) {
 }
 
 $stmt = $koneksi->prepare("SELECT 
-<<<<<<< HEAD
-    COUNT(ap.id) AS total,
-    COALESCE(SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END), 0) AS total_panggil,
-    COUNT(ap.id) - COALESCE(SUM(CASE WHEN ap.status = 1 THEN 1 ELSE 0 END), 0) AS sisa_antrean,
-=======
     COUNT(
         CASE 
             WHEN COALESCE(p.visit_status, '') != '99'
             THEN ap.id
         END
     ) AS total,
->>>>>>> bpjs_pcare
 
     COALESCE(
         SUM(
