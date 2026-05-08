@@ -93,36 +93,72 @@ $totalKeseluruhan = $totalObat + $totalBilling;
 
                   <!-- LEFT -->
                   <div class="d-flex align-items-center gap-3">
+
+                    <!-- Avatar -->
                     <div class="avatar-circle bg-primary text-white">
                       <?= strtoupper(substr($data['patient_name'], 0, 1)) ?>
                     </div>
 
+                    <!-- Patient Info -->
                     <div>
-                      <h5 class="mb-0 fw-semibold">
+
+                      <h5 class="mb-1 fw-semibold">
                         <?= $data['patient_name'] ?>
                       </h5>
-                      <small class="text-muted">
-                        No RM: <?= $data['nomor_rm'] ?>
-                      </small>
+
+                      <div class="d-flex flex-wrap gap-2 mt-2">
+
+                        <span class="badge rounded-pill bg-light text-dark border">
+                          <i class="fas fa-id-card me-1 text-primary"></i>
+                          RM : <?= $data['nomor_rm'] ?>
+                        </span>
+
+                        <span class="badge rounded-pill bg-light text-dark border">
+                          <i class="fas fa-venus-mars me-1 text-danger"></i>
+                          <?= $data['patient_gender'] ?? '-' ?>
+                        </span>
+
+                        <span class="badge rounded-pill bg-light text-dark border">
+                          <i class="fas fa-hospital me-1 text-success"></i>
+                          <?= $data['provider_name'] ?? '-' ?>
+                        </span>
+
+                        <span class="badge rounded-pill bg-light text-dark border">
+                          <i class="fas fa-user-md me-1 text-info"></i>
+                          <?= $data['id_doctor'] ?? '-' ?>
+                        </span>
+
+                        <span class="badge rounded-pill bg-light text-dark border">
+                          <i class="fas fa-calendar-check me-1 text-warning"></i>
+                          <?= !empty($data['visit_date'])
+                            ? date('d M Y', strtotime($data['visit_date']))
+                            : '-' ?>
+                        </span>
+
+                      </div>
+
                     </div>
                   </div>
 
                   <!-- RIGHT -->
-                  <!-- RIGHT -->
                   <div class="d-flex flex-column align-items-end text-end">
 
-                    <div class="fs-6 text-muted">Total Tagihan</div>
+                    <div class="fs-6 text-muted">
+                      Total Tagihan
+                    </div>
 
                     <div class="fs-4 fw-bold text-danger">
                       Rp <?= number_format($totalKeseluruhan, 0, ',', '.') ?>
                     </div>
 
                     <div class="d-flex align-items-center gap-2 mt-2">
+
                       <a href="module/admin/kasir">
                         <button class="btn btn-light shadow-sm">
                           <i class="fas fa-arrow-left"></i> Kembali
                         </button>
                       </a>
+
                       <a href="module/print/struk_billing?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
                         <button class="btn btn-info shadow-sm">
                           <i class="fas fa-print"></i>
@@ -141,8 +177,12 @@ $totalKeseluruhan = $totalObat + $totalBilling;
                       <?php else: ?>
 
                         <button class="btn btn-primary px-3"
-                          data-bs-toggle="modal" data-bs-target="#bayar">
-                          <i class="fas fa-coins me-1"></i> Bayar
+                          data-bs-toggle="modal"
+                          data-bs-target="#bayar">
+
+                          <i class="fas fa-coins me-1"></i>
+                          Bayar
+
                         </button>
 
                       <?php endif; ?>
@@ -154,6 +194,21 @@ $totalKeseluruhan = $totalObat + $totalBilling;
                 </div>
               </div>
             </div>
+
+            <style>
+              .avatar-circle {
+                width: 64px;
+                height: 64px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 26px;
+                font-weight: 700;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+                flex-shrink: 0;
+              }
+            </style>
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
                 <div class="card-body p-4 " class="">
