@@ -48,6 +48,11 @@ $id_patient = $data['id_patient'];
           }
           ?>
           <div class="row">
+            <div class="col-12">
+              <?php
+              require 'card-pasien.php';
+              ?>
+            </div>
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
                 <div class="card-body p-4">
