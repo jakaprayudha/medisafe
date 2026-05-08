@@ -888,7 +888,7 @@ require '../../controller/view.php';
                       <ul class="dropdown-menu dropdown-menu-end shadow">
 
                       <li>
-                        <a class="dropdown-item detail-btn" href="javascript:;" data-id="${row.id_visit}">
+                        <a class="dropdown-item detail-btn" href="javascript:;" data-id="${row.visit_ID}">
                           <i class="fas fa-eye me-2 text-info"></i> Lihat Hasil Pemeriksaan
                         </a>
                       </li>
@@ -1188,7 +1188,51 @@ require '../../controller/view.php';
       $('#d_anamnesa').text(d.anamnesa ?? '-');
       $('#d_catatan_screening').text(d.catatan_screening ?? '-');
       $('#d_diagnosa').text(d.code + '-' + d.icd10 ?? '-');
-      $('#d_tindakan').text(d.tindakan ?? '-');
+      if (Array.isArray(d.tindakan) && d.tindakan.length > 0) {
+
+        let html = `
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Obat</th>
+                        <th>Qty</th>
+                        <th>Signa</th>
+                        <th>Catatan</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+        d.tindakan.forEach(item => {
+
+          html += `
+            <tr>
+                <td>${item.pharmacy_name_generic ?? '-'}</td>
+                <td>${item.qty ?? '-'}</td>
+                <td>${item.signa ?? '-'}</td>
+                <td>${item.catatan ?? '-'}</td>
+            </tr>
+        `;
+        });
+
+        html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+
+        $('#d_tindakan').html(html);
+
+      } else {
+
+        $('#d_tindakan').html(`
+        <div class="text-muted">
+            Tidak ada tindakan / obat
+        </div>
+    `);
+
+      }
 
       if (d.suhu > 37.5) {
         $('#d_suhu').addClass('text-danger fw-bold');
