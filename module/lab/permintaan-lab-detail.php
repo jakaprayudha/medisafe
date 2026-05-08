@@ -33,6 +33,11 @@ $rm = $_GET['rm'];
       <div class="body-wrapper-inner">
         <div class="container-fluid">
           <div class="row">
+            <div class="col-12">
+              <?php
+              require '../admin/card-pasien.php';
+              ?>
+            </div>
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
                 <div class="card-body p-4">
