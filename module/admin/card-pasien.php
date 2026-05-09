@@ -16,44 +16,224 @@
          </div>
       </div>
       <hr class="my-3">
-      <div class="row text-sm">
-         <div class="col-md-2">
-            <div class="text-muted">Gender</div>
-            <div class="fw-semibold" id="pc_gender">-</div>
+      <div class="patient-info-grid mt-3">
+
+         <div class="patient-info-item">
+            <div class="info-icon bg-primary-subtle text-primary">
+               <i class="fas fa-venus-mars"></i>
+            </div>
+
+            <div class="info-content">
+               <div class="info-label">Gender</div>
+               <div class="info-value" id="pc_gender">-</div>
+            </div>
          </div>
-         <div class="col-md-2">
-            <div class="text-muted">Dokter</div>
-            <div class="fw-semibold" id="pc_dokter">-</div>
+
+         <div class="patient-info-item">
+            <div class="info-icon bg-danger-subtle text-danger">
+               <i class="fas fa-cake-candles"></i>
+            </div>
+
+            <div class="info-content">
+               <div class="info-label">Tanggal Lahir</div>
+               <div class="info-value" id="pc_birth_date">-</div>
+            </div>
          </div>
-         <div class="col-md-2">
-            <div class="text-muted">Pembayaran</div>
-            <div class="fw-semibold" id="pc_provider">-</div>
+
+         <div class="patient-info-item">
+            <div class="info-icon bg-warning-subtle text-warning">
+               <i class="fas fa-hourglass-half"></i>
+            </div>
+
+            <div class="info-content">
+               <div class="info-label">Umur</div>
+               <div class="info-value" id="idUmur">-</div>
+            </div>
          </div>
-         <div class="col-md-2">
-            <div class="text-muted">BPJS</div>
-            <div class="fw-semibold" id="patient_bpjs">-</div>
+
+         <div class="patient-info-item">
+            <div class="info-icon bg-success-subtle text-success">
+               <i class="fas fa-user-doctor"></i>
+            </div>
+
+            <div class="info-content">
+               <div class="info-label">Dokter</div>
+               <div class="info-value" id="pc_dokter">-</div>
+            </div>
          </div>
-         <div class="col-md-2">
-            <div class="text-muted">NIK</div>
-            <div class="fw-semibold" id="patient_nik">-</div>
+
+         <div class="patient-info-item">
+            <div class="info-icon bg-info-subtle text-info">
+               <i class="fas fa-wallet"></i>
+            </div>
+
+            <div class="info-content">
+               <div class="info-label">Pembayaran</div>
+               <div class="info-value" id="pc_provider">-</div>
+            </div>
          </div>
-         <div class="col-md-2">
-            <div class="text-muted">Umur</div>
-            <div class="fw-semibold"><span id="idUmur"></span></div>
+
+         <div class="patient-info-item">
+            <div class="info-icon bg-secondary-subtle text-secondary">
+               <i class="fas fa-id-card"></i>
+            </div>
+
+            <div class="info-content">
+               <div class="info-label">No BPJS</div>
+               <div class="info-value" id="patient_bpjs">-</div>
+            </div>
          </div>
+
+         <div class="patient-info-item">
+            <div class="info-icon bg-dark-subtle text-dark">
+               <i class="fas fa-address-card"></i>
+            </div>
+
+            <div class="info-content">
+               <div class="info-label">NIK</div>
+               <div class="info-value" id="patient_nik">-</div>
+            </div>
+         </div>
+
       </div>
    </div>
 </div>
 <style>
+   #patientCard {
+      border-radius: 18px;
+      overflow: hidden;
+      border: none;
+      background: linear-gradient(to bottom, #ffffff, #f8fafc);
+   }
+
+   #patientCard .card-body {
+      padding: 16px 18px;
+   }
+
+   /* =========================
+   AVATAR
+========================= */
    .avatar-circle {
-      width: 45px;
-      height: 45px;
-      border-radius: 50%;
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: bold;
+      font-weight: 700;
       font-size: 18px;
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      box-shadow: 0 6px 18px rgba(99, 102, 241, .18);
+      flex-shrink: 0;
+   }
+
+   /* =========================
+   TITLE
+========================= */
+   #pc_name {
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.1;
+      margin-bottom: 2px;
+   }
+
+   #pc_rm {
+      font-size: 12px;
+      color: #64748b !important;
+   }
+
+   /* =========================
+   GRID
+========================= */
+   .patient-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+   }
+
+   /* =========================
+   ITEM
+========================= */
+   .patient-info-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fff;
+      border: 1px solid #eef2f7;
+      border-radius: 14px;
+      padding: 10px 12px;
+      transition: all .2s ease;
+      min-height: 62px;
+   }
+
+   .patient-info-item:hover {
+      transform: translateY(-1px);
+      border-color: #dbeafe;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, .05);
+   }
+
+   /* =========================
+   ICON
+========================= */
+   .info-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+   }
+
+   /* =========================
+   TEXT
+========================= */
+   .info-content {
+      flex: 1;
+      min-width: 0;
+   }
+
+   .info-label {
+      font-size: 10px;
+      color: #64748b;
+      margin-bottom: 1px;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+   }
+
+   .info-value {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.25;
+      word-break: break-word;
+   }
+
+   /* =========================
+   STATUS BADGE
+========================= */
+   #pc_status {
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-weight: 600;
+   }
+
+   /* =========================
+   MOBILE
+========================= */
+   @media (max-width: 768px) {
+
+      #pc_name {
+         font-size: 18px;
+      }
+
+      .patient-info-grid {
+         grid-template-columns: 1fr 1fr;
+      }
+
    }
 </style>
 
@@ -145,6 +325,22 @@
       if (data.patient_nik && data.patient_nik !== "null") {
          setText("patient_nik", data.patient_nik);
       }
+
+
+      let birthDate = safeVal(data.patient_datebirth);
+
+      if (birthDate !== '-') {
+
+         const d = new Date(birthDate);
+
+         birthDate = d.toLocaleDateString('id-ID', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+         });
+      }
+
+      setText("pc_birth_date", birthDate);
 
       // ===============================
       // 🔥 STATUS

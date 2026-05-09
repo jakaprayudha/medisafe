@@ -122,21 +122,27 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
   let activeTab = 'belum'; // default tab
 
   const apiUrl = 'controller/doctor/registrasiController';
+
+  const doctorName = <?= json_encode($_SESSION['fullname'] ?? '') ?>;
+  const rmeType = '<?php echo $rme_type ?>';
   var today = new Date().toLocaleDateString("sv-SE", {
     timeZone: "Asia/Jakarta"
   });
-  const doctorName = <?= json_encode($_SESSION['fullname'] ?? '') ?>;
-  const rmeType = '<?php echo $rme_type ?>';
 
   $('#fromDate').val(today);
   $('#fromDate').attr('max', today);
-  $('#toDate').val();
+
+  $('#toDate').val(today);
+  $('#toDate').attr('max', today);
   $(document).ready(function() {
 
     var table = $('#zero_config').DataTable({
       processing: true,
       serverSide: false,
       scrollX: true,
+      order: [
+        [1, 'desc']
+      ], // 🔥 URUTKAN KOLOM TANGGAL TERBARU
       ajax: {
         url: apiUrl,
         type: "GET",
@@ -208,7 +214,12 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                     ${callButton}
                   </div>
                 `,
-                tanggal: row.visit_date + ' ' + row.visit_time,
+                tanggal: `
+                  <span style="display:none">
+                    ${row.visit_date} ${row.visit_time}
+                  </span>
+                  ${row.visit_date} ${row.visit_time}
+                `,
                 antrian: row.visit_antrian,
                 source_hub: row.source_hub,
                 nomor_rm: row.nomor_rm,

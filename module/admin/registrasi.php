@@ -95,6 +95,18 @@ require '../../controller/view.php';
     #periodeTable thead th:first-child {
       z-index: 6;
     }
+
+    .select2-results__option {
+      padding: 10px 14px !important;
+    }
+
+    .patient-search-item {
+      border-bottom: 1px solid #f1f1f1;
+    }
+
+    .patient-search-item:last-child {
+      border-bottom: none;
+    }
   </style>
 </head>
 
@@ -259,6 +271,30 @@ require '../../controller/view.php';
                 <small class="text-muted">Kondisi Masuk</small>
                 <div id="d_kondisi_masuk">-</div>
               </div>
+
+              <div class="col-md-6">
+                <small class="text-muted">No. Kartu BPJS</small>
+                <div id="d_no_bpjs">-</div>
+              </div>
+              <div class="col-md-6">
+                <small class="text-muted">NIK</small>
+                <div id="d_no_nik">-</div>
+              </div>
+
+              <div class="col-md-6">
+                <small class="text-muted">Jenis Kelamin</small>
+                <div id="d_gender">-</div>
+              </div>
+              <div class="col-md-6">
+                <small class="text-muted">Tanggal Lahir</small>
+                <div id="d_datebirth">-</div>
+              </div>
+              <div class="col-md-6">
+                <small class="text-muted">Umur</small>
+                <div id="d_umur">-</div>
+              </div>
+
+
             </div>
           </div>
         </div>
@@ -1167,6 +1203,37 @@ require '../../controller/view.php';
         });
     });
 
+    function hitungUmurDetail(tglLahir, tglVisit) {
+
+      if (!tglLahir) return '-';
+
+      const birth = new Date(tglLahir);
+      const visit = tglVisit ? new Date(tglVisit) : new Date();
+
+      let tahun = visit.getFullYear() - birth.getFullYear();
+      let bulan = visit.getMonth() - birth.getMonth();
+      let hari = visit.getDate() - birth.getDate();
+
+      if (hari < 0) {
+        bulan--;
+
+        const lastMonth = new Date(
+          visit.getFullYear(),
+          visit.getMonth(),
+          0
+        );
+
+        hari += lastMonth.getDate();
+      }
+
+      if (bulan < 0) {
+        tahun--;
+        bulan += 12;
+      }
+
+      return `${tahun} Tahun ${bulan} Bulan`;
+    }
+
     function fillDetail(d) {
       $('#d_patient_name').text(d.patient_name ?? '-');
       $('#d_doctor_name').text(d.id_doctor ?? '-');
@@ -1174,7 +1241,16 @@ require '../../controller/view.php';
       $('#d_visit_date').text(d.visit_date + ' ' + d.visit_time ?? '-');
       $('#d_no_sep').text(d.no_sep ?? '-');
       $('#d_kondisi_masuk').text(d.kondisi_masuk ?? '-');
-
+      $('#d_no_bpjs').text(d.patient_bpjs ?? '-');
+      $('#d_no_nik').text(d.patient_nik ?? '-');
+      $('#d_gender').text(d.patient_gender ?? '-');
+      $('#d_datebirth').text(d.patient_datebirth ?? '-');
+      $('#d_umur').text(
+        hitungUmurDetail(
+          d.patient_datebirth,
+          d.visit_date
+        )
+      );
       $('#d_tekanan_darah').text(d.tekanan_darah ?? '-');
       $('#d_suhu').text((d.suhu ?? '-') + ' °C');
       $('#d_nadi').text((d.nadi ?? '-') + ' bpm');
@@ -1477,6 +1553,7 @@ require '../../controller/view.php';
         type: 'GET',
         dataType: 'json',
         delay: 300,
+
         data: function(params) {
           return {
             search: params.term
@@ -1484,17 +1561,34 @@ require '../../controller/view.php';
         },
 
         processResults: function(data) {
+
           let items = data.data ? data.data : data;
 
           return {
             results: items.map(item => ({
+
               id: item.id_patient,
-              text: `${item.patient_name} (${item.nomor_rm})`, // tampil di UI
-              patient_name: item.patient_name // 🔥 simpan asli
+
+              text: item.patient_name,
+
+              patient_name: item.patient_name,
+              nomor_rm: item.nomor_rm,
+              nik: item.patient_nik,
+              gender: item.patient_gender,
+              birth_date: item.patient_datebirth
+
             }))
           };
         },
+
         cache: true
+      }, // 🔥 INI YANG KURANG
+
+      templateResult: formatPatient,
+      templateSelection: formatPatientSelection,
+
+      escapeMarkup: function(markup) {
+        return markup;
       }
     });
   });
@@ -1751,7 +1845,119 @@ require '../../controller/view.php';
 
       });
 
+
+
   });
+</script>
+
+<script>
+  function excelDateToJSDate(serial) {
+
+    if (!serial || isNaN(serial)) return '-';
+
+    // convert excel serial date
+    const utc_days = Math.floor(serial - 25569);
+    const utc_value = utc_days * 86400;
+
+    const date_info = new Date(utc_value * 1000);
+
+    const day = String(date_info.getDate()).padStart(2, '0');
+    const month = String(date_info.getMonth() + 1).padStart(2, '0');
+    const year = date_info.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  }
+
+  function hitungUmur(tglLahir, tglVisit = null) {
+
+    if (!tglLahir) return '-';
+
+    // kalau visit kosong pakai hari ini
+    const visit = tglVisit ? new Date(tglVisit) : new Date();
+
+    // convert excel serial
+    const utc_days = Math.floor(tglLahir - 25569);
+    const utc_value = utc_days * 86400;
+
+    const birth = new Date(utc_value * 1000);
+
+    let tahun = visit.getFullYear() - birth.getFullYear();
+    let bulan = visit.getMonth() - birth.getMonth();
+    let hari = visit.getDate() - birth.getDate();
+
+    if (hari < 0) {
+      bulan--;
+
+      const lastMonth = new Date(
+        visit.getFullYear(),
+        visit.getMonth(),
+        0
+      );
+
+      hari += lastMonth.getDate();
+    }
+
+    if (bulan < 0) {
+      tahun--;
+      bulan += 12;
+    }
+
+    return `${tahun} th`;
+  }
+
+  function formatPatient(patient) {
+
+    if (!patient.id) {
+      return patient.text;
+    }
+
+    let genderBadge =
+      patient.gender == 'Laki-laki' ?
+      `<span class="badge bg-primary" style="font-size:10px;padding:4px 7px;">L</span>` :
+      `<span class="badge bg-danger" style="font-size:10px;padding:4px 7px;">P</span>`;
+
+    // 🔥 convert tanggal excel
+    let birthDate = excelDateToJSDate(patient.birth_date);
+    let umur = hitungUmur(patient.birth_date);
+    return `
+      <div class="patient-search-item p-2">
+
+        <div class="fw-semibold text-dark"
+             style="font-size:15px; line-height:1.2;">
+          ${patient.patient_name}
+        </div>
+
+        <div class="small text-secondary mt-1"
+             style="font-size:11px; line-height:1.2;">
+
+          RM: <b>${patient.nomor_rm ?? '-'}</b>
+
+          &nbsp;|&nbsp;
+
+          NIK: ${patient.nik ?? '-'}
+
+        </div>
+
+        <div class="small mt-1 d-flex align-items-center gap-2"
+             style="font-size:11px;">
+
+          ${genderBadge}
+
+          <span class="text-dark">
+            🎂 ${birthDate}
+          </span>
+
+        </div>
+
+      </div>
+    `;
+  }
+
+  function formatPatientSelection(patient) {
+
+    return patient.patient_name || patient.text;
+
+  }
 </script>
 
 </html>
