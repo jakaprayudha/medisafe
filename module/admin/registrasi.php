@@ -271,6 +271,30 @@ require '../../controller/view.php';
                 <small class="text-muted">Kondisi Masuk</small>
                 <div id="d_kondisi_masuk">-</div>
               </div>
+
+              <div class="col-md-6">
+                <small class="text-muted">No. Kartu BPJS</small>
+                <div id="d_no_bpjs">-</div>
+              </div>
+              <div class="col-md-6">
+                <small class="text-muted">NIK</small>
+                <div id="d_no_nik">-</div>
+              </div>
+
+              <div class="col-md-6">
+                <small class="text-muted">Jenis Kelamin</small>
+                <div id="d_gender">-</div>
+              </div>
+              <div class="col-md-6">
+                <small class="text-muted">Tanggal Lahir</small>
+                <div id="d_datebirth">-</div>
+              </div>
+              <div class="col-md-6">
+                <small class="text-muted">Umur</small>
+                <div id="d_umur">-</div>
+              </div>
+
+
             </div>
           </div>
         </div>
@@ -1179,6 +1203,37 @@ require '../../controller/view.php';
         });
     });
 
+    function hitungUmurDetail(tglLahir, tglVisit) {
+
+      if (!tglLahir) return '-';
+
+      const birth = new Date(tglLahir);
+      const visit = tglVisit ? new Date(tglVisit) : new Date();
+
+      let tahun = visit.getFullYear() - birth.getFullYear();
+      let bulan = visit.getMonth() - birth.getMonth();
+      let hari = visit.getDate() - birth.getDate();
+
+      if (hari < 0) {
+        bulan--;
+
+        const lastMonth = new Date(
+          visit.getFullYear(),
+          visit.getMonth(),
+          0
+        );
+
+        hari += lastMonth.getDate();
+      }
+
+      if (bulan < 0) {
+        tahun--;
+        bulan += 12;
+      }
+
+      return `${tahun} Tahun ${bulan} Bulan`;
+    }
+
     function fillDetail(d) {
       $('#d_patient_name').text(d.patient_name ?? '-');
       $('#d_doctor_name').text(d.id_doctor ?? '-');
@@ -1186,7 +1241,16 @@ require '../../controller/view.php';
       $('#d_visit_date').text(d.visit_date + ' ' + d.visit_time ?? '-');
       $('#d_no_sep').text(d.no_sep ?? '-');
       $('#d_kondisi_masuk').text(d.kondisi_masuk ?? '-');
-
+      $('#d_no_bpjs').text(d.patient_bpjs ?? '-');
+      $('#d_no_nik').text(d.patient_nik ?? '-');
+      $('#d_gender').text(d.patient_gender ?? '-');
+      $('#d_datebirth').text(d.patient_datebirth ?? '-');
+      $('#d_umur').text(
+        hitungUmurDetail(
+          d.patient_datebirth,
+          d.visit_date
+        )
+      );
       $('#d_tekanan_darah').text(d.tekanan_darah ?? '-');
       $('#d_suhu').text((d.suhu ?? '-') + ' °C');
       $('#d_nadi').text((d.nadi ?? '-') + ' bpm');
@@ -1804,6 +1868,43 @@ require '../../controller/view.php';
     return `${day}/${month}/${year}`;
   }
 
+  function hitungUmur(tglLahir, tglVisit = null) {
+
+    if (!tglLahir) return '-';
+
+    // kalau visit kosong pakai hari ini
+    const visit = tglVisit ? new Date(tglVisit) : new Date();
+
+    // convert excel serial
+    const utc_days = Math.floor(tglLahir - 25569);
+    const utc_value = utc_days * 86400;
+
+    const birth = new Date(utc_value * 1000);
+
+    let tahun = visit.getFullYear() - birth.getFullYear();
+    let bulan = visit.getMonth() - birth.getMonth();
+    let hari = visit.getDate() - birth.getDate();
+
+    if (hari < 0) {
+      bulan--;
+
+      const lastMonth = new Date(
+        visit.getFullYear(),
+        visit.getMonth(),
+        0
+      );
+
+      hari += lastMonth.getDate();
+    }
+
+    if (bulan < 0) {
+      tahun--;
+      bulan += 12;
+    }
+
+    return `${tahun} th`;
+  }
+
   function formatPatient(patient) {
 
     if (!patient.id) {
@@ -1817,7 +1918,7 @@ require '../../controller/view.php';
 
     // 🔥 convert tanggal excel
     let birthDate = excelDateToJSDate(patient.birth_date);
-
+    let umur = hitungUmur(patient.birth_date);
     return `
       <div class="patient-search-item p-2">
 

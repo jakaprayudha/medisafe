@@ -6,6 +6,10 @@ $id = $_GET['id'] ?? '';
 $query = "SELECT 
     pasien_visit.*,
     ms_patient.patient_name,
+    ms_patient.patient_gender,
+    ms_patient.patient_datebirth,
+    ms_patient.patient_nik,
+    ms_patient.patient_bpjs,
 
     COALESCE(
         NULLIF(pasien_visit.diagnosa, ''),
@@ -62,13 +66,13 @@ $stmtObat->execute();
 $resObat = $stmtObat->get_result();
 
 while ($row = $resObat->fetch_assoc()) {
-  $obat[] = $row;
+    $obat[] = $row;
 }
 
 // inject ke response
 $data['tindakan'] = $obat;
 
 echo json_encode([
-  'status' => 'success',
-  'data' => $data
+    'status' => 'success',
+    'data' => $data
 ]);
