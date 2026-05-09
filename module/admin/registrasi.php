@@ -95,6 +95,18 @@ require '../../controller/view.php';
     #periodeTable thead th:first-child {
       z-index: 6;
     }
+
+    .select2-results__option {
+      padding: 10px 14px !important;
+    }
+
+    .patient-search-item {
+      border-bottom: 1px solid #f1f1f1;
+    }
+
+    .patient-search-item:last-child {
+      border-bottom: none;
+    }
   </style>
 </head>
 
@@ -1477,6 +1489,7 @@ require '../../controller/view.php';
         type: 'GET',
         dataType: 'json',
         delay: 300,
+
         data: function(params) {
           return {
             search: params.term
@@ -1484,17 +1497,34 @@ require '../../controller/view.php';
         },
 
         processResults: function(data) {
+
           let items = data.data ? data.data : data;
 
           return {
             results: items.map(item => ({
+
               id: item.id_patient,
-              text: `${item.patient_name} (${item.nomor_rm})`, // tampil di UI
-              patient_name: item.patient_name // 🔥 simpan asli
+
+              text: item.patient_name,
+
+              patient_name: item.patient_name,
+              nomor_rm: item.nomor_rm,
+              nik: item.patient_nik,
+              gender: item.patient_gender,
+              birth_date: item.patient_datebirth
+
             }))
           };
         },
+
         cache: true
+      }, // 🔥 INI YANG KURANG
+
+      templateResult: formatPatient,
+      templateSelection: formatPatientSelection,
+
+      escapeMarkup: function(markup) {
+        return markup;
       }
     });
   });
@@ -1751,7 +1781,82 @@ require '../../controller/view.php';
 
       });
 
+
+
   });
+</script>
+
+<script>
+  function excelDateToJSDate(serial) {
+
+    if (!serial || isNaN(serial)) return '-';
+
+    // convert excel serial date
+    const utc_days = Math.floor(serial - 25569);
+    const utc_value = utc_days * 86400;
+
+    const date_info = new Date(utc_value * 1000);
+
+    const day = String(date_info.getDate()).padStart(2, '0');
+    const month = String(date_info.getMonth() + 1).padStart(2, '0');
+    const year = date_info.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  }
+
+  function formatPatient(patient) {
+
+    if (!patient.id) {
+      return patient.text;
+    }
+
+    let genderBadge =
+      patient.gender == 'Laki-laki' ?
+      `<span class="badge bg-primary" style="font-size:10px;padding:4px 7px;">L</span>` :
+      `<span class="badge bg-danger" style="font-size:10px;padding:4px 7px;">P</span>`;
+
+    // 🔥 convert tanggal excel
+    let birthDate = excelDateToJSDate(patient.birth_date);
+
+    return `
+      <div class="patient-search-item p-2">
+
+        <div class="fw-semibold text-dark"
+             style="font-size:15px; line-height:1.2;">
+          ${patient.patient_name}
+        </div>
+
+        <div class="small text-secondary mt-1"
+             style="font-size:11px; line-height:1.2;">
+
+          RM: <b>${patient.nomor_rm ?? '-'}</b>
+
+          &nbsp;|&nbsp;
+
+          NIK: ${patient.nik ?? '-'}
+
+        </div>
+
+        <div class="small mt-1 d-flex align-items-center gap-2"
+             style="font-size:11px;">
+
+          ${genderBadge}
+
+          <span class="text-dark">
+            🎂 ${birthDate}
+          </span>
+
+        </div>
+
+      </div>
+    `;
+  }
+
+  function formatPatientSelection(patient) {
+
+    return patient.patient_name || patient.text;
+
+  }
 </script>
 
 </html>

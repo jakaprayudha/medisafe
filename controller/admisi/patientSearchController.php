@@ -6,7 +6,7 @@ header('Content-Type: application/json');
 $search = $_GET['search'] ?? '';
 $id_customer = $_SESSION['id_customer'];
 
-$query = "SELECT id_patient, patient_name, nomor_rm 
+$query = "SELECT id_patient, patient_name, nomor_rm, patient_datebirth, patient_nik
   FROM ms_patient
   WHERE id_customer = ?
   AND (
