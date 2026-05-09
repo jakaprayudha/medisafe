@@ -15,6 +15,7 @@ $query = "SELECT * FROM pasien_visit
           LEFT JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa 
           LEFT JOIN resume_medis ON resume_medis.visit_ID = pasien_visit.visit_ID AND resume_medis.nomor_rm = ms_patient.nomor_rm 
           LEFT JOIN ms_users AS dokter ON dokter.fullname = pasien_visit.id_doctor
+          LEFT JOIN  pasien_triase ON pasien_triase.visit_ID = pasien_visit.visit_ID
           WHERE pasien_visit.visit_ID='$visit' AND ms_patient.nomor_rm='$rm'";
 
 $checkdata = mysqli_query($koneksi, $query);
@@ -131,7 +132,7 @@ $dataresume = mysqli_fetch_array($checkdata) ?: [];
             <td id="rm_name" style="width: 28%;"><?php echo $dataresume['patient_name'] ?? ''; ?></td>
             <td class="resume-label">Tanggal Masuk</td>
             <td id="rm_tgl_masuk" style="width: 28%;">
-               <?= ($dataresume['visit_date'] ?? '') . ' ' . substr($dataresume['visit_time'] ?? '', 0, 5); ?>
+               <?= ($dataresume['visit_date'] ?? '') . ' ' . substr($dataresume['jam_masuk'] ?? '', 0, 5); ?>
             </td>
          </tr>
          <tr>
