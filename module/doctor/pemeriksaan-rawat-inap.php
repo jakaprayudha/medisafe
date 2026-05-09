@@ -105,7 +105,7 @@ $apiUrl = getenv('API_URL');
                         <tr>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                           <th class="text-dark fw-normal">Registrasi</th>
-                          <th scope="col" class="text-dark fw-normal">Nomor RM</th>
+                          <th scope="col" class="text-dark fw-normal">No.BPJS</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th class="text-dark fw-normal">Dokter</th>
@@ -235,7 +235,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                 </div>
               `,
               "tanggal": row.visit_date + ' ' + row.visit_time,
-              "nomor_rm": row.nomor_rm,
+              "bpjs": row.patient_bpjs,
               "nama_pasien": row.patient_name,
               "gender": row.patient_gender,
               "dokter": row.id_doctor,
@@ -255,7 +255,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
           "data": "tanggal"
         },
         {
-          "data": "nomor_rm"
+          "data": "bpjs"
         },
         {
           "data": "nama_pasien"
