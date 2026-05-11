@@ -221,11 +221,11 @@ $dataCust = mysqli_fetch_array($cust);
          <ul class="navbar-nav align-items-center gap-2">
 
             <?php if ($_SESSION['username'] === 'alfi') { ?>
-            <li class="nav-item" style="min-width: 280px;">
-               <select id="switchUserSelect" class="form-select" style="width: 100%;">
-                  <option value="">🔄 Login sebagai...</option>
-               </select>
-            </li>
+               <li class="nav-item" style="min-width: 280px;">
+                  <select id="switchUserSelect" class="form-select" style="width: 100%;">
+                     <option value="">🔄 Login sebagai...</option>
+                  </select>
+               </li>
             <?php } ?>
 
             <!-- ACTION DROPDOWN -->
@@ -316,7 +316,7 @@ $dataCust = mysqli_fetch_array($cust);
                      }
 
                      html += `
-                        <a class="dropdown-item" href="module/admin/patient_details?pt=${p.id_patient}">
+                        <a class="dropdown-item" href="module/admin/patient_details?pt=${p.id_patient}&tabs=5">
                            <strong>${p.patient_name}</strong><br>
                            <small>${detail.join(' | ')}</small>
                         </a>
@@ -340,78 +340,84 @@ $dataCust = mysqli_fetch_array($cust);
    });
 
    <?php if ($_SESSION['username'] === 'alfi') { ?>
-   $(document).ready(function() {
-      $('#switchUserSelect').select2({
-         placeholder: '🔄 Login sebagai...',
-         allowClear: true,
-         width: '100%',
-         ajax: {
-            url: 'controller/session/switchUser',
-            type: 'GET',
-            dataType: 'json',
-            delay: 300,
-            data: function(params) {
-               return { search: params.term || '' };
+      $(document).ready(function() {
+         $('#switchUserSelect').select2({
+            placeholder: '🔄 Login sebagai...',
+            allowClear: true,
+            width: '100%',
+            ajax: {
+               url: 'controller/session/switchUser',
+               type: 'GET',
+               dataType: 'json',
+               delay: 300,
+               data: function(params) {
+                  return {
+                     search: params.term || ''
+                  };
+               },
+               processResults: function(data) {
+                  return {
+                     results: data.results || []
+                  };
+               },
+               cache: true
             },
-            processResults: function(data) {
-               return { results: data.results || [] };
+            minimumInputLength: 0,
+            templateResult: function(data) {
+               if (data.loading) return data.text;
+               return $('<span>' + data.text + '</span>');
             },
-            cache: true
-         },
-         minimumInputLength: 0,
-         templateResult: function(data) {
-            if (data.loading) return data.text;
-            return $('<span>' + data.text + '</span>');
-         },
-         templateSelection: function(data) {
-            return data.text || data.id;
-         }
-      });
-
-      $('#switchUserSelect').on('select2:select', function(e) {
-         var selectedUser = e.params.data;
-         if (!selectedUser.id) return;
-
-         Swal.fire({
-            title: 'Switch User?',
-            text: 'Login sebagai ' + selectedUser.text + '?',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#0f9b8e',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Ya, Switch!',
-            cancelButtonText: 'Batal'
-         }).then((result) => {
-            if (result.isConfirmed) {
-               $.ajax({
-                  url: 'controller/session/switchUser',
-                  type: 'POST',
-                  data: { uid_user: selectedUser.id },
-                  dataType: 'json',
-                  success: function(res) {
-                     if (res.status === 'success') {
-                        Swal.fire({
-                           title: 'Berhasil!',
-                           text: res.message,
-                           icon: 'success',
-                           timer: 1500,
-                           showConfirmButton: false
-                        }).then(() => {
-                           window.location.href = res.redirect;
-                        });
-                     } else {
-                        Swal.fire('Gagal', res.message, 'error');
-                     }
-                  },
-                  error: function() {
-                     Swal.fire('Error', 'Gagal switch user', 'error');
-                  }
-               });
-            } else {
-               $('#switchUserSelect').val(null).trigger('change');
+            templateSelection: function(data) {
+               return data.text || data.id;
             }
          });
+
+         $('#switchUserSelect').on('select2:select', function(e) {
+            var selectedUser = e.params.data;
+            if (!selectedUser.id) return;
+
+            Swal.fire({
+               title: 'Switch User?',
+               text: 'Login sebagai ' + selectedUser.text + '?',
+               icon: 'question',
+               showCancelButton: true,
+               confirmButtonColor: '#0f9b8e',
+               cancelButtonColor: '#d33',
+               confirmButtonText: 'Ya, Switch!',
+               cancelButtonText: 'Batal'
+            }).then((result) => {
+               if (result.isConfirmed) {
+                  $.ajax({
+                     url: 'controller/session/switchUser',
+                     type: 'POST',
+                     data: {
+                        uid_user: selectedUser.id
+                     },
+                     dataType: 'json',
+                     success: function(res) {
+                        if (res.status === 'success') {
+                           Swal.fire({
+                              title: 'Berhasil!',
+                              text: res.message,
+                              icon: 'success',
+                              timer: 1500,
+                              showConfirmButton: false
+                           }).then(() => {
+                              window.location.href = res.redirect;
+                           });
+                        } else {
+                           Swal.fire('Gagal', res.message, 'error');
+                        }
+                     },
+                     error: function() {
+                        Swal.fire('Error', 'Gagal switch user', 'error');
+                     }
+                  });
+               } else {
+                  $('#switchUserSelect').val(null).trigger('change');
+               }
+            });
+         });
       });
-   });
    <?php } ?>
 </script>
