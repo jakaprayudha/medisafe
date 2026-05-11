@@ -11,6 +11,7 @@
             </div>
          </div>
          <div>
+            <span id="logosatusehat" class="d-none"><img src="assets/icon/icon-satusehat.png" width="40" height="40"></span>
             <span id="logobpjs" class="d-none"><img src="assets/icon/bpjs.png" width="30" height="30"></span>
             <span id="pc_status" class="badge bg-secondary">-</span>
          </div>
@@ -405,6 +406,22 @@
          } else {
             logo.classList.add("d-none");
          }
+      }
+
+      const logosatusehat = document.getElementById("logosatusehat");
+
+      if (logosatusehat) {
+
+         if (data.idsh && data.idsh !== "null") {
+
+            logosatusehat.classList.remove("d-none");
+
+         } else {
+
+            logosatusehat.classList.add("d-none");
+
+         }
+
       }
 
    }
