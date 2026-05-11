@@ -66,7 +66,7 @@ $pt = $_GET['pt'];
                   </div>
                   <nav>
                     <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                      <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab"
+                      <button class="nav-link " id="nav-home-tab" data-bs-toggle="tab"
                         data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home"
                         aria-selected="true">Data Umum</button>
                       <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab"
@@ -78,7 +78,7 @@ $pt = $_GET['pt'];
                       <button class="nav-link" id="nav-dokumen-tab" data-bs-toggle="tab"
                         data-bs-target="#nav-dokumen" type="button" role="tab" aria-controls="nav-dokumen"
                         aria-selected="false">Dokumen</button>
-                      <button class="nav-link bg-success" id="nav-riwayat-tab" data-bs-toggle="tab"
+                      <button class="nav-link bg-success active" id="nav-riwayat-tab" data-bs-toggle="tab"
                         data-bs-target="#nav-riwayat" type="button" role="tab" aria-controls="nav-riwayat"
                         aria-selected="false">Riwayat Pengobatan</button>
                       <!-- <button class="nav-link" id="nav-ttd-tab" data-bs-toggle="tab"
@@ -89,7 +89,7 @@ $pt = $_GET['pt'];
 
                   <div class="tab-content mt-3" id="nav-tabContent">
                     <!-- Data Umum -->
-                    <div class="tab-pane fade show active" id="nav-home" role="tabpanel"
+                    <div class="tab-pane fade" id="nav-home" role="tabpanel"
                       aria-labelledby="nav-home-tab" tabindex="0">
                       <form id="formIdentitas">
                         <div class="row">
@@ -392,7 +392,7 @@ $pt = $_GET['pt'];
                       </div>
                     </div>
 
-                    <div class="tab-pane fade" id="nav-riwayat" role="tabpanel" aria-labelledby="nav-riwayat-tab" tabindex="0">
+                    <div class="tab-pane fade  show active" id="nav-riwayat" role="tabpanel" aria-labelledby="nav-riwayat-tab" tabindex="0">
                       <div class="alert alert-info d-flex align-items-start justify-content-between">
 
                         <!-- 🔹 LEFT (icon + text) -->
