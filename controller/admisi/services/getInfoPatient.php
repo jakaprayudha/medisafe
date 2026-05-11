@@ -5,7 +5,7 @@ require_once __DIR__ . '/servicebpjs.php';
 
 header('Content-Type: application/json');
 
-$tipe = $_GET['tipe'] ?? null;
+$tipe = $_GET['type'] ?? null;
 $nomor_kartu = trim($_GET['nomor'] ?? '');
 $lengthkartu = strlen($nomor_kartu);
 if (!in_array($lengthkartu, [13, 16])) {
@@ -38,7 +38,7 @@ if (!in_array($lengthkartu, [13, 16])) {
             'sex' => $result['data']['sex'],
             'tglLahir' => date('Y-m-d', strtotime(str_replace('-', '/', $result['data']['tglLahir']))),
             'golDarah' => $result['data']['golDarah'],
-            'noHP' => $result['data']['noHP'],
+            'noHP' => $result['data']['noHP']
         ];
     }
 }
