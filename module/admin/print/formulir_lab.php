@@ -93,7 +93,7 @@ if ($no && $id_customer) {
         $resLab = mysqli_stmt_get_result($stmtLab);
 
         while ($row = mysqli_fetch_assoc($resLab)) {
-            $tanggal = date('Y-m-d', strtotime($ins['created_at'] ?? $pasien['visit_date']));
+            $tanggal = date('Y-m-d', strtotime($ins['inspection_date']));
             $grupHasil[$tanggal][$row['group_name']][] = [
 
                 'nama'   => $row['nama'],
@@ -471,7 +471,7 @@ $qrApiUrl  = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . 
             </button>
         </div>
 
-        </div>
+    </div>
 
 </body>
 
