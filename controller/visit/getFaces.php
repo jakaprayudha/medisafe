@@ -19,7 +19,7 @@ while ($row = mysqli_fetch_assoc($result)) {
    $data[] = [
       "id_visit" => $row['id_visit'],
       "name" => $row['id_patient'],
-      "image" => "https://medisafe.sehatdigital.id/uploads/faces/" . $row['face_image']
+      "image" => "../uploads/faces/" . $row['face_image']
    ];
 }
 

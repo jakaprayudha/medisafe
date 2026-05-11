@@ -319,8 +319,8 @@ require '../../controller/view.php';
               "gender": row.patient_gender ?? "-",
               "phone": row.patient_phone ?? "-",
               "face_image": row.face_image ? `
-                <a href="${baseUrl}${row.face_image.replace('../../','')}" target="_blank">
-                  <img src="${baseUrl}${row.face_image.replace('../../','')}" 
+                <a href="${baseUrl}${row.face_image.replace('../../../','')}" target="_blank">
+                  <img src="${baseUrl}${row.face_image.replace('../../../','')}" 
                       style="width:50px;height:50px;object-fit:cover;border-radius:8px;">
                 </a>
               ` : '-',
