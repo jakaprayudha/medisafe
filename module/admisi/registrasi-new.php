@@ -129,14 +129,36 @@ require '../../controller/view.php';
           </div>
           <div class="col-6">
             <div class="mb-3">
-              <label class="form-label " id="patient_name">NIK</label>
-              <input type="text" id="patient_nik" name="patient_nik" class="form-control">
+              <label class="form-label" id="patient_name">NIK</label>
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="patient_nik"
+                  name="patient_nik"
+                  class="form-control">
+                <button
+                  class="btn btn-primary"
+                  type="button" id="btncarinik">
+                  <i class="bi bi-search"></i>
+                </button>
+              </div>
             </div>
           </div>
           <div class="col-6">
             <div class="mb-3">
-              <label class="form-label " id="patient_name">No.BPJS</label>
-              <input type="text" id="patient_bpjs" name="patient_bpjs" class="form-control">
+              <label class="form-label" id="patient_name">No.BPJS</label>
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="patient_bpjs"
+                  name="patient_bpjs"
+                  class="form-control">
+                <button
+                  class="btn btn-primary"
+                  type="button" id="btncaribpjs">
+                  <i class="bi bi-search"></i>
+                </button>
+              </div>
             </div>
           </div>
           <div class="col-3">
@@ -481,6 +503,56 @@ require '../../controller/view.php';
         }
       });
     });
+
+    $(document).on('click', '#btncarinik', function() {
+      cariDataPatient('nik', '#btncarinik');
+    });
+
+    $(document).on('click', '#btncaribpjs', function() {
+      cariDataPatient('bpjs', '#btncaribpjs');
+    });
+
+    function cariDataPatient(type, id) {
+      let btn = $(id);
+      const nomor = type == "nik" ?
+        $('#patient_nik').val() :
+        $('#patient_bpjs').val();
+      $.ajax({
+        type: 'GET',
+        url: 'controller/admisi/services/getInfoPatient.php',
+        data: {
+          type: type,
+          nomor: nomor
+        },
+        dataType: 'json',
+        beforeSend: function() {
+          btn.prop('disabled', true);
+          btn.find('.btn-text').addClass('d-none');
+          btn.find('.btn-loading').removeClass('d-none');
+
+        },
+        complete: function() {
+          btn.prop('disabled', false);
+          btn.find('.btn-text').removeClass('d-none');
+          btn.find('.btn-loading').addClass('d-none');
+
+        },
+        success: function(response) {
+          $('#patient_nik').val(response.nik);
+          $('#patient_bpjs').val(response.noKartu);
+          $('#patient_name').val(response.nama);
+          $('#patient_datebirth').val(response.tglLahir);
+          if (response.sex == 'L') {
+            $('#patient_gender').val('Laki-laki').trigger('change');
+          }else{
+            $('#patient_gender').val('Perempuan').trigger('change');
+          }
+        },
+        error: function(xhr, status, error) {
+          console.log(error);
+        }
+      });
+    }
   });
 </script>
 <script>
