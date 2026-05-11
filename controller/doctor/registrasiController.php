@@ -96,7 +96,7 @@ function getData()
    }
 
    // Order
-   $query .= " ORDER BY pasien_visit.visit_date DESC, pasien_visit.visit_time DESC";
+   $query .= " ORDER BY pasien_visit.visit_date DESC, pasien_visit.visit_time ASC";
 
    // =========================
    // PREPARE & EXECUTE
