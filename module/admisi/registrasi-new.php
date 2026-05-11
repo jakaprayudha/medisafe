@@ -509,7 +509,7 @@ require '../../controller/view.php';
     });
 
     $(document).on('click', '#btncaribpjs', function() {
-      cariDataPatient('bpjs', '#btncaribpjs');
+      cariDataPatient('noka', '#btncaribpjs');
     });
 
     function cariDataPatient(type, id) {
@@ -538,8 +538,11 @@ require '../../controller/view.php';
 
         },
         success: function(response) {
-          $('#patient_nik').val(response.nik);
-          $('#patient_bpjs').val(response.noKartu);
+          if (type == 'nik'){
+            $('#patient_bpjs').val(response.noKartu);
+          }else{
+            $('#patient_nik').val(response.nik);
+          }
           $('#patient_name').val(response.nama);
           $('#patient_datebirth').val(response.tglLahir);
           if (response.sex == 'L') {
