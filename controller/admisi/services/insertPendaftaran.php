@@ -196,10 +196,10 @@ if ($type == "BPJS") {
         //     $fieldWhere = 'patient_nik';
         //     $valueWhere = $noNIK;
         // }
-        $stmt2 = $koneksi->prepare("UPDATE ms_patient SET patient_nik = ?, patient_bpjs = ?, patient_datebirth = ? WHERE (patient_bpjs = ? OR patient_nik = ?) AND id_customer = ?");
-        $stmt2->bind_param("ssssss", $noNIK, $noKartu, $tglLahir, $noKartu, $noNIK, $idcustomer);
-        $hasil2 = $stmt2->execute();
-        if ($hasil and $hasil1 and $hasil2) {
+        // $stmt2 = $koneksi->prepare("UPDATE ms_patient SET patient_nik = ?, patient_bpjs = ?, patient_datebirth = ? WHERE (patient_bpjs = ? OR patient_nik = ?) AND id_customer = ?");
+        // $stmt2->bind_param("ssssss", $noNIK, $noKartu, $tglLahir, $noKartu, $noNIK, $idcustomer);
+        // $hasil2 = $stmt2->execute();
+        if ($hasil and $hasil1) {
             $response = [
                 'success'  => true,
                 'message'  => "Berhasil Mendaftar Pasien",
