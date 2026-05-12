@@ -36,12 +36,37 @@ $apiUrl = getenv('API_URL');
       <div class="body-wrapper-inner">
         <div class="container-fluid">
           <ul class="nav nav-tabs" id="tabStatus">
+
             <li class="nav-item">
-              <a class="nav-link active" data-status="permintaan" href="#">Permintaan</a>
+              <a class="nav-link active"
+                data-status="permintaan"
+                href="javascript:;">
+
+                Permintaan
+
+              </a>
             </li>
+
             <li class="nav-item">
-              <a class="nav-link" data-status="selesai" href="#">Selesai</a>
+              <a class="nav-link"
+                data-status="selesai"
+                href="javascript:;">
+
+                Selesai
+
+              </a>
             </li>
+
+            <li class="nav-item">
+              <a class="nav-link"
+                data-status="pulang"
+                href="javascript:;">
+
+                Pasien Pulang
+
+              </a>
+            </li>
+
           </ul>
           <div class="row">
             <div class="col-lg-12 d-flex align-items-stretch">
@@ -134,9 +159,41 @@ $apiUrl = getenv('API_URL');
             let status = parseInt(row.status_permintaan);
 
             // 🔥 FILTER STATUS
-            let statusMatch = (currentFilter === 'selesai') ?
-              status === 3 :
-              status !== 3;
+            let statusMatch = false;
+
+            // ===============================
+            // TAB SELESAI
+            // ===============================
+            if (currentFilter === 'selesai') {
+
+              statusMatch = status === 3;
+
+            }
+
+            // ===============================
+            // TAB PASIEN PULANG
+            // ===============================
+            else if (currentFilter === 'pulang') {
+
+              statusMatch =
+                row.visit_status == 'pulang' ||
+                row.visit_status == 'selesai' ||
+                row.visit_status == 'checkout';
+
+            }
+
+            // ===============================
+            // TAB PERMINTAAN
+            // ===============================
+            else {
+
+              statusMatch =
+                status !== 3 &&
+                row.visit_status != 'pulang' &&
+                row.visit_status != 'selesai' &&
+                row.visit_status != 'checkout';
+
+            }
 
             // 🔥 FILTER TANGGAL
             let rowDate = row.created_at ? row.created_at.substring(0, 10) : null;
@@ -170,26 +227,73 @@ $apiUrl = getenv('API_URL');
               "dokter": row.id_doctor,
               "layanan": row.id_poli,
               "status_visit": (function() {
+
                 let status = row.status_permintaan;
+                let visitStatus = row.visit_status;
 
                 let badgeClass = '';
                 let label = '';
 
-                if (status == 1) {
-                  badgeClass = 'bg-danger';
-                  label = 'Belum';
-                } else if (status == 2) {
-                  badgeClass = 'bg-primary';
-                  label = 'Persiapan';
-                } else if (status == 3) {
-                  badgeClass = 'bg-success';
-                  label = 'Selesai';
-                } else {
-                  badgeClass = 'bg-secondary';
-                  label = 'Belum Pemeriksaan';
+                // ===============================
+                // PASIEN PULANG
+                // ===============================
+                if (
+                  visitStatus == 'pulang' ||
+                  visitStatus == 'selesai' ||
+                  visitStatus == 'checkout'
+                ) {
+
+                  badgeClass = 'bg-dark';
+                  label = 'Pasien Pulang';
+
                 }
 
-                return `<span class="badge ${badgeClass} d-block text-center">${label}</span>`;
+                // ===============================
+                // BELUM
+                // ===============================
+                else if (status == 1) {
+
+                  badgeClass = 'bg-danger';
+                  label = 'Belum';
+
+                }
+
+                // ===============================
+                // PERSIAPAN
+                // ===============================
+                else if (status == 2) {
+
+                  badgeClass = 'bg-primary';
+                  label = 'Persiapan';
+
+                }
+
+                // ===============================
+                // SELESAI
+                // ===============================
+                else if (status == 3) {
+
+                  badgeClass = 'bg-success';
+                  label = 'Selesai';
+
+                }
+
+                // ===============================
+                // DEFAULT
+                // ===============================
+                else {
+
+                  badgeClass = 'bg-secondary';
+                  label = 'Belum Pemeriksaan';
+
+                }
+
+                return `
+      <span class="badge ${badgeClass} d-block text-center">
+         ${label}
+      </span>
+   `;
+
               })()
             };
           });

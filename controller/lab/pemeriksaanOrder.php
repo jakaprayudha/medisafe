@@ -45,7 +45,8 @@ function getData()
          pasien_visit.id_poli,
          ms_patient.patient_place,
          ms_patient.patient_datebirth,
-         pasien_visit.source_hub
+         pasien_visit.source_hub,
+         pasien_visit.visit_status
       FROM visit_inspection 
       LEFT JOIN pasien_visit 
          ON pasien_visit.visit_ID = visit_inspection.id_visit 
