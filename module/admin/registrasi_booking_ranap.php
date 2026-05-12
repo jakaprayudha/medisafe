@@ -53,6 +53,8 @@ require '../../controller/view.php';
                         <tr>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                           <th class="text-dark fw-normal">Nomor RM</th>
+                          <th class="text-dark fw-normal">Tanggal</th>
+                          <th class="text-dark fw-normal">Waktu</th>
                           <th scope="col" class="text-dark fw-normal">Nama Lengkap</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">DPJP</th>
@@ -275,6 +277,8 @@ require '../../controller/view.php';
                 </div>
               `,
               "rm": row.nomor_rm ?? "-",
+              "tanggal": row.ranap_date ?? "-",
+              "waktu": row.ranap_time ?? "-",
               "name": row.patient_name ?? "-",
               "gender": row.patient_gender ?? "-",
               "dpjp": row.id_doctor ?? "-",
@@ -289,6 +293,12 @@ require '../../controller/view.php';
           searchable: false
         }, {
           data: "rm"
+        },
+        {
+          data: "tanggal"
+        },
+        {
+          data: "waktu"
         },
         {
           data: "name"
