@@ -1,0 +1,182 @@
+[
+    {
+        "kode_registrasi_fasyankes": "12070300030",
+        "nama_fasyankes": "Klinik Amanah",
+        "organization_id": "100019329",
+        "alamat": "Jl. Pancasila, Bakaran Batu, Kec. Batang Kuis, Kabupaten Deli Serdang, Sumatera Utara 20372"
+    },
+    {
+        "kode_registrasi_fasyankes": null,
+        "nama_fasyankes": "Klinik Anugerah",
+        "organization_id": "100019406",
+        "alamat": "Jl. Sentosa Raya No.94, Paya Geli, Kec. Sunggal, Kabupaten Deli Serdang, Sumatera Utara 20351"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300076",
+        "nama_fasyankes": "Klinik Delima",
+        "organization_id": "100019369",
+        "alamat": "Jl. Medan - Lubuk Pakam No.KM 19,5, Tj. Baru, Kec. Tj. Morawa, Kabupaten Deli Serdang, Sumatera Utara 20518"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300085",
+        "nama_fasyankes": "Klinik Dewina",
+        "organization_id": "100019387",
+        "alamat": "Jln. Pancurbatu-Delitua, Dusun 1 Durin Tonggal, Kel. Desa Durin Tonggal, Kec. Pancurbatu, Kab. Deli Serdang 20353"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300054",
+        "nama_fasyankes": "Klinik Dita Husada",
+        "organization_id": "100019358",
+        "alamat": "Gg. Sepakat, Dalu 10 A, Kec. Tj. Morawa, Kabupaten Deli Serdang, Sumatera Utara 20372"
+    },
+    {
+        "kode_registrasi_fasyankes": null,
+        "nama_fasyankes": "Klinik Hamidah",
+        "organization_id": "100019361",
+        "alamat": "Dusun Tani A No.B, Sidodadi Ramunia, Kec. Beringin, Kabupaten Deli Serdang, Sumatera Utara 20552"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300015",
+        "nama_fasyankes": "Klinik Hasanah Husada",
+        "organization_id": "100019393",
+        "alamat": "Jl. Batang Kuis, Penara Kebun, Kec. Tj. Morawa, Kabupaten Deli Serdang, Sumatera Utara"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300059",
+        "nama_fasyankes": "Klinik Ira Medical Center",
+        "organization_id": "100019395",
+        "alamat": "Jl. Ahmad Yani No.35, Lubuk Pakam, Kabupaten Deli Serdang, Sumatera Utara"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300047",
+        "nama_fasyankes": "Klinik Kasih Ibu",
+        "organization_id": "100019335",
+        "alamat": "Jl Besar Medan-Deli Tua Km. 10,5, Deli Tua, Kabupaten Deli Serdang, Sumatera Utara 20355"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300108",
+        "nama_fasyankes": "Klinik Lestari",
+        "organization_id": "100063442",
+        "alamat": "Dusun II Desa Sei Beras Sekata, Kec. Sunggal, Kabupaten Deli Serdang, Sumatera Utara 20351"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300002",
+        "nama_fasyankes": "Klinik Mahdalena Pane",
+        "organization_id": "100019340",
+        "alamat": "Jl. Rajawali II No.189, Medan Denai, Kota Medan, Sumatera Utara 20226"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300014",
+        "nama_fasyankes": "Klinik Mars",
+        "organization_id": "100019337",
+        "alamat": "Jl. Galang No.29, Kec. Pagar Merbau, Kabupaten Deli Serdang, Sumatera Utara"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300056",
+        "nama_fasyankes": "Klinik Mayen",
+        "organization_id": "100019334",
+        "alamat": "Limau Mungkur, Kec. Sinembah Tj. Muda Hilir, Kabupaten Deli Serdang, Sumatera Utara 20363"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300184",
+        "nama_fasyankes": "Klinik Nanta",
+        "organization_id": "100475653",
+        "alamat": "Jl. Paya Bakung Dusun VI, Kec. Sunggal, Kabupaten Deli Serdang, Sumatera Utara"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300078",
+        "nama_fasyankes": "Klinik Pratama Mitra Sehat",
+        "organization_id": "100019370",
+        "alamat": "Jl. Sei Merah No.88, Tanjung Morawa, Deli Serdang"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300004",
+        "nama_fasyankes": "Klinik Rizki",
+        "organization_id": "100019397",
+        "alamat": "Jl. Sibolangit Dusun V, Kec. Lubuk Pakam, Kabupaten Deli Serdang, Sumatera Utara 20518"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300037",
+        "nama_fasyankes": "Klinik Romana",
+        "organization_id": "100019382",
+        "alamat": "Jl. Besar Tj. Anom, Kec. Pancur Batu, Kabupaten Deli Serdang, Sumatera Utara 20353"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300053",
+        "nama_fasyankes": "Klinik Salbiyana",
+        "organization_id": "100019375",
+        "alamat": "Jl. Veteran Ps. IX, Medan Deli, Kota Medan, Sumatera Utara 20241"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300024",
+        "nama_fasyankes": "Klinik Salsabila Sehati",
+        "organization_id": "100019368",
+        "alamat": "Jl. B. Labuhan No.44 A3, Kec. Tj. Morawa, Kabupaten Deli Serdang, Sumatera Utara 20362"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300018",
+        "nama_fasyankes": "Klinik Sehati Husada",
+        "organization_id": "100019349",
+        "alamat": "Gg. Madrasah, Kec. Sibiru-biru, Kabupaten Deli Serdang, Sumatera Utara 20358"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300042",
+        "nama_fasyankes": "Klinik Sejati",
+        "organization_id": "100019352",
+        "alamat": "Jl. Kebun Kopi, Kec. Patumbak, Kabupaten Deli Serdang, Sumatera Utara 20361"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300046",
+        "nama_fasyankes": "Klinik Siti Rahmah",
+        "organization_id": "100019371",
+        "alamat": "Jl. Limau Mungkur No.34, Tanjung Morawa, Deli Serdang"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300029",
+        "nama_fasyankes": "Klinik Sunartik",
+        "organization_id": "100019415",
+        "alamat": "Jl. Sei Mencirim, Kec. Sunggal, Kabupaten Deli Serdang, Sumatera Utara 20351"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300082",
+        "nama_fasyankes": "Klinik Syifa Sukamaju",
+        "organization_id": "100019404",
+        "alamat": "Jl. Sei Mencirim No.31, Kec. Sunggal, Kabupaten Deli Serdang, Sumatera Utara 20351"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300035",
+        "nama_fasyankes": "Klinik Talia",
+        "organization_id": "100019386",
+        "alamat": "Jl. Perumahan Milala, Kec. Pancur Batu, Kabupaten Deli Serdang, Sumatera Utara 20353"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300006",
+        "nama_fasyankes": "Klinik Tampukasih",
+        "organization_id": "100019356",
+        "alamat": "Jl. Mekatani No.20, Kec. Patumbak, Kabupaten Deli Serdang, Sumatera Utara 20361"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300007",
+        "nama_fasyankes": "Klinik Tiara Medistra",
+        "organization_id": "100019339",
+        "alamat": "Jl. Pendidikan No.95, Kec. Percut Sei Tuan, Kabupaten Deli Serdang, Sumatera Utara 20371"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300101",
+        "nama_fasyankes": "Klinik Tutun Sehati",
+        "organization_id": "100063429",
+        "alamat": "Jl. Ps. Baru KM 16.5, Kec. Tj. Morawa, Kabupaten Deli Serdang, Sumatera Utara 20362"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300161",
+        "nama_fasyankes": "Klinik Madina",
+        "organization_id": "100153197",
+        "alamat": "Jl. Datuk Kabu Pasar 3, Kec. Percut Sei Tuan, Kabupaten Deli Serdang, Sumatera Utara 20371"
+    },
+    {
+        "kode_registrasi_fasyankes": "12070300011",
+        "nama_fasyankes": "Klinik Cahaya 2",
+        "organization_id": "100019400",
+        "alamat": "Jl. Pembangunan I, Kec. Lubuk Pakam, Kabupaten Deli Serdang, Sumatera Utara 20551"
+    }
+]
