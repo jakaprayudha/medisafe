@@ -45,7 +45,7 @@ $totalPages     = count($otherDocs) + $perawatanPages;
 $currentPage    = 1;
 
 $httpHost = $_SERVER['HTTP_HOST'] ?? 'localhost';
-$baseURL  = 'http://' . $httpHost . '/medisafe/';
+$baseURL  = 'http://' . $httpHost . '/verify/';
 
 if (!function_exists('qrImg')) {
     function qrImg(string $url): string
@@ -56,6 +56,7 @@ if (!function_exists('qrImg')) {
 }
 
 if (!function_exists('fmtTgl')) {
+
     function fmtTgl(?string $tgl): string
     {
         if (empty($tgl)) return '-';
@@ -292,7 +293,7 @@ if (!function_exists('fmtTgl')) {
             $slice      = array_slice($fotoPerawatan, $p * $perPage, $perPage);
             $isLastPage = ($p === $perawatanPages - 1) && empty($otherDocs);
         ?>
-            <?php $qrVerify = $baseURL . 'verify_dokumen.php?rm=' . urlencode($rm ?? ''); ?>
+            <?php $qrVerify = $baseURL . 'dokumen.php?rm=' . urlencode($rm ?? ''); ?>
             <div class="dokmulti-page <?= $isLastPage ? 'last-page' : '' ?>">
 
                 <div class="dokmulti-title">DOKUMENTASI PERAWATAN</div>

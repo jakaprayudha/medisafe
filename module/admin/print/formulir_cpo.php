@@ -102,7 +102,7 @@ foreach ($cpoRows as $row) {
 // ============================================================
 $protocol  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
 $domain    = $_SERVER['HTTP_HOST'] ?? 'localhost';
-$verifyUrl = $protocol . $domain . "/verify_cpo.php?no=" . urlencode((string)$no) . "&rm=" . urlencode((string)$rm);
+$verifyUrl = $protocol . $domain . "/verify/cpo.php?no=" . urlencode((string)$no) . "&rm=" . urlencode((string)$rm);
 $qrApiUrl  = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . urlencode($verifyUrl);
 ?>
 <!DOCTYPE html>
