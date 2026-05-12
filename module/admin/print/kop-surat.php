@@ -8,10 +8,12 @@ $checkpasien = mysqli_query(
    WHERE pasien_visit.visit_ID='$visit' AND  pasien_visit.id_customer='$id_customer' LIMIT 1"
 );
 require '../../admin/getdataclinic.php';
-
 $datapasien = mysqli_fetch_array($checkpasien);
+$checktriase = mysqli_query($koneksi, "SELECT * FROM pasien_triase WHERE visit_ID='$visit' LIMIT 1");
+$datatriase = mysqli_fetch_array($checktriase);
 
 if (!function_exists('hitungUsia')) {
+
   function hitungUsia($tgl_lahir, $tgl_acuan = null)
   {
     if (!$tgl_lahir) return "-";
@@ -157,7 +159,7 @@ $subtitle = $subtitle ?? "PASIEN GAWAT DARURAT (IGD)";
             <tr>
               <td>Masuk</td>
               <td>: <?= htmlspecialchars($datapasien['visit_date'] ?? '-') ?>
-                <?= htmlspecialchars($datapasien['visit_time'] ?? '') ?></td>
+                <?= htmlspecialchars($datatriase['jam_masuk'] ?? '') ?></td>
             </tr>
             <tr>
               <td>Dokter</td>

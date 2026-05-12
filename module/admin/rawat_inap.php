@@ -205,7 +205,7 @@ require '../../controller/view.php';
                             <iconify-icon icon="mdi:cancel" class="me-1"></iconify-icon>
                             <span>Batalkan Permintaan</span>
                           </button>
-                          <button type="submit" class="btn btn-primary d-flex align-items-center">
+                          <button type="submit" id="btnSimpanRanap" class="btn btn-primary d-flex align-items-center">
                             <iconify-icon icon="mdi:check-circle-outline" class="me-1"></iconify-icon>
                             <span>Simpan Permintaan</span>
                           </button>
@@ -298,16 +298,40 @@ require '../../controller/view.php';
         dataType: "json",
         success: function(response) {
           if (response.status === "success" && response.data) {
-            $("#showDokter").text(response.data.doctor_name);
+
+            $("#showDokter").text(response.data.id_doctor);
             $("#showTanggal").text(response.data.ranap_date);
             $("#showWaktu").text(response.data.ranap_time);
             $("#showDiagnosa").text(response.data.diagnosa_awal);
             $("#showCatatan").text(response.data.ranap_notes || "-");
+
             $("#dataRanapBaru")
               .data("id_ranap", response.data.id_ranap)
               .removeClass("d-none");
+
+            // ✅ Disable tombol simpan jika data sudah ada
+            $("#btnSimpanRanap")
+              .prop("disabled", true)
+              .removeClass("btn-primary")
+              .addClass("btn-light")
+              .html(`
+            <iconify-icon icon="mdi:check-all" class="me-1"></iconify-icon>
+            Permintaan Sudah Ada
+          `);
+
           } else {
+
             $("#dataRanapBaru").addClass("d-none");
+
+            // ✅ Enable kembali jika belum ada data
+            $("#btnSimpanRanap")
+              .prop("disabled", false)
+              .removeClass("btn-secondary")
+              .addClass("btn-primary")
+              .html(`
+            <iconify-icon icon="mdi:check-circle-outline" class="me-1"></iconify-icon>
+            Simpan Permintaan
+          `);
           }
         },
         error: function() {
@@ -328,10 +352,10 @@ require '../../controller/view.php';
         data: $(this).serialize(),
         dataType: "json",
         beforeSend: function() {
-          $('button[type="submit"]').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Memproses...');
+          $('#btnSimpanRanap').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Memproses...');
         },
         success: function(response) {
-          $('button[type="submit"]').prop('disabled', false).html('<iconify-icon icon="mdi:check-circle-outline" class="me-1"></iconify-icon>Simpan Permintaan');
+          $('#btnSimpanRanap').prop('disabled', false).html('<iconify-icon icon="mdi:check-circle-outline" class="me-1"></iconify-icon>Simpan Permintaan');
 
           if (response.status === "success") {
             $("#alertSuccess").removeClass("d-none");
@@ -355,7 +379,7 @@ require '../../controller/view.php';
           }
         },
         error: function() {
-          $('button[type="submit"]').prop('disabled', false);
+          $('#btnSimpanRanap').prop('disabled', false);
           Swal.fire({
             icon: 'error',
             title: 'Gagal!',
@@ -407,7 +431,25 @@ require '../../controller/view.php';
                 });
                 $("#dataRanapBaru").addClass("d-none");
                 $("#alertSuccess").addClass("d-none");
+
+                // reset form
                 $("#formRawatInap")[0].reset();
+
+                // hapus id ranap lama
+                $("#dataRanapBaru").removeData("id_ranap");
+
+                // aktifkan kembali tombol simpan
+                $("#btnSimpanRanap")
+                  .prop("disabled", false)
+                  .removeClass("btn-light btn-secondary")
+                  .addClass("btn-primary")
+                  .html(`
+                      <iconify-icon icon="mdi:check-circle-outline" class="me-1"></iconify-icon>
+                      Simpan Permintaan
+                    `);
+
+                // load ulang data terbaru
+                loadDataRanap();
               } else {
                 Swal.fire({
                   icon: 'error',
