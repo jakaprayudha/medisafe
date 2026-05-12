@@ -21,7 +21,9 @@ if ($no && $id_customer) {
             v.id_doctor,
             u.signature_user,
             i.code  AS icd_code,
-            i.icd10 AS icd10
+            i.icd10 AS icd10,
+            t.tanggal_masuk,
+            t.jam_masuk
         FROM pasien_triase t
         LEFT JOIN pasien_visit v  ON t.visit_ID = v.visit_ID AND v.id_customer = ?
         LEFT JOIN icd_10       i  ON i.code = v.diagnosa
