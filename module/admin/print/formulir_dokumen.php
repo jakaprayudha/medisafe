@@ -1,10 +1,8 @@
 <?php
 require_once '../../../database/connect.php';
-
 $id_customer = $_SESSION['id_customer'] ?? null;
 $no          = $_GET['no'] ?? null;
 $rm          = $_GET['rm'] ?? null;
-
 // ============================================================
 // QUERY DOKUMEN + DATA PASIEN
 // ============================================================
@@ -54,8 +52,7 @@ if (!function_exists('qrImg')) {
         return '<img src="' . htmlspecialchars($qrSrc, ENT_QUOTES) . '" class="dokmulti-qr-img" alt="QR Code">';
     }
 }
-<?php
-include '../../database/connect.php';
+
 session_start();
 
 header('Content-Type: application/json');
@@ -63,35 +60,35 @@ header('Content-Type: application/json');
 $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
-   case 'GET':
-      getData();
-      break;
+    case 'GET':
+        getData();
+        break;
 
-   default:
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Method tidak diizinkan.'
-      ]);
-      break;
+    default:
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Method tidak diizinkan.'
+        ]);
+        break;
 }
 
 function getData()
 {
-   global $koneksi;
+    global $koneksi;
 
-   // 🔥 ambil session
-   $id_customer = $_SESSION['id_customer'] ?? null;
+    // 🔥 ambil session
+    $id_customer = $_SESSION['id_customer'] ?? null;
 
-   if (!$id_customer) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Session tidak ditemukan'
-      ]);
-      exit;
-   }
+    if (!$id_customer) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Session tidak ditemukan'
+        ]);
+        exit;
+    }
 
-   // 🔥 PREPARE QUERY (WAJIB karena pakai ?)
-   $stmt = $koneksi->prepare("SELECT 
+    // 🔥 PREPARE QUERY (WAJIB karena pakai ?)
+    $stmt = $koneksi->prepare("SELECT 
          visit_inspection.*,
          pasien_visit.visit_ID,
          pasien_visit.patient_name_pcare,
@@ -113,28 +110,28 @@ function getData()
       ORDER BY visit_inspection.id_inspection ASC
    ");
 
-   if (!$stmt) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Prepare failed: ' . $koneksi->error
-      ]);
-      return;
-   }
+    if (!$stmt) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Prepare failed: ' . $koneksi->error
+        ]);
+        return;
+    }
 
-   // 🔥 bind param
-   $stmt->bind_param("i", $id_customer);
+    // 🔥 bind param
+    $stmt->bind_param("i", $id_customer);
 
-   $stmt->execute();
-   $result = $stmt->get_result();
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-   $data = $result->fetch_all(MYSQLI_ASSOC);
+    $data = $result->fetch_all(MYSQLI_ASSOC);
 
-   $stmt->close();
+    $stmt->close();
 
-   echo json_encode([
-      'status' => 'success',
-      'data' => $data,
-   ]);
+    echo json_encode([
+        'status' => 'success',
+        'data' => $data,
+    ]);
 }
 
 if (!function_exists('fmtTgl')) {
