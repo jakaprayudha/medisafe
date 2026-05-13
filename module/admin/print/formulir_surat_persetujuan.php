@@ -169,8 +169,8 @@ $signatureSaksi = $saksi['signature_user'] ?? null;
          }
       }
       if ($doctorName) {
-         // Remove 'dr. ', 'dr ', or 'dr' prefix if present
-         $doctorNameClean = preg_replace('/^dr\.?\s*/i', '', $doctorName);
+         // Remove 'dr.', 'dr', with or without whitespace, and trim leading/trailing whitespace
+         $doctorNameClean = trim(preg_replace('/^dr\.?\s*/i', '', $doctorName));
          // Find signature by fullname LIKE
          $dokter = mysqli_query($koneksi, "SELECT signature_user FROM ms_users WHERE fullname LIKE '%" . mysqli_real_escape_string($koneksi, $doctorNameClean) . "%'");
          $dokter = mysqli_fetch_assoc($dokter);
