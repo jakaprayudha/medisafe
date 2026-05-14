@@ -430,7 +430,7 @@ $pt = $_GET['pt'];
 
                             <?php
                             $pt = $_GET['pt'] ?? '';
-                            $getquery = tampildata("SELECT * FROM pasien_visit WHERE id_patient='$pt' ORDER BY visit_date DESC");
+                            $getquery = tampildata("SELECT pv.*, mp.nomor_rm FROM pasien_visit pv LEFT JOIN ms_patient mp ON mp.id_patient = pv.id_patient WHERE pv.id_patient='$pt' ORDER BY visit_date DESC");
                             ?>
                             <?php if (!empty($getquery)): ?>
                               <div class="accordion" id="accordionExample">
@@ -441,15 +441,45 @@ $pt = $_GET['pt'];
                                   ?>
 
                                   <div class="accordion-item">
-                                    <h2 class="accordion-header" id="<?= $headingId ?>">
+                                    <style>
+                                      .accordion-header-custom {
+                                        position: relative;
+                                      }
+
+                                      .btn-download-resume {
+                                        position: absolute;
+                                        right: 55px;
+                                        top: 50%;
+                                        transform: translateY(-50%);
+                                        z-index: 20;
+                                      }
+                                    </style>
+
+                                    <h2 class="accordion-header accordion-header-custom"
+                                      id="<?= $headingId ?>">
+
                                       <button class="accordion-button <?= $index != 0 ? 'collapsed' : '' ?>"
                                         type="button"
                                         data-bs-toggle="collapse"
                                         data-bs-target="#<?= $collapseId ?>"
                                         aria-expanded="<?= $index == 0 ? 'true' : 'false' ?>">
 
-                                        <?= $row['patient_name'] ?? 'Tanggal : ' ?> <?= $row['visit_date'] ?> <?= $row['visit_time'] ?>
+                                        <?= $row['patient_name'] ?? 'Tanggal : ' ?>
+                                        <?= $row['visit_date'] ?>
+                                        <?= $row['visit_time'] ?>
+
                                       </button>
+
+                                      <!-- 🔥 BUTTON DOWNLOAD -->
+                                      <a href="module/admin/print/formulir_resume_v2?no=<?= $row['visit_ID'] ?>&rm=<?= $row['nomor_rm'] ?>&download=1"
+                                        target="_blank"
+                                        class="btn btn-sm btn-danger btn-download-resume">
+
+                                        <i class="fas fa-file-pdf"></i>
+                                        Download Resume
+
+                                      </a>
+
                                     </h2>
 
                                     <div id="<?= $collapseId ?>"
