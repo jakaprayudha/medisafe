@@ -1,6 +1,7 @@
 <?php
 include '../../database/connect.php';
 $method = $_SERVER['REQUEST_METHOD'];
+session_start();
 
 switch ($method) {
    case 'POST':
@@ -34,7 +35,7 @@ function uploadPerawatan()
 
    $rm    = $_POST['nomor_rm'] ?? '';
    $visit = $_POST['visit_ID'] ?? '';
-   $judul = $_POST['judul'] ?? '';
+   $judul = $_POST['judul_dokumen'] ?? '';
    $id_customer = $_SESSION['id_customer'] ?? '';
    $tgl   = $_POST['tgl_upload'] ?? date('Y-m-d');
 
@@ -51,7 +52,7 @@ function uploadPerawatan()
    // FILE VALIDATION
    $file = $_FILES['dokumen_path'];
    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-   $allowed = ['jpg', 'jpeg', 'png'];
+   $allowed = ['pdf'];
 
    if (!in_array($ext, $allowed)) {
       echo json_encode(["status" => "error", "message" => "Format harus JPG/PNG"]);
@@ -72,7 +73,7 @@ function uploadPerawatan()
    // INSERT DB
    mysqli_query($koneksi, "
       INSERT INTO pasien_dokumen_klaim_lainnya 
-      (visit_ID, id_customer, tanggal, juduL_dokumen, dokumen_path)
+      (visit_ID, id_customer, tanggal, judul_dokumen, dokumen_path)
       VALUES ('$visit', '$id_customer', '$tgl', '$judul', '$pathDB')
    ");
 
@@ -132,18 +133,75 @@ function deleteData()
    global $koneksi;
 
    $id = $_GET['id'] ?? '';
+
    if (!$id) {
-      echo json_encode(["status" => "error", "message" => "ID tidak ditemukan"]);
+      echo json_encode([
+         "status" => "error",
+         "message" => "ID tidak ditemukan"
+      ]);
       return;
    }
 
-   $st = $koneksi->prepare("DELETE FROM pasien_dokumen_klaim_lainnya WHERE id_dokumen=?");
-   $st->bind_param("i", $id);
+   // =========================
+   // AMBIL DATA FILE
+   // =========================
+   $st = $koneksi->prepare("
+      SELECT dokumen_path
+      FROM pasien_dokumen_klaim_lainnya
+      WHERE id_dokumen = ?
+   ");
 
-   if ($st->execute()) {
-      echo json_encode(["status" => "success", "message" => "Data dihapus"]);
+   $st->bind_param("i", $id);
+   $st->execute();
+
+   $res = $st->get_result();
+
+   if (!$res->num_rows) {
+
+      echo json_encode([
+         "status" => "error",
+         "message" => "Data tidak ditemukan"
+      ]);
+
+      return;
+   }
+
+   $data = $res->fetch_assoc();
+
+   // =========================
+   // HAPUS FILE FISIK
+   // =========================
+   if (!empty($data['dokumen_path'])) {
+
+      $filePath = "../../" . $data['dokumen_path'];
+
+      if (file_exists($filePath)) {
+         unlink($filePath);
+      }
+   }
+
+   // =========================
+   // HAPUS DATABASE
+   // =========================
+   $del = $koneksi->prepare("
+      DELETE FROM pasien_dokumen_klaim_lainnya
+      WHERE id_dokumen = ?
+   ");
+
+   $del->bind_param("i", $id);
+
+   if ($del->execute()) {
+
+      echo json_encode([
+         "status" => "success",
+         "message" => "Data dan file berhasil dihapus"
+      ]);
    } else {
-      echo json_encode(["status" => "error", "message" => "Gagal menghapus"]);
+
+      echo json_encode([
+         "status" => "error",
+         "message" => "Gagal menghapus data"
+      ]);
    }
 }
 
@@ -156,6 +214,7 @@ function updateTanggal($id)
    global $koneksi;
 
    $tgl = $_POST['tgl_upload'] ?? null;
+   $judul = $_POST['judul_dokumen'] ?? null;
 
    if (!$tgl) {
       echo json_encode(["status" => "error", "message" => "Tanggal wajib diisi"]);
@@ -164,11 +223,11 @@ function updateTanggal($id)
 
    $st = $koneksi->prepare("
       UPDATE pasien_dokumen_klaim_lainnya 
-      SET tanggal = ? 
+      SET tanggal = ?, judul_dokumen = ?
       WHERE id_dokumen = ?
    ");
 
-   $st->bind_param("si", $tgl, $id);
+   $st->bind_param("ssi", $tgl, $judul, $id);
 
    if ($st->execute()) {
       echo json_encode([

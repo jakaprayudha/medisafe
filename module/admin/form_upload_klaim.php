@@ -86,10 +86,12 @@ require '../../controller/view.php';
                           </div>
                         </div>
                       </div>
+                    </form>
                   </div>
                 </div>
               </div>
             </div>
+
 
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
@@ -131,30 +133,6 @@ require '../../controller/view.php';
   require 'library.php';
   ?>
 
-  <!-- 🔥 Modal Preview File -->
-  <div class="modal fade" id="filePreviewModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-      <div class="modal-content">
-
-        <div class="modal-header">
-          <h5 class="modal-title">Preview Dokumen</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-
-        <div class="modal-body text-center">
-          <!-- image -->
-          <img id="previewImage" src="" class="img-fluid d-none" />
-
-          <!-- pdf -->
-          <iframe id="previewPdf"
-            style="width:100%; height:500px;"
-            class="d-none"></iframe>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
   <div class="modal fade" id="programModal" tabindex="-1">
     <div class="modal-dialog">
       <form id="programForm" class="modal-content" enctype="multipart/form-data">
@@ -193,7 +171,8 @@ require '../../controller/view.php';
                   name="dokumen_path"
                   class="form-control"
                   id="dokumen_path"
-                  accept="pdf/*">
+                  accept=".pdf,application/pdf"
+                  required>
               </div>
             </div>
           </div>
@@ -204,6 +183,32 @@ require '../../controller/view.php';
       </form>
     </div>
   </div>
+
+  <!-- 🔥 Modal Preview File -->
+  <div class="modal fade" id="filePreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Preview Dokumen</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body text-center">
+          <!-- image -->
+          <img id="previewImage" src="" class="img-fluid d-none" />
+
+          <!-- pdf -->
+          <iframe id="previewPdf"
+            style="width:100%; height:500px;"
+            class="d-none"></iframe>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
 </body>
 
 <script>
@@ -457,7 +462,23 @@ require '../../controller/view.php';
             tanggal: row.tanggal ?? "-",
             judul: row.judul_dokumen ?? "-",
             dokumen_path: row.dokumen_path ?
-              `<img src="${row.dokumen_path}" style="max-width:80px">` : "-",
+              `
+<div class="d-flex gap-2">
+
+   <button 
+      class="btn btn-sm btn-primary preview-btn"
+      data-file="${row.dokumen_path}">
+      <i class="fas fa-eye"></i> Preview
+   </button>
+
+   <a href="${row.dokumen_path}" 
+      target="_blank"
+      class="btn btn-sm btn-danger">
+      <i class="fas fa-file-pdf"></i> PDF
+   </a>
+
+</div>
+` : "-",
           }));
         }
       },
@@ -482,44 +503,113 @@ require '../../controller/view.php';
 
     });
 
-    $('#customSearch').on('keyup', function() {
-      table.search(this.value).draw();
-    });
+
 
     // 🔹 Tambah
-    $('#btnTambah').on('click', function() {
+    $(document).on('click', '#btnTambah', function() {
 
-      $('#programForm')[0].reset();
+      const form = document.getElementById('programForm');
+
+      if (form) {
+        form.reset();
+      }
+
       $('#id_dokumen').val('');
 
-      $('#fileWrapper').show(); // 🔥 tampilkan file
-      $('#dokumen_path').attr('required', true);
+      $('#fileWrapper').show();
 
-      $('#programModal .modal-title').text('Tambah Data');
-      $('#programModal').modal('show');
+      $('#dokumen_path').prop('required', true);
+
+      $('.modal-title').text('Tambah Data');
+
+      const modal = new bootstrap.Modal(
+        document.getElementById('programModal')
+      );
+
+      modal.show();
+
     });
 
     // 🔹 Submit (Tambah / Update)
-    $('#programForm').on('submit', function(e) {
+    $('#programForm').on('submit', async function(e) {
+
       e.preventDefault();
 
-      let formData = new FormData(this); // WAJIB FORM DATA
-      let id = $('#id_dokumen').val();
+      const btn = $(this).find('button[type="submit"]');
 
-      fetch(apiUrl + (id ? `&id=${id}` : ''), {
-          method: id ? 'POST' : 'POST', // pakai POST untuk upload
-          body: formData, // JANGAN pakai header Content-Type
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === 'success') {
-            Swal.fire('Berhasil!', data.message, 'success');
-            $('#programModal').modal('hide');
-            table.ajax.reload(null, false);
-          } else {
-            Swal.fire('Gagal!', data.message, 'error');
+      btn.prop('disabled', true);
+
+      btn.html(`
+      <span class="spinner-border spinner-border-sm"></span>
+      Menyimpan...
+   `);
+
+      try {
+
+        let formData = new FormData(this);
+
+        let id = $('#id_dokumen').val();
+
+        const response = await fetch(
+          apiUrl + (id ? `&id=${id}` : ''), {
+            method: 'POST',
+            body: formData
           }
-        })
+        );
+
+        const data = await response.json();
+
+        console.log(data);
+
+        if (data.status === 'success') {
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: data.message,
+            timer: 2000,
+            showConfirmButton: false
+          });
+
+          // reload table
+          table.ajax.reload(null, false);
+
+          // close modal bootstrap 5
+          bootstrap.Modal
+            .getInstance(document.getElementById('programModal'))
+            .hide();
+
+          // reset form
+          document.getElementById('programForm').reset();
+
+        } else {
+
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal',
+            text: data.message
+          });
+
+        }
+
+      } catch (err) {
+
+        console.log(err);
+
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Terjadi kesalahan server'
+        });
+
+      } finally {
+
+        btn.prop('disabled', false);
+
+        btn.html('Simpan');
+
+      }
+
     });
     // 🔹 Delete
     $(document).on('click', '.delete-btn', function() {
@@ -560,7 +650,29 @@ require '../../controller/view.php';
     $('#dokumen_path').val('');
 
     $('#programModal .modal-title').text('Edit Tanggal');
-    $('#programModal').modal('show');
+    const modal = new bootstrap.Modal(
+      document.getElementById('programModal')
+    );
+
+    modal.show();
+  });
+
+  $(document).on('click', '.preview-btn', function() {
+
+    let file = $(this).data('file');
+
+    $('#previewPdf').attr('src', file);
+
+    $('#previewImage').addClass('d-none');
+
+    $('#previewPdf').removeClass('d-none');
+
+    const modal = new bootstrap.Modal(
+      document.getElementById('filePreviewModal')
+    );
+
+    modal.show();
+
   });
 </script>
 
