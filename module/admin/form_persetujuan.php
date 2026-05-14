@@ -100,6 +100,7 @@
                                 <option value="Anak">Anak</option>
                                 <option value="Ayah">Ayah</option>
                                 <option value="Ibu">Ibu</option>
+                                <option value="Keluarga Lain">Keluarga Lain</option>
                               </select>
                             </div>
 

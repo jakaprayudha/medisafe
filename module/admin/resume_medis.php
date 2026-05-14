@@ -144,9 +144,10 @@ $dataresume =  mysqli_fetch_array($checkvisit);
                       <select name="kondisi_pulang" id="kondisi_pulang" class="form-select">
                         <option value="">PILIH</option>
                         <option value="Sembuh">Sembuh</option>
-                        <option value="Rujuk">Rujuk</option>
-                        <option value="Lemah">Lemah</option>
-                        <option value="Meninggal">Meninggal</option>
+                        <option value="Membaik">Membaik</option>
+                        <option value="Belum Sembuh">Belum Sembuh</option>
+                        <option value="Mati < 48 Jam">Mati < 48 Jam</option>
+                        <option value="Mati > 48 Jam">Mati > 48 Jam</option>
                         <option value="Lainnya">Lainnya</option>
                       </select>
                     </div>
@@ -156,10 +157,11 @@ $dataresume =  mysqli_fetch_array($checkvisit);
                       <label class="form-label">Cara Keluar</label>
                       <select name="cara_keluar" id="cara_keluar" class="form-select">
                         <option value="">PILIH</option>
+                        <option value="Diizinkan Lari">Diizinkan Lari</option>
+                        <option value="Pulang Paksa">Pulang Paksa</option>
                         <option value="Lari">Lari</option>
-                        <option value="Pulang">Pulang</option>
-                        <option value="Paksa">Paksa</option>
-                        <option value="Diizinkan Pulang">Diizinkan Pulang</option>
+                        <option value="Pindah Ke FKTP Rawat Inap Lain">Pindah Ke FKTP Rawat Inap Lain</option>
+                        <option value="Dirujuk Ke RS">Dirujuk Ke RS</option>
                         <option value="Lainnya">Lainnya</option>
                       </select>
                     </div>
