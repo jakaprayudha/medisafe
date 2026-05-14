@@ -287,6 +287,64 @@ foreach (['file_spp' => 'SEP', 'file_fkpp' => 'FKPP'] as $col => $label) {
 }
 
 // =============================================================================
+// TAMBAHKAN DOKUMEN KLAIM LAINNYA
+// =============================================================================
+
+$qDokLain = mysqli_query(
+    $koneksi,
+    "
+    SELECT dokumen_path, judul_dokumen
+    FROM pasien_dokumen_klaim_lainnya
+    WHERE visit_ID='$visit'
+    ORDER BY id_dokumen ASC
+"
+);
+
+while ($dok = mysqli_fetch_assoc($qDokLain)) {
+
+    $pathDok = trim($dok['dokumen_path'] ?? '');
+
+    if (empty($pathDok)) {
+        continue;
+    }
+
+    // path absolut
+    $fullPath = realpath(
+        __DIR__ . '/../../../' . $pathDok
+    );
+
+    if (!$fullPath || !is_readable($fullPath)) {
+
+        error_log(
+            "[bundle_klaim] Dokumen lainnya tidak ditemukan: " .
+                $pathDok
+        );
+
+        continue;
+    }
+
+    // hanya PDF
+    $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+
+    if ($ext !== 'pdf') {
+
+        error_log(
+            "[bundle_klaim] Skip non PDF: " .
+                $fullPath
+        );
+
+        continue;
+    }
+
+    // flatten agar kompatibel fpdi
+    $allPdfs[] = flattenPdfForFpdi(
+        $fullPath,
+        $tempDir,
+        $tempPaths
+    );
+}
+
+// =============================================================================
 // MERGE SEMUA PDF MENGGUNAKAN FPDI
 // =============================================================================
 
