@@ -45,6 +45,8 @@ while ($ins = mysqli_fetch_assoc($qIns)) {
 
    $id_inspection = $ins['id_inspection'];
    $assemen = $ins['inspection_name'];
+   // ambil tanggal pemeriksaan
+   $tgl_periksa = $ins['inspection_date'];
 
    $qLab = mysqli_query($koneksi, "
       SELECT 
@@ -79,7 +81,9 @@ while ($ins = mysqli_fetch_assoc($qIns)) {
 $data = [
    "pasien" => [
       "nama" => $p['patient_name'] ?? '',
-      "tgl_periksa" => date('d-m-Y', strtotime($p['visit_date'] ?? date('Y-m-d'))),
+      "tgl_periksa" => !empty($tgl_periksa)
+         ? date('d-m-Y', strtotime($tgl_periksa))
+         : '',
       "tgllahir" => $p['patient_datebirth'] ?? '',
       // "umur" => hitungUmur($p['patient_datebirth'] ?? ''),
       "jk" => $p['patient_gender'] ?? '',
