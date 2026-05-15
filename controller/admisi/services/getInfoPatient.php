@@ -31,7 +31,8 @@ if (!in_array($lengthkartu, [13, 16])) {
         ];
     } else {
         $date = DateTime::createFromFormat('d-m-Y', trim($result['data']['tglLahir']));
-        $tglLahir = $date ? $date->format('Y-m-d') : null;
+        $tglLahir = $date ? $date->format('Y-m-d') : null;  
+        // perbaikaqn
         $response = [
             'success' => true,
             'code' => $result['data']['aktif'] ?? null,
