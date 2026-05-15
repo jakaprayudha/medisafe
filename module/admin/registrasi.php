@@ -12,9 +12,6 @@ require '../../controller/view.php';
   ?>
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <style id="fixcss">
-    /* =========================
-   🎯 DROPDOWN (PRIORITAS)
-========================= */
     .dropdown-menu {
       z-index: 999999 !important;
       min-width: 200px;
@@ -22,10 +19,6 @@ require '../../controller/view.php';
       width: auto;
       white-space: normal;
     }
-
-    /* =========================
-   🎯 DATATABLE FIX (INTI MASALAH)
-========================= */
 
     /* wrapper utama */
     .dataTables_wrapper {
@@ -55,9 +48,6 @@ require '../../controller/view.php';
       overflow: visible !important;
     }
 
-    /* =========================
-   🎯 DROPUP POSITION FIX
-========================= */
     .dropup .dropdown-menu {
       top: auto !important;
       bottom: 100% !important;
@@ -65,9 +55,7 @@ require '../../controller/view.php';
       transform: none !important;
     }
 
-    /* =========================
-   🎯 CAMERA MODAL (JANGAN DIUBAH)
-========================= */
+
     #cameraModal .modal-body {
       position: relative;
     }
@@ -670,63 +658,6 @@ require '../../controller/view.php';
     </div>
   </div>
 </div>
-<div class="modal fade" id="poliModal">
-  <div class="modal-dialog">
-    <div class="modal-content">
-
-      <div class="modal-header">
-        <h5 class="modal-title">🩺 Registrasi Poliklinik</h5>
-        <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-
-        <form id="formPoli">
-          <!-- Pasien -->
-          <div class="mb-3">
-            <label class="form-label">👤 Nama Pasien</label>
-            <select name="id_patient_select" id="id_patient_select"
-              class="form-select js-example-basic-item" required>
-            </select>
-          </div>
-          <div class="row">
-            <div class="col">
-              <!-- Tanggal -->
-              <div class="mb-3">
-                <label class="form-label">📅 Tanggal</label>
-                <input type="date" id="poli_date" class="form-control">
-              </div>
-            </div>
-            <div class="col">
-              <!-- Jam -->
-              <div class="mb-3">
-                <label class="form-label">⏰ Jam Kunjungan</label>
-                <input type="time" id="poli_time" class="form-control">
-              </div>
-            </div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">👨‍⚕️ Dokter</label>
-            <select id="poli_doctor" class="form-select"></select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">🏥 Poliklinik</label>
-            <select id="poli_poli" class="form-select"></select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">💳 Provider</label>
-            <select id="poli_provider" class="form-select"></select>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-        <button class="btn btn-success" id="btnSavePoli">💾 Simpan</button>
-      </div>
-
-    </div>
-  </div>
-</div>
 <script>
   let currentTab = 'belum'; // default tab saat halaman pertama kali dimuat
   $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
@@ -746,18 +677,6 @@ require '../../controller/view.php';
   });
 </script>
 <script>
-  $(document).on('click', '.poli-btn', function() {
-    $('#poliModal').modal('show');
-
-    const now = new Date();
-    $('#poli_date').val(now.toISOString().split('T')[0]);
-    $('#poli_time').val(now.toTimeString().slice(0, 5));
-    APP.ambil_data('#poli_doctor', 'dokter/0/15', 'nmDokter', 'nmDokter', true);
-    // loadDoctors();
-    loadPoli();
-    loadProvider();
-  });
-
   function hitungBMI() {
     const tinggi = parseFloat(document.getElementById('tinggi').value);
     const berat = parseFloat(document.getElementById('berat').value);
@@ -1452,15 +1371,6 @@ require '../../controller/view.php';
         console.log(xhr.responseText);
       }
     });
-    // fetch('controller/visit/getpoli')
-    //   .then(res => res.json())
-    //   .then(res => {
-    //     let html = '<option value="">Pilih Poli</option>';
-    //     res.forEach(p => {
-    //       html += `<option value="${p.id_poli}">${p.poli_name}</option>`;
-    //     });
-    //     $('#poli_poli').html(html);
-    //   });
   }
 
   function loadProvider() {
@@ -1535,9 +1445,7 @@ require '../../controller/view.php';
   });
 
   $('#poliModal').on('shown.bs.modal', function() {
-
     const $select = $('#id_patient_select');
-
     // destroy kalau sudah ada
     if ($select.hasClass("select2-hidden-accessible")) {
       $select.select2('destroy');
