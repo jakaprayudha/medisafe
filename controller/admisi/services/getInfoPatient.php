@@ -20,26 +20,29 @@ if (!in_array($lengthkartu, [13, 16])) {
     ];
 } else {
     $result = bpjsGet('/peserta/' . $tipe . '/' . $nomor_kartu);
+
     if (($result['code'] ?? '') != "200") {
         $msg = $result['message'] ?? "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
+
         $response = [
             'success' => false,
-            'code' => $result['data']['aktif'],
+            'code' => $result['data']['aktif'] ?? null,
             'message' => $msg,
         ];
     } else {
+        $date = DateTime::createFromFormat('d-m-Y', trim($result['data']['tglLahir']));
+        $tglLahir = $date ? $date->format('Y-m-d') : null;
         $response = [
             'success' => true,
-            'code' => $result['data']['aktif'],
-            'message' => $result['data']['ketAktif'],
-            'noKartu' => $result['data']['noKartu'],
-            'nik' => $result['data']['noKTP'],
-            'nama' => $result['data']['nama'],
-            'sex' => $result['data']['sex'],
-            'tglLahir' => date('Y-m-d', strtotime(str_replace('-', '/', $result['data']['tglLahir']))), 
-            'tglLahirsebelum' => $result['data']['tglLahir'], 
-            'golDarah' => $result['data']['golDarah'],
-            'noHP' => $result['data']['noHP']
+            'code' => $result['data']['aktif'] ?? null,
+            'message' => $result['data']['ketAktif'] ?? '',
+            'noKartu' => $result['data']['noKartu'] ?? '',
+            'nik' => $result['data']['noKTP'] ?? '',
+            'nama' => $result['data']['nama'] ?? '',
+            'sex' => $result['data']['sex'] ?? '',
+            'tglLahir' => $tglLahir,
+            'golDarah' => $result['data']['golDarah'] ?? '',
+            'noHP' => $result['data']['noHP'] ?? ''
         ];
     }
 }
