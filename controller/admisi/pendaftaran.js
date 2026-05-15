@@ -112,6 +112,7 @@ $(function () {
                         APP.cetakhtml('#tglLahir', response.data.tglLahir || '-');
                         APP.cetakhtml('#kelamin', response.data.sex === "P" ? "Perempuan" : "Laki - Laki");
                         APP.cetakhtml('#ppkumum', response.data.kdProviderPst.nmProvider || '-');
+                        APP.cetak('#kdProviderPeserta', response.data.kdProviderPst.kdProvider || '');
                         APP.cetak('#nohp', response.data.noHP || '080000000000');
                         APP.cetakhtml('#noTelp', response.data.noHP || '-');
                         APP.cetak('#noKartu', response.data.noKartu || '-');
@@ -124,7 +125,6 @@ $(function () {
                         let nik = response.data.noKTP || nomor;
                         APP.cetak('#noNIK', nik);
                         APP.cetakhtml('#nonik', nik);
-                        APP.cetak('#kdProviderPeserta', response.data.kdProvider || '');
                     });
                 } else {
                     resetTampilan();
