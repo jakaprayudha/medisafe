@@ -59,6 +59,22 @@ function createVisit(){
          exit;
       }
 
+      // 🔥 generate visit ID
+      $visit_ID = generateVisitID($koneksi);
+
+      // // 🔥 generate antrian
+      // $stmtQueue = $koneksi->prepare("
+      //       SELECT COUNT(*) as total 
+      //       FROM pasien_visit 
+      //       WHERE visit_date=? AND id_doctor=? AND id_customer=?
+      //   ");
+      // $stmtQueue->bind_param("sii", $visit_date, $id_doctor, $id_customer);
+      // $stmtQueue->execute();
+      // $resultQueue = $stmtQueue->get_result()->fetch_assoc();
+      // $stmtQueue->close();
+
+      // $visit_antrian = $resultQueue['total'] + 1;
+
       // 🔥 insert
       $stmt = $koneksi->prepare("
             INSERT INTO pasien_visit (
