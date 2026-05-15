@@ -157,7 +157,7 @@ $dataresume =  mysqli_fetch_array($checkvisit);
                       <label class="form-label">Cara Keluar</label>
                       <select name="cara_keluar" id="cara_keluar" class="form-select">
                         <option value="">PILIH</option>
-                        <option value="Diizinkan Lari">Diizinkan Pulang</option>
+                        <option value="Diizinkan Pulang">Diizinkan Pulang</option>
                         <option value="Pulang Paksa">Pulang Paksa</option>
                         <option value="Lari">Lari</option>
                         <option value="Pindah Ke FKTP Rawat Inap Lain">Pindah Ke FKTP Rawat Inap Lain</option>
