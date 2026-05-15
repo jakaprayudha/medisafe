@@ -108,7 +108,7 @@ $(function () {
                         APP.cetakhtml('#nama', response.data.nama || '-');
                         APP.cetakhtml('#tglLahir', response.data.tglLahir || '-');
                         APP.cetakhtml('#kelamin', response.data.sex === "P" ? "Perempuan" : "Laki - Laki");
-                        APP.cetakhtml('#ppkumum', response.data.nmProvider || '-');
+                        APP.cetakhtml('#ppkumum', response.data.kdProviderPst.nmProvider || '-');
                         APP.cetak('#nohp', response.data.noHP || '080000000000');
                         APP.cetakhtml('#noTelp', response.data.noHP || '-');
                         APP.cetak('#noKartu', response.data.noKartu || '-');
