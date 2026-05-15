@@ -1,5 +1,6 @@
 window.APP = window.APP || {};
 let type = 'BPJS';
+let idPasien = '';
 $(function () {
     $('#pasienSelect').select2({
         placeholder: 'Ketik nama,nik,bpjs pasien (min. 2 karakter)...',
@@ -74,6 +75,7 @@ $(function () {
         resetSemuaForm();
         let data = e.params.data;
         const nomor = data.nik == '-' ? data.bpjs : data.nik;
+        idPasien = data.id;
         loadPasien(nomor, 'BPJS');
     });
     function loadPasien(nomor, tipe) {
@@ -104,6 +106,7 @@ $(function () {
                             $('.viewBpjs').removeClass('d-none');
                         }
                         APP.cetak('#typePatient', tipe);
+                        APP.cetak('#id_patient', idPasien);
                         APP.cetakhtml('#noK', response.data.noKartu || '-');
                         APP.cetakhtml('#nama', response.data.nama || '-');
                         APP.cetakhtml('#tglLahir', response.data.tglLahir || '-');
