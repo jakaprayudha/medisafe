@@ -31,6 +31,7 @@ $suhu    =  $_POST['suhu'];
 $saturasi    =  $_POST['saturasiOksigen'];
 $type = $_POST['typePatient'];
 $kdProv = $_POST['kdProv'];
+$id_patient = $_POST['id_patient'];
 $payload = [
     "kdProviderPeserta" => $kdProviderPeserta,
     "tglDaftar" => $tglDaftar,
@@ -213,36 +214,35 @@ if ($type == "BPJS") {
         }
     }
 } else {
-    $chackpasien = null;
-    if (!empty($noNIK)) {
-        $stmt = $koneksi->prepare("
-        SELECT * FROM ms_patient 
-        WHERE patient_nik = ? AND id_customer = ?
-    ");
-        $stmt->bind_param('ss', $noNIK, $idcustomer);
-        $stmt->execute();
-        $chackpasien = $stmt->get_result()->fetch_assoc();
-    }
-    if (!$chackpasien && !empty($noKartu)) {
-        $stmt = $koneksi->prepare("
-        SELECT * FROM ms_patient 
-        WHERE patient_bpjs = ? AND id_customer = ?
-    ");
-        $stmt->bind_param('ss', $noKartu, $idcustomer);
-        $stmt->execute();
-        $chackpasien = $stmt->get_result()->fetch_assoc();
-    }
-    if (!$chackpasien) {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Data pasien tidak ditemukan',
-            'nik' => $noNIK,
-            'kartu' => $noKartu
-        ]);
-        exit;
-    }
-
-    $id_patient = $chackpasien['id_patient'];
+    // $chackpasien = null;
+    // if (!empty($noNIK)) {
+    //     $stmt = $koneksi->prepare("
+    //     SELECT * FROM ms_patient 
+    //     WHERE patient_nik = ? AND id_customer = ?
+    // ");
+    //     $stmt->bind_param('ss', $noNIK, $idcustomer);
+    //     $stmt->execute();
+    //     $chackpasien = $stmt->get_result()->fetch_assoc();
+    // }
+    // if (!$chackpasien && !empty($noKartu)) {
+    //     $stmt = $koneksi->prepare("
+    //     SELECT * FROM ms_patient 
+    //     WHERE patient_bpjs = ? AND id_customer = ?
+    // ");
+    //     $stmt->bind_param('ss', $noKartu, $idcustomer);
+    //     $stmt->execute();
+    //     $chackpasien = $stmt->get_result()->fetch_assoc();
+    // }
+    // if (!$chackpasien) {
+    //     echo json_encode([
+    //         'success' => false,
+    //         'message' => 'Data pasien tidak ditemukan',
+    //         'nik' => $noNIK,
+    //         'kartu' => $noKartu
+    //     ]);
+    //     exit;
+    // }
+    // $id_patient = $chackpasien['id_patient'];
 
     $created_user = "User";
     $source_hub   = "Poliklinik";

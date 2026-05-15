@@ -41,6 +41,7 @@
                 <input type="hidden" name="jnsKlamin" id="Kelamin">
                 <input type="hidden" name="tglLahir" id="tgllahir">
                 <input type="hidden" name="typePatient" id="typePasien">
+                <input type="hidden" name="id_patient" id="id_patient">
                 <div class="card shadow-sm">
                     <div class="card-header bg-light fw-semibold">
                         Form Kunjungan Pasien
