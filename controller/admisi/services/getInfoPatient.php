@@ -36,7 +36,8 @@ if (!in_array($lengthkartu, [13, 16])) {
             'nik' => $result['data']['noKTP'],
             'nama' => $result['data']['nama'],
             'sex' => $result['data']['sex'],
-            'tglLahir' => date('Y-m-d', strtotime(str_replace('-', '/', $result['data']['tglLahir']))),
+            'tglLahir' => date('Y-m-d', strtotime(str_replace('-', '/', $result['data']['tglLahir']))), 
+            'tglLahirsebelum' => $result['data']['tglLahir'], 
             'golDarah' => $result['data']['golDarah'],
             'noHP' => $result['data']['noHP']
         ];
