@@ -24,11 +24,10 @@ $status   = $_GET['status'] ?? null;
 // =============================
 // BASE QUERY
 // =============================
-$sql = "
-SELECT 
-
+$sql = "SELECT 
    pv.*,
    mp.provider_name,
+   ms.patient_nik as nik,
 
    -- 🔥 STATUS CPPT
    CASE
@@ -58,7 +57,8 @@ FROM pasien_visit pv
 
 LEFT JOIN ms_provider mp 
    ON mp.id_provider = pv.id_provider
-
+LEFT JOIN ms_patient ms 
+   ON ms.id_patient = pv.id_patient
 WHERE pv.id_customer = '$id_customer'
 AND pv.status_rawatinap = 1
 ";

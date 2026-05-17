@@ -19,11 +19,11 @@ if (!$id_customer) {
 // =============================
 // QUERY
 // =============================
-$sql = "
-SELECT 
+$sql = "SELECT 
 
    pv.*,
    mp.provider_name,
+   ms.patient_nik as nik,
 
    -- 🔥 STATUS CPPT
    CASE
@@ -53,6 +53,8 @@ FROM pasien_visit pv
 
 LEFT JOIN ms_provider mp
    ON mp.id_provider = pv.id_provider
+LEFT JOIN ms_patient ms
+   ON ms.id_patient = pv.id_patient
 
 WHERE pv.id_customer = '$id_customer'
 AND pv.status_rawatinap = 1
@@ -245,6 +247,7 @@ $query = mysqli_query($koneksi, $sql);
          <tr>
             <th>Status</th>
             <th>No BPJS</th>
+            <th>NIK</th>
             <th>Tanggal</th>
             <th>Nama Pasien</th>
             <th>Dokter</th>
@@ -290,6 +293,12 @@ $query = mysqli_query($koneksi, $sql);
                <!-- NO BPJS -->
                <td>
                   <?= $row['noKartu'] ?? '-' ?>
+               </td>
+
+
+               <!-- NIK -->
+               <td>
+                  <?= $row['nik'] ?? '-' ?>
                </td>
 
                <!-- TANGGAL -->
