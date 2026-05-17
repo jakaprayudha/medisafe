@@ -12,9 +12,10 @@ $provider = $_GET['provider'] ?? null;
 $poli     = $_GET['poli'] ?? null;
 
 $sql = "
-SELECT pv.*, mp.provider_name
+SELECT pv.*, mp.provider_name,  ms.patient_nik AS nik
 FROM pasien_visit pv
 LEFT JOIN ms_provider mp ON mp.id_provider = pv.id_provider
+LEFT JOIN ms_patient ms ON ms.id_patient = pv.id_patient
 WHERE pv.id_customer = '$id_customer'
 ";
 

@@ -149,6 +149,7 @@ require '../../controller/view.php';
                         <tr>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
                           <th scope="col" class="text-dark fw-normal">No.BPJS</th>
+                          <th scope="col" class="text-dark fw-normal">NIK</th>
                           <th class="text-dark fw-normal">Tanggal</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">Dokter</th>
@@ -367,6 +368,18 @@ require '../../controller/view.php';
         // =============================
         {
           data: "noKartu",
+
+          render: function(data) {
+            return data ? data : '-';
+          }
+        },
+
+
+        // =============================
+        // NIK
+        // =============================
+        {
+          data: "nik",
 
           render: function(data) {
             return data ? data : '-';

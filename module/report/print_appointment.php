@@ -16,6 +16,8 @@ $query = mysqli_query($koneksi, "
   FROM pasien_visit 
   INNER JOIN ms_provider 
     ON pasien_visit.id_provider = ms_provider.id_provider
+LEFT JOIN ms_patient 
+    ON pasien_visit.id_patient = ms_patient.id_patient
   WHERE pasien_visit.id_customer = '$id_customer'
     AND DATE(pasien_visit.visit_date) BETWEEN '$fromDate' AND '$toDate'
     " . ($doctor ? " AND pasien_visit.id_doctor = '$doctor'" : "") . "
@@ -107,6 +109,7 @@ $query = mysqli_query($koneksi, "
          <tr>
             <th>Status</th>
             <th>No BPJS</th>
+            <th>NIK</th>
             <th>Tanggal</th>
             <th>Nama Pasien</th>
             <th>Dokter</th>
@@ -126,6 +129,7 @@ $query = mysqli_query($koneksi, "
                   <?php } ?>
                </td>
                <td><?= $row['noKartu'] ?></td>
+               <td><?= $row['patient_nik'] ?></td>
                <td><?= $row['visit_date'] ?> <?= $row['visit_time'] ?></td>
                <td><?= $row['patient_name_pcare'] ?></td>
                <td><?= $row['id_doctor'] ?></td>
