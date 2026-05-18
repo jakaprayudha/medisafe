@@ -1,7 +1,7 @@
 <?php
 include '../../database/connect.php';
 header("Content-Type: application/json");
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 
 $id_customer = $_SESSION['id_customer'] ?? null;
 

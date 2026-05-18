@@ -137,6 +137,9 @@ require '../../controller/view.php';
                         </button>
                       </div>
                       <div class="d-flex ms-auto gap-2">
+                        <button id="btnExcel" class="btn btn-success">
+                          <i class="fas fa-file-excel"></i> Excel
+                        </button>
                         <button id="btnPrint" class="btn btn-primary">
                           <i class="fas fa-print"></i> Print
                         </button>
@@ -350,14 +353,23 @@ require '../../controller/view.php';
 
       table.ajax.reload();
     });
+    $('#btnExcel').on('click', function() {
+      let fromDate = $('#fromDate').val();
+      let toDate   = $('#toDate').val();
+      let doctor   = $('#doctorSelect').val();
+      let provider = $('#providerSelect').val();
+
+      let url = `module/report/export_appointment.php?fromDate=${fromDate}&toDate=${toDate}&doctor=${doctor}&provider=${provider}`;
+      window.location.href = url;
+    });
+
     $('#btnPrint').on('click', function() {
       let fromDate = $('#fromDate').val();
-      let toDate = $('#toDate').val();
-      let doctor = $('#doctorSelect').val();
+      let toDate   = $('#toDate').val();
+      let doctor   = $('#doctorSelect').val();
       let provider = $('#providerSelect').val();
 
       let url = `module/report/print_appointment.php?fromDate=${fromDate}&toDate=${toDate}&doctor=${doctor}&provider=${provider}`;
-
       window.open(url, '_blank');
     });
   });
