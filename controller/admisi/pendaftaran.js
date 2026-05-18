@@ -130,7 +130,7 @@ $(function () {
                     resetTampilan();
                     if (tipe === 'BPJS') {
                         Swal.fire({
-                            title: "Data BPJS Bermasalah",
+                            title: "Terjadi kesalahan pada layanan BPJS",
                             text: response.message,
                             icon: "warning",
                             showDenyButton: true,
