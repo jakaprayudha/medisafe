@@ -315,16 +315,6 @@ $data = mysqli_fetch_array($check);
                       word-break: break-word;
                     }
                   </style>
-
-
-                  <!-- CATATAN -->
-                  <?php if (!empty($data['catatan_permintaan'])): ?>
-                    <hr class="my-3">
-                    <div>
-                      <div class="label text-muted">Catatan</div>
-                      <div class="value"><?= $data['catatan_permintaan'] ?></div>
-                    </div>
-                  <?php endif; ?>
                   <!-- 🔥 TOMBOL CALL -->
                   <div class="mt-4 text-end">
                     <button class="btn btn-light" onclick="window.history.back()">
@@ -338,7 +328,6 @@ $data = mysqli_fetch_array($check);
                       data-visit="<?= $data['visit_ID'] ?>"
                       data-dokter="<?= $data['id_doctor'] ?>"
                       data-obat="<?= $data['tipe_obat'] ?? 'Obat siap diambil' ?>">
-
                       <i class="ti ti-volume"></i> Panggil Pasien
                     </button>
                   </div>
@@ -495,7 +484,7 @@ $data = mysqli_fetch_array($check);
                 </div>
 
                 <small class="text-muted">
-                  Jumlah ${tiket.rck_jumlah ?? '-'} • Satuan ${tiket.rck_satuan ?? '-'} • Signa ${tiket.rck_signa ?? '-'} 
+                  Jumlah ${tiket.rck_jumlah ?? '-'} • Satuan ${tiket.rck_satuan ?? '-'} • Signa ${tiket.rck_signa ?? '-'}  <br> <strong class="text-danger"> Catatan : ${tiket.catatan_permintaan ?? '-' } </strong>
                 </small>
               </div>
 
@@ -600,7 +589,7 @@ $data = mysqli_fetch_array($check);
           }</td>
             <td>${row.qty}</td>
             <td>${row.signa}</td>
-            <td>${row.catatan_permintaan ?? '-'}</td>
+            <td>${row.catatan ?? '-'}</td>
             <td class='col-1'>
               <div class="btn-group btn-group-sm">
                 <button class="btn btn-warning edit-btn" data-id="${row.id_pharmacy_details}">
