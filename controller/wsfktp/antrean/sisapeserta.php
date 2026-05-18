@@ -144,7 +144,7 @@ if ($adaData) {
         "response" => [
             "nomorantrean" => $result['nomorantrean'] ?? 1,
             "namapoli" => ucwords(strtolower($result['id_poli'])),
-            "sisaantrean" => max(0, $result['sisa_antrean'] - 1),
+            "sisaantrean" => (string) max(0, $result['sisa_antrean'] - 1),
             "antreanpanggil" =>  $result['antrean_terakhir'],
             "keterangan" => ""
         ],
