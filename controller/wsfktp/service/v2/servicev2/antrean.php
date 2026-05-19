@@ -83,7 +83,7 @@ if (!$dokterDipilih) {
 }
 $namaDokter = $dokterDipilih['namadokter'];
 $kodeDokter = $dokterDipilih['kodedokter'];
-$jamPraktek = $dokterDipilih['jampraktek'];
+$jamPraktekDokter = $dokterDipilih['jampraktek'];
 
 $cekpoli = $koneksi->prepare("SELECT d.doctor_name, mds.day_of_week, mds.start_time, mds.end_time, mds.sch_status, mds.kuota FROM ms_doctor AS d INNER JOIN ms_doctor_schedule AS mds ON d.id_doctor = mds.id_doctor AND d.id_customer = mds.id_customer WHERE d.doctor_code = ? AND d.id_customer = ? AND mds.day_of_week = ?");
 $cekpoli->bind_param('sss', $kodedokter, $id_customer, $hariIndonesia);
@@ -102,11 +102,13 @@ if ($status_antrian['sch_status'] == '0') {
     exit;
 }
 $pecah_jam = explode('-', $jampraktek);
-$jamMulai_db = $status_antrian['start_time'];
-$jamSelesai_db = $status_antrian['end_time'];
+
+$pecahJamPrakterDokter = explode('-', $jamPraktekDokter);
+$jamMulai_db = $pecahJamPrakterDokter[0];
+$jamSelesai_db = $pecahJamPrakterDokter[1];
 $jamMulai_user = $pecah_jam[0];
 $jamSelesai_user = $pecah_jam[1];
-if ($jamMulai_user != $jamMulai_db || $jamSelesai_user != $jamSelesai_db) {
+if (($jamMulai_user < $jamSelesai_db) && ($jamSelesai_user > $jamMulai_db)) {
     http_response_code(201);
     echo json_encode([
         "metadata" => [
