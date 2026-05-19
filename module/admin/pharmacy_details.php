@@ -433,6 +433,10 @@ $datamargin = mysqli_fetch_array($checkmargin);
               icon: "success",
               title: "Berhasil",
               text: "Data berhasil diperbarui!"
+            }).then(() => {
+              if (data.new_id) {
+                window.location.href = "module/admin/pharmacy_details?no=" + data.new_id;
+              }
             });
           } else {
             Swal.fire({
@@ -459,7 +463,7 @@ $datamargin = mysqli_fetch_array($checkmargin);
       }
 
       const formData = new FormData(formPersediaan);
-      formData.append("pharmacy_number", pharmacyNo);
+      formData.append("id_pharmacy", pharmacyNo);
       formData.append("_method", "PUT");
 
       fetch("controller/master/pharmacyDetailsController.php", {
@@ -473,6 +477,10 @@ $datamargin = mysqli_fetch_array($checkmargin);
               icon: "success",
               title: "Berhasil",
               text: "Data berhasil diperbarui!"
+            }).then(() => {
+              if (data.new_id) {
+                window.location.href = "module/admin/pharmacy_details?no=" + data.new_id;
+              }
             });
           } else {
             Swal.fire({
@@ -499,7 +507,7 @@ $datamargin = mysqli_fetch_array($checkmargin);
       }
 
       const formData = new FormData(formSupplier);
-      formData.append("pharmacy_number", pharmacyNo);
+      formData.append("id_pharmacy", pharmacyNo);
       formData.append("_method", "PUT");
 
       fetch("controller/master/pharmacyDetailsController.php", {
@@ -513,6 +521,10 @@ $datamargin = mysqli_fetch_array($checkmargin);
               icon: "success",
               title: "Berhasil",
               text: "Data berhasil diperbarui!"
+            }).then(() => {
+              if (data.new_id) {
+                window.location.href = "module/admin/pharmacy_details?no=" + data.new_id;
+              }
             });
           } else {
             Swal.fire({
