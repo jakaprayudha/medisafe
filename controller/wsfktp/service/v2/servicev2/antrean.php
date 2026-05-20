@@ -64,11 +64,29 @@ $hariIndonesia = $mapHari[$hariInggris];
 
 $config = getConfigBPJS($id_customer, $koneksi);
 $result = bpjsGet('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggal, $config);
-// echo json_encode($result);die();
+
+$explodejampraktek = explode('-', $jampraktek);
+
+$desiredStartTime = strtotime($explodejampraktek[0]);
+$desiredEndTime = strtotime($explodejampraktek[1]);
+
+$dokterDipilih = false;
+$foundJadwal = false;
 foreach ($result as $dokter) {
     if ((int)$dokter['kodedokter'] === (int)$kodedokter) {
+
+        // Split the "jadwal" into start and end times
+        [$doctorStartTime, $doctorEndTime] = explode('-', $dokter['jampraktek']);
+        $doctorStartTime = strtotime(trim($doctorStartTime));
+        $doctorEndTime = strtotime(trim($doctorEndTime));
+
         $dokterDipilih = $dokter;
-        break;
+
+
+        if (($desiredStartTime < $doctorEndTime && $desiredEndTime > $doctorStartTime)) {
+            $foundJadwal = true;
+            break;
+        }
     }
 }
 if (!$dokterDipilih) {
@@ -81,9 +99,20 @@ if (!$dokterDipilih) {
     ]);
     exit;
 }
+
 $namaDokter = $dokterDipilih['namadokter'];
 $kodeDokter = $dokterDipilih['kodedokter'];
-$jamPraktekDokter = $dokterDipilih['jampraktek'];
+
+if (!$foundJadwal) {
+    http_response_code(201);
+    echo json_encode([
+        "metadata" => [
+            "message" => "Jadwal Dokter " . $namaDokter . " tersebut Belum tersedia, Silahkan Reschedule Tanggal dan Jam Praktek Lainnya",
+            "code" => 201
+        ]
+    ]);
+    exit;
+}
 
 $cekpoli = $koneksi->prepare("SELECT d.doctor_name, mds.day_of_week, mds.start_time, mds.end_time, mds.sch_status, mds.kuota FROM ms_doctor AS d INNER JOIN ms_doctor_schedule AS mds ON d.id_doctor = mds.id_doctor AND d.id_customer = mds.id_customer WHERE d.doctor_code = ? AND d.id_customer = ? AND mds.day_of_week = ?");
 $cekpoli->bind_param('sss', $kodedokter, $id_customer, $hariIndonesia);
@@ -101,31 +130,14 @@ if ($status_antrian['sch_status'] == '0') {
     ]);
     exit;
 }
-$pecah_jam = explode('-', $jampraktek);
 
-$pecahJamPrakterDokter = explode('-', $jamPraktekDokter);
-$jamMulai_db = $pecahJamPrakterDokter[0];
-$jamSelesai_db = $pecahJamPrakterDokter[1];
-$jamMulai_user = $pecah_jam[0];
-$jamSelesai_user = $pecah_jam[1];
-if (($jamMulai_user < $jamSelesai_db) && ($jamSelesai_user > $jamMulai_db)) {
-    http_response_code(201);
-    echo json_encode([
-        "metadata" => [
-            "message" => "Jadwal Dokter " . $status_antrian['doctor_name'] . " tersebut Belum tersedia, Silahkan Reschedule Tanggal dan Jam Praktek Lainnya",
-            "code" => 201
-        ]
-    ]);
-    exit;
-}
-// $jamsekarang = "19:00";
 $now = new DateTime();
-$jadwal_selesai = new DateTime($tanggal . ' ' . $jamSelesai_db);
+$jadwal_selesai = new DateTime($tanggal . ' ' . date('H:i:s', $desiredEndTime));
 if ($now > $jadwal_selesai) {
     http_response_code(201);
     echo json_encode([
         "metadata" => [
-            "message" => "Pendaftaran Ke Poli " . $nmPoli . " Sudah Tutup Jam " . $jamSelesai_db,
+            "message" => "Pendaftaran Ke Poli " . $nmPoli . " Sudah Tutup Jam " . date('H:i:s', $desiredEndTime),
             "code" => 201,
         ]
     ]);
@@ -248,7 +260,7 @@ if ($cek->num_rows > 0) {
                     "nomorantrean" => $nomorantrean,
                     "angkaantrean" => $angkaantrean,
                     "namapoli" => $nmPoli,
-                    "sisaantrean" => $dataAntrian['sisa_antrean'],
+                    "sisaantrean" => $angkaantrean == 1 ? 0 : $dataAntrian['sisa_antrean'],
                     "antreanpanggil" => $dataAntrian['antrean_terakhir'],
                     "keterangan" => "Apabila antrean terlewat harap mengambil antrean kembali."
                 ],
