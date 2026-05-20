@@ -260,7 +260,7 @@ if ($cek->num_rows > 0) {
                     "nomorantrean" => $nomorantrean,
                     "angkaantrean" => $angkaantrean,
                     "namapoli" => $nmPoli,
-                    "sisaantrean" => $dataAntrian['sisa_antrean'],
+                    "sisaantrean" => $angkaantrean == 1 ? 0 : $dataAntrian['sisa_antrean'],
                     "antreanpanggil" => $dataAntrian['antrean_terakhir'],
                     "keterangan" => "Apabila antrean terlewat harap mengambil antrean kembali."
                 ],
