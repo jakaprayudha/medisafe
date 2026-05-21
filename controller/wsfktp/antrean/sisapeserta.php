@@ -65,41 +65,45 @@ $stmt = $koneksi->prepare("
     SELECT 
     COUNT(
         CASE 
-            WHEN COALESCE(p.visit_status, '') != '99'
+            WHEN p.visit_status = '10'
             THEN 1
         END
-    ) as total,
+    ) AS total,
 
     SUM(
         CASE 
-            WHEN ap.status = 1 
-            AND COALESCE(p.visit_status, '') != '99'
-            THEN 1 
-            ELSE 0 
-        END
-    ) as total_panggil,
-
-    COUNT(
-        CASE 
-            WHEN COALESCE(p.visit_status, '') != '99'
+            WHEN ap.status = 1
+            AND p.visit_status = '10'
             THEN 1
+            ELSE 0
         END
-    ) 
-    -
+    ) AS total_panggil,
+
     SUM(
-        CASE 
-            WHEN ap.status = 1 
-            AND COALESCE(p.visit_status, '') != '99'
-            THEN 1 
-            ELSE 0 
+        CASE
+            WHEN p.visit_status = '10'
+            AND ap.status != 1
+            AND ap.nomor < (
+                SELECT ap2.nomor
+                FROM antrian_poli ap2
+                INNER JOIN pasien_visit p2 
+                    ON p2.visit_ID = ap2.nomor_visit
+                WHERE p2.noKartu = ?
+                AND ap2.id_customer = ?
+                AND ap2.poli = ?
+                AND ap2.tanggal = ?
+                LIMIT 1
+            )
+            THEN 1
+            ELSE 0
         END
-    ) as sisa_antrean,
+    ) AS sisa_antrean,
 
     IFNULL(
         MAX(
-            CASE 
-                WHEN ap.status = 1 
-                AND COALESCE(p.visit_status, '') != '99'
+            CASE
+                WHEN ap.status = 1
+                AND p.visit_status = '10'
                 THEN CONCAT(ap.kode_antri, ap.nomor)
             END
         ),
@@ -107,14 +111,14 @@ $stmt = $koneksi->prepare("
     ) AS antrean_terakhir,
 
     MAX(
-        CASE 
+        CASE
             WHEN p.noKartu = ?
             THEN CONCAT(ap.kode_antri, ap.nomor)
         END
     ) AS nomorantrean,
 
     MAX(
-        CASE 
+        CASE
             WHEN p.noKartu = ?
             THEN ap.nomor
         END
@@ -122,19 +126,19 @@ $stmt = $koneksi->prepare("
 
     p.id_poli
 
-    FROM antrian_poli AS ap
+FROM antrian_poli AS ap
 
-    INNER JOIN pasien_visit AS p 
-        ON p.visit_ID = ap.nomor_visit
+INNER JOIN pasien_visit AS p
+    ON p.visit_ID = ap.nomor_visit
 
-    WHERE ap.id_customer = ?
-    AND ap.poli = ?
-    AND ap.tanggal = ?
+WHERE ap.id_customer = ?
+AND ap.poli = ?
+AND ap.tanggal = ?
 
-    GROUP BY p.id_poli
+GROUP BY p.id_poli
 ");
 
-$stmt->bind_param("sssss", $nokartu, $nokartu, $id_customer, $kodepoli, $tanggalperiksa);
+$stmt->bind_param("sssssssss", $nokartu, $id_customer, $kodepoli, $tanggalperiksa, $nokartu, $nokartu, $id_customer, $kodepoli, $tanggalperiksa);
 $stmt->execute();
 $result = $stmt->get_result()->fetch_assoc();
 $adaData = ($result && (int)$result['total'] > 0);
@@ -144,7 +148,7 @@ if ($adaData) {
         "response" => [
             "nomorantrean" => $result['nomorantrean'] ?? 1,
             "namapoli" => ucwords(strtolower($result['id_poli'])),
-            "sisaantrean" => (string) max(0, $result['sisa_antrean'] - 1),
+            "sisaantrean" => $result['sisa_antrean'],
             "antreanpanggil" =>  $result['antrean_terakhir'],
             "keterangan" => ""
         ],
