@@ -84,7 +84,7 @@ $stmt = $koneksi->prepare("
             WHEN p.visit_status = '10'
             AND ap.status != 1
             AND ap.nomor < (
-                SELECT ap2.nomor
+                SELECT MAX(ap2.nomor)
                 FROM antrian_poli ap2
                 INNER JOIN pasien_visit p2 
                     ON p2.visit_ID = ap2.nomor_visit
@@ -92,12 +92,13 @@ $stmt = $koneksi->prepare("
                 AND ap2.id_customer = ?
                 AND ap2.poli = ?
                 AND ap2.tanggal = ?
-                LIMIT 1
+                AND p2.visit_status = '10'
             )
             THEN 1
             ELSE 0
         END
     ) AS sisa_antrean,
+
 
     IFNULL(
         MAX(
