@@ -168,13 +168,9 @@ $signatureSaksi = $saksi['signature_user'] ?? null;
             $doctorName = $row['id_doctor'];
          }
       }
-<<<<<<< HEAD
       if ($doctorName) {
          // Remove 'dr.', 'dr', with or without whitespace, and trim leading/trailing whitespace
          $doctorNameClean = trim(preg_replace('/^dr\.?\s*/i', '', $doctorName));
-=======
-      if ($) {
->>>>>>> aec287b (fix:add option hubungan keluarga form persetujuan opname)
          // Find signature by fullname LIKE
          $dokter = mysqli_query($koneksi, "SELECT signature_user FROM ms_users WHERE fullname LIKE '%" . mysqli_real_escape_string($koneksi, $doctorNameClean) . "%'");
          $dokter = mysqli_fetch_assoc($dokter);

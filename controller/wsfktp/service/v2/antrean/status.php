@@ -111,13 +111,10 @@ foreach ($bpjsResult as $d) {
     $mapDokter[(string)$d['kodedokter']] = $d;
 }
 
-$stmt = $koneksi->prepare("SELECT 
-    COUNT(
-        CASE 
-            WHEN COALESCE(p.visit_status, '') != '99'
-            THEN ap.id
-        END
-    ) AS total,
+$stmt = $koneksi->prepare("
+SELECT 
+
+    COUNT(ap.id) AS total,
 
     COALESCE(
         SUM(
@@ -131,17 +128,10 @@ $stmt = $koneksi->prepare("SELECT
         0
     ) AS total_panggil,
 
-    COUNT(
-        CASE 
-            WHEN COALESCE(p.visit_status, '') != '99'
-            THEN ap.id
-        END
-    ) 
-    - 
     COALESCE(
         SUM(
             CASE 
-                WHEN ap.status = 1 
+                WHEN ap.status != 1
                 AND COALESCE(p.visit_status, '') != '99'
                 THEN 1 
                 ELSE 0 
@@ -158,12 +148,7 @@ $stmt = $koneksi->prepare("SELECT
                 THEN ap.nomor 
             END
         ),
-        MIN(
-            CASE 
-                WHEN COALESCE(p.visit_status, '') != '99'
-                THEN ap.nomor
-            END
-        )
+        0
     ) AS antrean_panggil,
 
     d.id_poli AS poli,
@@ -196,6 +181,7 @@ AND LOWER(jd.day_of_week) = ?
 AND jd.sch_status = 1
 
 GROUP BY jd.id_doctor, jd.start_time, jd.end_time
+
 ORDER BY jd.start_time ASC");
 $stmt->bind_param(
     "ssss",
@@ -209,8 +195,8 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 $data = [];
-$antrean_terakhir = ($row['antrean_panggil'] == 0 ? '-' : $row['kode_antri'].$row['antrean_panggil']);
 while ($row = $result->fetch_assoc()) {
+    $antrean_terakhir = ($row['antrean_panggil'] == 0 ? '-' : $row['kode_antri'].$row['antrean_panggil']);
     $kode = (string)$row['doctor_code'];
     $nama = $row['doctor_name'];
     $jam  = $row['start_time'] . '-' . $row['end_time'];
