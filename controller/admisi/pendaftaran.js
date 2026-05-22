@@ -296,103 +296,6 @@ $(function () {
             }
         });
     });
-    // $('#cari').on('click', function () {
-    //     const btn = $(this);
-    //     let url = "controller/admisi/services/getPasien.php";
-    //     if (type == "UMUM") {
-    //         url = "controller/admisi/services/getPasienUmum.php";
-    //     }
-    //     APP.load_btn_aktif(btn);
-    //     const nomor = $('#nomor').val();
-    //     if (nomor.length != "") {
-    //         let pilih = '';
-    //         if (nomor.length == 16) {
-    //             pilih = "nik";
-    //         } else {
-    //             pilih = "noka";
-    //         }
-    //         $.ajax({
-    //             url: url,
-    //             type: 'GET',
-    //             data: {
-    //                 tipe: pilih,
-    //                 nokartu: nomor
-    //             },
-    //             dataType: 'json',
-    //             success: function (response) {
-    //                 if (response.success) {
-    //                     $('#tampilan').load("controller/admisi/pages/viewpendaftaran.php", function () {
-    //                         APP.initLoadfunction();
-    //                         if (type == "BPJS") {
-    //                             $('.viewBpjs').removeClass('d-none');
-    //                             APP.cetakhtml('#noK', response.data.noKartu);
-    //                             APP.cetakhtml('#nama', response.data.nama);
-    //                             APP.cetakhtml('#tglLahir', response.data.tglLahir);
-    //                             APP.cetakhtml('#kelamin', response.data.sex == "P" ? "Perempuan" : "Laki - Laki");
-    //                             APP.cetakhtml('#ppkumum', response.data.kdProviderPst['nmProvider']);
-    //                             APP.cetakhtml('#noTelp', response.data.noHP);
-    //                             APP.cetak('#noKartu', response.data.noKartu);
-    //                             APP.cetak('#namapatient', response.data.nama);
-    //                             APP.cetak('#Kelamin', response.data.sex == "P" ? "Perempuan" : "Laki - Laki");
-    //                             APP.cetak('#tgllahir', response.data.tglLahir);
-    //                             APP.cetak("#typePasien", "BPJS");
-    //                         } else {
-    //                             APP.cetakhtml('#nama', response.data.nama);
-    //                             APP.cetakhtml('#tglLahir', response.data.tglLahir);
-    //                             APP.cetakhtml('#kelamin', response.data.sex);
-    //                             APP.cetakhtml('#noTelp', response.data.noHP);
-    //                             APP.cetak('#noKartu', response.data.noKartu);
-    //                             APP.cetak('#namapatient', response.data.nama);
-    //                             APP.cetak('#Kelamin', response.data.sex);
-    //                             APP.cetak('#tgllahir', response.data.tglLahir);
-    //                             APP.cetak("#typePasien", "UMUM");
-    //                         }
-    //                         if (response.data.noKTP == null || response.data.noKTP == "") {
-    //                             let nomor = $('#nomor').val();
-    //                             APP.cetak('#noNIK', nomor);
-    //                             APP.cetakhtml('#nonik', nomor);
-    //                         } else {
-    //                             APP.cetak('#noNIK', response.nomor);
-    //                             APP.cetakhtml('#nonik', response.nomor);
-    //                         }
-    //                         APP.cetak('#kdProviderPeserta', response.data.kdProviderPst['kdProvider']);
-    //                     })
-    //                 } else {
-    //                     Swal.fire({
-    //                         title: "Warning",
-    //                         text: response.message,
-    //                         icon: "error",
-    //                         showDenyButton: true,
-    //                         confirmButtonText: "Daftar",
-    //                         denyButtonText: "Kembali"
-    //                     }).then((result) => {
-    //                         if (result.isConfirmed) {
-    //                             window.location.href = "module/admisi/registrasi-new";
-    //                         } else if (result.isDenied) {
-    //                             Swal.close();
-    //                         }
-    //                     });
-    //                 }
-    //                 APP.load_btn_non(btn, 'Cari');
-    //             },
-    //             error: function (xhr, status, error) {
-    //                 Swal.fire({
-    //                     title: "Opss..",
-    //                     text: "Terjadi Kesalahan",
-    //                     icon: "error"
-    //                 });
-    //                 APP.load_btn_non(btn, 'Cari');
-    //             }
-    //         })
-    //     } else {
-    //         Swal.fire({
-    //             title: "Opss..",
-    //             text: "Nomor Pencarian Tidak Boleh Kosong!",
-    //             icon: "error"
-    //         });
-    //         APP.load_btn_non(btn, 'Cari');
-    //     }
-    // });
     APP.initLoadfunction = function () {
         flatpickr("#tanggalKunjung", {
             dateFormat: "Y-m-d",
@@ -574,14 +477,12 @@ $(function () {
     }
     APP.createpeserta = function () {
         var data = $('#isiform').serialize();
-
         $.ajax({
             type: "POST",
             data: data,
             dataType: "json",
             url: 'controller/admisi/services/insertPendaftaran.php',
             success: function (response) {
-
                 if (!response.success) {
                     Swal.fire({
                         icon: "error",
