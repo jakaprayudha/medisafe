@@ -176,9 +176,51 @@ $dataresume = mysqli_fetch_array($checkdata) ?: [];
             <td class="resume-label">Diagnosa Utama</td>
             <td colspan="3" id="rm_dpjp_utama"><?php echo $dataresume['diagnosa_utama'] ?? ''; ?></td>
          </tr>
+         <?php
+         $sekunder = trim($dataresume['diagnosa_sekunder']);
+         $hasilDiagnosa = $sekunder;
+
+         if (!empty($sekunder)) {
+
+            // Pecah jika ada banyak kode dipisah koma
+            $listKode = array_map('trim', explode(',', $sekunder));
+
+            $hasilArray = [];
+
+            foreach ($listKode as $kode) {
+
+               // Kalau sudah ada format " - " tampilkan langsung
+               if (strpos($kode, ' - ') !== false) {
+                  $hasilArray[] = $kode;
+                  continue;
+               }
+
+               // Cari ke tabel ICD
+               $stmt = mysqli_prepare($koneksi, "SELECT * FROM icd_10 WHERE code = ?");
+               mysqli_stmt_bind_param($stmt, "s", $kode);
+               mysqli_stmt_execute($stmt);
+
+               $result = mysqli_stmt_get_result($stmt);
+               $dataIcd = mysqli_fetch_assoc($result);
+
+               if ($dataIcd) {
+                  $hasilArray[] = $dataIcd['code'] . ' - ' . $dataIcd['nama'];
+               } else {
+                  // Kalau kode tidak ditemukan tetap tampilkan kode asli
+                  $hasilArray[] = $kode;
+               }
+            }
+
+            // Gabungkan hasil
+            $hasilDiagnosa = implode(', ', $hasilArray);
+         }
+         ?>
+
          <tr>
             <td class="resume-label">Diagnosa Sekunder</td>
-            <td colspan="3" id="rm_dpjp_sekunder"><?php echo $dataresume['diagnosa_sekunder'] ?? ''; ?></td>
+            <td colspan="3" id="rm_dpjp_sekunder">
+               <?= htmlspecialchars($hasilDiagnosa) ?>
+            </td>
          </tr>
 
          <?php
@@ -243,8 +285,14 @@ $dataresume = mysqli_fetch_array($checkdata) ?: [];
          </table>
 
          <div class="resume-sign-area">
+            <?php
+            $tanggalPulang = !empty($dataresume['tanggal_pulang'])
+               ? $dataresume['tanggal_pulang']
+               : ($dataresume['visit_date_out'] ?? date('Y-m-d'));
+            ?>
+
             <div class="resume-sign-city">
-               Deli Serdang, <?= date('d F Y', strtotime($dataresume['visit_date_out'] ?? date('Y-m-d'))) ?>
+               Deli Serdang, <?= date('d F Y', strtotime($tanggalPulang)) ?>
             </div>
             <div class="resume-sign-title">
                Dokter yang Merawat
