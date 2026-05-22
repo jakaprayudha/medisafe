@@ -182,20 +182,29 @@ $dataresume = mysqli_fetch_array($checkdata) ?: [];
 
          if (!empty($sekunder)) {
 
-            // Pecah jika ada banyak kode dipisah koma
             $listKode = array_map('trim', explode(',', $sekunder));
-
             $hasilArray = [];
 
             foreach ($listKode as $kode) {
 
-               // Kalau sudah ada format " - " tampilkan langsung
+               // Cek apakah format sudah "CODE - NAMA"
                if (strpos($kode, ' - ') !== false) {
-                  $hasilArray[] = $kode;
-                  continue;
+
+                  $explodeDiagnosa = explode(' - ', $kode, 2);
+
+                  $kodeOnly = trim($explodeDiagnosa[0]);
+                  $namaOnly = trim($explodeDiagnosa[1] ?? '');
+
+                  // Kalau nama diagnosa masih kosong → cari DB
+                  if (!empty($namaOnly)) {
+                     $hasilArray[] = $kode;
+                     continue;
+                  }
+
+                  $kode = $kodeOnly;
                }
 
-               // Cari ke tabel ICD
+               // Cari ICD berdasarkan kode
                $stmt = mysqli_prepare($koneksi, "SELECT * FROM icd_10 WHERE code = ?");
                mysqli_stmt_bind_param($stmt, "s", $kode);
                mysqli_stmt_execute($stmt);
@@ -206,12 +215,10 @@ $dataresume = mysqli_fetch_array($checkdata) ?: [];
                if ($dataIcd) {
                   $hasilArray[] = $dataIcd['code'] . ' - ' . $dataIcd['nama'];
                } else {
-                  // Kalau kode tidak ditemukan tetap tampilkan kode asli
                   $hasilArray[] = $kode;
                }
             }
 
-            // Gabungkan hasil
             $hasilDiagnosa = implode(', ', $hasilArray);
          }
          ?>
