@@ -123,20 +123,42 @@ require '../../controller/view.php';
           </div>
           <div class="col-6">
             <div class="mb-3">
-              <label class="form-label required" id="patient_name">Nama Pasien</label>
+              <label class="form-label required">Nama Pasien</label>
               <input type="text" id="patient_name" name="patient_name" class="form-control" required>
             </div>
           </div>
           <div class="col-6">
             <div class="mb-3">
-              <label class="form-label " id="patient_name">NIK</label>
-              <input type="text" id="patient_nik" name="patient_nik" class="form-control">
+              <label class="form-label">NIK</label>
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="patient_nik"
+                  name="patient_nik"
+                  class="form-control">
+                <button
+                  class="btn btn-primary"
+                  type="button" id="btncarinik">
+                  <i class="bi bi-search"></i>
+                </button>
+              </div>
             </div>
           </div>
           <div class="col-6">
             <div class="mb-3">
-              <label class="form-label " id="patient_name">No.BPJS</label>
-              <input type="text" id="patient_bpjs" name="patient_bpjs" class="form-control">
+              <label class="form-label">No.BPJS</label>
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="patient_bpjs"
+                  name="patient_bpjs"
+                  class="form-control">
+                <button
+                  class="btn btn-primary"
+                  type="button" id="btncaribpjs">
+                  <i class="bi bi-search"></i>
+                </button>
+              </div>
             </div>
           </div>
           <div class="col-3">
@@ -297,8 +319,8 @@ require '../../controller/view.php';
               "gender": row.patient_gender ?? "-",
               "phone": row.patient_phone ?? "-",
               "face_image": row.face_image ? `
-                <a href="${baseUrl}${row.face_image.replace('../../','')}" target="_blank">
-                  <img src="${baseUrl}${row.face_image.replace('../../','')}" 
+                <a href="${baseUrl}${row.face_image.replace('../../../','')}" target="_blank">
+                  <img src="${baseUrl}${row.face_image.replace('../../../','')}" 
                       style="width:50px;height:50px;object-fit:cover;border-radius:8px;">
                 </a>
               ` : '-',
@@ -481,6 +503,59 @@ require '../../controller/view.php';
         }
       });
     });
+
+    $(document).on('click', '#btncarinik', function() {
+      cariDataPatient('nik', '#btncarinik');
+    });
+
+    $(document).on('click', '#btncaribpjs', function() {
+      cariDataPatient('noka', '#btncaribpjs');
+    });
+
+    function cariDataPatient(type, id) {
+      let btn = $(id);
+      const nomor = type == "nik" ?
+        $('#patient_nik').val() :
+        $('#patient_bpjs').val();
+      $.ajax({
+        type: 'GET',
+        url: 'controller/admisi/services/getInfoPatient.php',
+        data: {
+          type: type,
+          nomor: nomor
+        },
+        dataType: 'json',
+        beforeSend: function() {
+          btn.prop('disabled', true);
+          btn.find('.btn-text').addClass('d-none');
+          btn.find('.btn-loading').removeClass('d-none');
+
+        },
+        complete: function() {
+          btn.prop('disabled', false);
+          btn.find('.btn-text').removeClass('d-none');
+          btn.find('.btn-loading').addClass('d-none');
+
+        },
+        success: function(response) {
+          if (type == 'nik'){
+            $('#patient_bpjs').val(response.noKartu);
+          }else{
+            $('#patient_nik').val(response.nik);
+          }
+          $('#patient_name').val(response.nama);
+          $('#patient_datebirth').val(response.tglLahir);
+          if (response.sex == 'L') {
+            $('#patient_gender').val('Laki-laki').trigger('change');
+          }else{
+            $('#patient_gender').val('Perempuan').trigger('change');
+          }
+        },
+        error: function(xhr, status, error) {
+          console.log(error);
+        }
+      });
+    }
   });
 </script>
 <script>
