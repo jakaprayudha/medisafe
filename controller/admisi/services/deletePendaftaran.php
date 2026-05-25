@@ -28,7 +28,7 @@ $stmt = $koneksi->prepare("DELETE FROM pcare_pendaftaran WHERE nomor_visit = ?")
 $stmt->bind_param("s", $visit);
 $hasil = $stmt->execute();
 
-$stmt1 = $koneksi->prepare("DELETE FROM pasien_visit WHERE visit_ID = ?");
+$stmt1 = $koneksi->prepare("UPDATE pasien_visit SET visit_status = '99' WHERE visit_ID = ?");
 $stmt1->bind_param("s", $visit);
 $hasil1 = $stmt1->execute();
 

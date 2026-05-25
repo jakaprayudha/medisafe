@@ -59,12 +59,11 @@ if (empty($kdDokter)) {
     ]);
     exit;
 }
-$visit_ID = generateVisitID($koneksi, $idcustomer);
 if ($type == "BPJS") {
     // echo json_encode($payload, JSON_PRETTY_PRINT);die();
-    $result = bpjsPost("/pendaftaran", $payload);
+    // $result = bpjsPost("/pendaftaran", $payload);
     // echo json_encode($result);die();
-    // $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
+    $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
     if ($result['code'] != '200') {
         $msg = $result['metadata'];
         if ($msg == null) {
@@ -85,6 +84,10 @@ if ($type == "BPJS") {
         $respRate     = (int)$respRate;
         $lingkarPerut = (int)$lingkarPerut;
         $heartRate    = (int)$heartRate;
+        $visit_ID = $_POST['visit_id'];
+        $antrian = $_POST['antrian'];
+        $angkaantrean = $_POST['angkaantrean'];
+        $kodeAntri       = $_POST['kodeAntri'];
         $stmt = $koneksi->prepare("INSERT INTO `pcare_pendaftaran` (`tanggal_daftar`, `noKartu`, `kdPoli`, `nmPoli`, `keluhan`, `kunjSakit`, `sistole`, `diastole`, `beratBadan`, `tinggiBadan`, `respRate`, `lingkarPerut`, `heartRate`, `rujukBalik`, `kdTkp`, `noUrut`, `nomor_visit`, `saturasi`, `suhu`, `jamperaktek`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
         $stmt->bind_param(
             "ssssssiiiiiiisssssss",
@@ -123,10 +126,6 @@ if ($type == "BPJS") {
         $visit_time = date('H:i:s');
         $bmi = $_POST['bmi'];
         $bmiKet = $_POST['bmiKet'];
-        $resultAntrian = createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tglDaftarDB, $jampraktek);
-        $nomorantrean = $resultAntrian['display'];
-        $angkaantrean = $resultAntrian['nomor'];
-        $kodeAntri       = $resultAntrian['kode'];
         $stmt = $koneksi->prepare("
             INSERT INTO pasien_visit (
                 id_patient,
@@ -167,7 +166,7 @@ if ($type == "BPJS") {
             $nmPoli,
             $source_hub,
             $created_user,
-            $nomorantrean,
+            $antrian,
             $status_antrian,
             $idcustomer,
             $nmDokter,
@@ -195,22 +194,7 @@ if ($type == "BPJS") {
             $response = [
                 'success'  => true,
                 'message'  => "Berhasil Mendaftar Pasien",
-                'result' => $result,
-                "nomorkartu"      => $noKartu,
-                "nik"             => $noNIK,
-                "nohp"            => $noHp ?? '0',
-                "kodepoli"        => $kdPoli,
-                "namapoli"        => $nmPoli,
-                "norm"            => $norm,
-                "tanggalperiksa"  => $tglDaftarDB,
-                "kodedokter"      => $kdDokter,
-                "namadokter"      => $nmDokter,
-                "jampraktek"      => $jampraktek,
-                "nomorantrean"    => $nomorantrean,
-                "angkaantrean"    => $angkaantrean,
-                "kodeAntri"       => $kodeAntri,
-                "keterangan"      => "",
-                'type'            => "BPJS"
+                'type' => "BPJS"
             ];
         } else {
             $response = [
@@ -220,6 +204,7 @@ if ($type == "BPJS") {
         }
     }
 } else {
+    $visit_ID = generateVisitID($koneksi, $idcustomer);
     $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE (patient_nik = ? OR patient_bpjs = ?) AND id_customer = ?");
     $stmt->bind_param('sss', $noNIK, $noKartu, $idcustomer);
     $stmt->execute();
@@ -298,7 +283,6 @@ if ($type == "BPJS") {
         $response = [
             'success'  => true,
             'message'  => "Berhasil Mendaftar Pasien",
-            'result' => $result,
             'type' => 'UMUM'
         ];
     } else {

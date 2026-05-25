@@ -12,75 +12,76 @@ require '../../controller/view.php';
   ?>
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <style id="fixcss">
-      .dropdown-menu {
-        z-index: 999999 !important;
-        min-width: 200px;
-        max-width: 250px;
-        width: auto;
-        white-space: normal;
-      }
+    .dropdown-menu {
+      z-index: 999999 !important;
+      min-width: 200px;
+      max-width: 250px;
+      width: auto;
+      white-space: normal;
+    }
 
-      /* wrapper utama */
-      .dataTables_wrapper {
-        overflow: visible !important;
-      }
+    /* wrapper utama */
+    .dataTables_wrapper {
+      overflow: visible !important;
+    }
 
-      /* scroll container */
-      .dataTables_scroll {
-        overflow: visible !important;
-      }
+    /* scroll container */
+    .dataTables_scroll {
+      overflow: visible !important;
+    }
 
-      /* biarkan scroll tetap jalan */
-      .dataTables_scrollBody {
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
-      }
+    /* biarkan scroll tetap jalan */
+    .dataTables_scrollBody {
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+    }
 
 
 
-      /* responsive table */
-      .table-responsive {
-        overflow: visible !important;
-      }
+    /* responsive table */
+    .table-responsive {
+      overflow: visible !important;
+    }
 
-      /* card container */
-      .card {
-        overflow: visible !important;
-      }
+    /* card container */
+    .card {
+      overflow: visible !important;
+    }
 
-      .dropup .dropdown-menu {
-        top: auto !important;
-        bottom: 100% !important;
-        margin-bottom: 5px;
-        transform: none !important;
-      }
-      #cameraModal .modal-body {
-        position: relative;
-      }
+    .dropup .dropdown-menu {
+      top: auto !important;
+      bottom: 100% !important;
+      margin-bottom: 5px;
+      transform: none !important;
+    }
 
-      #cameraModal video {
-        width: 100%;
-      }
+    #cameraModal .modal-body {
+      position: relative;
+    }
 
-      #cameraModal canvas {
-        position: absolute;
-        top: 0;
-        left: 0;
-      }
+    #cameraModal video {
+      width: 100%;
+    }
 
-      /* 🔥 freeze kolom pertama */
-      #periodeTable th:first-child,
-      #periodeTable td:first-child {
-        position: sticky;
-        left: 0;
-        z-index: 5;
-        background: #fff;
-      }
+    #cameraModal canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
 
-      /* header lebih tinggi z-index */
-      #periodeTable thead th:first-child {
-        z-index: 6;
-      }
+    /* 🔥 freeze kolom pertama */
+    #periodeTable th:first-child,
+    #periodeTable td:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 5;
+      background: #fff;
+    }
+
+    /* header lebih tinggi z-index */
+    #periodeTable thead th:first-child {
+      z-index: 6;
+    }
   </style>
 </head>
 
@@ -860,7 +861,8 @@ require '../../controller/view.php';
               return `${tahun} th ${bulan} bln ${hari} hr`;
             }
 
-            let isSelesai = row.visit_status == 4; // ✅ status selesai
+            let isSelesai = row.visit_status == 4;
+            let Batal = row.visit_status == 99;
             return {
               "actions": `
                 <div class="text-center">
@@ -909,25 +911,37 @@ require '../../controller/view.php';
                           <i class="fas fa-signature me-2 text-dark"></i> Tanda Tangan
                         </a>
                       </li>
-                      ${!isSelesai ? `
+                    ${!isSelesai ? `
                       <li><hr class="dropdown-divider"></li>
-                    <li>
-                      <a class="dropdown-item edit-visit-btn" 
-                        href="javascript:;" 
-                        data-visit="${row.visit_ID}"
-                        data-date="${row.visit_date}"
-                      data-patient="${row.id_patient}"
-                        data-time="${row.visit_time}">
-                        <i class="fas fa-edit me-2 text-warning"></i> Perubahan Waktu
-                      </a>
-                    </li>
+
                       <li>
-                        <a class="dropdown-item delete-btn text-danger" href="javascript:;" data-id="${row.id_visit}" data-prov="${row.id_provider}" data-visit="${row.visit_ID}">
-                          <i class="fas fa-trash me-2"></i> Hapus
-                        </a>
+                          <a class="dropdown-item edit-visit-btn" 
+                              href="javascript:;" 
+                              data-visit="${row.visit_ID}"
+                              data-date="${row.visit_date}"
+                              data-patient="${row.id_patient}"
+                              data-time="${row.visit_time}">
+                              
+                              <i class="fas fa-edit me-2 text-warning"></i>
+                              Perubahan Waktu
+                          </a>
                       </li>
+
+                      ${!Batal ? `
+                          <li>
+                              <a class="dropdown-item delete-btn text-danger" 
+                                  href="javascript:;" 
+                                  data-id="${row.id_visit}" 
+                                  data-prov="${row.id_provider}" 
+                                  data-visit="${row.visit_ID}">
+                                  
+                                  <i class="fas fa-trash me-2"></i>
+                                  Hapus
+                              </a>
+                          </li>
                       ` : ''}
 
+                  ` : ''}
                     </ul>
 
                   </div>
@@ -1105,7 +1119,7 @@ require '../../controller/view.php';
               }
             });
           } else {
-            fetch(apiUrl + `?id=${id}`, {
+            fetch(apiUrl + `?id=${id}&nomor_visit=${visit}`, {
                 method: 'DELETE',
                 headers: {
                   'Content-Type': 'application/json'

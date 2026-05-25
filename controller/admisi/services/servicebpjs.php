@@ -81,6 +81,7 @@ function bpjsDelete($endpoint)
         "Content-Type: application/json; charset=utf-8",
     );
     $url = rtrim($base_url, '/') . '/' . trim($service, '/') . '/' . ltrim($endpoint, '/');
+    //  echo trim($url);die();
     $ch = curl_init();
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,
@@ -94,6 +95,7 @@ function bpjsDelete($endpoint)
     $response = curl_exec($ch);
     $err = curl_error($ch);
     curl_close($ch);
+    // echo $response;die();
     if ($err) {
         return bpjsError("CURL Error: " . $err);
     }

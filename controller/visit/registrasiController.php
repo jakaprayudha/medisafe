@@ -255,6 +255,7 @@ function deleteData()
 
    // Ambil ID user dari query parameter
    $id = isset($_GET['id']) ? $_GET['id'] : '';
+   $visit_id =  $_GET['nomor_visit'];
 
    if (empty($id)) {
       echo json_encode([
@@ -265,12 +266,12 @@ function deleteData()
    }
 
    // Query untuk menghapus data user
-   $query = "DELETE FROM pasien_visit WHERE id_visit = ?";
-
+   $query = "UPDATE pasien_visit SET visit_status = '99' WHERE id_visit = ?";
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $id);
-
-      if ($stmt->execute()) {
+      $stmt2 = $koneksi->prepare("UPDATE antrian_poli SET `status` = '99' WHERE nomor_visit = ?");
+      $stmt2->bind_param("s", $visit_id);
+      if ($stmt->execute() && $stmt2->execute()) {
          echo json_encode([
             'status' => 'success',
             'message' => 'Data berhasil dihapus.'

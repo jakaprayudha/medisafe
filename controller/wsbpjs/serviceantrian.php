@@ -2,7 +2,8 @@
 require_once __DIR__ . '/../../database/connect.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
 session_start();
-$idcustomer = $_SESSION['id_customer'];
+// $idcustomer = $_SESSION['id_customer'];
+$idcustomer = '19';
 $sql = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM `setting_antrol` WHERE id_customer = '$idcustomer'"));
 $base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
 $service = 'antreanfktp_dev';
@@ -14,7 +15,6 @@ $waktusekarang = date('Y-m-d H:i:s');
 $secretKey = $sql['secretkey'];
 $userkey = $sql['userkey'];
 $const_id = $sql['constid'];
-$encodedSignature = base64_encode($signature);
 
 function generateSignature($const_id, $secretKey)
 {
@@ -47,14 +47,13 @@ function getNamaBulan($bulan)
     return $daftarBulan[$bulan - 1];
 }
 
-function getHeaders($const_id, $tStamp, $signature, $userkey)
-{
+function getHeaders($const_id, $tStamp, $signature, $userkey){
     return [
         "X-cons-id: $const_id",
         "X-timestamp: $tStamp",
         "X-signature: $signature",
         "user_key: $userkey",
-        "Content-Type: application/json; charset=utf-8",
+        // "Content-Type: application/json; charset=utf-8",
     ];
 }
 
@@ -97,7 +96,8 @@ function bpjsGetService($endpoint){
     );
 }
 
-function bpjsGet($endpoint, $config){
+function bpjsGet($endpoint, $config)
+{
     $url = rtrim($config['base_url'], '/') . '/' . trim($config['service'], '/') . '/' . ltrim($endpoint, '/');
 
     $auth = generateSignature($config['const_id'], $config['secretKey']);
@@ -153,6 +153,7 @@ function bpjsPost($endpoint, array $payload, $method = "POST")
         $auth['signature'],
         $userkey
     );
+    // echo json_encode($headers, JSON_PRETTY_PRINT);die();
     $ch = curl_init();
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,
@@ -166,6 +167,7 @@ function bpjsPost($endpoint, array $payload, $method = "POST")
     $response = curl_exec($ch);
     $err = curl_error($ch);
     // echo $response;die();
+    // echo $err;die();
     curl_close($ch);
     if ($err) {
         return bpjsError("cURL Error: " . $err);
@@ -184,14 +186,10 @@ function bpjsPost($endpoint, array $payload, $method = "POST")
 function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp)
 {
     $json = json_decode($response, true);
-
     if (!$json || !isset($json['metadata'])) {
         return bpjsError("Format response tidak valid");
     }
-
     $code = (string)($json['metadata']['code'] ?? '');
-
-    // ❗ hanya 200 yang dianggap sukses
     if ($code !== '200') {
         return [
             'success' => false,
@@ -200,14 +198,16 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp)
             'data' => null
         ];
     }
-
     if (!isset($json['response'])) {
-        return bpjsError("Response kosong");
+        return [
+            'success' => true,
+            'code' => $code,
+            'message' => $json['metadata']['message'] ?? 'OK',
+            'data' => null
+        ];
     }
-
     $key = $consid . $secretKey . $tStamp;
     $rawResponse = $json['response'];
-
     if (is_array($rawResponse)) {
         return [
             'success' => true,
@@ -216,18 +216,20 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp)
             'data' => $rawResponse
         ];
     }
-
     $decrypted = stringDecrypt($key, $rawResponse);
     if (!$decrypted) {
         return bpjsError("Decrypt gagal");
     }
-
     $decompressed = \LZCompressor\LZString::decompressFromEncodedURIComponent($decrypted);
     if (!$decompressed) {
         return bpjsError("Decompress gagal");
     }
-
-    return json_decode($decompressed, true);
+    return [
+        'success' => true,
+        'code' => $code,
+        'message' => 'OK',
+        'data' => json_decode($decompressed, true)
+    ];
 }
 
 function stringDecrypt($key, $dtdecrypt)
@@ -271,5 +273,40 @@ function getConfigBPJS($idcustomer, $koneksi)
         'const_id'  => $sql['constid'],
         'secretKey' => $sql['secretkey'],
         'userkey'   => $sql['userkey'],
+    ];
+}
+function testingBPJS_POST($url, $payload)
+{
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_HTTPHEADER => ["Content-Type: application/json"],
+        CURLOPT_POSTFIELDS => json_encode($payload)
+    ]);
+
+    $response = curl_exec($ch);
+
+    if ($response === false) {
+        return [
+            'success' => false,
+            'code' => '500',
+            'message' => 'Curl error: ' . curl_error($ch),
+            'data' => null
+        ];
+    }
+
+    curl_close($ch);
+
+    $json = json_decode($response, true);
+
+    // Ambil response sep jika ada
+    $sepData = $json['response'] ?? null;
+
+    return [
+        'success' => $sepData ? true : false,
+        'code' => $json['metaData']['code'] ?? '200',
+        'message' => $json['metaData']['message'] ?? 'OK',
+        'data' => $sepData
     ];
 }
