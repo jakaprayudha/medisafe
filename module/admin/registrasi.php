@@ -167,6 +167,7 @@ require '../../controller/view.php';
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
                           <th scope="col" class="text-dark fw-normal">No.BPJS</th>
                           <th>Antrian</th>
+                          <th class="text-dark fw-normal">Sumber</th>
                           <th class="text-dark fw-normal">Tanggal</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
@@ -860,7 +861,12 @@ require '../../controller/view.php';
 
               return `${tahun} th ${bulan} bln ${hari} hr`;
             }
-
+            let status_sumber = "Non JKN/UMUM";
+            if (row.provider_name == 'BPJS KESEHATAN' && row.created_user != "User") {
+              status_sumber = "Mobile JKN";
+            } else if (row.provider_name == 'BPJS KESEHATAN') {
+              status_sumber = "Non JKN/Onsite";
+            }
             let isSelesai = row.visit_status == 4;
             let Batal = row.visit_status == 99;
             return {
@@ -949,6 +955,7 @@ require '../../controller/view.php';
               `,
               "registrasi": row.patient_bpjs ?? "-",
               "antrian": row.visit_antrian ?? "-",
+              "sumber": status_sumber ?? "-",
               "tanggal": row.visit_date + "- " + row.visit_time ?? "-",
               "nama": row.patient_name_pcare ?? "-",
               "gender": row.patient_gender ?? "-",
@@ -973,6 +980,9 @@ require '../../controller/view.php';
         },
         {
           data: "antrian"
+        },
+        {
+          data: "sumber"
         },
         {
           data: "tanggal"
