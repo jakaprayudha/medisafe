@@ -2,8 +2,8 @@
 require_once __DIR__ . '/../../database/connect.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
 session_start();
-// $idcustomer = $_SESSION['id_customer'];
-$idcustomer = '19';
+$idcustomer = $_SESSION['id_customer'];
+// $idcustomer = '19';
 $sql = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM `setting_antrol` WHERE id_customer = '$idcustomer'"));
 $base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
 $service = 'antreanfktp_dev';

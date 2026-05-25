@@ -36,8 +36,8 @@ try {
         "keterangan"      => ""
     ];
     // echo json_encode($payload, JSON_PRETTY_PRINT);die();
-    $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getantrian.php", $payload);
-    // $result = bpjsPost("/antrean/add", $payload);
+    // $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getantrian.php", $payload);
+    $result = bpjsPost("/antrean/add", $payload);
     if ($result['code'] != '200') {
         $msg = $result['message'];
         if ($msg == null) {
