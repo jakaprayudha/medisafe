@@ -64,7 +64,7 @@ $hariIndonesia = $mapHari[$hariInggris];
 
 $config = getConfigBPJS($id_customer, $koneksi);
 $result = bpjsGet('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggal, $config);
-
+// echo json_encode($result);die();
 $explodejampraktek = explode('-', $jampraktek);
 
 $desiredStartTime = strtotime($explodejampraktek[0]);

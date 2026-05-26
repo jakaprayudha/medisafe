@@ -65,7 +65,7 @@ $stmt = $koneksi->prepare("
     SELECT 
     COUNT(
         CASE 
-            WHEN p.visit_status = '10'
+            WHEN p.visit_status IN ('0', '10')
             THEN 1
         END
     ) AS total,
@@ -73,7 +73,7 @@ $stmt = $koneksi->prepare("
     SUM(
         CASE 
             WHEN ap.status = 1
-            AND p.visit_status = '10'
+            AND p.visit_status != '99'
             THEN 1
             ELSE 0
         END
@@ -81,7 +81,7 @@ $stmt = $koneksi->prepare("
 
     SUM(
         CASE
-            WHEN p.visit_status = '10'
+            WHEN p.visit_status IN ('0', '10')
             AND ap.status != 1
             AND ap.nomor < (
                 SELECT MAX(ap2.nomor)
@@ -92,7 +92,7 @@ $stmt = $koneksi->prepare("
                 AND ap2.id_customer = ?
                 AND ap2.poli = ?
                 AND ap2.tanggal = ?
-                AND p2.visit_status = '10'
+                AND p2.visit_status IN ('0', '10')
             )
             THEN 1
             ELSE 0
@@ -104,7 +104,7 @@ $stmt = $koneksi->prepare("
         MAX(
             CASE
                 WHEN ap.status = 1
-                AND p.visit_status = '10'
+                AND p.visit_status != '99'
                 THEN CONCAT(ap.kode_antri, ap.nomor)
             END
         ),
