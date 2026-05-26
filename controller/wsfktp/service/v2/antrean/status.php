@@ -132,7 +132,7 @@ SELECT
         SUM(
             CASE 
                 WHEN ap.status != 1
-                AND COALESCE(p.visit_status, '') != '99'
+                AND p.visit_status IN ('0', '10')
                 THEN 1 
                 ELSE 0 
             END
