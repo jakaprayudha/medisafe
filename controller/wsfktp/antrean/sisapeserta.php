@@ -104,7 +104,7 @@ $stmt = $koneksi->prepare("
         MAX(
             CASE
                 WHEN ap.status = 1
-                AND p.visit_status = '10'
+                AND p.visit_status != '99'
                 THEN CONCAT(ap.kode_antri, ap.nomor)
             END
         ),
