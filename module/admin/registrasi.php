@@ -1336,7 +1336,7 @@ require '../../controller/view.php';
     const now = new Date();
     $('#poli_date').val(now.toISOString().split('T')[0]);
     $('#poli_time').val(now.toTimeString().slice(0, 5));
-    APP.ambil_data('#poli_doctor', 'dokter/0/15', 'nmDokter', 'nmDokter', true);
+    APP.ambil_data('#poli_doctor', 'dokter/0/50', 'nmDokter', 'nmDokter', true);
     // loadDoctors();
     loadPoli();
     loadProvider();
