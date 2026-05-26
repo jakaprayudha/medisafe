@@ -23,10 +23,13 @@ if (str_contains($type, "BPJS")) {
 }
 $stmt1 = $koneksi->prepare("UPDATE antrian_poli SET `status` = ? WHERE nomor_visit = ? AND id_customer = ?");
 $stmt1->bind_param("sss", $status_hadir, $visit_id, $idcustomer);
-
-$stmt2 = $koneksi->prepare("UPDATE pasien_visit SET visit_status = '99' WHERE visit_ID = ? AND id_customer = ?");
+if ($status_hadir != '1') {
+    $stmt2 = $koneksi->prepare("UPDATE pasien_visit SET visit_status = '99' WHERE visit_ID = ? AND id_customer = ?");
+} else {
+    $stmt2 = $koneksi->prepare("UPDATE pasien_visit SET visit_status = '1' WHERE visit_ID = ? AND id_customer = ?");
+}
 $stmt2->bind_param("ss", $visit_id, $idcustomer);
-if ($stmt1->execute() AND $stmt2->execute()) {
+if ($stmt1->execute() && $stmt2->execute()) {
     echo json_encode([
         'success' => true,
         'message' => 'Berhasil',

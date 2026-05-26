@@ -110,21 +110,6 @@ if ($result['code'] != '200') {
             'success'  => true,
             'message'  => "Berhasil Mendaftar Pasien",
             'result' => $result,
-            "nomorkartu"      => $noKartu,
-            "nik"             => $noNIK,
-            "nohp"            => $noHp ?? '0',
-            "kodepoli"        => $kdPoli,
-            "namapoli"        => $nmPoli,
-            "norm"            => $nomor_rm,
-            "tanggalperiksa"  => $tglDaftarDB,
-            "kodedokter"      => $kdDokter,
-            "namadokter"      => $nmDokter,
-            "jampraktek"      => $jampraktek,
-            "nomorantrean"    => $visitantri,
-            "angkaantrean"    => $angkaantrean,
-            "kodeAntri"       => $kodeAntri,
-            "keterangan"      => "",
-            'type'            => "BPJS"
         ];
     } else {
         $response = [

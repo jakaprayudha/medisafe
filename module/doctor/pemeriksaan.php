@@ -88,14 +88,13 @@ $apiUrl = getenv('API_URL');
                         <tr>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                           <th class="text-dark fw-normal">Registrasi</th>
-                          <th>Antrian</th>
-                          <th>Layanan</th>
+                          <th scope="col" class="text-dark fw-normal">Antrian</th>
+                          <th scope="col" class="text-dark fw-normal">Layanan</th>
                           <th scope="col" class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th>Jenis Bayar</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
-
                         </tr>
                       </thead>
                       <tbody></tbody>
@@ -130,7 +129,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 
   $('#fromDate').val(today);
   $('#fromDate').attr('max', today);
-  $('#toDate').val();
+  $('#toDate').val(today);
   $(document).ready(function() {
 
     var table = $('#zero_config').DataTable({
@@ -198,25 +197,25 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                 `;
               }
               let actionBtn = '';
-              if (row.status_panggil == 0) {
+              if (row.status_panggil == 0 && row.id_provider == 1) {
                 actionBtn = `
-            <button type="button"
-              class="btn btn-sm btn-secondary btn-hadir"
-              data-visit="${row.visit_ID}" 
-              data-jnsbyr="${row.provider_name}"
-              data-status="1"
-              title="Hadir">
-              <i class="ti ti-check"></i>
-            </button>
+                  <button type="button"
+                    class="btn btn-sm btn-secondary btn-hadir"
+                    data-visit="${row.visit_ID}" 
+                    data-jnsbyr="${row.provider_name}"
+                    data-status="1"
+                    title="Hadir">
+                    <i class="ti ti-check"></i>
+                  </button>
 
-            <button type="button"
-              class="btn btn-sm btn-danger btn-hadir"
-              data-visit="${row.visit_ID}" 
-              data-jnsbyr="${row.provider_name}"
-              data-status="2"
-              title="Tidak hadir">
-              <i class="ti ti-x"></i>
-            </button> 
+                  <button type="button"
+                    class="btn btn-sm btn-danger btn-hadir"
+                    data-visit="${row.visit_ID}" 
+                    data-jnsbyr="${row.provider_name}"
+                    data-status="2"
+                    title="Tidak hadir">
+                    <i class="ti ti-x"></i>
+                  </button> 
               `;
               } else {
                 actionBtn = `
@@ -384,7 +383,9 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
     let visitID = $(this).data('visit');
     let bayar = $(this).data('jnsbyr');
     let status = $(this).data('status');
-    let konfirmasi = status == '1' ? "Konfirmasi pasien hadir?" : "Konfirmasi pasien tidak hadir?";
+    let konfirmasi = status == '1' ?
+      "Konfirmasi pasien hadir?" :
+      "Konfirmasi pasien tidak hadir?";
     Swal.fire({
       title: konfirmasi,
       icon: 'question',
@@ -392,7 +393,6 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
       confirmButtonText: 'Ya'
     }).then((result) => {
       if (result.isConfirmed) {
-
         $.ajax({
           url: 'controller/wsbpjs/setHadir.php',
           type: 'POST',
@@ -402,17 +402,51 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
             type: bayar,
             statushadir: status
           },
-
+          beforeSend: function() {
+            Swal.fire({
+              title: 'Sedang diproses...',
+              text: 'Mohon tunggu',
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              didOpen: () => {
+                Swal.showLoading();
+              }
+            });
+          },
           success: function(res) {
             if (res.success) {
-
-              Swal.fire({
-                icon: 'success',
-                title: 'Berhasil',
-                text: res.message
+              $.ajax({
+                url: 'controller/admisi/services/chackinv2.php',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                  visit: visitID
+                },
+                success: function(pcare) {
+                  if (pcare.success) {
+                    Swal.fire({
+                      icon: 'success',
+                      title: 'Berhasil',
+                      text: pcare.message
+                    });
+                  } else {
+                    Swal.fire({
+                      icon: 'warning',
+                      title: 'Berhasil Set Hadir',
+                      text: 'Set hadir berhasil, namun pendaftaran PCare gagal : ' + pcare.message
+                    });
+                  }
+                  $('#zero_config').DataTable().ajax.reload(null, false);
+                },
+                error: function() {
+                  Swal.fire({
+                    icon: 'warning',
+                    title: 'Berhasil Set Hadir',
+                    text: 'Set hadir berhasil, namun server PCare tidak merespon'
+                  });
+                  $('#zero_config').DataTable().ajax.reload(null, false);
+                }
               });
-              $('#zero_config').DataTable().ajax.reload(null, false);
-
             } else {
               Swal.fire({
                 icon: 'error',
@@ -421,7 +455,6 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
               });
             }
           },
-
           error: function() {
             Swal.fire({
               icon: 'error',
@@ -430,7 +463,6 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
             });
           }
         });
-
       }
     });
   });
