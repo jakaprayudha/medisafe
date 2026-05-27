@@ -210,7 +210,7 @@ $dataresume = mysqli_fetch_array($checkdata) ?: [];
                }
 
                // Cari ke database ICD
-               $stmt = mysqli_prepare($koneksi, "SELECT code, nama FROM icd_10 WHERE code = ?");
+               $stmt = mysqli_prepare($koneksi, "SELECT code, icd10 as nama FROM icd_10 WHERE code = ?");
                mysqli_stmt_bind_param($stmt, "s", $kode);
                mysqli_stmt_execute($stmt);
 
