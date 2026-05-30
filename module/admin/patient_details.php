@@ -471,14 +471,27 @@ $pt = $_GET['pt'];
                                       </button>
 
                                       <!-- 🔥 BUTTON DOWNLOAD -->
-                                      <a href="module/admin/print/formulir_resume_v2?no=<?= $row['visit_ID'] ?>&rm=<?= $row['nomor_rm'] ?>&download=1"
-                                        target="_blank"
-                                        class="btn btn-sm btn-danger btn-download-resume">
+                                      <?php
+                                      $statusranap = $row['status_rawatinap'] ?? '';
+                                      if ($statusranap == '1') { ?>
+                                        <a href="module/admin/print/formulir_resume_v2?no=<?= $row['visit_ID'] ?>&rm=<?= $row['nomor_rm'] ?>&download=1&ranap=<?= $row['status_rawatinap'] ?>"
+                                          target="_blank"
+                                          class="btn btn-sm btn-danger btn-download-resume">
 
-                                        <i class="fas fa-file-pdf"></i>
-                                        Download Resume
+                                          <i class="fas fa-file-pdf"></i>
+                                          Download Resume Rawat Inap
+                                        </a>
+                                      <?php   } else { ?>
+                                        <a href="module/admin/print/formulir_resume_poli?no=<?= $row['visit_ID'] ?>&rm=<?= $row['nomor_rm'] ?>&download=1&ranap=<?= $row['status_rawatinap'] ?>"
+                                          target="_blank"
+                                          class="btn btn-sm btn-danger btn-download-resume">
 
-                                      </a>
+                                          <i class="fas fa-file-pdf"></i>
+                                          Download Resume Poliklinik
+                                        </a>
+                                      <?php  }
+                                      ?>
+
 
                                     </h2>
 
@@ -624,27 +637,153 @@ $pt = $_GET['pt'];
                                                 <div class="text-muted"><?= $row['anamnesa'] ?? '-' ?></div>
                                               </div>
 
+                                              <?php
+                                              $diagnosa = $row['kdDiag1'] ?? $row['diagnosa'] ?? '';
+                                              $diagnosaData = mysqli_query($koneksi, "SELECT * FROM icd_10 WHERE code='$diagnosa'");
+                                              $icd = mysqli_fetch_array($diagnosaData);
+                                              ?>
                                               <div class="mb-2">
                                                 <strong>Diagnosa Utama</strong>
-                                                <div class="text-muted"><?= $row['kdDiag1'] . ' - ' . $row['nmDiag1'] ?? '-' ?></div>
+                                                <div class="text-muted">
+                                                  <?=
+                                                  !empty($row['kdDiag1'])
+                                                    ? $row['kdDiag1'] . ' - ' . $row['nmDiag1']
+                                                    : (
+                                                      !empty($row['diagnosa'])
+                                                      ? $icd['code'] . ' - ' . $icd['icd10']
+                                                      : '-'
+                                                    )
+                                                  ?>
+                                                </div>
                                               </div>
-
+                                              <?php
+                                              $diagnosaSekunder = $row['kdDiag2'] ?? $row['diagnosa_sekunder'] ?? '';
+                                              $diagnosaDataSekunder = mysqli_query($koneksi, "SELECT * FROM icd_10 WHERE code='$diagnosaSekunder'");
+                                              $icdSekunder = mysqli_fetch_array($diagnosaDataSekunder);
+                                              ?>
                                               <div class="mb-2">
                                                 <strong>Diagnosa Sekunder</strong>
-                                                <div class="text-muted"><?= $row['kdDiag2'] . ' - ' . $row['nmDiag2'] ?? '-' ?></div> <br>
-                                                <div class="text-muted"><?= $row['kdDiag3'] . ' - ' . $row['nmDiag3'] ?? '-' ?></div>
+                                                <div class="text-muted">
+                                                  <?php
+                                                  if (!empty($row['kdDiag2'])) {
+
+                                                    echo $row['kdDiag2'] . ' - ' . $row['nmDiag2'];
+                                                  } elseif (!empty($row['diagnosa_sekunder'])) {
+
+                                                    $kodeDiagnosa = array_map('trim', explode(',', $row['diagnosa_sekunder']));
+                                                    $hasilDiagnosa = [];
+
+                                                    foreach ($kodeDiagnosa as $kode) {
+
+                                                      $query = mysqli_query(
+                                                        $koneksi,
+                                                        "SELECT code, icd10 FROM icd_10 WHERE code='$kode'"
+                                                      );
+
+                                                      if ($data = mysqli_fetch_assoc($query)) {
+                                                        $hasilDiagnosa[] = $data['code'] . ' - ' . $data['icd10'];
+                                                      } else {
+                                                        $hasilDiagnosa[] = $kode;
+                                                      }
+                                                    }
+
+                                                    echo implode('<br>', $hasilDiagnosa);
+                                                  } else {
+
+                                                    echo '-';
+                                                  }
+                                                  ?>
+                                                </div>
+                                                <?php
+                                                if ($row['kdDiag3'] != null) { ?>
+                                                  <br>
+                                                  <div class="text-muted">
+                                                    <?= (!empty($row['kdDiag3']) && !empty($row['nmDiag3']))
+                                                      ? $row['kdDiag3'] . ' - ' . $row['nmDiag3']
+                                                      : '-' ?>
+                                                  </div>
+                                                <?php   }
+                                                ?>
                                               </div>
 
                                               <div class="mb-2">
                                                 <strong>Tindakan / Terapi</strong>
-                                                <div class="text-muted"><?= $row['tindakan'] ?? '-' ?></div>
+                                                <div class="text-muted">
+                                                  <?php
+                                                  $id_visit = $row['visit_ID'] ?? '';
+
+                                                  if (!empty($row['tindakan'])) {
+
+                                                    echo nl2br($row['tindakan']);
+                                                  } else {
+
+                                                    $obatList = [];
+
+                                                    $qPermintaan = mysqli_query(
+                                                      $koneksi,
+                                                      "SELECT id_permintaan_farmasi
+                                                      FROM permintaan_pharmacy
+                                                      WHERE id_visit = '$id_visit'
+                                                      ORDER BY id_permintaan_farmasi ASC"
+                                                    );
+
+                                                    while ($permintaan = mysqli_fetch_assoc($qPermintaan)) {
+
+                                                      $idPermintaan = $permintaan['id_permintaan_farmasi'];
+
+                                                      $qDetail = mysqli_query(
+                                                        $koneksi,
+                                                        "SELECT
+                                                          d.qty,
+                                                          d.signa,
+                                                          d.item_name,
+                                                          p.pharmacy_name_generic,
+                                                          p.pharmacy_name_trade
+                                                      FROM permintaan_pharmacy_details d
+                                                      LEFT JOIN ms_pharmacy p
+                                                          ON p.id_pharmacy = d.id_pharmacy
+                                                      WHERE d.id_permintaan_farmasi = '$idPermintaan'"
+                                                      );
+
+                                                      while ($detail = mysqli_fetch_assoc($qDetail)) {
+                                                        $namaObat =
+                                                          !empty($detail['pharmacy_name_generic'])
+                                                          ? $detail['pharmacy_name_generic']
+                                                          : 'Nama Obat Tidak Ada';
+
+                                                        $obatList[] =
+                                                          $namaObat .
+                                                          ' | Qty: ' . $detail['qty'] .
+                                                          (!empty($detail['signa']) ? ' | Signa: ' . $detail['signa'] : '');
+                                                      }
+                                                    }
+
+                                                    echo !empty($obatList)
+                                                      ? implode('<br>', array_unique($obatList))
+                                                      : '-';
+                                                  }
+                                                  ?>
+                                                </div>
                                               </div>
 
                                               <div>
                                                 <strong>Status Pulang</strong>
                                                 <div>
                                                   <span class="badge bg-success">
-                                                    <?= $row['status_pulang'] ?? '-' ?>
+                                                    <?php
+                                                    $statuspulang = $row['status_pulang'] ?? '';
+                                                    if ($statuspulang == '0') {
+                                                      echo 'Berobat Jalan';
+                                                    } else if ($statuspulang == '3') {
+                                                      echo 'Berobat Jalan';
+                                                    } elseif ($statuspulang == '4') {
+                                                      echo 'Rujuk Lanjut';
+                                                    } elseif ($statuspulang == '5') {
+                                                      echo 'Rujuk Internal';
+                                                    } else {
+                                                      echo 'Rawat Inap';
+                                                    }
+                                                    ?>
                                                   </span>
                                                 </div>
                                               </div>
