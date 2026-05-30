@@ -655,7 +655,7 @@ $data = mysqli_fetch_array($check);
       atau
 
       const text = `
-        pasien ${namaPasien}, dipersilahkan untuk mengambil obat di farmasi
+        pasien ${namaPasien}, dipersilahkan untuk mengambil obat
       `;
 
       const utterance = new SpeechSynthesisUtterance(text);
