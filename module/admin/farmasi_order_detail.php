@@ -652,9 +652,10 @@ $data = mysqli_fetch_array($check);
     if ('speechSynthesis' in window) {
 
       speechSynthesis.cancel();
+      atau
 
       const text = `
-        pasien ${namaPasien}, dipersilahkan untuk ambil obat
+        pasien ${namaPasien}, dipersilahkan untuk mengambil obat di farmasi
       `;
 
       const utterance = new SpeechSynthesisUtterance(text);
