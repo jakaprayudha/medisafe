@@ -1238,10 +1238,10 @@ $pt = $_GET['pt'];
           console.log("DATA DOC:", data); // 🔥 debug
 
           if (data.status === "success") {
-            updateStatus("statusKtp", data.files.patient_ktp_file, "KTP");
-            updateStatus("statusKk", data.files.patient_kk_file, "KK");
-            updateStatus("statusBpjs", data.files.patient_bpjs_file, "BPJS");
-            updateStatus("statusFoto", data.files.patient_foto, "Foto");
+            updateStatus("statusKtp", data.files.patient_ktp_file, "KTP", "ktp");
+            updateStatus("statusKk", data.files.patient_kk_file, "KK", "kk");
+            updateStatus("statusBpjs", data.files.patient_bpjs_file, "BPJS", "bpjs");
+            updateStatus("statusFoto", data.files.patient_foto, "Foto", "foto");
           }
 
         },
@@ -1252,21 +1252,27 @@ $pt = $_GET['pt'];
     }
 
 
-    function updateStatus(elementId, fileName, label) {
+    function updateStatus(elementId, fileName, label, field) {
       const baseUrl = document.querySelector("base").href + "uploads/patient/";
 
       if (fileName && fileName !== "null" && fileName !== null) {
 
         $("#" + elementId).html(`
-      <div class="d-flex align-items-center gap-2">
-        <span class="badge bg-success">${label} sudah upload</span>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-success">${label} sudah upload</span>
 
-     <button type="button" class="btn btn-sm btn-primary"
-  onclick="previewFile('${baseUrl + fileName}')">
-  Lihat
-</button>
-      </div>
-    `);
+        <button type="button" class="btn btn-sm btn-primary"
+            onclick="previewFile('${baseUrl + fileName}')">
+            Lihat
+          </button>
+
+          <button type="button"
+            class="btn btn-sm btn-danger"
+            onclick="hapusDokumen('${field}','${fileName}')">
+            Hapus
+          </button>
+          </div>
+        `);
 
       } else {
 
@@ -1721,6 +1727,7 @@ $pt = $_GET['pt'];
               onclick="previewFile('${baseUrl + fileName}')">
               Lihat
             </button>
+
           </div>
         `);
       } else {
@@ -1760,6 +1767,63 @@ $pt = $_GET['pt'];
   function showSample() {
     const modal = new bootstrap.Modal(document.getElementById("modalSample"));
     modal.show();
+  }
+
+  function hapusDokumen(field, fileName) {
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const id_patient = urlParams.get("pt");
+
+    Swal.fire({
+      title: "Hapus dokumen?",
+      text: fileName,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Ya, Hapus",
+      cancelButtonText: "Batal"
+    }).then((result) => {
+
+      if (!result.isConfirmed) return;
+
+      $.ajax({
+        url: "controller/master/deletePatientFile.php",
+        type: "POST",
+        dataType: "json",
+        data: {
+          id_patient: id_patient,
+          field: field
+        },
+        success: function(res) {
+          if (res.status === "success") {
+
+            Swal.fire({
+              toast: true,
+              position: "top-end",
+              icon: "success",
+              title: "Dokumen berhasil dihapus",
+              showConfirmButton: false,
+              timer: 2000
+            });
+
+            let target = "";
+
+            if (field === "ktp") target = "#statusKtp";
+            if (field === "kk") target = "#statusKk";
+            if (field === "bpjs") target = "#statusBpjs";
+            if (field === "foto") target = "#statusFoto";
+
+            $(target).html(`
+        <span class="text-danger">
+            <i class="fas fa-times-circle"></i>
+            Belum upload
+        </span>
+    `);
+
+          }
+        }
+      });
+
+    });
   }
 </script>
 
