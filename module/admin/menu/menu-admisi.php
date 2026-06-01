@@ -87,7 +87,7 @@
            </a>
         </li>
 
-        <!-- <li class="sidebar-item">
+        <li class="sidebar-item">
            <a class="sidebar-link <?php if ($title == 'Display Tiket') {
                                        echo 'active';
                                     } ?>"
@@ -96,7 +96,17 @@
               <iconify-icon icon="solar:printer-linear"></iconify-icon>
               <span class="hide-menu">Ambil Antrean</span>
            </a>
-        </li> -->
+        </li>
+        <li class="sidebar-item">
+           <a class="sidebar-link <?php if ($title == 'Display Tiket') {
+                                       echo 'active';
+                                    } ?>"
+              href="module/admisi/counter-call"
+              aria-expanded="false">
+              <iconify-icon icon="material-symbols:call"></iconify-icon>
+              <span class="hide-menu">Panggilan</span>
+           </a>
+        </li>
         <!-- <li class="nav-small-cap">
            <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
            <span class="hide-menu">Daftar/Layanan (Pcare)</span>
