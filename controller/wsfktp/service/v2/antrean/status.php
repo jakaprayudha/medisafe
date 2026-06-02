@@ -151,7 +151,7 @@ SELECT
         0
     ) AS antrean_panggil,
 
-    d.id_poli AS poli,
+    d.doctor_category AS poli,
     d.doctor_code,
     d.doctor_name,
     jd.start_time,
@@ -165,10 +165,10 @@ INNER JOIN ms_doctor AS d
     ON d.id_doctor = jd.id_doctor
 
 INNER JOIN master_poli AS mp
-    ON d.id_poli = mp.kdPoli
+    ON d.doctor_category = mp.kdPoli
 
 LEFT JOIN antrian_poli AS ap 
-    ON ap.poli = d.id_poli
+    ON ap.poli = d.doctor_category
     AND ap.tanggal = ?
     AND ap.id_customer = ?
     AND ap.kode_antri = d.doctor_antrean
@@ -176,7 +176,7 @@ LEFT JOIN antrian_poli AS ap
 LEFT JOIN pasien_visit AS p
     ON p.visit_ID = ap.nomor_visit
 
-WHERE d.id_poli = ?
+WHERE d.doctor_category = ?
 AND LOWER(jd.day_of_week) = ?
 AND jd.sch_status = 1
 

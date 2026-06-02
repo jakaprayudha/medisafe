@@ -18,6 +18,25 @@ header('Content-Type: application/json');
 $clinics = tampildata("SELECT * FROM setting_antrol");
 $syncResults = [];
 
+$dayMap = [
+    'monday' => 'senin',
+    'tuesday' => 'selasa',
+    'wednesday' => 'rabu',
+    'thursday' => 'kamis',
+    'friday' => 'jumat',
+    'saturday' => 'sabtu',
+    'sunday' => 'minggu'
+];
+
+$today = new DateTimeImmutable('today');
+$tanggalRange = [];
+for ($i = 0; $i <= 7; $i++) {
+    $tanggalRange[] = $today->modify("+{$i} day")->format('Y-m-d');
+}
+
+$tanggalAwal = $tanggalRange[0];
+$tanggalAkhir = $tanggalRange[count($tanggalRange) - 1];
+
 function getOrCreateDoctorId($koneksi, $idCustomer, $idPoli, $kodeDokter, $namaDokter)
 {
     $doctorId = null;
@@ -54,20 +73,6 @@ function getOrCreateDoctorId($koneksi, $idCustomer, $idPoli, $kodeDokter, $namaD
 foreach ($clinics as $clinic) {
     $config = getConfigBPJS($clinic['id_customer'], $koneksi);
 
-    $tanggal = date('Y-m-d');
-
-    $hari = strtolower(date('l', strtotime($tanggal)));
-    $map = [
-        'monday' => 'Senin',
-        'tuesday' => 'Selasa',
-        'wednesday' => 'Rabu',
-        'thursday' => 'Kamis',
-        'friday' => 'Jumat',
-        'saturday' => 'Sabtu',
-        'sunday' => 'Minggu'
-    ];
-    $hariIndonesia = $map[$hari];
-
     $deleteSchedule = $koneksi->prepare("DELETE FROM ms_doctor_schedule WHERE id_customer = ?");
     $deleteSchedule->bind_param("s", $clinic['id_customer']);
     $deleteSchedule->execute();
@@ -80,51 +85,62 @@ foreach ($clinics as $clinic) {
         $kdpoli = $policlinic['poli_code'];
         $idPoli = $policlinic['id_poli'];
 
-        $result = bpjsGet('/ref/dokter/kodepoli/' . $kdpoli . '/tanggal/' . $tanggal, $config);
+        foreach ($tanggalRange as $tanggal) {
+            $hari = strtolower(date('l', strtotime($tanggal)));
+            $hariIndonesia = $dayMap[$hari] ?? null;
 
-        $responseData = [];
-        if (isset($result['response']) && is_array($result['response'])) {
-            $responseData = $result['response'];
-        } elseif (is_array($result)) {
-            $responseData = $result;
-        }
-
-        foreach ($responseData as $doctor) {
-            if (!isset($doctor['kodedokter'], $doctor['namadokter'], $doctor['jampraktek'])) {
+            if ($hariIndonesia === null) {
                 continue;
             }
 
-            $kodeDokter = (string) $doctor['kodedokter'];
-            $namaDokter = (string) $doctor['namadokter'];
-            $jamPraktek = (string) $doctor['jampraktek'];
-            $kapasitas = isset($doctor['kapasitas']) ? (int) $doctor['kapasitas'] : 0;
-            $jam = explode('-', $jamPraktek);
+            $result = bpjsGet('/ref/dokter/kodepoli/' . $kdpoli . '/tanggal/' . $tanggal, $config);
 
-            if (count($jam) !== 2) {
-                continue;
+            $responseData = [];
+            if (isset($result['response']) && is_array($result['response'])) {
+                $responseData = $result['response'];
+            } elseif (is_array($result)) {
+                $responseData = $result;
             }
 
-            $startTime = trim($jam[0]);
-            $endTime = trim($jam[1]);
-            $doctorId = getOrCreateDoctorId($koneksi, $clinic['id_customer'], $idPoli, $kodeDokter, $namaDokter);
+            foreach ($responseData as $doctor) {
+                if (!isset($doctor['kodedokter'], $doctor['namadokter'], $doctor['jampraktek'])) {
+                    continue;
+                }
 
-            $insertSchedule = $koneksi->prepare("INSERT INTO ms_doctor_schedule (id_doctor, id_poli, id_customer, day_of_week, start_time, end_time, sch_status, kuota) VALUES (?, ?, ?, ?, ?, ?, 1, ?)");
-            $insertSchedule->bind_param("ssssssi", $doctorId, $idPoli, $clinic['id_customer'], $hariIndonesia, $startTime, $endTime, $kapasitas);
-            $insertSchedule->execute();
-            $insertSchedule->close();
+                $kodeDokter = (string) $doctor['kodedokter'];
+                $namaDokter = (string) $doctor['namadokter'];
+                $jamPraktek = (string) $doctor['jampraktek'];
+                $kapasitas = isset($doctor['kapasitas']) ? (int) $doctor['kapasitas'] : 0;
+                $jam = explode('-', $jamPraktek);
+
+                if (count($jam) !== 2) {
+                    continue;
+                }
+
+                $startTime = trim($jam[0]);
+                $endTime = trim($jam[1]);
+                $doctorId = getOrCreateDoctorId($koneksi, $clinic['id_customer'], $idPoli, $kodeDokter, $namaDokter);
+
+                $insertSchedule = $koneksi->prepare("INSERT INTO ms_doctor_schedule (id_doctor, id_poli, id_customer, day_of_week, start_time, end_time, sch_status, kuota) VALUES (?, ?, ?, ?, ?, ?, 1, ?)");
+                $insertSchedule->bind_param("ssssssi", $doctorId, $idPoli, $clinic['id_customer'], $hariIndonesia, $startTime, $endTime, $kapasitas);
+                $insertSchedule->execute();
+                $insertSchedule->close();
+            }
+
+            $clinicResult[] = [
+                'kodepoli' => $kdpoli,
+                'tanggal' => $tanggal,
+                'hari' => $hariIndonesia,
+                'result' => $result,
+            ];
         }
-
-        $clinicResult[] = [
-            'kodepoli' => $kdpoli,
-            'result' => $result,
-        ];
 
     }
 
     $syncResults[] = [
         'id_customer' => $clinic['id_customer'],
-        'tanggal' => $tanggal,
-        'hari' => $hariIndonesia,
+        'tanggal_awal' => $tanggalAwal,
+        'tanggal_akhir' => $tanggalAkhir,
         'data' => $clinicResult,
     ];
 }
