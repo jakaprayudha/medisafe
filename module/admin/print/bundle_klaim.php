@@ -90,7 +90,8 @@ $debugMode  = !empty($_GET['debug']);
 $fpdiErrors = [];
 
 // =============================================================================
-// HELPER: Flatten PDF ke 1.4 via ghostscript agar kompatibel FPDI free parser
+// HELPER: Flatten PDF ke format kompatibel FPDI free parser
+// Coba ghostscript dulu, fallback ke Imagick (PDF → PNG per halaman → PDF baru)
 // =============================================================================
 
 function flattenPdfForFpdi(string $inputPath, string $tempDir, array &$tempPaths): string
