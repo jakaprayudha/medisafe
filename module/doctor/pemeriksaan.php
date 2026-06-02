@@ -158,7 +158,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
       serverSide: false,
       scrollX: true,
       order: [
-        [1, 'desc']
+        [1, 'asc']
       ], // 🔥 URUTKAN KOLOM TANGGAL TERBARU
       ajax: {
         url: apiUrl,
