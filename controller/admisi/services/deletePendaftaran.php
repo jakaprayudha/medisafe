@@ -28,21 +28,26 @@ $stmt = $koneksi->prepare("DELETE FROM pcare_pendaftaran WHERE nomor_visit = ?")
 $stmt->bind_param("s", $visit);
 $hasil = $stmt->execute();
 
-$stmt1 = $koneksi->prepare("DELETE FROM pasien_visit WHERE visit_ID = ?");
+$stmt1 = $koneksi->prepare("UPDATE pasien_visit SET visit_status = '99' WHERE visit_ID = ?");
 $stmt1->bind_param("s", $visit);
 $hasil1 = $stmt1->execute();
 
+$stmt2 = $koneksi->prepare("UPDATE antrian_poli SET `status` = '99' WHERE nomor_visit = ?");
+$stmt2->bind_param("s", $visit);
+$hasil2 = $stmt2->execute();
+
 $stmt->close();
 $stmt1->close();
-if ($hasil and $hasil1) {
+$stmt2->close();
+if ($hasil and $hasil1 and $hasil2) {
     $response = [
         'success' => true,
-        'message' => "Berhasil Hapus Pendaftaran" . $msg,
+        'message' => "Berhasil Hapus Pendaftaran",
     ];
 } else {
     $response = [
         'success' => false,
-        'message' => "Gagal Hapus Pendaftaran" . mysqli_error($koneksi) . $msg,
+        'message' => "Gagal Hapus Pendaftaran" . mysqli_error($koneksi),
     ];
 }
 
