@@ -865,7 +865,7 @@ require '../../controller/view.php';
             if (row.provider_name == 'BPJS KESEHATAN' && row.created_user != "User") {
               status_sumber = "Mobile JKN";
             } else if (row.provider_name == 'BPJS KESEHATAN') {
-              status_sumber = "Non JKN/Onsite";
+              status_sumber = "JKN/Onsite";
             }
             let isSelesai = row.visit_status == 4;
             let Batal = row.visit_status == 99;
