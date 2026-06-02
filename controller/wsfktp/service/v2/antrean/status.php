@@ -151,7 +151,7 @@ SELECT
         0
     ) AS antrean_panggil,
 
-    d.id_poli AS poli,
+    d.doctor_category AS poli,
     d.doctor_code,
     d.doctor_name,
     jd.start_time,
