@@ -37,9 +37,9 @@ function startApp() {
                     socket.emit("join", data.id_customer + "_" + target);
                 }
             })
-            console.log(data.id_customer + "_" + target);
-            console.log(pageName);
-            console.log(data);
+            // console.log(data.id_customer + "_" + target);
+            // console.log(pageName);
+            // console.log(data);
         });
         socket.on('trigger', data => {
             let key = target + "/" + pageName;
