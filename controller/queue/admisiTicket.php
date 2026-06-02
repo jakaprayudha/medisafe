@@ -61,7 +61,8 @@ $insert = mysqli_query($koneksi, "
       nama_pasien,
       id_poli,
       status,
-      queue_date
+      queue_date,
+      id_customer
    )
    VALUES
    (
@@ -69,7 +70,8 @@ $insert = mysqli_query($koneksi, "
       '$nama',
       $idPoli,
       'menunggu',
-      '$today'
+      '$today',
+      $id_customer
    )
 ");
 

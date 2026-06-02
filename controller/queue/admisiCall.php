@@ -7,7 +7,7 @@ $type = $_POST['type'];
 $nomor = $_POST['nomor'];
 $loket = $_POST['loket'];
 $name = $_POST['name'];
-$id = $_POST['id'];
+$id = (int)$_POST['id'];
 $idAntri = $_POST['idAntri'];
 
 /* =========================

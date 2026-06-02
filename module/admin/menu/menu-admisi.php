@@ -46,16 +46,6 @@
               <span class="hide-menu">Poliklinik</span>
            </a>
         </li>
-        <li class="sidebar-item">
-           <a class="sidebar-link <?php if ($title == 'Pasien JKN' or $title == 'Pasien JKN') {
-                                       echo 'active';
-                                    } ?>"
-              href="module/admisi/listPasien.php"
-              aria-expanded="false">
-              <iconify-icon icon="solar:checklist-minimalistic-broken"></iconify-icon>
-              <span class="hide-menu">Pasien JKN</span>
-           </a>
-        </li>
         <!-- <li class="sidebar-item">
            <a class="sidebar-link <?php if ($title == 'Registrasi UGD' or $title == 'List Pasien' and $_GET['type'] == 'UGD') {
                                        echo 'active';
@@ -80,7 +70,7 @@
            <a class="sidebar-link <?php if ($title == 'Counter Admisi') {
                                        echo 'active';
                                     } ?>"
-              href="module/display/display-poliklinik" target="_blank"
+              href="module/display/display-admisi" target="_blank"
               aria-expanded="false">
               <iconify-icon icon="solar:display-linear"></iconify-icon>
               <span class="hide-menu">Display Antrean</span>
@@ -97,7 +87,7 @@
            </a>
         </li>
 
-        <!-- <li class="sidebar-item">
+        <li class="sidebar-item">
            <a class="sidebar-link <?php if ($title == 'Display Tiket') {
                                        echo 'active';
                                     } ?>"
@@ -106,7 +96,17 @@
               <iconify-icon icon="solar:printer-linear"></iconify-icon>
               <span class="hide-menu">Ambil Antrean</span>
            </a>
-        </li> -->
+        </li>
+        <li class="sidebar-item">
+           <a class="sidebar-link <?php if ($title == 'Display Tiket') {
+                                       echo 'active';
+                                    } ?>"
+              href="module/admisi/counter-call"
+              aria-expanded="false">
+              <iconify-icon icon="material-symbols:call"></iconify-icon>
+              <span class="hide-menu">Panggilan</span>
+           </a>
+        </li>
         <!-- <li class="nav-small-cap">
            <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
            <span class="hide-menu">Daftar/Layanan (Pcare)</span>

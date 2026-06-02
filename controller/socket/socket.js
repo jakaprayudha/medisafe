@@ -1,4 +1,5 @@
 window.APP = window.APP || {};
+// const base_url = "http://localhost:3001";
 const base_url = "https://websocketservermedicine.online";
 if (!window.io) {
     const script = document.createElement("script");
@@ -17,48 +18,65 @@ function startApp() {
     let moduleName = moduleIndex !== -1 ? parts[moduleIndex + 1].toUpperCase() : null;
     let pageName = moduleIndex !== -1 ? parts[moduleIndex + 2] : null;
     let target = moduleName;
-    let pages = ["counter-call", "display-admisi"];
+    let pages = ["pemeriksaan", "display-admisi"];
+    // let pages = ["counter-call", "display-admisi"];
     if (pages.includes(pageName)) {
         enableSocket = true;
     }
-    // console.log(
-    $(document).ready(function () {
-        if (enableSocket) {
-            const socket = io(base_url, {
-                reconnection: true
-            });
-            socket.on("connect", () => {
-                page.forEach((pageName) => {
-                    if (pageName == "display-admisi") {
-                        socket.emit("join", data.id_customer + "_" + pageName);
-                    } else {
-                        socket.emit("join", data.id_customer + "_" + target);
-                    }
-                })
-                // console.log(data.id_customer + "_" + target);
-                // console.log(pageName);
-            });
-            socket.on('trigger', data => {
-                let key = target + "/" + pageName;
-                // console.log(key);
-                switch (key) {
-                    case "ADMISI/counter-call":
-                        APP.resetTable();
-                        break;
-                    case "DISPLAY/display-admisi":
-                        APP.showQueue();
-                        break;
-                }
-            });
-            socket.on("panggil", data => {
-                let key = target + "/" + pageName;
-                console.log(key)
-                switch (key) {
-                    case "DISPLAY/display-admisi":
-                        APP.CallAntrian(data.type, data.nomor, data.loket, data.idantrian, "pendaftaran");
-                        break;
+    if (enableSocket) {
+        const socket = io(base_url, {
+            reconnection: true
+        });
+        socket.on("connect", () => {
+            pages.forEach((pageName) => {
+                if (pageName == "display-admisi") {
+                    socket.emit("join", data.id_customer + "_" + pageName);
+                } else if (pageName == 'pemeriksaan' && target == 'DOCTOR') {
+                    socket.emit("join", data.id_customer + "_" + pageName + "_" + target);
+                } else {
+                    socket.emit("join", data.id_customer + "_" + target);
                 }
             })
-        }
-    });
+            console.log(data.id_customer + "_" + target);
+            console.log(pageName);
+        });
+        socket.on('trigger', data => {
+            let key = target + "/" + pageName;
+            // console.log(key);
+            switch (key) {
+                case "ADMISI/counter-call":
+                    APP.resetTable();
+                    break;
+                case "DISPLAY/display-admisi":
+                    APP.showQueue();
+                    break;
+            }
+        });
+        socket.on("panggil", data => {
+            let key = target + "/" + pageName;
+            console.log(key)
+            switch (key) {
+                case "DISPLAY/display-admisi":
+                    APP.CallAntrian(data.type, data.nomor, data.loket, data.idantrian, "pendaftaran");
+                    break;
+            }
+        });
+        socket.on("putar_suara_panggilan", (data) => {
+            if (data.audioBase64) {
+                console.log("Menerima data audio Base64, mencoba memutar...");
+
+                // 🔥 Format menjadi Data URI Mp3
+                const audioFormat = `data:audio/mp3;base64,${data.audioBase64}`;
+
+                const audio = new Audio(audioFormat);
+                audio.volume = 1.0;
+
+                audio.play().then(() => {
+                    console.log("Suara berhasil diputar!");
+                }).catch(err => {
+                    console.error("Gagal memutar suara otomatis:", err);
+                });
+            }
+        });
+    }
 }
