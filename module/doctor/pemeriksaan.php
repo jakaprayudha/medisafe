@@ -16,6 +16,22 @@ $apiUrl = getenv('API_URL');
   require '../../assets/template/head.php';
   ?>
 </head>
+<style>
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .icon-spin {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+  }
+</style>
 
 <body>
   <!--  Body Wrapper -->
@@ -113,6 +129,7 @@ $apiUrl = getenv('API_URL');
   <?php
   require '../admin/library.php';
   ?>
+  <script src="controller/socket/socket.js"></script>
 </body>
 <?php
 $setting = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT rme_type FROM setting_clinic LIMIT 1"));
@@ -295,75 +312,52 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 <script>
   $(document).on('click', '.btn-call', function() {
     const noAntrian = $(this).data('antrian');
-    const nama = $(this).data('nama');
+    const namaPasien = $(this).data('nama');
     const poli = $(this).data('poli');
     const visit = $(this).data('visit');
-    const dokter = $(this).data('dokter');
-
-    console.log('DOKTER:', dokter); // debug
-
-    callPatient(noAntrian, nama, poli, visit, dokter);
-  });
-
-  function callPatient(noAntrian, namaPasien, poli, visitID, id_doctor) {
-
-    if ('speechSynthesis' in window) {
-
-      speechSynthesis.cancel();
-
-      let dokterRaw = (id_doctor || '').trim();
-
-      // 🔥 NORMALISASI: paksa "dr." selalu ada spasi
-      dokterRaw = dokterRaw.replace(/^dr\.?/i, 'dr. ');
-      dokterRaw = dokterRaw.replace(/\s+/g, ' ').trim();
-
-      // 🔥 DETEKSI "dr di depan"
-      let isPrefixDr = /^dr\./i.test(dokterRaw);
-
-      // 🔥 DETEKSI "dr di belakang" (contoh: nama, dr)
-      let isSuffixDr = /,\s*dr\.?$/i.test(dokterRaw);
-
-      let text;
-
-      if (isPrefixDr) {
-        // ✅ contoh: dr. Andi
-        text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan ${dokterRaw}`;
-
-      } else if (isSuffixDr) {
-        // ✅ contoh: Maharani Siregar, dr
-        let cleanName = dokterRaw.replace(/,\s*dr\.?$/i, '').trim();
-
-        text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan dokter ${cleanName}`;
-
-      } else {
-        // ❗ tidak ada dr sama sekali
-        text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan dokter ${dokterRaw}`;
-      }
-
-      const utterance = new SpeechSynthesisUtterance(text);
-
-      utterance.lang = 'id-ID';
-      utterance.rate = 0.9;
-      utterance.pitch = 1;
-      utterance.volume = 1;
-
-      const voices = speechSynthesis.getVoices();
-      const indo = voices.find(v => v.lang === 'id-ID');
-      if (indo) utterance.voice = indo;
-
-      speechSynthesis.speak(utterance);
+    const id_doctor = $(this).data('dokter');
+    // console.log('DOKTER:', dokter);
+    // callPatient(noAntrian, nama, poli, visit, dokter);
+    let dokterRaw = (id_doctor || '').trim();
+    dokterRaw = dokterRaw.replace(/^dr\.?/i, 'dr. ');
+    dokterRaw = dokterRaw.replace(/\s+/g, ' ').trim();
+    let isPrefixDr = /^dr\./i.test(dokterRaw);
+    let isSuffixDr = /,\s*dr\.?$/i.test(dokterRaw);
+    let text;
+    if (isPrefixDr) {
+      text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan ${dokterRaw}`;
+    } else if (isSuffixDr) {
+      let cleanName = dokterRaw.replace(/,\s*dr\.?$/i, '').trim();
+      text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan dokter ${cleanName}`;
+    } else {
+      text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan dokter ${dokterRaw}`;
     }
-
-    fetch('controller/queue/poliCall.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
+    console.log(text);
+    $.ajax({
+      url: 'controller/admisi/sound.php',
+      type: 'POST',
+      data: {
+        text: text
       },
-      body: JSON.stringify({
-        visit_ID: visitID
-      })
-    });
-  }
+      dataType: 'json',
+      success: function(response) {
+        console.log(response);
+      },
+      beforeSend: function() {
+        $('.btn-call')
+          .prop('disabled', true)
+          .find('i')
+          .attr('class', 'ti ti-loader-2 icon-spin');
+      },
+
+      complete: function() {
+        $('.btn-call')
+          .prop('disabled', false)
+          .find('i')
+          .attr('class', 'ti ti-volume');
+      }
+    })
+  });
 </script>
 
 <script>
