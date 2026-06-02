@@ -2,15 +2,16 @@
 require_once __DIR__ . '/../socket/sendSocket.php';
 header('Content-Type: application/json');
 $uid = $_SESSION['uid_user'];
+$text = strtolower($_POST['text']);
 pemanggilanAntrian([
     "rs_id" => $kdRumahSakit,
     "target_role" => "pemeriksaan_DOCTOR_" . $uid,
-    "text" => strtolower($_POST['text']),
+    "text" => $text,
 ]);
 
 echo json_encode([
     'success' => true,
     'message' => 'Panggilan berhasil dikirim',
-    'text' => $_POST['text']
+    'text' => $text
 ]);
 exit;
