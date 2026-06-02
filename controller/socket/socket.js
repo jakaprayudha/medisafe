@@ -63,20 +63,22 @@ function startApp() {
             }
         });
         socket.on("putar_suara_panggilan", (data) => {
+            const myTabId = sessionStorage.getItem('tabId');
+            const activeCallerTab = localStorage.getItem('activeCallerTab');
+            if (myTabId !== activeCallerTab) {
+                return;
+            }
             if (data.audioBase64) {
-                console.log("Menerima data audio Base64, mencoba memutar...");
-
-                // 🔥 Format menjadi Data URI Mp3
                 const audioFormat = `data:audio/mp3;base64,${data.audioBase64}`;
-
                 const audio = new Audio(audioFormat);
                 audio.volume = 1.0;
-
-                audio.play().then(() => {
-                    console.log("Suara berhasil diputar!");
-                }).catch(err => {
-                    console.error("Gagal memutar suara otomatis:", err);
-                });
+                audio.play()
+                    .then(() => {
+                        console.log("Suara berhasil diputar!");
+                    })
+                    .catch(err => {
+                        console.error(err);
+                    });
             }
         });
     }
