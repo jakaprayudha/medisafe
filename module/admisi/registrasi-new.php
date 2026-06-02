@@ -545,6 +545,7 @@ require '../../controller/view.php';
           }
           $('#patient_name').val(response.nama);
           $('#patient_datebirth').val(response.tglLahir);
+          $('#patient_phone').val(response.noHP);
           if (response.sex == 'L') {
             $('#patient_gender').val('Laki-laki').trigger('change');
           }else{
