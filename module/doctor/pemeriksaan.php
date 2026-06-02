@@ -357,7 +357,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
       complete: function() {
         setTimeout(() => {
           $('.btn-call').prop('disabled', false).find('i').attr('class', 'ti ti-volume');
-        }, 10000);
+        }, 5000);
       }
     })
   });
