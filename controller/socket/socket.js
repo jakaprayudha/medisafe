@@ -1,14 +1,4 @@
 window.APP = window.APP || {};
-
-if (!sessionStorage.getItem('tabId')) {
-    sessionStorage.setItem(
-        'tabId',
-        Date.now() + '_' + Math.random().toString(36).substring(2)
-    );
-}
-
-console.log('TAB ID:', sessionStorage.getItem('tabId'));
-
 // const base_url = "http://localhost:3001";
 const base_url = "https://websocketservermedicine.online";
 if (!window.io) {
@@ -73,37 +63,19 @@ function startApp() {
             }
         });
         socket.on("putar_suara_panggilan", (data) => {
-            const myTabId = sessionStorage.getItem('tabId');
-            const activeCallerTab = localStorage.getItem('activeCallerTab');
-            console.log('=== DEBUG AUDIO ===');
-            console.log('myTabId:', myTabId);
-            console.log('activeCallerTab:', activeCallerTab);
-            console.log('socket data:', data);
-            if (myTabId !== activeCallerTab) {
-                console.log('SKIP: tab tidak cocok');
+            console.log("DATA SOCKET:", data);
+            const myRequestId = sessionStorage.getItem('requestId');
+            console.log("MY REQUEST:", myRequestId);
+            console.log("SOCKET REQUEST:", data.requestId);
+            if (data.requestId !== myRequestId) {
+                console.log("SKIP");
                 return;
             }
-            console.log('TAB COCOK');
-            if (!data.audioBase64) {
-                console.log('audioBase64 kosong');
-                return;
-            }
-            console.log('Panjang audio:', data.audioBase64.length);
-            const audioFormat = `data:audio/mp3;base64,${data.audioBase64}`;
-            const audio = new Audio(audioFormat);
-            audio.onloadeddata = () => {
-                console.log('Audio berhasil dimuat');
-            };
-            audio.onerror = (e) => {
-                console.log('Audio error:', e);
-            };
-            audio.play()
-                .then(() => {
-                    console.log('Suara berhasil diputar');
-                })
-                .catch(err => {
-                    console.error('Play error:', err);
-                });
+            console.log("PLAY AUDIO");
+            const audio = new Audio(
+                `data:audio/mp3;base64,${data.audioBase64}`
+            );
+            audio.play();
         });
     }
 }
