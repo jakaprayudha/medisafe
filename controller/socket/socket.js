@@ -63,23 +63,48 @@ function startApp() {
             }
         });
         socket.on("putar_suara_panggilan", (data) => {
+
             const myTabId = sessionStorage.getItem('tabId');
             const activeCallerTab = localStorage.getItem('activeCallerTab');
+
+            console.log('=== DEBUG AUDIO ===');
+            console.log('myTabId:', myTabId);
+            console.log('activeCallerTab:', activeCallerTab);
+            console.log('socket data:', data);
+
             if (myTabId !== activeCallerTab) {
+                console.log('SKIP: tab tidak cocok');
                 return;
             }
-            if (data.audioBase64) {
-                const audioFormat = `data:audio/mp3;base64,${data.audioBase64}`;
-                const audio = new Audio(audioFormat);
-                audio.volume = 1.0;
-                audio.play()
-                    .then(() => {
-                        console.log("Suara berhasil diputar!");
-                    })
-                    .catch(err => {
-                        console.error(err);
-                    });
+
+            console.log('TAB COCOK');
+
+            if (!data.audioBase64) {
+                console.log('audioBase64 kosong');
+                return;
             }
+
+            console.log('Panjang audio:', data.audioBase64.length);
+
+            const audioFormat = `data:audio/mp3;base64,${data.audioBase64}`;
+
+            const audio = new Audio(audioFormat);
+
+            audio.onloadeddata = () => {
+                console.log('Audio berhasil dimuat');
+            };
+
+            audio.onerror = (e) => {
+                console.log('Audio error:', e);
+            };
+
+            audio.play()
+                .then(() => {
+                    console.log('Suara berhasil diputar');
+                })
+                .catch(err => {
+                    console.error('Play error:', err);
+                });
         });
     }
 }
