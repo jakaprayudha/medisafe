@@ -39,7 +39,7 @@ function startApp() {
             })
             console.log(data.id_customer + "_" + target);
             console.log(pageName);
-            console.log(data.id_user);
+            console.log(data);
         });
         socket.on('trigger', data => {
             let key = target + "/" + pageName;
