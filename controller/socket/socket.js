@@ -32,7 +32,7 @@ function startApp() {
                 if (pageName == "display-admisi") {
                     socket.emit("join", data.id_customer + "_" + pageName);
                 } else if (pageName == 'pemeriksaan' && target == 'DOCTOR') {
-                    socket.emit("join", data.id_customer + "_" + pageName + "_" + target);
+                    socket.emit("join", data.id_customer + "_" + pageName + "_" + target + "_" + data.uid_user);
                 } else {
                     socket.emit("join", data.id_customer + "_" + target);
                 }
