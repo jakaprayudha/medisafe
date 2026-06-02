@@ -332,7 +332,11 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
     } else {
       text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan dokter ${dokterRaw}`;
     }
-    console.log(text);
+    localStorage.setItem(
+      'activeCallerTab',
+      sessionStorage.getItem('tabId')
+    );
+    // console.log(text);
     $.ajax({
       url: 'controller/admisi/sound.php',
       type: 'POST',
