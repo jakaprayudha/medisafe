@@ -53,7 +53,7 @@ function pemanggilanAntrian($data)
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_HTTPHEADER => ["Content-Type: application/json"],
         CURLOPT_POSTFIELDS => $payload,
-        CURLOPT_TIMEOUT => 3
+        CURLOPT_TIMEOUT => 30
     ]);
 
     $res = curl_exec($ch);
