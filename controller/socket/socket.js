@@ -1,4 +1,11 @@
 window.APP = window.APP || {};
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+document.addEventListener('click', async () => {
+    if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+    }
+});
 // const base_url = "http://localhost:3001";
 const base_url = "https://websocketservermedicine.online";
 if (!window.io) {
@@ -63,15 +70,15 @@ function startApp() {
             }
         });
         socket.on("putar_suara_panggilan", (data) => {
-            // console.log("DATA SOCKET:", data);
+            console.log("DATA SOCKET:", data);
             const myRequestId = sessionStorage.getItem('requestId');
-            // console.log("MY REQUEST:", myRequestId);
-            // console.log("SOCKET REQUEST:", data.requestId);
+            console.log("MY REQUEST:", myRequestId);
+            console.log("SOCKET REQUEST:", data.requestId);
             if (data.requestId !== myRequestId) {
-                // console.log("SKIP");
+                console.log("SKIP");
                 return;
             }
-            // console.log("PLAY AUDIO");
+            console.log("PLAY AUDIO");
             const audio = new Audio(
                 `data:audio/mp3;base64,${data.audioBase64}`
             );
