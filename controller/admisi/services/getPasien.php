@@ -2,7 +2,6 @@
 require_once __DIR__ . '/view.php';
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/servicebpjs.php';
-
 header('Content-Type: application/json');
 
 $tipe = $_GET['tipe'] ?? null;
@@ -54,44 +53,54 @@ if (!in_array($lengthkartu, [13, 16, 19])) {
         }
     } else {
         $result = bpjsGet('/peserta/' . $tipe . '/' . $nomor_kartu);
-    }
-    // $result = testingBPJS_GET("http://localhost/medisafe/controller/admisi/api/getpeserta.php");
-
-    if (($result['code'] ?? '') != "200" || $result['data']['aktif'] != 'true') {
-        $msg = $result['message'] ?? "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
-        $response = [
-            'success' => false,
-            'code' => $result['data']['aktif'],
-            'message' => $result['data']['ketAktif'],
-            'data' => [
-                'noKartu' => $respon['data']['nokaPst'],
-                'nama' => $data['patient_name'] ?? null,
-                'sex' => $data['patient_gender'] ?? null,
-                'tglLahir' => $data['patient_datebirth'] ?? null,
-                'noHP' => $data['patient_phone'] ?? null,
-                'noKTP' => $data['patient_nik'] ?? null,
-                'rm' => $data['nomor_rm'] ?? null,
-                'kdProvider' => $result['data']['ppk']['kdPPK'],
-                'nmProvider' => $result['data']['ppk']['nmPPK'],
-            ]
-        ];
-    } else {
-        $response = [
-            'success' => true,
-            'code' => $result['data']['aktif'],
-            'message' => $result['data']['ketAktif'],
-            'data' => [
-                'noKartu' => $data['patient_bpjs'],
-                'nama' => $data['patient_name'] ?? null,
-                'sex' => $data['patient_gender'] ?? null,
-                'tglLahir' => $data['patient_datebirth'] ?? null,
-                'noHP' => $data['patient_phone'] ?? null,
-                'noKTP' => $data['patient_nik'] ?? null,
-                'rm' => $data['nomor_rm'] ?? null,
-                'kdProvider' => $result['data']['kdProviderPst']['kdProvider'],
-                'nmProvider' => $result['data']['kdProviderPst']['nmProvider'],
-            ]
-        ];
+        if ($kodeppk == $result['data']['ppk']['kdPPK']) {
+            if (($result['code'] ?? '') != "200" || $result['data']['aktif'] != 'true') {
+                $msg = $result['message'] ?? "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
+                $response = [
+                    'success' => false,
+                    'code' => $result['data']['aktif'],
+                    'message' => $result['data']['ketAktif'],
+                    'data' => [
+                        'noKartu' => $data['patient_bpjs'],
+                        'nama' => $data['patient_name'] ?? null,
+                        'sex' => $data['patient_gender'] ?? null,
+                        'tglLahir' => $data['patient_datebirth'] ?? null,
+                        'noHP' => $data['patient_phone'] ?? null,
+                        'noKTP' => $data['patient_nik'] ?? null,
+                        'rm' => $data['nomor_rm'] ?? null,
+                        'kdProvider' => $result['data']['ppk']['kdPPK'],
+                        'nmProvider' => $result['data']['ppk']['nmPPK'],
+                    ]
+                ];
+            } else {
+                $response = [
+                    'success' => true,
+                    'code' => $result['data']['aktif'],
+                    'message' => $result['data']['ketAktif'],
+                    'data' => [
+                        'noKartu' => $data['patient_bpjs'],
+                        'nama' => $data['patient_name'] ?? null,
+                        'sex' => $data['patient_gender'] ?? null,
+                        'tglLahir' => $data['patient_datebirth'] ?? null,
+                        'noHP' => $data['patient_phone'] ?? null,
+                        'noKTP' => $data['patient_nik'] ?? null,
+                        'rm' => $data['nomor_rm'] ?? null,
+                        'kdProvider' => $result['data']['kdProviderPst']['kdProvider'],
+                        'nmProvider' => $result['data']['kdProviderPst']['nmProvider'],
+                    ]
+                ];
+            }
+        } else if ($kodeppk == '' || $kodeppk == null) {
+            $response = [
+                'success' => false,
+                'message' => "Pasien belum memiliki fasilitas kesehatan terdaftar. Silakan lakukan pendaftaran terlebih dahulu."
+            ];
+        } else {
+            $response = [
+                'success' => false,
+                'message' => "Pasien bukan berasal dari fasilitas kesehatan ini." . $result['data']['ppk']['nmPPK']
+            ];
+        }
     }
 }
 
