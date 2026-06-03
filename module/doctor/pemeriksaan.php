@@ -344,7 +344,11 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
       },
       dataType: 'json',
       success: function(response) {
-        console.log(response);
+        console.log("SUCCESS", response);
+      },
+      error: function(xhr) {
+        console.log("ERROR", xhr.responseText);
+        $('.btn-call').prop('disabled', false).find('i').attr('class', 'ti ti-volume');
       },
       beforeSend: function() {
         $('.btn-call')
