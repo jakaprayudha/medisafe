@@ -30,7 +30,7 @@ $dayMap = [
 
 $today = new DateTimeImmutable('today');
 $tanggalRange = [];
-for ($i = 0; $i <= 7; $i++) {
+for ($i = 0; $i <= 6; $i++) {
     $tanggalRange[] = $today->modify("+{$i} day")->format('Y-m-d');
 }
 
@@ -78,7 +78,7 @@ foreach ($clinics as $clinic) {
     $deleteSchedule->execute();
     $deleteSchedule->close();
 
-    $policlinics = tampildata("SELECT * FROM ms_poli WHERE id_customer = '{$clinic['id_customer']}'");
+    $policlinics = tampildata("SELECT * FROM master_poli");
     $clinicResult = [];
 
     foreach ($policlinics as $policlinic) {
