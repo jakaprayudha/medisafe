@@ -27,14 +27,12 @@ if ($no && $id_customer) {
         SELECT pv.*, mp.patient_name, mp.patient_datebirth,
                mp.patient_gender, mp.patient_address, mp.nomor_rm,
                r.room_name, b.bed_name,
-               icd.code, icd.icd10,
                u.signature_user
         FROM pasien_visit pv
         LEFT JOIN ms_patient       mp  ON pv.id_patient = mp.id_patient
         LEFT JOIN permintaan_ranap pr  ON pv.visit_ID   = pr.visit_ID_inpatient
         LEFT JOIN ms_room           r  ON pr.id_room    = r.id_room
         LEFT JOIN ms_room_bed       b  ON pr.id_bed     = b.id_bed
-        LEFT JOIN icd_10           icd ON icd.code      = pv.diagnosa
         LEFT JOIN ms_users          u  ON u.fullname    = pv.id_doctor
         WHERE pv.visit_ID = ? AND pv.id_customer = ?
         LIMIT 1
@@ -71,11 +69,8 @@ $nama     = val($data['patient_name'] ?? null);
 $dokter   = val($data['id_doctor'] ?? null);
 $usia     = val(hitungUsiaRanap($data['patient_datebirth'] ?? null, $data['visit_date'] ?? null));
 
-$diagnosaStr = trim(($data['code'] ?? '') . ' - ' . ($data['icd10'] ?? ''), ' -');
-if (!empty($data['diagnosa_sekunder'])) {
-    $diagnosaStr .= ' + ' . $data['diagnosa_sekunder'];
-}
-$diagnosa = val($diagnosaStr);
+
+
 
 $indikasi = val($data['anamnesa'] ?? null);
 $kamar    = val(trim(($data['room_name'] ?? '') . ' - ' . ($data['bed_name'] ?? ''), ' -'));
@@ -322,8 +317,17 @@ $ttdSrc   = !empty($data['signature_user'])
                     <td>: <?= $usia ?></td>
                 </tr>
                 <tr>
+                    <?php
+                    $diagnosa = array_filter([
+                        $data['nmDiag1'] ?? '',
+                        $data['nmDiag2'] ?? '',
+                        $data['nmDiag3'] ?? ''
+                    ]);
+
+                    $hasilDiagnosa = implode(' + ', $diagnosa);
+                    ?>
                     <td>Diagnosa</td>
-                    <td>: <?= $diagnosa ?></td>
+                    <td>: <?= htmlspecialchars($hasilDiagnosa) ?></td>
                 </tr>
                 <tr>
                     <td>Indikasi Dirawat</td>
