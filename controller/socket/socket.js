@@ -44,7 +44,7 @@ function startApp() {
                     socket.emit("join", data.id_customer + "_" + target);
                 }
             })
-            // console.log(data.id_customer + "_" + target);
+            // console.log(data.id_customer  + "_" + pageName + "_" + target + "_" + data.id_user);
             // console.log(pageName);
             // console.log(data);
         });

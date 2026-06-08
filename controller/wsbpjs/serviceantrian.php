@@ -130,7 +130,7 @@ function bpjsGet($endpoint, $config)
 
     $response = curl_exec($ch);
     $err = curl_error($ch);
-
+    //  echo $response;die();
     curl_close($ch);
 
     if ($err) {

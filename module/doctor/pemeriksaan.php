@@ -321,6 +321,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
     let dokterRaw = (id_doctor || '').trim();
     dokterRaw = dokterRaw.replace(/^dr\.?/i, 'dr. ');
     dokterRaw = dokterRaw.replace(/\s+/g, ' ').trim();
+    dokterRaw = dokterRaw.replace(/^dr\.\s+g\.\s+/i, 'dr. ');
     let isPrefixDr = /^dr\./i.test(dokterRaw);
     let isSuffixDr = /,\s*dr\.?$/i.test(dokterRaw);
     let text;

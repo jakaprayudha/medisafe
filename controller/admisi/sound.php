@@ -17,7 +17,6 @@ if (!$result['success']) {
         'success' => false,
         'message' => $result['message']
     ]);
-
     exit;
 }
 
