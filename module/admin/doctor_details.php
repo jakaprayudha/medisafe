@@ -172,7 +172,7 @@ $no = $_GET['no'];
                           <div class="col-6">
                             <div class="mb-3">
                               <label class="form-label">Satu Sehat ID</label>
-                              <input type="text" class="form-control" name="doctor_his" required id="doctor_his">
+                              <input type="text" class="form-control" name="doctor_his" id="doctor_his" readonly>
                             </div>
                           </div>
                           <div class="col-6">
