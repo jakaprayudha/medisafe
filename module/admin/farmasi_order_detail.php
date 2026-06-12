@@ -416,7 +416,7 @@ $data = mysqli_fetch_array($check);
 </div>
 
 </html>
-
+<script src="controller/socket/socket.js"></script>
 <script>
   const visit = "<?= $_GET['no'] ?>";
   const rm = "<?= $_GET['rm'] ?>";
@@ -630,49 +630,74 @@ $data = mysqli_fetch_array($check);
 </script>
 <script>
   $(document).on('click', '.btn-call', function() {
-
     const noAntrian = $(this).data('antrian');
     const nama = $(this).data('nama');
     const poli = $(this).data('poli');
     const visit = $(this).data('visit');
     const dokter = $(this).data('dokter');
     const obat = $(this).data('obat');
+    const text = `pasien ${nama}, dipersilahkan untuk mengambil obat`;
+    const requestId = crypto.randomUUID();
+    sessionStorage.setItem('requestId', requestId);
+    $.ajax({
+      url: 'controller/admisi/soundFarmasi.php',
+      type: 'POST',
+      data: {
+        text: text,
+        requestIdFarmasi: requestId
+      },
+      dataType: 'json',
+      success: function(response) {
+        console.log("SUCCESS", response);
+      },
+      error: function(xhr) {
+        console.log("ERROR", xhr.responseText);
+        $('.btn-call').prop('disabled', false).find('i').attr('class', 'ti ti-volume');
+      },
+      beforeSend: function() {
+        $('.btn-call')
+          .prop('disabled', true)
+          .find('i')
+          .attr('class', 'ti ti-loader-2 icon-spin');
+      },
 
-    callPatient(noAntrian, nama, poli, visit, dokter, obat);
-
-    // 🔥 disable biar gak double klik
-    $(this).prop('disabled', true);
+      complete: function() {
+        setTimeout(() => {
+          $('.btn-call').prop('disabled', false).find('i').attr('class', 'ti ti-volume');
+        }, 5000);
+      }
+    })
   });
 
-  function callPatient(noAntrian, namaPasien, poli, visitID, id_doctor, obat) {
+  // function callPatient(noAntrian, namaPasien, poli, visitID, id_doctor, obat) {
 
-    /* =========================
-       SUARA SAJA (NO API CALL)
-    ========================= */
-    if ('speechSynthesis' in window) {
+  //   /* =========================
+  //      SUARA SAJA (NO API CALL)
+  //   ========================= */
+  //   if ('speechSynthesis' in window) {
 
-      speechSynthesis.cancel();
+  //     speechSynthesis.cancel();
 
-      const text = `
-        pasien ${namaPasien}, dipersilahkan untuk mengambil obat`;
+  //     const text = `
+  //       pasien ${namaPasien}, dipersilahkan untuk mengambil obat`;
 
-      const utterance = new SpeechSynthesisUtterance(text);
+  //     const utterance = new SpeechSynthesisUtterance(text);
 
-      utterance.lang = 'id-ID';
-      utterance.rate = 0.9;
-      utterance.pitch = 1;
-      utterance.volume = 1;
+  //     utterance.lang = 'id-ID';
+  //     utterance.rate = 0.9;
+  //     utterance.pitch = 1;
+  //     utterance.volume = 1;
 
-      // 🔥 ambil voice Indonesia kalau ada
-      const voices = speechSynthesis.getVoices();
-      const indo = voices.find(v => v.lang === 'id-ID');
-      if (indo) utterance.voice = indo;
+  //     // 🔥 ambil voice Indonesia kalau ada
+  //     const voices = speechSynthesis.getVoices();
+  //     const indo = voices.find(v => v.lang === 'id-ID');
+  //     if (indo) utterance.voice = indo;
 
-      speechSynthesis.speak(utterance);
-    }
+  //     speechSynthesis.speak(utterance);
+  //   }
 
-    // ❌ TIDAK ADA FETCH / UPDATE STATUS
-  }
+  //   // ❌ TIDAK ADA FETCH / UPDATE STATUS
+  // }
 </script>
 <script>
   let selectedValue = '0';
