@@ -1,6 +1,9 @@
 window.APP = window.APP || {};
 let type = 'BPJS';
 let idPasien = '';
+let nomorPasienAktif = '';
+let dataPasienUmumAktif = null;
+let sedangSinkronProvider = false;
 $(function () {
     $('#pasienSelect').select2({
         placeholder: 'Ketik nama,nik,bpjs pasien (min. 2 karakter)...',
@@ -76,78 +79,146 @@ $(function () {
         let data = e.params.data;
         const nomor = data.nik == '-' ? data.bpjs : data.nik;
         idPasien = data.id;
-        loadPasien(nomor, 'BPJS');
+        nomorPasienAktif = nomor;
+        loadPasien(nomor);
     });
-    function loadPasien(nomor, tipe) {
-        const url = tipe === 'BPJS'
-            ? "controller/admisi/services/getPasien.php"
-            : "controller/admisi/services/getPasienUmum.php";
-        type = tipe === "BPJS" ? "BPJS" : "UMUM";
+
+    function isProviderBpjsKesehatan() {
+        const namaProvider = ($('#kodeprov').find(':selected').text() || '').trim().toUpperCase();
+        return namaProvider === 'BPJS KESEHATAN';
+    }
+
+    function isiDataPasien(data, tipePasien, nomorAsli) {
+        const dataProvider = data.kdProviderPst || {};
+        APP.cetak('#typePatient', tipePasien);
+        APP.cetak('#id_patient', idPasien);
+        APP.cetakhtml('#noK', data.noKartu || '-');
+        APP.cetakhtml('#nama', data.nama || '-');
+        APP.cetakhtml('#tglLahir', data.tglLahir || '-');
+        APP.cetakhtml('#kelamin', data.sex === "P" ? "Perempuan" : "Laki - Laki");
+        APP.cetakhtml('#ppkumum', dataProvider.nmProvider || '-');
+        APP.cetak('#kdProviderPeserta', dataProvider.kdProvider || '');
+        APP.cetak('#nohp', data.noHP || '080000000000');
+        APP.cetakhtml('#noTelp', data.noHP || '-');
+        APP.cetak('#noKartu', data.noKartu || '-');
+        APP.cetak('#namapatient', data.nama || '-');
+        APP.cetak('#Kelamin', data.sex === "P" ? "Perempuan" : "Laki - Laki");
+        APP.cetak('#tgllahir', data.tglLahir || '-');
+        APP.cetakhtml('#no_rekammedis', data.rm || '-');
+        APP.cetak('#norm', data.rm || '-');
+        APP.cetak("#typePasien", tipePasien);
+        let nik = data.noKTP || nomorAsli;
+        APP.cetak('#noNIK', nik);
+        APP.cetakhtml('#nonik', nik);
+    }
+
+    function sinkronProviderDariDataPasien() {
+        if (!nomorPasienAktif) return;
+        if (!dataPasienUmumAktif) return;
+
+        if (!isProviderBpjsKesehatan()) {
+            type = 'UMUM';
+            $('.viewBpjs').addClass('d-none');
+            isiDataPasien(dataPasienUmumAktif, 'UMUM', nomorPasienAktif);
+            return;
+        }
+
+        if (sedangSinkronProvider) return;
+        sedangSinkronProvider = true;
+        type = 'BPJS';
+
+        Swal.fire({
+            title: 'Memuat data BPJS...',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        let pilih = nomorPasienAktif.length === 16 ? 'nik' : 'noka';
+        $.ajax({
+            url: "controller/admisi/services/getPasien.php",
+            type: 'GET',
+            data: {
+                tipe: pilih,
+                nokartu: nomorPasienAktif
+            },
+            dataType: 'json',
+            success: function (response) {
+                let hasil = null;
+                if (response.success && response.data) {
+                    hasil = response;
+                } else if (response.result && response.result.success && response.result.data) {
+                    hasil = response.result;
+                }
+
+                if (hasil) {
+                    $('.viewBpjs').removeClass('d-none');
+                    isiDataPasien(hasil.data, 'BPJS', nomorPasienAktif);
+                    return;
+                }
+
+                $('.viewBpjs').addClass('d-none');
+                isiDataPasien(dataPasienUmumAktif, 'UMUM', nomorPasienAktif);
+                Swal.fire({
+                    title: "Terjadi kesalahan pada layanan BPJS",
+                    text: response.message || "Data BPJS tidak ditemukan",
+                    icon: "warning"
+                });
+            },
+            error: function () {
+                $('.viewBpjs').addClass('d-none');
+                isiDataPasien(dataPasienUmumAktif, 'UMUM', nomorPasienAktif);
+                Swal.fire({
+                    title: "Terjadi kesalahan pada layanan BPJS",
+                    text: "Terjadi Kesalahan Server",
+                    icon: "warning"
+                });
+            },
+            complete: function () {
+                sedangSinkronProvider = false;
+                if (Swal.isVisible() && Swal.isLoading()) {
+                    Swal.close();
+                }
+            }
+        });
+    }
+
+    function loadPasien(nomor) {
+        type = 'UMUM';
+        dataPasienUmumAktif = null;
         $('#tampilan').html(`
             <div class="text-center py-5">
                 <div class="spinner-border text-primary"></div>
                 <div class="mt-2 text-muted">Memuat data pasien...</div>
             </div>
         `);
-        let pilih = nomor.length === 16 ? 'nik' : 'noka';
         $.ajax({
-            url: url,
+            url: "controller/admisi/services/getPasienUmum.php",
             type: 'GET',
             data: {
-                tipe: pilih,
+                tipe: 'nik',
                 nokartu: nomor
             },
             dataType: 'json',
             success: function (response) {
-                if (response.success) {
+                if (response.success && response.data) {
+                    dataPasienUmumAktif = response.data;
                     $('#tampilan').load("controller/admisi/pages/viewpendaftaran.php", function () {
                         APP.initLoadfunction();
-                        if (tipe === "BPJS") {
-                            $('.viewBpjs').removeClass('d-none');
-                        }
-                        APP.cetak('#typePatient', tipe);
-                        APP.cetak('#id_patient', idPasien);
-                        APP.cetakhtml('#noK', response.data.noKartu || '-');
-                        APP.cetakhtml('#nama', response.data.nama || '-');
-                        APP.cetakhtml('#tglLahir', response.data.tglLahir || '-');
-                        APP.cetakhtml('#kelamin', response.data.sex === "P" ? "Perempuan" : "Laki - Laki");
-                        APP.cetakhtml('#ppkumum', response.data.kdProviderPst.nmProvider || '-');
-                        APP.cetak('#kdProviderPeserta', response.data.kdProviderPst.kdProvider || '');
-                        APP.cetak('#nohp', response.data.noHP || '080000000000');
-                        APP.cetakhtml('#noTelp', response.data.noHP || '-');
-                        APP.cetak('#noKartu', response.data.noKartu || '-');
-                        APP.cetak('#namapatient', response.data.nama || '-');
-                        APP.cetak('#Kelamin', response.data.sex === "P" ? "Perempuan" : "Laki - Laki");
-                        APP.cetak('#tgllahir', response.data.tglLahir || '-');
-                        APP.cetakhtml('#no_rekammedis', response.data.rm || '-');
-                        APP.cetak('#norm', response.data.rm || '-');
-                        APP.cetak("#typePasien", tipe);
-                        let nik = response.data.noKTP || nomor;
-                        APP.cetak('#noNIK', nik);
-                        APP.cetakhtml('#nonik', nik);
+                        $('.viewBpjs').addClass('d-none');
+                        isiDataPasien(response.data, 'UMUM', nomor);
+                        sinkronProviderDariDataPasien();
                     });
                 } else {
                     resetTampilan();
-                    if (tipe === 'BPJS') {
-                        Swal.fire({
-                            title: "Terjadi kesalahan pada layanan BPJS",
-                            text: response.message,
-                            icon: "warning",
-                            showDenyButton: true,
-                            confirmButtonText: "Daftar Umum",
-                            denyButtonText: "Tutup"
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                loadPasien(nomor, 'UMUM');
-                            }
-                        });
-                    } else {
-                        Swal.fire({
-                            title: "Tidak Ditemukan",
-                            text: "Data pasien umum juga tidak ditemukan",
-                            icon: "error"
-                        });
-                    }
+                    Swal.fire({
+                        title: "Tidak Ditemukan",
+                        text: response.message || "Data pasien umum tidak ditemukan",
+                        icon: "error"
+                    });
                 }
             },
             error: function () {
@@ -307,7 +378,7 @@ $(function () {
             maxDate: "today"
         });
         $.ajax({
-            url: 'controller/admisi/services/get_provider.php?type=' + type,
+            url: 'controller/admisi/services/get_provider.php?type=BPJS',
             dataType: 'json',
             success: function (data) {
                 let options = '';
@@ -472,6 +543,7 @@ $(function () {
         });
         $('#kodeprov').on('change', function () {
             setTypePasien();
+            sinkronProviderDariDataPasien();
         });
         $('#tanggalKunjung').on('change', function () {
             loadDokter();
