@@ -21,7 +21,7 @@ if (!in_array($lengthkartu, [16])) {
         $data = $stmt->get_result()->fetch_assoc();
 
         // get last visit
-        $stmt = $koneksi->prepare("SELECT setting_clinic.clinic_name FROM pasien_visit JOIN setting_clinic ON setting_clinic.id_customer = pasien_visit.id_customer WHERE patient_nik = ? ORDER BY created_at DESC LIMIT 1");
+        $stmt = $koneksi->prepare("SELECT setting_clinic.clinic_name FROM pasien_visit JOIN setting_clinic ON setting_clinic.id_customer = pasien_visit.id_customer WHERE patient_nik = ? ORDER BY pasien_visit.created_at DESC LIMIT 1");
         $stmt->bind_param("s", $data['patient_nik']);
         if ($stmt->execute()) {
             $clinic = $stmt->get_result()->fetch_assoc();
