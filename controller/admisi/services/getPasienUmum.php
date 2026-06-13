@@ -15,7 +15,7 @@ if (!in_array($lengthkartu, [16])) {
         'message' => 'Nomor harus berupa angka'
     ];
 } else {
-    $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE id_customer = ? AND patient_nik = ?");
+    $stmt = $koneksi->prepare("SELECT ms_patient.*, setting_clinic.clinic_name FROM ms_patient JOIN setting_clinic ON setting_clinic.id_customer = ms_patient.id_customer WHERE id_customer = ? AND patient_nik = ?");
     $stmt->bind_param("ss", $idcustomer, $nomor_kartu);
     if ($stmt->execute()) {
         $data = $stmt->get_result()->fetch_assoc();
@@ -29,6 +29,9 @@ if (!in_array($lengthkartu, [16])) {
                 'tglLahir' => $data['patient_datebirth'] ?? null,
                 'noHP' => $data['patient_phone'] ?? null,
                 'noKTP' => $data['patient_nik'] ?? null,
+                'kdProviderPst' => [
+                    'nmProvider' => $data['clinic_name'] ?? null,
+                ],
             ]
         ];
     } else {
