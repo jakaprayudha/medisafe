@@ -15,10 +15,17 @@ if (!in_array($lengthkartu, [16])) {
         'message' => 'Nomor harus berupa angka'
     ];
 } else {
-    $stmt = $koneksi->prepare("SELECT ms_patient.*, setting_clinic.clinic_name FROM ms_patient JOIN setting_clinic ON setting_clinic.id_customer = ms_patient.id_customer WHERE ms_patient.id_customer = ? AND patient_nik = ?");
+    $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE id_customer = ? AND patient_nik = ?");
     $stmt->bind_param("ss", $idcustomer, $nomor_kartu);
     if ($stmt->execute()) {
         $data = $stmt->get_result()->fetch_assoc();
+
+        // get last visit
+        $stmt = $koneksi->prepare("SELECT setting_clinic.clinic_name FROM pasien_visit JOIN setting_clinic ON setting_clinic.id_customer = pasien_visit.id_customer WHERE patient_nik = ? ORDER BY created_at DESC LIMIT 1");
+        $stmt->bind_param("s", $data['patient_nik']);
+        if ($stmt->execute()) {
+            $clinic = $stmt->get_result()->fetch_assoc();
+        }
         $response = [
             'success' => true,
             'code' => '200',
@@ -30,7 +37,7 @@ if (!in_array($lengthkartu, [16])) {
                 'noHP' => $data['patient_phone'] ?? null,
                 'noKTP' => $data['patient_nik'] ?? null,
                 'kdProviderPst' => [
-                    'nmProvider' => $data['clinic_name'] ?? null,
+                    'nmProvider' => $clinic['clinic_name'] ?? null,
                 ],
             ]
         ];
