@@ -274,7 +274,7 @@ $(function () {
                     $('#btnTambahPasien, #formBPJS').removeClass('d-none');
                     APP.cetak('#regNoBPJS', d.noKartu);
                     APP.cetak('#regNama', d.nama);
-                    APP.cetak('#regJnsKelamin', d.sex == "P" ? "Perempuan" : "Laki - Laki");
+                    APP.cetak('#regJnsKelamin', d.sex == "P" ? "Perempuan" : "Laki-Laki");
                     APP.cetak('#regTglLahir', d.tglLahir);
                     APP.cetak('#noKartuDaftar', noKartu);
                     APP.cetak("#typePasien", "BPJS");
