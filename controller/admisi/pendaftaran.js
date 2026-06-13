@@ -118,7 +118,6 @@ $(function () {
 
         if (!isProviderBpjsKesehatan()) {
             type = 'UMUM';
-            $('.viewBpjs').addClass('d-none');
             isiDataPasien(dataPasienUmumAktif, 'UMUM', nomorPasienAktif);
             return;
         }
@@ -155,12 +154,10 @@ $(function () {
                 }
 
                 if (hasil) {
-                    $('.viewBpjs').removeClass('d-none');
                     isiDataPasien(hasil.data, 'BPJS', nomorPasienAktif);
                     return;
                 }
 
-                $('.viewBpjs').addClass('d-none');
                 isiDataPasien(dataPasienUmumAktif, 'UMUM', nomorPasienAktif);
                 Swal.fire({
                     title: "Terjadi kesalahan pada layanan BPJS",
@@ -169,7 +166,6 @@ $(function () {
                 });
             },
             error: function () {
-                $('.viewBpjs').addClass('d-none');
                 isiDataPasien(dataPasienUmumAktif, 'UMUM', nomorPasienAktif);
                 Swal.fire({
                     title: "Terjadi kesalahan pada layanan BPJS",
@@ -208,7 +204,6 @@ $(function () {
                     dataPasienUmumAktif = response.data;
                     $('#tampilan').load("controller/admisi/pages/viewpendaftaran.php", function () {
                         APP.initLoadfunction();
-                        $('.viewBpjs').addClass('d-none');
                         isiDataPasien(response.data, 'UMUM', nomor);
                         sinkronProviderDariDataPasien();
                     });

@@ -22,8 +22,8 @@
                         <div class="col-5 text-muted">Jenis Kelamin</div>
                         <div class="col-7" id="kelamin">-</div>
 
-                        <div class="col-5 text-muted viewBpjs d-none">PPK Umum</div>
-                        <div class="col-7 viewBpjs d-none" id="ppkumum">-</div>
+                        <div class="col-5 text-muted">PPK Umum</div>
+                        <div class="col-7" id="ppkumum">-</div>
 
                         <div class="col-5 text-muted">No. HP</div>
                         <div class="col-7" id="noTelp">-</div>
