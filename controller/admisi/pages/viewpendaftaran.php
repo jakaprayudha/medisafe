@@ -29,7 +29,7 @@
                         <div class="col-7" id="noTelp">-</div>
 
                         <div class="col-5 text-muted">No. Rekam Medis</div>
-                        <div class="col-7" id="noRm">-</div>
+                        <div class="col-7" id="norm">-</div>
                     </div>
                 </div>
             </div>
