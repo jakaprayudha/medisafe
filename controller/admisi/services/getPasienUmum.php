@@ -36,6 +36,7 @@ if (!in_array($lengthkartu, [16])) {
                 'tglLahir' => $data['patient_datebirth'] ?? null,
                 'noHP' => $data['patient_phone'] ?? null,
                 'noKTP' => $data['patient_nik'] ?? null,
+                'rm' => $data['nomor_rm'] ?? null,
                 'kdProviderPst' => [
                     'nmProvider' => $clinic['clinic_name'] ?? null,
                 ],
