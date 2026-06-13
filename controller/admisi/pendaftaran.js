@@ -105,7 +105,7 @@ $(function () {
         APP.cetak('#Kelamin', data.sex === "P" ? "Perempuan" : "Laki - Laki");
         APP.cetak('#tgllahir', data.tglLahir || '-');
         APP.cetakhtml('#no_rekammedis', data.rm || '-');
-        APP.cetak('#norm', data.rm || '-');
+        APP.cetak('#noRm', data.rm || '-');
         APP.cetak("#typePasien", tipePasien);
         let nik = data.noKTP || nomorAsli;
         APP.cetak('#noNIK', nik);
