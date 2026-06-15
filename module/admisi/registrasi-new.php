@@ -123,13 +123,13 @@ require '../../controller/view.php';
           </div>
           <div class="col-6">
             <div class="mb-3">
-              <label class="form-label required" id="patient_name">Nama Pasien</label>
+              <label class="form-label required">Nama Pasien</label>
               <input type="text" id="patient_name" name="patient_name" class="form-control" required>
             </div>
           </div>
           <div class="col-6">
             <div class="mb-3">
-              <label class="form-label" id="patient_name">NIK</label>
+              <label class="form-label">NIK</label>
               <div class="input-group">
                 <input
                   type="text"
@@ -146,7 +146,7 @@ require '../../controller/view.php';
           </div>
           <div class="col-6">
             <div class="mb-3">
-              <label class="form-label" id="patient_name">No.BPJS</label>
+              <label class="form-label">No.BPJS</label>
               <div class="input-group">
                 <input
                   type="text"
@@ -545,6 +545,7 @@ require '../../controller/view.php';
           }
           $('#patient_name').val(response.nama);
           $('#patient_datebirth').val(response.tglLahir);
+          $('#patient_phone').val(response.noHP);
           if (response.sex == 'L') {
             $('#patient_gender').val('Laki-laki').trigger('change');
           }else{
