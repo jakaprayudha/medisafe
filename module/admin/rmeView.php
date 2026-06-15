@@ -172,17 +172,44 @@ $visitData = mysqli_fetch_array($visitCheck);
       <p><b>Pemeriksaan Fisik:</b><br><?= nl2br($visitData['pemeriksaan_fisik']) ?></p>
    </div>
 
+   <?php
+   $stmt = $koneksi->prepare("
+    SELECT *
+    FROM visit_anamnesa
+    INNER JOIN ms_anamnesa_detail
+        ON ms_anamnesa_detail.id_ass = visit_anamnesa.id_anamnesa_detail
+    WHERE nomor_visit=?
+");
+   $stmt->bind_param("s", $visit);
+   $stmt->execute();
+   $result = $stmt->get_result();
+
+   $anamnesa = [];
+   while ($row = $result->fetch_assoc()) {
+      $anamnesa[] = $row;
+   }
+   $stmt->close();
+   ?>
+
    <div class="section">
       <h2>Anamnesa</h2>
-      <?php
-      $getanamesa = mysqli_query($koneksi, "SELECT * FROM visit_anamnesa INNER JOIN ms_anamnesa_detail ON ms_anamnesa_detail.id_ass = visit_anamnesa.id_anamnesa_detail WHERE nomor_visit='$visit'");
-      $anamnesa = mysqli_fetch_all($getanamesa, MYSQLI_ASSOC);
-      ?>
-      <ul>
-         <?php foreach ($anamnesa as $a): ?>
-            <li><strong><?= $a['ass_name'] ?> : </strong> <br> Catatan <?= $a['detail'] ?></li>
-         <?php endforeach; ?>
-      </ul>
+
+      <?php if (count($anamnesa) > 0): ?>
+
+         <ul>
+            <?php foreach ($anamnesa as $a): ?>
+               <li>
+                  <strong><?= $a['ass_name'] ?></strong><br>
+                  Catatan : <?= $a['detail'] ?>
+               </li>
+            <?php endforeach; ?>
+         </ul>
+
+      <?php else: ?>
+
+         <p><?= nl2br(htmlspecialchars($visitData['anamnesa'])) ?></p>
+
+      <?php endif; ?>
    </div>
 
    <div class="section">
