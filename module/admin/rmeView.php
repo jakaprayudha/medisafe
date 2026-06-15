@@ -175,7 +175,7 @@ $visitData = mysqli_fetch_array($visitCheck);
    <div class="section">
       <h2>Anamnesa</h2>
       <?php
-      $getanamesa = mysqli_query($koneksi, "SELECT visit_anamnesa.*, ms_anamnesa_detail.ass_name FROM visit_anamnesa  INNER JOIN ms_anamnesa_detail ON ms_anamnesa_detail.id_ass = visit_anamnesa.id_anamnesa_detail WHERE visit_anamnesa.nomor_visit='$visit'");
+      $getanamesa = mysqli_query($koneksi, "SELECT * FROM visit_anamnesa INNER JOIN ms_anamnesa_detail ON ms_anamnesa_detail.id_ass = visit_anamnesa.id_anamnesa_detail WHERE nomor_visit='$visit'");
       $anamnesa = mysqli_fetch_all($getanamesa, MYSQLI_ASSOC);
       ?>
       <ul>
