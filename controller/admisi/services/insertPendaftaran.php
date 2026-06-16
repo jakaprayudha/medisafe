@@ -57,6 +57,14 @@ if (empty($kdDokter)) {
     ]);
     exit;
 }
+
+if (empty($kdPoli) || $nmPoli == "Mencari data...") {
+    echo json_encode([
+        "status" => false,
+        "message" => "Poli harus diisi"
+    ]);
+    exit;
+}
 $visit_ID = generateVisitID($koneksi, $idcustomer);
 if ($type == "BPJS") {
     // echo json_encode($payload, JSON_PRETTY_PRINT);die();
