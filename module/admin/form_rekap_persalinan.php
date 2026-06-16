@@ -1,0 +1,198 @@
+<?php
+$title = 'Rekapitulasi Pelayanan Persalinan';
+$no = $_GET['no'];
+$rm = $_GET['rm'];
+?>
+<!doctype html>
+<html lang="en">
+
+<head>
+  <base href="../../">
+  <?php
+  require '../../assets/template/head.php';
+  ?>
+
+</head>
+
+<body>
+  <!--  Body Wrapper -->
+  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
+    data-sidebar-position="fixed" data-header-position="fixed">
+    <!-- Sidebar Start -->
+    <?php
+    require 'sidebar.php';
+    ?>
+    <!--  Sidebar End -->
+    <!--  Main wrapper -->
+    <div class="body-wrapper">
+      <!--  Header Start -->
+      <?php
+      require 'navbar.php';
+      ?>
+      <!--  Header End -->
+      <div class="body-wrapper-inner">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-lg-12 d-flex align-items-stretch">
+              <div class="card w-100">
+                <div class="card-body p-4">
+                  <h4 class="mb-3">Rekapitulasi Pelayanan Persalinan</h4>
+
+                  <!-- IDENTITAS PASIEN -->
+                  <div class="row">
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Nama Pasien</label>
+                      <input type="text" id="patient_name" class="form-control bg-light" readonly>
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Gender</label>
+                      <input type="text" id="patient_gender" class="form-control bg-light" readonly>
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Usia</label>
+                      <input type="text" id="usia" class="form-control bg-light" readonly>
+                    </div>
+
+                    <div class="col-3 mb-3">
+                      <label class="form-label">Dokter</label>
+                      <input type="text" id="doctor_name" class="form-control bg-light" readonly>
+                    </div>
+                  </div>
+
+                  <hr>
+
+                  <!-- FORM PERSALINAN -->
+                  <div class="row">
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Gravid</label>
+                      <input type="text" id="gravid" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Abortus</label>
+                      <input type="text" id="abortus" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Jenis Persalinan</label>
+                      <input type="text" id="jenis_persalinan" class="form-control">
+                    </div>
+
+                    <div class="col-6 mb-3">
+                      <label class="form-label">Partus</label>
+                      <input type="text" id="partus" class="form-control">
+                    </div>
+                  </div>
+
+                  <div class="text-end mt-3">
+                    <a href="module/admin/print/formulir_persalinan?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                      <button class="btn btn-outline-primary">
+                        <iconify-icon icon="mdi:printer-outline"></iconify-icon> Cetak
+                      </button>
+                    </a>
+                    <button id="openModal" class="btn btn-primary">
+                      <iconify-icon icon="mdi:content-save-outline"></iconify-icon> Simpan
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <?php
+  require 'library.php';
+  ?>
+</body>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+
+    const url = new URLSearchParams(window.location.search);
+    const no = url.get("no");
+    const rm = url.get("rm");
+
+    if (!no || !rm) return;
+
+    // ===== GET DATA PASIEN + INAP =====
+    fetch(`controller/ranap/getFormRekapPersalinan.php?no=${no}&rm=${rm}`)
+      .then(r => r.json())
+      .then(res => {
+
+        if (!res || res.status !== "success") return;
+
+        const p = res.pasien ?? {};
+        const i = res.persalinan ?? {};
+
+        // Isi identitas pasien (aman walaupun null)
+        if (document.getElementById("patient_name"))
+          document.getElementById("patient_name").value = p.nama_pasien ?? "";
+
+        if (document.getElementById("patient_gender"))
+          document.getElementById("patient_gender").value = p.jk ?? "";
+
+        if (document.getElementById("doctor_name"))
+          document.getElementById("doctor_name").value = p.doctor_name ?? "";
+
+        if (document.getElementById("usia"))
+          document.getElementById("usia").value = p.usia ?? "";
+
+        // ===== EDIT MODE (Jika i ada) =====
+        for (let key in i) {
+          if (document.getElementById(key)) {
+            document.getElementById(key).value = i[key] ?? "";
+          }
+        }
+
+      })
+      .catch(err => console.error("ERR GET:", err));
+
+  });
+
+  // =============== SAVE DATA RANAP ===============
+  document.getElementById("openModal").addEventListener("click", () => {
+
+    const fields = [
+      "gravid", "abortus", "jenis_persalinan", "partus"
+    ];
+
+    let data = {
+      visit_ID: "<?= $_GET['no'] ?>",
+      nomor_rm: "<?= $_GET['rm'] ?>",
+    };
+
+    // Auto ambil semua fields (aman walau ada yang tidak ditemukan)
+    fields.forEach(f => {
+      let el = document.getElementById(f);
+      data[f] = el ? (el.value ?? "") : "";
+    });
+
+    fetch("controller/ranap/saveFormRekapPersalinan.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      })
+      .then(r => r.json())
+      .then(res => {
+        Swal.fire({
+          icon: res.status,
+          title: res.status === "success" ? "Berhasil" : "Gagal",
+          text: res.message
+        });
+      })
+      .catch(err => {
+        alert("Terjadi error saat menyimpan!");
+        console.error(err);
+      });
+
+  });
+</script>
+
+</html>

@@ -1,33 +1,22 @@
 <?php
-// Sertakan file koneksi database
 include '../../database/connect.php';
-
-// Mengambil method request
 $method = $_SERVER['REQUEST_METHOD'];
-
-// Handle request berdasarkan method (POST, GET, PUT, DELETE)
 switch ($method) {
-   case 'POST':
-      // Create User
-      createRegister();
-      break;
    case 'GET':
       if (isset($_GET['id'])) {
-         // Jika iduser ada di parameter, ambil data user berdasarkan iduser
-         getRegisterID($_GET['id']);
+         getID($_GET['id']);
       } else {
-         // Jika tidak ada iduser, ambil semua data user
-         getRegister();
+         getData();
       }
       break;
    case 'PUT':
       // Update User
-      updateRegister();
+      updateData();
       break;
 
    case 'DELETE':
       // Delete User
-      deleteRegister();
+      deleteData();
       break;
 
    default:
@@ -38,129 +27,76 @@ switch ($method) {
       break;
 }
 
-// Function untuk Create User
-function createRegister()
+// Function untuk Create
+
+
+
+function getData()
 {
    global $koneksi;
 
-   // Ambil data dari request body
-   $id = isset($_POST['data']) ? $_POST['data'] : '';
-   $checkpasien = mysqli_query($koneksi, "SELECT * FROM ms_pasien WHERE id='$id'");
-   $datapasien = mysqli_fetch_array($checkpasien);
-   $nomor_rm = $datapasien['nomor_rm'];
-   $tanggal = date('Y-m-d');
-   $tanggal_format = date('Ymd');
-   $waktu = date('H:i:s');
-   $dokter = isset($_POST['dokter']) ? $_POST['dokter'] : '';
-   $sumber = "Poliklinik";
-   $layanan = isset($_POST['layanan']) ? $_POST['layanan'] : '';
-   $catatan = isset($_POST['catatan']) ? $_POST['catatan'] : '';
+   // Ambil parameter tanggal (opsional)
+   $fromDate = isset($_GET['fromDate']) ? $_GET['fromDate'] : null;
+   $toDate   = isset($_GET['toDate']) ? $_GET['toDate'] : null;
 
-   if (empty($nomor_rm) || empty($dokter)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'RM dan Dokter harus diisi.'
-      ]);
-      exit;
+   // Base query dengan status_dilayani
+   $query = "SELECT 
+    pasien_visit.*, 
+    ms_patient.*, 
+    ms_doctor.*, 
+    ms_poli.*,
+    CASE 
+        WHEN visit_pemeriksaan.nomor_visit IS NOT NULL THEN 1
+        ELSE 0
+    END AS status_dilayani
+FROM pasien_visit
+INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient
+INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor
+INNER JOIN ms_poli ON ms_poli.id_poli = pasien_visit.id_poli
+LEFT JOIN visit_pemeriksaan ON visit_pemeriksaan.nomor_visit = pasien_visit.visit_ID
+WHERE 1=1
+";
+
+   // Jika ada filter tanggal (contoh pakai created_at, ganti sesuai kolom di DB)
+   if ($fromDate && $toDate) {
+      $query .= " AND DATE(visit_date) BETWEEN ? AND ?";
    }
 
-   // Hitung jumlah visit hari ini untuk mendapatkan urutan
-   $stmt = $koneksi->prepare("SELECT COUNT(*) as total FROM pasien_visit WHERE tanggal = ?");
-   $stmt->bind_param("s", $tanggal);
-   $stmt->execute();
-   $result = $stmt->get_result();
-   $row = $result->fetch_assoc();
-   $stmt->close();
-
-   $urutan = $row['total'] + 1;
-   $urutan_format = str_pad($urutan, 6, '0', STR_PAD_LEFT); // 6 digit
-   $nomor_visit = "RJ-" . $tanggal_format . $urutan_format;
-
-   // Query insert
-   $query = "INSERT INTO pasien_visit (nomor_rm, nomor_visit, tanggal, waktu, dokter, sumber, layanan, catatan_khusus) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+   $query .= " ORDER BY visit_date ASC";
 
    if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("ssssssss", $nomor_rm, $nomor_visit, $tanggal, $waktu, $dokter, $sumber, $layanan, $catatan);
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil ditambahkan.'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menambahkan.'
-         ]);
+      if ($fromDate && $toDate) {
+         $stmt->bind_param("ss", $fromDate, $toDate);
       }
+
+      $stmt->execute();
+      $result = $stmt->get_result();
+
+      $data = $result->fetch_all(MYSQLI_ASSOC);
+
       $stmt->close();
+
+      header('Content-Type: application/json');
+      echo json_encode([
+         'status' => 'success',
+         'data' => $data,
+      ]);
    } else {
+      http_response_code(500);
       echo json_encode([
          'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
+         'message' => 'Gagal menyiapkan query: ' . $koneksi->error
       ]);
    }
-}
-
-// Function untuk Read User
-function getRegister()
-{
-   global $koneksi;
-
-   // Ambil parameter pagination dan pencarian dari request
-   $start = isset($_GET['start']) ? (int)$_GET['start'] : 0;
-   $length = isset($_GET['length']) ? (int)$_GET['length'] : 10;
-   $search = isset($_GET['search']) && isset($_GET['search']['value']) ? $_GET['search']['value'] : '';
-
-   // Query dasar untuk mengambil data user
-   $query = "SELECT * FROM pasien_visit INNER JOIN ms_pasien ON pasien_visit.nomor_rm = ms_pasien.nomor_rm";
-
-   // Jika ada pencarian, tambahkan kondisi pencarian
-   if ($search) {
-      $query .= " WHERE nomor_rm LIKE '%$search%' or nama_pasien LIKE '%$search%'";
-   }
-
-   // Ambil data sesuai dengan pagination
-   $query .= " LIMIT $start, $length";
-
-   $result = mysqli_query($koneksi, $query);
-
-   if (!$result) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal mengambil data: ' . mysqli_error($koneksi)
-      ]);
-      exit;
-   }
-
-   $data = [];
-   while ($row = mysqli_fetch_assoc($result)) {
-      $data[] = $row;
-   }
-
-   // Query untuk menghitung total data
-   $totalQuery = "SELECT COUNT(*) AS total FROM pasien_visit INNER JOIN ms_pasien ON pasien_visit.nomor_rm = ms_pasien.nomor_rm";
-   $totalResult = mysqli_query($koneksi, $totalQuery);
-   $totalData = mysqli_fetch_assoc($totalResult);
-   $totalRecords = $totalData['total'];
-
-   // Kirimkan data dalam format JSON untuk DataTables
-   header('Content-Type: application/json');
-   echo json_encode([
-      'status' => 'success',
-      'data' => $data,
-      'recordsTotal' => $totalRecords,
-      'recordsFiltered' => $totalRecords // Jika Anda ingin total yang difilter, buat query terpisah untuk menghitung total hasil pencarian
-   ]);
 }
 
 // Function untuk Read User berdasarkan ID
-function getRegisterID($iduser)
+function  getID($iduser)
 {
    global $koneksi;
 
    // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM pasien_visit WHERE id = ?";
+   $query = "SELECT * FROM pasien_visit WHERE id_visit = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $iduser); // Bind parameter iduser
@@ -168,10 +104,10 @@ function getRegisterID($iduser)
       $result = $stmt->get_result();
 
       if ($result->num_rows > 0) {
-         $user = $result->fetch_assoc();
+         $data = $result->fetch_assoc();
          echo json_encode([
             'status' => 'success',
-            'user' => $user
+            'data' => $data
          ]);
       } else {
          echo json_encode([
@@ -189,59 +125,62 @@ function getRegisterID($iduser)
    }
 }
 
-// Function untuk Update User
-function updateRegister()
+
+
+function updateData()
 {
    global $koneksi;
-
-   // Ambil data dari request body
    parse_str(file_get_contents("php://input"), $_PUT);
-   $id = isset($_PUT['iduser']) ? $_PUT['iduser'] : '';
-   $satuan = isset($_PUT['satuan']) ? $_PUT['satuan'] : '';
-   $product = isset($_PUT['produk']) ? $_PUT['produk'] : '';
-   $code = isset($_PUT['kode']) ? $_PUT['kode'] : '';
-   $product_price = isset($_PUT['harga_jual']) ? $_PUT['harga_jual'] : '';
-   $product_base = isset($_PUT['harga_beli']) ? $_PUT['harga_beli'] : '';
-   $category = isset($_PUT['kategori']) ? $_PUT['kategori'] : '';
-   $description = isset($_PUT['deskripsi']) ? $_PUT['deskripsi'] : '';
 
-   // Debugging input data
-   if (empty($product) || empty($id)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'ID dan Product Item harus diisi.'
-      ]);
-      exit;
+   if (empty($_PUT['id_visit'])) {
+      echo json_encode(['status' => 'error', 'message' => 'ID tidak ditemukan.']);
+      return;
    }
 
-   // Query untuk update data user
-   $query = "UPDATE pasien_visit SET product_name = ?, product_code = ?, product_price = ?, product_base = ?, id_category = ?, product_description = ?, id_unit = ? WHERE id_product = ?";
+   $id = $_PUT['id_visit'];
+   $allowedFields = [
+      'id_doctor',
+      'id_poli',
+      'visit_notes'
+   ];
+   $fields = [];
+   $values = [];
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("ssssssss", $product, $code, $product_price, $product_base, $category, $description, $satuan, $id);
+   foreach ($allowedFields as $f) {
+      if (isset($_PUT[$f])) {
+         $fields[] = "$f=?";
+         $values[] = $_PUT[$f];
+      }
+   }
+
+   if (empty($fields)) {
+      echo json_encode(['status' => 'error', 'message' => 'Tidak ada data diupdate.']);
+      return;
+   }
+
+   $values[] = $id;
+   $types = str_repeat('s', count($values) - 1) . "i";
+
+   $query = "UPDATE pasien_visit SET " . implode(',', $fields) . " WHERE id_visit=?";
+   $stmt = $koneksi->prepare($query);
+
+   if ($stmt) {
+      $stmt->bind_param($types, ...$values);
       if ($stmt->execute()) {
-         header('Content-Type: application/json');
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil diperbarui.'
-         ]);
+         echo json_encode(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
       } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal memperbarui data.'
-         ]);
+         echo json_encode(['status' => 'error', 'message' => 'Update gagal: ' . $stmt->error]);
       }
       $stmt->close();
    } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
+      echo json_encode(['status' => 'error', 'message' => 'Query error: ' . $koneksi->error]);
    }
 }
 
+
+
 // Function untuk Delete User
-function deleteRegister()
+function deleteData()
 {
    global $koneksi;
 
@@ -257,7 +196,7 @@ function deleteRegister()
    }
 
    // Query untuk menghapus data user
-   $query = "DELETE FROM pasien_visit WHERE nomor_visit = ?";
+   $query = "DELETE FROM pasien_visit WHERE id_visit = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $id);

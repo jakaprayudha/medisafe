@@ -1,27 +1,101 @@
 <?php
 include '../../database/connect.php';
-header('Content-Type: application/json');
+header("Content-Type: application/json");
 
-function jsonResponse($success, $message, $data = null)
-{
-   echo json_encode([
-      'success' => $success,
-      'message' => $message,
-      'data' => $data
-   ]);
-   exit;
-}
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id_product'])) {
-   $kode = $koneksi->real_escape_string($_GET['id_product']);
+$method = $_SERVER['REQUEST_METHOD'];
 
-   $query = "SELECT * FROM ms_product LEFT OUTER JOIN ms_merk ON ms_merk.id_merk = ms_product.id_merk LEFT OUTER JOIN ms_product_category ON ms_product_category.id_category = ms_product.id_category LEFT OUTER JOIN ms_account ON ms_account.id_account = ms_product.id_account   WHERE ms_product.id_product = '$kode' LIMIT 1";
-   $result = $koneksi->query($query);
-   if ($result && $result->num_rows > 0) {
-      $data = $result->fetch_assoc();
-      jsonResponse(true, "Data ditemukan", $data);
-   } else {
-      jsonResponse(false, "Data tidak ditemukan");
-   }
+// Gunakan _method untuk spoof PUT/DELETE
+if ($method === 'POST' && isset($_POST['_method'])) {
+   $method = strtoupper($_POST['_method']);
 }
 
-jsonResponse(false, "Metode request tidak valid");
+switch ($method) {
+   case 'GET': // get data by doctor_number
+      if (isset($_GET['no'])) {
+         $no = $koneksi->real_escape_string($_GET['no']);
+         $sql = "SELECT * FROM ms_doctor WHERE doctor_number = '$no' LIMIT 1";
+         $result = $koneksi->query($sql);
+
+         if ($result && $result->num_rows > 0) {
+            echo json_encode([
+               "success" => true,
+               "data" => $result->fetch_assoc()
+            ]);
+         } else {
+            echo json_encode([
+               "success" => false,
+               "message" => "Dokter tidak ditemukan"
+            ]);
+         }
+      } else {
+         echo json_encode([
+            "success" => false,
+            "message" => "Parameter no tidak ditemukan"
+         ]);
+      }
+      break;
+
+   case 'PUT': // update data
+      if (isset($_POST['doctor_number'])) {
+         $doctorNo = $koneksi->real_escape_string($_POST['doctor_number']);
+
+         // daftar field yang boleh diupdate
+         $allowedFields = [
+            'doctor_name',
+            'id_poli',
+            'doctor_category',
+            'doctor_status',
+            'doctor_phone',
+            'doctor_mail',
+            'doctor_birthdate',
+            'doctor_gender',
+            'doctor_address',
+            'doctor_sip',
+            'doctor_str',
+            'doctor_expaired'
+         ];
+
+         $updates = [];
+         foreach ($allowedFields as $field) {
+            if (isset($_POST[$field])) {
+               $value = $koneksi->real_escape_string($_POST[$field]);
+               $updates[] = "$field = '$value'";
+            }
+         }
+
+         if (!empty($updates)) {
+            $updates[] = "updated_at = NOW()";
+            $sql = "UPDATE ms_doctor SET " . implode(", ", $updates) . " WHERE doctor_number = '$doctorNo'";
+
+            if ($koneksi->query($sql)) {
+               echo json_encode([
+                  "success" => true,
+                  "message" => "Data dokter berhasil diperbarui"
+               ]);
+            } else {
+               echo json_encode([
+                  "success" => false,
+                  "message" => "Gagal update: " . $koneksi->error
+               ]);
+            }
+         } else {
+            echo json_encode([
+               "success" => false,
+               "message" => "Tidak ada field yang dikirim"
+            ]);
+         }
+      } else {
+         echo json_encode([
+            "success" => false,
+            "message" => "doctor_number tidak ditemukan"
+         ]);
+      }
+      break;
+
+   default:
+      echo json_encode([
+         "success" => false,
+         "message" => "Method $method tidak diizinkan"
+      ]);
+      break;
+}

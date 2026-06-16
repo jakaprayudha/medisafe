@@ -1,11 +1,6 @@
 <?php
 $title = 'Tarif';
 require '../../controller/view.php';
-require '../../utility/env.php';
-// Memuat file .env
-$env = loadEnv();
-// Mengambil nilai API_URL dari environment
-$apiUrl = getenv('API_URL');
 ?>
 <!doctype html>
 <html lang="en">
@@ -43,18 +38,17 @@ $apiUrl = getenv('API_URL');
                     <h5 class="card-title fw-semibold">Data Tarif</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
-                      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add"><i class="fas fa-plus"></i> Tambah</button>
+                      <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
                     </div>
                   </div>
                   <div class="table-responsive" data-simplebar>
-                    <table class="table text-nowrap align-middle table-custom mb-0" id="zero_config">
+                    <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
-                          <th scope="col" class="text-dark fw-normal">Kode</th>
                           <th class="text-dark fw-normal">Layanan</th>
-                          <th class="text-dark fw-normal">Nama Tarif</th>
-                          <th class="text-dark fw-normal">Tarif</th>
-                          <th class="text-dark fw-normal">Keterangan</th>
+                          <th scope="col" class="text-dark fw-normal">Nama Tarif</th>
+                          <th scope="col" class="text-dark fw-normal">Harga</th>
+                          <th scope="col" class="text-dark fw-normal">Jaminan</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                         </tr>
@@ -71,209 +65,234 @@ $apiUrl = getenv('API_URL');
     </div>
   </div>
 
+
+
   <?php
   require 'library.php';
   ?>
 </body>
-<div class="modal fade" id="add" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="programModal" tabindex="-1">
   <div class="modal-dialog">
-    <div class="modal-content">
+    <form id="programForm" class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="exampleModalLabel">Tambah Data</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <form id="addForm">
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="kode" class="form-label">Kode</label>
-            <input type="text" name="kode" id="kode" class="form-control">
+      <div class="modal-body">
+        <input type="hidden" name="id_tarif" id="id_tarif">
+        <div class="row">
+          <div class="col-6">
+            <div class="mb-3">
+              <label class="form-label required" id="tarif_code">Kode</label>
+              <input type="text" id="tarif_code" name="tarif_code" class="form-control" required>
+            </div>
           </div>
-          <div class="mb-3">
-            <label for="layanan" class="form-label">Layanan <span class="text-danger">*</span> </label>
-            <select name="layanan" id="layanan" class="form-select">
-              <option value="Poliklinik">Poliklinik</option>
-              <option value="UGD">UGD</option>
-              <option value="Rawat Inap">Rawat Inap</option>
-              <option value="Intensive Care">Intensive Care</option>
-              <option value="Operasi">Operasi</option>
-            </select>
+          <div class="col-6">
+            <div class="mb-3">
+              <label class="form-label required" id="tarif_name">Nama Tarif</label>
+              <input type="text" id="tarif_name" name="tarif_name" class="form-control" required>
+            </div>
           </div>
-          <div class="mb-3">
-            <label for="nama_tarif" class="form-label">Nama Tarif <span class="text-danger">*</span> </label>
-            <input type="text" name="nama_tarif" id="nama_tarif" required class="form-control">
+          <div class="col-6">
+            <div class="mb-3">
+              <label class="form-label required">Layanan</label>
+              <select name="tarif_services" id="tarif_services" class="form-select" required>
+                <option value="Poliklinik">Poliklinik</option>
+                <option value="UGD">UGD</option>
+                <option value="Rawat Inap">Rawat Inap</option>
+                <option value="99">Seluruhnya</option>
+              </select>
+            </div>
           </div>
-          <div class="mb-3">
-            <label for="tarif" class="form-label">Tarif<span class="text-danger">*</span> </label>
-            <input type="number" name="tarif" id="tarif" required class="form-control">
+          <div class="col-6">
+            <div class="mb-3">
+              <label class="form-label required">Provider (Jenis Bayar)</label>
+              <select name="tarif_provider" id="tarif_provider" class="form-select" required>
+                <?php
+                $getprovider = tampildata("SELECT * FROM ms_provider WHERE provider_status='1'");
+                ?>
+                <?php foreach ($getprovider as $provider) : ?>
+                  <option value="<?= $provider['id_provider'] ?>"><?= $provider['provider_name'] ?></option>
+                <?php endforeach ?>
+                <option value="99">Seluruhnya</option>
+                ?>
+              </select>
+            </div>
           </div>
-          <div class="mb-3">
-            <label for="keterangan" class="form-label">Keterangan </label>
-            <textarea name="keterangan" id="keterangan" class="form-control" rows="5"></textarea>
+          <div class="col-12">
+            <div class="mb-3">
+              <label class="form-label required">Amount (IDR)</label>
+              <input type="number" id="tarif_amount" name="tarif_amount" class="form-control" required>
+            </div>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-primary">Simpan</button>
-        </div>
-      </form>
-    </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
   </div>
 </div>
 
-
-
 <script>
-  // Mengambil nilai API_URL dari PHP
-  const apiUrl = '<?php echo $apiUrl . 'master/' . 'tarifController' ?>';
+  const apiUrl = 'controller/master/tarifController';
+
   $(document).ready(function() {
-    // Initialize DataTable
-    var table = $('#zero_config').DataTable({
-      "processing": true,
-      "serverSide": true,
-      "ajax": {
-        "url": apiUrl, // Ganti dengan URL API yang sesuai
-        "type": "GET",
-        "dataSrc": function(json) {
-          // Format data yang akan ditampilkan dalam tabel
-          return json.data.map(function(row, index) {
+    var table = $('#periodeTable').DataTable({
+      processing: true,
+      serverSide: false, // 🔹 ubah jadi false
+      ajax: {
+        url: apiUrl,
+        type: "GET",
+        dataSrc: function(json) {
+          return json.data.map(function(row) {
             return {
               "actions": `
-                  <div class="text-center">
-                      <button class="btn btn-warning edit-btn" data-id="${row.id}">Ubah</button>
-                      <button class="btn btn-danger delete-btn" data-id="${row.id}">Hapus</button>
-                  </div>
-              `,
-              "kode": row.kode,
-              "layanan": row.layanan,
-              "nama_tarif": row.nama_tarif,
-              "tarif": row.tarif,
-              "keterangan": row.keterangan,
-              "status_tarif": '<span class="badge ' + (row.status_tarif == 1 ? 'bg-success' : 'bg-danger') + ' d-block text-center">' + (row.status_tarif == 1 ? 'Active' : 'Inactive') + '</span>'
+                      <div class="text-center">
+								<div class="btn-group btn-group-sm" role="group">
+									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_tarif}">
+											<i class="fas fa-edit"></i>
+									</a>
+									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_tarif}">
+											<i class="fas fa-trash"></i>
+									</a>
+								</div>
+							</div>
+                    `,
+              "layanan": row.tarif_services ?? "-",
+              "name": row.tarif_name ?? "-",
+              "idr": row.tarif_amount ?
+                new Intl.NumberFormat('id-ID', {
+                  style: 'currency',
+                  currency: 'IDR'
+                }).format(row.tarif_amount) :
+                "-",
+              "provider": row.tarif_provider ?? "-",
+              "status": row.tarif_status === '1' ?
+                '<span class="badge bg-success text-center d-block">Aktif</span>' : '<span class="badge bg-danger text-center d-block">Nonaktif</span>'
             };
           });
         }
       },
-      "columns": [{
-          "data": "kode"
+      columns: [{
+          data: "layanan"
         },
         {
-          "data": "layanan"
+          data: "name"
         },
         {
-          "data": "nama_tarif"
+          data: "idr"
         },
         {
-          "data": "tarif"
+          data: "provider"
         },
         {
-          "data": "keterangan"
+          data: "status"
         },
         {
-          "data": "status_tarif"
+          data: "actions",
+          orderable: false,
+          searchable: false
         },
-        {
-          "data": "actions"
-        }
-      ]
+      ],
+      footerCallback: function(row, data, start, end, display) {
+        var api = this.api();
+
+        // Hitung total bobot
+        let total = api
+          .column(3, {
+            page: 'current'
+          })
+          .data()
+          .reduce((a, b) => {
+            return (parseFloat(a) || 0) + (parseFloat(b) || 0);
+          }, 0);
+
+        // Tampilkan di footer
+        $(api.column(3).footer()).html(total.toFixed(2) + " %");
+      }
     });
 
-    // Handle form submission for adding 
-    document.getElementById("addForm").addEventListener("submit", function(event) {
-      event.preventDefault();
+    $('#customSearch').on('keyup', function() {
+      table.search(this.value).draw();
+    });
 
-      const kode = document.getElementById("kode").value;
-      const layanan = document.getElementById("layanan").value;
-      const nama_tarif = document.getElementById("nama_tarif").value;
-      const tarif = document.getElementById("tarif").value;
-      const keterangan = document.getElementById("keterangan").value;
+    // 🔹 Tambah
+    $('#btnTambah').on('click', function() {
+      $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
+      $('#id_tarif').val('');
+      $('#programModal .modal-title').text('Tambah Data');
+      $('#programModal').modal('show');
+    });
 
-      const formData = new URLSearchParams({
-        kode: kode,
-        layanan: layanan,
-        nama_tarif: nama_tarif,
-        tarif: tarif,
-        keterangan: keterangan
-      });
+    // 🔹 Submit (Tambah / Update)
+    $('#programForm').on('submit', function(e) {
+      e.preventDefault();
+      let formData = new URLSearchParams(new FormData(this));
+      let id = $('#id_tarif').val();
 
-      // ✅ Tampilkan data ke console
-      console.log("Data yang dikirim:", formData.toString());
-
-      fetch(apiUrl, {
-          method: 'POST',
+      fetch(apiUrl + (id ? `?id=${id}` : ''), {
+          method: id ? 'PUT' : 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
           },
           body: formData
         })
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
           if (data.status === 'success') {
-            Swal.fire({
-              title: 'Berhasil!',
-              text: data.message,
-              icon: 'success',
-              confirmButtonText: 'OK'
-            }).then(() => {
-              document.getElementById("addForm").reset();
-              $('#add').modal('hide');
-              table.ajax.reload(null, false);
-            });
+            Swal.fire('Berhasil!', data.message, 'success');
+            $('#programModal').modal('hide');
+            table.ajax.reload(null, false);
           } else {
-            Swal.fire({
-              title: 'Gagal!',
-              text: data.message,
-              icon: 'error',
-              confirmButtonText: 'Coba Lagi'
-            });
+            Swal.fire('Gagal!', data.message, 'error');
           }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          Swal.fire({
-            title: 'Terjadi Kesalahan!',
-            text: 'Gagal mengirim data. Coba lagi nanti.',
-            icon: 'error',
-            confirmButtonText: 'OK'
-          });
         });
     });
-    // Handle delete action
+    // 🔹 Edit
+    $(document).on('click', '.edit-btn', function() {
+      let id = $(this).data('id');
+      fetch(apiUrl + `?id=${id}`)
+        .then(res => res.json())
+        .then(resp => {
+          if (resp.status === 'success') {
+            let d = resp.data;
+
+            // isi otomatis berdasarkan name field
+            for (let key in d) {
+              $(`[name="${key}"]`).val(d[key]);
+            }
+
+            $('#programModal .modal-title').text('Edit Data');
+            $('#programModal').modal('show');
+          }
+        });
+    });
+
+    // 🔹 Delete
     $(document).on('click', '.delete-btn', function() {
-      var id = $(this).data('id'); // Ambil iduser dari data-id
+      let id = $(this).data('id');
       Swal.fire({
         title: 'Hapus Data?',
-        text: "Apakah Anda yakin ingin menghapus data ini?",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Hapus',
         cancelButtonText: 'Batal'
       }).then((result) => {
         if (result.isConfirmed) {
-          // Perform the deletion action using GET method
           fetch(apiUrl + `?id=${id}`, {
-              method: 'DELETE', // Gunakan GET, bukan DELETE
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-              }
+              method: 'DELETE'
             })
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
               if (data.status === 'success') {
-                Swal.fire('Berhasil!', 'Data berhasil dihapus.', 'success').then(() => {
-                  table.ajax.reload(null, false); // Reload table without changing page
-                });
-              } else {
-                Swal.fire('Gagal!', 'Terjadi kesalahan saat menghapus data.', 'error');
+                Swal.fire('Berhasil!', 'Data dihapus.', 'success');
+                table.ajax.reload(null, false);
               }
-            })
-            .catch(error => {
-              console.error('Error:', error);
-              Swal.fire('Terjadi Kesalahan!', 'Gagal menghapus data. Coba lagi nanti.', 'error');
             });
         }
       });
     });
-
   });
 </script>
 

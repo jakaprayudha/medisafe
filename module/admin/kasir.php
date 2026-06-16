@@ -93,16 +93,16 @@ $apiUrl = getenv('API_URL');
             return {
               "actions": `
                   <div class="text-center">
-                    <a href="module/admin/kasir_detail?no=${row.nomor_visit}&rm=${row.nomor_rm}">
+                    <a href="module/admin/kasir_detail?no=${row.visit_ID}&rm=${row.nomor_rm}">
                       <button class="btn btn-primary">Lihat Rincian</button>
                     </a>
                   </div>
               `,
-              "tanggal": row.tanggal + ' ' + row.waktu,
+              "tanggal": row.visit_date + ' ' + row.visit_time,
               "nomor_rm": row.nomor_rm,
-              "nama_pasien": row.nama_pasien,
-              "dokter": row.dokter + ' ' + row.dokter,
-              "layanan": row.layanan + ' ' + row.layanan,
+              "nama_pasien": row.patient_name,
+              "dokter": row.doctor_name,
+              "layanan": row.source_hub + ' ' + row.poli_name,
               "status_visit": '<span class="badge ' + (row.status_visit == 1 ? 'bg-success' : 'bg-danger') + ' d-block text-center">' + (row.status_visit == 1 ? 'Selesai' : 'Belum') + '</span>'
             };
           });

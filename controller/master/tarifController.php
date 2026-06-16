@@ -1,33 +1,25 @@
 <?php
-// Sertakan file koneksi database
 include '../../database/connect.php';
-
-// Mengambil method request
 $method = $_SERVER['REQUEST_METHOD'];
-
-// Handle request berdasarkan method (POST, GET, PUT, DELETE)
 switch ($method) {
    case 'POST':
-      // Create User
-      createTarif();
+      createData();
       break;
    case 'GET':
       if (isset($_GET['id'])) {
-         // Jika iduser ada di parameter, ambil data user berdasarkan iduser
-         getTarifID($_GET['id']);
+         getID($_GET['id']);
       } else {
-         // Jika tidak ada iduser, ambil semua data user
-         getTarif();
+         getData();
       }
       break;
    case 'PUT':
       // Update User
-      updateFarmasi();
+      updateData();
       break;
 
    case 'DELETE':
       // Delete User
-      deleteTarif();
+      deleteData();
       break;
 
    default:
@@ -38,30 +30,56 @@ switch ($method) {
       break;
 }
 
-// Function untuk Create User
-function createTarif()
+// Function untuk Create
+function createData()
 {
    global $koneksi;
 
-   // Ambil data dari request body
-   $kode = $_POST['kode'] ?? '';
-   $layanan = $_POST['layanan'] ?? '';
-   $nama_tarif = $_POST['nama_tarif'] ?? '';
-   $tarif = $_POST['tarif'] ?? '';
-   $keterangan = $_POST['keterangan'] ?? '';
-
-   if (empty($nama_tarif)) {
+   if (empty($_POST)) {
       echo json_encode([
          'status' => 'error',
-         'message' => 'Nama Tarif harus diisi.'
+         'message' => 'Data tidak ditemukan.'
       ]);
       exit;
    }
 
-   // Query insert data
-   $query = "INSERT INTO ms_tarif (kode, layanan, nama_tarif, tarif, keterangan) VALUES (?, ?, ?, ?, ?)";
+   // Ambil semua field yang valid untuk tabel ms_tarif
+   $allowedFields = [
+      'tarif_code',
+      'tarif_services',
+      'tarif_name',
+      'tarif_amount',
+      'tarif_provider'
+   ];
+
+   $fields = ['tarif_number']; // tambahkan tarif_number
+   $values = [generateDoctorNumber($koneksi)];
+
+   foreach ($allowedFields as $f) {
+      if (isset($_POST[$f])) {
+         $fields[] = $f;
+         $values[] = $_POST[$f];
+      }
+   }
+
+   if (empty($fields)) {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Tidak ada data yang dikirim.'
+      ]);
+      exit;
+   }
+
+   // Buat placeholder dan tipe untuk prepared statement
+   $placeholders = implode(', ', array_fill(0, count($fields), '?'));
+   $columns = implode(', ', $fields);
+   $types = str_repeat('s', count($fields)); // semua string
+
+   $query = "INSERT INTO ms_tarif ($columns) VALUES ($placeholders)";
+
    if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("sssss", $kode, $layanan, $nama_tarif, $tarif, $keterangan);
+      $stmt->bind_param($types, ...$values);
+
       if ($stmt->execute()) {
          echo json_encode([
             'status' => 'success',
@@ -70,77 +88,78 @@ function createTarif()
       } else {
          echo json_encode([
             'status' => 'error',
-            'message' => 'Gagal menambahkan data.'
+            'message' => 'Gagal menambahkan data: ' . $stmt->error
          ]);
       }
+
       $stmt->close();
    } else {
       echo json_encode([
          'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
+         'message' => 'Gagal menyiapkan query: ' . $koneksi->error
       ]);
    }
 }
 
-// Function untuk Read User
-function getTarif()
+/**
+ * Generate tarif_number unik dengan format TRX-XXXXXX
+ */
+function generateDoctorNumber($koneksi)
+{
+   $count = 0; // inisialisasi supaya tidak merah
+   do {
+      $random = mt_rand(100000, 999999); // 6 digit angka
+      $doctorNumber = "TRX-" . $random;
+
+      // cek ke database apakah sudah ada
+      $check = $koneksi->prepare("SELECT COUNT(*) FROM ms_tarif WHERE tarif_number = ?");
+      $check->bind_param("s", $doctorNumber);
+      $check->execute();
+      $check->bind_result($count);
+      $check->fetch();
+      $check->close();
+   } while ($count > 0); // ulang jika sudah ada
+
+   return $doctorNumber;
+}
+
+function getData()
 {
    global $koneksi;
 
-   // Ambil parameter pagination dan pencarian dari request
-   $start = isset($_GET['start']) ? (int)$_GET['start'] : 0;
-   $length = isset($_GET['length']) ? (int)$_GET['length'] : 10;
-   $search = isset($_GET['search']) && isset($_GET['search']['value']) ? $_GET['search']['value'] : '';
-
-   // Query dasar untuk mengambil data user
-   $query = "SELECT * FROM ms_tarif ";
-
-   // Jika ada pencarian, tambahkan kondisi pencarian
-   if ($search) {
-      $query .= " WHERE nama_tarif LIKE '%$search%'";
-   }
-
-   // Ambil data sesuai dengan pagination
-   $query .= " LIMIT $start, $length";
-
+   $query = "SELECT * FROM ms_tarif   ORDER BY tarif_name DESC";
    $result = mysqli_query($koneksi, $query);
 
    if (!$result) {
+      http_response_code(500);
       echo json_encode([
          'status' => 'error',
          'message' => 'Gagal mengambil data: ' . mysqli_error($koneksi)
       ]);
-      exit;
+      return;
    }
 
-   $data = [];
-   while ($row = mysqli_fetch_assoc($result)) {
-      $data[] = $row;
-   }
+   // Ambil semua data dalam bentuk array asosiatif
+   $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
-   // Query untuk menghitung total data
-   $totalQuery = "SELECT COUNT(*) AS total FROM ms_tarif";
-   $totalResult = mysqli_query($koneksi, $totalQuery);
-   $totalData = mysqli_fetch_assoc($totalResult);
-   $totalRecords = $totalData['total'];
+   // Tutup hasil query
+   mysqli_free_result($result);
 
-   // Kirimkan data dalam format JSON untuk DataTables
+   // Kirimkan data dalam format JSON
    header('Content-Type: application/json');
    echo json_encode([
       'status' => 'success',
       'data' => $data,
-      'recordsTotal' => $totalRecords,
-      'recordsFiltered' => $totalRecords // Jika Anda ingin total yang difilter, buat query terpisah untuk menghitung total hasil pencarian
    ]);
 }
 
 // Function untuk Read User berdasarkan ID
-function getTarifID($iduser)
+function  getID($iduser)
 {
    global $koneksi;
 
    // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM ms_tarif WHERE id = ?";
+   $query = "SELECT * FROM ms_tarif WHERE id_tarif = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $iduser); // Bind parameter iduser
@@ -148,10 +167,10 @@ function getTarifID($iduser)
       $result = $stmt->get_result();
 
       if ($result->num_rows > 0) {
-         $user = $result->fetch_assoc();
+         $data = $result->fetch_assoc();
          echo json_encode([
             'status' => 'success',
-            'user' => $user
+            'data' => $data
          ]);
       } else {
          echo json_encode([
@@ -169,59 +188,64 @@ function getTarifID($iduser)
    }
 }
 
-// Function untuk Update User
-function updateFarmasi()
+
+
+function updateData()
 {
    global $koneksi;
-
-   // Ambil data dari request body
    parse_str(file_get_contents("php://input"), $_PUT);
-   $id = isset($_PUT['iduser']) ? $_PUT['iduser'] : '';
-   $satuan = isset($_PUT['satuan']) ? $_PUT['satuan'] : '';
-   $product = isset($_PUT['produk']) ? $_PUT['produk'] : '';
-   $code = isset($_PUT['kode']) ? $_PUT['kode'] : '';
-   $product_price = isset($_PUT['harga_jual']) ? $_PUT['harga_jual'] : '';
-   $product_base = isset($_PUT['harga_beli']) ? $_PUT['harga_beli'] : '';
-   $category = isset($_PUT['kategori']) ? $_PUT['kategori'] : '';
-   $description = isset($_PUT['deskripsi']) ? $_PUT['deskripsi'] : '';
 
-   // Debugging input data
-   if (empty($product) || empty($id)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'ID dan Product Item harus diisi.'
-      ]);
-      exit;
+   if (empty($_PUT['id_tarif'])) {
+      echo json_encode(['status' => 'error', 'message' => 'ID tidak ditemukan.']);
+      return;
    }
 
-   // Query untuk update data user
-   $query = "UPDATE ms_tarif SET product_name = ?, product_code = ?, product_price = ?, product_base = ?, id_category = ?, product_description = ?, id_unit = ? WHERE id_product = ?";
+   $id = $_PUT['id_tarif'];
+   $allowedFields = [
+      'tarif_code',
+      'tarif_services',
+      'tarif_name',
+      'tarif_amount',
+      'tarif_provider'
+   ];
+   $fields = [];
+   $values = [];
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("ssssssss", $product, $code, $product_price, $product_base, $category, $description, $satuan, $id);
+   foreach ($allowedFields as $f) {
+      if (isset($_PUT[$f])) {
+         $fields[] = "$f=?";
+         $values[] = $_PUT[$f];
+      }
+   }
+
+   if (empty($fields)) {
+      echo json_encode(['status' => 'error', 'message' => 'Tidak ada data diupdate.']);
+      return;
+   }
+
+   $values[] = $id;
+   $types = str_repeat('s', count($values) - 1) . "i";
+
+   $query = "UPDATE ms_tarif SET " . implode(',', $fields) . " WHERE id_tarif=?";
+   $stmt = $koneksi->prepare($query);
+
+   if ($stmt) {
+      $stmt->bind_param($types, ...$values);
       if ($stmt->execute()) {
-         header('Content-Type: application/json');
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil diperbarui.'
-         ]);
+         echo json_encode(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
       } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal memperbarui data.'
-         ]);
+         echo json_encode(['status' => 'error', 'message' => 'Update gagal: ' . $stmt->error]);
       }
       $stmt->close();
    } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
+      echo json_encode(['status' => 'error', 'message' => 'Query error: ' . $koneksi->error]);
    }
 }
 
+
+
 // Function untuk Delete User
-function deleteTarif()
+function deleteData()
 {
    global $koneksi;
 
@@ -237,7 +261,7 @@ function deleteTarif()
    }
 
    // Query untuk menghapus data user
-   $query = "DELETE FROM ms_tarif WHERE id = ?";
+   $query = "DELETE FROM ms_tarif WHERE id_tarif = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $id);

@@ -1,11 +1,6 @@
 <?php
-$title = 'Registrasi';
+$title = 'Registrasi Pasien';
 require '../../controller/view.php';
-require '../../utility/env.php';
-// Memuat file .env
-$env = loadEnv();
-// Mengambil nilai API_URL dari environment
-$apiUrl = getenv('API_URL');
 ?>
 <!doctype html>
 <html lang="en">
@@ -15,6 +10,7 @@ $apiUrl = getenv('API_URL');
   <?php
   require '../../assets/template/head.php';
   ?>
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 </head>
 
 <body>
@@ -40,24 +36,51 @@ $apiUrl = getenv('API_URL');
               <div class="card w-100">
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Registrasi Pasien Poliklinik</h5>
+                    <h5 class="card-title fw-semibold">Data Registrasi</h5>
                     <!-- Grup tombol di sisi kanan -->
-                    <div class="d-flex ms-auto gap-2">
-                      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add"><i class="fas fa-plus"></i> Tambah</button>
+
+                    <!-- 🔽 Filter + Tombol Kembali -->
+                    <div class="d-flex align-items-end gap-2 flex-wrap">
+                      <form id="filterForm" class="row g-2 align-items-end">
+                        <div class="col-auto">
+                          <label for="fromDate" class="form-label mb-0">Dari</label>
+                          <input type="date" id="fromDate" name="fromDate" class="form-control">
+                        </div>
+                        <div class="col-auto">
+                          <label for="toDate" class="form-label mb-0">Sampai</label>
+                          <input type="date" id="toDate" name="toDate" class="form-control">
+                        </div>
+                        <div class="col-auto">
+                          <button type="button" id="btnFilter" class="btn btn-dark">
+                            <i class="fas fa-filter"></i> Filter
+                          </button>
+                        </div>
+                        <div class="col-auto">
+                          <button type="button" id="btnReset" class="btn btn-light">
+                            <i class="fas fa-undo"></i> Reset
+                          </button>
+                        </div>
+                      </form>
+
+                      <!-- Tombol kembali -->
+                      <div class="d-flex ms-auto gap-2">
+                        <a href="module/admin/registrasi_patient">
+                          <button class="btn btn-primary"><i class="fas fa-plus"></i> Tambah</button>
+                        </a>
+                      </div>
                     </div>
                   </div>
                   <div class="table-responsive" data-simplebar>
-                    <table class="table text-nowrap align-middle table-custom mb-0" id="zero_config">
+                    <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
                         <tr>
-                          <th class="text-dark fw-normal">Registrasi</th>
-                          <th class="text-dark fw-normal">ID Visit</th>
-                          <th scope="col" class="text-dark fw-normal">Nomor RM</th>
+                          <th scope="col" class="text-dark fw-normal">Registrasi</th>
+                          <th>Antrian</th>
+                          <th class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
-                          <th scope="col" class="text-dark fw-normal">TTL</th>
-                          <th class="text-dark fw-normal">Dokter</th>
-                          <th class="text-dark fw-normal">Poliklinik</th>
+                          <th scope="col" class="text-dark fw-normal">Dokter</th>
+                          <th scope="col" class="text-dark fw-normal">Layanan</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
                         </tr>
@@ -73,272 +96,266 @@ $apiUrl = getenv('API_URL');
       </div>
     </div>
   </div>
+  </div>
+
+
 
   <?php
   require 'library.php';
   ?>
 </body>
-<div class="modal fade" id="add" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+
+
+<div class="modal fade" id="programModal" tabindex="-1">
   <div class="modal-dialog">
-    <div class="modal-content">
+    <form id="programForm" class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="exampleModalLabel">Tambah Data</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <form id="addForm">
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="data" class="form-label">Pasien <span class="text-danger">*</span></label>
-            <select class="js-example-basic-single" name="data" id="data" required>
-              <option value="">Cari Pasien</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label for="layanan" class="form-label">Poliklinik <span class="text-danger">*</span> </label>
-            <select name="layanan" id="layanan" class="js-example-basic-layanan" required>
-              <option value="">Select Option</option>
-              <?php
-              $getpoli = tampildata("SELECT * FROM ms_poli WHERE status_poli='1'");
-              ?>
-              <?php foreach ($getpoli as $poli): ?>
-                <option value="<?= $poli['poliklinik']; ?>"><?= $poli['poliklinik']; ?></option>
-              <?php endforeach ?>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label for="dokter" class="form-label">Dokter <span class="text-danger">*</span> </label>
-            <select name="dokter" id="dokter" class="js-example-basic-dokter" required>
-              <option value="">Select Option</option>
-              <?php
-              $getpoli = tampildata("SELECT * FROM ms_dokter WHERE status_dokter='1'");
-              ?>
-              <?php foreach ($getpoli as $poli): ?>
-                <option value="<?= $poli['nama_dokter']; ?>"><?= $poli['nama_dokter']; ?></option>
-              <?php endforeach ?>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label for="catatan" class="form-label">Catatan Khusus </label>
-            <textarea name="catatan" id="catatan" class="form-control" rows="5"></textarea>
-          </div>
+      <div class="modal-body">
+        <input type="hidden" name="id_visit" id="id_visit">
+        <input type="hidden" name="id_patient" id="id_patient"> <!-- 🔹 dari klik add -->
+        <input type="hidden" name="user" value="<?= $_SESSION['fullname'] ?>" id="user">
+        <div class="mb-3">
+          <label class="form-label required">Layanan (Poli)</label>
+          <select name="id_poli" id="id_poli" class="form-select" required>
+            <option value="">PILIH</option>
+            <?php
+            $getpoli = tampildata("SELECT * FROM ms_poli WHERE poli_status='1'");
+            foreach ($getpoli as $poli) :
+            ?>
+              <option value="<?= $poli['id_poli'] ?>"><?= $poli['poli_name'] ?></option>
+            <?php endforeach ?>
+          </select>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-primary">Simpan</button>
+
+        <div class="mb-3">
+          <label class="form-label required">Dokter</label>
+          <select name="id_doctor" id="id_doctor" class="form-select" required>
+            <option value="">PILIH</option>
+            <?php
+            $getdoc = tampildata("SELECT * FROM ms_doctor WHERE doctor_status='1'");
+            foreach ($getdoc as $doc) :
+            ?>
+              <option value="<?= $doc['id_doctor'] ?>"><?= $doc['doctor_name'] ?></option>
+            <?php endforeach ?>
+          </select>
         </div>
-      </form>
-    </div>
+
+
+        <div class="mb-3">
+          <label class="form-label required">Layanan</label>
+          <select name="source_hub" id="source_hub" class="form-select" required>
+            <option value="Poliklinik">Poliklinik</option>
+            <option value="UGD">UGD</option>
+            <option value="Rawat Inap">Rawat Inap</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Catatan</label>
+          <textarea name="visit_notes" id="visit_notes" class="form-control" rows="5"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
   </div>
 </div>
-
 <script>
   $(document).ready(function() {
-    $('#data').select2({
-      dropdownParent: '#add',
+    var today = new Date().toISOString().split("T")[0];
+    $("#fromDate").val(today);
+    $("#toDate").val(today);
+    const apiUrl = 'controller/visit/registrasiController';
+    var table = $('#periodeTable').DataTable({
+      processing: true,
+      serverSide: false, // 🔹 ubah jadi false
       ajax: {
-        url: 'controller/visit/checkPasien',
-        dataType: 'json',
-        delay: 250,
-        data: function(params) {
-          return {
-            q: params.term, // Parameter pencarian
-            page: params.page,
-          };
+        url: apiUrl,
+        type: "GET",
+        data: function(d) {
+          // kirim tanggal filter ke backend
+          d.fromDate = $('#fromDate').val();
+          d.toDate = $('#toDate').val();
         },
-        processResults: function(data, params) {
-          return {
-            results: $.map(data.items, function(item) {
-              return {
-                text: `${item.nama_pasien} | ${item.nomor_rm} | ${item.tanggal_lahir}`,
-                nomor_rm: item.nomor_rm,
-                id: item.id
-              }
-            })
-          };
-        },
-        cache: true
-      },
-      minimumInputLength: 2
-    });
-    $('#data').on('select2:select', function(e) {
-      const selectedOption = e.params.data;
-      const nomor_rm = selectedOption.nomor_rm;
-      $('#nomor_rm').val(nomor_rm);
-    });
-  });
-
-  $('.js-example-basic-dokter').select2({
-    placeholder: 'Cari Data',
-    dropdownParent: '#add'
-  });
-  $('.js-example-basic-layanan').select2({
-    placeholder: 'Cari Data',
-    dropdownParent: '#add'
-  });
-</script>
-
-<script>
-  // Mengambil nilai API_URL dari PHP
-  const apiUrl = '<?php echo $apiUrl . 'visit/' . 'registrasiController' ?>';
-  $(document).ready(function() {
-    // Initialize DataTable
-    var table = $('#zero_config').DataTable({
-      "processing": true,
-      "serverSide": true,
-      "ajax": {
-        "url": apiUrl, // Ganti dengan URL API yang sesuai
-        "type": "GET",
-        "dataSrc": function(json) {
-          // Format data yang akan ditampilkan dalam tabel
-          return json.data.map(function(row, index) {
+        dataSrc: function(json) {
+          return json.data.map(function(row) {
             return {
               "actions": `
-                  <div class="text-center">
-                      <button class="btn btn-warning edit-btn" data-id="${row.id}">Ubah</button>
-                      <button class="btn btn-danger delete-btn" data-id="${row.nomor_visit}">Hapus</button>
-                  </div>
-              `,
-              "tanggal": row.tanggal + ' ' + row.waktu,
-              "nomor_visit": row.nomor_visit,
-              "nomor_rm": row.nomor_rm,
-              "nama_pasien": row.nama_pasien,
-              "gender": row.gender,
-              "ttl": row.tempat_lahir + ' ' + row.tanggal_lahir,
-              "dokter": row.dokter + ' ' + row.dokter,
-              "layanan": row.layanan + ' ' + row.layanan,
-              "status_visit": '<span class="badge ' + (row.status_visit == 1 ? 'bg-success' : 'bg-danger') + ' d-block text-center">' + (row.status_visit == 1 ? 'Selesai' : 'Belum') + '</span>'
+                      <div class="text-center">
+								<div class="btn-group btn-group-sm" role="group">
+									<a class="btn btn-warning edit-btn" href="javascript:;" 
+                    data-id="${row.id_visit}" 
+                  data-patient="${row.id_patient}" 
+                  data-doctor="${row.id_doctor}" 
+                  data-poli="${row.id_poli}" 
+                  data-source="${row.source_hub}" 
+                  data-notes="${row.visit_notes}">
+                  
+											<i class="fas fa-edit"></i>
+									</a>
+									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_visit}">
+											<i class="fas fa-trash"></i>
+									</a>
+								</div>
+							</div>
+                    `,
+              "registrasi": row.visit_ID + '<br>' + row.visit_date + ' ' + row.visit_time ?? "-",
+              "antrian": row.visit_antrian ?? "-",
+              "nomor_rm": row.nomor_rm ?? "-",
+              "nama": row.patient_name ?? "-",
+              "gender": row.patient_gender ?? "-",
+              "dokter": row.doctor_name ?? "-",
+              "layanan": row.poli_name ?? "-",
+              "status": row.visit_status === '1' ?
+                '<span class="badge bg-success text-center d-block">Aktif</span>' : '<span class="badge bg-danger text-center d-block">Belum Di Layani</span>'
             };
           });
         }
       },
-      "columns": [{
-          "data": "tanggal"
+      columns: [{
+          data: "registrasi"
         },
         {
-          "data": "nomor_visit"
+          data: "antrian"
         },
         {
-          "data": "nomor_rm"
+          data: "nomor_rm"
         },
         {
-          "data": "nama_pasien"
+          data: "nama"
         },
         {
-          "data": "gender"
+          data: "gender"
         },
         {
-          "data": "ttl"
+          data: "dokter"
         },
         {
-          "data": "dokter"
+          data: "layanan"
         },
         {
-          "data": "layanan"
+          data: "status"
         },
         {
-          "data": "status_visit"
+          data: "actions",
+          orderable: false,
+          searchable: false
         },
-        {
-          "data": "actions"
-        }
-      ]
+      ],
+      footerCallback: function(row, data, start, end, display) {
+        var api = this.api();
+
+        // Hitung total bobot
+        let total = api
+          .column(3, {
+            page: 'current'
+          })
+          .data()
+          .reduce((a, b) => {
+            return (parseFloat(a) || 0) + (parseFloat(b) || 0);
+          }, 0);
+
+        // Tampilkan di footer
+        $(api.column(3).footer()).html(total.toFixed(2) + " %");
+      }
     });
 
-    // Handle form submission for adding 
-    document.getElementById("addForm").addEventListener("submit", function(event) {
-      event.preventDefault();
+    $('#customSearch').on('keyup', function() {
+      table.search(this.value).draw();
+    });
 
-      const data = document.getElementById("data").value;
-      const layanan = document.getElementById("layanan").value;
-      const dokter = document.getElementById("dokter").value;
-      const catatan = document.getElementById("catatan").value;
+    // 🔹 Tambah
+    $('#btnTambah').on('click', function() {
+      $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
+      $('#id_visit').val('');
+      $('#programModal .modal-title').text('Tambah Data');
+      $('#programModal').modal('show');
+    });
 
-      const formData = new URLSearchParams({
-        data: data,
-        layanan: layanan,
-        dokter: dokter,
-        catatan: catatan
-      });
+    // 🔹 Submit (Tambah / Update)
+    $('#programForm').on('submit', function(e) {
+      e.preventDefault();
+      let formData = new URLSearchParams(new FormData(this));
+      let id = $('#id_visit').val();
 
-      // ✅ Tampilkan data ke console
-      console.log("Data yang dikirim:", formData.toString());
-
-      fetch(apiUrl, {
-          method: 'POST',
+      fetch(apiUrl + (id ? `?id=${id}` : ''), {
+          method: id ? 'PUT' : 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
           },
           body: formData
         })
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
           if (data.status === 'success') {
-            Swal.fire({
-              title: 'Berhasil!',
-              text: data.message,
-              icon: 'success',
-              confirmButtonText: 'OK'
-            }).then(() => {
-              document.getElementById("addForm").reset();
-              $('#add').modal('hide');
-              table.ajax.reload(null, false);
-            });
+            Swal.fire('Berhasil!', data.message, 'success');
+            $('#programModal').modal('hide');
+            table.ajax.reload(null, false);
           } else {
-            Swal.fire({
-              title: 'Gagal!',
-              text: data.message,
-              icon: 'error',
-              confirmButtonText: 'Coba Lagi'
-            });
+            Swal.fire('Gagal!', data.message, 'error');
           }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          Swal.fire({
-            title: 'Terjadi Kesalahan!',
-            text: 'Gagal mengirim data. Coba lagi nanti.',
-            icon: 'error',
-            confirmButtonText: 'OK'
-          });
         });
     });
-    // Handle delete action
+    // 🔹 Edit
+    $(document).on('click', '.edit-btn', function() {
+      let id = $(this).data('id');
+      fetch(apiUrl + `?id=${id}`)
+        .then(res => res.json())
+        .then(resp => {
+          if (resp.status === 'success') {
+            let d = resp.data;
+
+            // isi otomatis berdasarkan name field
+            for (let key in d) {
+              $(`[name="${key}"]`).val(d[key]);
+            }
+
+            $('#programModal .modal-title').text('Edit Data');
+            $('#programModal').modal('show');
+          }
+        });
+    });
+
+    // 🔹 Delete
     $(document).on('click', '.delete-btn', function() {
-      var id = $(this).data('id'); // Ambil iduser dari data-id
+      let id = $(this).data('id');
       Swal.fire({
         title: 'Hapus Data?',
-        text: "Apakah Anda yakin ingin menghapus data ini?",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Hapus',
         cancelButtonText: 'Batal'
       }).then((result) => {
         if (result.isConfirmed) {
-          // Perform the deletion action using GET method
           fetch(apiUrl + `?id=${id}`, {
-              method: 'DELETE', // Gunakan GET, bukan DELETE
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-              }
+              method: 'DELETE'
             })
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
               if (data.status === 'success') {
-                Swal.fire('Berhasil!', 'Data berhasil dihapus.', 'success').then(() => {
-                  table.ajax.reload(null, false); // Reload table without changing page
-                });
-              } else {
-                Swal.fire('Gagal!', 'Terjadi kesalahan saat menghapus data.', 'error');
+                Swal.fire('Berhasil!', 'Data dihapus.', 'success');
+                table.ajax.reload(null, false);
               }
-            })
-            .catch(error => {
-              console.error('Error:', error);
-              Swal.fire('Terjadi Kesalahan!', 'Gagal menghapus data. Coba lagi nanti.', 'error');
             });
         }
       });
     });
 
+    // filter manual
+    $('#btnFilter').on('click', function() {
+      table.ajax.reload();
+    });
+
+    // reset filter ke today
+    $('#btnReset').on('click', function() {
+      $('#fromDate').val(today);
+      $('#toDate').val(today);
+      table.ajax.reload();
+    });
   });
 </script>
 

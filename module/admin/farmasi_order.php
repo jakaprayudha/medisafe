@@ -35,6 +35,9 @@ $apiUrl = getenv('API_URL');
       <!--  Header End -->
       <div class="body-wrapper-inner">
         <div class="container-fluid">
+          <?php
+          require 'menu_farmasi.php';
+          ?>
           <div class="row">
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
@@ -80,7 +83,7 @@ $apiUrl = getenv('API_URL');
 
 <script>
   // Mengambil nilai API_URL dari PHP
-  const apiUrl = '<?php echo $apiUrl . 'visit/' . 'registrasiController' ?>';
+  const apiUrl = '<?php echo $apiUrl . 'farmasi/' . 'farmasiOrder' ?>';
   $(document).ready(function() {
     // Initialize DataTable
     var table = $('#zero_config').DataTable({
@@ -95,18 +98,18 @@ $apiUrl = getenv('API_URL');
             return {
               "actions": `
                   <div class="text-center">
-                    <a href="module/admin/farmasi_order_detail?no=${row.nomor_visit}&rm=${row.nomor_rm}">
+                    <a href="module/admin/farmasi_order_detail?no=${row.visit_ID}&rm=${row.nomor_rm}">
                       <button class="btn btn-primary">Lihat Resep</button>
                     </a>
                   </div>
               `,
-              "tanggal": row.tanggal + ' ' + row.waktu,
+              "tanggal": row.visit_date + ' ' + row.visit_time,
               "nomor_rm": row.nomor_rm,
-              "nama_pasien": row.nama_pasien,
-              "gender": row.gender,
-              "ttl": row.tempat_lahir + ' ' + row.tanggal_lahir,
-              "dokter": row.dokter + ' ' + row.dokter,
-              "layanan": row.layanan + ' ' + row.layanan,
+              "nama_pasien": row.patient_name,
+              "gender": row.patient_gender,
+              "ttl": row.patient_place + '/' + row.patient_datebirth,
+              "dokter": row.doctor_name,
+              "layanan": row.source_hub + ' ' + row.poli_name,
               "status_visit": '<span class="badge ' + (row.status_visit == 1 ? 'bg-success' : 'bg-danger') + ' d-block text-center">' + (row.status_visit == 1 ? 'Selesai' : 'Belum') + '</span>'
             };
           });

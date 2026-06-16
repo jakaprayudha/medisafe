@@ -9,11 +9,11 @@ $checkklinik = mysqli_query($koneksi, "SELECT * FROM setting_clinic LIMIT 1");
 $dataklinik = mysqli_fetch_array($checkklinik);
 
 $checkpasien = mysqli_query($koneksi, "SELECT * FROM pasien_visit 
-   INNER JOIN ms_pasien ON ms_pasien.nomor_rm = pasien_visit.nomor_rm 
-   WHERE pasien_visit.nomor_visit='$no' AND pasien_visit.nomor_rm='$rm'");
+   INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient  INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor
+   WHERE pasien_visit.visit_ID='$no'");
 $datapasien = mysqli_fetch_array($checkpasien);
 
-$checkobat = tampildata("SELECT * FROM permintaan_farmasi WHERE nomor_visit='$no' AND nomor_rm='$rm'");
+$checkobat = tampildata("SELECT * FROM permintaan_pharmacy INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy.id_pharmacy WHERE id_visit='$no' ");
 
 $total = 0;
 foreach ($checkobat as $obat) {
@@ -115,15 +115,15 @@ foreach ($checkobat as $obat) {
    <div class="container">
       <h2><?= $dataklinik['clinic_name'] ?></h2>
       <div style="text-align:center; font-size: 9px;">
-         <?= $dataklinik['alamat'] ?><br>
-         Telp/Wa: <?= $dataklinik['telepon'] ?>
+         <?= $dataklinik['address'] ?><br>
+         Telp/Wa: <?= $dataklinik['phone_number'] ?>
       </div>
 
       <div class="info">
-         <div>Pasien: <strong><?= $datapasien['nama_pasien'] ?></strong></div>
+         <div>Pasien: <strong><?= $datapasien['patient_name'] ?></strong></div>
          <div>No. RM: <?= $datapasien['nomor_rm'] ?></div>
          <div>Tgl: <?= date('d/m/Y') ?></div>
-         <div>Dokter: <?= $datapasien['dokter'] ?></div>
+         <div>Dokter: <?= $datapasien['doctor_name'] ?></div>
       </div>
 
       <table>
@@ -141,7 +141,7 @@ foreach ($checkobat as $obat) {
             foreach ($checkobat as $obat): ?>
                <tr>
                   <td><?= $i++ ?></td>
-                  <td class="wrap"><?= $obat['item'] ?></td>
+                  <td class="wrap"><?= $obat['pharmacy_name_trade'] ?>/<?= $obat['pharmacy_name_generic'] ?></td>
                   <td><?= $obat['qty'] ?></td>
                   <td class="right"><?= number_format($obat['harga']) ?></td>
                   <td class="right"><?= number_format($obat['qty'] * $obat['harga']) ?></td>
