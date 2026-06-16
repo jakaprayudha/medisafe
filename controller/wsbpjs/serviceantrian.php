@@ -14,7 +14,7 @@ $waktusekarang = date('Y-m-d H:i:s');
 $secretKey = $sql['secretkey'];
 $userkey = $sql['userkey'];
 $const_id = $sql['constid'];
-$encodedSignature = base64_encode($signature);
+// $encodedSignature = base64_encode($signature);
 
 function generateSignature($const_id, $secretKey)
 {
