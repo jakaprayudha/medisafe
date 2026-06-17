@@ -44,6 +44,10 @@ if ($no && $id_customer) {
     $result = mysqli_stmt_get_result($stmt);
     $data   = mysqli_fetch_assoc($result);
     mysqli_stmt_close($stmt);
+
+    $diagnosa = $data['kdDiag1'] ?? $data['diagnosa'] ?? '';
+    $diagnosaData = mysqli_query($koneksi, "SELECT * FROM icd_10 WHERE code='$diagnosa'");
+    $icd = mysqli_fetch_array($diagnosaData);
 }
 
 // ============================================================
@@ -317,17 +321,16 @@ $ttdSrc   = !empty($data['signature_user'])
                     <td>: <?= $usia ?></td>
                 </tr>
                 <tr>
-                    <?php
-                    $diagnosa = array_filter([
-                        $data['nmDiag1'] ?? '',
-                        $data['nmDiag2'] ?? '',
-                        $data['nmDiag3'] ?? ''
-                    ]);
-
-                    $hasilDiagnosa = implode(' + ', $diagnosa);
-                    ?>
                     <td>Diagnosa</td>
-                    <td>: <?= htmlspecialchars($hasilDiagnosa) ?></td>
+                    <td>: <?=
+                            !empty($data['kdDiag1'])
+                                ? $data['kdDiag1'] . ' - ' . $data['nmDiag1']
+                                : (
+                                    !empty($data['diagnosa'])
+                                    ? $icd['code'] . ' - ' . $icd['icd10']
+                                    : '-'
+                                )
+                            ?></td>
                 </tr>
                 <tr>
                     <td>Indikasi Dirawat</td>
