@@ -82,8 +82,8 @@ foreach ($clinics as $clinic) {
     $clinicResult = [];
 
     foreach ($policlinics as $policlinic) {
-        $kdpoli = $policlinic['poli_code'];
-        $idPoli = $policlinic['id_poli'];
+        $kdpoli = $policlinic['kdPoli'];
+        $idPoli = $policlinic['id'];
 
         foreach ($tanggalRange as $tanggal) {
             $hari = strtolower(date('l', strtotime($tanggal)));
