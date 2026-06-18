@@ -4,10 +4,10 @@ header('Content-Type: application/json');
 $tipe = $_GET['tipe'] ?? null;
 $nomor_kartu = trim($_GET['nokartu'] ?? '');
 $lengthkartu = strlen($nomor_kartu);
-if (!in_array($lengthkartu, [16, 19])) {
+if (!in_array($lengthkartu, [16, 13])) {
     $response = [
         'success' => false,
-        'message' => 'Nomor harus 16 digit (NIK) atau 19 digit (BPJS)'
+        'message' => 'Nomor harus 16 digit (NIK) atau 13 digit (BPJS)'
     ];
     echo json_encode($response);
     exit;
