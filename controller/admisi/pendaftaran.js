@@ -73,7 +73,7 @@ $(function () {
     $('#pasienSelect').on('select2:select', function (e) {
         resetSemuaForm();
         let data = e.params.data;
-        const nomor = data.nik == '-' ? data.bpjs : data.nik;
+        const nomor = !data.nik ? data.bpjs : data.nik;
         loadPasien(nomor, 'BPJS');
     });
     function loadPasien(nomor, tipe) {
