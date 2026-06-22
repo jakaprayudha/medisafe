@@ -20,6 +20,9 @@ $query = "SELECT * FROM pasien_visit
 
 $checkdata = mysqli_query($koneksi, $query);
 $dataresume = mysqli_fetch_array($checkdata) ?: [];
+$diagnosamasuk = mysqli_query($koneksi, "SELECT pasien_visit.diagnosa, icd_10.code, icd_10.icd10 FROM pasien_visit LEFT JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa  WHERE visit_ID='$visit'");
+$datadiagnosamasuk = mysqli_fetch_array($diagnosamasuk);
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -162,7 +165,7 @@ $dataresume = mysqli_fetch_array($checkdata) ?: [];
 
          <tr>
             <td class="resume-label">Diagnosa Masuk</td>
-            <td colspan="3" id="rm_dpjp_diagnosa"><?php echo ($dataresume['diagnosa'] ?? '') . ' - ' . ($dataresume['icd10'] ?? ''); ?></td>
+            <td colspan="3" id="rm_dpjp_diagnosa"><?php echo ($datadiagnosamasuk['diagnosa'] ?? '') . ' - ' . ($datadiagnosamasuk['icd10'] ?? ''); ?></td>
          </tr>
          <tr>
             <td class="resume-label">Indikasi Rawat Inap</td>
