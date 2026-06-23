@@ -121,8 +121,8 @@ $(function () {
                         let nik = response.data.noKTP || nomor;
                         APP.cetak('#noNIK', nik);
                         APP.cetakhtml('#nonik', nik);
-                        APP.cetakhtml('#ppkumum', response.data.kdProviderPst.nmProvider || '-');
-                        APP.cetak('#kdProviderPeserta', response.data.kdProviderPst.kdProvider || '');
+                        APP.cetakhtml('#ppkumum', response.data.nmProvider || '-');
+                        APP.cetak('#kdProviderPeserta', response.data.kdProvider || '');
                     });
                 } else {
                     resetTampilan();
