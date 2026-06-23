@@ -53,7 +53,7 @@ if (!in_array($lengthkartu, [13, 16, 19])) {
         }
     } else {
         $result = bpjsGet('/peserta/' . $tipe . '/' . $nomor_kartu);
-        if ($kodeppk == $result['data']['kdProviderPst']['kdProvider']) {
+        // if ($kodeppk == $result['data']['kdProviderPst']['kdProvider']) {
             if (($result['code'] ?? '') != "200" || $result['data']['aktif'] != 'true') {
                 $msg = $result['message'] ?? "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
                 $response = [
@@ -90,18 +90,18 @@ if (!in_array($lengthkartu, [13, 16, 19])) {
                     ]
                 ];
             }
-        } else if ($kodeppk == '' || $kodeppk == null) {
-            $response = [
-                'success' => false,
-                'message' => "Pasien belum memiliki fasilitas kesehatan terdaftar. Silakan lakukan pendaftaran terlebih dahulu."
-            ];
-        } else {
-            $response = [
-                'success' => false,
-                'message' => "Pasien bukan berasal dari fasilitas kesehatan ini. :" . $result['data']['kdProviderPst']['nmProvider'],
-                'result' => $result
-            ];
-        }
+        // } else if ($kodeppk == '' || $kodeppk == null) {
+        //     $response = [
+        //         'success' => false,
+        //         'message' => "Pasien belum memiliki fasilitas kesehatan terdaftar. Silakan lakukan pendaftaran terlebih dahulu."
+        //     ];
+        // } else {
+        //     $response = [
+        //         'success' => false,
+        //         'message' => "Pasien bukan berasal dari fasilitas kesehatan ini. :" . $result['data']['kdProviderPst']['nmProvider'],
+        //         'result' => $result
+        //     ];
+        // }
     }
 }
 
