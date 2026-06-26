@@ -53,9 +53,7 @@ if (!in_array($lengthkartu, [13, 16, 19])) {
         }
     } else {
         $result = bpjsGet('/peserta/' . $tipe . '/' . $nomor_kartu);
-
         if (($result['code'] ?? '') != "200" || $result['data']['aktif'] != 'true') {
-
             $response = [
                 'success' => false,
                 'code' => $result['data']['aktif'] ?? false,
@@ -71,8 +69,6 @@ if (!in_array($lengthkartu, [13, 16, 19])) {
                 ],
             ];
         } else {
-
-            // Default response pasien aktif
             $response = [
                 'success' => true,
                 'code' => $result['data']['aktif'],
@@ -92,12 +88,11 @@ if (!in_array($lengthkartu, [13, 16, 19])) {
 
 
             // Tambahkan informasi FKTP
-            if ($kodeppk == '' || $kodeppk == null) {
-
+            if ($result['data']['kdProviderPst']['kdProvider'] == '' || $result['data']['kdProviderPst']['kdProvider'] == null) {
                 $response['warning'] = true;
                 $response['message'] = "Pasien belum memiliki fasilitas kesehatan terdaftar.";
+                $response['data']['kdProvider'] = $kodeppk;
             } elseif ($kodeppk != $result['data']['kdProviderPst']['kdProvider']) {
-
                 $response['warning'] = true;
                 $response['message'] = "Pasien terdaftar di fasilitas kesehatan lain: " .
                     $result['data']['kdProviderPst']['nmProvider'];
