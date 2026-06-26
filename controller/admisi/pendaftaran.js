@@ -100,6 +100,14 @@ $(function () {
                 if (response.success) {
                     $('#tampilan').load("controller/admisi/pages/viewpendaftaran.php", function () {
                         APP.initLoadfunction();
+                        if (response.warning) {
+                            Swal.fire({
+                                title: "Perhatian",
+                                text: response.message,
+                                icon: "warning",
+                                confirmButtonText: "Lanjutkan"
+                            });
+                        }
                         if (tipe === "BPJS") {
                             $('.viewBpjs').removeClass('d-none');
                         }
@@ -203,6 +211,13 @@ $(function () {
                 }
                 if (hasil) {
                     let d = hasil.data;
+                    if (hasil.warning) {
+                        Swal.fire({
+                            title: "Perhatian",
+                            text: hasil.message,
+                            icon: "warning"
+                        });
+                    }
                     $('#btnTambahPasien, #formBPJS').removeClass('d-none');
                     APP.cetak('#regNoBPJS', d.noKartu);
                     APP.cetak('#regNama', d.nama);
