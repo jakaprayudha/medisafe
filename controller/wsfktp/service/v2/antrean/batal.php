@@ -76,15 +76,15 @@ try {
         ]);
         exit;
     }
-    if ($visit_status_db != '10') {
-        echo json_encode([
-            "metadata" => [
-                "message" => "Pasien Sudah Dilayani, Antrean Tidak Dapat Dibatalkan",
-                "code" => 201
-            ]
-        ]);
-        exit;
-    }
+    // if ($visit_status_db != '10') {
+    //     echo json_encode([
+    //         "metadata" => [
+    //             "message" => "Pasien Sudah Dilayani, Antrean Tidak Dapat Dibatalkan",
+    //             "code" => 201
+    //         ]
+    //     ]);
+    //     exit;
+    // }
     $stmtUpdateVisit = $koneksi->prepare("
         UPDATE pasien_visit 
         SET visit_status = ? 
