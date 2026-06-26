@@ -941,8 +941,8 @@ require '../../controller/view.php';
                                   data-prov="${row.id_provider}" 
                                   data-visit="${row.visit_ID}">
                                   
-                                  <i class="fas fa-trash me-2"></i>
-                                  Hapus
+                                  <i class="fas  fa-times-circle me-2"></i>
+                                  Batal
                               </a>
                           </li>
                       ` : ''}
@@ -1074,7 +1074,7 @@ require '../../controller/view.php';
       let prov = $(this).data('prov');
 
       Swal.fire({
-        title: 'Hapus Data?',
+        title: 'Peringatan?',
         text: 'Masukkan alasan pembatalan',
         icon: 'warning',
         input: 'textarea', // 🔥 ini kuncinya
