@@ -170,7 +170,7 @@
                     </div>
                 </div>
                 <input type="hidden" name="noKartu" id="noKartu">
-                <input type="text" name="kdProviderPeserta" id="kdProviderPeserta">
+                <input type="hidden" name="kdProviderPeserta" id="kdProviderPeserta">
             </form>
         </div>
     </div>
