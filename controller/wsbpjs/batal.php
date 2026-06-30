@@ -1,11 +1,9 @@
 <?php
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/serviceantrian.php';
-$nomor_visit = $_POST['novisit'];
-$sql = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT pv.noKartu, pv.visit_date, p.kdPoli FROM pasien_visit AS pv INNER JOIN master_poli AS p ON p.nmPoli = pv.id_poli WHERE visit_ID = '$nomor_visit'"));
-$tanggalperiksa = $sql['visit_date'];
-$kdPoli = $sql['kdPoli'];
-$nomorkartu = $sql['noKartu'];
+$tanggalperiksa = $_POST['tanggalperiksa'];
+$kdPoli = $_POST['kdPoli'];
+$nomorkartu = $_POST['nomorkartu'];
 $alasan = $_POST['alasan'];
 $payload = [
     "tanggalperiksa"  => $tanggalperiksa,
@@ -13,7 +11,7 @@ $payload = [
     "nomorkartu" => $nomorkartu,
     "alasan"      => $alasan
 ];
-
+//  echo json_encode($payload, JSON_PRETTY_PRINT);die();
 $result = bpjsPost("/antrean/batal", $payload);
 if ($result['code'] != '200') {
     $msg = $result['message'];

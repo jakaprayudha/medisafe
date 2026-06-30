@@ -13,6 +13,14 @@ $kodedokter     = $_POST['kdDokter'] ?? '';
 $namadokter     = $_POST['nmDokter'] ?? '';
 $jampraktek     = $_POST['jampraktek'] ?? '';
 
+if (empty($nohp)) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Nomor HP wajib diisi.'
+    ]);
+    exit;
+}
+
 $koneksi->begin_transaction();
 try {
     $visit_ID = generateVisitID($koneksi, $idcustomer);
@@ -68,26 +76,26 @@ try {
 function createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tglDaftarDB, $jampraktek)
 {
     $cekantrian = $koneksi->prepare("SELECT 
-                                    COALESCE(MAX(a.nomor), 0) AS last,
-                                    (
-                                        SELECT d.doctor_antrean
-                                        FROM ms_doctor d
-                                        WHERE d.doctor_code = ?
-                                        AND d.id_customer = ?
-                                        LIMIT 1
-                                    ) AS kode_antrian
-                                FROM antrian_poli a
-                                WHERE a.poli = ?
-                                AND a.tanggal = ?
-                                AND a.id_customer = ?
-                                AND a.kode_antri = (
-                                    SELECT d.doctor_antrean
-                                    FROM ms_doctor d
-                                    WHERE d.doctor_code = ?
-                                    AND d.id_customer = ?
-                                    LIMIT 1
-                                )
-                                FOR UPDATE");
+        COALESCE(MAX(a.nomor), 0) AS last,
+        (
+            SELECT d.doctor_antrean
+            FROM ms_doctor d
+            WHERE d.doctor_code = ?
+            AND d.id_customer = ?
+            LIMIT 1
+        ) AS kode_antrian
+    FROM antrian_poli a
+    WHERE a.poli = ?
+    AND a.tanggal = ?
+    AND a.id_customer = ?
+    AND a.kode_antri = (
+        SELECT d.doctor_antrean
+        FROM ms_doctor d
+        WHERE d.doctor_code = ?
+        AND d.id_customer = ?
+        LIMIT 1
+    )
+    FOR UPDATE");
     $cekantrian->bind_param("sssssss", $kdDokter, $idcustomer, $kdPoli, $tglDaftarDB, $idcustomer, $kdDokter, $idcustomer);
     $cekantrian->execute();
     $rowantrian = $cekantrian->get_result()->fetch_assoc();
@@ -102,8 +110,7 @@ function createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tg
         'display' => $kode_antrian . $next
     ];
 }
-function generateVisitID($koneksi, $idcustomer)
-{
+function generateVisitID($koneksi, $idcustomer){
     do {
         $date = date('ymd');
         $random = strtoupper(bin2hex(random_bytes(3)));

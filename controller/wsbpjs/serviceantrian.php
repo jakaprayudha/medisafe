@@ -5,8 +5,8 @@ session_start();
 $idcustomer = $_SESSION['id_customer'];
 // $idcustomer = '19';
 $sql = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM `setting_antrol` WHERE id_customer = '$idcustomer'"));
-$base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
-$service = 'antreanfktp_dev';
+$base_url = $sql['base_url'];
+$service = $sql['service'];
 // date_default_timezone_set('Asia/Jakarta');
 $kodeppk = $sql['kodePPK'];
 $tanggal = date('Y-m-d');
@@ -57,7 +57,8 @@ function getHeaders($const_id, $tStamp, $signature, $userkey){
     ];
 }
 
-function bpjsGetService($endpoint){
+function bpjsGetService($endpoint)
+{
     global $base_url, $service, $const_id, $secretKey, $userkey;
     $url = rtrim($base_url, '/') . '/' . trim($service, '/') . '/' . ltrim($endpoint, '/');
     $auth = generateSignature($const_id, $secretKey);
@@ -96,21 +97,16 @@ function bpjsGetService($endpoint){
     );
 }
 
-function bpjsGet($endpoint, $config)
-{
+function bpjsGet($endpoint, $config){
     $url = rtrim($config['base_url'], '/') . '/' . trim($config['service'], '/') . '/' . ltrim($endpoint, '/');
-
     $auth = generateSignature($config['const_id'], $config['secretKey']);
-
     $headers = getHeaders(
         $config['const_id'],
         $auth['timestamp'],
         $auth['signature'],
         $config['userkey']
     );
-
     $ch = curl_init();
-
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,
         CURLOPT_CUSTOMREQUEST => 'GET',
@@ -122,8 +118,7 @@ function bpjsGet($endpoint, $config)
 
     $response = curl_exec($ch);
     $err = curl_error($ch);
-    echo $response;
-    die();
+    // echo $response;die();
     curl_close($ch);
 
     if ($err) {
@@ -153,7 +148,8 @@ function bpjsPost($endpoint, array $payload, $method = "POST")
         $auth['signature'],
         $userkey
     );
-    // echo json_encode($headers, JSON_PRETTY_PRINT);die();
+    // echo $url;die();
+    // echo json_encode($payload, JSON_PRETTY_PRINT);die();
     $ch = curl_init();
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,

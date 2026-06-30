@@ -938,6 +938,9 @@ require '../../controller/view.php';
                               <a class="dropdown-item delete-btn text-danger" 
                                   href="javascript:;" 
                                   data-id="${row.id_visit}" 
+                                  data-nokartu="${row.patient_bpjs}" 
+                                  data-kdpoli="${row.id_provider}" 
+                                  data-tanggal="${row.id_provider}" 
                                   data-prov="${row.id_provider}" 
                                   data-visit="${row.visit_ID}">
                                   
@@ -1073,6 +1076,11 @@ require '../../controller/view.php';
       let visit = $(this).data('visit');
       let prov = $(this).data('prov');
 
+      let nokartu = $(this).data('prov');
+      let kdpoli = $(this).data('prov');
+      let tanggal = $(this).data('prov');
+
+
       Swal.fire({
         title: 'Peringatan?',
         text: 'Masukkan alasan pembatalan',
@@ -1103,7 +1111,7 @@ require '../../controller/view.php';
           });
           if (prov == '1') {
             $.ajax({
-              url: 'controller/admisi/services/deletePendaftaran.php',
+              url: 'controller/wsbpjs/batalAntrian.php',
               type: "POST",
               data: {
                 novisit: visit,
@@ -1111,14 +1119,25 @@ require '../../controller/view.php';
               },
               dataType: 'json',
               success: function(res) {
-                Swal.close();
                 if (res.success) {
-                  Swal.fire({
-                    title: "Berhasil",
-                    text: res.message,
-                    icon: "success"
-                  });
-                  table.ajax.reload(null, false);
+                  $.ajax({
+                    url: 'controller/admisi/services/deletePendaftaran.php',
+                    type: "POST",
+                    data: {
+                      novisit: visit,
+                      alasan: alasan
+                    },
+                    dataType: 'json',
+                    success: function(res) {
+                      Swal.close();
+                      Swal.fire({
+                        title: "Berhasil",
+                        text: res.message,
+                        icon: "success"
+                      });
+                      table.ajax.reload(null, false);
+                    }
+                  })
                 } else {
                   Swal.fire({
                     title: "Gagal Hapus",
