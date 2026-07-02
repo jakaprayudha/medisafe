@@ -446,7 +446,14 @@ $MAP = [
             </tr>
             <tr>
                 <td>Diagnosa Banding</td>
-                <td><?= val($triase['diagnosa_sekunder'] ?? null) ?></td>
+                <td>
+                    <?php
+                    $diagnosaSekunder = $triase['diagnosa_sekunder'] ?? '';
+                    $diagnosaDataSekunder = mysqli_query($koneksi, "SELECT code, icd10 FROM icd_10 WHERE code='$diagnosaSekunder'");
+                    $icdSekunder = mysqli_fetch_array($diagnosaDataSekunder);
+                    ?>
+                    <?= val($icdSekunder['icd10'] ? $icdSekunder['code'] . ' - ' . $icdSekunder['icd10'] : null) ?>
+                </td>
             </tr>
         </table>
 
