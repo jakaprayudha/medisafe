@@ -154,7 +154,6 @@
       <div class="call-label">PANGGILAN PASIEN</div>
       <div class="call-number" id="callPatient">-</div>
       <div class="call-counter" id="callQueue">-</div>
-      <div class="call-counter" id="callLoket">-</div>
     </div>
 
     <!-- DAFTAR ANTRIAN -->
@@ -196,10 +195,9 @@
               <tr>
                 <td colspan="3" class="text-center">Tidak ada antrian</td>
               </tr>
-          `);
-              $('#callPatient').html('-');
-              $('#callQueue').html('-');
-              $('#callLoket').html('-');
+              `);
+              // $('#callPatient').html('-');
+              // $('#callQueue').html('-');
               return;
             }
             res.data.forEach(function(item) {
@@ -207,7 +205,7 @@
                 <tr>
                   <td>${item.no_antrian}</td>
                   <td>${item.nama_pasien}</td>
-                  <td class="status-wait">${item.status}</td>
+                  <td class="status-wait">${item.status = "0" ? "Menunggu" : "Dipanggil"}</td>
                 </tr>
               `;
             });
@@ -216,65 +214,12 @@
         })
       }
       APP.showQueue();
-      APP.CallAntrian = function(nama, nomor, loket, kdantri, target) {
+      APP.showAntrianPoli = function(nama, dokter) {
+        console.log(nama);
+        console.log(dokter);
+        $('#callPatient').html(nama.toUpperCase());
+        $('#callQueue').html("Ruangan Dr. " + dokter.toUpperCase());
         APP.showQueue();
-        $('#callPatient').html(nama);
-        $('#callQueue').html(nomor);
-        $('#callLoket').html(target.toUpperCase());
-        speakQueue(nama, target, nomor);
-      }
-
-      function updateDateTime() {
-        const now = new Date();
-
-        const optionsDate = {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        };
-
-        const date = now.toLocaleDateString('id-ID', optionsDate);
-        const time = now.toLocaleTimeString('id-ID', {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
-        });
-
-        document.getElementById('date').textContent = date;
-        document.getElementById('time').textContent = time;
-      }
-      updateDateTime();
-      setInterval(updateDateTime, 1000);
-
-      function loadVoices() {
-        voices = speechSynthesis.getVoices();
-      }
-      speechSynthesis.onvoiceschanged = loadVoices;
-      document.addEventListener("DOMContentLoaded", () => {
-        loadVoices();
-      });
-
-      function speakQueue(nama, target, nomor) {
-        if (!('speechSynthesis' in window)) return;
-
-        const text = `Kepada pasien atas nama ${nama}, dengan antrian ${nomor}, dipersilakan ke loket ${target}`;
-        const utterance = new SpeechSynthesisUtterance(text);
-
-        utterance.rate = 0.9;
-        utterance.pitch = 1;
-        utterance.volume = 1;
-
-        // Cari voice Indonesia, fallback aman
-        let voice =
-          voices.find(v => v.lang === 'id-ID') ||
-          voices.find(v => v.lang && v.lang.startsWith('id')) ||
-          voices[0];
-
-        if (voice) utterance.voice = voice;
-
-        speechSynthesis.cancel();
-        speechSynthesis.speak(utterance);
       }
     })
   </script>
