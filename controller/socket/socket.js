@@ -25,7 +25,7 @@ function startApp() {
     let moduleName = moduleIndex !== -1 ? parts[moduleIndex + 1].toUpperCase() : null;
     let pageName = moduleIndex !== -1 ? parts[moduleIndex + 2] : null;
     let target = moduleName;
-    let pages = ["pemeriksaan", "farmasi_order_detail"];
+    let pages = ["pemeriksaan", "farmasi_order_detail", "display-admisi"];
     // let pages = ["counter-call", "display-admisi"];
     if (pages.includes(pageName)) {
         enableSocket = true;
@@ -37,7 +37,7 @@ function startApp() {
         socket.on("connect", () => {
             pages.forEach((pageName) => {
                 if (pageName == "display-admisi") {
-                    socket.emit("join", data.id_customer + "_" + pageName);
+                    socket.emit("join", data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
                 } else if (pageName == 'pemeriksaan' && target == 'DOCTOR') {
                     socket.emit("join", data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
                 } else if (pageName == "farmasi_order_detail" && target == "ADMIN") {
@@ -70,13 +70,18 @@ function startApp() {
                     break;
             }
         });
+
+        socket.on("display_antian_poli", data => {
+            APP.showAntrianPoli(data.nama, data.dokter);
+        });
+
         socket.on("putar_suara_panggilan", (data) => {
-            console.log("DATA SOCKET:", data);
+            // console.log("DATA SOCKET:", data);
             const myRequestId = sessionStorage.getItem('requestId');
-            console.log("MY REQUEST:", myRequestId);
-            console.log("SOCKET REQUEST:", data.requestId);
+            // console.log("MY REQUEST:", myRequestId);
+            // console.log("SOCKET REQUEST:", data.requestId);
             if (data.requestId !== myRequestId) {
-                console.log("SKIP");
+                // console.log("SKIP");
                 return;
             }
             console.log("PLAY AUDIO");

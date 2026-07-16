@@ -49,9 +49,9 @@ $(function () {
         language: {
             inputTooShort: function (args) {
                 let sisa = args.minimum - args.input.length;
-                return sisa === 1
-                    ? 'Masukkan 1 karakter lagi'
-                    : `Masukkan ${sisa} karakter lagi`;
+                return sisa === 1 ?
+                    'Masukkan 1 karakter lagi' :
+                    `Masukkan ${sisa} karakter lagi`;
             },
             noResults: function () {
                 return `
@@ -108,7 +108,9 @@ $(function () {
         APP.cetak('#norm', data.rm || '-');
         APP.cetak("#typePasien", tipePasien);
         let nik = data.noKTP || nomorAsli;
-        APP.cetak('#noNIK', nik);
+        if (nik != null && nik != '' && nik != '-') {
+            APP.cetak('#noNIK', nik);
+        }
         APP.cetakhtml('#nonik', nik);
     }
 
@@ -226,6 +228,7 @@ $(function () {
             }
         });
     }
+
     function resetTampilan() {
         $('#tampilan').html(`
         <div class="text-muted text-center py-4">
@@ -265,8 +268,7 @@ $(function () {
                 let hasil = null;
                 if (response.success && response.data) {
                     hasil = response;
-                }
-                else if (response.result && response.result.success && response.result.data) {
+                } else if (response.result && response.result.success && response.result.data) {
                     hasil = response.result;
                 }
                 if (hasil) {
@@ -460,8 +462,7 @@ $(function () {
         //     $("#nmPoli").val(nmPoli);
         //     loadDokter();
         // });
-        const knjsakit = [
-            {
+        const knjsakit = [{
                 id: "10",
                 text: "Rawat Jalan",
             },
@@ -501,8 +502,7 @@ $(function () {
             width: "100%",
             placeholder: "Jenis Kunjungan",
             allowClear: false,
-            data: [
-                {
+            data: [{
                     id: "true",
                     text: "Kunjungan Sakit"
                 },
@@ -586,6 +586,7 @@ $(function () {
             }
         });
     };
+
     function resetSemuaForm() {
         $('#tampilan').html(`
             <div class="text-muted text-center py-4">
@@ -606,6 +607,7 @@ $(function () {
         $('#kdProviderPeserta').val('');
         $('#isiform')[0]?.reset();
     }
+
     function setTypePasien() {
         let selected = $('#kodeprov').find(':selected');
         let nama = (selected.text() || '').toLowerCase();

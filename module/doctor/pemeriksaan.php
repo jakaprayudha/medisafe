@@ -215,6 +215,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                       data-poli="${row.poli_name}"
                       data-visit="${row.visit_ID}"
                       data-dokter="${row.id_doctor}"
+                      data-visit="${row.visit_ID}"
                       title="Panggil Pasien">
                       <i class="ti ti-volume"></i>
                     </button>
@@ -316,6 +317,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
     const poli = $(this).data('poli');
     const visit = $(this).data('visit');
     const id_doctor = $(this).data('dokter');
+    const visit_ID = $(this).data('visit');
     // console.log('DOKTER:', dokter);
     // callPatient(noAntrian, nama, poli, visit, dokter);
     let dokterRaw = (id_doctor || '').trim();
@@ -341,7 +343,9 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
       type: 'POST',
       data: {
         text: text,
-        requestId: requestId
+        requestId: requestId,
+        nama: namaPasien,
+        nomor_visit: visit_ID
       },
       dataType: 'json',
       success: function(response) {
