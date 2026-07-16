@@ -110,8 +110,8 @@ $(function () {
         let nik = data.noKTP || nomorAsli;
         if (nik != null && nik != '' && nik != '-') {
             APP.cetak('#noNIK', nik);
+            APP.cetakhtml('#nonik', nik);
         }
-        APP.cetakhtml('#nonik', nik);
     }
 
     function sinkronProviderDariDataPasien() {
