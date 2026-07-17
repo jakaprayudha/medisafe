@@ -127,6 +127,7 @@ if ($type == "BPJS") {
         $created_user = "JKNOnsite";
         $source_hub = "Poliklinik";
         $id_patient = $chackpasien['id_patient'];
+        $patient_name_db = !empty($chackpasien['patient_name']) ? $chackpasien['patient_name'] : $nama;
         $visit_time = date('H:i:s');
         $bmi = $_POST['bmi'];
         $bmiKet = $_POST['bmiKet'];
@@ -182,7 +183,7 @@ if ($type == "BPJS") {
             $respRate,
             $tinggiBadan,
             $beratBadan,
-            $nama,
+            $patient_name_db,
             $suhu,
             $saturasi,
             $bmi,
@@ -256,6 +257,58 @@ if ($type == "BPJS") {
     $status_antrian = 0;
     $td = $sistole . "/" . $diastole;
     $stmt->bind_param(
+
+    $patient_name_db = $nama;
+    if (!empty($id_patient)) {
+        $stmtName = $koneksi->prepare("SELECT patient_name FROM ms_patient WHERE id_patient = ? AND id_customer = ?");
+        $stmtName->bind_param("ss", $id_patient, $idcustomer);
+        $stmtName->execute();
+        $rowName = $stmtName->get_result()->fetch_assoc();
+        $stmtName->close();
+        if (!empty($rowName['patient_name'])) {
+            $patient_name_db = $rowName['patient_name'];
+        }
+    }
+
+    $stmtInsert = $koneksi->prepare("
+    INSERT INTO pasien_visit (
+        id_patient,
+        visit_ID,
+        visit_date,
+        id_poli,
+        source_hub,
+        created_user,
+        visit_antrian,
+        status_antrian,
+        id_customer,
+        id_doctor,
+        visit_time,
+        keluhan_penyerta,
+        tekanan_darah, 
+        nadi,
+        respirasi, 
+        tinggi_badan,
+        berat_badan,
+        patient_name_pcare,
+        suhu,
+        saturasi,
+        bmi,
+        bmi_keterangan,
+        code_doctor,
+        id_provider
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ");
+
+    if (!$stmtInsert) {
+        $response = [
+            'success' => false,
+            'message' => $koneksi->error
+        ];
+        echo json_encode($response);
+        exit;
+    }
+
+    $stmtInsert->bind_param(
         "ssssssssssssssssssssssss",
         $id_patient,
         $visit_ID,
@@ -274,7 +327,7 @@ if ($type == "BPJS") {
         $respRate,
         $tinggiBadan,
         $beratBadan,
-        $nama,
+        $patient_name_db,
         $suhu,
         $saturasi,
         $bmi,
