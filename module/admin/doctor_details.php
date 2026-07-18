@@ -63,9 +63,6 @@ $no = $_GET['no'];
                       <button class="nav-link" id="nav-contact-tab" data-bs-toggle="tab"
                         data-bs-target="#nav-contact" type="button" role="tab" aria-controls="nav-contact"
                         aria-selected="false">Dokumen</button>
-                      <button class="nav-link" id="nav-jadwal-tab" data-bs-toggle="tab"
-                        data-bs-target="#nav-jadwal" type="button" role="tab" aria-controls="nav-jadwal"
-                        aria-selected="false">Jadwal Praktik</button>
                     </div>
                   </nav>
 
@@ -304,60 +301,6 @@ $no = $_GET['no'];
                         </div>
                       </div>
                     </div>
-                    <!-- Jadwal Prakikt -->
-                    <div class="tab-pane fade" id="nav-jadwal" role="tabpanel" aria-labelledby="nav-jadwal-tab" tabindex="0">
-                      <form id="formJadwal">
-                        <div class="row">
-                          <div class="col-4">
-                            <div class="mb-3">
-                              <label class="form-label">Hari</label>
-                              <select class="form-select" name="day_of_week" required>
-                                <option value="">Pilih Hari</option>
-                                <option value="Senin">Senin</option>
-                                <option value="Selasa">Selasa</option>
-                                <option value="Rabu">Rabu</option>
-                                <option value="Kamis">Kamis</option>
-                                <option value="Jumat">Jumat</option>
-                                <option value="Sabtu">Sabtu</option>
-                                <option value="Minggu">Minggu</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div class="col-4">
-                            <div class="mb-3">
-                              <label class="form-label">Jam Mulai</label>
-                              <input type="text" class="form-control timepicker" name="start_time" required>
-                            </div>
-                          </div>
-                          <div class="col-4">
-                            <div class="mb-3">
-                              <label class="form-label">Jam Selesai</label>
-                              <input type="text" class="form-control timepicker" name="end_time" required>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="mt-3 text-end">
-                          <button type="submit" class="btn btn-primary">Simpan</button>
-                        </div>
-                      </form>
-
-                      <hr>
-                      <h6>Jadwal Dokter</h6>
-                      <table class="table table-bordered" id="jadwalTable">
-                        <thead>
-                          <tr>
-                            <th>Hari</th>
-                            <th>Jam</th>
-                            <th>Kuota</th>
-                            <th class="col-1">Aksi</th>
-                          </tr>
-                        </thead>
-                        <tbody></tbody>
-                      </table>
-                    </div>
-                  </div>
-
-
                 </div>
               </div>
             </div>
@@ -613,126 +556,126 @@ $no = $_GET['no'];
       }
     });
 
-    function toggleStatus(id, el) {
-      let newStatus = el.checked ? 1 : 0;
-      let text = newStatus ? "mengaktifkan" : "menonaktifkan";
+    // function toggleStatus(id, el) {
+    //   let newStatus = el.checked ? 1 : 0;
+    //   let text = newStatus ? "mengaktifkan" : "menonaktifkan";
 
-      Swal.fire({
-        title: "Yakin?",
-        text: `Ingin ${text} jadwal ini?`,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Ya",
-        cancelButtonText: "Batal"
-      }).then((result) => {
+    //   Swal.fire({
+    //     title: "Yakin?",
+    //     text: `Ingin ${text} jadwal ini?`,
+    //     icon: "warning",
+    //     showCancelButton: true,
+    //     confirmButtonText: "Ya",
+    //     cancelButtonText: "Batal"
+    //   }).then((result) => {
 
-        if (result.isConfirmed) {
+    //     if (result.isConfirmed) {
 
-          el.disabled = true;
+    //       el.disabled = true;
 
-          // 🔥 tampilkan loading popup
-          Swal.fire({
-            title: "Memproses...",
-            text: "Mohon tunggu",
-            allowOutsideClick: false,
-            didOpen: () => {
-              Swal.showLoading();
-            }
-          });
+    //       // 🔥 tampilkan loading popup
+    //       Swal.fire({
+    //         title: "Memproses...",
+    //         text: "Mohon tunggu",
+    //         allowOutsideClick: false,
+    //         didOpen: () => {
+    //           Swal.showLoading();
+    //         }
+    //       });
 
-          fetch("controller/master/updateStatusJadwal.php", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                id: id,
-                status: newStatus
-              })
-            })
-            .then(res => res.json())
-            .then(res => {
+    //       fetch("controller/master/updateStatusJadwal.php", {
+    //           method: "POST",
+    //           headers: {
+    //             "Content-Type": "application/json"
+    //           },
+    //           body: JSON.stringify({
+    //             id: id,
+    //             status: newStatus
+    //           })
+    //         })
+    //         .then(res => res.json())
+    //         .then(res => {
 
-              if (res.success) {
-                Swal.fire("Berhasil", "Status diperbarui", "success");
-              } else {
-                Swal.fire("Gagal", res.message, "error");
-                el.checked = !el.checked;
-              }
+    //           if (res.success) {
+    //             Swal.fire("Berhasil", "Status diperbarui", "success");
+    //           } else {
+    //             Swal.fire("Gagal", res.message, "error");
+    //             el.checked = !el.checked;
+    //           }
 
-            })
-            .catch(() => {
-              Swal.fire("Error", "Terjadi kesalahan", "error");
-              el.checked = !el.checked;
-            })
-            .finally(() => {
-              el.disabled = false;
-            });
+    //         })
+    //         .catch(() => {
+    //           Swal.fire("Error", "Terjadi kesalahan", "error");
+    //           el.checked = !el.checked;
+    //         })
+    //         .finally(() => {
+    //           el.disabled = false;
+    //         });
 
-        } else {
-          el.checked = !el.checked;
-        }
+    //     } else {
+    //       el.checked = !el.checked;
+    //     }
 
-      });
-    }
+    //   });
+    // }
 
-    document.addEventListener("change", function(e) {
+    // document.addEventListener("change", function(e) {
 
-      if (e.target.classList.contains("kuota-input")) {
+    //   if (e.target.classList.contains("kuota-input")) {
 
-        let input = e.target;
-        let id = input.dataset.id;
-        let value = parseInt(input.value);
+    //     let input = e.target;
+    //     let id = input.dataset.id;
+    //     let value = parseInt(input.value);
 
-        if (value < 0 || isNaN(value)) {
-          alert("Kuota tidak valid");
-          input.value = 0;
-          return;
-        }
+    //     if (value < 0 || isNaN(value)) {
+    //       alert("Kuota tidak valid");
+    //       input.value = 0;
+    //       return;
+    //     }
 
-        let oldValue = input.getAttribute("data-old") || value;
+    //     let oldValue = input.getAttribute("data-old") || value;
 
-        // loading style
-        input.disabled = true;
-        input.style.backgroundColor = "#ffeeba";
+    //     // loading style
+    //     input.disabled = true;
+    //     input.style.backgroundColor = "#ffeeba";
 
-        fetch("controller/master/updateKuota.php", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              id: id,
-              kuota: value
-            })
-          })
-          .then(res => res.json())
-          .then(res => {
+    //     fetch("controller/master/updateKuota.php", {
+    //         method: "POST",
+    //         headers: {
+    //           "Content-Type": "application/json"
+    //         },
+    //         body: JSON.stringify({
+    //           id: id,
+    //           kuota: value
+    //         })
+    //       })
+    //       .then(res => res.json())
+    //       .then(res => {
 
-            if (res.success) {
-              input.setAttribute("data-old", value);
-              input.style.backgroundColor = "#d4edda"; // hijau sukses
-            } else {
-              alert(res.message);
-              input.value = oldValue; // rollback
-            }
+    //         if (res.success) {
+    //           input.setAttribute("data-old", value);
+    //           input.style.backgroundColor = "#d4edda"; // hijau sukses
+    //         } else {
+    //           alert(res.message);
+    //           input.value = oldValue; // rollback
+    //         }
 
-          })
-          .catch(() => {
-            alert("Terjadi kesalahan");
-            input.value = oldValue;
-          })
-          .finally(() => {
-            input.disabled = false;
+    //       })
+    //       .catch(() => {
+    //         alert("Terjadi kesalahan");
+    //         input.value = oldValue;
+    //       })
+    //       .finally(() => {
+    //         input.disabled = false;
 
-            setTimeout(() => {
-              input.style.backgroundColor = "";
-            }, 800);
-          });
+    //         setTimeout(() => {
+    //           input.style.backgroundColor = "";
+    //         }, 800);
+    //       });
 
-      }
+    //   }
 
-    });
+    // });
     $(document).on('click', '.delete-btn', function() {
       let id = $(this).data('id');
 

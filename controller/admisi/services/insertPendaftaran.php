@@ -64,63 +64,67 @@ if ($type == "BPJS") {
     $result = bpjsPost("/pendaftaran", $payload);
     // echo json_encode($result);die();
     // $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
-    if ($result['code'] != '200') {
-        $msg = $result['metadata'];
-        if ($msg == null) {
-            $msg = "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
-        }
-        $response = [
-            'success' => false,
-            'message' => $msg,
-            'result' => $result
-        ];
-    } else {
-        $noUrut = $result['data']['message'];
-        $noUrut = (string) $noUrut;
-        $sistole      = (int)$sistole;
-        $diastole     = (int)$diastole;
-        $beratBadan   = (int)$beratBadan;
-        $tinggiBadan  = (int)$tinggiBadan;
-        $respRate     = (int)$respRate;
-        $lingkarPerut = (int)$lingkarPerut;
-        $heartRate    = (int)$heartRate;
+    // if ($result['code'] != '200') {
+    //     $msg = $result['metadata'];
+    //     if ($msg == null) {
+    //         $msg = "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
+    //     }
+    //     $response = [
+    //         'success' => false,
+    //         'message' => $msg,
+    //         'result' => $result
+    //     ];
+    // } else {
+        // $noUrut = $result['data']['message'];
+        // $noUrut = (string) $noUrut;
+        // $sistole      = (int)$sistole;
+        // $diastole     = (int)$diastole;
+        // $beratBadan   = (int)$beratBadan;
+        // $tinggiBadan  = (int)$tinggiBadan;
+        // $respRate     = (int)$respRate;
+        // $lingkarPerut = (int)$lingkarPerut;
+        // $heartRate    = (int)$heartRate;
+        // $visit_ID = $_POST['visit_id'];
+        // $antrian = $_POST['antrian'];
+        // $angkaantrean = $_POST['angkaantrean'];
+        // $kodeAntri       = $_POST['kodeAntri'];
+        // $stmt = $koneksi->prepare("INSERT INTO `pcare_pendaftaran` (`tanggal_daftar`, `noKartu`, `kdPoli`, `nmPoli`, `keluhan`, `kunjSakit`, `sistole`, `diastole`, `beratBadan`, `tinggiBadan`, `respRate`, `lingkarPerut`, `heartRate`, `rujukBalik`, `kdTkp`, `noUrut`, `nomor_visit`, `saturasi`, `suhu`, `jamperaktek`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+        // $stmt->bind_param(
+        //     "ssssssiiiiiiisssssss",
+        //     $tglDaftarDB,
+        //     $noKartu,
+        //     $kdPoli,
+        //     $nmPoli,
+        //     $keluhan,
+        //     $kunjSakit,
+        //     $sistole,
+        //     $diastole,
+        //     $beratBadan,
+        //     $tinggiBadan,
+        //     $respRate,
+        //     $lingkarPerut,
+        //     $heartRate,
+        //     $rujukbalik,
+        //     $kdTkp,
+        //     $noUrut,
+        //     $visit_ID,
+        //     $saturasi,
+        //     $suhu,
+        //     $jampraktek
+        // );
+        // $hasil = $stmt->execute();
+        // $stmt->close();
+
         $visit_ID = $_POST['visit_id'];
         $antrian = $_POST['antrian'];
         $angkaantrean = $_POST['angkaantrean'];
         $kodeAntri       = $_POST['kodeAntri'];
-        $stmt = $koneksi->prepare("INSERT INTO `pcare_pendaftaran` (`tanggal_daftar`, `noKartu`, `kdPoli`, `nmPoli`, `keluhan`, `kunjSakit`, `sistole`, `diastole`, `beratBadan`, `tinggiBadan`, `respRate`, `lingkarPerut`, `heartRate`, `rujukBalik`, `kdTkp`, `noUrut`, `nomor_visit`, `saturasi`, `suhu`, `jamperaktek`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-        $stmt->bind_param(
-            "ssssssiiiiiiisssssss",
-            $tglDaftarDB,
-            $noKartu,
-            $kdPoli,
-            $nmPoli,
-            $keluhan,
-            $kunjSakit,
-            $sistole,
-            $diastole,
-            $beratBadan,
-            $tinggiBadan,
-            $respRate,
-            $lingkarPerut,
-            $heartRate,
-            $rujukbalik,
-            $kdTkp,
-            $noUrut,
-            $visit_ID,
-            $saturasi,
-            $suhu,
-            $jampraktek
-        );
-        $hasil = $stmt->execute();
-        $stmt->close();
-
         $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE (patient_bpjs = ? OR patient_nik = ?) AND id_customer = ?");
         $stmt->bind_param('sss', $noKartu, $noNIK, $idcustomer);
         $stmt->execute();
         $chackpasien = $stmt->get_result()->fetch_assoc();
 
-        $created_user = "User";
+        $created_user = "JKNOnsite";
         $source_hub = "Poliklinik";
         $id_patient = $chackpasien['id_patient'];
         $visit_time = date('H:i:s');
@@ -190,7 +194,7 @@ if ($type == "BPJS") {
         // $stmt2 = $koneksi->prepare("UPDATE ms_patient SET patient_nik = ?, patient_bpjs = ?, patient_datebirth = ? WHERE (patient_bpjs = ? OR patient_nik = ?) AND id_customer = ?");
         // $stmt2->bind_param("ssssss", $noNIK, $noKartu, $tglLahir, $noKartu, $noNIK, $idcustomer);
         // $hasil2 = $stmt2->execute();
-        if ($hasil and $hasil1) {
+        if ($hasil1) {
             $response = [
                 'success'  => true,
                 'message'  => "Berhasil Mendaftar Pasien",
@@ -202,7 +206,7 @@ if ($type == "BPJS") {
                 'message' => "Gagal Mendaftar",
             ];
         }
-    }
+    // }
 } else {
     $visit_ID = generateVisitID($koneksi, $idcustomer);
     $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE (patient_nik = ? OR patient_bpjs = ?) AND id_customer = ?");
@@ -214,7 +218,7 @@ if ($type == "BPJS") {
     $nomorantrean = $resultAntrian['display'];
     $angkaantrean = $resultAntrian['nomor'];
     $kodeAntri       = $resultAntrian['kode'];
-    $created_user = "User";
+    $created_user = "Onsite";
     $source_hub = "Poliklinik";
     $id_patient = $chackpasien['id_patient'];
     $visit_time = date('H:i:s');

@@ -5,6 +5,12 @@ session_start();
 $idcustomer = $_SESSION['id_customer'];
 // $idcustomer = '19';
 $sql = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM `setting_antrol` WHERE id_customer = '$idcustomer'"));
+if ($sql) {
+    $status_antrol = true;
+} else {
+    $status_antrol = false;
+}
+
 $base_url = $sql['base_url'];
 $service = $sql['service'];
 // date_default_timezone_set('Asia/Jakarta');

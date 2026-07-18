@@ -862,7 +862,7 @@ require '../../controller/view.php';
               return `${tahun} th ${bulan} bln ${hari} hr`;
             }
             let status_sumber = "Non JKN/UMUM";
-            if (row.provider_name == 'BPJS KESEHATAN' && row.created_user != "User") {
+            if (row.provider_name == 'BPJS KESEHATAN' && row.created_user != "JKNOnsite") {
               status_sumber = "Mobile JKN";
             } else if (row.provider_name == 'BPJS KESEHATAN') {
               status_sumber = "JKN/Onsite";

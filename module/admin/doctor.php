@@ -37,9 +37,9 @@ require '../../controller/view.php';
                   <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="card-title fw-semibold">Data Dokter</h5>
                     <!-- Grup tombol di sisi kanan -->
-                    <div class="d-flex ms-auto gap-2">
+                    <!-- <div class="d-flex ms-auto gap-2">
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
-                    </div>
+                    </div> -->
                   </div>
                   <div class="table-responsive" data-simplebar>
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">

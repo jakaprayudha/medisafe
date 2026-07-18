@@ -45,7 +45,14 @@ try {
     ];
     // echo json_encode($payload, JSON_PRETTY_PRINT);die();
     // $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getantrian.php", $payload);
-    $result = bpjsPost("/antrean/add", $payload);
+    if ($status_antrol) {
+        $result = bpjsPost("/antrean/add", $payload);
+    } else {
+        $result = [
+            "code"    => 200,
+            "message" => "OK"
+        ];
+    }
     if ($result['code'] != '200') {
         $msg = $result['message'];
         if ($msg == null) {
@@ -110,7 +117,8 @@ function createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tg
         'display' => $kode_antrian . $next
     ];
 }
-function generateVisitID($koneksi, $idcustomer){
+function generateVisitID($koneksi, $idcustomer)
+{
     do {
         $date = date('ymd');
         $random = strtoupper(bin2hex(random_bytes(3)));

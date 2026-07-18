@@ -368,7 +368,7 @@ $(function () {
             const poli = $('#kodepoli').val();
             $select.html('<option value="">Loading...</option>').trigger('change.select2');
             $.ajax({
-                url: 'controller/wsbpjs/getDokter.php',
+                url: 'controller/admisi/services/getDokterlocal.php',
                 type: 'GET',
                 data: {
                     kdpoli: poli,
@@ -486,9 +486,6 @@ $(function () {
         $('#kodeprov').on('change', function () {
             setTypePasien();
         });
-        $('#tanggalKunjung').on('change', function () {
-            loadDokter();
-        })
 
     }
     APP.createpeserta = function () {
