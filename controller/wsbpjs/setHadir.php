@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/serviceantrian.php';
-
+date_default_timezone_set('Asia/Jakarta');
 $visit_id = $_POST['visit_id'] ?? '';
 $type = $_POST['type'];
 $status_hadir = $_POST['statushadir'] ?? '1';
@@ -18,7 +18,7 @@ if (str_contains($type, "BPJS")) {
         "status" => (int)$status_hadir,
         "waktu" => round(microtime(true) * 1000)
     ];
-    // echo json_encode($payload, JSON_PRETTY_PRINT);
+    // echo json_encode($payload, JSON_PRETTY_PRINT);die();
     $result = bpjsPost('/antrean/panggil', $payload);
 }
 $stmt1 = $koneksi->prepare("UPDATE antrian_poli SET `status` = ? WHERE nomor_visit = ? AND id_customer = ?");

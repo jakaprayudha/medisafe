@@ -122,7 +122,7 @@ if ($data['created_user'] == "MobileJKN") {
 } else {
     $response = [
         'success'  => true,
-        'message'  => "Tidak Perlu Daftar Pcare",
+        'message'  => "Berhasil",
     ];
 }
 echo json_encode($response);
