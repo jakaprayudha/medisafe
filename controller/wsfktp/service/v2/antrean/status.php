@@ -42,7 +42,6 @@ $listPoli = [
 $headers = array_change_key_case(getallheaders(), CASE_LOWER);
 $username = $headers['x-username'] ?? null;
 $id_customer = validateBpjsToken($username);
-
 /* URL PARAM */
 $url = $_SERVER['REQUEST_URI'];
 $segments = explode('/', trim(parse_url($url, PHP_URL_PATH), '/'));
@@ -104,7 +103,7 @@ $map = [
 $hari_indonesia = $map[$hari] ?? '';
 
 // $config = getConfigBPJS($id_customer, $koneksi);
-// $bpjsResult = bpjsGet('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggalperiksa, $config);
+// $bpjsResult = bpjsGetService('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggalperiksa, $config);
 // echo json_encode($bpjsResult);die();
 // $mapDokter = [];
 // foreach ($bpjsResult as $d) {

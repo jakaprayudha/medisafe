@@ -22,7 +22,8 @@ $userkey = $sql['userkey'];
 $const_id = $sql['constid'];
 // $encodedSignature = base64_encode($signature);
 
-function generateSignature($const_id, $secretKey){
+function generateSignature($const_id, $secretKey)
+{
     date_default_timezone_set('UTC');
     $tStamp = strval(time());
     $signature = hash_hmac('sha256', $const_id . "&" . $tStamp, $secretKey, true);
@@ -32,7 +33,8 @@ function generateSignature($const_id, $secretKey){
     ];
 }
 
-function getNamaBulan($bulan){
+function getNamaBulan($bulan)
+{
     $daftarBulan = [
         'Januari',
         'Februari',
@@ -57,7 +59,7 @@ function getHeaders($const_id, $tStamp, $signature, $userkey){
         "X-timestamp: $tStamp",
         "X-signature: $signature",
         "user_key: $userkey",
-        "Content-Type: application/json; charset=utf-8",
+        // "Content-Type: application/json; charset=utf-8",
     ];
 }
 
@@ -72,7 +74,11 @@ function bpjsGetService($endpoint)
         $auth['signature'],
         $userkey
     );
-
+    // echo "<pre>";
+    // print_r($headers);
+    // echo "</pre>";die();
+    // echo $url;die();
+    // echo json_encode($payload, JSON_PRETTY_PRINT);die();
     $ch = curl_init();
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,
@@ -101,7 +107,8 @@ function bpjsGetService($endpoint)
     );
 }
 
-function bpjsGet($endpoint, $config){
+function bpjsGet($endpoint, $config)
+{
     $url = rtrim($config['base_url'], '/') . '/' . trim($config['service'], '/') . '/' . ltrim($endpoint, '/');
     $auth = generateSignature($config['const_id'], $config['secretKey']);
     $headers = getHeaders(

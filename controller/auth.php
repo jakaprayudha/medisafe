@@ -40,6 +40,7 @@ if (isset($_POST['login'])) {
       <script>
          const configData = {
             id_customer: "<?php echo $datauser['id_customer'] ?>",
+            id_user: "<?php echo $datauser['uid_user'] ?>"
          };
          localStorage.setItem("rs_config", JSON.stringify(configData));
       </script>
