@@ -218,7 +218,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                 `;
               }
               let actionBtn = '';
-              if (row.status_panggil == 0 && row.id_provider == 1) {
+              if (row.status_panggil == 0 && row.id_provider == 1 && row.visit_status == 0) {
                 actionBtn = `
                   <button type="button"
                     class="btn btn-sm btn-secondary btn-hadir"
