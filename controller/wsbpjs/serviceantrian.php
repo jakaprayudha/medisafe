@@ -9,8 +9,8 @@ if ($sql) {
 } else {
     $status_antrol = false;
 }
-$base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
-$service = 'antreanfktp_dev';
+$base_url = $sql['base_url'];
+$service = $sql['service'];
 // date_default_timezone_set('Asia/Jakarta');
 $kodeppk = $sql['kodePPK'];
 $tanggal = date('Y-m-d');
@@ -21,8 +21,7 @@ $userkey = $sql['userkey'];
 $const_id = $sql['constid'];
 // $encodedSignature = base64_encode($signature);
 
-function generateSignature($const_id, $secretKey)
-{
+function generateSignature($const_id, $secretKey){
     date_default_timezone_set('UTC');
     $tStamp = strval(time());
     $signature = hash_hmac('sha256', $const_id . "&" . $tStamp, $secretKey, true);
@@ -32,8 +31,7 @@ function generateSignature($const_id, $secretKey)
     ];
 }
 
-function getNamaBulan($bulan)
-{
+function getNamaBulan($bulan){
     $daftarBulan = [
         'Januari',
         'Februari',
@@ -52,8 +50,7 @@ function getNamaBulan($bulan)
     return $daftarBulan[$bulan - 1];
 }
 
-function getHeaders($const_id, $tStamp, $signature, $userkey)
-{
+function getHeaders($const_id, $tStamp, $signature, $userkey){
     return [
         "X-cons-id: $const_id",
         "X-timestamp: $tStamp",
