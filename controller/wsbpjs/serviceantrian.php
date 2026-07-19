@@ -4,6 +4,11 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 session_start();
 $idcustomer = $_SESSION['id_customer'];
 $sql = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM `setting_antrol` WHERE id_customer = '$idcustomer'"));
+if ($sql) {
+    $status_antrol = true;
+} else {
+    $status_antrol = false;
+}
 $base_url = 'https://apijkn-dev.bpjs-kesehatan.go.id/';
 $service = 'antreanfktp_dev';
 // date_default_timezone_set('Asia/Jakarta');

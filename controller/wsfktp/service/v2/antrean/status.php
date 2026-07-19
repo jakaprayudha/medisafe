@@ -103,13 +103,13 @@ $map = [
 ];
 $hari_indonesia = $map[$hari] ?? '';
 
-$config = getConfigBPJS($id_customer, $koneksi);
-$bpjsResult = bpjsGet('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggalperiksa, $config);
+// $config = getConfigBPJS($id_customer, $koneksi);
+// $bpjsResult = bpjsGet('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggalperiksa, $config);
 // echo json_encode($bpjsResult);die();
-$mapDokter = [];
-foreach ($bpjsResult as $d) {
-    $mapDokter[(string)$d['kodedokter']] = $d;
-}
+// $mapDokter = [];
+// foreach ($bpjsResult as $d) {
+//     $mapDokter[(string)$d['kodedokter']] = $d;
+// }
 
 $stmt = $koneksi->prepare("
 SELECT 
@@ -162,7 +162,7 @@ SELECT
 FROM ms_doctor_schedule AS jd
 
 INNER JOIN ms_doctor AS d
-    ON d.id_doctor = jd.id_doctor
+    ON d.doctor_code = jd.id_doctor AND d.id_customer = jd.id_customer
 
 INNER JOIN master_poli AS mp
     ON d.doctor_category = mp.kdPoli
@@ -200,9 +200,7 @@ while ($row = $result->fetch_assoc()) {
     $kode = (string)$row['doctor_code'];
     $nama = $row['doctor_name'];
     $jam  = $row['start_time'] . '-' . $row['end_time'];
-    if (isset($mapDokter[$kode])) {
-        $nama = $mapDokter[$kode]['namadokter'];
-    }
+    $nama = $row['doctor_name'];
     $data[] = [
         "namapoli" => ucwords(strtolower($row['nmPoli'])),
         "totalantrean" => (string)$row['total'],

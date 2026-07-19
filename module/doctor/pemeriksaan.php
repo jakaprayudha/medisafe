@@ -153,13 +153,10 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
   $('#toDate').attr('max', today);
   $(document).ready(function() {
 
-    var table = $('#zero_config').DataTable({
+     var table = $('#zero_config').DataTable({
       processing: true,
       serverSide: false,
       scrollX: true,
-      order: [
-        [1, 'asc']
-      ], // 🔥 URUTKAN KOLOM TANGGAL TERBARU
       ajax: {
         url: apiUrl,
         type: "GET",
@@ -215,32 +212,53 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                       data-poli="${row.poli_name}"
                       data-visit="${row.visit_ID}"
                       data-dokter="${row.id_doctor}"
-                      data-visit="${row.visit_ID}"
                       title="Panggil Pasien">
                       <i class="ti ti-volume"></i>
                     </button>
                 `;
               }
+              let actionBtn = '';
+              if (row.status_panggil == 0 && row.id_provider == 1) {
+                actionBtn = `
+                  <button type="button"
+                    class="btn btn-sm btn-secondary btn-hadir"
+                    data-visit="${row.visit_ID}" 
+                    data-jnsbyr="${row.provider_name}"
+                    data-status="1"
+                    title="Hadir">
+                    <i class="ti ti-check"></i>
+                  </button>
+
+                  <button type="button"
+                    class="btn btn-sm btn-danger btn-hadir"
+                    data-visit="${row.visit_ID}" 
+                    data-jnsbyr="${row.provider_name}"
+                    data-status="2"
+                    title="Tidak hadir">
+                    <i class="ti ti-x"></i>
+                  </button> 
+              `;
+              } else {
+                actionBtn = `
+                  <a href="module/admin/${pemeriksaanFile}?no=${row.visit_ID}&rm=${row.nomor_rm}"
+                    class="btn btn-sm btn-primary"
+                    title="Pemeriksaan">
+                    <i class="ti ti-stethoscope"></i>
+                  </a>
+                `;
+              }
+
               return {
                 actions: `
                   <div class="text-center">
-                    <a href="module/admin/${pemeriksaanFile}?no=${row.visit_ID}&rm=${row.nomor_rm}"
-                      class="btn btn-sm btn-primary"
-                      title="Pemeriksaan">
-                      <i class="ti ti-stethoscope"></i>
-                    </a>
+                    ${actionBtn}
                     ${callButton}
                   </div>
                 `,
-                tanggal: `
-                  <span style="display:none">
-                    ${row.visit_date} ${row.visit_time}
-                  </span>
-                  ${row.visit_date} ${row.visit_time}
-                `,
+                tanggal: row.visit_date + ' ' + row.visit_time,
                 antrian: row.visit_antrian,
                 source_hub: row.source_hub,
-                bpjs: row.patient_bpjs,
+                nomor_rm: row.nomor_rm,
                 nama_pasien: row.patient_name,
                 gender: row.patient_gender,
                 jenis_bayar: row.provider_name,
@@ -267,7 +285,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
           data: "source_hub"
         },
         {
-          data: "bpjs"
+          data: "nomor_rm"
         },
         {
           data: "nama_pasien"
@@ -283,6 +301,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
         }
       ]
     });
+    
 
     // 🔥 TAB EVENT
     $('#home-tab').on('click', function() {
@@ -307,6 +326,94 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
       table.ajax.reload();
     });
 
+    $(document).on('click', '.btn-hadir', function() {
+    let visitID = $(this).data('visit');
+    let bayar = $(this).data('jnsbyr');
+    let status = $(this).data('status');
+    let konfirmasi = status == '1' ?
+      "Konfirmasi pasien hadir?" :
+      "Konfirmasi pasien tidak hadir?";
+    Swal.fire({
+      title: konfirmasi,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Ya'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        $.ajax({
+          url: 'controller/wsbpjs/setHadir.php',
+          type: 'POST',
+          dataType: 'json',
+          data: {
+            visit_id: visitID,
+            type: bayar,
+            statushadir: status
+          },
+          beforeSend: function() {
+            Swal.fire({
+              title: 'Sedang diproses...',
+              text: 'Mohon tunggu',
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              didOpen: () => {
+                Swal.showLoading();
+              }
+            });
+          },
+          success: function(res) {
+            if (res.success) {
+              $.ajax({
+                url: 'controller/admisi/services/chackinv2.php',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                  visit: visitID
+                },
+                success: function(pcare) {
+                  if (pcare.success) {
+                    Swal.fire({
+                      icon: 'success',
+                      title: 'Berhasil',
+                      text: pcare.message
+                    });
+                  } else {
+                    Swal.fire({
+                      icon: 'warning',
+                      title: 'Berhasil Set Hadir',
+                      text: 'Set hadir berhasil, namun pendaftaran PCare gagal : ' + pcare.message
+                    });
+                  }
+                  $('#zero_config').DataTable().ajax.reload(null, false);
+                },
+                error: function() {
+                  Swal.fire({
+                    icon: 'warning',
+                    title: 'Berhasil Set Hadir',
+                    text: 'Set hadir berhasil, namun server PCare tidak merespon'
+                  });
+                  $('#zero_config').DataTable().ajax.reload(null, false);
+                }
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: res.message
+              });
+            }
+          },
+          error: function() {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'Server tidak merespon'
+            });
+          }
+        });
+      }
+    });
+  });
+  
   });
 </script>
 
