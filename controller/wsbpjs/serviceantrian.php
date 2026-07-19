@@ -159,6 +159,9 @@ function bpjsPost($endpoint, array $payload, $method = "POST")
         $auth['signature'],
         $userkey
     );
+    // echo "<pre>";
+    // print_r($headers);
+    // echo "</pre>";
     // echo $url;die();
     // echo json_encode($payload, JSON_PRETTY_PRINT);die();
     $ch = curl_init();
