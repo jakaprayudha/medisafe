@@ -187,6 +187,13 @@ require '../../controller/view.php';
                                 title="Check-in Pasien">
                                 <i class="ti ti-check"></i>
                             </a>
+                            <a href="#"
+                                class="btn btn-sm btn-danger btn-batal ms-1"
+                                data-visit="${row.visit_ID}"
+                                title="Batalkan Antrean">
+                                <i class="ti ti-x"></i>
+                            </a>
+
                         `;
                         }
 
@@ -324,6 +331,62 @@ require '../../controller/view.php';
 
                 }
 
+            });
+        });
+        $(document).on("click", ".btn-batal", function(e) {
+            e.preventDefault();
+            let visit = $(this).data("visit");
+            Swal.fire({
+                title: "Batalkan Antrean?",
+                text: "Pasien akan dibatalkan dari antrean.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Ya, Batalkan",
+                cancelButtonText: "Tidak"
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+                Swal.fire({
+                    title: "Memproses...",
+                    text: "Mohon tunggu",
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                $.ajax({
+                    url: "controller/admisi/services/batalchackin.php",
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        visit_ID: visit
+                    },
+                    success: function(res) {
+                        if (res.success) {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Berhasil",
+                                text: res.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                table.ajax.reload(null, false);
+                            });
+                        } else {
+                            Swal.fire(
+                                "Gagal",
+                                res.message,
+                                "error"
+                            );
+                        }
+                    },
+                    error: function() {
+                        Swal.fire(
+                            "Error",
+                            "Terjadi kesalahan server.",
+                            "error"
+                        );
+                    }
+                });
             });
         });
     </script>
