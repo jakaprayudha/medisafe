@@ -11,7 +11,7 @@ $stmt->bind_param('ssss', $idcustomer, $idcustomer, $visit_id, $idcustomer);
 $stmt->execute();
 $data = $stmt->get_result()->fetch_assoc();
 
-if (in_array($data['created_user'], ['MobileJKN', 'JKNOnsite'])) {
+if ($data['created_user'] == "MobileJKN") {
     $kdProviderPeserta = $kodeppk;
     $jamSekarang = date('H:i:s');
     $tglDaftarDB = $data['visit_date'];
