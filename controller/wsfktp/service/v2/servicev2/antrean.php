@@ -62,11 +62,26 @@ $mapHari = [
 ];
 $hariIndonesia = $mapHari[$hariInggris];
 
-$config = getConfigBPJS($id_customer, $koneksi);
-$result = bpjsGet('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggal, $config);
-// echo json_encode($result);die();
-$explodejampraktek = explode('-', $jampraktek);
+$cekdokter = $koneksi->prepare("SELECT j.id_doctor, j.start_time, j.end_time, j.kuota, dj.nmDokter FROM ms_doctor_schedule AS j INNER JOIN master_doctor_bpjs AS dj ON dj.kdDokter = j.id_doctor WHERE j.day_of_week = ? AND j.id_customer = ? AND dj.id_customer = ?");
+$cekdokter->bind_param('sss', $hariIndonesia, $id_customer, $id_customer);
+$cekdokter->execute();
+$data = $cekdokter->get_result();
 
+$result = [];
+while ($row = $data->fetch_assoc()) {
+    $result[] = [
+        "namadokter" => $row["nmDokter"],
+        "kodedokter" => (int)$row["id_doctor"],
+        "jampraktek" => $row["start_time"] . "-" . $row["end_time"],
+        "kapasitas" => (int)$row["kuota"]
+    ];
+
+}
+// $config = getConfigBPJS($id_customer, $koneksi);
+// $result = bpjsGet('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggal, $config);
+// echo json_encode($result);die();
+
+$explodejampraktek = explode('-', $jampraktek);
 $desiredStartTime = strtotime($explodejampraktek[0]);
 $desiredEndTime = strtotime($explodejampraktek[1]);
 
@@ -89,6 +104,8 @@ foreach ($result as $dokter) {
         }
     }
 }
+
+
 if (!$dokterDipilih) {
     http_response_code(201);
     echo json_encode([
@@ -114,7 +131,7 @@ if (!$foundJadwal) {
     exit;
 }
 
-$cekpoli = $koneksi->prepare("SELECT d.doctor_name, mds.day_of_week, mds.start_time, mds.end_time, mds.sch_status, mds.kuota FROM ms_doctor AS d INNER JOIN ms_doctor_schedule AS mds ON d.id_doctor = mds.id_doctor AND d.id_customer = mds.id_customer WHERE d.doctor_code = ? AND d.id_customer = ? AND mds.day_of_week = ?");
+$cekpoli = $koneksi->prepare("SELECT d.doctor_name, mds.day_of_week, mds.start_time, mds.end_time, mds.sch_status, mds.kuota FROM ms_doctor AS d INNER JOIN ms_doctor_schedule AS mds ON d.doctor_code = mds.id_doctor AND d.id_customer = mds.id_customer WHERE d.doctor_code = ? AND d.id_customer = ? AND mds.day_of_week = ?");
 $cekpoli->bind_param('sss', $kodedokter, $id_customer, $hariIndonesia);
 $cekpoli->execute();
 $status_antrian = $cekpoli->get_result()->fetch_assoc();
