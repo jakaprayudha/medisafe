@@ -1091,7 +1091,7 @@ require '../../controller/view.php';
           'aria-label': 'Alasan'
         },
         showCancelButton: true,
-        confirmButtonText: 'Hapus',
+        confirmButtonText: 'Batal',
         cancelButtonText: 'Batal',
         preConfirm: (alasan) => {
           if (!alasan) {
