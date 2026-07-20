@@ -381,11 +381,15 @@ $(function () {
                         $select.append('<option value="">- Pilih -</option>');
                     }
                     response.data.forEach(function (item) {
+                        let disabled = item.exp ? 'disabled' : '';
+                        let textExp = item.exp ? '(Sudah Tutup)' : '';
                         $select.append(
                             '<option value="' + item.kodedokter + '" ' +
                             'data-nama="' + item.namadokter + '" ' +
-                            'data-jam="' + item.jampraktek + '">' +
-                            item.namadokter + ' (' + item.jampraktek + ')' +
+                            'data-jam="' + item.jampraktek + '" ' +
+                            disabled +
+                            '>' +
+                            item.namadokter + ' (' + item.jampraktek + ')' + textExp +
                             '</option>'
                         );
                     });
