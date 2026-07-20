@@ -58,15 +58,12 @@ function getData()
    $query = "SELECT 
             pasien_visit.*, 
             ms_patient.*, 
-            ms_provider.provider_name,
-            ap.status AS status_panggil
+            ms_provider.provider_name
         FROM pasien_visit
         LEFT JOIN ms_patient 
             ON ms_patient.id_patient = pasien_visit.id_patient
       LEFT JOIN ms_provider ON ms_provider.id_provider = pasien_visit.id_provider
-      INNER JOIN antrian_poli AS ap
-      		ON ap.nomor_visit = pasien_visit.visit_ID
-        WHERE 1=1 AND pasien_visit.source_hub != 'Rawat Inap' AND pasien_visit.id_customer = '$id_customer' AND ap.id_customer = '$id_customer'
+        WHERE 1=1 AND pasien_visit.source_hub != 'Rawat Inap' AND pasien_visit.id_customer = '$id_customer'
     ";
 
    // =========================
@@ -99,7 +96,7 @@ function getData()
    }
 
    // Order
-   $query .= " ORDER BY pasien_visit.visit_date ASC";
+   $query .= " ORDER BY pasien_visit.visit_date DESC, pasien_visit.visit_time ASC";
 
    // =========================
    // PREPARE & EXECUTE

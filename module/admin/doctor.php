@@ -37,9 +37,9 @@ require '../../controller/view.php';
                   <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="card-title fw-semibold">Data Dokter</h5>
                     <!-- Grup tombol di sisi kanan -->
-                    <!-- <div class="d-flex ms-auto gap-2">
+                    <div class="d-flex ms-auto gap-2">
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
-                    </div> -->
+                    </div>
                   </div>
                   <div class="table-responsive" data-simplebar>
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
@@ -84,14 +84,22 @@ require '../../controller/view.php';
           <div class="col-12">
             <div class="mb-3">
               <label class="form-label required" id="comp_code">Nama Dokter</label>
-              <select id="kode_dokter" name="doctor_code" class="form-control" required></select>
-              <input type="hidden" id="doctor_name" name="doctor_name">
+              <input type="text" id="doctor_name" name="doctor_name" class="form-control" required>
             </div>
           </div>
           <div class="col-12">
             <div class="mb-3">
               <label class="form-label required">Poliklnik</label>
-              <select name="id_poli" id="id_poli" class="form-select" required></select>
+              <select name="id_poli" id="id_poli" class="form-select" required>
+                <option value="">PILIH</option>
+                <?php
+                $id_customer = $_SESSION['id_customer'];
+                $getpoli = tampildata("SELECT * FROM ms_poli WHERE poli_status='1' AND id_customer = '$id_customer' ORDER BY poli_name ASC");
+                ?>
+                <?php foreach ($getpoli as $poli) : ?>
+                  <option value="<?= $poli['id_poli'] ?>"><?= $poli['poli_name'] ?></option>
+                <?php endforeach ?>
+              </select>
             </div>
           </div>
           <div class="col-12">
@@ -114,9 +122,10 @@ require '../../controller/view.php';
     </form>
   </div>
 </div>
-<script src="controller/admisi/helper.js"></script>
+
 <script>
   const apiUrl = 'controller/master/dokterController';
+
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
       processing: true,
@@ -143,7 +152,7 @@ require '../../controller/view.php';
 							</div>
                     `,
               "name": row.doctor_name ?? "-",
-              "spesialis": row.nmPoli ?? "-",
+              "spesialis": row.poli_name ?? "-",
               "phone": row.doctor_phone ?? "-",
               "address": row.doctor_address ?? "-",
               "status": `
@@ -196,24 +205,6 @@ require '../../controller/view.php';
         $(api.column(3).footer()).html(total.toFixed(2) + " %");
       }
     });
-    $('#kode_dokter').select2({
-      dropdownParent: $('#programModal'),
-      width: '100%',
-      language: {
-        noResults: function() {
-          return "Dokter tidak ditemukan";
-        }
-      }
-    });
-    $('#id_poli').select2({
-      dropdownParent: $('#programModal'),
-      width: '100%',
-      language: {
-        noResults: function() {
-          return "Poli tidak ditemukan";
-        }
-      }
-    });
 
     $('#customSearch').on('keyup', function() {
       table.search(this.value).draw();
@@ -221,12 +212,10 @@ require '../../controller/view.php';
 
     // 🔹 Tambah
     $('#btnTambah').on('click', function() {
-      $('#programForm')[0].reset();
+      $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
       $('#id_doctor').val('');
       $('#programModal .modal-title').text('Tambah Data');
       $('#programModal').modal('show');
-      APP.ambil_data_save('#kode_dokter', 'dokter/0/100', 'nmDokter', 'kdDokter', true, '#doctor_name');
-      APP.ambil_data('#id_poli', 'poli/fktp/0/100', 'kdPoli', 'nmPoli', false);
     });
 
     // 🔹 Submit (Tambah / Update)
