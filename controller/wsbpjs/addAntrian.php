@@ -88,8 +88,7 @@ try {
     exit;
 }
 
-function createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tglDaftarDB, $jampraktek)
-{
+function createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tglDaftarDB, $jampraktek){
     $cekantrian = $koneksi->prepare("SELECT 
         COALESCE(MAX(a.nomor), 0) AS last,
         (
@@ -125,8 +124,7 @@ function createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tg
         'display' => $kode_antrian . $next
     ];
 }
-function generateVisitID($koneksi, $idcustomer)
-{
+function generateVisitID($koneksi, $idcustomer){
     do {
         $date = date('ymd');
         $random = strtoupper(bin2hex(random_bytes(3)));
