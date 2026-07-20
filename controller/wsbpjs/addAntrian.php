@@ -78,6 +78,14 @@ try {
     echo json_encode($response);
 } catch (Exception $e) {
     $koneksi->rollback();
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ]);
+    exit;
 }
 
 function createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tglDaftarDB, $jampraktek)
