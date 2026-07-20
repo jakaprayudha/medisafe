@@ -46,6 +46,18 @@
               <span class="hide-menu">Poliklinik</span>
            </a>
         </li>
+
+        <li class="sidebar-item">
+           <a class="sidebar-link <?php if ($title == 'Pasien MobileJKN' or $title == 'Pasien MobileJKN' and $_GET['type'] == 'Poliklinik') {
+                                       echo 'active';
+                                    } ?>"
+              href="module/admin/listpasienadmisi.php"
+              aria-expanded="false">
+              <iconify-icon icon="material-symbols:mobile"></iconify-icon>
+              <span class="hide-menu">MobileJKN</span>
+           </a>
+        </li>
+
         <!-- <li class="sidebar-item">
            <a class="sidebar-link <?php if ($title == 'Registrasi UGD' or $title == 'List Pasien' and $_GET['type'] == 'UGD') {
                                        echo 'active';
@@ -70,7 +82,7 @@
            <a class="sidebar-link <?php if ($title == 'Counter Admisi') {
                                        echo 'active';
                                     } ?>"
-              href="module/display/display-poliklinik" target="_blank"
+              href="module/display/display-admisi" target="_blank"
               aria-expanded="false">
               <iconify-icon icon="solar:display-linear"></iconify-icon>
               <span class="hide-menu">Display Antrean</span>

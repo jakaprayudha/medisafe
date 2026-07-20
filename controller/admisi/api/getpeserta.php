@@ -2,10 +2,13 @@
 header('Content-Type: application/json');
 
 $response = [
-    "response" => "/Lc1GVbcwa+XZHTMBHrVdNTReZuru7wpvlU59u3+ClMQIyxJHS0rXDHTe2nPzfxucqqRPhn60buc6IoXzM8dEI/JW2QB6yZeuJb/Q9vvU+E+aQub713p45cBeV2gXLRD",
+    "response" => [
+        "field" => "noUrut",
+        "message" => "A1"
+    ],
     "metaData" => [
-        "message" => "Created",
-        "code" => 201
+        "message" => "CREATED",
+        "code" => 200
     ]
 ];
 

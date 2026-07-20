@@ -6,8 +6,7 @@ header('Content-Type: application/json');
 
 $nik = $_POST['noKartu'];
 $nama = $_POST['nama'];
-$date = DateTime::createFromFormat('d-m-Y', trim($_POST['tgl_lahir']));
-$tanggalLahir = $date ? $date->format('Y-m-d') : null; 
+$tanggalLahir = $_POST['tgl_lahir'];
 $jenisKelamin = $_POST['jenis_kelamin'];
 $noKartu = $_POST['no_bpjs'];
 
