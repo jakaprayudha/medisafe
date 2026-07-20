@@ -223,43 +223,54 @@ if ($type == "BPJS") {
         }
     }
 } else {
-    // $chackpasien = null;
-    // if (!empty($noNIK)) {
-    //     $stmt = $koneksi->prepare("
-    //     SELECT * FROM ms_patient 
-    //     WHERE patient_nik = ? AND id_customer = ?
-    // ");
-    //     $stmt->bind_param('ss', $noNIK, $idcustomer);
-    //     $stmt->execute();
-    //     $chackpasien = $stmt->get_result()->fetch_assoc();
-    // }
-    // if (!$chackpasien && !empty($noKartu)) {
-    //     $stmt = $koneksi->prepare("
-    //     SELECT * FROM ms_patient 
-    //     WHERE patient_bpjs = ? AND id_customer = ?
-    // ");
-    //     $stmt->bind_param('ss', $noKartu, $idcustomer);
-    //     $stmt->execute();
-    //     $chackpasien = $stmt->get_result()->fetch_assoc();
-    // }
-    // if (!$chackpasien) {
-    //     echo json_encode([
-    //         'success' => false,
-    //         'message' => 'Data pasien tidak ditemukan',
-    //         'nik' => $noNIK,
-    //         'kartu' => $noKartu
-    //     ]);
-    //     exit;
-    // }
-    // $id_patient = $chackpasien['id_patient'];
+    $visit_ID = generateVisitID($koneksi, $idcustomer);
+    $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE (patient_nik = ? OR patient_bpjs = ?) AND id_customer = ?");
+    $stmt->bind_param('sss', $noNIK, $noKartu, $idcustomer);
+    $stmt->execute();
+    $chackpasien = $stmt->get_result()->fetch_assoc();
 
-    $created_user = "User";
-    $source_hub   = "Poliklinik";
-    $visit_time   = date('H:i:s');
-    $bmi          = $_POST['bmi'] ?? '';
-    $bmiKet       = $_POST['bmiKet'] ?? '';
-    $td           = $sistole . "/" . $diastole;
+    $resultAntrian = createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tglDaftarDB, $jampraktek);
+    $nomorantrean = $resultAntrian['display'];
+    $angkaantrean = $resultAntrian['nomor'];
+    $kodeAntri       = $resultAntrian['kode'];
+    $created_user = "Onsite";
+    $source_hub = "Poliklinik";
+    $id_patient = $chackpasien['id_patient'];
+    $visit_time = date('H:i:s');
+    $bmi = $_POST['bmi'];
+    $bmiKet = $_POST['bmiKet'];
+    $stmt = $koneksi->prepare("
+            INSERT INTO pasien_visit (
+                id_patient,
+                visit_ID,
+                visit_date,
+                id_poli,
+                source_hub,
+                created_user,
+                visit_antrian,
+                status_antrian,
+                id_customer,
+                id_doctor,
+                visit_time,
+                keluhan_penyerta,
+                tekanan_darah, 
+                nadi,
+                respirasi, 
+                tinggi_badan,
+                berat_badan,
+                patient_name_pcare,
+                suhu,
+                saturasi,
+                bmi,
+                bmi_keterangan,
+                code_doctor,
+                id_provider
+            )VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?)
+        ");
+    $visit_status = 1;
     $status_antrian = 0;
+    $td = $sistole . "/" . $diastole;
+    $stmt->bind_param(
 
     $patient_name_db = $nama;
     if (!empty($id_patient)) {
