@@ -414,7 +414,7 @@ $(function () {
                         $select.append('<option value="">- Pilih -</option>');
                     }
                     response.data.forEach(function (item) {
-                        let disabled = item.exp ? 'disabled' : '';
+                        let disabled = item.exp ? '' : '';
                         let textExp = item.exp ? '(Sudah Tutup)' : '';
                         $select.append(
                             '<option value="' + item.kodedokter + '" ' +
