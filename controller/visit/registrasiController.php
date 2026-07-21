@@ -1,6 +1,7 @@
 <?php
 include '../../database/connect.php';
 $method = $_SERVER['REQUEST_METHOD'];
+date_default_timezone_set('Asia/Jakarta');
 switch ($method) {
    case 'GET':
       if (isset($_GET['id'])) {
@@ -118,11 +119,14 @@ function getData()
    $tab = $_GET['tab'] ?? null;
 
    if ($tab == 'belum') {
-      $query .= " AND pasien_visit.visit_status NOT IN (3,4)";
+      $query .= " AND pasien_visit.visit_status NOT IN (3,4,99)";
    }
 
    if ($tab == 'selesai') {
       $query .= " AND pasien_visit.visit_status IN (3,4)";
+   }
+   if ($tab == 'batal') {
+      $query .= " AND pasien_visit.visit_status IN (99)";
    }
 
    $query .= " ORDER BY pasien_visit.visit_date ASC";
@@ -139,7 +143,6 @@ function getData()
    }
 
    $stmt->bind_param($types, ...$params);
-
    if (!$stmt->execute()) {
       http_response_code(500);
       echo json_encode([

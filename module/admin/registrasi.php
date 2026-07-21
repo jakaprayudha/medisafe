@@ -1,6 +1,7 @@
 <?php
 $title = 'Registrasi Poliklinik';
 require '../../controller/view.php';
+date_default_timezone_set('Asia/Jakarta');
 ?>
 <!doctype html>
 <html lang="en">
@@ -110,10 +111,14 @@ require '../../controller/view.php';
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Sudah Dilayani</button>
             </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="batal-tab" data-bs-toggle="tab" data-bs-target="#batal-tab-pane" type="button" role="tab" aria-controls="batal-tab-pane" aria-selected="false">Sudah Dilayani</button>
+            </li>
           </ul>
           <div class="tab-content" id="myTabContent">
             <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0"></div>
             <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0"></div>
+            <div class="tab-pane fade" id="batal-tab-pane" role="tabpanel" aria-labelledby="batal-tab" tabindex="0"></div>
           </div>
           <div class="row">
             <div class="col-lg-12 d-flex align-items-stretch">
@@ -627,6 +632,8 @@ require '../../controller/view.php';
       currentTab = 'belum';
     } else if (target === 'profile-tab') {
       currentTab = 'selesai';
+    }else if (target === 'batal-tab') {
+      currentTab = 'batal';
     }
 
     console.log("TAB AKTIF:", currentTab);
