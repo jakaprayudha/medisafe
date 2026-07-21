@@ -1,6 +1,10 @@
 <?php
 $title = 'Pendaftaran Pasien';
 require '../../controller/view.php';
+
+$idcustomer = $_SESSION['id_customer'] ?? '';
+$cekAntrol = mysqli_query($koneksi, "SELECT id_customer FROM setting_antrol WHERE id_customer = '$idcustomer'");
+$useLocalDokter = $cekAntrol && mysqli_num_rows($cekAntrol) > 0;
 ?>
 <!doctype html>
 <html lang="en">
@@ -119,6 +123,7 @@ require '../../controller/view.php';
     </div>
     <?php require '../admin/library.php'; ?>
     <script src="controller/admisi/helper.js"></script>
+    <script>window.USE_LOCAL_DOKTER = <?= $useLocalDokter ? 'true' : 'false' ?>;</script>
     <script src="controller/admisi/pendaftaran.js"></script>
     <div class="modal fade" id="modalCariBPJS" tabindex="-1"
         data-bs-backdrop="static" data-bs-keyboard="false">

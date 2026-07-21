@@ -1091,8 +1091,8 @@ require '../../controller/view.php';
           'aria-label': 'Alasan'
         },
         showCancelButton: true,
-        confirmButtonText: 'Batal',
-        cancelButtonText: 'Batal',
+        confirmButtonText: 'Ya, batalkan',
+        cancelButtonText: 'Kembali',
         preConfirm: (alasan) => {
           if (!alasan) {
             Swal.showValidationMessage('Alasan wajib diisi');

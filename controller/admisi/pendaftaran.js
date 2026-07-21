@@ -364,6 +364,38 @@ $(function () {
         // APP.ambil_data_dokter('#kodedokter', 'dokter/0/100', 'nmDokter', 'kdDokter', true);
         function loadDokter(status = true) {
             const $select = $('#kodedokter');
+
+            // Clinics without a setting_antrol row: use raw BPJS PCare doctor list
+            if (typeof window.USE_LOCAL_DOKTER !== 'undefined' && window.USE_LOCAL_DOKTER === false) {
+                $select.html('<option value="">Loading...</option>').trigger('change.select2');
+                $.ajax({
+                    url: 'controller/admisi/services/getApi.php',
+                    type: 'POST',
+                    data: { url: 'dokter/0/100' },
+                    dataType: 'json',
+                    success: function (response) {
+                        $select.empty();
+                        if (status) {
+                            $select.append('<option value="">- Pilih -</option>');
+                        }
+                        (response.list || []).forEach(function (item) {
+                            $select.append(
+                                '<option value="' + item.kdDokter + '" ' +
+                                'data-nama="' + item.nmDokter + '" data-jam="">' +
+                                item.nmDokter +
+                                '</option>'
+                            );
+                        });
+                        $select.trigger('change.select2');
+                    },
+                    error: function (err) {
+                        console.error(err);
+                        $select.html('<option value="">Error loading data</option>').trigger('change.select2');
+                    }
+                });
+                return;
+            }
+
             const tgl = $('#tanggalKunjung').val();
             const poli = $('#kodepoli').val();
             $select.html('<option value="">Loading...</option>').trigger('change.select2');

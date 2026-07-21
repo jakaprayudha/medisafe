@@ -3,6 +3,11 @@ session_start();
 $id_customer = $_SESSION['id_customer'];
 $title = 'Setting Bridging BPJS';
 require '../../controller/view.php';
+
+$antrol = mysqli_fetch_assoc(mysqli_query(
+  $koneksi,
+  "SELECT * FROM setting_antrol WHERE id_customer = '" . mysqli_real_escape_string($koneksi, $id_customer) . "' LIMIT 1"
+));
 ?>
 <!doctype html>
 <html lang="en">
@@ -109,42 +114,62 @@ require '../../controller/view.php';
                       <button class="btn btn-primary col-12">Simpan</button>
                     </div>
                     <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" tabindex="0">
-                      <div class="alert alert-danger" role="alert">
-                        Proses Integrasi (Bridging) Antrean Online sedang dalam tahap koordinasi menunggu jadwal UAT, untuk informasi lebih lanjut silakan hubungi tim IT kami. Terima kasih atas pengertiannya.
-                      </div>
-                      <!-- <div class="row mt-4">
-                        <div class="col-12">
-                          <div class="mb-3">
-                            <label for="username_antrol" class="form-label">Username Antrean Online</label>
-                            <input type="text" class="form-control" id="username_antrol" name="username_antrol" required>
+                      <?php if ($antrol) { ?>
+                        <div class="alert alert-success d-flex align-items-center mt-4" role="alert">
+                          <i class="fas fa-check-circle me-2"></i>
+                          <div>
+                            Klinik Anda <strong>telah terhubung</strong> dengan layanan Antrean Online BPJS. Konfigurasi di bawah dikelola oleh tim IT dan bersifat hanya-baca.
                           </div>
                         </div>
-                        <div class="col-12">
-                          <div class="mb-3">
-                            <label for="password_antrol" class="form-label">Password Antrean Online</label>
-                            <input type="text" class="form-control" id="password_antrol" name="password_antrol" required>
+                        <div class="row mt-4">
+                          <div class="col-12">
+                            <div class="mb-3">
+                              <label for="antrol_username" class="form-label">Username Antrean Online</label>
+                              <input type="text" class="form-control bg-light" id="antrol_username" value="<?= htmlspecialchars($antrol['username'] ?? '') ?>" readonly>
+                            </div>
+                          </div>
+                          <div class="col-12">
+                            <div class="mb-3">
+                              <label for="antrol_base_url" class="form-label">Base URL</label>
+                              <input type="text" class="form-control bg-light" id="antrol_base_url" value="<?= htmlspecialchars($antrol['base_url'] ?? '') ?>" readonly>
+                            </div>
+                          </div>
+                          <div class="col-12">
+                            <div class="mb-3">
+                              <label for="antrol_service" class="form-label">Service</label>
+                              <input type="text" class="form-control bg-light" id="antrol_service" value="<?= htmlspecialchars($antrol['service'] ?? '') ?>" readonly>
+                            </div>
+                          </div>
+                          <div class="col-12">
+                            <div class="mb-3">
+                              <label for="antrol_kodePPK" class="form-label">Kode PPK</label>
+                              <input type="text" class="form-control bg-light" id="antrol_kodePPK" value="<?= htmlspecialchars($antrol['kodePPK'] ?? '') ?>" readonly>
+                            </div>
+                          </div>
+                          <div class="col-12">
+                            <div class="mb-3">
+                              <label for="antrol_constid" class="form-label">Consumer ID</label>
+                              <input type="text" class="form-control bg-light" id="antrol_constid" value="<?= htmlspecialchars($antrol['constid'] ?? '') ?>" readonly>
+                            </div>
+                          </div>
+                          <div class="col-12">
+                            <div class="mb-3">
+                              <label for="antrol_secretkey" class="form-label">Secret Key</label>
+                              <input type="text" class="form-control bg-light" id="antrol_secretkey" value="<?= htmlspecialchars($antrol['secretkey'] ?? '') ?>" readonly>
+                            </div>
+                          </div>
+                          <div class="col-12">
+                            <div class="mb-3">
+                              <label for="antrol_userkey" class="form-label">User Key</label>
+                              <input type="text" class="form-control bg-light" id="antrol_userkey" value="<?= htmlspecialchars($antrol['userkey'] ?? '') ?>" readonly>
+                            </div>
                           </div>
                         </div>
-                        <div class="col-12">
-                          <div class="mb-3">
-                            <label for="consumer_id" class="form-label">Consumer ID</label>
-                            <input type="text" class="form-control" id="consumer_id" name="consumer_id" required>
-                          </div>
+                      <?php } else { ?>
+                        <div class="alert alert-danger" role="alert">
+                          Proses Integrasi (Bridging) Antrean Online sedang dalam tahap koordinasi menunggu jadwal UAT, untuk informasi lebih lanjut silakan hubungi tim IT kami. Terima kasih atas pengertiannya.
                         </div>
-                        <div class="col-12">
-                          <div class="mb-3">
-                            <label for="secret_key" class="form-label">Secret Key</label>
-                            <input type="text" class="form-control" id="secret_key" name="secret_key" required>
-                          </div>
-                        </div>
-                        <div class="col-12">
-                          <div class="mb-3">
-                            <label for="user_key" class="form-label">User Key</label>
-                            <input type="text" class="form-control" id="user_key" name="user_key" required>
-                          </div>
-                        </div>
-                      </div>
-                      <button class="btn btn-primary col-12">Simpan</button> -->
+                      <?php } ?>
                     </div>
                     <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab" tabindex="0">
                       <div class="alert alert-danger" role="alert">
