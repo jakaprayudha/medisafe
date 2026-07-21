@@ -41,7 +41,7 @@ function getOrCreateDoctorId($koneksi, $idCustomer, $idPoli, $kodeDokter, $namaD
 {
     $doctorId = null;
 
-    $stmt = $koneksi->prepare("SELECT id_doctor FROM ms_doctor WHERE id_customer = ? AND doctor_code = ? LIMIT 1");
+    $stmt = $koneksi->prepare("SELECT doctor_code FROM ms_doctor WHERE id_customer = ? AND doctor_code = ? LIMIT 1");
     $stmt->bind_param("ss", $idCustomer, $kodeDokter);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -102,7 +102,7 @@ foreach ($clinics as $clinic) {
                 $responseData = $result;
             }
 
-            foreach ($responseData as $doctor) {
+            foreach ($responseData['data'] as $doctor) {
                 if (!isset($doctor['kodedokter'], $doctor['namadokter'], $doctor['jampraktek'])) {
                     continue;
                 }
@@ -119,10 +119,10 @@ foreach ($clinics as $clinic) {
 
                 $startTime = trim($jam[0]);
                 $endTime = trim($jam[1]);
-                $doctorId = getOrCreateDoctorId($koneksi, $clinic['id_customer'], $idPoli, $kodeDokter, $namaDokter);
+                // $doctorId = getOrCreateDoctorId($koneksi, $clinic['id_customer'], $idPoli, $kodeDokter, $namaDokter);
 
                 $insertSchedule = $koneksi->prepare("INSERT INTO ms_doctor_schedule (id_doctor, id_poli, id_customer, day_of_week, start_time, end_time, sch_status, kuota) VALUES (?, ?, ?, ?, ?, ?, 1, ?)");
-                $insertSchedule->bind_param("ssssssi", $doctorId, $idPoli, $clinic['id_customer'], $hariIndonesia, $startTime, $endTime, $kapasitas);
+                $insertSchedule->bind_param("ssssssi", $kodeDokter, $kdpoli, $clinic['id_customer'], $hariIndonesia, $startTime, $endTime, $kapasitas);
                 $insertSchedule->execute();
                 $insertSchedule->close();
             }
