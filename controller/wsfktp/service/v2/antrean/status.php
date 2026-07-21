@@ -3,7 +3,7 @@ header("Content-Type: application/json");
 
 require_once __DIR__ . '/../../../../../database/connect.php';
 require_once __DIR__ . '/../../../validateToken.php';
-require_once __DIR__ . '/../../../../wsbpjs/serviceantrian.php';
+// require_once __DIR__ . '/../../../../wsfktp/serviceantrian.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     echo json_encode([
@@ -102,9 +102,9 @@ $map = [
 ];
 $hari_indonesia = $map[$hari] ?? '';
 
-$config = getConfigBPJS($id_customer, $koneksi);
-$bpjsResult = bpjsGetService('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggalperiksa, $config);
-echo json_encode($bpjsResult);die();
+// $config = getConfigBPJS($id_customer, $koneksi);
+// $bpjsResult = bpjsGetService('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggalperiksa, $config);
+// echo json_encode($bpjsResult);die();
 // $mapDokter = [];
 // foreach ($bpjsResult as $d) {
 //     $mapDokter[(string)$d['kodedokter']] = $d;

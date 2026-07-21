@@ -173,7 +173,7 @@ date_default_timezone_set('Asia/Jakarta');
                           <th scope="col" class="text-dark fw-normal">No.BPJS</th>
                           <th>Antrian</th>
                           <th class="text-dark fw-normal">Sumber</th>
-                          <th class="text-dark fw-normal">Tanggal</th>
+                          <th class="text-dark fw-normal">Waktu</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">Dokter</th>
@@ -947,7 +947,7 @@ date_default_timezone_set('Asia/Jakarta');
               "registrasi": row.patient_bpjs ?? "-",
               "antrian": row.visit_antrian ?? "-",
               "sumber": status_sumber ?? "-",
-              "tanggal": row.visit_date + "- " + row.visit_time ?? "-",
+              "tanggal": row.visit_time ?? "-",
               "nama": row.patient_name_pcare ?? "-",
               "gender": row.patient_gender ?? "-",
               "dokter": row.id_doctor ?? "-",
