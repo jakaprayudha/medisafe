@@ -278,8 +278,8 @@ function getConfigBPJS($idcustomer, $koneksi)
     }
 
     return [
-        'base_url'  => 'https://apijkn-dev.bpjs-kesehatan.go.id/',
-        'service'   => 'antreanfktp_dev',
+        'base_url'  => $sql['base_url'],
+        'service'   => $sql['service'],
         'const_id'  => $sql['constid'],
         'secretKey' => $sql['secretkey'],
         'userkey'   => $sql['userkey'],
