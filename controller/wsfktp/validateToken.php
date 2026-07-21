@@ -9,7 +9,6 @@ use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Lcobucci\JWT\Validation\Constraint\ValidAt;
 use Lcobucci\Clock\SystemClock;
-use DateTimeZone;
 use Lcobucci\JWT\Token\Plain;
 
 function validateBpjsToken($usernameParam)
