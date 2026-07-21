@@ -64,9 +64,12 @@ function getData()
         LEFT JOIN ms_patient 
             ON ms_patient.id_patient = pasien_visit.id_patient
       LEFT JOIN ms_provider ON ms_provider.id_provider = pasien_visit.id_provider
-      INNER JOIN antrian_poli AS ap
+      LEFT JOIN antrian_poli AS ap
       		ON ap.nomor_visit = pasien_visit.visit_ID
-        WHERE 1=1 AND pasien_visit.source_hub != 'Rawat Inap' AND pasien_visit.id_customer = '$id_customer' AND ap.id_customer = '$id_customer'
+            AND ap.id_customer = pasien_visit.id_customer
+        WHERE 1=1
+            AND pasien_visit.source_hub != 'Rawat Inap'
+            AND pasien_visit.id_customer = '$id_customer'
     ";
 
    // =========================
