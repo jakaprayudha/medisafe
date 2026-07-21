@@ -45,8 +45,8 @@ $nmPoli = $result1['poli_name'];
 $kodeAntri = $result1['poli_queue'];
 $stmt->close();
 
-$stmt2 = $koneksi->prepare("SELECT * FROM master_poli WHERE id_customer = ? AND status_poli = 1");
-$stmt2->bind_param('s', $id_customer);
+$stmt2 = $koneksi->prepare("SELECT * FROM master_poli WHERE status_poli = 1 AND kdPoli = ?");
+$stmt2->bind_param('s', $kodepoli);
 $stmt2->execute();
 $result = $stmt2->get_result();
 if ($result->num_rows > 0) {
