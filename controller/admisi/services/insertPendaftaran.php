@@ -118,7 +118,7 @@ if ($type == "BPJS") {
         $visit_ID = $_POST['visit_id'];
         $antrian = $_POST['antrian'];
         $angkaantrean = $_POST['angkaantrean'];
-        $kodeAntri       = $_POST['kodeAntri'];
+        $kodeAntri = $_POST['kodeAntri'];
         $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE (patient_bpjs = ? OR patient_nik = ?) AND id_customer = ?");
         $stmt->bind_param('sss', $noKartu, $noNIK, $idcustomer);
         $stmt->execute();
