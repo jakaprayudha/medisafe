@@ -1,6 +1,7 @@
 <?php
 $title = 'Registrasi Poliklinik';
 require '../../controller/view.php';
+date_default_timezone_set('Asia/Jakarta');
 ?>
 <!doctype html>
 <html lang="en">
@@ -110,10 +111,14 @@ require '../../controller/view.php';
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Sudah Dilayani</button>
             </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="batal-tab" data-bs-toggle="tab" data-bs-target="#batal-tab-pane" type="button" role="tab" aria-controls="batal-tab-pane" aria-selected="false">Sudah Dilayani</button>
+            </li>
           </ul>
           <div class="tab-content" id="myTabContent">
             <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0"></div>
             <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0"></div>
+            <div class="tab-pane fade" id="batal-tab-pane" role="tabpanel" aria-labelledby="batal-tab" tabindex="0"></div>
           </div>
           <div class="row">
             <div class="col-lg-12 d-flex align-items-stretch">
@@ -168,7 +173,7 @@ require '../../controller/view.php';
                           <th scope="col" class="text-dark fw-normal">No.BPJS</th>
                           <th>Antrian</th>
                           <th class="text-dark fw-normal">Sumber</th>
-                          <th class="text-dark fw-normal">Tanggal</th>
+                          <th class="text-dark fw-normal">Waktu</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th scope="col" class="text-dark fw-normal">Dokter</th>
@@ -617,6 +622,59 @@ require '../../controller/view.php';
     </div>
   </div>
 </div>
+<div class="modal fade" id="modalRescheduleDoctor" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="formRescheduleDoctor">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fas fa-user-md me-2"></i>Ganti Dokter
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="visit_id" name="visit_id">
+          <div class="mb-3">
+            <label class="form-label">
+              Dokter Saat Ini
+            </label>
+            <input
+              type="text"
+              class="form-control"
+              id="doctor_now"
+              readonly>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">
+              Ganti Ke Dokter
+            </label>
+            <select
+              class="form-select"
+              id="doctor_new"
+              name="doctor_new"
+              required>
+              <option value="">-- Pilih Dokter --</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal">
+            Batal
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary">
+            <i class="fas fa-save me-1"></i>
+            Simpan
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
 <script>
   let currentTab = 'belum'; // default tab saat halaman pertama kali dimuat
   $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
@@ -627,6 +685,8 @@ require '../../controller/view.php';
       currentTab = 'belum';
     } else if (target === 'profile-tab') {
       currentTab = 'selesai';
+    } else if (target === 'batal-tab') {
+      currentTab = 'batal';
     }
 
     console.log("TAB AKTIF:", currentTab);
@@ -797,7 +857,7 @@ require '../../controller/view.php';
                     type="button"
                     data-bs-toggle="dropdown"
                     data-bs-boundary="window">
-                    ⚙️ Aksi
+                    Aksi
                   </button>
                       <ul class="dropdown-menu dropdown-menu-end shadow">
 
@@ -808,13 +868,13 @@ require '../../controller/view.php';
                       </li>
 
                       
-                       <li>
+                      <li>
                         <a class="dropdown-item" href="module/admin/form_sep?no=${row.visit_ID}&rm=${row.nomor_rm}">
                           <i class="fas fa-upload me-2 text-info"></i> Upload SEP
                         </a>
                       </li>
 
-                         <li>
+                      <li>
                         <a class="dropdown-item" href="module/admin/form_fkpp?no=${row.visit_ID}&rm=${row.nomor_rm}">
                           <i class="fas fa-upload me-2 text-info"></i> Upload FKPP
                         </a>
@@ -832,14 +892,22 @@ require '../../controller/view.php';
                           <i class="fas fa-camera me-2 text-success"></i> Ambil Foto
                         </a>
                       </li>
-                        <li>
+                      <li>
                         <a class="dropdown-item ttd-btn" href="javascript:;" data-id="${row.id_visit}">
                           <i class="fas fa-signature me-2 text-dark"></i> Tanda Tangan
                         </a>
                       </li>
                     ${!isSelesai ? `
                       <li><hr class="dropdown-divider"></li>
-
+                      <li>
+                        <a class="dropdown-item btn-reschedule"
+                            href="javascript:;"
+                            data-id="${row.id_visit}"
+                            data-doctor="${row.id_doctor}">
+                            <i class="fas fa-user-md me-2 text-dark"></i>
+                            Reschedule
+                        </a>
+                      </li>
                       <li>
                           <a class="dropdown-item edit-visit-btn" 
                               href="javascript:;" 
@@ -879,7 +947,7 @@ require '../../controller/view.php';
               "registrasi": row.patient_bpjs ?? "-",
               "antrian": row.visit_antrian ?? "-",
               "sumber": status_sumber ?? "-",
-              "tanggal": row.visit_date + "- " + row.visit_time ?? "-",
+              "tanggal": row.visit_time ?? "-",
               "nama": row.patient_name_pcare ?? "-",
               "gender": row.patient_gender ?? "-",
               "dokter": row.id_doctor ?? "-",
@@ -1730,6 +1798,69 @@ require '../../controller/view.php';
 
       });
 
+  });
+</script>
+<script>
+  $(document).on("click", ".btn-reschedule", function() {
+    const idVisit = $(this).data("id");
+    const doctorNow = $(this).data("doctor");
+    $("#visit_id").val(idVisit);
+    $("#doctor_now").val(doctorNow);
+    $("#doctor_new").val("").trigger("change");
+    $("#modalRescheduleDoctor").modal("show");
+    $.ajax({
+      url: "module/admin/get_dokter_bpjs.php",
+      type: "POST",
+      dataType: "json",
+      success: function(res) {
+        let html = '<option value="">- Pilih Dokter -</option>';
+        $.each(res.data, function(i, row) {
+          html += `<option value="${row.kdDokter}">${row.nmDokter}</option>`;
+        });
+        $('#doctor_new').html(html);
+        if (selected !== "") {
+          $('#doctor_new').val(selected).trigger("change");
+        }
+      },
+      error: function() {
+        $('#doctor_new').html('<option value="">Gagal memuat data</option>');
+      }
+    });
+  });
+  $("#formRescheduleDoctor").submit(function(e) {
+    e.preventDefault();
+    $.ajax({
+      url: "module/admin/serviceRescheduleDoctor.php",
+      type: "POST",
+      data: $(this).serialize(),
+      dataType: "json",
+      success: function(res) {
+        if (res.success) {
+          $("#modalRescheduleDoctor").modal("hide");
+          Swal.fire({
+            icon: "success",
+            title: "Berhasil",
+            text: res.message,
+            confirmButtonText: "OK"
+          }).then(() => {
+            table.ajax.reload(null, false);
+          });
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Gagal",
+            text: res.message
+          });
+        }
+      },
+      error: function() {
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "Terjadi kesalahan pada server."
+        });
+      }
+    });
   });
 </script>
 

@@ -1,7 +1,7 @@
 <?php
 header("Content-Type: application/json");
 require_once __DIR__ . '/../../../../../database/connect.php';
-require_once __DIR__ . '/../../../../wsbpjs/serviceantrian.php';
+// require_once __DIR__ . '/../../../../wsbpjs/serviceantrian.php';
 require_once __DIR__ . '/../../../validateToken.php';
 date_default_timezone_set('Asia/Jakarta');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -161,6 +161,7 @@ if ($now > $jadwal_selesai) {
     exit;
 }
 // die();
+$total_antrian = 0;
 $cekkuota = $koneksi->prepare("SELECT COUNT(*) FROM pasien_visit WHERE id_customer = ? AND id_poli = ? AND code_doctor = ? AND visit_date = ?");
 $cekkuota->bind_param('ssss', $id_customer, $nmPoli, $kodedokter, $tanggal);
 $cekkuota->execute();
