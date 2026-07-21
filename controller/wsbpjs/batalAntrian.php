@@ -7,25 +7,34 @@ $tanggalperiksa = $sql['visit_date'];
 $kdPoli = $sql['kdPoli'];
 $nomorkartu = $sql['noKartu'];
 $alasan = $_POST['alasan'];
-$payload = [
-    "tanggalperiksa"  => $tanggalperiksa,
-    "kodepoli" => $kdPoli,
-    "nomorkartu" => $nomorkartu,
-    "alasan"      => $alasan
-];
- // echo json_encode($payload, JSON_PRETTY_PRINT);die();
-$result = bpjsPost("/antrean/batal", $payload);
-if ($result['code'] != '200') {
-    $msg = $result['message'];
-    if ($msg == null) {
-        $msg = "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
-    }
-    $response = [
-        'success' => false,
-        'message' => $msg,
-        'result' => $result
+if ($status_antrol) {
+    $payload = [
+        "tanggalperiksa"  => $tanggalperiksa,
+        "kodepoli" => $kdPoli,
+        "nomorkartu" => $nomorkartu,
+        "alasan"      => $alasan
     ];
+    // echo json_encode($payload, JSON_PRETTY_PRINT);die();
+    $result = bpjsPost("/antrean/batal", $payload);
+    if ($result['code'] != '200') {
+        $msg = $result['message'];
+        if ($msg == null) {
+            $msg = "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
+        }
+        $response = [
+            'success' => false,
+            'message' => $msg,
+            'result' => $result
+        ];
+    } else {
+        $response = [
+            'success'  => true,
+            'message'  => "Berhasil Batal Pasien",
+        ];
+    }
 } else {
+    // Klinik tidak terdaftar di setting_antrol, maka lewati BPJS,
+    // di deletePendaftaran.php yang mengubah pasien_visit.
     $response = [
         'success'  => true,
         'message'  => "Berhasil Batal Pasien",
