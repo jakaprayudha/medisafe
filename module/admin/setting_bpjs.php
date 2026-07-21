@@ -1131,11 +1131,9 @@ $antrol = mysqli_fetch_assoc(mysqli_query(
         let html = '<option value="">- Pilih Poliklinik -</option>';
         if (res.success) {
           $.each(res.data, function(i, row) {
-            html += `
-                        <option value="${row.kdPoli}">
-                            ${row.nmPoli}
-                        </option>
-                    `;
+            if (row.poliSakit == '1'){
+              html += `<option value="${row.kdPoli}">${row.nmPoli}</option>`;
+            }
           });
         }
         $(target).html(html);

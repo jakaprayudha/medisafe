@@ -392,6 +392,7 @@ $(function () {
                         console.error(err);
                         $select.html('<option value="">Error loading data</option>').trigger('change.select2');
                     }
+                    
                 });
                 return;
             }
