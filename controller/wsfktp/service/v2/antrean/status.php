@@ -42,6 +42,7 @@ $listPoli = [
 $headers = array_change_key_case(getallheaders(), CASE_LOWER);
 $username = $headers['x-username'] ?? null;
 $id_customer = validateBpjsToken($username);
+
 /* URL PARAM */
 $url = $_SERVER['REQUEST_URI'];
 $segments = explode('/', trim(parse_url($url, PHP_URL_PATH), '/'));
@@ -102,15 +103,16 @@ $map = [
 ];
 $hari_indonesia = $map[$hari] ?? '';
 
-// $config = getConfigBPJS($id_customer, $koneksi);
-// $bpjsResult = bpjsGetService('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggalperiksa, $config);
+$config = getConfigBPJS($id_customer, $koneksi);
+$bpjsResult = bpjsGet('/ref/dokter/kodepoli/' . $kodepoli . '/tanggal/' . $tanggalperiksa, $config);
 // echo json_encode($bpjsResult);die();
-// $mapDokter = [];
-// foreach ($bpjsResult as $d) {
-//     $mapDokter[(string)$d['kodedokter']] = $d;
-// }
+$mapDokter = [];
+foreach ($bpjsResult as $d) {
+    $mapDokter[(string)$d['kodedokter']] = $d;
+}
 
-$stmt = $koneksi->prepare("SELECT 
+$stmt = $koneksi->prepare("
+SELECT 
 
     COUNT(ap.id) AS total,
 
@@ -151,7 +153,7 @@ $stmt = $koneksi->prepare("SELECT
 
     d.doctor_category AS poli,
     d.doctor_code,
-    mdb.nmDokter,
+    d.doctor_name,
     jd.start_time,
     jd.end_time,
     mp.nmPoli,
@@ -160,18 +162,20 @@ $stmt = $koneksi->prepare("SELECT
 FROM ms_doctor_schedule AS jd
 
 INNER JOIN ms_doctor AS d
-    ON d.doctor_code = jd.id_doctor AND d.id_customer = jd.id_customer
+    ON d.id_doctor = jd.id_doctor
+
 INNER JOIN master_poli AS mp
     ON d.doctor_category = mp.kdPoli
+
 LEFT JOIN antrian_poli AS ap 
     ON ap.poli = d.doctor_category
     AND ap.tanggal = ?
     AND ap.id_customer = ?
     AND ap.kode_antri = d.doctor_antrean
+
 LEFT JOIN pasien_visit AS p
     ON p.visit_ID = ap.nomor_visit
-INNER JOIN master_doctor_bpjs AS mdb
-	ON ap.id_dokter = mdb.kdDokter
+
 WHERE d.doctor_category = ?
 AND LOWER(jd.day_of_week) = ?
 AND jd.sch_status = 1
@@ -194,8 +198,11 @@ $data = [];
 while ($row = $result->fetch_assoc()) {
     $antrean_terakhir = ($row['antrean_panggil'] == 0 ? '-' : $row['kode_antri'].$row['antrean_panggil']);
     $kode = (string)$row['doctor_code'];
-    $nama = $row['nmDokter'];
+    $nama = $row['doctor_name'];
     $jam  = $row['start_time'] . '-' . $row['end_time'];
+    if (isset($mapDokter[$kode])) {
+        $nama = $mapDokter[$kode]['namadokter'];
+    }
     $data[] = [
         "namapoli" => ucwords(strtolower($row['nmPoli'])),
         "totalantrean" => (string)$row['total'],

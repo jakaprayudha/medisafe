@@ -14,12 +14,6 @@ $no = $_GET['no'];
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </head>
-<style>
-  .switch-lg {
-    transform: scale(1.5);
-    cursor: pointer;
-  }
-</style>
 
 <body>
   <!--  Body Wrapper -->
@@ -63,6 +57,9 @@ $no = $_GET['no'];
                       <button class="nav-link" id="nav-contact-tab" data-bs-toggle="tab"
                         data-bs-target="#nav-contact" type="button" role="tab" aria-controls="nav-contact"
                         aria-selected="false">Dokumen</button>
+                      <button class="nav-link" id="nav-jadwal-tab" data-bs-toggle="tab"
+                        data-bs-target="#nav-jadwal" type="button" role="tab" aria-controls="nav-jadwal"
+                        aria-selected="false">Jadwal Praktik</button>
                     </div>
                   </nav>
 
@@ -101,13 +98,9 @@ $no = $_GET['no'];
                             <div class="mb-3">
                               <label class="form-label">Kategori Dokter</label>
                               <select class="form-select" name="doctor_category">
-                                <option value="">PILIH</option>
-                                <?php
-                                $getpoli = tampildata("SELECT * FROM master_poli WHERE status_poli='1'");
-                                ?>
-                                <?php foreach ($getpoli as $poli) : ?>
-                                  <option value="<?= $poli['kdPoli'] ?>"><?= $poli['nmPoli'] ?></option>
-                                <?php endforeach ?>
+                                <option value="Umum">Umum</option>
+                                <option value="Dokter Gigi">Dokter Gigi</option>
+                                <!-- <option value="Spesialis">Spesialis</option> -->
                               </select>
                             </div>
                           </div>
@@ -117,10 +110,10 @@ $no = $_GET['no'];
                               <select name="id_poli" id="id_poli" class="form-select" required>
                                 <option value="">PILIH</option>
                                 <?php
-                                $getpoli = tampildata("SELECT * FROM master_poli WHERE status_poli='1'");
+                                $getpoli = tampildata("SELECT * FROM ms_poli WHERE poli_status='1'");
                                 ?>
                                 <?php foreach ($getpoli as $poli) : ?>
-                                  <option value="<?= $poli['kdPoli'] ?>"><?= $poli['nmPoli'] ?></option>
+                                  <option value="<?= $poli['id_poli'] ?>"><?= $poli['poli_name'] ?></option>
                                 <?php endforeach ?>
                               </select>
                             </div>
@@ -179,7 +172,7 @@ $no = $_GET['no'];
                           <div class="col-6">
                             <div class="mb-3">
                               <label class="form-label">Satu Sehat ID</label>
-                              <input type="text" class="form-control" name="doctor_his" required id="doctor_his">
+                              <input type="text" class="form-control" name="doctor_his" id="doctor_his" readonly>
                             </div>
                           </div>
                           <div class="col-6">
@@ -301,6 +294,59 @@ $no = $_GET['no'];
                         </div>
                       </div>
                     </div>
+                    <!-- Jadwal Prakikt -->
+                    <div class="tab-pane fade" id="nav-jadwal" role="tabpanel" aria-labelledby="nav-jadwal-tab" tabindex="0">
+                      <form id="formJadwal">
+                        <div class="row">
+                          <div class="col-4">
+                            <div class="mb-3">
+                              <label class="form-label">Hari</label>
+                              <select class="form-select" name="day_of_week" required>
+                                <option value="">Pilih Hari</option>
+                                <option value="Senin">Senin</option>
+                                <option value="Selasa">Selasa</option>
+                                <option value="Rabu">Rabu</option>
+                                <option value="Kamis">Kamis</option>
+                                <option value="Jumat">Jumat</option>
+                                <option value="Sabtu">Sabtu</option>
+                                <option value="Minggu">Minggu</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div class="col-4">
+                            <div class="mb-3">
+                              <label class="form-label">Jam Mulai</label>
+                              <input type="text" class="form-control timepicker" name="start_time" required>
+                            </div>
+                          </div>
+                          <div class="col-4">
+                            <div class="mb-3">
+                              <label class="form-label">Jam Selesai</label>
+                              <input type="text" class="form-control timepicker" name="end_time" required>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="mt-3 text-end">
+                          <button type="submit" class="btn btn-primary">Simpan</button>
+                        </div>
+                      </form>
+
+                      <hr>
+                      <h6>Jadwal Dokter</h6>
+                      <table class="table table-bordered" id="jadwalTable">
+                        <thead>
+                          <tr>
+                            <th>Hari</th>
+                            <th>Jam</th>
+                            <th class="col-1">Aksi</th>
+                          </tr>
+                        </thead>
+                        <tbody></tbody>
+                      </table>
+                    </div>
+                  </div>
+
+
                 </div>
               </div>
             </div>
@@ -444,65 +490,26 @@ $no = $_GET['no'];
 
     // Load Jadwal
     function loadJadwal() {
-      const tbody = document.querySelector("#jadwalTable tbody");
-
-      // loading state
-      tbody.innerHTML = `<tr><td colspan="3" class="text-center">Loading...</td></tr>`;
-
-      fetch("controller/master/dokterJadwalController.php?no=" + encodeURIComponent(doctorNo))
+      fetch("controller/master/dokterJadwalController.php?no=" + doctorNo)
         .then(res => res.json())
         .then(data => {
+          const tbody = document.querySelector("#jadwalTable tbody");
           tbody.innerHTML = "";
-
-          if (!data.success || !Array.isArray(data.data)) {
-            tbody.innerHTML = `<tr><td colspan="3" class="text-center">Data tidak tersedia</td></tr>`;
-            return;
+          if (data.success) {
+            data.data.forEach(j => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+              <td>${j.day_of_week}</td>
+              <td>${j.start_time} - ${j.end_time}</td>
+              <td>
+                <button class="btn btn-danger btn-sm" onclick="deleteJadwal(${j.id_schedule})">Hapus</button>
+              </td>
+            `;
+              tbody.appendChild(tr);
+            });
           }
-
-          data.data.forEach(j => {
-            const tr = document.createElement("tr");
-
-            tr.innerHTML = `
-          <td>${j.day_of_week ?? '-'}</td>
-          <td>${j.start_time ?? '-'} - ${j.end_time ?? '-'}</td>
-          <td>
-            <input 
-              type="number" 
-              class="form-control form-control-sm text-center kuota-input"
-              value="${j.kuota ?? 30}"
-              min="0"
-              style="width:80px;"
-              data-id="${j.id_schedule}"
-            >
-          </td>
-          <td>
-            <div class="d-flex align-items-center justify-content-center gap-2">
-              
-              <div class="form-check form-switch m-0">
-                <input 
-                  class="form-check-input switch-lg toggle-status" 
-                  type="checkbox"
-                  data-id="${j.id_schedule}"
-                  ${j.sch_status == 1 ? 'checked' : ''}
-                >
-              </div>
-
-              <button class="btn btn-outline-danger btn-sm delete-btn" 
-                data-id="${j.id_schedule}">
-                <i class="bi bi-trash"></i>
-              </button>
-
-            </div>
-          </td>
-        `;
-
-            tbody.appendChild(tr);
-          });
         })
-        .catch(err => {
-          console.error("Error:", err);
-          tbody.innerHTML = `<tr><td colspan="3" class="text-center text-danger">Gagal load data</td></tr>`;
-        });
+        .catch(err => console.error("Error:", err));
     }
 
     // Submit Form Jadwal
@@ -549,17 +556,7 @@ $no = $_GET['no'];
           }
         });
     }
-    document.addEventListener("change", function(e) {
-      if (e.target.classList.contains("toggle-status")) {
-        const id = e.target.dataset.id;
-        toggleStatus(id, e.target);
-      }
-    });
-    $(document).on('click', '.delete-btn', function() {
-      let id = $(this).data('id');
 
-      deleteJadwal(id);
-    });
     if (doctorNo) loadJadwal();
   });
 </script>

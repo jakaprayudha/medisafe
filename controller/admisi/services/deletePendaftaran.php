@@ -42,12 +42,12 @@ $stmt2->close();
 if ($hasil and $hasil1 and $hasil2) {
     $response = [
         'success' => true,
-        'message' => "Berhasil Batal Pendaftaran",
+        'message' => "Berhasil Hapus Pendaftaran",
     ];
 } else {
     $response = [
         'success' => false,
-        'message' => "Gagal Batal Pendaftaran" . mysqli_error($koneksi),
+        'message' => "Gagal Hapus Pendaftaran" . mysqli_error($koneksi),
     ];
 }
 

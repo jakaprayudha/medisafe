@@ -55,6 +55,7 @@ require '../../controller/view.php';
       transform: none !important;
     }
 
+
     #cameraModal .modal-body {
       position: relative;
     }
@@ -81,6 +82,18 @@ require '../../controller/view.php';
     /* header lebih tinggi z-index */
     #periodeTable thead th:first-child {
       z-index: 6;
+    }
+
+    .select2-results__option {
+      padding: 10px 14px !important;
+    }
+
+    .patient-search-item {
+      border-bottom: 1px solid #f1f1f1;
+    }
+
+    .patient-search-item:last-child {
+      border-bottom: none;
     }
   </style>
 </head>
@@ -167,7 +180,6 @@ require '../../controller/view.php';
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
                           <th scope="col" class="text-dark fw-normal">No.BPJS</th>
                           <th>Antrian</th>
-                          <th class="text-dark fw-normal">Sumber</th>
                           <th class="text-dark fw-normal">Tanggal</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
@@ -247,6 +259,30 @@ require '../../controller/view.php';
                 <small class="text-muted">Kondisi Masuk</small>
                 <div id="d_kondisi_masuk">-</div>
               </div>
+
+              <div class="col-md-6">
+                <small class="text-muted">No. Kartu BPJS</small>
+                <div id="d_no_bpjs">-</div>
+              </div>
+              <div class="col-md-6">
+                <small class="text-muted">NIK</small>
+                <div id="d_no_nik">-</div>
+              </div>
+
+              <div class="col-md-6">
+                <small class="text-muted">Jenis Kelamin</small>
+                <div id="d_gender">-</div>
+              </div>
+              <div class="col-md-6">
+                <small class="text-muted">Tanggal Lahir</small>
+                <div id="d_datebirth">-</div>
+              </div>
+              <div class="col-md-6">
+                <small class="text-muted">Umur</small>
+                <div id="d_umur">-</div>
+              </div>
+
+
             </div>
           </div>
         </div>
@@ -622,63 +658,6 @@ require '../../controller/view.php';
     </div>
   </div>
 </div>
-<div class="modal fade" id="poliModal">
-  <div class="modal-dialog">
-    <div class="modal-content">
-
-      <div class="modal-header">
-        <h5 class="modal-title">🩺 Registrasi Poliklinik</h5>
-        <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-
-        <form id="formPoli">
-          <!-- Pasien -->
-          <div class="mb-3">
-            <label class="form-label">👤 Nama Pasien</label>
-            <select name="id_patient_select" id="id_patient_select"
-              class="form-select js-example-basic-item" required>
-            </select>
-          </div>
-          <div class="row">
-            <div class="col">
-              <!-- Tanggal -->
-              <div class="mb-3">
-                <label class="form-label">📅 Tanggal</label>
-                <input type="date" id="poli_date" class="form-control">
-              </div>
-            </div>
-            <div class="col">
-              <!-- Jam -->
-              <div class="mb-3">
-                <label class="form-label">⏰ Jam Kunjungan</label>
-                <input type="time" id="poli_time" class="form-control">
-              </div>
-            </div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">👨‍⚕️ Dokter</label>
-            <select id="poli_doctor" class="form-select"></select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">🏥 Poliklinik</label>
-            <select id="poli_poli" class="form-select"></select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">💳 Provider</label>
-            <select id="poli_provider" class="form-select"></select>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-        <button class="btn btn-success" id="btnSavePoli">💾 Simpan</button>
-      </div>
-
-    </div>
-  </div>
-</div>
 <script>
   let currentTab = 'belum'; // default tab saat halaman pertama kali dimuat
   $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
@@ -698,18 +677,6 @@ require '../../controller/view.php';
   });
 </script>
 <script>
-  $(document).on('click', '.poli-btn', function() {
-    $('#poliModal').modal('show');
-
-    const now = new Date();
-    $('#poli_date').val(now.toISOString().split('T')[0]);
-    $('#poli_time').val(now.toTimeString().slice(0, 5));
-    APP.ambil_data('#poli_doctor', 'dokter/0/15', 'nmDokter', 'nmDokter', true);
-    // loadDoctors();
-    loadPoli();
-    loadProvider();
-  });
-
   function hitungBMI() {
     const tinggi = parseFloat(document.getElementById('tinggi').value);
     const berat = parseFloat(document.getElementById('berat').value);
@@ -861,14 +828,8 @@ require '../../controller/view.php';
 
               return `${tahun} th ${bulan} bln ${hari} hr`;
             }
-            let status_sumber = "Non JKN/UMUM";
-            if (row.provider_name == 'BPJS KESEHATAN' && row.created_user != "JKNOnsite") {
-              status_sumber = "Mobile JKN";
-            } else if (row.provider_name == 'BPJS KESEHATAN') {
-              status_sumber = "JKN/Onsite";
-            }
-            let isSelesai = row.visit_status == 4;
-            let Batal = row.visit_status == 99;
+
+            let isSelesai = row.visit_status == 4; // ✅ status selesai
             return {
               "actions": `
                 <div class="text-center">
@@ -882,7 +843,7 @@ require '../../controller/view.php';
                       <ul class="dropdown-menu dropdown-menu-end shadow">
 
                       <li>
-                        <a class="dropdown-item detail-btn" href="javascript:;" data-id="${row.id_visit}">
+                        <a class="dropdown-item detail-btn" href="javascript:;" data-id="${row.visit_ID}">
                           <i class="fas fa-eye me-2 text-info"></i> Lihat Hasil Pemeriksaan
                         </a>
                       </li>
@@ -917,40 +878,25 @@ require '../../controller/view.php';
                           <i class="fas fa-signature me-2 text-dark"></i> Tanda Tangan
                         </a>
                       </li>
-                    ${!isSelesai ? `
+                      ${!isSelesai ? `
                       <li><hr class="dropdown-divider"></li>
-
+                    <li>
+                      <a class="dropdown-item edit-visit-btn" 
+                        href="javascript:;" 
+                        data-visit="${row.visit_ID}"
+                        data-date="${row.visit_date}"
+                      data-patient="${row.id_patient}"
+                        data-time="${row.visit_time}">
+                        <i class="fas fa-edit me-2 text-warning"></i> Perubahan Waktu
+                      </a>
+                    </li>
                       <li>
-                          <a class="dropdown-item edit-visit-btn" 
-                              href="javascript:;" 
-                              data-visit="${row.visit_ID}"
-                              data-date="${row.visit_date}"
-                              data-patient="${row.id_patient}"
-                              data-time="${row.visit_time}">
-                              
-                              <i class="fas fa-edit me-2 text-warning"></i>
-                              Perubahan Waktu
-                          </a>
+                        <a class="dropdown-item delete-btn text-danger" href="javascript:;" data-id="${row.id_visit}" data-prov="${row.id_provider}" data-visit="${row.visit_ID}">
+                          <i class="fas fa-trash me-2"></i> Hapus
+                        </a>
                       </li>
-
-                      ${!Batal ? `
-                          <li>
-                              <a class="dropdown-item delete-btn text-danger" 
-                                  href="javascript:;" 
-                                  data-id="${row.id_visit}" 
-                                  data-nokartu="${row.patient_bpjs}" 
-                                  data-kdpoli="${row.id_provider}" 
-                                  data-tanggal="${row.id_provider}" 
-                                  data-prov="${row.id_provider}" 
-                                  data-visit="${row.visit_ID}">
-                                  
-                                  <i class="fas  fa-times-circle me-2"></i>
-                                  Batal
-                              </a>
-                          </li>
                       ` : ''}
 
-                  ` : ''}
                     </ul>
 
                   </div>
@@ -958,7 +904,6 @@ require '../../controller/view.php';
               `,
               "registrasi": row.patient_bpjs ?? "-",
               "antrian": row.visit_antrian ?? "-",
-              "sumber": status_sumber ?? "-",
               "tanggal": row.visit_date + "- " + row.visit_time ?? "-",
               "nama": row.patient_name_pcare ?? "-",
               "gender": row.patient_gender ?? "-",
@@ -983,9 +928,6 @@ require '../../controller/view.php';
         },
         {
           data: "antrian"
-        },
-        {
-          data: "sumber"
         },
         {
           data: "tanggal"
@@ -1075,34 +1017,14 @@ require '../../controller/view.php';
       let id = $(this).data('id');
       let visit = $(this).data('visit');
       let prov = $(this).data('prov');
-
-      let nokartu = $(this).data('prov');
-      let kdpoli = $(this).data('prov');
-      let tanggal = $(this).data('prov');
-
-
       Swal.fire({
-        title: 'Peringatan?',
-        text: 'Masukkan alasan pembatalan',
+        title: 'Hapus Data?',
         icon: 'warning',
-        input: 'textarea', // 🔥 ini kuncinya
-        inputPlaceholder: 'Tulis alasan...',
-        inputAttributes: {
-          'aria-label': 'Alasan'
-        },
         showCancelButton: true,
         confirmButtonText: 'Hapus',
-        cancelButtonText: 'Batal',
-        preConfirm: (alasan) => {
-          if (!alasan) {
-            Swal.showValidationMessage('Alasan wajib diisi');
-          }
-          return alasan;
-        }
+        cancelButtonText: 'Batal'
       }).then((result) => {
         if (result.isConfirmed) {
-
-          let alasan = result.value;
           Swal.fire({
             title: 'Menghapus...',
             text: 'Sedang memproses data',
@@ -1111,65 +1033,48 @@ require '../../controller/view.php';
           });
           if (prov == '1') {
             $.ajax({
-              url: 'controller/wsbpjs/batalAntrian.php',
+              url: 'controller/admisi/services/deletePendaftaran.php',
               type: "POST",
               data: {
                 novisit: visit,
-                alasan: alasan
               },
               dataType: 'json',
               success: function(res) {
                 if (res.success) {
-                  $.ajax({
-                    url: 'controller/admisi/services/deletePendaftaran.php',
-                    type: "POST",
-                    data: {
-                      novisit: visit,
-                      alasan: alasan
-                    },
-                    dataType: 'json',
-                    success: function(res) {
-                      Swal.close();
-                      Swal.fire({
-                        title: "Berhasil",
-                        text: res.message,
-                        icon: "success"
-                      });
-                      table.ajax.reload(null, false);
-                    }
-                  })
+                  Swal.close();
+                  Swal.fire({
+                    title: "Berhasil",
+                    html: `
+                            <b>${res.message}</b><br></b>
+                        `,
+                    icon: "success",
+                    confirmButtonText: "Tutup",
+                  });
+                  table.ajax.reload(null, false);
                 } else {
+                  Swal.close();
                   Swal.fire({
                     title: "Gagal Hapus",
                     text: res.message,
-                    icon: "error"
+                    icon: "error",
+                    confirmButtonText: "Tutup"
                   });
                 }
               }
-            });
+            })
           } else {
-            fetch(apiUrl + `?id=${id}&nomor_visit=${visit}`, {
-                method: 'DELETE',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                  alasan: alasan
-                })
+            fetch(apiUrl + `?id=${id}`, {
+                method: 'DELETE'
               })
               .then(res => res.json())
               .then(data => {
-                Swal.close();
-
                 if (data.status === 'success') {
+                  Swal.close();
                   Swal.fire('Berhasil!', 'Data dihapus.', 'success');
                   table.ajax.reload(null, false);
-                } else {
-                  Swal.fire('Gagal!', data.message, 'error');
                 }
               });
           }
-
         }
       });
     });
@@ -1217,6 +1122,37 @@ require '../../controller/view.php';
         });
     });
 
+    function hitungUmurDetail(tglLahir, tglVisit) {
+
+      if (!tglLahir) return '-';
+
+      const birth = new Date(tglLahir);
+      const visit = tglVisit ? new Date(tglVisit) : new Date();
+
+      let tahun = visit.getFullYear() - birth.getFullYear();
+      let bulan = visit.getMonth() - birth.getMonth();
+      let hari = visit.getDate() - birth.getDate();
+
+      if (hari < 0) {
+        bulan--;
+
+        const lastMonth = new Date(
+          visit.getFullYear(),
+          visit.getMonth(),
+          0
+        );
+
+        hari += lastMonth.getDate();
+      }
+
+      if (bulan < 0) {
+        tahun--;
+        bulan += 12;
+      }
+
+      return `${tahun} Tahun ${bulan} Bulan`;
+    }
+
     function fillDetail(d) {
       $('#d_patient_name').text(d.patient_name ?? '-');
       $('#d_doctor_name').text(d.id_doctor ?? '-');
@@ -1224,7 +1160,16 @@ require '../../controller/view.php';
       $('#d_visit_date').text(d.visit_date + ' ' + d.visit_time ?? '-');
       $('#d_no_sep').text(d.no_sep ?? '-');
       $('#d_kondisi_masuk').text(d.kondisi_masuk ?? '-');
-
+      $('#d_no_bpjs').text(d.patient_bpjs ?? '-');
+      $('#d_no_nik').text(d.patient_nik ?? '-');
+      $('#d_gender').text(d.patient_gender ?? '-');
+      $('#d_datebirth').text(d.patient_datebirth ?? '-');
+      $('#d_umur').text(
+        hitungUmurDetail(
+          d.patient_datebirth,
+          d.visit_date
+        )
+      );
       $('#d_tekanan_darah').text(d.tekanan_darah ?? '-');
       $('#d_suhu').text((d.suhu ?? '-') + ' °C');
       $('#d_nadi').text((d.nadi ?? '-') + ' bpm');
@@ -1238,7 +1183,51 @@ require '../../controller/view.php';
       $('#d_anamnesa').text(d.anamnesa ?? '-');
       $('#d_catatan_screening').text(d.catatan_screening ?? '-');
       $('#d_diagnosa').text(d.code + '-' + d.icd10 ?? '-');
-      $('#d_tindakan').text(d.tindakan ?? '-');
+      if (Array.isArray(d.tindakan) && d.tindakan.length > 0) {
+
+        let html = `
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Obat</th>
+                        <th>Qty</th>
+                        <th>Signa</th>
+                        <th>Catatan</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+        d.tindakan.forEach(item => {
+
+          html += `
+            <tr>
+                <td>${item.pharmacy_name_generic ?? '-'}</td>
+                <td>${item.qty ?? '-'}</td>
+                <td>${item.signa ?? '-'}</td>
+                <td>${item.catatan ?? '-'}</td>
+            </tr>
+        `;
+        });
+
+        html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+
+        $('#d_tindakan').html(html);
+
+      } else {
+
+        $('#d_tindakan').html(`
+        <div class="text-muted">
+            Tidak ada tindakan / obat
+        </div>
+    `);
+
+      }
 
       if (d.suhu > 37.5) {
         $('#d_suhu').addClass('text-danger fw-bold');
@@ -1347,7 +1336,7 @@ require '../../controller/view.php';
     const now = new Date();
     $('#poli_date').val(now.toISOString().split('T')[0]);
     $('#poli_time').val(now.toTimeString().slice(0, 5));
-    APP.ambil_data('#poli_doctor', 'dokter/0/15', 'nmDokter', 'nmDokter', true);
+    APP.ambil_data('#poli_doctor', 'dokter/0/50', 'nmDokter', 'nmDokter', true);
     // loadDoctors();
     loadPoli();
     loadProvider();
@@ -1382,15 +1371,6 @@ require '../../controller/view.php';
         console.log(xhr.responseText);
       }
     });
-    // fetch('controller/visit/getpoli')
-    //   .then(res => res.json())
-    //   .then(res => {
-    //     let html = '<option value="">Pilih Poli</option>';
-    //     res.forEach(p => {
-    //       html += `<option value="${p.id_poli}">${p.poli_name}</option>`;
-    //     });
-    //     $('#poli_poli').html(html);
-    //   });
   }
 
   function loadProvider() {
@@ -1465,9 +1445,7 @@ require '../../controller/view.php';
   });
 
   $('#poliModal').on('shown.bs.modal', function() {
-
     const $select = $('#id_patient_select');
-
     // destroy kalau sudah ada
     if ($select.hasClass("select2-hidden-accessible")) {
       $select.select2('destroy');
@@ -1483,6 +1461,7 @@ require '../../controller/view.php';
         type: 'GET',
         dataType: 'json',
         delay: 300,
+
         data: function(params) {
           return {
             search: params.term
@@ -1490,17 +1469,34 @@ require '../../controller/view.php';
         },
 
         processResults: function(data) {
+
           let items = data.data ? data.data : data;
 
           return {
             results: items.map(item => ({
+
               id: item.id_patient,
-              text: `${item.patient_name} (${item.nomor_rm})`, // tampil di UI
-              patient_name: item.patient_name // 🔥 simpan asli
+
+              text: item.patient_name,
+
+              patient_name: item.patient_name,
+              nomor_rm: item.nomor_rm,
+              nik: item.patient_nik,
+              gender: item.patient_gender,
+              birth_date: item.patient_datebirth
+
             }))
           };
         },
+
         cache: true
+      }, // 🔥 INI YANG KURANG
+
+      templateResult: formatPatient,
+      templateSelection: formatPatientSelection,
+
+      escapeMarkup: function(markup) {
+        return markup;
       }
     });
   });
@@ -1757,7 +1753,119 @@ require '../../controller/view.php';
 
       });
 
+
+
   });
+</script>
+
+<script>
+  function excelDateToJSDate(serial) {
+
+    if (!serial || isNaN(serial)) return '-';
+
+    // convert excel serial date
+    const utc_days = Math.floor(serial - 25569);
+    const utc_value = utc_days * 86400;
+
+    const date_info = new Date(utc_value * 1000);
+
+    const day = String(date_info.getDate()).padStart(2, '0');
+    const month = String(date_info.getMonth() + 1).padStart(2, '0');
+    const year = date_info.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  }
+
+  function hitungUmur(tglLahir, tglVisit = null) {
+
+    if (!tglLahir) return '-';
+
+    // kalau visit kosong pakai hari ini
+    const visit = tglVisit ? new Date(tglVisit) : new Date();
+
+    // convert excel serial
+    const utc_days = Math.floor(tglLahir - 25569);
+    const utc_value = utc_days * 86400;
+
+    const birth = new Date(utc_value * 1000);
+
+    let tahun = visit.getFullYear() - birth.getFullYear();
+    let bulan = visit.getMonth() - birth.getMonth();
+    let hari = visit.getDate() - birth.getDate();
+
+    if (hari < 0) {
+      bulan--;
+
+      const lastMonth = new Date(
+        visit.getFullYear(),
+        visit.getMonth(),
+        0
+      );
+
+      hari += lastMonth.getDate();
+    }
+
+    if (bulan < 0) {
+      tahun--;
+      bulan += 12;
+    }
+
+    return `${tahun} th`;
+  }
+
+  function formatPatient(patient) {
+
+    if (!patient.id) {
+      return patient.text;
+    }
+
+    let genderBadge =
+      patient.gender == 'Laki-laki' ?
+      `<span class="badge bg-primary" style="font-size:10px;padding:4px 7px;">L</span>` :
+      `<span class="badge bg-danger" style="font-size:10px;padding:4px 7px;">P</span>`;
+
+    // 🔥 convert tanggal excel
+    let birthDate = excelDateToJSDate(patient.birth_date);
+    let umur = hitungUmur(patient.birth_date);
+    return `
+      <div class="patient-search-item p-2">
+
+        <div class="fw-semibold text-dark"
+             style="font-size:15px; line-height:1.2;">
+          ${patient.patient_name}
+        </div>
+
+        <div class="small text-secondary mt-1"
+             style="font-size:11px; line-height:1.2;">
+
+          RM: <b>${patient.nomor_rm ?? '-'}</b>
+
+          &nbsp;|&nbsp;
+
+          NIK: ${patient.nik ?? '-'}
+
+        </div>
+
+        <div class="small mt-1 d-flex align-items-center gap-2"
+             style="font-size:11px;">
+
+          ${genderBadge}
+
+          <span class="text-dark">
+            🎂 ${birthDate}
+          </span>
+
+        </div>
+
+      </div>
+    `;
+  }
+
+  function formatPatientSelection(patient) {
+
+    return patient.patient_name || patient.text;
+
+  }
 </script>
 
 </html>
