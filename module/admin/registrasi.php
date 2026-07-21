@@ -476,16 +476,14 @@ require '../../controller/view.php';
     <div class="modal-content">
 
       <div class="modal-header">
-        <h5 class="modal-title">🩺 Registrasi Poliklinik</h5>
+        <h5 class="modal-title">Registrasi Poliklinik</h5>
         <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
       </div>
-
       <div class="modal-body">
-
         <form id="formPoli">
           <!-- Pasien -->
           <div class="mb-3">
-            <label class="form-label">👤 Nama Pasien</label>
+            <label class="form-label">Nama Pasien</label>
             <select name="id_patient_select" id="id_patient_select"
               class="form-select js-example-basic-item" required>
             </select>
@@ -494,45 +492,42 @@ require '../../controller/view.php';
             <div class="col">
               <!-- Tanggal -->
               <div class="mb-3">
-                <label class="form-label">📅 Tanggal</label>
+                <label class="form-label">Tanggal</label>
                 <input type="date" id="poli_date" class="form-control">
               </div>
             </div>
             <div class="col">
               <!-- Jam -->
               <div class="mb-3">
-                <label class="form-label">⏰ Jam Kunjungan</label>
+                <label class="form-label">Jam Kunjungan</label>
                 <input type="time" id="poli_time" class="form-control">
               </div>
             </div>
           </div>
-          <!-- Dokter -->
-          <div class="mb-3">
-            <label class="form-label">👨‍⚕️ Dokter</label>
-            <select id="poli_doctor" class="form-select"></select>
-          </div>
 
           <!-- Poli -->
           <div class="mb-3">
-            <label class="form-label">🏥 Poliklinik</label>
+            <label class="form-label">Poliklinik</label>
             <select id="poli_poli" class="form-select"></select>
+            <input type="hidden" id="kdPoli" name="kdPoli">
+          </div>
+
+          <!-- Dokter -->
+          <div class="mb-3">
+            <label class="form-label">Dokter</label>
+            <select id="poli_doctor" class="form-select"></select>
           </div>
 
           <!-- Provider -->
           <div class="mb-3">
-            <label class="form-label">💳 Provider</label>
+            <label class="form-label">Provider</label>
             <select id="poli_provider" class="form-select"></select>
           </div>
-
-
-
         </form>
-
       </div>
-
       <div class="modal-footer">
         <button class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-        <button class="btn btn-success" id="btnSavePoli">💾 Simpan</button>
+        <button class="btn btn-success" id="btnSavePoli">Simpan</button>
       </div>
 
     </div>
@@ -622,63 +617,6 @@ require '../../controller/view.php';
     </div>
   </div>
 </div>
-<div class="modal fade" id="poliModal">
-  <div class="modal-dialog">
-    <div class="modal-content">
-
-      <div class="modal-header">
-        <h5 class="modal-title">🩺 Registrasi Poliklinik</h5>
-        <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-
-        <form id="formPoli">
-          <!-- Pasien -->
-          <div class="mb-3">
-            <label class="form-label">👤 Nama Pasien</label>
-            <select name="id_patient_select" id="id_patient_select"
-              class="form-select js-example-basic-item" required>
-            </select>
-          </div>
-          <div class="row">
-            <div class="col">
-              <!-- Tanggal -->
-              <div class="mb-3">
-                <label class="form-label">📅 Tanggal</label>
-                <input type="date" id="poli_date" class="form-control">
-              </div>
-            </div>
-            <div class="col">
-              <!-- Jam -->
-              <div class="mb-3">
-                <label class="form-label">⏰ Jam Kunjungan</label>
-                <input type="time" id="poli_time" class="form-control">
-              </div>
-            </div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">👨‍⚕️ Dokter</label>
-            <select id="poli_doctor" class="form-select"></select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">🏥 Poliklinik</label>
-            <select id="poli_poli" class="form-select"></select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">💳 Provider</label>
-            <select id="poli_provider" class="form-select"></select>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-        <button class="btn btn-success" id="btnSavePoli">💾 Simpan</button>
-      </div>
-
-    </div>
-  </div>
-</div>
 <script>
   let currentTab = 'belum'; // default tab saat halaman pertama kali dimuat
   $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
@@ -698,18 +636,6 @@ require '../../controller/view.php';
   });
 </script>
 <script>
-  $(document).on('click', '.poli-btn', function() {
-    $('#poliModal').modal('show');
-
-    const now = new Date();
-    $('#poli_date').val(now.toISOString().split('T')[0]);
-    $('#poli_time').val(now.toTimeString().slice(0, 5));
-    APP.ambil_data('#poli_doctor', 'dokter/0/15', 'nmDokter', 'nmDokter', true);
-    // loadDoctors();
-    loadPoli();
-    loadProvider();
-  });
-
   function hitungBMI() {
     const tinggi = parseFloat(document.getElementById('tinggi').value);
     const berat = parseFloat(document.getElementById('berat').value);
@@ -745,12 +671,6 @@ require '../../controller/view.php';
 <script>
   APP.window = APP.window || {};
   $(document).ready(function() {
-    $('#filterModal').on('show.bs.modal', function() {
-      // loadDoctors();
-      APP.ambil_data('#kdDokter', 'dokter/0/15', 'nmDokter', 'nmDokter', false);
-      loadProviders();
-      loadPoli();
-    });
 
     function loadDoctors() {
       $.ajax({
@@ -1347,8 +1267,6 @@ require '../../controller/view.php';
     const now = new Date();
     $('#poli_date').val(now.toISOString().split('T')[0]);
     $('#poli_time').val(now.toTimeString().slice(0, 5));
-    APP.ambil_data('#poli_doctor', 'dokter/0/15', 'nmDokter', 'nmDokter', true);
-    // loadDoctors();
     loadPoli();
     loadProvider();
   });
@@ -1360,8 +1278,9 @@ require '../../controller/view.php';
     select.prop('disabled', true);
     select.html('<option value="">Mencari data...</option>');
     select.val('').trigger('change');
+
     $.ajax({
-      url: 'controller/admisi/services/getPoli.php',
+      url: 'module/admin/get_master_poli.php',
       type: 'POST',
       dataType: 'json',
       success: function(response) {
@@ -1372,7 +1291,9 @@ require '../../controller/view.php';
         select.empty();
         $.each(response.data, function(index, item) {
           if (item.poliSakit == poliSakit) {
-            select.append(new Option(item.nmPoli, item.nmPoli, false, false));
+            var option = new Option(item.nmPoli, item.nmPoli, false, false);
+            $(option).attr('data-kd', item.kdPoli);
+            select.append(option);
           }
         });
         select.prop('disabled', false);
@@ -1382,15 +1303,57 @@ require '../../controller/view.php';
         console.log(xhr.responseText);
       }
     });
-    // fetch('controller/visit/getpoli')
-    //   .then(res => res.json())
-    //   .then(res => {
-    //     let html = '<option value="">Pilih Poli</option>';
-    //     res.forEach(p => {
-    //       html += `<option value="${p.id_poli}">${p.poli_name}</option>`;
-    //     });
-    //     $('#poli_poli').html(html);
-    //   });
+  }
+  $('#poli_poli').on('change', function() {
+    var kdPoli = $(this).find(':selected').data('kd') || '';
+    $('#kdPoli').val(kdPoli);
+    loadDokter();
+  });
+
+  function loadDokter() {
+    const $select = $('#poli_doctor');
+    const tgl = $('#poli_date').val();
+    const poli = $('#kdPoli').val();
+    $select.html('<option value="">Loading...</option>').trigger('change.select2');
+    $.ajax({
+      url: 'controller/admisi/services/getDokterlocal.php',
+      type: 'GET',
+      data: {
+        kdpoli: poli,
+        tanggal: tgl
+      },
+      dataType: 'json',
+      success: function(response) {
+        $select.empty();
+        if (!response.data || response.data.length === 0) {
+          $select.append('<option value="">Tidak ada dokter</option>');
+          $select.trigger('change.select2');
+          return;
+        }
+
+        if (status) {
+          $select.append('<option value="">- Pilih -</option>');
+        }
+        response.data.forEach(function(item) {
+          let disabled = item.exp ? 'disabled' : '';
+          let textExp = item.exp ? '(Sudah Tutup)' : '';
+          $select.append(
+            '<option value="' + item.kodedokter + '" ' +
+            'data-nama="' + item.namadokter + '" ' +
+            'data-jam="' + item.jampraktek + '" ' +
+            disabled +
+            '>' +
+            item.namadokter + ' (' + item.jampraktek + ')' + textExp +
+            '</option>'
+          );
+        });
+        $select.trigger('change.select2');
+      },
+      error: function(err) {
+        console.error(err);
+        $select.html('<option value="">Error loading data</option>').trigger('change.select2');
+      }
+    });
   }
 
   function loadProvider() {
@@ -1405,63 +1368,73 @@ require '../../controller/view.php';
       });
   }
   $('#btnSavePoli').on('click', function() {
+    const $btn = $(this);
     const selected = $('#id_patient_select').select2('data')[0];
     const data = {
       id_patient: $('#id_patient_select').val(),
       patient_name_pcare: selected?.patient_name || '',
       id_doctor: $('#poli_doctor').val(),
       doctor_name: $('#poli_doctor option:selected').text(),
-
       id_poli: $('#poli_poli').val(),
       poli_name: $('#poli_poli option:selected').text(),
-
       id_provider: $('#poli_provider').val(),
-
       visit_date: $('#poli_date').val(),
-      visit_time: $('#poli_time').val()
+      visit_time: $('#poli_time').val(),
+      kdPoli: $('#kdPoli').val()
     };
-    // 🔥 VALIDASI (optional tapi bagus)
     if (!data.id_patient || !data.id_doctor || !data.visit_date || !data.visit_time) {
-      alert('Data wajib belum lengkap');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Data Belum Lengkap',
+        text: 'Silakan lengkapi semua data yang wajib diisi.'
+      });
       return;
     }
-
-    // 🔥 CONVERT KE FORM-ENCODED
-    const formData = new URLSearchParams();
-    for (let key in data) {
-      formData.append(key, data[key] ?? '');
-    }
-
-    fetch('controller/visit/visitController', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: formData
-      })
-      .then(res => res.json())
-      .then(resp => {
-
+    $.ajax({
+      url: 'controller/visit/visitController',
+      type: 'POST',
+      data: data,
+      dataType: 'json',
+      beforeSend: function() {
+        $btn.prop('disabled', true)
+          .html('<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...');
+      },
+      success: function(resp) {
         if (resp.status === 'success') {
-
-          // 🔥 ALERT LEBIH INFORMATIVE
-          alert(`Registrasi berhasil`);
-
+          Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: 'Registrasi berhasil.',
+            timer: 1800,
+            showConfirmButton: false
+          });
           $('#poliModal').modal('hide');
-
-          // reload table tanpa reset paging
           $('#periodeTable').DataTable().ajax.reload(null, false);
-
         } else {
-          alert('❌ ' + resp.message);
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal',
+            text: resp.message
+          });
         }
-
-      })
-      .catch(err => {
-        console.error(err);
-        alert('Terjadi error');
-      });
-
+      },
+      error: function(xhr) {
+        let pesan = 'Terjadi kesalahan pada server.';
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+          pesan = xhr.responseJSON.message;
+        }
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: pesan
+        });
+        console.error(xhr.responseText);
+      },
+      complete: function() {
+        $btn.prop('disabled', false)
+          .html('Simpan');
+      }
+    });
   });
 
   $('#poliModal').on('shown.bs.modal', function() {

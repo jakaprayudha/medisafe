@@ -297,8 +297,7 @@ if ($type == "BPJS") {
     }
 }
 echo json_encode($response);
-function generateVisitID($koneksi, $idcustomer)
-{
+function generateVisitID($koneksi, $idcustomer){
     do {
         $date = date('ymd');
         $random = strtoupper(bin2hex(random_bytes(3)));
@@ -314,8 +313,7 @@ function generateVisitID($koneksi, $idcustomer)
 
     return $visitID;
 }
-function createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tglDaftarDB, $jampraktek)
-{
+function createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tglDaftarDB, $jampraktek){
     $cekantrian = $koneksi->prepare("SELECT 
                                     COALESCE(MAX(a.nomor), 0) AS last,
                                     (
