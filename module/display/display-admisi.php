@@ -218,7 +218,8 @@
         console.log(nama);
         console.log(dokter);
         $('#callPatient').html(nama.toUpperCase());
-        $('#callQueue').html("Ruangan Dr. " + dokter.toUpperCase());
+        let namaDokter = dokter.toUpperCase().replace(/^DR\./i, 'Dr.');
+        $('#callQueue').html("Ruangan : " + namaDokter);
         APP.showQueue();
       }
     })
