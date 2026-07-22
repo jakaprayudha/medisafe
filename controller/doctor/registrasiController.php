@@ -111,7 +111,7 @@ function getData()
 
    // Order
    $query .= " ORDER BY pasien_visit.visit_date ASC";
-
+   // echo $query;
    // =========================
    // PREPARE & EXECUTE
    // =========================
