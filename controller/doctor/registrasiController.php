@@ -28,10 +28,13 @@ switch ($method) {
 }
 
 // Function untuk Create
-function getData(){
+function getData()
+{
    global $koneksi;
+
    $role = $_SESSION['roles'] ?? null;
    $id_customer = $_SESSION['id_customer'] ?? null;
+
    if (!$id_customer) {
       echo json_encode([
          'status' => 'error',
@@ -39,76 +42,81 @@ function getData(){
       ]);
       exit;
    }
+
    $fromDate   = $_GET['fromDate'] ?? null;
    $toDate     = $_GET['toDate'] ?? null;
    $doctorName = $_GET['doctorName'] ?? null;
    $kdDokter   = $_GET['kdDokter'] ?? null;
-   $query = "
-        SELECT
-            pasien_visit.*,
-            ms_patient.*,
-            ms_provider.provider_name,
-            ap.status AS status_panggil
-        FROM pasien_visit
-        LEFT JOIN ms_patient
-            ON ms_patient.id_patient = pasien_visit.id_patient
-        LEFT JOIN ms_provider
-            ON ms_provider.id_provider = pasien_visit.id_provider
-        LEFT JOIN antrian_poli ap
-            ON ap.nomor_visit = pasien_visit.visit_ID
-            AND ap.id_customer = pasien_visit.id_customer
-        WHERE pasien_visit.source_hub <> 'Rawat Inap'
-        AND pasien_visit.id_customer = ?
-    ";
+
+   $query = "SELECT
+                pasien_visit.*,
+                ms_patient.*,
+                ms_provider.provider_name,
+                ap.status AS status_panggil
+            FROM pasien_visit
+            LEFT JOIN ms_patient
+                ON ms_patient.id_patient = pasien_visit.id_patient
+            LEFT JOIN ms_provider
+                ON ms_provider.id_provider = pasien_visit.id_provider
+            LEFT JOIN antrian_poli ap
+                ON ap.nomor_visit = pasien_visit.visit_ID
+                AND ap.id_customer = pasien_visit.id_customer
+            WHERE pasien_visit.source_hub <> 'Rawat Inap'
+            AND pasien_visit.id_customer = ?";
+
    $params = [];
    $types  = "";
-   // id_customer
+
    $params[] = $id_customer;
    $types .= "s";
+
    // Filter tanggal
    if (!empty($fromDate) && !empty($toDate)) {
-      $query .= " AND pasien_visit.visit_date BETWEEN ? AND ?";
+      $query .= " AND DATE(pasien_visit.visit_date) BETWEEN ? AND ?";
       $params[] = $fromDate;
       $params[] = $toDate;
       $types .= "ss";
    }
+
    // Filter dokter
    if ($role != "admin" && (!empty($doctorName) || !empty($kdDokter))) {
+
       $query .= " AND (";
+
       $filter = [];
+
       if (!empty($doctorName)) {
          $doctorNameClean = preg_replace('/^dr\.?\s*/i', '', $doctorName);
+
          $filter[] = "REPLACE(LOWER(pasien_visit.id_doctor),'dr. ','') LIKE ?";
+
          $params[] = "%" . strtolower($doctorNameClean) . "%";
          $types .= "s";
       }
+
       if (!empty($kdDokter)) {
          $filter[] = "pasien_visit.code_doctor = ?";
          $params[] = $kdDokter;
          $types .= "s";
       }
+
       $query .= implode(" OR ", $filter);
       $query .= ")";
    }
+
    // ==========================
    // ORDER ANTRIAN
    // ==========================
    $query .= "
         ORDER BY
-        CASE
-            WHEN pasien_visit.visit_status = 0 THEN 1
-            WHEN pasien_visit.visit_status = 1 THEN 2
-            WHEN pasien_visit.visit_status = 4 THEN 3
-            ELSE 4
-        END,
-        LEFT(pasien_visit.visit_antrian,1),
-        CAST(
-            SUBSTRING(pasien_visit.visit_antrian,2)
-            AS UNSIGNED
-        ),
-        pasien_visit.visit_time ASC
+            pasien_visit.visit_date ASC,
+            LEFT(pasien_visit.visit_antrian,1) ASC,
+            CAST(REGEXP_SUBSTR(pasien_visit.visit_antrian,'[0-9]+$') AS UNSIGNED) ASC,
+            pasien_visit.visit_time ASC
     ";
+
    $stmt = $koneksi->prepare($query);
+
    if (!$stmt) {
       echo json_encode([
          'status' => 'error',
@@ -116,14 +124,17 @@ function getData(){
       ]);
       return;
    }
+
    $stmt->bind_param($types, ...$params);
+
    $stmt->execute();
+
    $result = $stmt->get_result();
-   $data = [];
-   while ($row = $result->fetch_assoc()) {
-      $data[] = $row;
-   }
+
+   $data = $result->fetch_all(MYSQLI_ASSOC);
+
    $stmt->close();
+
    echo json_encode([
       "status" => "success",
       "data" => $data
