@@ -110,7 +110,12 @@ function getData()
    }
 
    // Order
-   $query .= " ORDER BY pasien_visit.visit_date ASC";
+   $query .= "
+      ORDER BY
+         pasien_visit.visit_date ASC,
+         LEFT(pasien_visit.visit_antrian, 1) ASC,
+         CAST(SUBSTRING(pasien_visit.visit_antrian, 2) AS UNSIGNED) ASC
+      ";
    // echo $query;
    // =========================
    // PREPARE & EXECUTE

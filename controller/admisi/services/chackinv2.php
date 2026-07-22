@@ -62,8 +62,8 @@ if ($data['created_user'] == "MobileJKN") {
         "kdTkp" => $kdTkp
     ];
     // echo json_encode($payload, JSON_PRETTY_PRINT);die();
-    $result = bpjsPost("/pendaftaran", $payload);
-    // $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
+    // $result = bpjsPost("/pendaftaran", $payload);
+    $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
     if ($result['code'] != '200') {
         $msg = $result['metadata'];
         if ($msg == null) {

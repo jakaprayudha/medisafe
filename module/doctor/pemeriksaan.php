@@ -154,7 +154,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
   $('#toDate').attr('max', today);
   $(document).ready(function() {
 
-     var table = $('#zero_config').DataTable({
+    var table = $('#zero_config').DataTable({
       processing: true,
       serverSide: false,
       scrollX: true,
@@ -220,7 +220,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                 `;
               }
               let actionBtn = '';
-              if (row.id_provider == 1 && row.visit_status == 0) {
+              if (row.id_provider == 1 && row.status_panggil == 0) {
                 actionBtn = `
                   <button type="button"
                     class="btn btn-sm btn-secondary btn-hadir"
@@ -303,7 +303,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
         }
       ]
     });
-    
+
 
     // 🔥 TAB EVENT
     $('#home-tab').on('click', function() {
@@ -329,93 +329,95 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
     });
 
     $(document).on('click', '.btn-hadir', function() {
-    let visitID = $(this).data('visit');
-    let bayar = $(this).data('jnsbyr');
-    let status = $(this).data('status');
-    let konfirmasi = status == '1' ?
-      "Konfirmasi pasien hadir?" :
-      "Konfirmasi pasien tidak hadir?";
-    Swal.fire({
-      title: konfirmasi,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Ya'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        $.ajax({
-          url: 'controller/wsbpjs/setHadir.php',
-          type: 'POST',
-          dataType: 'json',
-          data: {
-            visit_id: visitID,
-            type: bayar,
-            statushadir: status
-          },
-          beforeSend: function() {
-            Swal.fire({
-              title: 'Sedang diproses...',
-              text: 'Mohon tunggu',
-              allowOutsideClick: false,
-              allowEscapeKey: false,
-              didOpen: () => {
-                Swal.showLoading();
-              }
-            });
-          },
-          success: function(res) {
-            if (res.success) {
-              $.ajax({
-                url: 'controller/admisi/services/chackinv2.php',
-                type: 'POST',
-                dataType: 'json',
-                data: {
-                  visit: visitID
-                },
-                success: function(pcare) {
-                  if (pcare.success) {
-                    Swal.fire({
-                      icon: 'success',
-                      title: 'Berhasil',
-                      text: pcare.message
-                    });
-                  } else {
+      let visitID = $(this).data('visit');
+      let bayar = $(this).data('jnsbyr');
+      let status = $(this).data('status');
+      let konfirmasi = status == '1' ?
+        "Konfirmasi pasien hadir?" :
+        "Konfirmasi pasien tidak hadir?";
+      Swal.fire({
+        title: konfirmasi,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajax({
+            url: 'controller/wsbpjs/setHadir.php',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+              visit_id: visitID,
+              type: bayar,
+              statushadir: status
+            },
+            beforeSend: function() {
+              Swal.fire({
+                title: 'Sedang diproses...',
+                text: 'Mohon tunggu',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                  Swal.showLoading();
+                }
+              });
+            },
+            success: function(res) {
+              if (res.success) {
+                $.ajax({
+                  url: 'controller/admisi/services/chackinv2.php',
+                  type: 'POST',
+                  dataType: 'json',
+                  data: {
+                    visit: visitID
+                  },
+                  success: function(pcare) {
+                    if (pcare.success) {
+                      Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: pcare.message
+                      });
+                      table.ajax.reload(null, false);
+                    } else {
+                      Swal.fire({
+                        icon: 'warning',
+                        title: 'Berhasil Set Hadir',
+                        text: 'Set hadir berhasil, namun pendaftaran PCare gagal : ' + pcare.message
+                      });
+                    }
+                    table.ajax.reload(null, false);
+                  },
+                  error: function() {
                     Swal.fire({
                       icon: 'warning',
                       title: 'Berhasil Set Hadir',
-                      text: 'Set hadir berhasil, namun pendaftaran PCare gagal : ' + pcare.message
+                      text: 'Set hadir berhasil, namun server PCare tidak merespon'
                     });
+                    table.ajax.reload(null, false);
                   }
-                  $('#zero_config').DataTable().ajax.reload(null, false);
-                },
-                error: function() {
-                  Swal.fire({
-                    icon: 'warning',
-                    title: 'Berhasil Set Hadir',
-                    text: 'Set hadir berhasil, namun server PCare tidak merespon'
-                  });
-                  $('#zero_config').DataTable().ajax.reload(null, false);
-                }
-              });
-            } else {
+                });
+              } else {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Gagal',
+                  text: res.message
+                });
+                table.ajax.reload(null, false);
+              }
+            },
+            error: function() {
               Swal.fire({
                 icon: 'error',
-                title: 'Gagal',
-                text: res.message
+                title: 'Error',
+                text: 'Server tidak merespon'
               });
             }
-          },
-          error: function() {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: 'Server tidak merespon'
-            });
-          }
-        });
-      }
+          });
+        }
+      });
     });
-  });
-  
+
   });
 </script>
 
