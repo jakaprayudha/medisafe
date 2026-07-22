@@ -73,6 +73,7 @@ function startApp() {
 
         socket.on("display_antian_poli", data => {
             APP.showAntrianPoli(data.nama, data.dokter);
+            console.log(data);
         });
 
         socket.on("putar_suara_panggilan", (data) => {

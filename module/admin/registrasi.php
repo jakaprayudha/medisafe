@@ -799,9 +799,10 @@ date_default_timezone_set('Asia/Jakarta');
     const apiUrl = 'controller/visit/registrasiController';
     var table = $('#periodeTable').DataTable({
       processing: true,
-      serverSide: false, // 🔹 ubah jadi false
-      scrollX: true, // ✅ ini wajib
+      serverSide: false,
+      scrollX: true,
       scrollCollapse: true,
+      order: [],
       ajax: {
         url: apiUrl,
         type: "GET",
@@ -969,9 +970,7 @@ date_default_timezone_set('Asia/Jakarta');
         }, {
           data: "registrasi"
         },
-        {
-          data: "antrian"
-        },
+        { data: "antrian", orderable: false },
         {
           data: "sumber"
         },
@@ -1734,21 +1733,21 @@ date_default_timezone_set('Asia/Jakarta');
 </script>
 
 <script>
-  $(document).on('show.bs.dropdown', '.dropdown', function() {
-    let $menu = $(this).find('.dropdown-menu');
+  // $(document).on('show.bs.dropdown', '.dropdown', function() {
+  //   let $menu = $(this).find('.dropdown-menu');
 
-    // pindahkan ke body
-    $('body').append($menu);
+  //   // pindahkan ke body
+  //   $('body').append($menu);
 
-    let offset = $(this).find('.dropdown-toggle')[0].getBoundingClientRect();
+  //   let offset = $(this).find('.dropdown-toggle')[0].getBoundingClientRect();
 
-    $menu.css({
-      position: 'fixed',
-      top: offset.bottom,
-      left: offset.left,
-      zIndex: 999999
-    });
-  });
+  //   $menu.css({
+  //     position: 'fixed',
+  //     top: offset.bottom,
+  //     left: offset.left,
+  //     zIndex: 999999
+  //   });
+  // });
 
   $(document).on('hide.bs.dropdown', '.dropdown', function() {
     let $menu = $(this).find('.dropdown-menu');

@@ -129,7 +129,14 @@ function getData()
       $query .= " AND pasien_visit.visit_status IN (99)";
    }
 
-   $query .= " ORDER BY pasien_visit.visit_date ASC";
+   $query .= " 
+      ORDER BY 
+         pasien_visit.visit_date ASC,
+         pasien_visit.id_poli ASC,
+         pasien_visit.id_doctor ASC,
+         LEFT(pasien_visit.visit_antrian, 1) ASC,
+         CAST(REGEXP_SUBSTR(pasien_visit.visit_antrian, '[0-9]+$') AS UNSIGNED) ASC
+   ";
 
    $stmt = $koneksi->prepare($query);
 

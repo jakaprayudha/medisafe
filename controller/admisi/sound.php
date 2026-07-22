@@ -5,9 +5,15 @@ header('Content-Type: application/json');
 $uid = $_SESSION['uid_user'];
 $text = strtolower($_POST['text']);
 preg_match('/atas nama\s+(.*?)(?=,)/i', $text, $namaMatch);
-preg_match('/dokter\s+(.*)$/i', $text, $dokterMatch);
+if (preg_match('/dokter\s+(.*)$/i', $text, $dokterMatch)) {
+    $tujuan = $dokterMatch[1];
+} elseif (preg_match('/ruangan\s+(.*)$/i', $text, $ruanganMatch)) {
+    $tujuan = $ruanganMatch[1];
+} else {
+    $tujuan = null;
+}
 $nama   = $namaMatch[1] ?? '';
-$dokter = $dokterMatch[1] ?? '';
+$dokter = $tujuan ?? '';
 $visit_id = $_POST['nomor_visit'];
 $result = pemanggilanAntrian([
     "rs_id" => $kdRumahSakit,
