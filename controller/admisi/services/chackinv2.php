@@ -6,7 +6,7 @@ header('Content-Type: application/json');
 date_default_timezone_set('Asia/Jakarta');
 
 $visit_id = $_POST['visit'];
-$stmt = $koneksi->prepare("SELECT pv.created_user, pv.suhu,pv.saturasi, pv.visit_antrian,pv.jampraktek, ms_patient.nomor_rm, pv.id_poli ,pv.visit_date, ms_patient.patient_bpjs, mp.kdPoli, pv.code_doctor, md.doctor_name, ms_patient.patient_bpjs, ms_patient.patient_nik, ms_patient.patient_phone FROM pasien_visit AS pv INNER JOIN master_poli AS mp ON mp.nmPoli = pv.id_poli INNER JOIN ms_doctor AS md ON md.doctor_code = pv.code_doctor INNER JOIN ms_patient ON pv.id_patient = ms_patient.id_patient WHERE pv.id_customer = ? AND md.id_customer = ? AND visit_ID = ? AND ms_patient.id_customer = ?");
+$stmt = $koneksi->prepare("SELECT pv.anamnesa, pv.berat_badan,pv.tinggi_badan, pv.respirasi, pv.lingkar_perut, pv.nadi, pv.created_user, pv.suhu,pv.saturasi, pv.visit_antrian,pv.jampraktek, ms_patient.nomor_rm, pv.id_poli ,pv.visit_date, ms_patient.patient_bpjs, mp.kdPoli, pv.code_doctor, md.doctor_name, ms_patient.patient_bpjs, ms_patient.patient_nik, ms_patient.patient_phone FROM pasien_visit AS pv INNER JOIN master_poli AS mp ON mp.nmPoli = pv.id_poli INNER JOIN ms_doctor AS md ON md.doctor_code = pv.code_doctor INNER JOIN ms_patient ON pv.id_patient = ms_patient.id_patient WHERE pv.id_customer = ? AND md.id_customer = ? AND visit_ID = ? AND ms_patient.id_customer = ?");
 $stmt->bind_param('ssss', $idcustomer, $idcustomer, $visit_id, $idcustomer);
 $stmt->execute();
 $data = $stmt->get_result()->fetch_assoc();
@@ -16,7 +16,7 @@ if ($data['created_user'] == "MobileJKN") {
     $jamSekarang = date('H:i:s');
     $tglDaftarDB = $data['visit_date'];
     $tglDaftar = date("d-m-Y", strtotime($data['visit_date']));
-    $noKartu = $data['noKartu'];
+    $noKartu = $data['patient_bpjs'];
     $saturasi = $data['saturasi'];
     $suhu = $data['suhu'];
 
@@ -31,16 +31,15 @@ if ($data['created_user'] == "MobileJKN") {
     preg_match('/([A-Za-z]+)(\d+)/', $visitantri, $match);
     $kodeAntri = $match[1];
     $angkaantrean = $match[2];
-
-    $keluhan = isset($_POST['keluhan']) && !empty($_POST['keluhan']) ? $_POST['keluhan'] : null;
     $kunjSakit = true;
-    $sistole       = (int) ($_POST['sistole'] ?? 0);
-    $diastole      = (int) ($_POST['diastole'] ?? 0);
-    $beratBadan    = (int) ($_POST['beratBadan'] ?? 0);
-    $tinggiBadan   = (int) ($_POST['tinggiBadan'] ?? 0);
-    $respRate      = (int) ($_POST['respRate'] ?? 0);
-    $lingkarPerut  = (int) ($_POST['lingkarPerut'] ?? 0);
-    $heartRate     = (int) ($_POST['heartRate'] ?? 0);
+    $keluhan = $data['keluhan'];
+    $sistole       = (int)$data['sistole'] ?? 0;
+    $diastole      = (int)$data['diastole'] ?? 0;
+    $beratBadan    = (int)$data['beratBadan'] ?? 0;
+    $tinggiBadan   = (int)$data['tinggiBadan'] ?? 0;
+    $respRate      = (int)$data['respirasi'] ?? 0;
+    $lingkarPerut  = (int)$data['lingkar_perut'] ?? 0;
+    $heartRate     = (int)$data['nadi'] ?? 0;
     $kdTkp = '10';
     $nmPoli = $data['id_poli'];
     $rujukbalik = 0;
@@ -50,7 +49,7 @@ if ($data['created_user'] == "MobileJKN") {
         "tglDaftar" => $tglDaftar,
         "noKartu" => $noKartu,
         "kdPoli" => $kdPoli,
-        "keluhan" => null,
+        "keluhan" => $keluhan,
         "kunjSakit" => $kunjSakit,
         "sistole" => $sistole,
         "diastole" => $diastole,
