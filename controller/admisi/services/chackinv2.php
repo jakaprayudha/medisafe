@@ -6,7 +6,7 @@ header('Content-Type: application/json');
 date_default_timezone_set('Asia/Jakarta');
 
 $visit_id = $_POST['visit'];
-$stmt = $koneksi->prepare("SELECT pv.anamnesa, pv.berat_badan,pv.tinggi_badan, pv.respirasi, pv.lingkar_perut, pv.nadi, pv.created_user, pv.suhu,pv.saturasi, pv.visit_antrian,pv.jampraktek, ms_patient.nomor_rm, pv.id_poli ,pv.visit_date, ms_patient.patient_bpjs, mp.kdPoli, pv.code_doctor, md.doctor_name, ms_patient.patient_bpjs, ms_patient.patient_nik, ms_patient.patient_phone FROM pasien_visit AS pv INNER JOIN master_poli AS mp ON mp.nmPoli = pv.id_poli INNER JOIN ms_doctor AS md ON md.doctor_code = pv.code_doctor INNER JOIN ms_patient ON pv.id_patient = ms_patient.id_patient WHERE pv.id_customer = ? AND md.id_customer = ? AND visit_ID = ? AND ms_patient.id_customer = ?");
+$stmt = $koneksi->prepare("SELECT pv.jampraktek,pv.anamnesa, pv.berat_badan,pv.tinggi_badan, pv.respirasi, pv.lingkar_perut, pv.nadi, pv.created_user, pv.suhu,pv.saturasi, pv.visit_antrian,pv.jampraktek, ms_patient.nomor_rm, pv.id_poli ,pv.visit_date, ms_patient.patient_bpjs, mp.kdPoli, pv.code_doctor, md.doctor_name, ms_patient.patient_bpjs, ms_patient.patient_nik, ms_patient.patient_phone FROM pasien_visit AS pv INNER JOIN master_poli AS mp ON mp.nmPoli = pv.id_poli INNER JOIN ms_doctor AS md ON md.doctor_code = pv.code_doctor INNER JOIN ms_patient ON pv.id_patient = ms_patient.id_patient WHERE pv.id_customer = ? AND md.id_customer = ? AND visit_ID = ? AND ms_patient.id_customer = ?");
 $stmt->bind_param('ssss', $idcustomer, $idcustomer, $visit_id, $idcustomer);
 $stmt->execute();
 $data = $stmt->get_result()->fetch_assoc();
@@ -32,7 +32,7 @@ if ($data['created_user'] == "MobileJKN") {
     $kodeAntri = $match[1];
     $angkaantrean = $match[2];
     $kunjSakit = true;
-    $keluhan = $data['keluhan'];
+    $keluhan = $data['keluhan'] ?? '';
     $sistole       = (int)$data['sistole'] ?? 0;
     $diastole      = (int)$data['diastole'] ?? 0;
     $beratBadan    = (int)$data['beratBadan'] ?? 0;
@@ -76,7 +76,7 @@ if ($data['created_user'] == "MobileJKN") {
         ];
     } else {
         $noUrut = $result['data']['message'];
-        $stmt = $koneksi->prepare("INSERT INTO `pcare_pendaftaran` (`tanggal_daftar`, `noKartu`, `kdPoli`, `nmPoli`, `keluhan`, `kunjSakit`, `sistole`, `diastole`, `beratBadan`, `tinggiBadan`, `respRate`, `lingkarPerut`, `heartRate`, `rujukBalik`, `kdTkp`, `noUrut`, `nomor_visit`, `saturasi`, `suhu`, `jamperaktek`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+        $stmt = $koneksi->prepare("INSERT INTO `pcare_pendaftaran` (`tanggal_daftar`, `noKartu`, `kdPoli`, `nmPoli`, `keluhan`, `kunjSakit`, `sistole`, `diastole`, `beratBadan`, `tinggiBadan`, `respRate`, `lingkarPerut`, `heartRate`, `rujukBalik`, `kdTkp`, `noUrut`, `nomor_visit`, `saturasi`, `suhu`, `jampraktek`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
         $stmt->bind_param(
             "ssssssiiiiiiisssssss",
             $tglDaftarDB,
