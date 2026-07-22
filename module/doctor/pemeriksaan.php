@@ -106,7 +106,7 @@ $apiUrl = getenv('API_URL');
                           <th class="text-dark fw-normal">Registrasi</th>
                           <th>Antrian</th>
                           <th>Layanan</th>
-                          <th scope="col" class="text-dark fw-normal">No.BPJS</th>
+                          <th scope="col" class="text-dark fw-normal">No.RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th scope="col" class="text-dark fw-normal">P/L</th>
                           <th>Jenis Bayar</th>
