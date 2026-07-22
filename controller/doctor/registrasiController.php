@@ -47,6 +47,7 @@ function getData()
    $toDate     = $_GET['toDate'] ?? null;
    $doctorName = $_GET['doctorName'] ?? null;
    $kdDokter   = $_GET['kdDokter'] ?? null;
+   $provider   = $_GET['provider'] ?? null;
 
    $query = "SELECT
                 pasien_visit.*,
@@ -76,6 +77,13 @@ function getData()
       $params[] = $fromDate;
       $params[] = $toDate;
       $types .= "ss";
+   }
+
+   // FIlter Provider
+   if (!empty($provider)) {
+      $query .= " AND pasien_visit.id_provider = ?";
+      $params[] = $provider;
+      $types .= "s";
    }
 
    // Filter dokter

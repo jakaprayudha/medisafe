@@ -69,9 +69,14 @@ $apiUrl = getenv('API_URL');
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="card-title fw-semibold">Pemeriksaan Pasien Poliklinik</h5>
-                    <!-- 🔽 Filter + Tombol Kembali -->
                     <div class="d-flex align-items-end gap-2 flex-wrap">
                       <form id="filterForm" class="row g-2 align-items-end">
+                        <div class="col-auto">
+                          <label for="provider" class="form-label mb-0">Provider</label>
+                          <select id="provider" name="provider" class="form-select">
+                            <option value="">Semua Provider</option>
+                          </select>
+                        </div>
                         <div class="col-auto">
                           <label for="fromDate" class="form-label mb-0">Dari</label>
                           <input type="date" id="fromDate" name="fromDate" max="" class="form-control">
@@ -168,6 +173,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
           d.doctorName = doctorName;
           d.tab = activeTab;
           d.kdDokter = kodeDokter;
+          d.provider = $('#provider').val();
         },
 
         dataSrc: function(json) {
@@ -427,7 +433,6 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 
   });
 </script>
-
 <script>
   $(document).on('click', '.btn-call', function() {
     const noAntrian = $(this).data('antrian');
@@ -488,9 +493,25 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
     })
   });
 </script>
-
 <script>
-
+  $(document).ready(function() {
+    $.ajax({
+      url: 'controller/admisi/services/get_provider.php?type=BPJS',
+      type: 'GET',
+      dataType: 'json',
+      success: function(response) {
+        let options = '<option value="">Semua Provider</option>';
+        $.each(response, function(index, item) {
+          options += `<option value="${item.id}">${item.text}</option>`;
+        });
+        $('#provider').html(options);
+      },
+      error: function(xhr, status, error) {
+        console.error('Gagal mengambil data provider:', error);
+        $('#provider').html('<option value="">Gagal memuat data</option>');
+      }
+    });
+  });
 </script>
 
 </html>
