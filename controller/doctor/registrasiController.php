@@ -51,6 +51,7 @@ function getData()
    $fromDate   = $_GET['fromDate']   ?? null;
    $toDate     = $_GET['toDate']     ?? null;
    $doctorName = $_GET['doctorName'] ?? null;
+   $kdDokter = $_GET['kdDokter'] ?? null;
 
    // =========================
    // BASE QUERY
@@ -86,19 +87,26 @@ function getData()
       $types   .= "ss";
    }
 
-   // ✅ Filter dokter (BERDASARKAN NAMA)
-   // if (!empty($doctorName)) {
-   //    $query   .= " AND pasien_visit.id_doctor = ?";
-   //    $params[] = $doctorName;
-   //    $types   .= "s";
-   // }
-
-   if ($role != 'admin' && !empty($doctorName)) {
-      $doctorNameClean = preg_replace('/^dr\.?\s*/i', '', $doctorName);
-      $query .= " AND (
-      REPLACE(LOWER(pasien_visit.id_doctor), 'dr. ', '') LIKE ?)";
-      $params[] = "%" . strtolower($doctorNameClean) . "%";
-      $types   .= "s";
+   if ($role != 'admin' && (!empty($doctorName) || !empty($kdDokter))) {
+      $query .= " AND (";
+      $orCondition = [];
+      if (!empty($doctorName)) {
+         $doctorNameClean = preg_replace('/^dr\.?\s*/i', '', $doctorName);
+         $orCondition[] = "
+            REPLACE(LOWER(pasien_visit.id_doctor), 'dr. ', '') LIKE ?
+        ";
+         $params[] = "%" . strtolower($doctorNameClean) . "%";
+         $types .= "s";
+      }
+      if (!empty($kdDokter)) {
+         $orCondition[] = "
+            pasien_visit.code_doctor = ?
+        ";
+         $params[] = $kdDokter;
+         $types .= "s";
+      }
+      $query .= implode(" OR ", $orCondition);
+      $query .= ")";
    }
 
    // Order

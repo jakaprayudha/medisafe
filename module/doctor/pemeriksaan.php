@@ -141,6 +141,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
   const apiUrl = 'controller/doctor/registrasiController';
 
   const doctorName = <?= json_encode($_SESSION['fullname'] ?? '') ?>;
+  const kodeDokter = <?= json_encode($_SESSION['kode_dokter'] ?? '') ?>;
   const rmeType = '<?php echo $rme_type ?>';
   var today = new Date().toLocaleDateString("sv-SE", {
     timeZone: "Asia/Jakarta"
@@ -164,7 +165,8 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
           d.fromDate = $('#fromDate').val();
           d.toDate = $('#toDate').val();
           d.doctorName = doctorName;
-          d.tab = activeTab; // 🔥 kirim tab (opsional backend)
+          d.tab = activeTab;
+          d.kdDokter = kodeDokter;
         },
 
         dataSrc: function(json) {
