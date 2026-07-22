@@ -217,7 +217,9 @@ if ($cek->num_rows > 0) {
             $source_hub = "Poliklinik";
             $status_antrian = 0;
             $status_visit = '10';
-            $stmt4 = $koneksi->prepare("INSERT INTO pasien_visit (id_patient,visit_ID,visit_date,id_poli,source_hub,created_user,visit_antrian,status_antrian,id_customer,visit_status,patient_name_pcare,noKartu, code_doctor, jampraktek) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt4 = $koneksi->prepare("INSERT INTO pasien_visit (id_patient,visit_ID,visit_date,id_poli,source_hub,created_user,visit_antrian,status_antrian,id_customer,
+            visit_status,patient_name_pcare,noKartu, code_doctor, jampraktek) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt4->bind_param(
                 "issssssiisssss",
                 $id_patient,

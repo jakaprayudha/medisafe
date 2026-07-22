@@ -73,7 +73,11 @@ $(function () {
     $('#pasienSelect').on('select2:select', function (e) {
         resetSemuaForm();
         let data = e.params.data;
-        const nomor = !data.nik ? data.bpjs : data.nik;
+        const nik = (data.nik || "").trim();
+
+        const nomor = (nik === "" || nik === "-")
+            ? data.bpjs
+            : nik;
         loadPasien(nomor, 'BPJS');
     });
     function loadPasien(nomor, tipe) {
@@ -392,7 +396,7 @@ $(function () {
                         console.error(err);
                         $select.html('<option value="">Error loading data</option>').trigger('change.select2');
                     }
-                    
+
                 });
                 return;
             }
