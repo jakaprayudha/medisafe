@@ -176,16 +176,19 @@ INNER JOIN master_doctor_bpjs AS mdb
 WHERE d.doctor_category = ?
 AND LOWER(jd.day_of_week) = ?
 AND jd.sch_status = 1
-
+AND mdb.id_customer = ?
+AND jd.id_poli = ?
 GROUP BY jd.id_doctor, jd.start_time, jd.end_time
 
 ORDER BY jd.start_time ASC");
 $stmt->bind_param(
-    "ssss",
+    "ssssss",
     $tanggalperiksa,
     $id_customer,
     $kodepoli,
-    $hari_indonesia
+    $hari_indonesia,
+    $id_customer,
+    $kodepoli
 );
 
 $stmt->execute();
