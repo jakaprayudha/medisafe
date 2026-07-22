@@ -158,6 +158,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
       processing: true,
       serverSide: false,
       scrollX: true,
+      order: [], // PERBAIKAN 1: Matikan auto-sort agar urutan dari PHP tidak berantakan
       ajax: {
         url: apiUrl,
         type: "GET",
@@ -172,11 +173,11 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
         dataSrc: function(json) {
 
           return json.data
-
             // 🔥 FILTER TAB DISINI
             .filter(function(row) {
               if (activeTab === 'belum') {
-                return row.visit_status == 0 || row.visit_status == 1;
+                // PERBAIKAN 3: Pastikan status 10 juga tertangani jika itu memang status antrean
+                return row.visit_status == 0 || row.visit_status == 1 || row.visit_status == 10;
               } else if (activeTab === 'sudah') {
                 return row.visit_status == 4;
               }
@@ -197,6 +198,10 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
               } else if (row.visit_status == 4) {
                 statusClass = 'bg-success';
                 statusText = 'Selesai Dilayani';
+              } else if (row.visit_status == 10) {
+                // PERBAIKAN 3: Tangani status 10 (Sesuaikan teksnya dengan sistem Anda)
+                statusClass = 'bg-info';
+                statusText = 'Menunggu';
               } else {
                 statusClass = 'bg-secondary';
                 statusText = 'Unknown';
@@ -205,7 +210,6 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
               let pemeriksaanFile = (rmeType == 1) ? 'kunjungan' : 'pemeriksaan_b';
 
               let callButton = '';
-              // 🔥 hanya tampil di tab BELUM
               if (row.source_hub === 'Poliklinik' && activeTab === 'belum') {
                 callButton = `
                     <button class="btn btn-sm btn-warning btn-call"
@@ -250,6 +254,9 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                 `;
               }
 
+              // PERBAIKAN 2: Tangani visit_time null agar tidak muncul kata "null"
+              let waktuVisit = row.visit_time ? row.visit_time : '';
+
               return {
                 actions: `
                   <div class="text-center">
@@ -257,7 +264,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                     ${callButton}
                   </div>
                 `,
-                tanggal: row.visit_date + ' ' + row.visit_time,
+                tanggal: row.visit_date + ' ' + waktuVisit,
                 antrian: row.visit_antrian,
                 source_hub: row.source_hub,
                 nomor_rm: row.nomor_rm,
