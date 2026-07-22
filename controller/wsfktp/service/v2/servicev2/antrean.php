@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ]);
     exit;
 }
+$jamSekarang = date('H:i');
 $headers = array_change_key_case(getallheaders(), CASE_LOWER);
 $token = $headers['x-token'] ?? null;
 $username = $headers['x-username'] ?? null;
@@ -218,10 +219,10 @@ if ($cek->num_rows > 0) {
             $status_antrian = 0;
             $status_visit = '10';
             $stmt4 = $koneksi->prepare("INSERT INTO pasien_visit (id_patient,visit_ID,visit_date,id_poli,source_hub,created_user,visit_antrian,status_antrian,id_customer,
-            visit_status,patient_name_pcare,noKartu, code_doctor, jampraktek) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            visit_status,patient_name_pcare,noKartu, code_doctor, jampraktek, id_doctor, visit_time) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt4->bind_param(
-                "issssssiisssss",
+                "issssssiisssssss",
                 $id_patient,
                 $visit_ID,
                 $tanggal,
@@ -233,9 +234,11 @@ if ($cek->num_rows > 0) {
                 $id_customer,
                 $status_visit,
                 $patient_name,
-                $patient_bpjs,
+                $noKartu,
                 $kodedokter,
-                $jampraktek
+                $jampraktek,
+                $namaDokter,
+                $jamSekarang
             );
             if (!$stmt4->execute()) {
                 throw new Exception($stmt4->error);

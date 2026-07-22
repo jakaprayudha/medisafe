@@ -172,7 +172,7 @@ LEFT JOIN antrian_poli AS ap
 LEFT JOIN pasien_visit AS p
     ON p.visit_ID = ap.nomor_visit
 INNER JOIN master_doctor_bpjs AS mdb
-	ON ap.id_dokter = mdb.kdDokter
+	ON d.doctor_code = mdb.kdDokter
 WHERE d.doctor_category = ?
 AND LOWER(jd.day_of_week) = ?
 AND jd.sch_status = 1
