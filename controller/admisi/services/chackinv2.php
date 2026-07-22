@@ -6,7 +6,7 @@ header('Content-Type: application/json');
 date_default_timezone_set('Asia/Jakarta');
 
 $visit_id = $_POST['visit'];
-$stmt = $koneksi->prepare("SELECT pv.created_user, pv.visit_antrian,pv.jampraktek, ms_patient.nomor_rm, pv.id_poli ,pv.visit_date, ms_patient.patient_bpjs, mp.kdPoli, pv.code_doctor, md.doctor_name, ms_patient.patient_bpjs, ms_patient.patient_nik, ms_patient.patient_phone FROM pasien_visit AS pv INNER JOIN master_poli AS mp ON mp.nmPoli = pv.id_poli INNER JOIN ms_doctor AS md ON md.doctor_code = pv.code_doctor INNER JOIN ms_patient ON pv.id_patient = ms_patient.id_patient WHERE pv.id_customer = ? AND md.id_customer = ? AND visit_ID = ? AND ms_patient.id_customer = ?");
+$stmt = $koneksi->prepare("SELECT pv.created_user, pv.suhu,pv.saturasi, pv.visit_antrian,pv.jampraktek, ms_patient.nomor_rm, pv.id_poli ,pv.visit_date, ms_patient.patient_bpjs, mp.kdPoli, pv.code_doctor, md.doctor_name, ms_patient.patient_bpjs, ms_patient.patient_nik, ms_patient.patient_phone FROM pasien_visit AS pv INNER JOIN master_poli AS mp ON mp.nmPoli = pv.id_poli INNER JOIN ms_doctor AS md ON md.doctor_code = pv.code_doctor INNER JOIN ms_patient ON pv.id_patient = ms_patient.id_patient WHERE pv.id_customer = ? AND md.id_customer = ? AND visit_ID = ? AND ms_patient.id_customer = ?");
 $stmt->bind_param('ssss', $idcustomer, $idcustomer, $visit_id, $idcustomer);
 $stmt->execute();
 $data = $stmt->get_result()->fetch_assoc();
@@ -17,6 +17,9 @@ if ($data['created_user'] == "MobileJKN") {
     $tglDaftarDB = $data['visit_date'];
     $tglDaftar = date("d-m-Y", strtotime($data['visit_date']));
     $noKartu = $data['noKartu'];
+    $saturasi = $data['saturasi'];
+    $suhu = $data['suhu'];
+
     $kdPoli = $data['kdPoli'];
     $jampraktek = $data['jampraktek'];
     $kdDokter = $data['code_doctor'];
@@ -93,7 +96,7 @@ if ($data['created_user'] == "MobileJKN") {
             $rujukbalik,
             $kdTkp,
             $noUrut,
-            $visit_ID,
+            $visit_id,
             $saturasi,
             $suhu,
             $jampraktek
