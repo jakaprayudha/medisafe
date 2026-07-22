@@ -799,9 +799,10 @@ date_default_timezone_set('Asia/Jakarta');
     const apiUrl = 'controller/visit/registrasiController';
     var table = $('#periodeTable').DataTable({
       processing: true,
-      serverSide: false, // 🔹 ubah jadi false
-      scrollX: true, // ✅ ini wajib
+      serverSide: false,
+      scrollX: true,
       scrollCollapse: true,
+      order: [],
       ajax: {
         url: apiUrl,
         type: "GET",
@@ -969,9 +970,7 @@ date_default_timezone_set('Asia/Jakarta');
         }, {
           data: "registrasi"
         },
-        {
-          data: "antrian"
-        },
+        { data: "antrian", orderable: false },
         {
           data: "sumber"
         },
