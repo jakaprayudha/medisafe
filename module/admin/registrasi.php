@@ -112,7 +112,7 @@ date_default_timezone_set('Asia/Jakarta');
               <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Sudah Dilayani</button>
             </li>
             <li class="nav-item" role="presentation">
-              <button class="nav-link" id="batal-tab" data-bs-toggle="tab" data-bs-target="#batal-tab-pane" type="button" role="tab" aria-controls="batal-tab-pane" aria-selected="false">Sudah Dilayani</button>
+              <button class="nav-link" id="batal-tab" data-bs-toggle="tab" data-bs-target="#batal-tab-pane" type="button" role="tab" aria-controls="batal-tab-pane" aria-selected="false">Batal Dilayani</button>
             </li>
           </ul>
           <div class="tab-content" id="myTabContent">
