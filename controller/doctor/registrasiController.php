@@ -109,7 +109,6 @@ function getData()
    // ==========================
    $query .= "
         ORDER BY
-            pasien_visit.visit_date ASC,
             LEFT(pasien_visit.visit_antrian,1) ASC,
             CAST(REGEXP_SUBSTR(pasien_visit.visit_antrian,'[0-9]+$') AS UNSIGNED) ASC,
             pasien_visit.visit_time ASC
