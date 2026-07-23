@@ -970,7 +970,10 @@ date_default_timezone_set('Asia/Jakarta');
         }, {
           data: "registrasi"
         },
-        { data: "antrian", orderable: false },
+        {
+          data: "antrian",
+          orderable: false
+        },
         {
           data: "sumber"
         },
@@ -1733,21 +1736,32 @@ date_default_timezone_set('Asia/Jakarta');
 </script>
 
 <script>
-  // $(document).on('show.bs.dropdown', '.dropdown', function() {
-  //   let $menu = $(this).find('.dropdown-menu');
+  $(document).on('show.bs.dropdown', '.dropdown', function(e) {
+    let $toggle = $(this).find('.dropdown-toggle');
+    if ($toggle.length === 0) {
+      return;
+    }
+    let $menu = $(this).find('.dropdown-menu');
+    if ($menu.length === 0) return;
+    $menu.data('original-parent', $(this));
+    $('body').append($menu);
+    let offset = $toggle[0].getBoundingClientRect();
+    $menu.css({
+      position: 'fixed',
+      top: offset.bottom,
+      left: offset.left,
+      zIndex: 999999
+    });
+  });
 
-  //   // pindahkan ke body
-  //   $('body').append($menu);
-
-  //   let offset = $(this).find('.dropdown-toggle')[0].getBoundingClientRect();
-
-  //   $menu.css({
-  //     position: 'fixed',
-  //     top: offset.bottom,
-  //     left: offset.left,
-  //     zIndex: 999999
-  //   });
-  // });
+  $(document).on('hide.bs.dropdown', function() {
+    $('body > .dropdown-menu').each(function() {
+      let $parent = $(this).data('original-parent');
+      if ($parent && $parent.length) {
+        $parent.append($(this));
+      }
+    });
+  });
 
   $(document).on('hide.bs.dropdown', '.dropdown', function() {
     let $menu = $(this).find('.dropdown-menu');
