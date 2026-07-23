@@ -159,6 +159,7 @@ require '../../controller/view.php';
             serverSide: false,
             responsive: true,
             scrollX: true,
+            order: [],
 
             ajax: {
                 url: 'controller/admisi/services/listpatientjkn.php',
@@ -167,8 +168,9 @@ require '../../controller/view.php';
                     return json.data.map(function(row) {
                         let statusClass = '';
                         let statusText = '';
+
                         if (row.visit_status == '10') {
-                            statusClass = 'bg-warning';
+                            statusClass = 'bg-warning text-dark'; // Tambah text-dark agar mudah dibaca di kuning
                             statusText = 'Belum Check-in';
                         } else if (row.visit_status == '99') {
                             statusClass = 'bg-danger';
@@ -177,52 +179,53 @@ require '../../controller/view.php';
                             statusClass = 'bg-success';
                             statusText = 'Sudah Check-in';
                         }
+
                         let actionBtn = '';
 
                         if (row.visit_status == '10') {
                             actionBtn = `
-                            <a href="#" 
-                                class="btn btn-sm btn-secondary btn-checkin"
-                                data-visit="${row.visit_ID}"
-                                title="Check-in Pasien">
-                                <i class="ti ti-check"></i>
-                            </a>
-                            <a href="#"
-                                class="btn btn-sm btn-danger btn-batal ms-1"
-                                data-visit="${row.visit_ID}"
-                                title="Batalkan Antrean">
-                                <i class="ti ti-x"></i>
-                            </a>
-
-                        `;
+                    <a href="javascript:;" 
+                        class="btn btn-sm btn-secondary btn-checkin"
+                        data-visit="${row.visit_ID}"
+                        title="Check-in Pasien">
+                        <i class="ti ti-check"></i>
+                    </a>
+                    <a href="javascript:;"
+                        class="btn btn-sm btn-danger btn-batal ms-1"
+                        data-visit="${row.visit_ID}"
+                        title="Batalkan Antrean">
+                        <i class="ti ti-x"></i>
+                    </a>
+                `;
                         }
 
                         return {
                             actions: `<div class="text-center">${actionBtn}</div>`,
                             status: `
-                                <div class="text-center">
-                                    <span class="badge ${statusClass}">
-                                        ${statusText}
-                                    </span>
-                                </div>
-                            `,
-
+                        <div class="text-center">
+                            <span class="badge ${statusClass}">
+                                ${statusText}
+                            </span>
+                        </div>
+                    `,
                             nobpjs: row.no_bpjs ?? '-',
-                            antrian: row.visit_antrian,
-                            tanggal: row.visit_date,
-                            nama: row.patient_name,
-                            gender: row.patient_gender,
-                            dokter: row.doctor_name,
-                            poli: row.poli_name,
+                            antrian: row.visit_antrian ?? '-',
+                            tanggal: row.visit_date ?? '-',
+                            nama: row.patient_name ?? '-',
+                            gender: row.patient_gender ?? '-',
+                            dokter: row.doctor_name ?? '-',
+                            poli: row.poli_name ?? '-',
                             screening: row.screening ?? '-',
-                            bayar: row.provider_name
+                            bayar: row.provider_name ?? '-'
                         };
                     });
                 }
             },
 
             columns: [{
-                    data: 'actions'
+                    data: 'actions',
+                    orderable: false,
+                    searchable: false
                 },
                 {
                     data: 'status'
@@ -231,7 +234,8 @@ require '../../controller/view.php';
                     data: 'nobpjs'
                 },
                 {
-                    data: 'antrian'
+                    data: 'antrian',
+                    orderable: false
                 },
                 {
                     data: 'tanggal'
@@ -252,11 +256,9 @@ require '../../controller/view.php';
         });
         $(document).on('click', '.btn-checkin', function(e) {
             e.preventDefault();
-
             let $btn = $(this);
             let visit = $btn.data('visit');
             let originalHtml = $btn.html();
-
             Swal.fire({
                 title: 'Check-in pasien?',
                 text: 'Pastikan pasien sudah hadir',
@@ -265,14 +267,9 @@ require '../../controller/view.php';
                 confirmButtonText: 'Ya, Check-in',
                 cancelButtonText: 'Batal'
             }).then((result) => {
-
                 if (result.isConfirmed) {
-
-                    // 🔥 loading di tombol
                     $btn.prop('disabled', true);
                     $btn.html('<span class="spinner-border spinner-border-sm"></span>');
-
-                    // 🔥 loading popup
                     Swal.fire({
                         title: 'Memproses...',
                         text: 'Sedang melakukan check-in',
@@ -281,7 +278,6 @@ require '../../controller/view.php';
                             Swal.showLoading();
                         }
                     });
-
                     $.ajax({
                         url: 'controller/admisi/services/chackin.php',
                         type: 'POST',
@@ -289,10 +285,8 @@ require '../../controller/view.php';
                             visit: visit
                         },
                         dataType: 'json',
-
                         success: function(res) {
                             if (res.success) {
-
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Berhasil',
@@ -300,37 +294,28 @@ require '../../controller/view.php';
                                     timer: 1500,
                                     showConfirmButton: false
                                 });
-
                                 table.ajax.reload(null, false);
-
                             } else {
-
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Gagal',
                                     text: res.message
                                 });
-
-                                // balikin tombol
                                 $btn.prop('disabled', false);
                                 $btn.html(originalHtml);
                             }
                         },
-
                         error: function() {
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error',
                                 text: 'Terjadi kesalahan server'
                             });
-
                             $btn.prop('disabled', false);
                             $btn.html(originalHtml);
                         }
                     });
-
                 }
-
             });
         });
         $(document).on("click", ".btn-batal", function(e) {
