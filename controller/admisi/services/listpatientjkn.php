@@ -18,6 +18,8 @@ $stmt = $koneksi->prepare("
         pv.code_doctor,
         mp.patient_name,
         mp.patient_gender,
+        mp.nomor_rm,
+        pv.tekanan_darah,
         md.doctor_name,
         pv.id_poli AS poli_name,
         prov.provider_name
@@ -39,7 +41,11 @@ $stmt = $koneksi->prepare("
     AND DATE(pv.visit_date) = ?
     AND pv.created_user = 'MobileJKN'
 
-    ORDER BY pv.visit_time ASC
+    ORDER BY 
+        pv.id_poli ASC,
+        pv.code_doctor ASC,
+        LEFT(pv.visit_antrian, 1) ASC,
+        CAST(REGEXP_SUBSTR(pv.visit_antrian, '[0-9]+$') AS UNSIGNED) ASC
 ");
 
 $stmt->bind_param('ss', $idcustomer, $tanggal);
@@ -58,7 +64,7 @@ while ($row = $result->fetch_assoc()) {
         "visit_time"      => $row['visit_time'],
         "nomor_rm"        => $row['nomor_rm'],
         "no_bpjs"         => $row['noKartu'],
-        "screening"       => $row['screening'],
+        "screening"       => $row['tekanan_darah'] ? 'Sudah' : 'Belum',
         "patient_name"    => $row['patient_name'],
         "patient_gender"  => $row['patient_gender'],
         "doctor_name"     => $row['doctor_name'],
@@ -68,8 +74,6 @@ while ($row = $result->fetch_assoc()) {
 }
 
 $stmt->close();
-
-// 🔥 OUTPUT JSON untuk DataTable
 echo json_encode([
     "data" => $data
 ]);
