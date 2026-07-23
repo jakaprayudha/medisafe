@@ -1072,17 +1072,11 @@ date_default_timezone_set('Asia/Jakarta');
       let id = $(this).data('id');
       let visit = $(this).data('visit');
       let prov = $(this).data('prov');
-
-      let nokartu = $(this).data('prov');
-      let kdpoli = $(this).data('prov');
-      let tanggal = $(this).data('prov');
-
-
       Swal.fire({
         title: 'Peringatan?',
         text: 'Masukkan alasan pembatalan',
         icon: 'warning',
-        input: 'textarea', // 🔥 ini kuncinya
+        input: 'textarea',
         inputPlaceholder: 'Tulis alasan...',
         inputAttributes: {
           'aria-label': 'Alasan'
@@ -1106,35 +1100,18 @@ date_default_timezone_set('Asia/Jakarta');
             allowOutsideClick: false,
             didOpen: () => Swal.showLoading()
           });
-          if (prov == '1') {
+          if (prov == 1) {
             $.ajax({
               url: 'controller/wsbpjs/batalAntrian.php',
               type: "POST",
               data: {
                 novisit: visit,
-                alasan: alasan
+                alasan: alasan,
               },
               dataType: 'json',
               success: function(res) {
                 if (res.success) {
-                  $.ajax({
-                    url: 'controller/admisi/services/deletePendaftaran.php',
-                    type: "POST",
-                    data: {
-                      novisit: visit,
-                      alasan: alasan
-                    },
-                    dataType: 'json',
-                    success: function(res) {
-                      Swal.close();
-                      Swal.fire({
-                        title: "Berhasil",
-                        text: res.message,
-                        icon: "success"
-                      });
-                      table.ajax.reload(null, false);
-                    }
-                  })
+                  batalAntrian(visit, alasan, prov);
                 } else {
                   Swal.fire({
                     title: "Gagal Hapus",
@@ -1145,32 +1122,33 @@ date_default_timezone_set('Asia/Jakarta');
               }
             });
           } else {
-            fetch(apiUrl + `?id=${id}&nomor_visit=${visit}`, {
-                method: 'DELETE',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                  alasan: alasan
-                })
-              })
-              .then(res => res.json())
-              .then(data => {
-                Swal.close();
-
-                if (data.status === 'success') {
-                  Swal.fire('Berhasil!', 'Data dihapus.', 'success');
-                  table.ajax.reload(null, false);
-                } else {
-                  Swal.fire('Gagal!', data.message, 'error');
-                }
-              });
+            batalAntrian(visit, alasan, prov);
           }
-
         }
       });
     });
 
+    function batalAntrian(visit, alasan, prov) {
+      $.ajax({
+        url: 'controller/admisi/services/deletePendaftaran.php',
+        type: "POST",
+        data: {
+          novisit: visit,
+          alasan: alasan,
+          provider: prov
+        },
+        dataType: 'json',
+        success: function(res) {
+          Swal.close();
+          Swal.fire({
+            title: "Berhasil",
+            text: res.message,
+            icon: "success"
+          });
+          table.ajax.reload(null, false);
+        }
+      })
+    }
     // filter manual
     $('#btnFilter').on('click', function() {
       table.ajax.reload();
@@ -1209,7 +1187,7 @@ date_default_timezone_set('Asia/Jakarta');
           $('#d_poli_name').text(d.id_poli ?? '-');
           $('#d_visit_date').text(d.visit_date + ' ' + d.visit_time);
           $('#d_kondisi_masuk').text(d.kondisi_masuk ?? '-');
-          
+
           $('#d_tekanan_darah').text(d.tekanan_darah ?? '-');
           $('#d_suhu').text(d.suhu ?? '-');
           $('#d_nadi').text(d.nadi ?? '-');
