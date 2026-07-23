@@ -8,7 +8,7 @@ $tanggal  = $_GET['tanggal'] ?? date('Y-m-d');
 
 // 🔥 QUERY UTAMA
 $stmt = $koneksi->prepare("
-    SELECT 
+     SELECT 
         pv.visit_ID,
         pv.visit_status,
         pv.visit_antrian,
@@ -20,26 +20,27 @@ $stmt = $koneksi->prepare("
         mp.patient_gender,
         mp.nomor_rm,
         pv.tekanan_darah,
-        md.doctor_name,
+        md.nmDokter,
         pv.id_poli AS poli_name,
         prov.provider_name
-    FROM pasien_visit pv
+    FROM pasien_visit AS pv
 
-    LEFT JOIN ms_patient mp 
+    INNER JOIN ms_patient AS mp 
         ON mp.id_patient = pv.id_patient
 
-    LEFT JOIN ms_doctor md 
-        ON md.doctor_code = pv.code_doctor
+    INNER JOIN master_doctor_bpjs AS md 
+        ON md.kdDokter = pv.code_doctor
 
-    LEFT JOIN master_poli poli 
-        ON poli.kdPoli = pv.id_poli
+    INNER JOIN master_poli AS poli 
+        ON poli.nmPoli = pv.id_poli
 
-    LEFT JOIN ms_provider prov 
+    INNER JOIN ms_provider AS prov 
         ON prov.id_provider = pv.id_provider
 
     WHERE pv.id_customer = ?
     AND DATE(pv.visit_date) = ?
     AND pv.created_user = 'MobileJKN'
+    AND md.id_customer = ?
 
     ORDER BY 
         pv.id_poli ASC,
@@ -48,7 +49,7 @@ $stmt = $koneksi->prepare("
         CAST(REGEXP_SUBSTR(pv.visit_antrian, '[0-9]+$') AS UNSIGNED) ASC
 ");
 
-$stmt->bind_param('ss', $idcustomer, $tanggal);
+$stmt->bind_param('sss', $idcustomer, $tanggal, $idcustomer);
 $stmt->execute();
 
 $result = $stmt->get_result();
