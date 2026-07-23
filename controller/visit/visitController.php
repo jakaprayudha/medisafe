@@ -23,7 +23,7 @@ function createVisit()
    global $koneksi;
    try {
       $id_customer = $_SESSION['id_customer'] ?? null;
-      $created_user = $_SESSION['fullname'] ?? null;
+      $created_user = "Tanpa Identitas";
 
       if (!$id_customer) {
          echo json_encode([
