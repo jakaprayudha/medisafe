@@ -128,7 +128,7 @@ date_default_timezone_set('Asia/Jakarta');
                     <h5 class="card-title fw-semibold">Data Registrasi Poliklinik</h5>
                     <div class="d-flex align-items-end gap-2 flex-wrap">
                       <div class="col-auto">
-                        <button type="button" data-bs-toggle="modal" data-bs-target="#filterModal" class="btn btn-dark">
+                        <button type="button" id="btnModalFilter" class="btn btn-dark">
                           <i class="fas fa-filter"></i> Filter
                         </button>
                       </div>
@@ -214,124 +214,123 @@ date_default_timezone_set('Asia/Jakarta');
       </div>
 
       <div class="modal-body">
+        <!-- Loading -->
+        <div id="detailLoading" class="text-center py-5">
+          <div class="spinner-border text-primary mb-3" role="status"></div>
+          <div class="fw-semibold">Memuat data pemeriksaan...</div>
+        </div>
 
-        <!-- 👤 INFO PASIEN -->
-        <div class="card border-0 shadow-sm mb-3">
-          <div class="card-body">
-            <h6 class="fw-bold mb-3">👤 Informasi Pasien</h6>
+        <div id="detailContent" style="display:none;">
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+              <h6 class="fw-bold mb-3">👤 Informasi Pasien</h6>
 
-            <div class="row g-3">
-              <div class="col-md-6">
-                <small class="text-muted">Nama Pasien</small>
-                <div class="fw-semibold" id="d_patient_name">-</div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <small class="text-muted">Nama Pasien</small>
+                  <div class="fw-semibold" id="d_patient_name">-</div>
+                </div>
+
+                <div class="col-md-6">
+                  <small class="text-muted">Dokter</small>
+                  <div id="d_doctor_name">-</div>
+                </div>
+
+                <div class="col-md-6">
+                  <small class="text-muted">Poliklinik</small>
+                  <div id="d_poli_name">-</div>
+                </div>
+
+                <div class="col-md-6">
+                  <small class="text-muted">Tanggal</small>
+                  <span>
+                    <div id="d_visit_date">-</div>
+                  </span>
+
+                </div>
+                <div class="col-md-6">
+                  <small class="text-muted">Kondisi Masuk</small>
+                  <div id="d_kondisi_masuk">-</div>
+                </div>
               </div>
+            </div>
+          </div>
 
-              <div class="col-md-6">
-                <small class="text-muted">Dokter</small>
-                <div id="d_doctor_name">-</div>
-              </div>
+          <!-- ❤️ VITAL SIGN -->
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+              <h6 class="fw-bold mb-3">❤️ Vital Sign</h6>
 
-              <div class="col-md-6">
-                <small class="text-muted">Poliklinik</small>
-                <div id="d_poli_name">-</div>
-              </div>
+              <div class="d-flex flex-wrap gap-2">
 
-              <div class="col-md-6">
-                <small class="text-muted">Tanggal</small>
-                <span>
-                  <div id="d_visit_date">-</div>
+                <span class="badge bg-light text-dark">
+                  🩸 TD: <span id="d_tekanan_darah">-</span>
+                </span>
+
+                <span class="badge bg-light text-dark">
+                  🌡️ Suhu: <span id="d_suhu">-</span>
+                </span>
+
+                <span class="badge bg-light text-dark">
+                  ❤️ Nadi: <span id="d_nadi">-</span>
+                </span>
+
+                <span class="badge bg-light text-dark">
+                  🫁 RR: <span id="d_respirasi">-</span>
+                </span>
+
+                <span class="badge bg-light text-dark">
+                  🩸 Saturasi: <span id="d_saturasi">-</span>
+                </span>
+
+                <span class="badge bg-light text-dark">
+                  📏 TB: <span id="d_tinggi">-</span>
+                </span>
+
+                <span class="badge bg-light text-dark">
+                  ⚖️ BB: <span id="d_berat">-</span>
+                </span>
+
+                <span class="badge bg-light text-dark">
+                  🏋 BMI: <span id="d_bmi">-</span> Keterangan : <span id="d_bmi_keterangan"></span>
                 </span>
 
               </div>
+            </div>
+          </div>
 
-              <div class="col-md-6">
-                <small class="text-muted">No. SEP</small>
-                <div id="d_no_sep">-</div>
-              </div>
-              <div class="col-md-6">
-                <small class="text-muted">Kondisi Masuk</small>
-                <div id="d_kondisi_masuk">-</div>
-              </div>
+          <!-- 🧠 ANAMNESA -->
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+              <h6 class="fw-bold mb-2">🧠 Keluhan / Anamnesa</h6>
+              <div id="d_anamnesa" class="text-muted">-</div>
+            </div>
+          </div>
+
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+              <h6 class="fw-bold mb-2">📝 Catatan Screening</h6>
+              <div id="d_catatan_screening" class="text-muted">-</div>
+            </div>
+          </div>
+
+          <!-- 🔬 DIAGNOSA -->
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+              <h6 class="fw-bold mb-2">🔬 Diagnosa</h6>
+              <div id="d_diagnosa" class="text-muted">-</div>
+            </div>
+          </div>
+
+          <!-- 💊 TINDAKAN -->
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <h6 class="fw-bold mb-2">💊 Tindakan</h6>
+              <div id="d_tindakan" class="text-muted">-</div>
             </div>
           </div>
         </div>
-
-        <!-- ❤️ VITAL SIGN -->
-        <div class="card border-0 shadow-sm mb-3">
-          <div class="card-body">
-            <h6 class="fw-bold mb-3">❤️ Vital Sign</h6>
-
-            <div class="d-flex flex-wrap gap-2">
-
-              <span class="badge bg-light text-dark">
-                🩸 TD: <span id="d_tekanan_darah">-</span>
-              </span>
-
-              <span class="badge bg-light text-dark">
-                🌡️ Suhu: <span id="d_suhu">-</span>
-              </span>
-
-              <span class="badge bg-light text-dark">
-                ❤️ Nadi: <span id="d_nadi">-</span>
-              </span>
-
-              <span class="badge bg-light text-dark">
-                🫁 RR: <span id="d_respirasi">-</span>
-              </span>
-
-              <span class="badge bg-light text-dark">
-                🩸 Saturasi: <span id="d_saturasi">-</span>
-              </span>
-
-              <span class="badge bg-light text-dark">
-                📏 TB: <span id="d_tinggi">-</span>
-              </span>
-
-              <span class="badge bg-light text-dark">
-                ⚖️ BB: <span id="d_berat">-</span>
-              </span>
-
-              <span class="badge bg-light text-dark">
-                🏋 BMI: <span id="d_bmi">-</span> Keterangan : <span id="d_bmi_keterangan"></span>
-              </span>
-
-            </div>
-          </div>
-        </div>
-
-        <!-- 🧠 ANAMNESA -->
-        <div class="card border-0 shadow-sm mb-3">
-          <div class="card-body">
-            <h6 class="fw-bold mb-2">🧠 Keluhan / Anamnesa</h6>
-            <div id="d_anamnesa" class="text-muted">-</div>
-          </div>
-        </div>
-
-        <div class="card border-0 shadow-sm mb-3">
-          <div class="card-body">
-            <h6 class="fw-bold mb-2">📝 Catatan Screening</h6>
-            <div id="d_catatan_screening" class="text-muted">-</div>
-          </div>
-        </div>
-
-        <!-- 🔬 DIAGNOSA -->
-        <div class="card border-0 shadow-sm mb-3">
-          <div class="card-body">
-            <h6 class="fw-bold mb-2">🔬 Diagnosa</h6>
-            <div id="d_diagnosa" class="text-muted">-</div>
-          </div>
-        </div>
-
-        <!-- 💊 TINDAKAN -->
-        <div class="card border-0 shadow-sm">
-          <div class="card-body">
-            <h6 class="fw-bold mb-2">💊 Tindakan</h6>
-            <div id="d_tindakan" class="text-muted">-</div>
-          </div>
-        </div>
-
       </div>
-
     </div>
   </div>
 </div>
@@ -732,6 +731,14 @@ date_default_timezone_set('Asia/Jakarta');
   APP.window = APP.window || {};
   $(document).ready(function() {
 
+    $('#btnModalFilter').on('click', function() {
+      $('#filterModal').modal('show');
+      loadDoctors();
+      loadProviders();
+      loadPoli();
+    })
+
+
     function loadDoctors() {
       $.ajax({
         url: 'controller/visit/getdoctor',
@@ -775,7 +782,7 @@ date_default_timezone_set('Asia/Jakarta');
           let html = '<option value="">Semua Poliklinik</option>';
 
           res.forEach(p => {
-            html += `<option value="${p.id_poli}">${p.poli_name}</option>`;
+            html += `<option value="${p.kdpoli}">${p.nmPoli}</option>`;
           });
 
           $('#poliSelect').html(html);
@@ -794,7 +801,7 @@ date_default_timezone_set('Asia/Jakarta');
     $('#fromDate').val(today);
     $('#fromDate').attr('max', today);
 
-    $('#toDate').val();
+    $('#toDate').val(today);
     const tipePasien = "Poliklinik";
     const apiUrl = 'controller/visit/registrasiController';
     var table = $('#periodeTable').DataTable({
@@ -1177,63 +1184,63 @@ date_default_timezone_set('Asia/Jakarta');
       $('#poliSelect').val('');
       table.ajax.reload();
     });
-
     $(document).on('click', '.detail-btn', function() {
-      let id = $(this).data('id');
-
+      let id_visit = $(this).data('id');
       $('#detailModal').modal('show');
-
-      fetch(`controller/visit/getDetailPemeriksaan?id=${id}`)
-        .then(res => {
-          if (!res.ok) throw new Error("HTTP error");
-          return res.json();
-        })
-        .then(resp => {
-
-          console.log("DETAIL RESP:", resp);
-
-          if (resp.status === 'success') {
-            fillDetail(resp.data || {});
+      $('#detailLoading').show();
+      $('#detailContent').hide();
+      $.ajax({
+        url: 'controller/visit/getDetailPemeriksaan',
+        type: 'GET',
+        data: {
+          id: id_visit
+        },
+        dataType: 'json',
+        success: function(res) {
+          if (!res.status) {
+            $('#detailLoading').html(
+              '<div class="alert alert-danger">Data tidak ditemukan.</div>'
+            );
+            return;
           }
-
-          $('#detailModal').modal('show'); // 🔥 PASTI MUNCUL
-
-        })
-        .catch(err => {
-          console.error("DETAIL ERROR:", err);
-
-          // 🔥 tetap buka modal walau gagal
-          $('#detailModal').modal('show');
-        });
+          let d = res.data;
+          $('#d_patient_name').text(d.patient_name_pcare ?? '-');
+          $('#d_doctor_name').text(d.id_doctor ?? '-');
+          $('#d_poli_name').text(d.id_poli ?? '-');
+          $('#d_visit_date').text(d.visit_date + ' ' + d.visit_time);
+          $('#d_kondisi_masuk').text(d.kondisi_masuk ?? '-');
+          
+          $('#d_tekanan_darah').text(d.tekanan_darah ?? '-');
+          $('#d_suhu').text(d.suhu ?? '-');
+          $('#d_nadi').text(d.nadi ?? '-');
+          $('#d_respirasi').text(d.respirasi ?? '-');
+          $('#d_saturasi').text(d.saturasi ?? '-');
+          $('#d_tinggi').text(d.tinggi_badan ?? '-');
+          $('#d_berat').text(d.berat_badan ?? '-');
+          $('#d_bmi').text(d.bmi ?? '-');
+          $('#d_bmi_keterangan').text(d.bmi_keterangan ?? '-');
+          $('#d_anamnesa').text(d.anamnesa ?? '-');
+          $('#d_catatan_screening').text(d.catatan_screening ?? '-');
+          let diagnosa = '-';
+          if (d.kdDiag1 || d.nmDiag1) {
+            diagnosa = (d.kdDiag1 ?? '') + ' - ' + (d.nmDiag1 ?? '');
+          } else if (d.diagnosa) {
+            diagnosa = d.diagnosa;
+          }
+          $('#d_diagnosa').text(diagnosa);
+          $('#d_tindakan').text(d.tindakan ?? '-');
+          $('#detailLoading').hide();
+          $('#detailContent').fadeIn(200);
+        },
+        error: function() {
+          $('#detailLoading').html(`
+                <div class="alert alert-danger text-center">
+                    Gagal mengambil data pemeriksaan.
+                </div>
+            `);
+        }
+      });
     });
-
-    function fillDetail(d) {
-      $('#d_patient_name').text(d.patient_name ?? '-');
-      $('#d_doctor_name').text(d.id_doctor ?? '-');
-      $('#d_poli_name').text(d.id_poli ?? '-');
-      $('#d_visit_date').text(d.visit_date + ' ' + d.visit_time ?? '-');
-      $('#d_no_sep').text(d.no_sep ?? '-');
-      $('#d_kondisi_masuk').text(d.kondisi_masuk ?? '-');
-
-      $('#d_tekanan_darah').text(d.tekanan_darah ?? '-');
-      $('#d_suhu').text((d.suhu ?? '-') + ' °C');
-      $('#d_nadi').text((d.nadi ?? '-') + ' bpm');
-      $('#d_respirasi').text((d.respirasi ?? '-') + ' /menit');
-      $('#d_saturasi').text((d.saturasi ?? '-') + ' %');
-      $('#d_tinggi').text((d.tinggi_badan ?? '-') + ' cm');
-      $('#d_berat').text((d.berat_badan ?? '-') + ' kg');
-      $('#d_bmi').text(d.bmi ?? '-');
-      $('#d_bmi_keterangan').text(d.bmi_keterangan ?? '-');
-
-      $('#d_anamnesa').text(d.anamnesa ?? '-');
-      $('#d_catatan_screening').text(d.catatan_screening ?? '-');
-      $('#d_diagnosa').text(d.code + '-' + d.icd10 ?? '-');
-      $('#d_tindakan').text(d.tindakan ?? '-');
-
-      if (d.suhu > 37.5) {
-        $('#d_suhu').addClass('text-danger fw-bold');
-      }
-    }
   });
 </script>
 <script>
@@ -1405,13 +1412,11 @@ date_default_timezone_set('Asia/Jakarta');
           $select.append('<option value="">- Pilih -</option>');
         }
         response.data.forEach(function(item) {
-          let disabled = item.exp ? 'disabled' : '';
           let textExp = item.exp ? '(Sudah Tutup)' : '';
           $select.append(
             '<option value="' + item.kodedokter + '" ' +
             'data-nama="' + item.namadokter + '" ' +
             'data-jam="' + item.jampraktek + '" ' +
-            disabled +
             '>' +
             item.namadokter + ' (' + item.jampraktek + ')' + textExp +
             '</option>'
