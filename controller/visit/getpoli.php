@@ -2,7 +2,7 @@
 <?php
 include '../../database/connect.php';
 
-$query = "SELECT id_poli, poli_name FROM ms_poli ORDER BY poli_name ASC";
+$query = "SELECT kdPoli, nmPoli FROM master_poli ORDER BY nmPoli ASC";
 $result = mysqli_query($koneksi, $query);
 
 $data = [];

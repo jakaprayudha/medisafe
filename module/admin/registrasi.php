@@ -128,7 +128,7 @@ date_default_timezone_set('Asia/Jakarta');
                     <h5 class="card-title fw-semibold">Data Registrasi Poliklinik</h5>
                     <div class="d-flex align-items-end gap-2 flex-wrap">
                       <div class="col-auto">
-                        <button type="button" data-bs-toggle="modal" data-bs-target="#filterModal" class="btn btn-dark">
+                        <button type="button" id="btnModalFilter" class="btn btn-dark">
                           <i class="fas fa-filter"></i> Filter
                         </button>
                       </div>
@@ -732,6 +732,14 @@ date_default_timezone_set('Asia/Jakarta');
   APP.window = APP.window || {};
   $(document).ready(function() {
 
+    $('#btnModalFilter').on('click', function() {
+      $('#filterModal').modal('show');
+      loadDoctors();
+      loadProviders();
+      loadPoli();
+    })
+
+
     function loadDoctors() {
       $.ajax({
         url: 'controller/visit/getdoctor',
@@ -775,7 +783,7 @@ date_default_timezone_set('Asia/Jakarta');
           let html = '<option value="">Semua Poliklinik</option>';
 
           res.forEach(p => {
-            html += `<option value="${p.id_poli}">${p.poli_name}</option>`;
+            html += `<option value="${p.kdpoli}">${p.nmPoli}</option>`;
           });
 
           $('#poliSelect').html(html);
@@ -794,7 +802,7 @@ date_default_timezone_set('Asia/Jakarta');
     $('#fromDate').val(today);
     $('#fromDate').attr('max', today);
 
-    $('#toDate').val();
+    $('#toDate').val(today);
     const tipePasien = "Poliklinik";
     const apiUrl = 'controller/visit/registrasiController';
     var table = $('#periodeTable').DataTable({
