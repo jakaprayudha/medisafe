@@ -213,7 +213,7 @@ require '../../controller/view.php';
                             tanggal: row.visit_date ?? '-',
                             nama: row.patient_name ?? '-',
                             gender: row.patient_gender ?? '-',
-                            dokter: row.doctor_name ?? '-',
+                            dokter: row.nmDokter ?? '-',
                             poli: row.poli_name ?? '-',
                             screening: row.screening ?? '-',
                             bayar: row.provider_name ?? '-'
