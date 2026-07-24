@@ -111,7 +111,7 @@ require '../../controller/view.php';
                                         <h5 class="card-title fw-semibold">Data Mobile-JKN</h5>
                                         <div class="d-flex align-items-end gap-2 flex-wrap">
                                             <div class="col-auto">
-                                                <button type="button" data-bs-toggle="modal" data-bs-target="#filterModal" class="btn btn-dark">
+                                                <button type="button" id="filterButton" class="btn btn-dark">
                                                     <i class="fas fa-filter"></i> Filter
                                                 </button>
                                             </div>
@@ -152,7 +152,110 @@ require '../../controller/view.php';
     <?php
     require 'library.php';
     ?>
+    <div class="modal fade" id="filterModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Filter Data</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label for="fromDate" class="form-label mb-0">Dari</label>
+                            <input type="date" id="fromDate" name="fromDate" class="form-control">
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label for="toDate" class="form-label mb-0">Sampai</label>
+                            <input type="date" id="toDate" name="toDate" class="form-control">
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <!-- DIPERBAIKI: for="doctorSelect" -->
+                            <label for="doctorSelect" class="form-label mb-0">Dokter</label>
+                            <select name="doctorSelect" id="doctorSelect" class="form-select">
+                                <option value="">Semua Dokter</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <!-- DIPERBAIKI: for="poliSelect" -->
+                            <label for="poliSelect" class="form-label mb-0">Poliklinik</label>
+                            <select name="poliSelect" id="poliSelect" class="form-select">
+                                <option value="">Semua Poliklinik</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
+                    <button class="btn btn-primary" id="btnApplyFilter">Terapkan Filter</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="controller/admisi/helper.js"></script>
+    <script>
+        $(document).ready(function() {
+            const today = new Date().toLocaleDateString('en-CA', {
+                timeZone: 'Asia/Jakarta'
+            });
+            $('#fromDate').val(today);
+            $('#toDate').val(today);
+            $('#filterButton').on('click', function() {
+                $('#filterModal').modal('show');
+                loadDoctors();
+                loadPoli();
+            });
+            $('#btnApplyFilter').on('click', function() {
+                console.log($('#doctorSelect').val());
+                console.log($('#poliSelect').val());
+                table.ajax.reload();
+                $('#filterModal').modal('hide');
+            });
+            $('#btnReset').on('click', function() {
+                $('#fromDate').val(today);
+                $('#toDate').val(today);
+                $('#doctorSelect').val('');
+                $('#poliSelect').val('');
+                table.ajax.reload();
+            });
+        })
+
+        function loadDoctors() {
+            $.ajax({
+                url: 'controller/visit/getdoctor',
+                method: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    let html = '<option value="">Semua Dokter</option>';
+
+                    res.forEach(d => {
+                        html += `<option value="${d.doctor_name}">${d.doctor_name}</option>`;
+                    });
+
+                    $('#doctorSelect').html(html);
+                }
+            });
+        }
+
+        function loadPoli() {
+            $.ajax({
+                url: 'controller/visit/getpoli',
+                method: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    let html = '<option value="">Semua Poliklinik</option>';
+
+                    res.forEach(p => {
+                        html += `<option value="${p.nmPoli}">${p.nmPoli}</option>`;
+                    });
+
+                    $('#poliSelect').html(html);
+                }
+            });
+        }
+    </script>
     <script>
         var table = $('#periodeTable').DataTable({
             processing: true,
@@ -164,6 +267,12 @@ require '../../controller/view.php';
             ajax: {
                 url: 'controller/admisi/services/listpatientjkn.php',
                 type: 'GET',
+                data: function(d) {
+                    d.fromDate = $('#fromDate').val();
+                    d.toDate = $('#toDate').val();
+                    d.doctor = $('#doctorSelect').val();
+                    d.poli = $('#poliSelect').val();
+                },
                 dataSrc: function(json) {
                     return json.data.map(function(row) {
                         let statusClass = '';
@@ -213,7 +322,7 @@ require '../../controller/view.php';
                             tanggal: row.visit_date ?? '-',
                             nama: row.patient_name ?? '-',
                             gender: row.patient_gender ?? '-',
-                            dokter: row.nmDokter ?? '-',
+                            dokter: row.doctor_name ?? '-',
                             poli: row.poli_name ?? '-',
                             screening: row.screening ?? '-',
                             bayar: row.provider_name ?? '-'
@@ -376,50 +485,5 @@ require '../../controller/view.php';
         });
     </script>
 </body>
-<div class="modal fade" id="filterModal">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Filter Data</h5>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-6 mb-3">
-                        <label for="fromDate" class="form-label mb-0">Dari</label>
-                        <input type="date" id="fromDate" name="fromDate" class="form-control">
-                    </div>
-                    <div class="col-6 mb-3">
-                        <label for="toDate" class="form-label mb-0">Sampai</label>
-                        <input type="date" id="toDate" name="toDate" class="form-control">
-                    </div>
-                    <div class="col-12 mb-3">
-                        <label for="doctorSelect" class="form-label mb-0">Dokter</label>
-                        <select name="doctorSelect" class="form-select" id="doctorSelect">
-                            <option value="">Semua Dokter</option>
-                        </select>
-                    </div>
-                    <div class="col-12 mb-3">
-                        <label for="providerSelect" class="form-label mb-0">Provider</label>
-                        <select name="providerSelect" class="form-select" id="providerSelect">
-                            <option value="">Semua Metode Pembayaran</option>
-                        </select>
-                    </div>
-                    <div class="col-12 mb-3">
-                        <label for="poliSelect" class="form-label mb-0">Poliklinik</label>
-                        <select name="poliSelect" class="form-select" id="poliSelect">
-                            <option value="">Semua Poliklinik</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
-                <button class="btn btn-primary" id="btnApplyFilter">Terapkan Filter</button>
-            </div>
-
-        </div>
-    </div>
-</div>
 
 </html>

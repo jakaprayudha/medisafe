@@ -4,11 +4,13 @@ require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/servicebpjs.php';
 header('Content-Type: application/json');
 date_default_timezone_set('Asia/Jakarta');
-$tanggal  = $_GET['tanggal'] ?? date('Y-m-d');
-
-// 🔥 QUERY UTAMA
-$stmt = $koneksi->prepare("
-     SELECT 
+$idcustomer = $idcustomer ?? $_SESSION['id_customer'] ?? null;
+$fromDate = !empty($_GET['fromDate']) ? $_GET['fromDate'] : date('Y-m-d');
+$toDate   = !empty($_GET['toDate']) ? $_GET['toDate'] : date('Y-m-d');
+$doctor   = !empty($_GET['doctor']) ? $_GET['doctor'] : null;
+$poli     = !empty($_GET['poli']) ? $_GET['poli'] : null;
+$query = "
+    SELECT DISTINCT
         pv.visit_ID,
         pv.visit_status,
         pv.visit_antrian,
@@ -25,33 +27,55 @@ $stmt = $koneksi->prepare("
         prov.provider_name
     FROM pasien_visit AS pv
 
-    INNER JOIN ms_patient AS mp 
+    -- Gunakan LEFT JOIN agar data pasien tidak hilang jika master dokter/provider kosong
+    LEFT JOIN ms_patient AS mp 
         ON mp.id_patient = pv.id_patient
 
-    INNER JOIN master_doctor_bpjs AS md 
-        ON md.kdDokter = pv.code_doctor
+    LEFT JOIN master_doctor_bpjs AS md 
+        ON md.kdDokter = pv.code_doctor AND md.id_customer = ?
 
-    INNER JOIN master_poli AS poli 
-        ON poli.nmPoli = pv.id_poli
+    -- INNER JOIN master_poli DIHAPUS (karena sering buat duplikat dan datanya tidak dipakai)
 
-    INNER JOIN ms_provider AS prov 
+    LEFT JOIN ms_provider AS prov 
         ON prov.id_provider = pv.id_provider
 
     WHERE pv.id_customer = ?
-    AND DATE(pv.visit_date) = ?
+    AND DATE(pv.visit_date) BETWEEN ? AND ?
     AND pv.created_user = 'MobileJKN'
-    AND md.id_customer = ?
+";
 
+$params = [];
+$types  = "";
+$params[] = $idcustomer;
+$types .= "s";
+$params[] = $idcustomer;
+$types .= "s";
+$params[] = $fromDate;
+$params[] = $toDate;
+$types .= "ss";
+if (!empty($doctor)) {
+    $query .= " AND pv.id_doctor = ?";
+    $params[] = $doctor;
+    $types .= "s";
+}
+if (!empty($poli)) {
+    $query .= " AND pv.id_poli = ?";
+    $params[] = $poli;
+    $types .= "s";
+}
+$query .= "
     ORDER BY 
         pv.id_poli ASC,
         pv.code_doctor ASC,
         LEFT(pv.visit_antrian, 1) ASC,
         CAST(REGEXP_SUBSTR(pv.visit_antrian, '[0-9]+$') AS UNSIGNED) ASC
-");
+";
+$stmt = $koneksi->prepare($query);
+if ($types) {
+    $stmt->bind_param($types, ...$params);
+}
 
-$stmt->bind_param('sss', $idcustomer, $tanggal, $idcustomer);
 $stmt->execute();
-
 $result = $stmt->get_result();
 
 $data = [];
@@ -68,13 +92,14 @@ while ($row = $result->fetch_assoc()) {
         "screening"       => $row['tekanan_darah'] ? 'Sudah' : 'Belum',
         "patient_name"    => $row['patient_name'],
         "patient_gender"  => $row['patient_gender'],
-        "nmDokter"     => $row['nmDokter'],
+        "doctor_name"     => $row['nmDokter'],
         "poli_name"       => $row['poli_name'],
         "provider_name"   => $row['provider_name']
     ];
 }
 
 $stmt->close();
+
 echo json_encode([
     "data" => $data
 ]);

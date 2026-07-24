@@ -773,22 +773,8 @@ date_default_timezone_set('Asia/Jakarta');
       });
     }
 
-    function loadPoli() {
-      $.ajax({
-        url: 'controller/visit/getpoli',
-        method: 'GET',
-        dataType: 'json',
-        success: function(res) {
-          let html = '<option value="">Semua Poliklinik</option>';
-
-          res.forEach(p => {
-            html += `<option value="${p.kdpoli}">${p.nmPoli}</option>`;
-          });
-
-          $('#poliSelect').html(html);
-        }
-      });
-    }
+   
+    
 
     $('#btnApplyFilter').on('click', function() {
       table.ajax.reload();
