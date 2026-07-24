@@ -68,7 +68,7 @@ while ($row = $result->fetch_assoc()) {
         "screening"       => $row['tekanan_darah'] ? 'Sudah' : 'Belum',
         "patient_name"    => $row['patient_name'],
         "patient_gender"  => $row['patient_gender'],
-        "doctor_name"     => $row['doctor_name'],
+        "nmDokter"     => $row['nmDokter'],
         "poli_name"       => $row['poli_name'],
         "provider_name"   => $row['provider_name']
     ];
