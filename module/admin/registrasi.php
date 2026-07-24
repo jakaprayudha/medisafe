@@ -735,7 +735,7 @@ date_default_timezone_set('Asia/Jakarta');
       $('#filterModal').modal('show');
       loadDoctors();
       loadProviders();
-      loadPoli();
+      loadPoli('#poliSelect');
     })
 
 
@@ -773,22 +773,8 @@ date_default_timezone_set('Asia/Jakarta');
       });
     }
 
-    function loadPoli() {
-      $.ajax({
-        url: 'controller/visit/getpoli',
-        method: 'GET',
-        dataType: 'json',
-        success: function(res) {
-          let html = '<option value="">Semua Poliklinik</option>';
-
-          res.forEach(p => {
-            html += `<option value="${p.kdpoli}">${p.nmPoli}</option>`;
-          });
-
-          $('#poliSelect').html(html);
-        }
-      });
-    }
+   
+    
 
     $('#btnApplyFilter').on('click', function() {
       table.ajax.reload();
@@ -1322,13 +1308,13 @@ date_default_timezone_set('Asia/Jakarta');
     const now = new Date();
     $('#poli_date').val(now.toISOString().split('T')[0]);
     $('#poli_time').val(now.toTimeString().slice(0, 5));
-    loadPoli();
+    loadPoli('#poli_poli');
     loadProvider();
   });
 
-  function loadPoli() {
+  function loadPoli(poliid) {
     poliSakit = true;
-    var select = $('#poli_poli');
+    var select = $(poliid);
     select.empty();
     select.prop('disabled', true);
     select.html('<option value="">Mencari data...</option>');
