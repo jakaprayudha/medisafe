@@ -748,7 +748,7 @@ date_default_timezone_set('Asia/Jakarta');
           let html = '<option value="">Semua Dokter</option>';
 
           res.forEach(d => {
-            html += `<option value="${d.id_doctor}">${d.doctor_name}</option>`;
+            html += `<option value="${d.doctor_name}">${d.doctor_name}</option>`;
           });
 
           $('#doctorSelect').html(html);
