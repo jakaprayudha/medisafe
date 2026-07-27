@@ -15,7 +15,7 @@ if (in_array(strtoupper($kategori), $poliKhusus) && empty($kdspel)) {
     $url = "/spesialis/rujuk/khusus/" . $kategori . "/noKartu/" . $nokartu . "/tglEstRujuk/" . $tgl;
 } else {
     // $url = "/spesialis/rujuk/subspesialis/" . $kdspel . "/sarana/" . $kdSarana . "/tglEstRujuk/" . $tgl;
-    $url = "/spesialis/rujuk/subspesialis/" . $kdspel . "/sarana/9/tglEstRujuk/" . $tgl;
+    $url = "/spesialis/rujuk/subspesialis/" . $kdspel . "/sarana/0/tglEstRujuk/" . $tgl;
 }
 $result = bpjsGet($url);
 if ($result['code'] != "200") {
