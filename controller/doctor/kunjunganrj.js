@@ -543,7 +543,7 @@ $(function () {
     APP.showSmoot("#subspesialis");
     APP.showSmoot("#sarana");
     $("#kdSarana").prop("disabled", true);
-    $("#kdSaranaHidden").val("9");
+    $("#kdSaranaHidden").val("0");
     $("#useSarana").on("change", function () {
       if ($(this).is(":checked")) {
         console.log("pilih");
