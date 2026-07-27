@@ -32,6 +32,7 @@ $(function () {
               true,
             ).then(function () {
               $(".statuspasien").addClass("d-none");
+              $("#kdStatusPulang").val(d.kdStatusPulang).trigger("change");
               APP.cetak("#nama_poli", d.nmPoli);
               APP.cetak("#id_patient", d.id_patient);
               APP.cetak("#kdDokter", d.code_doctor);
@@ -78,7 +79,6 @@ $(function () {
                 );
                 APP.addValueInput("#nmDiag3", d.nmDiag3);
               }
-              $("#kdStatusPulang").val(d.kdStatusPulang).trigger("change");
             });
           } else {
             $("#logobpjs").removeClass("d-none");
