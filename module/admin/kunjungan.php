@@ -392,7 +392,7 @@ $rm = $_GET['rm'];
                           <input type="hidden"
                             name="kdSarana"
                             id="kdSaranaHidden"
-                            value="9">
+                            value="0">
                         </div>
                         <div class="col-5">
                           <label for="kdKategori" class="form-label fw-semibold">
