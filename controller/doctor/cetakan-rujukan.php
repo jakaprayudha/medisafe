@@ -261,7 +261,7 @@ $tgl_cetak = date('d-m-Y');
                 </td>
             </tr>
             <tr>
-                <td style="padding-top: 10px;">Surat rujukan berlaku 1[satu] kali kunjungan, berlaku sampai dengan : &nbsp;&nbsp; <?= date('Y-m-d', strtotime($tgl_kunjung . ' +89 days')) ?></td>
+                <td style="padding-top: 10px;">Surat rujukan berlaku 1[satu] kali kunjungan, berlaku sampai dengan : &nbsp;&nbsp; <?= date('d-m-Y', strtotime($tgl_kunjung . ' +89 days')) ?></td>
             </tr>
         </table>
 
