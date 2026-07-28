@@ -182,8 +182,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
             // 🔥 FILTER TAB DISINI
             .filter(function(row) {
               if (activeTab === 'belum') {
-                // PERBAIKAN 3: Pastikan status 10 juga tertangani jika itu memang status antrean
-                return row.visit_status == 0 || row.visit_status == 1 || row.visit_status == 10;
+                return row.visit_status == 0 || row.visit_status == 1;
               } else if (activeTab === 'sudah') {
                 return row.visit_status == 4;
               }
