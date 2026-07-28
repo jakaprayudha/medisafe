@@ -35,7 +35,7 @@
               <button class="nav-link <?= ($current == 'rawat_inap.php') ? 'active' : '' ?>">Rawat Inap</button>
            </a>
         <?php }
-         if ($roles == "dokter") {
+         if ($roles == "dokter" || $roles == 'admin') {
             require 'trigger_pulang.php';
          }
          ?>
