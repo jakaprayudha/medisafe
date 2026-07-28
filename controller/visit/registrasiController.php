@@ -119,7 +119,7 @@ function getData()
    $tab = $_GET['tab'] ?? null;
 
    if ($tab == 'belum') {
-      $query .= " AND pasien_visit.visit_status NOT IN (3,4,99)";
+      $query .= " AND pasien_visit.visit_status NOT IN (3,4,99,10)";
    }
 
    if ($tab == 'selesai') {
