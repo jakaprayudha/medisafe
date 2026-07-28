@@ -88,40 +88,28 @@ function getData()
 
    // Filter dokter
    if ($role != "admin" && (!empty($doctorName) || !empty($kdDokter))) {
-
       $query .= " AND (";
-
       $filter = [];
-
       if (!empty($doctorName)) {
          $doctorNameClean = preg_replace('/^dr\.?\s*/i', '', $doctorName);
-
          $filter[] = "REPLACE(LOWER(pasien_visit.id_doctor),'dr. ','') LIKE ?";
-
          $params[] = "%" . strtolower($doctorNameClean) . "%";
          $types .= "s";
       }
-
       if (!empty($kdDokter)) {
          $filter[] = "pasien_visit.code_doctor = ?";
          $params[] = $kdDokter;
          $types .= "s";
       }
-
       $query .= implode(" OR ", $filter);
       $query .= ")";
    }
-
-   // ==========================
-   // ORDER ANTRIAN
-   // ==========================
    $query .= "
         ORDER BY
             LEFT(pasien_visit.visit_antrian,1) ASC,
             CAST(REGEXP_SUBSTR(pasien_visit.visit_antrian,'[0-9]+$') AS UNSIGNED) ASC,
             pasien_visit.visit_time ASC
     ";
-
    $stmt = $koneksi->prepare($query);
 
    if (!$stmt) {
