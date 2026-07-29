@@ -115,7 +115,7 @@ $(function () {
                         if (tipe === "BPJS") {
                             $('.viewBpjs').removeClass('d-none');
                         }
-                        APP.cetak('#typePatient', tipe);
+                        // APP.cetak('#typePatient', tipe);
                         APP.cetakhtml('#noK', response.data.noKartu || '-');
                         APP.cetakhtml('#nama', response.data.nama || '-');
                         APP.cetakhtml('#tglLahir', response.data.tglLahir || '-');
@@ -630,7 +630,7 @@ $(function () {
         let selected = $('#kodeprov').find(':selected');
         let nama = (selected.text() || '').toLowerCase();
 
-        let tipe = nama.includes('bpjs') ? 'BPJS' : 'UMUM';
+        let tipe = nama.includes('bpjs kesehatan') ? 'BPJS' : 'UMUM';
         $('#typePasien').val(tipe);
     }
 })
