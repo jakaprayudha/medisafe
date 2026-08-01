@@ -21,7 +21,7 @@ $stmt = $koneksi->prepare("SELECT
       p.patient_gender,
       pr.provider_name,
       p.patient_datebirth,
-p.patient_bpjs, 
+v.noKartu,
 p.patient_nik,
 p.idsh,
       v.id_doctor,
