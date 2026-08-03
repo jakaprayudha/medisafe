@@ -29,7 +29,7 @@ LEFT JOIN pasien_visit v ON t.visit_ID = v.visit_ID AND v.id_customer = ?
 LEFT JOIN icd_10       i ON i.code = v.diagnosa
 LEFT JOIN ms_users     u 
     ON REPLACE(REPLACE(REPLACE(REPLACE(LOWER(u.fullname), 'dr.', ''), 'dr ', ''), '.', ''), ' ', '') = 
-       REPLACE(REPLACE(REPLACE(REPLACE(LOWER(v.id_doctor), 'dr.', ''), 'dr ', ''), '.', ''), ' ', '') AND u.id_customer = v.id_customer
+       REPLACE(REPLACE(REPLACE(REPLACE(LOWER(v.id_doctor), 'dr.', ''), 'dr ', ''), '.', ''), ' ', '') AND u.id_customer = ?
 WHERE t.visit_ID = ?
 ORDER BY t.id_triase DESC
 LIMIT 1;
@@ -37,7 +37,7 @@ LIMIT 1;
 
     $stmt = mysqli_prepare($koneksi, $queryTriase);
     if ($stmt) {
-        mysqli_stmt_bind_param($stmt, "is", $id_customer, $no);
+        mysqli_stmt_bind_param($stmt, "iis", $id_customer, $id_customer, $no);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
         $triase = mysqli_fetch_assoc($result);
