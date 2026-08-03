@@ -11,26 +11,28 @@ $terapii = "-";
 
 if ($no && $id_customer) {
     $queryTriase = "
-        SELECT
-            t.*,
-            v.riwayat_penyakit_sekarang,
-            v.riwayat_pengobatan,
-            v.riwayat_penyakit_pribadi,
-            v.riwayat_alergi,
-            v.diagnosa_sekunder,
-            v.id_doctor,
-            u.signature_user,
-            i.code  AS icd_code,
-            i.icd10 AS icd10,
-            t.tanggal_masuk,
-            t.jam_masuk
-        FROM pasien_triase t
-        LEFT JOIN pasien_visit v  ON t.visit_ID = v.visit_ID AND v.id_customer = ?
-        LEFT JOIN icd_10       i  ON i.code = v.diagnosa
-        LEFT JOIN ms_users     u  ON u.fullname = v.id_doctor
-        WHERE t.visit_ID = ?
-        ORDER BY t.id_triase DESC
-        LIMIT 1
+       SELECT
+    t.*,
+    v.riwayat_penyakit_sekarang,
+    v.riwayat_pengobatan,
+    v.riwayat_penyakit_pribadi,
+    v.riwayat_alergi,
+    v.diagnosa_sekunder,
+    v.id_doctor,
+    u.signature_user,
+    i.code  AS icd_code,
+    i.icd10 AS icd10,
+    t.tanggal_masuk,
+    t.jam_masuk
+FROM pasien_triase t
+LEFT JOIN pasien_visit v ON t.visit_ID = v.visit_ID AND v.id_customer = ?
+LEFT JOIN icd_10       i ON i.code = v.diagnosa
+LEFT JOIN ms_users     u 
+    ON REPLACE(REPLACE(REPLACE(REPLACE(LOWER(u.fullname), 'dr.', ''), 'dr ', ''), '.', ''), ' ', '') = 
+       REPLACE(REPLACE(REPLACE(REPLACE(LOWER(v.id_doctor), 'dr.', ''), 'dr ', ''), '.', ''), ' ', '') AND u.id_customer = v.id_customer
+WHERE t.visit_ID = ?
+ORDER BY t.id_triase DESC
+LIMIT 1;
     ";
 
     $stmt = mysqli_prepare($koneksi, $queryTriase);
