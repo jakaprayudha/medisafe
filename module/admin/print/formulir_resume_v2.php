@@ -14,9 +14,10 @@ $query = "SELECT * FROM pasien_visit
           LEFT JOIN ms_provider ON ms_provider.id_provider = pasien_visit.id_provider 
           LEFT JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa 
           LEFT JOIN resume_medis ON resume_medis.visit_ID = pasien_visit.visit_ID AND resume_medis.nomor_rm = ms_patient.nomor_rm 
-          LEFT JOIN ms_users AS dokter ON dokter.fullname = pasien_visit.id_doctor
+          LEFT JOIN ms_users AS dokter ON REPLACE(REPLACE(REPLACE(REPLACE(LOWER(dokter.fullname), 'dr.', ''), 'dr ', ''), '.', ''), ' ', '') = 
+       REPLACE(REPLACE(REPLACE(REPLACE(LOWER(pasien_visit.id_doctor), 'dr.', ''), 'dr ', ''), '.', ''), ' ', '')
           LEFT JOIN  pasien_triase ON pasien_triase.visit_ID = pasien_visit.visit_ID
-          WHERE pasien_visit.visit_ID='$visit' AND ms_patient.nomor_rm='$rm'";
+          WHERE pasien_visit.visit_ID=? AND ms_patient.nomor_rm=?";
 
 $checkdata = mysqli_query($koneksi, $query);
 $dataresume = mysqli_fetch_array($checkdata) ?: [];

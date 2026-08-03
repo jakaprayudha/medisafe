@@ -24,7 +24,7 @@ $data = null;
 
 if ($no && $id_customer) {
     $query = "
-        SELECT pv.*, mp.patient_name, mp.patient_datebirth,
+         SELECT pv.*, mp.patient_name, mp.patient_datebirth,
                mp.patient_gender, mp.patient_address, mp.nomor_rm,
                r.room_name, b.bed_name,
                u.signature_user
@@ -33,7 +33,8 @@ if ($no && $id_customer) {
         LEFT JOIN permintaan_ranap pr  ON pv.visit_ID   = pr.visit_ID_inpatient
         LEFT JOIN ms_room           r  ON pr.id_room    = r.id_room
         LEFT JOIN ms_room_bed       b  ON pr.id_bed     = b.id_bed
-        LEFT JOIN ms_users          u  ON u.fullname    = pv.id_doctor
+        LEFT JOIN ms_users          u  ON REPLACE(REPLACE(REPLACE(REPLACE(LOWER(u.fullname), 'dr.', ''), 'dr ', ''), '.', ''), ' ', '') = 
+       REPLACE(REPLACE(REPLACE(REPLACE(LOWER(pv.id_doctor), 'dr.', ''), 'dr ', ''), '.', ''), ' ', '')
         WHERE pv.visit_ID = ? AND pv.id_customer = ?
         LIMIT 1
     ";
