@@ -17,7 +17,7 @@ $query = "SELECT * FROM pasien_visit
           LEFT JOIN ms_users AS dokter ON REPLACE(REPLACE(REPLACE(REPLACE(LOWER(dokter.fullname), 'dr.', ''), 'dr ', ''), '.', ''), ' ', '') = 
        REPLACE(REPLACE(REPLACE(REPLACE(LOWER(pasien_visit.id_doctor), 'dr.', ''), 'dr ', ''), '.', ''), ' ', '')
           LEFT JOIN  pasien_triase ON pasien_triase.visit_ID = pasien_visit.visit_ID
-          WHERE pasien_visit.visit_ID=? AND ms_patient.nomor_rm=?";
+          WHERE pasien_visit.visit_ID='$visit' AND ms_patient.nomor_rm='$rm'";
 
 $checkdata = mysqli_query($koneksi, $query);
 $dataresume = mysqli_fetch_array($checkdata) ?: [];
