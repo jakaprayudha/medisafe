@@ -114,6 +114,7 @@ if ($data['created_user'] == "MobileJKN") {
                 'message'  => "Berhasil Mendaftar Pasien",
                 'result' => $result,
             ];
+            updateStatus($visit_id, $idcustomer);
         } else {
             $response = [
                 'success' => false,
@@ -129,3 +130,10 @@ if ($data['created_user'] == "MobileJKN") {
     ];
 }
 echo json_encode($response);
+
+
+function updateStatus(String $visit, String $id){
+    global $koneksi;
+    mysqli_query($koneksi, "UPDATE `antrian_poli` SET `status` = '0' WHERE `nomor_visit` = '$visit' AND `id_customer` = '$id");
+    mysqli_query($koneksi, "UPDATE pasien_visit SET visit_status = '1' WHERE visit_ID = '$visit' AND id_customer = '$id'");
+}

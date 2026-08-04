@@ -141,7 +141,7 @@ $setting = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT rme_type FROM setti
 $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 ?>
 <script>
-  let activeTab = 'belum'; // default tab
+  let activeTab = 'belum';
 
   const apiUrl = 'controller/doctor/registrasiController';
 
@@ -163,7 +163,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
       processing: true,
       serverSide: false,
       scrollX: true,
-      order: [], // PERBAIKAN 1: Matikan auto-sort agar urutan dari PHP tidak berantakan
+      order: [],
       ajax: {
         url: apiUrl,
         type: "GET",
@@ -375,47 +375,56 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
               });
             },
             success: function(res) {
-              if (res.success) {
-                $.ajax({
-                  url: 'controller/admisi/services/chackinv2.php',
-                  type: 'POST',
-                  dataType: 'json',
-                  data: {
-                    visit: visitID
-                  },
-                  success: function(pcare) {
-                    if (pcare.success) {
-                      Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil',
-                        text: pcare.message
-                      });
+              if (status == '2') {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Berhasil',
+                  text: 'Berhasil Batal Pasien'
+                });
+                table.ajax.reload(null, false);
+              } else {
+                if (res.success) {
+                  $.ajax({
+                    url: 'controller/admisi/services/chackinv2.php',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                      visit: visitID
+                    },
+                    success: function(pcare) {
+                      if (pcare.success) {
+                        Swal.fire({
+                          icon: 'success',
+                          title: 'Berhasil',
+                          text: pcare.message
+                        });
+                        table.ajax.reload(null, false);
+                      } else {
+                        Swal.fire({
+                          icon: 'warning',
+                          title: 'Berhasil Set Hadir',
+                          text: 'Set hadir berhasil, namun pendaftaran PCare gagal : ' + pcare.message
+                        });
+                      }
                       table.ajax.reload(null, false);
-                    } else {
+                    },
+                    error: function() {
                       Swal.fire({
                         icon: 'warning',
                         title: 'Berhasil Set Hadir',
-                        text: 'Set hadir berhasil, namun pendaftaran PCare gagal : ' + pcare.message
+                        text: 'Set hadir berhasil, namun server PCare tidak merespon'
                       });
+                      table.ajax.reload(null, false);
                     }
-                    table.ajax.reload(null, false);
-                  },
-                  error: function() {
-                    Swal.fire({
-                      icon: 'warning',
-                      title: 'Berhasil Set Hadir',
-                      text: 'Set hadir berhasil, namun server PCare tidak merespon'
-                    });
-                    table.ajax.reload(null, false);
-                  }
-                });
-              } else {
-                Swal.fire({
-                  icon: 'error',
-                  title: 'Gagal',
-                  text: res.message
-                });
-                table.ajax.reload(null, false);
+                  });
+                } else {
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: res.message
+                  });
+                  table.ajax.reload(null, false);
+                }
               }
             },
             error: function() {
