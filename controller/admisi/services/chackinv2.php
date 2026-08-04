@@ -127,6 +127,7 @@ if ($data['created_user'] == "MobileJKN") {
     $response = [
         'success'  => true,
         'message'  => "Berhasil",
+        'user' => $data['created_user']
     ];
 }
 echo json_encode($response);
