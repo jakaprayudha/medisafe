@@ -33,8 +33,32 @@ if ($no && $id_customer) {
         LEFT JOIN permintaan_ranap pr  ON pv.visit_ID   = pr.visit_ID_inpatient
         LEFT JOIN ms_room           r  ON pr.id_room    = r.id_room
         LEFT JOIN ms_room_bed       b  ON pr.id_bed     = b.id_bed
-        LEFT JOIN ms_users          u  ON REPLACE(REPLACE(REPLACE(REPLACE(LOWER(u.fullname), 'dr.', ''), 'dr ', ''), '.', ''), ' ', '') = 
-       REPLACE(REPLACE(REPLACE(REPLACE(LOWER(pv.id_doctor), 'dr.', ''), 'dr ', ''), '.', ''), ' ', '')
+        LEFT JOIN ms_users u
+            ON LOWER(
+                REPLACE(
+                    REPLACE(
+                        REPLACE(
+                            REPLACE(
+                                REPLACE(TRIM(u.fullname),
+                                'dr.',''),
+                            'dr ',''),
+                        '.',''),
+                    ',',''),
+                ' ','')
+            )
+            =
+            LOWER(
+                REPLACE(
+                    REPLACE(
+                        REPLACE(
+                            REPLACE(
+                                REPLACE(TRIM(pv.id_doctor),
+                                'dr.',''),
+                            'dr ',''),
+                        '.',''),
+                    ',',''),
+                ' ','')
+            )
         WHERE pv.visit_ID = ? AND pv.id_customer = ?
         LIMIT 1
     ";
