@@ -73,7 +73,8 @@ if ($data['created_user'] == "MobileJKN") {
         $response = [
             'success' => false,
             'message' => $msg,
-            'result' => $result
+            'result' => $result,
+            'data' => $data
         ];
     } else {
         $noUrut = $result['data']['message'];
