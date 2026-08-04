@@ -6,6 +6,7 @@ header('Content-Type: application/json');
 date_default_timezone_set('Asia/Jakarta');
 
 $visit_id = $_POST['visit'];
+$idcustomer = $_SESSION['id_customer'];
 $stmt = $koneksi->prepare("SELECT pv.jampraktek,pv.anamnesa, pv.berat_badan,pv.tinggi_badan, pv.respirasi, pv.lingkar_perut, pv.nadi, pv.created_user, pv.suhu,pv.saturasi, pv.visit_antrian,pv.jampraktek, ms_patient.nomor_rm, pv.id_poli ,pv.visit_date, mp.kdPoli, pv.code_doctor, md.doctor_name, pv.noKartu, ms_patient.patient_nik, ms_patient.patient_phone FROM pasien_visit AS pv INNER JOIN master_poli AS mp ON mp.nmPoli = pv.id_poli INNER JOIN ms_doctor AS md ON md.doctor_code = pv.code_doctor INNER JOIN ms_patient ON pv.id_patient = ms_patient.id_patient WHERE pv.id_customer = ? AND md.id_customer = ? AND visit_ID = ? AND ms_patient.id_customer = ? LIMIT 1");
 $stmt->bind_param('ssss', $idcustomer, $idcustomer, $visit_id, $idcustomer);
 $stmt->execute();
