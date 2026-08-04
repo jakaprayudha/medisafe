@@ -126,6 +126,7 @@ if ($data['created_user'] == "MobileJKN") {
         }
     }
 } else {
+    updateStatus($visit_id, $idcustomer);
     $response = [
         'success'  => true,
         'message'  => "Berhasil",
