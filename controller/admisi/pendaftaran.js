@@ -116,16 +116,17 @@ $(function () {
                             $('.viewBpjs').removeClass('d-none');
                         }
                         // APP.cetak('#typePatient', tipe);
+                        const sex = (response.data.sex || '').toLowerCase();
                         APP.cetakhtml('#noK', response.data.noKartu || '-');
                         APP.cetakhtml('#nama', response.data.nama || '-');
                         APP.cetakhtml('#tglLahir', response.data.tglLahir || '-');
-                        APP.cetakhtml('#kelamin', response.data.sex === "P" ? "Perempuan" : "Laki - Laki");
+                        APP.cetakhtml('#kelamin', sex === 'p' || sex === 'perempuan' ? "Perempuan" : "Laki - Laki");
                         APP.cetakhtml('#ppkumum', response.data.nmProvider || '-');
                         APP.cetak('#nohp', response.data.noHP || '080000000000');
                         APP.cetakhtml('#noTelp', response.data.noHP || '-');
                         APP.cetak('#noKartu', response.data.noKartu || '-');
                         APP.cetak('#namapatient', response.data.nama || '-');
-                        APP.cetak('#Kelamin', response.data.sex === "P" ? "Perempuan" : "Laki - Laki");
+                        APP.cetak('#Kelamin', sex === 'p' || sex === 'perempuan' ? "Perempuan" : "Laki - Laki");
                         APP.cetak('#tgllahir', response.data.tglLahir || '-');
                         APP.cetakhtml('#no_rekammedis', response.data.rm || '-');
                         APP.cetak('#norm', response.data.rm || '-');
