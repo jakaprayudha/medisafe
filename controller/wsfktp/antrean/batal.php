@@ -67,7 +67,7 @@ try {
         ]);
         exit;
     }
-    if ($visit_status_db != '10') {
+    if ($visit_status_db == '4') {
         echo json_encode([
             "metadata" => [
                 "message" => "Pasien Sudah Dilayani, Antrean Tidak Dapat Dibatalkan",
