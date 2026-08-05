@@ -15,7 +15,7 @@ $namaHari = [
 ];
 
 $hari = $namaHari[(new DateTime($tanggal))->format('l')];
-$sql = mysqli_query($koneksi, "SELECT d.doctor_name, d.doctor_code, j.day_of_week, j.start_time, j.end_time, db.nmDokter FROM ms_doctor AS d INNER JOIN ms_doctor_schedule AS j ON j.id_doctor = d.doctor_code INNER JOIN master_doctor_bpjs AS db ON db.kdDokter = d.doctor_code WHERE d.id_customer = '$idcustomer' AND j.id_customer = '$idcustomer' AND db.id_customer = '$idcustomer' AND j.day_of_week = '$hari' AND j.id_poli = '$kdpoli'");
+$sql = mysqli_query($koneksi, "SELECT d.doctor_name, d.doctor_code, j.day_of_week, j.start_time, j.end_time, db.nmDokter FROM ms_doctor AS d INNER JOIN ms_doctor_schedule AS j ON j.id_doctor = d.doctor_code INNER JOIN master_doctor_bpjs AS db ON db.kdDokter = d.doctor_code WHERE d.id_customer = '$idcustomer' AND j.id_customer = '$idcustomer' AND db.id_customer = '$idcustomer' AND j.day_of_week = '$hari' AND j.id_poli = '$kdpoli' AND d.id_poli = '$kdpoli'");
 $data = [];
 $now = new DateTime();
 
