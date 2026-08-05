@@ -12,7 +12,8 @@ $tanggalperiksa = $_POST['tglDaftar'] ?? '';
 $kodedokter     = $_POST['kdDokter'] ?? '';
 $namadokter     = $_POST['nmDokter'] ?? '';
 $jampraktek     = $_POST['jampraktek'] ?? '';
-
+date_default_timezone_set('Asia/Jakarta');
+$tanggalSekarang = date('Y-m-d');
 if (empty($nohp)) {
     echo json_encode([
         'success' => false,
@@ -45,7 +46,7 @@ try {
     ];
     // echo json_encode($payload, JSON_PRETTY_PRINT);die();
     // $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getantrian.php", $payload);
-    if ($status_antrol) {
+    if ($status_antrol && $tanggalperiksa == $tanggalSekarang) {
         $result = bpjsPost("/antrean/add", $payload);
     } else {
         $result = [
