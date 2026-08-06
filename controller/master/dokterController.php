@@ -133,11 +133,10 @@ function getData($id_customer)
 {
    global $koneksi;
 
-   $query = "SELECT d.*, p.poli_name 
+   $query = "SELECT d.*, p.nmPoli AS poli_name
              FROM ms_doctor d
-             LEFT JOIN ms_poli p 
-             ON p.id_poli = d.id_poli 
-             AND p.id_customer = d.id_customer
+             INNER JOIN master_poli p 
+             ON p.kdPoli = d.id_poli 
              WHERE d.id_customer = ?
              ORDER BY d.doctor_name DESC";
 
