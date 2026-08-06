@@ -97,28 +97,54 @@ function getData()
 {
    global $koneksi, $id_customer;
 
+   $id_patient = $_GET['id_patient'] ?? '';
    $no = $_GET['no'] ?? '';
-
    $stmt = $koneksi->prepare("
-      SELECT * FROM visit_inspection 
-      WHERE id_visit=? AND id_customer=? 
-      ORDER BY id_inspection ASC
-   ");
+SELECT
+    vi.*,
+    pv.visit_ID,
+    pv.visit_date,
 
-   $stmt->bind_param("ss", $no, $id_customer);
+    lr.hasil,
+    lr.keterangan,
+
+    CASE
+        WHEN pv.visit_ID = ? THEN 1
+        ELSE 0
+    END AS is_current
+
+FROM visit_inspection vi
+
+INNER JOIN pasien_visit pv
+    ON pv.visit_ID = vi.id_visit
+
+LEFT JOIN laboratorium_result lr
+    ON lr.id_inspection = vi.id_inspection
+    AND LOWER(TRIM(vi.inspection_name)) NOT IN (
+        'Darah Lengkap',
+        'Urine Rutin'
+    )
+WHERE pv.id_patient = ?
+  AND pv.id_customer = ?
+
+ORDER BY
+    is_current DESC,
+    vi.inspection_date DESC,
+    vi.id_inspection DESC
+");
+
+   $stmt->bind_param("sss", $no, $id_patient, $id_customer);
    $stmt->execute();
 
    $result = $stmt->get_result();
-   $data = $result->fetch_all(MYSQLI_ASSOC);
 
    echo json_encode([
       'status' => 'success',
-      'data' => $data
+      'data' => $result->fetch_all(MYSQLI_ASSOC)
    ]);
 
    $stmt->close();
 }
-
 # ================= READ BY ID =================
 function getID($id)
 {
