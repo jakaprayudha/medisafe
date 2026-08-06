@@ -15,6 +15,10 @@ function bpjsGet($endpoint){
     );
     $url = rtrim($base_url, '/') . '/' . trim($service, '/') . '/' . ltrim($endpoint, '/');
     $ch = curl_init();
+    // echo "<pre>";
+    // print_r($headers);
+    // echo "</pre>";
+    // echo $url;die();
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,
         CURLOPT_CUSTOMREQUEST => 'GET',
@@ -27,7 +31,7 @@ function bpjsGet($endpoint){
     $response = curl_exec($ch);
     $err = curl_error($ch);
     curl_close($ch);
-    // echo($response);die();
+    echo($response);die();
     if (!$response) {
         return bpjsError("Tidak ada response dari server BPJS");
     }
