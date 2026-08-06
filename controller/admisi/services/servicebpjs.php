@@ -31,7 +31,7 @@ function bpjsGet($endpoint){
     $response = curl_exec($ch);
     $err = curl_error($ch);
     curl_close($ch);
-    echo($response);die();
+    // echo($response);die();
     if (!$response) {
         return bpjsError("Tidak ada response dari server BPJS");
     }
