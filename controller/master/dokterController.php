@@ -133,7 +133,7 @@ function getData($id_customer)
 {
    global $koneksi;
 
-   $query = "SELECT d.*, p.nmPoli AS poli_name
+   $query = "SELECT d.*, p.nmPoli
              FROM ms_doctor d
              INNER JOIN master_poli p 
              ON p.kdPoli = d.id_poli 
