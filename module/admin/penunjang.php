@@ -1,8 +1,12 @@
 <?php
 $title = 'Penunjang';
+// require '../../database/connect.php';
 require '../../controller/view.php';
 $no = $_GET['no'];
 $rm = $_GET['rm'];
+$check = mysqli_query($koneksi, "SELECT id_patient FROM pasien_visit WHERE visit_ID='$no'");
+$datacheck = mysqli_fetch_array($check);
+$id_patient = $datacheck['id_patient'];
 ?>
 <!doctype html>
 <html lang="en">
@@ -69,6 +73,7 @@ $rm = $_GET['rm'];
                           <th>Tanggal</th>
                           <th>Sumber</th>
                           <th>Keterangan</th>
+                          <th>Hasil</th>
                           <th class="text-center">Actions</th>
                         </tr>
                       </thead>
@@ -175,12 +180,16 @@ $rm = $_GET['rm'];
   </div>
 </div>
 <script>
-  const apiUrl = 'controller/visit/penunjang?no=<?= $_GET['no'] ?>';
+  const apiUrl = 'controller/visit/penunjang?no=<?= $_GET['no'] ?>&id_patient=<?= $id_patient ?>';
 
   $(document).ready(function() {
+
     var table = $('#periodeTable').DataTable({
       processing: true,
       serverSide: false,
+      order: [
+        [1, "desc"]
+      ], // Urutkan berdasarkan kolom tanggal
       ajax: {
         url: apiUrl,
         type: "GET",
@@ -195,7 +204,10 @@ $rm = $_GET['rm'];
                   name.includes('darah lengkap') ||
                   name.includes('widal');
 
-                let btnClass = isLabKhusus ? 'btn-light' : 'btn-info';
+                let btnClass = row.is_current == 1 ?
+                  'btn-success' :
+                  (isLabKhusus ? 'btn-light' : 'btn-info');
+
                 let icon = isLabKhusus ? 'fas fa-eye' : 'fas fa-flask';
                 let title = isLabKhusus ? 'Lihat Hasil' : 'Input Hasil';
                 return `
@@ -219,10 +231,29 @@ $rm = $_GET['rm'];
                   </div>
                 `;
               })(),
-              "name": row.inspection_name ?? "-",
+              "name": (() => {
+
+                let badge = '';
+
+                if (row.is_current == 1) {
+                  badge = `
+            <span class="badge bg-success ms-1">
+                Visit Saat Ini
+            </span>
+            `;
+                }
+
+                return `
+              ${row.inspection_name ?? '-'}
+              ${badge}
+          `;
+              })(),
               "tanggal": row.inspection_date ?? "-",
               "sumber": row.inspection_source ?? "-",
-              "kesimpulan": row.inspection_note ?? "-"
+              "keterangan": row.inspection_note ?? "-",
+              "hasil": row.hasil ?
+                `${row.hasil}${row.keterangan ? ' (' + row.keterangan + ')' : ''}` :
+                "-"
             };
           });
         }
@@ -240,7 +271,11 @@ $rm = $_GET['rm'];
           className: "text-wrap"
         },
         {
-          data: "kesimpulan",
+          data: "keterangan",
+          className: "text-wrap"
+        },
+        {
+          data: "hasil",
           className: "text-wrap"
         },
         {
@@ -248,7 +283,20 @@ $rm = $_GET['rm'];
           orderable: false,
           searchable: false
         }
-      ]
+      ],
+      // ← Letakkan di sini
+      createdRow: function(row, data) {
+
+        if (data.is_current == 1) {
+
+          $(row)
+            .addClass('table-success')
+            .css('font-weight', '600');
+
+        }
+
+      }
+
     });
 
     $('#customSearch').on('keyup', function() {
