@@ -177,7 +177,7 @@ require '../../controller/view.php';
     var today = new Date().toISOString().split("T")[0];
 
     $('#fromDate').val(today);
-    $('#toDate').val('');
+    $('#toDate').val(today);
 
     $('#fromDate').attr('max', today);
 
