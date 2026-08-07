@@ -104,16 +104,16 @@ date_default_timezone_set('Asia/Jakarta');
       <!--  Header End -->
       <div class="body-wrapper-inner">
         <div class="container-fluid">
-          <ul class="nav nav-tabs" id="myTab" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-pane" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">Belum Dilayani</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Sudah Dilayani</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="batal-tab" data-bs-toggle="tab" data-bs-target="#batal-tab-pane" type="button" role="tab" aria-controls="batal-tab-pane" aria-selected="false">Batal Dilayani</button>
-            </li>
+          <ul class="nav nav-tabs align-items-center" id="myTab" role="tablist"> <!-- Grup kiri -->
+            <li class="nav-item" role="presentation"> <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-pane" type="button" role="tab"> Belum Dilayani </button> </li>
+            <li class="nav-item" role="presentation"> <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane" type="button" role="tab"> Sudah Dilayani </button> </li>
+            <li class="nav-item" role="presentation"> <button class="nav-link" id="batal-tab" data-bs-toggle="tab" data-bs-target="#batal-tab-pane" type="button" role="tab"> Batal Dilayani </button> </li> <!-- Pemisah 2 garis -->
+            <li class="nav-item mx-3 d-flex align-items-center">
+              <div style="width:1px;height:24px;background:#dee2e6;"></div>
+              <div class="mx-1"></div>
+              <div style="width:1px;height:24px;background:#dee2e6;"></div>
+            <li class="nav-item" role="presentation"> <button class="nav-link  fw-bold" id="kunjungsehat-tab" data-bs-toggle="tab" data-bs-target="#kunjungsehat-pane" type="button" role="tab"> Kunjungan Sehat </button> </li>
+            <li class="nav-item" role="presentation"> <button class="nav-link fw-bold" id="kunjungsehatbatal-tab" data-bs-toggle="tab" data-bs-target="#kunjungsehatbatal-pane" type="button" role="tab"> Kunjungan Sehat Batal</button> </li>
           </ul>
           <div class="tab-content" id="myTabContent">
             <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0"></div>
@@ -675,7 +675,7 @@ date_default_timezone_set('Asia/Jakarta');
   </div>
 </div>
 <script>
-  let currentTab = 'belum'; // default tab saat halaman pertama kali dimuat
+  let currentTab = 'belum'; 
   $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
 
     const target = $(e.target).attr("id");
@@ -686,6 +686,10 @@ date_default_timezone_set('Asia/Jakarta');
       currentTab = 'selesai';
     } else if (target === 'batal-tab') {
       currentTab = 'batal';
+    }else if (target === 'kunjungsehat-tab'){
+      currentTab = 'sehat';
+    }else if (target === 'kunjungsehatbatal-tab'){
+      currentTab = 'sehatbatal';
     }
 
     console.log("TAB AKTIF:", currentTab);
@@ -773,8 +777,8 @@ date_default_timezone_set('Asia/Jakarta');
       });
     }
 
-   
-    
+
+
 
     $('#btnApplyFilter').on('click', function() {
       table.ajax.reload();

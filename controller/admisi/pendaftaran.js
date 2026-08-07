@@ -510,8 +510,12 @@ $(function () {
                     $('#kunjungan').append(new Option(item.text, item.id, false, false));
                 });
                 $("#kunjungan").val("10").trigger("change");
+                $('#statusKsehat').removeClass('d-none');
+                setTypePasien();
             } else {
                 APP.addValueSelect('#kunjungan', '10', 'Rawat Jalan');
+                $('#statusKsehat').addClass('d-none');
+                APP.cetak("#typePasien", "BPJS");
             }
         }
         APP.jnsKunjungvalue();
@@ -533,6 +537,7 @@ $(function () {
     APP.createpeserta = function () {
         var data = $('#isiform').serialize();
         const typePasien = new URLSearchParams(data).get('typePatient');
+        const kunjungSakit = new URLSearchParams(data).get('kunjSakit');
         const createPendaftaran = (antrian, nomor, kode, visit_id) => {
             data += '&antrian=' + encodeURIComponent(antrian);
             data += '&nomorantrean=' + encodeURIComponent(nomor);
@@ -576,7 +581,7 @@ $(function () {
                 }
             });
         }
-        if (typePasien == 'UMUM') {
+        if (typePasien == 'UMUM' || kunjungSakit == 'false') {
             createPendaftaran();
             return;
         }

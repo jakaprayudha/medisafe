@@ -30,7 +30,7 @@ $tglLahir = date("Y-m-d", strtotime($_POST['tglLahir']));
 $suhu    =  $_POST['suhu'];
 $saturasi    =  $_POST['saturasiOksigen'];
 $type = $_POST['typePatient'];
-$kdProv = $_POST['kdProv'];
+$kdProv = $kunjSakit == 'true' ? $_POST['kdProv'] : '1';
 $norm = $_POST['norm'];
 $noHp = $_POST['noHp'];
 $jampraktek = $_POST['jampraktek'];
@@ -52,7 +52,7 @@ $payload = [
     "kdTkp" => $kdTkp
 ];
 
-if (empty($kdDokter)) {
+if (empty($kdDokter) && $kunjSakit == 'true') {
     echo json_encode([
         "status" => false,
         "message" => "Dokter harus diisi"
@@ -60,6 +60,7 @@ if (empty($kdDokter)) {
     exit;
 }
 if ($type == "BPJS") {
+    // echo $kdProv;
     // echo json_encode($payload, JSON_PRETTY_PRINT);die();
     $result = bpjsPost("/pendaftaran", $payload);
     // echo json_encode($result);die();
@@ -88,6 +89,12 @@ if ($type == "BPJS") {
         $antrian = $_POST['antrian'];
         $angkaantrean = $_POST['angkaantrean'];
         $kodeAntri       = $_POST['kodeAntri'];
+        $created_user = "JKNOnsite";
+        if (!$kunjSakit){
+            $visit_ID = generateVisitID($koneksi, $idcustomer);
+            $antrian = $noUrut;
+            $created_user = "JKNSehat";
+        }
         $stmt = $koneksi->prepare("INSERT INTO `pcare_pendaftaran` (`tanggal_daftar`, `noKartu`, `kdPoli`, `nmPoli`, `keluhan`, `kunjSakit`, `sistole`, `diastole`, `beratBadan`, `tinggiBadan`, `respRate`, `lingkarPerut`, `heartRate`, `rujukBalik`, `kdTkp`, `noUrut`, `nomor_visit`, `saturasi`, `suhu`, `jampraktek`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
         $stmt->bind_param(
             "ssssssiiiiiiisssssss",
@@ -114,17 +121,11 @@ if ($type == "BPJS") {
         );
         $hasil = $stmt->execute();
         $stmt->close();
-
-        $visit_ID = $_POST['visit_id'];
-        $antrian = $_POST['antrian'];
-        $angkaantrean = $_POST['angkaantrean'];
-        $kodeAntri = $_POST['kodeAntri'];
         $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE (patient_bpjs = ? OR patient_nik = ?) AND id_customer = ?");
         $stmt->bind_param('sss', $noKartu, $noNIK, $idcustomer);
         $stmt->execute();
         $chackpasien = $stmt->get_result()->fetch_assoc();
 
-        $created_user = "JKNOnsite";
         $source_hub = "Poliklinik";
         $id_patient = $chackpasien['id_patient'];
         $visit_time = date('H:i:s');

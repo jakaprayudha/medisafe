@@ -68,15 +68,19 @@
                                 <input type="date" class="form-control"
                                     name="tglDaftar" id="tanggalKunjung" value="<?= $tanggal ?>">
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Dokter <span class="text-danger">*</span></label>
-                                <select class="form-select" id="kodedokter" name="kdDokter"></select>
-                                <input type="hidden" name="nmDokter" id="namadokter">
-                                <input type="hidden" name="jampraktek" id="jampraktek">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Provider <span class="text-danger">*</span></label>
-                                <select class="form-select" id="kodeprov" name="kdProv"></select>
+                            <div id="statusKsehat">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Dokter <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="kodedokter" name="kdDokter"></select>
+                                        <input type="hidden" name="nmDokter" id="namadokter">
+                                        <input type="hidden" name="jampraktek" id="jampraktek">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Provider <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="kodeprov" name="kdProv"></select>
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Keluhan <span class="text-danger">*</span></label>
