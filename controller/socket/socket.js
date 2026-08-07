@@ -38,14 +38,17 @@ function startApp() {
             pages.forEach((pageName) => {
                 if (pageName == "display-admisi") {
                     socket.emit("join", data.id_customer + "_" + pageName + "_" + target);
+                    console.log(data.id_customer + "_" + pageName + "_" + target);
                 } else if (pageName == 'pemeriksaan' && target == 'DOCTOR') {
                     socket.emit("join", data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
+                    console.log(data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
                 } else if (pageName == "farmasi_order_detail" && target == "ADMIN") {
                     socket.emit("join", data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
+                    console.log(data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
                 }
             })
 
-            console.log(data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
+            // console.log(data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
             // console.log(pageName);
             // console.log(data);
         });
