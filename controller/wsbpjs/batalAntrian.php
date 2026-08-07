@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/serviceantrian.php';
+header('Content-Type: application/json');
 $nomor_visit = $_POST['novisit'];
 $sql = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT pv.noKartu, pv.visit_date, p.kdPoli FROM pasien_visit AS pv INNER JOIN master_poli AS p ON p.nmPoli = pv.id_poli WHERE visit_ID = '$nomor_visit'"));
 $tanggalperiksa = $sql['visit_date'];
@@ -20,6 +21,12 @@ if ($status_antrol) {
         $msg = $result['message'];
         if ($msg == null) {
             $msg = "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
+        }
+        if ($msg == "Data tidak ditemukan"){
+            $response = [
+            'success' => true,
+            'message' => "",
+        ];
         }
         $response = [
             'success' => false,
