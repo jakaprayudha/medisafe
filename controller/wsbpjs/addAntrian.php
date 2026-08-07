@@ -12,6 +12,7 @@ $tanggalperiksa = $_POST['tglDaftar'] ?? '';
 $kodedokter     = $_POST['kdDokter'] ?? '';
 $namadokter     = $_POST['nmDokter'] ?? '';
 $jampraktek     = $_POST['jampraktek'] ?? '';
+$kunjSakit = $_POST['kunjSakit'];
 date_default_timezone_set('Asia/Jakarta');
 $tanggalSekarang = date('Y-m-d');
 if (empty($nohp)) {

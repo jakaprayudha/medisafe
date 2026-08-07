@@ -128,7 +128,13 @@ function getData()
    if ($tab == 'batal') {
       $query .= " AND pasien_visit.visit_status IN (99)";
    }
-
+   if ($tab == 'sehat') {
+      $query .= " AND pasien_visit.created_user = 'JKNSehat' AND pasien_visit.visit_status NOT IN (3,4,99,10)";
+   }else if ($tab == 'sehatbatal'){
+      $query .= " AND pasien_visit.created_user = 'JKNSehat' AND pasien_visit.visit_status IN (99)";
+   }else{
+      $query .= " AND pasien_visit.created_user != 'JKNSehat'";
+   }
    $query .= " 
       ORDER BY 
          pasien_visit.visit_date ASC,
