@@ -157,7 +157,7 @@ $rm = $_GET['rm'];
   </div>
 </div>
 <script>
-  const apiUrl = 'controller/visit/penunjang?no=<?= $_GET['no'] ?>';
+  const apiUrl = 'controller/visit/penunjangLabRoles?no=<?= $_GET['no'] ?>';
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
