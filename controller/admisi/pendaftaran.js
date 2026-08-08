@@ -131,7 +131,7 @@ $(function () {
                         APP.cetakhtml('#no_rekammedis', response.data.rm || '-');
                         APP.cetak('#norm', response.data.rm || '-');
                         APP.cetak("#typePasien", tipe);
-                        let nik = response.data.noKTP || nomor;
+                        let nik = response.data.noKTP;
                         APP.cetak('#noNIK', nik);
                         APP.cetakhtml('#nonik', nik);
                         APP.cetakhtml('#ppkumum', response.data.nmProvider || '-');
