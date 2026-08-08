@@ -3,131 +3,235 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Display Admisi</title>
+  <title>Display Admisi Poliklinik</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     /* ===== BASE ===== */
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #ffffff;
+      font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+      background: #e2e8f0;
       color: #111827;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
     /* ===== HEADER ===== */
     .header {
-      padding: 28px;
-      text-align: center;
-      background: #1e293b;
-      color: #ffffff;
-      font-size: 34px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background: #ffffff;
+      color: #1e293b;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 10;
+    }
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-placeholder {
+      font-size: 28px;
+      font-weight: 900;
+      color: #ef4444;
+      letter-spacing: 1px;
+    }
+
+    .clinic-name {
+      font-size: 24px;
       font-weight: bold;
-      position: relative;
+      color: #64748b;
+      border-left: 2px solid #cbd5e1;
+      padding-left: 15px;
     }
 
-    .subtitle {
-      font-size: 20px;
-      margin-top: 6px;
-      opacity: 0.9;
-    }
-
-    /* ===== DATE TIME ===== */
     .datetime {
-      position: absolute;
-      right: 24px;
-      top: 24px;
       text-align: right;
-      font-size: 20px;
-      line-height: 1.3;
+      color: #334155;
     }
 
     .time {
-      font-size: 32px;
+      font-size: 28px;
       font-weight: bold;
+      color: #0f172a;
     }
 
-    /* ===== LAYOUT ===== */
+    .date {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* ===== MAIN LAYOUT (SPLIT SCREEN) ===== */
     .container {
-      padding: 40px 48px;
+      display: flex;
+      flex: 1;
+      padding: 20px;
+      gap: 20px;
+      height: calc(100vh - 130px);
     }
 
-    .card {
-      background: #f8fafc;
-      border-radius: 18px;
-      padding: 32px;
-      margin-bottom: 40px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    /* --- SISI KIRI (PANGGILAN UTAMA) --- */
+    .left-panel {
+      flex: 6;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
 
-    /* ===== NOMOR DIPANGGIL ===== */
-    .call-card {
+    .card-call {
+      background: #ffffff;
+      border-radius: 12px;
+      border-top: 6px solid #3b82f6;
+      padding: 30px;
       text-align: center;
-      border: 6px solid #d97706;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
     .call-label {
-      font-size: 30px;
+      font-size: 28px;
       font-weight: bold;
-      margin-bottom: 16px;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-bottom: 20px;
     }
 
+    /* Menggunakan class call-number untuk text besar (sesuai ID aslinya) */
     .call-number {
-      font-size: 140px;
-      font-weight: 800;
-      color: #d97706;
-      letter-spacing: 10px;
-      margin: 12px 0;
+      font-size: 100px;
+      font-weight: 900;
+      color: #1e40af;
+      line-height: 1.2;
+      margin: 10px 0 30px 0;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .call-counter {
-      margin-top: 10px;
-      font-size: 36px;
-      font-weight: bold;
-      background: #fde68a;
-      color: #92400e;
       display: inline-block;
-      padding: 14px 40px;
-      border-radius: 14px;
+      font-size: 32px;
+      font-weight: bold;
+      background: #dbeafe;
+      color: #1d4ed8;
+      padding: 15px 40px;
+      border-radius: 50px;
     }
 
-    /* ===== TABLE ANTRIAN ===== */
+    /* --- SISI KANAN (LIST ROTASI POLI) --- */
+    .right-panel {
+      flex: 4;
+      background: #ffffff;
+      border-radius: 12px;
+      border-top: 6px solid #10b981;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .right-header {
+      background: #10b981;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .poli-title-display {
+      background: #ecfdf5;
+      color: #065f46;
+      text-align: center;
+      padding: 15px;
+      font-size: 22px;
+      font-weight: bold;
+      border-bottom: 2px solid #d1fae5;
+    }
+
+    .table-container {
+      flex: 1;
+      padding: 0 20px 20px 20px;
+      overflow: hidden;
+    }
+
     .table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 8px;
+      margin-top: 10px;
     }
 
     .table th,
     .table td {
-      padding: 22px;
-      text-align: center;
-      font-size: 28px;
+      padding: 18px 10px;
+      text-align: left;
+      font-size: 20px;
+      border-bottom: 1px solid #f1f5f9;
     }
 
     .table th {
-      background: #e5e7eb;
+      color: #64748b;
       font-weight: bold;
+      text-transform: uppercase;
+      font-size: 16px;
     }
 
     .table tr:nth-child(even) {
-      background: #f1f5f9;
+      background: #f8fafc;
     }
 
-    .status-wait {
-      font-weight: bold;
+    /* Animasi Fade/Geser untuk Rotasi Poli */
+    .fade-transition {
+      animation: fadeInOut 0.5s ease-in-out;
     }
 
-    /* ===== FOOTER ===== */
+    @keyframes fadeInOut {
+      0% {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ===== FOOTER (RUNNING TEXT) ===== */
     .footer {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      text-align: center;
-      padding: 18px;
       background: #1e293b;
-      color: #ffffff;
-      font-size: 18px;
+      color: #f8fafc;
+      padding: 12px 20px;
+      font-size: 22px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+    }
+
+    .footer-label {
+      background: #ef4444;
+      padding: 5px 15px;
+      border-radius: 4px;
+      margin-right: 15px;
+      white-space: nowrap;
+    }
+
+    .marquee-container {
+      flex: 1;
+      overflow: hidden;
     }
   </style>
 </head>
@@ -136,84 +240,177 @@
 
   <!-- HEADER -->
   <div class="header">
-    DISPLAY ADMISI
-    <div class="subtitle">Antrian Pendaftaran Pasien</div>
-
-    <!-- DATE TIME -->
+    <div class="header-title">
+      <!-- <div class="logo-placeholder">DISPLAY ADMISI</div> -->
+      <div class="clinic-name">Antrian Poliklinik Pasien</div>
+    </div>
     <div class="datetime">
-      <div id="date"></div>
       <div id="time" class="time"></div>
+      <div id="date" class="date"></div>
     </div>
   </div>
 
   <!-- CONTENT -->
   <div class="container">
 
-    <!-- NOMOR DIPANGGIL -->
-    <div class="card call-card text-center">
-      <div class="call-label">PANGGILAN PASIEN</div>
-      <div class="call-number" id="callPatient">-</div>
-      <div class="call-counter" id="callQueue">-</div>
+    <!-- KIRI: PANGGILAN UTAMA -->
+    <div class="left-panel">
+      <div class="card-call">
+        <div class="call-label">PANGGILAN PASIEN</div>
+        <!-- ID callPatient dan callQueue DIPERTAHANKAN sesuai bawaan socket Anda -->
+        <div class="call-number" id="callPatient">-</div>
+        <div>
+          <div class="call-counter" id="callQueue">Menunggu...</div>
+        </div>
+      </div>
     </div>
 
-    <!-- DAFTAR ANTRIAN -->
-    <div class="card">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>No Antrian</th>
-            <th>Nama Pasien</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody">
-        </tbody>
-      </table>
+    <!-- KANAN: DAFTAR TUNGGU ROTASI -->
+    <div class="right-panel">
+      <div class="right-header">
+        DAFTAR PASIEN MENUNGGU
+      </div>
+      <!-- Judul Poli yang sedang tampil -->
+      <div class="poli-title-display" id="currentPoliDisplay">Memuat Data...</div>
+
+      <div class="table-container fade-transition" id="tableContainer">
+        <table class="table">
+          <thead>
+            <tr>
+              <th width="30%">No Antrian</th>
+              <th width="70%">Nama Pasien</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Data akan di-inject lewat jQuery secara bergantian -->
+          </tbody>
+        </table>
+      </div>
     </div>
 
   </div>
+
+  <!-- FOOTER -->
   <div class="footer">
-    Medisafe • Display Admisi
+    <div class="footer-label">INFORMASI</div>
+    <div class="marquee-container">
+      <marquee scrollamount="6">Silakan duduk di ruang tunggu. Harap bersabar menunggu panggilan dari dokter pada poliklinik tujuan Anda. Terima kasih.</marquee>
+    </div>
   </div>
 
-  <!-- ===== REALTIME DATE & TIME SCRIPT ===== -->
+  <!-- SCRIPTS -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="../../controller/socket/socket.js"></script>
+
   <script>
     APP.window = APP.window || {};
-    let voices = [];
+    let groupedQueueData = {};
+    let poliKeys = [];
+    let currentPoliIndex = 0;
+    let currentPageIndex = 0; // Melacak halaman saat ini dalam 1 poli
+    let itemsPerPage = 10; // Batas maksimal pasien per halaman (bisa diubah)
+
+    let rotationInterval;
     $(function() {
+      function updateClock() {
+        const now = new Date();
+        const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+        let h = now.getHours().toString().padStart(2, '0');
+        let m = now.getMinutes().toString().padStart(2, '0');
+        let s = now.getSeconds().toString().padStart(2, '0');
+        $('#time').text(`${h}:${m}:${s}`);
+        $('#date').text(`${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`);
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
       APP.showQueue = function() {
         $.ajax({
           url: '../../controller/queue/listAntriAdmisiDisplay',
           type: 'GET',
           dataType: 'json',
           success: function(res) {
-            let html = '';
-            if (res == null) {
-              $('#tableBody').html(`
-              <tr>
-                <td colspan="3" class="text-center">Tidak ada antrian</td>
-              </tr>
-              `);
-              // $('#callPatient').html('-');
-              // $('#callQueue').html('-');
+            if (res == null || !res.data || res.data.length === 0) {
+              $('#tableBody').html(`<tr><td colspan="2" style="text-align:center;">Tidak ada antrian</td></tr>`);
+              $('#currentPoliDisplay').text("ANTRIAN KOSONG");
+              clearInterval(rotationInterval);
               return;
             }
+
+            groupedQueueData = {};
             res.data.forEach(function(item) {
-              html += `
-                <tr>
-                  <td>${item.no_antrian}</td>
-                  <td>${item.nama_pasien}</td>
-                  <td class="status-wait">${item.status = "0" ? "Menunggu" : "Dipanggil"}</td>
-                </tr>
-              `;
+              // Menambahkan toUpperCase() dan default value agar lebih aman
+              let poliName = item.poli ? item.poli.toUpperCase() : 'POLIKLINIK UMUM';
+              if (!groupedQueueData[poliName]) {
+                groupedQueueData[poliName] = [];
+              }
+              if (item.status == "0" || item.status == 0) {
+                groupedQueueData[poliName].push(item);
+              }
             });
-            $('#tableBody').html(html);
+
+            poliKeys = Object.keys(groupedQueueData);
+
+            // --- BAGIAN YANG DIUBAH: Reset rotasi dan halaman ---
+            clearInterval(rotationInterval);
+            currentPoliIndex = 0;
+            currentPageIndex = 0;
+
+            renderCurrentPoli();
+
+            if (poliKeys.length > 0) {
+              rotationInterval = setInterval(renderCurrentPoli, 10000);
+            }
           }
-        })
+        });
       }
+
+      function renderCurrentPoli() {
+        if (poliKeys.length === 0) return;
+
+        let currentPoliName = poliKeys[currentPoliIndex];
+        let patients = groupedQueueData[currentPoliName];
+
+        // Trigger animasi CSS
+        let container = $('#tableContainer');
+        container.removeClass('fade-transition');
+        void container[0].offsetWidth;
+        container.addClass('fade-transition');
+
+        // Update UI Judul Poli
+        $('#currentPoliDisplay').text(currentPoliName);
+
+        // Update Tabel Pasien
+        let html = '';
+        if (!patients || patients.length === 0) {
+          html = `<tr><td colspan="2" style="text-align:center;">Semua pasien telah dipanggil</td></tr>`;
+        } else {
+          patients.forEach(function(item) {
+            html += `
+                    <tr>
+                    <td><b>${item.no_antrian}</b></td>
+                    <td>${item.nama_pasien}</td>
+                    </tr>
+                `;
+          });
+        }
+        $('#tableBody').html(html);
+
+        // Geser ke index berikutnya
+        currentPoliIndex++;
+        if (currentPoliIndex >= poliKeys.length) {
+          currentPoliIndex = 0;
+        }
+      }
+
+      // Inisialisasi Panggilan Tabel Pertama Kali
       APP.showQueue();
+
+      // =================================================================
+      // FUNGSI INI SAYA KEMBALIKAN 100% PERSIS SEPERTI MILIK ANDA
+      // AGAR SOCKET YANG SUDAH TERPASANG TETAP BERFUNGSI DENGAN NORMAL
+      // =================================================================
       APP.showAntrianPoli = function(nama, dokter) {
         console.log(nama);
         console.log(dokter);
@@ -222,7 +419,8 @@
         $('#callQueue').html("Ruangan : " + namaDokter);
         APP.showQueue();
       }
-    })
+
+    });
   </script>
 
 </body>
