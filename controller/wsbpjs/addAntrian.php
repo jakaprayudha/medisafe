@@ -22,7 +22,6 @@ if (empty($nohp)) {
     ]);
     exit;
 }
-
 $koneksi->begin_transaction();
 try {
     $visit_ID = generateVisitID($koneksi, $idcustomer);
@@ -30,6 +29,12 @@ try {
     $nomorantrean = $resultAntrian['display'];
     $angkaantrean = $resultAntrian['nomor'];
     $kodeAntri       = $resultAntrian['kode'];
+
+    if (isset($noNik) && trim($noNik) !== '') {
+        echo json_encode(['success' => true, 'message' => 'Berhasil', 'visitID' => $visit_ID, 'antian' => $nomorantrean, 'kdAntri' => $kodeAntri, 'noAntrian' => $angkaantrean]);
+        exit;
+    }
+
     $payload = [
         "nomorkartu"      => $nomorkartu,
         "nik"             => $nik,
@@ -90,7 +95,8 @@ try {
     exit;
 }
 
-function createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tglDaftarDB, $jampraktek){
+function createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tglDaftarDB, $jampraktek)
+{
     $cekantrian = $koneksi->prepare("SELECT 
         COALESCE(MAX(a.nomor), 0) AS last,
         (
@@ -126,7 +132,8 @@ function createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tg
         'display' => $kode_antrian . $next
     ];
 }
-function generateVisitID($koneksi, $idcustomer){
+function generateVisitID($koneksi, $idcustomer)
+{
     do {
         $date = date('ymd');
         $random = strtoupper(bin2hex(random_bytes(3)));
