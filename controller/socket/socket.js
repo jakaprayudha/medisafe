@@ -35,7 +35,7 @@ function startApp() {
             reconnection: true
         });
         socket.on("connect", () => {
-            pages.forEach((pageName) => {
+            // pages.forEach((pageName) => {
                 if (pageName == "display-admisi") {
                     socket.emit("join", data.id_customer + "_" + pageName + "_" + target);
                     console.log(data.id_customer + "_" + pageName + "_" + target);
@@ -46,7 +46,7 @@ function startApp() {
                     socket.emit("join", data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
                     console.log(data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
                 }
-            })
+            // })
 
             // console.log(data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
             // console.log(pageName);
