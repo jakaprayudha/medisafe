@@ -350,9 +350,9 @@
         void container[0].offsetWidth;
         container.addClass('fade-transition');
         let displayTitle = currentPoliName;
-        // if (totalPages > 1) {
-        //   displayTitle += ` (Hal ${currentPageIndex + 1}/${totalPages})`;
-        // }
+        if (totalPages > 1) {
+          displayTitle += ` (${currentPageIndex + 1}/${totalPages})`;
+        }
         $('#currentPoliDisplay').text(displayTitle);
         let html = '';
         if (!paginatedPatients || paginatedPatients.length === 0) {
