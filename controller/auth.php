@@ -27,7 +27,8 @@ if (isset($_POST['login'])) {
    $iddokter = '';
    if ($datauser['roles'] == 'dokter'){
       $fullname = $datauser['fullname'];
-      $sql = mysqli_fetch_array(mysqli_query($koneksi, "SELECT doctor_code FROM ms_doctor WHERE doctor_name = '$fullname'"));
+      $kdDokter = $datauser['kdDokter'];
+      $sql = mysqli_fetch_array(mysqli_query($koneksi, "SELECT doctor_code FROM ms_doctor WHERE doctor_name = '$fullname' || doctor_code = '$kdDokter'"));
       $_SESSION['kode_dokter'] = $sql['doctor_code'];
    }
 
