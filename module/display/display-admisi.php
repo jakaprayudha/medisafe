@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
   <meta charset="UTF-8">
   <title>Display Admisi Poliklinik</title>
@@ -235,10 +234,7 @@
     }
   </style>
 </head>
-
 <body>
-
-  <!-- HEADER -->
   <div class="header">
     <div class="header-title">
       <!-- <div class="logo-placeholder">DISPLAY ADMISI</div> -->
@@ -249,30 +245,21 @@
       <div id="date" class="date"></div>
     </div>
   </div>
-
-  <!-- CONTENT -->
   <div class="container">
-
-    <!-- KIRI: PANGGILAN UTAMA -->
     <div class="left-panel">
       <div class="card-call">
         <div class="call-label">PANGGILAN PASIEN</div>
-        <!-- ID callPatient dan callQueue DIPERTAHANKAN sesuai bawaan socket Anda -->
         <div class="call-number" id="callPatient">-</div>
         <div>
           <div class="call-counter" id="callQueue">Menunggu...</div>
         </div>
       </div>
     </div>
-
-    <!-- KANAN: DAFTAR TUNGGU ROTASI -->
     <div class="right-panel">
       <div class="right-header">
         DAFTAR PASIEN MENUNGGU
       </div>
-      <!-- Judul Poli yang sedang tampil -->
       <div class="poli-title-display" id="currentPoliDisplay">Memuat Data...</div>
-
       <div class="table-container fade-transition" id="tableContainer">
         <table class="table">
           <thead>
@@ -282,26 +269,19 @@
             </tr>
           </thead>
           <tbody id="tableBody">
-            <!-- Data akan di-inject lewat jQuery secara bergantian -->
           </tbody>
         </table>
       </div>
     </div>
-
   </div>
-
-  <!-- FOOTER -->
   <div class="footer">
     <div class="footer-label">INFORMASI</div>
     <div class="marquee-container">
       <marquee scrollamount="6">Silakan duduk di ruang tunggu. Harap bersabar menunggu panggilan dari dokter pada poliklinik tujuan Anda. Terima kasih.</marquee>
     </div>
   </div>
-
-  <!-- SCRIPTS -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="../../controller/socket/socket.js"></script>
-
   <script>
     APP.window = APP.window || {};
     let groupedQueueData = {};
@@ -309,14 +289,12 @@
     let currentPoliIndex = 0;
     let currentPageIndex = 0;
     let itemsPerPage = 10;
-
     let rotationInterval;
     $(function() {
       function updateClock() {
         const now = new Date();
         const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-
         let h = now.getHours().toString().padStart(2, '0');
         let m = now.getMinutes().toString().padStart(2, '0');
         let s = now.getSeconds().toString().padStart(2, '0');
@@ -337,10 +315,8 @@
               clearInterval(rotationInterval);
               return;
             }
-
             groupedQueueData = {};
             res.data.forEach(function(item) {
-              // Menambahkan toUpperCase() dan default value agar lebih aman
               let poliName = item.poli ? item.poli.toUpperCase() : 'POLIKLINIK UMUM';
               if (!groupedQueueData[poliName]) {
                 groupedQueueData[poliName] = [];
@@ -349,51 +325,35 @@
                 groupedQueueData[poliName].push(item);
               }
             });
-
             poliKeys = Object.keys(groupedQueueData);
-
-            // --- BAGIAN YANG DIUBAH: Reset rotasi dan halaman ---
             clearInterval(rotationInterval);
             currentPoliIndex = 0;
             currentPageIndex = 0;
-
             renderCurrentPoli();
-
             if (poliKeys.length > 0) {
               rotationInterval = setInterval(renderCurrentPoli, 10000);
             }
           }
         });
       }
-
       function renderCurrentPoli() {
         if (poliKeys.length === 0) return;
-
         let currentPoliName = poliKeys[currentPoliIndex];
         let patients = groupedQueueData[currentPoliName];
-
-        // --- LOGIKA BARU: Hitung Halaman & Potong Data ---
         let totalPages = Math.ceil(patients.length / itemsPerPage);
         if (totalPages === 0) totalPages = 1;
-
         let startIndex = currentPageIndex * itemsPerPage;
         let endIndex = startIndex + itemsPerPage;
         let paginatedPatients = patients.slice(startIndex, endIndex);
-
-        // Trigger animasi CSS
         let container = $('#tableContainer');
         container.removeClass('fade-transition');
         void container[0].offsetWidth;
         container.addClass('fade-transition');
-
-        // --- LOGIKA BARU: Update Judul Poli + Info Halaman (Jika > 1) ---
         let displayTitle = currentPoliName;
-        if (totalPages > 1) {
-          displayTitle += ` (Hal ${currentPageIndex + 1}/${totalPages})`;
-        }
+        // if (totalPages > 1) {
+        //   displayTitle += ` (Hal ${currentPageIndex + 1}/${totalPages})`;
+        // }
         $('#currentPoliDisplay').text(displayTitle);
-
-        // Update Tabel Pasien dengan data yang sudah dipotong (paginatedPatients)
         let html = '';
         if (!paginatedPatients || paginatedPatients.length === 0) {
           html = `<tr><td colspan="2" style="text-align:center;">Semua pasien telah dipanggil</td></tr>`;
@@ -408,27 +368,17 @@
           });
         }
         $('#tableBody').html(html);
-
-        // --- LOGIKA BARU: Pergantian Halaman Dulu, Baru Ganti Poli ---
         currentPageIndex++;
-
         if (currentPageIndex >= totalPages) {
-          currentPageIndex = 0; // Reset halaman ke awal
-          currentPoliIndex++; // Ganti ke Poli selanjutnya
+          currentPageIndex = 0;
+          currentPoliIndex++;
 
           if (currentPoliIndex >= poliKeys.length) {
-            currentPoliIndex = 0; // Kembali ke poli pertama jika sudah habis
+            currentPoliIndex = 0;
           }
         }
       }
-
-      // Inisialisasi Panggilan Tabel Pertama Kali
       APP.showQueue();
-
-      // =================================================================
-      // FUNGSI INI SAYA KEMBALIKAN 100% PERSIS SEPERTI MILIK ANDA
-      // AGAR SOCKET YANG SUDAH TERPASANG TETAP BERFUNGSI DENGAN NORMAL
-      // =================================================================
       APP.showAntrianPoli = function(nama, dokter) {
         console.log(nama);
         console.log(dokter);
