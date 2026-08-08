@@ -22,7 +22,6 @@ if (empty($nohp)) {
     ]);
     exit;
 }
-
 $koneksi->begin_transaction();
 try {
     $visit_ID = generateVisitID($koneksi, $idcustomer);
@@ -30,6 +29,12 @@ try {
     $nomorantrean = $resultAntrian['display'];
     $angkaantrean = $resultAntrian['nomor'];
     $kodeAntri       = $resultAntrian['kode'];
+
+    if (isset($noNik) && trim($noNik) !== '') {
+        echo json_encode(['success' => true, 'message' => 'Berhasil', 'visitID' => $visit_ID, 'antian' => $nomorantrean, 'kdAntri' => $kodeAntri, 'noAntrian' => $angkaantrean]);
+        exit;
+    }
+
     $payload = [
         "nomorkartu"      => $nomorkartu,
         "nik"             => $nik,
