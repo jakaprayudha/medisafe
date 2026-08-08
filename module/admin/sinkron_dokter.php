@@ -26,9 +26,9 @@ try {
     $hapus  = 0;
     foreach ($list as $dokter) {
         $nmDokter = trim($dokter['nmDokter']);
-        if (!preg_match('/^(dr|drg)\.?\s*/i', $nmDokter)) {
-            continue;
-        }
+        // if (!preg_match('/^(dr|drg)\.?\s*/i', $nmDokter)) {
+        //     continue;
+        // }
         $kdDokter = mysqli_real_escape_string(
             $koneksi,
             $dokter['kdDokter']
