@@ -67,7 +67,7 @@ function createData($id_customer)
       return;
    }
 
-   $fields = ['uid_user', 'id_customer', 'fullname', 'username', 'password', 'roles', 'path'];
+   $fields = ['uid_user', 'id_customer', 'fullname', 'username', 'password', 'roles', 'path', 'kdDokter'];
    $values = [
       generateUserUID($koneksi),
       $id_customer,
@@ -75,10 +75,11 @@ function createData($id_customer)
       $_POST['username'],
       md5($_POST['password']),
       $_POST['roles'],
-      $_POST['path']
+      $_POST['path'],
+      $_POST['kdDokter']
    ];
 
-   $types = "sisssss";
+   $types = "sissssss";
 
    $placeholders = implode(',', array_fill(0, count($fields), '?'));
    $columns = implode(',', $fields);

@@ -135,19 +135,16 @@ require '../../controller/view.php';
         <input type="hidden" name="id_user" id="id_user">
         <input type="hidden" name="path" id="path" value="admin">
         <input type="hidden" name="roles" id="roles" value="dokter">
+        <input type="hidden" name="kdDokter" id="kdDokter">
         <div class="row">
           <div class="col-12">
             <div class="mb-3">
               <label class="form-label required" id="comp_code">Nama Dokter</label>
               <select name="fullname" id="fullname" class="form-select" required>
-                <?php
-                $id_customer = $_SESSION['id_customer'];
-                $query = tampildata("SELECT * FROM ms_doctor WHERE doctor_status='1' AND id_customer='$id_customer' ORDER BY doctor_name ASC");
-                ?>
-                <option value="">PILIH DOKTER</option>
-                <?php foreach ($query as $rows): ?>
-                  <option value="<?= $rows['doctor_name'] ?>"><?= $rows['doctor_name'] ?></option>
-                <?php endforeach ?>
+                <?php $id_customer = $_SESSION['id_customer'];
+                $query = tampildata("SELECT * FROM ms_doctor WHERE doctor_status='1' AND id_customer='$id_customer' ORDER BY doctor_name ASC"); ?>
+                <option value="">PILIH DOKTER</option> <?php foreach ($query as $rows): ?>
+                  <option value="<?= $rows['doctor_name'] ?>" data-kode="<?= $rows['doctor_code'] ?>"> <?= $rows['doctor_name'] ?> </option> <?php endforeach ?>
               </select>
             </div>
           </div>
@@ -176,6 +173,11 @@ require '../../controller/view.php';
   const apiUrl = 'controller/master/userController';
 
   $(document).ready(function() {
+    $(document).on('change', '#fullname', function() {
+      let kodeDokter = $(this).find(':selected').data('kode');
+      console.log(kodeDokter);
+      $('#kdDokter').val(kodeDokter);
+    });
     var table = $('#periodeTable').DataTable({
       processing: true,
       serverSide: false,
@@ -455,6 +457,5 @@ require '../../controller/view.php';
     });
   });
 </script>
-
 
 </html>
