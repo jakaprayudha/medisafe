@@ -307,8 +307,8 @@
     let groupedQueueData = {};
     let poliKeys = [];
     let currentPoliIndex = 0;
-    let currentPageIndex = 0; // Melacak halaman saat ini dalam 1 poli
-    let itemsPerPage = 10; // Batas maksimal pasien per halaman (bisa diubah)
+    let currentPageIndex = 0;
+    let itemsPerPage = 10;
 
     let rotationInterval;
     $(function() {
@@ -372,21 +372,33 @@
         let currentPoliName = poliKeys[currentPoliIndex];
         let patients = groupedQueueData[currentPoliName];
 
+        // --- LOGIKA BARU: Hitung Halaman & Potong Data ---
+        let totalPages = Math.ceil(patients.length / itemsPerPage);
+        if (totalPages === 0) totalPages = 1;
+
+        let startIndex = currentPageIndex * itemsPerPage;
+        let endIndex = startIndex + itemsPerPage;
+        let paginatedPatients = patients.slice(startIndex, endIndex);
+
         // Trigger animasi CSS
         let container = $('#tableContainer');
         container.removeClass('fade-transition');
         void container[0].offsetWidth;
         container.addClass('fade-transition');
 
-        // Update UI Judul Poli
-        $('#currentPoliDisplay').text(currentPoliName);
+        // --- LOGIKA BARU: Update Judul Poli + Info Halaman (Jika > 1) ---
+        let displayTitle = currentPoliName;
+        if (totalPages > 1) {
+          displayTitle += ` (Hal ${currentPageIndex + 1}/${totalPages})`;
+        }
+        $('#currentPoliDisplay').text(displayTitle);
 
-        // Update Tabel Pasien
+        // Update Tabel Pasien dengan data yang sudah dipotong (paginatedPatients)
         let html = '';
-        if (!patients || patients.length === 0) {
+        if (!paginatedPatients || paginatedPatients.length === 0) {
           html = `<tr><td colspan="2" style="text-align:center;">Semua pasien telah dipanggil</td></tr>`;
         } else {
-          patients.forEach(function(item) {
+          paginatedPatients.forEach(function(item) {
             html += `
                     <tr>
                     <td><b>${item.no_antrian}</b></td>
@@ -397,10 +409,16 @@
         }
         $('#tableBody').html(html);
 
-        // Geser ke index berikutnya
-        currentPoliIndex++;
-        if (currentPoliIndex >= poliKeys.length) {
-          currentPoliIndex = 0;
+        // --- LOGIKA BARU: Pergantian Halaman Dulu, Baru Ganti Poli ---
+        currentPageIndex++;
+
+        if (currentPageIndex >= totalPages) {
+          currentPageIndex = 0; // Reset halaman ke awal
+          currentPoliIndex++; // Ganti ke Poli selanjutnya
+
+          if (currentPoliIndex >= poliKeys.length) {
+            currentPoliIndex = 0; // Kembali ke poli pertama jika sudah habis
+          }
         }
       }
 
