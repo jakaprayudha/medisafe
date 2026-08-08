@@ -63,7 +63,7 @@ function getData()
                 ON ap.nomor_visit = pasien_visit.visit_ID
                 AND ap.id_customer = pasien_visit.id_customer
             WHERE pasien_visit.source_hub <> 'Rawat Inap'
-            AND pasien_visit.id_customer = ?";
+            AND pasien_visit.id_customer = ? AND pasien_visit.created_user != 'JKNSehat'";
 
    $params = [];
    $types  = "";
