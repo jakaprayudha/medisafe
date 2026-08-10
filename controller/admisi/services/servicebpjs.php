@@ -18,7 +18,9 @@ function bpjsGet($endpoint){
     // echo "<pre>";
     // print_r($headers);
     // echo "</pre>";
-    // echo $url;die();
+    // echo "\n";
+    // echo $url;
+    // echo "\n";
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,
         CURLOPT_CUSTOMREQUEST => 'GET',
