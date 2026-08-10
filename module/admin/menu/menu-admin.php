@@ -60,6 +60,7 @@
             <li><a href="module/admin/rpt_appointment">Appointment</a></li>
             <li><a href="module/admin/rpt_ranap">Rawat Inap</a></li>
             <li><a href="module/admin/rpt_prosedur">Tindakan (Prosedur)</a></li>
+            <li><a href="module/admin/rpt_farmasi">Farmasi</a></li>
          </ul>
       </li>
 
@@ -117,16 +118,16 @@
             <span class="hide-menu">Poliklinik</span>
          </a>
       </li>
-       <li class="sidebar-item">
-           <a class="sidebar-link <?php if ($title == 'Pasien MobileJKN' or $title == 'Pasien MobileJKN' and $_GET['type'] == 'Poliklinik') {
-                                       echo 'active';
-                                    } ?>"
-              href="module/admin/listpasienadmisi.php"
-              aria-expanded="false">
-              <iconify-icon icon="material-symbols:mobile"></iconify-icon>
-              <span class="hide-menu">MobileJKN</span>
-           </a>
-        </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Pasien MobileJKN' or $title == 'Pasien MobileJKN' and $_GET['type'] == 'Poliklinik') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/admin/listpasienadmisi.php"
+            aria-expanded="false">
+            <iconify-icon icon="material-symbols:mobile"></iconify-icon>
+            <span class="hide-menu">MobileJKN</span>
+         </a>
+      </li>
       <li class="sidebar-item">
          <a class="sidebar-link <?php if ($title == 'Registrasi Rawat Inap' or $title == 'Permintaan Pasien Rawat Inap') {
                                     echo 'active';
@@ -171,7 +172,7 @@
             <span class="hide-menu">Poliklinik</span>
          </a>
       </li>
-      
+
       <li class="sidebar-item">
          <a class="sidebar-link <?php if ($title == 'Pemeriksaan Rawat Inap' or (isset($_GET['rme']) && $_GET['rme'] == 'c')) {
                                     echo 'active';

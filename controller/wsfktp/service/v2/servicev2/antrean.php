@@ -243,6 +243,7 @@ if ($cek->num_rows > 0) {
             if (!$stmt4->execute()) {
                 throw new Exception($stmt4->error);
             }
+            mysqli_query($koneksi, "UPDATE ms_patient SET patient_nik = '$nik', patient_bpjs = '$noKartu' WHERE id_patient = '$id_patient'");
             $stmt = $koneksi->prepare("SELECT 
                     COUNT(*) as total,
 
