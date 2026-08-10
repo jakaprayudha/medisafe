@@ -48,13 +48,38 @@ require '../../controller/view.php';
       <?php
       require 'navbar.php';
       ?>
+
       <!--  Header End -->
       <div class="body-wrapper-inner">
         <div class="container-fluid">
+          <div class="alert alert-primary d-flex align-items-start gap-3 shadow-sm border-0" role="alert">
+            <div class="flex-shrink-0">
+              <i class="fas fa-info-circle fa-lg mt-1"></i>
+            </div>
+
+            <div>
+              <h6 class="alert-heading mb-1 fw-bold">
+                Informasi Daftar Pasien Belum Bayar
+              </h6>
+
+              <div class="small">
+                Pasien akan muncul pada daftar ini apabila <strong>pemeriksaan pasien
+                  telah diselesaikan</strong> dengan menekan tombol
+                <span class="badge bg-success">Selesai Pemeriksaan</span>
+                pada halaman pemeriksaan pasien.
+              </div>
+
+              <div class="small mt-1 text-muted">
+                <i class="fas fa-exclamation-circle me-1"></i>
+                Jika pemeriksaan belum diselesaikan, pasien <strong>tidak akan muncul</strong>
+                pada daftar ini.
+              </div>
+            </div>
+          </div>
+
           <ul class="nav nav-tabs" id="tabStatus">
             <li class="nav-item">
               <a class="nav-link active" data-status="belum" href="javascript:void(0)">Belum Bayar</a>
-
             </li>
             <li class="nav-item">
               <a class="nav-link" data-status="lunas" href="javascript:void(0)">Bayar</a>

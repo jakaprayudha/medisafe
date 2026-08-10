@@ -5,7 +5,7 @@ session_start();
 header('Content-Type: application/json');
 
 // Ambil id_customer dari session
-$id_customer = "19";
+$id_customer = $_SESSION['id_customer'] ?? null;
 
 if (!$id_customer) {
    echo json_encode([
