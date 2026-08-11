@@ -84,8 +84,8 @@ function bpjsPostIcare(array $payload){
         "user_key: " . $userkey,
         "Content-Type: application/json",
     );
-    // $url = 'https://apijkn.bpjs-kesehatan.go.id/ihs/api/pcare/validate';
-    $url = 'https://apijkn-dev.bpjs-kesehatan.go.id/ihs_dev/api/pcare/validate';
+    $url = 'https://apijkn.bpjs-kesehatan.go.id/ihs/api/pcare/validate';
+    // $url = 'https://apijkn-dev.bpjs-kesehatan.go.id/ihs_dev/api/pcare/validate';
     $ch = curl_init();
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,
@@ -100,7 +100,7 @@ function bpjsPostIcare(array $payload){
     $response = curl_exec($ch);
     $err = curl_error($ch);
     curl_close($ch);
-    // echo $response;die();
+    echo $response;die();
     // echo $err;die();
     if (!$response) {
         return bpjsError("Tidak ada response dari server BPJS");
