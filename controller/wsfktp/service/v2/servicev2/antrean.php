@@ -219,10 +219,10 @@ if ($cek->num_rows > 0) {
             $status_antrian = 0;
             $status_visit = '10';
             $stmt4 = $koneksi->prepare("INSERT INTO pasien_visit (id_patient,visit_ID,visit_date,id_poli,source_hub,created_user,visit_antrian,status_antrian,id_customer,
-            visit_status,patient_name_pcare,noKartu, code_doctor, jampraktek, id_doctor, visit_time) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            visit_status,patient_name_pcare,noKartu, code_doctor, jampraktek, id_doctor, visit_time, anamnesa) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt4->bind_param(
-                "issssssiisssssss",
+                "issssssiissssssss",
                 $id_patient,
                 $visit_ID,
                 $tanggal,
@@ -238,7 +238,8 @@ if ($cek->num_rows > 0) {
                 $kodedokter,
                 $jampraktek,
                 $namaDokter,
-                $jamSekarang
+                $jamSekarang,
+                $keluhan
             );
             if (!$stmt4->execute()) {
                 throw new Exception($stmt4->error);
