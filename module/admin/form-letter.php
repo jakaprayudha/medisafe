@@ -256,7 +256,7 @@ require '../../controller/view.php';
 
                     <!-- BUTTON -->
 
-                    <a href="module/admisi/form-letter/sick"
+                    <a href="module/letter/form-sick"
                       class="btn btn-danger btn-sm"
                       style="
                                     width:145px;

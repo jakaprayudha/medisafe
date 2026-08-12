@@ -5,23 +5,38 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Surat Keterangan Sehat</title>
-  <link rel="stylesheet" href="surat.css" />
+  <title>Surat Keterangan Sakit</title>
+  <link rel="stylesheet" href="surat-sakit.css" />
+
+
 </head>
 
 <body>
+  <!-- =====================================
+         TOOLBAR
+    ====================================== -->
 
-  <!-- TOOLBAR -->
   <div class="toolbar no-print">
-    <button class="btn-print" onclick="window.print()">🖨 Cetak Surat</button>
+    <button type="button" class="btn-print" onclick="window.print()">
+      🖨 Cetak Surat
+    </button>
   </div>
 
-  <!-- A4 -->
+  <!-- =====================================
+         A4 DOCUMENT
+    ====================================== -->
+
   <div class="page">
+    <!-- =================================
+             KOP SURAT
+        ================================== -->
+
     <?php include 'kop-surat.php' ?>
-    <!-- =========================
+
+    <!-- =================================
              JUDUL
-        ========================== -->
+        ================================== -->
+
     <?php
 
     $id = $_GET['id'] ?? '';
@@ -57,7 +72,7 @@
 */
 
     $urlVerifikasi =
-      'https://app.medisafe.id/module/letter/verifikasi-surat?id='
+      'https://app.medisafe.id/module/letter/verifikasi-surat-sakit?id='
       . urlencode(md5($id));
 
 
@@ -88,6 +103,7 @@
     );
 
     ?>
+
     <?php
 
 
@@ -103,9 +119,9 @@
         mp.patient_gender,
         mp.patient_address,
         pv.id_doctor,
-        dc.sip_number,
-        pv.suhu
-     FROM surat_sehat ss
+        pv.visit_date,
+        dc.sip_number
+     FROM surat_sakit ss
      INNER JOIN pasien_visit pv 
         ON pv.id_visit = ss.id_visit
     INNER JOIN ms_patient mp
@@ -117,98 +133,6 @@
     );
     $dataSurat = mysqli_fetch_array($checkSurat);
     ?>
-    <?php
-
-    function keteranganTekananDarah($value)
-    {
-      if (empty($value)) {
-        return '-';
-      }
-
-      // Contoh: 120/80
-      $parts = preg_split('/[\/\-]/', trim($value));
-
-      if (count($parts) < 2) {
-        return '-';
-      }
-
-      $sistolik = (int) $parts[0];
-      $diastolik = (int) $parts[1];
-
-      if ($sistolik < 90 || $diastolik < 60) {
-        return 'Di bawah batas rujukan';
-      }
-
-      if ($sistolik >= 140 || $diastolik >= 90) {
-        return 'Di atas batas rujukan';
-      }
-
-      return 'Dalam batas rujukan';
-    }
-
-
-    function keteranganNadi($value)
-    {
-      if ($value === '' || $value === null) {
-        return '-';
-      }
-
-      $nadi = (int) preg_replace('/[^0-9]/', '', $value);
-
-      if ($nadi < 60) {
-        return 'Di bawah batas rujukan';
-      }
-
-      if ($nadi > 100) {
-        return 'Di atas batas rujukan';
-      }
-
-      return 'Dalam batas rujukan';
-    }
-
-
-    function keteranganSuhu($value)
-    {
-      if ($value === '' || $value === null) {
-        return '-';
-      }
-
-      $suhu = (float) str_replace(',', '.', $value);
-
-      if ($suhu < 36.0) {
-        return 'Di bawah batas rujukan';
-      }
-
-      if ($suhu > 37.5) {
-        return 'Di atas batas rujukan';
-      }
-
-      return 'Dalam batas rujukan';
-    }
-
-
-    function keteranganBMI($value)
-    {
-      if ($value === '' || $value === null) {
-        return '-';
-      }
-
-      $bmi = (float) str_replace(',', '.', $value);
-
-      if ($bmi < 18.5) {
-        return 'Berat badan kurang';
-      }
-
-      if ($bmi < 25) {
-        return 'Normal';
-      }
-
-      if ($bmi < 30) {
-        return 'Berat badan berlebih';
-      }
-
-      return 'Obesitas';
-    } ?>
 
     <?php
 
@@ -240,15 +164,77 @@
         date('Y', $time);
     }
     ?>
+
+    <?php
+
+    function terbilang($angka)
+    {
+      $angka = (int) $angka;
+
+      $bilangan = [
+        '',
+        'satu',
+        'dua',
+        'tiga',
+        'empat',
+        'lima',
+        'enam',
+        'tujuh',
+        'delapan',
+        'sembilan',
+        'sepuluh',
+        'sebelas'
+      ];
+
+      if ($angka < 12) {
+        return $bilangan[$angka];
+      }
+
+      if ($angka < 20) {
+        return terbilang($angka - 10) . ' belas';
+      }
+
+      if ($angka < 100) {
+        return terbilang((int) ($angka / 10))
+          . ' puluh '
+          . terbilang($angka % 10);
+      }
+
+      if ($angka < 200) {
+        return 'seratus ' . terbilang($angka - 100);
+      }
+
+      if ($angka < 1000) {
+        return terbilang((int) ($angka / 100))
+          . ' ratus '
+          . terbilang($angka % 100);
+      }
+
+      if ($angka < 2000) {
+        return 'seribu ' . terbilang($angka - 1000);
+      }
+
+      if ($angka < 1000000) {
+        return terbilang((int) ($angka / 1000))
+          . ' ribu '
+          . terbilang($angka % 1000);
+      }
+
+      return (string) $angka;
+    }
+    ?>
+
+
+
     <div class="judul">
-      <h1>Surat Keterangan Sehat</h1>
+      <h1>Surat Keterangan Sakit</h1>
 
       <div class="nomor">Nomor: <?= $dataSurat['nomor_surat'] ?></div>
     </div>
 
-    <!-- =========================
+    <!-- =================================
              ISI
-        ========================== -->
+        ================================== -->
 
     <div class="isi">
       <div class="pembuka">
@@ -256,7 +242,10 @@
         <strong><?= $dataClinic['clinic_name'] ?></strong>, menerangkan bahwa:
       </div>
 
-      <!-- IDENTITAS PASIEN -->
+      <!-- =================================
+                 IDENTITAS PASIEN
+            ================================== -->
+
 
       <table class="identitas">
         <tr>
@@ -290,206 +279,88 @@
         </tr>
       </table>
 
-      <div class="pernyataan">
+      <!-- =================================
+                 KETERANGAN
+            ================================== -->
+
+      <div class="keterangan">
         Berdasarkan hasil pemeriksaan kesehatan yang telah dilakukan pada
         tanggal
-        <strong><?= tanggalIndonesia($dataSurat['tanggal_surat']) ?></strong>, terhadap yang bersangkutan diperoleh
-        hasil bahwa kondisi kesehatan yang bersangkutan dalam keadaan
-        <strong>SEHAT</strong> dan dinyatakan layak untuk melakukan aktivitas
-        sesuai dengan keperluannya.
+        <strong><?= tanggalIndonesia($dataSurat['visit_date']) ?></strong></strong>, terhadap yang bersangkutan
+        dinyatakan dalam kondisi yang memerlukan
+        <strong>istirahat</strong> dan tidak dapat melaksanakan aktivitas
+        seperti biasa untuk sementara waktu.
       </div>
 
-      <!-- HASIL PEMERIKSAAN -->
+      <!-- =================================
+                 PERIODE ISTIRAHAT
+            ================================== -->
 
-      <table class="pemeriksaan">
+      <div class="periode">
+        <div class="periode-title">Keterangan Istirahat</div>
 
-        <thead>
-
+        <table>
           <tr>
+            <td class="label">Mulai Istirahat</td>
 
-            <th>Jenis Pemeriksaan</th>
+            <td class="separator">:</td>
 
-            <th>Hasil</th>
-
-            <th>Keterangan</th>
-
+            <td><?= tanggalIndonesia($dataSurat['tanggal_mulai']) ?></td>
           </tr>
 
-        </thead>
-
-
-        <tbody>
-
-
-          <!-- TEKANAN DARAH -->
-
           <tr>
+            <td class="label">Sampai Dengan</td>
 
-            <td>
-              Tekanan Darah
-            </td>
+            <td class="separator">:</td>
 
-            <td>
-              <?= htmlspecialchars(
-                $dataSurat['tekanan_darah'] ?? '-'
-              ) ?>
-
-              mmHg
-            </td>
-
-            <td>
-              <?= keteranganTekananDarah(
-                $dataSurat['tekanan_darah'] ?? ''
-              ) ?>
-            </td>
-
+            <td><?= tanggalIndonesia($dataSurat['tanggal_selesai']) ?></td>
           </tr>
 
-
-          <!-- NADI -->
-
           <tr>
+            <td class="label">Lama Istirahat</td>
+
+            <td class="separator">:</td>
 
             <td>
-              Nadi
+              <strong>
+                <?= htmlspecialchars($dataSurat['lama']) ?>
+                (<?= terbilang($dataSurat['lama']) ?>) hari
+              </strong>
             </td>
-
-            <td>
-              <?= htmlspecialchars(
-                $dataSurat['nadi'] ?? '-'
-              ) ?>
-
-              x/menit
-            </td>
-
-            <td>
-              <?= keteranganNadi(
-                $dataSurat['nadi'] ?? ''
-              ) ?>
-            </td>
-
           </tr>
 
-
-          <!-- SUHU -->
-
           <tr>
+            <td class="label">Keterangan</td>
 
-            <td>
-              Suhu
-            </td>
+            <td class="separator">:</td>
 
-            <td>
-              <?= htmlspecialchars(
-                $dataSurat['suhu'] ?? '-'
-              ) ?>
-
-              <sup>o</sup>C
-            </td>
-
-            <td>
-              <?= keteranganSuhu(
-                $dataSurat['suhu'] ?? ''
-              ) ?>
-            </td>
-
+            <td><?= $dataSurat['keterangan'] ?></td>
           </tr>
-
-
-          <!-- BERAT BADAN -->
-
-          <tr>
-
-            <td>
-              Berat Badan
-            </td>
-
-            <td>
-              <?= htmlspecialchars(
-                $dataSurat['berat_badan'] ?? '-'
-              ) ?>
-
-              Kg
-            </td>
-
-            <td>
-              -
-            </td>
-
-          </tr>
-
-
-          <!-- TINGGI BADAN -->
-
-          <tr>
-
-            <td>
-              Tinggi Badan
-            </td>
-
-            <td>
-              <?= htmlspecialchars(
-                $dataSurat['tinggi_badan'] ?? '-'
-              ) ?>
-
-              cm
-            </td>
-
-            <td>
-              -
-            </td>
-
-          </tr>
-
-
-          <!-- BMI -->
-
-          <?php if (
-            isset($dataSurat['bmi']) &&
-            $dataSurat['bmi'] !== ''
-          ): ?>
-
-            <tr>
-
-              <td>
-                Indeks Massa Tubuh (BMI)
-              </td>
-
-              <td>
-                <?= htmlspecialchars(
-                  $dataSurat['bmi']
-                ) ?>
-              </td>
-
-              <td>
-                <?= keteranganBMI(
-                  $dataSurat['bmi']
-                ) ?>
-              </td>
-
-            </tr>
-
-          <?php endif; ?>
-
-
-        </tbody>
-
-      </table>
-
-      <div class="keperluan">
-        Surat keterangan sehat ini dibuat untuk keperluan:
-
-        <strong> <?= strtoupper($dataSurat['keperluan']) ?> </strong>
-
-        dan dapat dipergunakan sebagaimana mestinya.
+        </table>
       </div>
 
-      <!-- KESIMPULAN -->
+      <!-- =================================
+                 KESIMPULAN
+            ================================== -->
 
       <div class="kesimpulan">
-        Demikian surat keterangan ini dibuat dengan sebenar- benarnya untuk
-        dapat dipergunakan sebagaimana mestinya.
+        Dengan demikian, yang bersangkutan diberikan keterangan untuk
+        <span class="highlight"> beristirahat selama <?= htmlspecialchars($dataSurat['lama']) ?>
+          (<?= terbilang($dataSurat['lama']) ?>) hari </span>,
+        terhitung mulai tanggal
+        <strong><?= tanggalIndonesia($dataSurat['tanggal_mulai']) ?></strong>
+        sampai dengan
+        <strong><?= tanggalIndonesia($dataSurat['tanggal_selesai']) ?></strong>.
       </div>
+
+      <div class="kesimpulan">
+        Demikian surat keterangan sakit ini dibuat dengan sebenar-benarnya
+        untuk dapat dipergunakan sebagaimana mestinya.
+      </div>
+
+      <!-- =================================
+                 TANDA TANGAN DOKTER
+            ================================== -->
 
       <div class="ttd-wrapper">
 
@@ -559,7 +430,9 @@
       </div>
     </div>
 
-    <!-- FOOTER -->
+    <!-- =================================
+             FOOTER
+        ================================== -->
 
     <div class="footer">
       Surat ini diterbitkan melalui Sistem Informasi Klinik <strong>Medisafe</strong> dan merupakan
