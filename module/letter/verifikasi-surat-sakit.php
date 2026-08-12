@@ -33,8 +33,7 @@ if (empty($idHash)) {
     |--------------------------------------------------------------------------
     */
 
-   $stmt = $koneksi->prepare("
-        SELECT
+   $stmt = $koneksi->prepare("SELECT
             ss.*,
 
             pv.id_doctor,
@@ -50,7 +49,7 @@ if (empty($idHash)) {
             mp.patient_gender,
             mp.patient_address
 
-        FROM surat_sehat ss
+        FROM surat_sakit ss
 
         INNER JOIN pasien_visit pv
             ON pv.id_visit = ss.id_visit
@@ -105,15 +104,13 @@ if ($statusValid) {
 
    $alamat = $dataSurat['patient_address'] ?? '-';
 
-   $keperluan = $dataSurat['keperluan'] ?? '-';
+   $keterangan = $dataSurat['keterangan'] ?? '-';
 
-   $tekananDarah = $dataSurat['tekanan_darah'] ?? '-';
+   $tanggal_mulai = $dataSurat['tanggal_mulai'] ?? '-';
 
-   $nadi = $dataSurat['nadi'] ?? '-';
+   $tanggal_selesai = $dataSurat['tanggal_selesai'] ?? '-';
 
-   $beratBadan = $dataSurat['berat_badan'] ?? '-';
-
-   $tinggiBadan = $dataSurat['tinggi_badan'] ?? '-';
+   $lama = $dataSurat['lama'] ?? '-';
 } else {
 
    $nomorSurat = '-';
@@ -132,15 +129,13 @@ if ($statusValid) {
 
    $alamat = '-';
 
-   $keperluan = '-';
+   $keterangan = '-';
 
-   $tekananDarah = '-';
+   $tanggal_mulai = '-';
 
-   $nadi = '-';
+   $tanggal_selesai = '-';
 
-   $beratBadan = '-';
-
-   $tinggiBadan = '-';
+   $lama = '-';
 }
 
 ?>
@@ -912,122 +907,6 @@ if ($statusValid) {
 
 
 
-               <!-- PEMERIKSAAN -->
-
-               <div
-                  class="section-title"
-                  style="margin-top: 28px;">
-
-                  <i class="fas fa-stethoscope"></i>
-
-                  Hasil Pemeriksaan
-
-               </div>
-
-
-               <table class="medical-table">
-
-                  <thead>
-
-                     <tr>
-
-                        <th>
-                           Pemeriksaan
-                        </th>
-
-                        <th>
-                           Hasil
-                        </th>
-
-                     </tr>
-
-                  </thead>
-
-
-                  <tbody>
-
-
-                     <tr>
-
-                        <td>
-                           Tekanan Darah
-                        </td>
-
-                        <td>
-
-                           <?= htmlspecialchars(
-                              $tekananDarah
-                           ) ?>
-
-                           mmHg
-
-                        </td>
-
-                     </tr>
-
-
-                     <tr>
-
-                        <td>
-                           Nadi
-                        </td>
-
-                        <td>
-
-                           <?= htmlspecialchars(
-                              $nadi
-                           ) ?>
-
-                           x/menit
-
-                        </td>
-
-                     </tr>
-
-
-                     <tr>
-
-                        <td>
-                           Berat Badan
-                        </td>
-
-                        <td>
-
-                           <?= htmlspecialchars(
-                              $beratBadan
-                           ) ?>
-
-                           Kg
-
-                        </td>
-
-                     </tr>
-
-
-                     <tr>
-
-                        <td>
-                           Tinggi Badan
-                        </td>
-
-                        <td>
-
-                           <?= htmlspecialchars(
-                              $tinggiBadan
-                           ) ?>
-
-                           cm
-
-                        </td>
-
-                     </tr>
-
-
-                  </tbody>
-
-               </table>
-
-
 
                <!-- KEPERLUAN -->
 
@@ -1065,14 +944,65 @@ if ($statusValid) {
                   <div class="info-item">
 
                      <div class="info-label">
-                        Keperluan
+                        Keterangan
                      </div>
 
                      <div class="info-value">
 
                         <?= htmlspecialchars(
-                           $keperluan
+                           $keterangan
                         ) ?>
+
+                     </div>
+
+                  </div>
+
+
+                  <div class="info-item">
+
+                     <div class="info-label">
+                        Mulai Istirahat
+                     </div>
+
+                     <div class="info-value">
+
+                        <?= htmlspecialchars(
+                           $tanggal_mulai
+                        ) ?>
+
+                     </div>
+
+                  </div>
+
+
+                  <div class="info-item">
+
+                     <div class="info-label">
+                        Sampai
+                     </div>
+
+                     <div class="info-value">
+
+                        <?= htmlspecialchars(
+                           $tanggal_selesai
+                        ) ?>
+
+                     </div>
+
+                  </div>
+
+
+                  <div class="info-item">
+
+                     <div class="info-label">
+                        Lama
+                     </div>
+
+                     <div class="info-value">
+
+                        <?= htmlspecialchars(
+                           $lama
+                        ) ?> Hari
 
                      </div>
 

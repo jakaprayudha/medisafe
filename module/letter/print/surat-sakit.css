@@ -336,3 +336,32 @@ body {
 .btn-print:hover {
   background: #157347;
 }
+
+.periode {
+  margin-top: 20px;
+  padding: 12px 15px;
+  border: 1px solid #000;
+}
+
+.periode-title {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.periode table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.periode td {
+  padding: 3px 0;
+}
+
+.periode .label {
+  width: 55mm;
+}
+
+.periode .separator {
+  width: 7mm;
+  text-align: center;
+}

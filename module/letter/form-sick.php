@@ -1,5 +1,5 @@
 <?php
-$title = 'Surat Keterangan Sehat';
+$title = 'Surat Keterangan Sakit';
 require '../../controller/view.php';
 ?>
 <!doctype html>
@@ -35,7 +35,7 @@ require '../../controller/view.php';
               <div class="card w-100">
                 <div class="card-body p-4">
                   <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Surat Keterangan Sehat</h5>
+                    <h5 class="card-title fw-semibold">Surat Keterangan Sakit</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
@@ -49,7 +49,6 @@ require '../../controller/view.php';
                           <th class="text-dark fw-normal">Tanggal</th>
                           <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
                           <th class="text-dark fw-normal">Dokter Pemeriksa</th>
-                          <th class="text-dark fw-normal">Keperluan</th>
                           <th class="text-dark fw-normal">Keterangan</th>
                           <th scope="col" class="text-dark fw-normal text-center col-1">Actions</th>
                         </tr>
@@ -81,7 +80,7 @@ require '../../controller/view.php';
       <div class="modal-header">
 
         <h5 class="modal-title">
-          Tambah Surat Keterangan Sehat
+          Tambah Surat Keterangan Sakit
         </h5>
 
         <button
@@ -94,6 +93,7 @@ require '../../controller/view.php';
 
 
       <div class="modal-body">
+
 
         <!-- ID SURAT -->
 
@@ -156,194 +156,70 @@ require '../../controller/view.php';
         </div>
 
 
-        <!-- ======================================
-                     PEMERIKSAAN FISIK DARI PASIEN_VISIT
-                ======================================= -->
+        <!-- PERIODE SAKIT -->
 
         <div class="row">
 
 
-          <!-- TEKANAN DARAH -->
+          <!-- MULAI -->
 
           <div class="col-md-6 mb-3">
 
             <label class="form-label">
-              Tekanan Darah
+              Tanggal Mulai
             </label>
 
             <input
-              type="text"
-              name="tekanan_darah"
-              id="tekanan_darah"
+              type="date"
+              name="tanggal_mulai"
+              id="tanggal_mulai"
               class="form-control"
-              placeholder="120/80 mmHg">
+              required>
 
           </div>
 
 
-          <!-- NADI -->
+          <!-- SELESAI -->
 
           <div class="col-md-6 mb-3">
 
             <label class="form-label">
-              Nadi
+              Tanggal Selesai
             </label>
 
             <input
-              type="text"
-              name="nadi"
-              id="nadi"
+              type="date"
+              name="tanggal_selesai"
+              id="tanggal_selesai"
               class="form-control"
-              placeholder="80 x/menit">
-
-          </div>
-
-
-          <!-- SUHU -->
-
-          <div class="col-md-6 mb-3">
-
-            <label class="form-label">
-              Suhu
-            </label>
-
-            <input
-              type="text"
-              name="suhu"
-              id="suhu"
-              class="form-control"
-              placeholder="36.5 °C">
-
-          </div>
-
-
-          <!-- RESPIRASI -->
-
-          <div class="col-md-6 mb-3">
-
-            <label class="form-label">
-              Respirasi
-            </label>
-
-            <input
-              type="text"
-              name="respirasi"
-              id="respirasi"
-              class="form-control"
-              placeholder="20 x/menit">
-
-          </div>
-
-
-          <!-- BERAT BADAN -->
-
-          <div class="col-md-6 mb-3">
-
-            <label class="form-label">
-              Berat Badan
-            </label>
-
-            <input
-              type="text"
-              name="berat_badan"
-              id="berat_badan"
-              class="form-control"
-              placeholder="65 kg">
-
-          </div>
-
-
-          <!-- TINGGI BADAN -->
-
-          <div class="col-md-6 mb-3">
-
-            <label class="form-label">
-              Tinggi Badan
-            </label>
-
-            <input
-              type="text"
-              name="tinggi_badan"
-              id="tinggi_badan"
-              class="form-control"
-              placeholder="170 cm">
-
-          </div>
-
-
-          <!-- BMI -->
-
-          <div class="col-md-6 mb-3">
-
-            <label class="form-label">
-              BMI
-            </label>
-
-            <input
-              type="text"
-              name="bmi"
-              id="bmi"
-              class="form-control"
-              placeholder="22.5"
-              readonly>
-
-          </div>
-
-
-          <!-- BMI KETERANGAN -->
-
-          <div class="col-md-6 mb-3">
-
-            <label class="form-label">
-              Keterangan BMI
-            </label>
-
-            <input
-              type="text"
-              name="bmi_keterangan"
-              id="bmi_keterangan"
-              class="form-control"
-              placeholder="Normal"
-              readonly>
+              required>
 
           </div>
 
         </div>
 
 
-        <!-- ======================================
-                     KEPERLUAN
-                ======================================= -->
+        <!-- LAMA -->
 
         <div class="mb-3">
 
           <label class="form-label">
-            Keperluan
+            Lama Istirahat
           </label>
 
-          <select
-            name="keperluan"
-            id="keperluan"
-            class="form-select"
-            required>
+          <div class="input-group">
 
-            <option value="Administrasi">
-              Administrasi
-            </option>
+            <input
+              type="text"
+              id="lama"
+              class="form-control"
+              readonly>
 
-            <option value="Pekerjaan">
-              Pekerjaan
-            </option>
+            <span class="input-group-text">
+              Hari
+            </span>
 
-            <option value="Pendidikan">
-              Pendidikan
-            </option>
-
-            <option value="Lainnya">
-              Lainnya
-            </option>
-
-          </select>
+          </div>
 
         </div>
 
@@ -364,6 +240,7 @@ require '../../controller/view.php';
             placeholder="Keterangan tambahan..."></textarea>
 
         </div>
+
 
       </div>
 
@@ -397,6 +274,58 @@ require '../../controller/view.php';
   </div>
 
 </div>
+<script>
+  function hitungLamaSakit() {
+
+    const mulai =
+      $('#tanggal_mulai').val();
+
+    const selesai =
+      $('#tanggal_selesai').val();
+
+
+    if (!mulai || !selesai) {
+
+      $('#lama').val('');
+
+      return;
+    }
+
+
+    const start =
+      new Date(mulai + 'T00:00:00');
+
+    const end =
+      new Date(selesai + 'T00:00:00');
+
+
+    if (end < start) {
+
+      $('#lama').val('');
+
+      return;
+    }
+
+
+    const diff =
+      Math.round(
+        (end - start) /
+        (1000 * 60 * 60 * 24)
+      ) + 1;
+
+
+    $('#lama').val(
+      diff
+    );
+  }
+
+
+  $('#tanggal_mulai, #tanggal_selesai')
+    .on(
+      'change',
+      hitungLamaSakit
+    );
+</script>
 <script>
   $('#programModal').on('shown.bs.modal', function() {
 
@@ -442,7 +371,7 @@ require '../../controller/view.php';
 
       ajax: {
 
-        url: 'controller/admisi/patientVisitController',
+        url: 'controller/admisi/patientVisitControllerInOut',
 
         type: 'GET',
 
@@ -546,32 +475,9 @@ require '../../controller/view.php';
 
                   id_doctor: item.id_doctor,
 
-                  id_poli: item.id_poli,
+                  tanggal_pulang: item.tanggal_pulang,
 
 
-                  /*
-                  |----------------------------------------------
-                  | TANDA VITAL
-                  |----------------------------------------------
-                  */
-
-                  tekanan_darah: item.tekanan_darah,
-
-                  suhu: item.suhu,
-
-                  nadi: item.nadi,
-
-                  respirasi: item.respirasi,
-
-                  tinggi_badan: item.tinggi_badan,
-
-                  berat_badan: item.berat_badan,
-
-                  bmi: item.bmi,
-
-                  bmi_keterangan: item.bmi_keterangan,
-
-                  saturasi: item.saturasi
 
                 };
 
@@ -630,93 +536,37 @@ require '../../controller/view.php';
           data.id_visit
         );
 
-
         /*
-        |--------------------------------------------------------------------------
-        | TEKANAN DARAH
-        |--------------------------------------------------------------------------
-        */
+               |--------------------------------------------------------------------------
+               | TANGGAL MULAI
+               |--------------------------------------------------------------------------
+               */
 
-        $('#tekanan_darah').val(
-          data.tekanan_darah || ''
-        );
+        if (data.visit_date) {
 
+          $('#tanggal_mulai').val(
+            data.visit_date
+          );
 
-        /*
-        |--------------------------------------------------------------------------
-        | NADI
-        |--------------------------------------------------------------------------
-        */
-
-        $('#nadi').val(
-          data.nadi || ''
-        );
+        }
 
 
         /*
         |--------------------------------------------------------------------------
-        | SUHU
+        | DEFAULT SELESAI = TANGGAL MULAI
         |--------------------------------------------------------------------------
         */
 
-        $('#suhu').val(
-          data.suhu || ''
-        );
+        if (data.visit_date) {
+
+          $('#tanggal_selesai').val(
+            data.visit_date
+          );
+
+        }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | RESPIRASI
-        |--------------------------------------------------------------------------
-        */
-
-        $('#respirasi').val(
-          data.respirasi || ''
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | BERAT BADAN
-        |--------------------------------------------------------------------------
-        */
-
-        $('#berat_badan').val(
-          data.berat_badan || ''
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | TINGGI BADAN
-        |--------------------------------------------------------------------------
-        */
-
-        $('#tinggi_badan').val(
-          data.tinggi_badan || ''
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | BMI
-        |--------------------------------------------------------------------------
-        */
-
-        $('#bmi').val(
-          data.bmi || ''
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | BMI KETERANGAN
-        |--------------------------------------------------------------------------
-        */
-
-        $('#bmi_keterangan').val(
-          data.bmi_keterangan || ''
-        );
+        hitungLamaSakit();
 
 
         /*
@@ -754,21 +604,9 @@ require '../../controller/view.php';
 
         $('#id_visit').val('');
 
-        $('#tekanan_darah').val('');
+        $('#tanggal_mulai').val('');
 
-        $('#nadi').val('');
-
-        $('#suhu').val('');
-
-        $('#respirasi').val('');
-
-        $('#berat_badan').val('');
-
-        $('#tinggi_badan').val('');
-
-        $('#bmi').val('');
-
-        $('#bmi_keterangan').val('');
+        $('#tanggal_pulang').val('');
 
       }
     );
@@ -777,7 +615,7 @@ require '../../controller/view.php';
 </script>
 
 <script>
-  const apiUrl = 'controller/letter/suratSehatController';
+  const apiUrl = 'controller/letter/suratSakitController';
 
 
   $(document).ready(function() {
@@ -827,7 +665,7 @@ require '../../controller/view.php';
                                       <!-- PRINT -->
                                       <a
                                           class="btn btn-primary"
-                                          href="module/letter/print/surat-keterangan-sehat?id=${row.id}"
+                                          href="module/letter/print/surat-keterangan-sakit?id=${row.id}"
                                           target="_blank"
                                           title="Cetak Surat">
 
@@ -873,9 +711,6 @@ require '../../controller/view.php';
               "nomor_rm": row.id_doctor || '-',
 
 
-              "keperluan": row.keperluan || '-',
-
-
               "keterangan": row.keterangan || '-'
 
             };
@@ -903,10 +738,6 @@ require '../../controller/view.php';
 
         {
           data: "nomor_rm"
-        },
-
-        {
-          data: "keperluan"
         },
 
         {
@@ -1078,7 +909,7 @@ require '../../controller/view.php';
 
 
       $('#programModal .modal-title').text(
-        'Tambah Surat Keterangan Sehat'
+        'Tambah Surat Keterangan Sakit'
       );
 
 
@@ -1283,15 +1114,11 @@ require '../../controller/view.php';
       '.edit-btn',
       function() {
 
-
-        let id =
-          $(this).data('id');
+        let id = $(this).data('id');
 
 
         fetch(
-            apiUrl +
-            '?id=' +
-            id
+            apiUrl + '?id=' + id
           )
 
           .then(function(res) {
@@ -1302,15 +1129,11 @@ require '../../controller/view.php';
 
           .then(function(resp) {
 
-
             if (
-              resp.status ===
-              'success'
+              resp.status === 'success'
             ) {
 
-
-              let d =
-                resp.data;
+              let d = resp.data;
 
 
               /*
@@ -1336,42 +1159,56 @@ require '../../controller/view.php';
 
               /*
               |--------------------------------------------------------------------------
-              | FIELD
+              | TANGGAL SURAT
               |--------------------------------------------------------------------------
               */
 
               $('#tanggal_surat').val(
-                d.tanggal_surat
+                d.tanggal_surat || ''
               );
 
 
-              $('#tekanan_darah').val(
-                d.tekanan_darah
+              /*
+              |--------------------------------------------------------------------------
+              | TANGGAL MULAI
+              |--------------------------------------------------------------------------
+              */
+
+              $('#tanggal_mulai').val(
+                d.tanggal_mulai || ''
               );
 
 
-              $('#nadi').val(
-                d.nadi
+              /*
+              |--------------------------------------------------------------------------
+              | TANGGAL SELESAI
+              |--------------------------------------------------------------------------
+              */
+
+              $('#tanggal_selesai').val(
+                d.tanggal_selesai || ''
               );
 
 
-              $('#berat_badan').val(
-                d.berat_badan
+              /*
+              |--------------------------------------------------------------------------
+              | LAMA
+              |--------------------------------------------------------------------------
+              */
+
+              $('#lama').val(
+                d.lama || ''
               );
 
 
-              $('#tinggi_badan').val(
-                d.tinggi_badan
-              );
-
-
-              $('#keperluan').val(
-                d.keperluan
-              );
-
+              /*
+              |--------------------------------------------------------------------------
+              | KETERANGAN
+              |--------------------------------------------------------------------------
+              */
 
               $('#keterangan').val(
-                d.keterangan
+                d.keterangan || ''
               );
 
 
@@ -1383,6 +1220,7 @@ require '../../controller/view.php';
 
               const option =
                 new Option(
+
                   d.patient_name +
                   ' - RM ' +
                   (d.nomor_rm || '-'),
@@ -1390,7 +1228,9 @@ require '../../controller/view.php';
                   d.id_patient,
 
                   true,
+
                   true
+
                 );
 
 
@@ -1402,25 +1242,32 @@ require '../../controller/view.php';
 
               /*
               |--------------------------------------------------------------------------
-              | MODAL
+              | MODAL TITLE
               |--------------------------------------------------------------------------
               */
 
               $('#programModal .modal-title')
                 .text(
-                  'Edit Surat Keterangan Sehat'
+                  'Edit Surat Keterangan Sakit'
                 );
 
+
+              /*
+              |--------------------------------------------------------------------------
+              | TAMPILKAN MODAL
+              |--------------------------------------------------------------------------
+              */
 
               $('#programModal')
                 .modal('show');
 
-            } else {
 
+            } else {
 
               Swal.fire(
                 'Gagal!',
-                resp.message,
+                resp.message ||
+                'Data surat tidak ditemukan.',
                 'error'
               );
 
