@@ -210,61 +210,133 @@ function createData($id_customer)
 
 
    /*
-    |--------------------------------------------------------------------------
-    | NOMOR SURAT OTOMATIS
-    |--------------------------------------------------------------------------
-    |
-    | Contoh:
-    | SKS/20260812/0001
-    |
-    */
+|--------------------------------------------------------------------------
+| NOMOR SURAT OTOMATIS PER CUSTOMER
+|--------------------------------------------------------------------------
+|
+| Contoh:
+|
+| Customer 1:
+| SKS/20260812/0001
+| SKS/20260812/0002
+| SKS/20260812/0003
+|
+| Customer 2:
+| SKS/20260812/0001
+| SKS/20260812/0002
+|
+|--------------------------------------------------------------------------
+*/
 
-   $tanggalNomor = date('Ymd', strtotime($tanggal_surat));
+   $tanggalNomor = date(
+      'Ymd',
+      strtotime($tanggal_surat)
+   );
 
    $prefix = "SKS/" . $tanggalNomor . "/";
 
-
-   /*
-    |--------------------------------------------------------------------------
-    | CARI NOMOR TERAKHIR HARI INI
-    |--------------------------------------------------------------------------
-    */
-
-   $stmtNomor = $koneksi->prepare("
-        SELECT nomor_surat
-        FROM surat_sehat
-        WHERE nomor_surat LIKE ?
-        ORDER BY id DESC
-        LIMIT 1
-    ");
-
    $likeNomor = $prefix . "%";
 
+
+   /*
+|--------------------------------------------------------------------------
+| CARI NOMOR TERAKHIR
+|
+| Customer diambil dari pasien_visit
+|--------------------------------------------------------------------------
+*/
+
+   $stmtNomor = $koneksi->prepare("
+    SELECT
+        ss.nomor_surat
+
+    FROM surat_sehat ss
+
+    INNER JOIN pasien_visit pv
+        ON pv.id_visit = ss.id_visit
+
+    WHERE pv.id_customer = ?
+      AND ss.nomor_surat LIKE ?
+
+    ORDER BY ss.id DESC
+
+    LIMIT 1
+");
+
+
+   if (!$stmtNomor) {
+
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Prepare nomor surat gagal: ' . $koneksi->error
+      ]);
+
+      return;
+   }
+
+
    $stmtNomor->bind_param(
-      "s",
+      "is",
+      $id_customer,
       $likeNomor
    );
 
+
    $stmtNomor->execute();
+
 
    $resultNomor = $stmtNomor->get_result();
 
+
+   /*
+|--------------------------------------------------------------------------
+| DEFAULT
+|--------------------------------------------------------------------------
+|
+| Kalau customer belum punya nomor pada tanggal tersebut
+| maka mulai dari 1.
+|--------------------------------------------------------------------------
+*/
+
    $nextNumber = 1;
+
 
    if ($resultNomor->num_rows > 0) {
 
       $rowNomor = $resultNomor->fetch_assoc();
 
+      $nomorTerakhir = $rowNomor['nomor_surat'];
+
+
+      /*
+    |--------------------------------------------------------------------------
+    | AMBIL ANGKA TERAKHIR
+    |--------------------------------------------------------------------------
+    |
+    | SKS/20260812/0005
+    |                  ↑
+    |                ambil 5
+    |--------------------------------------------------------------------------
+    */
+
       $lastNumber = (int) substr(
-         $rowNomor['nomor_surat'],
-         strrpos($rowNomor['nomor_surat'], '/') + 1
+         $nomorTerakhir,
+         strrpos($nomorTerakhir, '/') + 1
       );
+
 
       $nextNumber = $lastNumber + 1;
    }
 
+
    $stmtNomor->close();
 
+
+   /*
+|--------------------------------------------------------------------------
+| FORMAT NOMOR
+|--------------------------------------------------------------------------
+*/
 
    $nomor_surat = $prefix . str_pad(
       $nextNumber,
