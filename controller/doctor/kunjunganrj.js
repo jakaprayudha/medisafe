@@ -503,6 +503,7 @@ $(function () {
                                 <td>
                                     <button class="btn btn-sm btn-primary pilihFaskes"
                                         data-kode="${item.kdppk}"
+                                        data-jadwal="${item.jadwal}"
                                         data-nama="${item.nmppk}">
                                         Pilih
                                     </button>
@@ -528,8 +529,10 @@ $(function () {
   $(document).on("click", ".pilihFaskes", function () {
     let kode = $(this).data("kode");
     let nama = $(this).data("nama");
+    let jadwal = $(this).data("jadwal");
     APP.addValueInput("#nmfaskes", nama);
     APP.addValueInput("#kdfaskes", kode);
+    APP.addValueInput("#jadwal", jadwal);
     $("#modalFaskes").modal("hide");
   });
   $("#kdTacc").on("change", function () {

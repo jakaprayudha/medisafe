@@ -86,6 +86,16 @@ function bpjsPostIcare(array $payload){
     );
     $url = 'https://apijkn.bpjs-kesehatan.go.id/ihs/api/pcare/validate';
     // $url = 'https://apijkn-dev.bpjs-kesehatan.go.id/ihs_dev/api/pcare/validate';
+    // echo '<pre>';
+    // print_r($payload);
+    // echo '</pre>';
+    // echo "<pre>";
+    // print_r($headers);
+    // echo "</pre>";
+    // echo "\n";
+    // echo $url;
+    // echo "\n";
+    // die();
     $ch = curl_init();
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,
