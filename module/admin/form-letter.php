@@ -367,7 +367,7 @@ require '../../controller/view.php';
 
                     <!-- BUTTON -->
 
-                    <a href="module/admisi/form-letter/treatment"
+                    <a href="module/letter/form-medical"
                       class="btn btn-primary btn-sm"
                       style="
                                     width:145px;
