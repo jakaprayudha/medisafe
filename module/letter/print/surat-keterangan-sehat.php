@@ -491,46 +491,67 @@
         dapat dipergunakan sebagaimana mestinya.
       </div>
 
-      <!-- =========================
-                 TANDA TANGAN
-            ========================== -->
-
       <div class="ttd-wrapper">
 
         <div class="ttd">
 
           <div class="tempat-tanggal">
-            <?= htmlspecialchars($dataClinic['faskes_city'] ?? 'Deli Serdang') ?>,
-            <?= tanggalIndonesia($dataSurat['tanggal_surat']) ?>
+
+            <?= htmlspecialchars(
+              !empty($dataClinic['faskes_city'])
+                ? $dataClinic['faskes_city']
+                : 'Deli Serdang'
+            ) ?>,
+
+            <?= tanggalIndonesia(
+              $dataSurat['tanggal_surat']
+            ) ?>
+
           </div>
+
 
           <div class="jabatan">
+
             Dokter Pemeriksa,
+
           </div>
 
-          <div class="space"></div>
+
+          <!-- QR VERIFIKASI -->
+
+          <div class="qr-verifikasi">
+
+            <img
+              src="data:image/png;base64,<?= $qrBase64 ?>"
+              alt="QR Verifikasi">
+
+            <div>
+              Scan untuk verifikasi
+            </div>
+
+          </div>
+
+
+          <!-- NAMA DOKTER -->
 
           <div class="nama-dokter">
-            <?= htmlspecialchars($dataSurat['id_doctor']) ?>
+
+            <?= htmlspecialchars(
+              $dataSurat['id_doctor'] ?? '-'
+            ) ?>
+
           </div>
+
+
+          <!-- SIP -->
 
           <div class="sip">
-            SIP. <?= htmlspecialchars($dataSurat['sip_number']) ?>
-          </div>
 
-        </div>
+            SIP.
+            <?= htmlspecialchars(
+              $dataSurat['sip_number'] ?? '-'
+            ) ?>
 
-
-        <!-- QR CODE -->
-
-        <div class="qr-verifikasi">
-
-          <img
-            src="data:image/png;base64,<?= $qrBase64 ?>"
-            alt="QR Verifikasi">
-
-          <div>
-            Scan untuk verifikasi
           </div>
 
         </div>

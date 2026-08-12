@@ -218,53 +218,25 @@ body {
   text-transform: uppercase;
 }
 
-/* =========================
-   TANDA TANGAN + QR
-========================= */
-
 .ttd-wrapper {
   display: flex;
   justify-content: flex-end;
   align-items: flex-end;
-  margin-top: 14px;
+  margin-top: 14mm;
 }
 
 .ttd {
-  width: 70mm;
+  width: 75mm;
   text-align: center;
   font-size: 10pt;
 }
 
-.ttd .tempat-tanggal {
-  margin-bottom: 4px;
-}
-
-.ttd .jabatan {
-  margin-bottom: 2px;
-}
-
-.ttd .space {
-  height: 20mm;
-}
-
-.ttd .nama-dokter {
-  font-weight: bold;
-  text-decoration: underline;
-}
-
-.ttd .sip {
-  margin-top: 1px;
-}
-
-/* =========================
-   QR
-========================= */
-
+/* QR tepat di tengah blok tanda tangan */
 .qr-verifikasi {
-  width: 30mm;
+  width: 100%;
   text-align: center;
   font-size: 6.5pt;
-  margin-left: 5mm;
+  margin: 0;
 }
 
 .qr-verifikasi img {
