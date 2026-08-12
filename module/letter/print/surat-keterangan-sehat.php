@@ -57,7 +57,7 @@
 */
 
     $urlVerifikasi =
-      'https://medisafe.sehatdigital.id/module/letter/verifikasi-surat?id='
+      'https://app.medisafe.id/module/letter/verifikasi-surat?id='
       . urlencode(md5($id));
 
 
