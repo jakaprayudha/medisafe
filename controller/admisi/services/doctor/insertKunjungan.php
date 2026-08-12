@@ -72,6 +72,7 @@ $id_patient = $_POST['id_patient'];
 $nmKategori = $_POST['nmKategori'];
 $nmSubSpesialis1 = $_POST['nmSubSpesialis1'];
 $nmfaskes = $_POST['nmfaskes'];
+$jadwal = $_POST['jadwal'] ?? null;
 $status_pasien = $_POST['status_pasien'] ?? null;
 if ($status_pasien == "UMUM") {
     $stmt1 = $koneksi->prepare("UPDATE pasien_visit SET
@@ -249,7 +250,7 @@ if ($status_pasien == "UMUM") {
             catatan, kdTacc, alasanTacc, anamnesa,
             alergiMakan, alergiUdara, alergiObat,
             kdPrognosa, terapiObat, terapiNonObat,
-            bmhp, suhu, noLP, nmKategori, nmSubSpesialis1, nmfaskes
+            bmhp, suhu, noLP, nmKategori, nmSubSpesialis1, nmfaskes, jdwpraktek
             ) VALUES (
             ?,?,?,?,?,?,
             ?,?,?,?,?,?,
@@ -257,10 +258,10 @@ if ($status_pasien == "UMUM") {
             ?,?,?,?,?,
             ?,?,?,?,?,
             ?,?,?,?,?,
-            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
             $stmt->bind_param(
-                "sssssssssssssssssssssssssssssssssssssssssssssss",
+                "ssssssssssssssssssssssssssssssssssssssssssssssss",
                 $noKunjungan,
                 $noKartu,
                 $DBtglDatar,
@@ -308,6 +309,7 @@ if ($status_pasien == "UMUM") {
                 $nmKategori,
                 $nmSubSpesialis1,
                 $nmfaskes,
+                $jadwal
             );
             $stmt1 = $koneksi->prepare("UPDATE pasien_visit SET
                 kondisi_masuk = ?,

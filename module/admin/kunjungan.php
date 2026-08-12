@@ -435,6 +435,7 @@ $rm = $_GET['rm'];
                           <div class="col-10">
                             <input type="text" id="nmfaskes" name="nmfaskes" class="form-control" readonly>
                             <input type="hidden" name="kdppk" id="kdfaskes">
+                            <input type="hidden" name="jadwal" id="jadwal">
                           </div>
                         </div>
                       </div>

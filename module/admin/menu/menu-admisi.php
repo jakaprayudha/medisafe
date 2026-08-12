@@ -119,6 +119,16 @@
               <span class="hide-menu">Panggilan</span>
            </a>
         </li>
+        <li class="sidebar-item">
+           <a class="sidebar-link <?php if ($title == 'Surat') {
+                                       echo 'active';
+                                    } ?>"
+              href="module/admin/form-letter"
+              aria-expanded="false">
+              <iconify-icon icon="material-symbols:description-outline"></iconify-icon>
+              <span class="hide-menu">Surat</span>
+           </a>
+        </li>
         <!-- <li class="nav-small-cap">
            <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
            <span class="hide-menu">Daftar/Layanan (Pcare)</span>
