@@ -145,7 +145,7 @@ require '../../controller/view.php';
 
                     <!-- BUTTON -->
 
-                    <a href="module/admisi/form-letter/healthy"
+                    <a href="module/letter/form-sks"
                       class="btn btn-success btn-sm"
                       style="
                                     width:145px;
