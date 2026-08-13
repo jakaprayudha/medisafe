@@ -33,7 +33,7 @@ if ($data['created_user'] == "MobileJKN") {
     $kodeAntri = $match[1];
     $angkaantrean = $match[2];
     $kunjSakit = true;
-    $keluhan = $data['keluhan'] ?? '';
+    $keluhan = $data['anamnesa'] ?? '';
     $sistole       = (int)$data['sistole'] ?? 0;
     $diastole      = (int)$data['diastole'] ?? 0;
     $beratBadan    = (int)$data['beratBadan'] ?? 0;
