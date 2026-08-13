@@ -175,11 +175,8 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
           d.kdDokter = kodeDokter;
           d.provider = $('#provider').val();
         },
-
         dataSrc: function(json) {
-
           return json.data
-            // 🔥 FILTER TAB DISINI
             .filter(function(row) {
               if (activeTab === 'belum') {
                 return row.visit_status == 0 || row.visit_status == 1;
@@ -188,12 +185,9 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
               }
               return true;
             })
-
             .map(function(row, index) {
-
               let statusClass = '';
               let statusText = '';
-
               if (row.visit_status == 0) {
                 statusClass = 'bg-danger';
                 statusText = 'Belum Dilayani';
@@ -229,7 +223,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                 `;
               }
               let actionBtn = '';
-              if (row.id_provider == 1 && row.status_panggil == 0) {
+              if (row.id_provider == 1 && (row.status_panggil == 0 || row.status_pcare == 0)) {
                 actionBtn = `
                   <button type="button"
                     class="btn btn-sm btn-secondary btn-hadir"

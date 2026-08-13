@@ -64,7 +64,6 @@ if ($data['created_user'] == "MobileJKN") {
     ];
     // echo json_encode($payload, JSON_PRETTY_PRINT);die();
     $result = bpjsPost("/pendaftaran", $payload);
-    // $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
     if ($result['code'] != '200') {
         $msg = $result['metadata'];
         if ($msg == null) {
@@ -140,5 +139,4 @@ echo json_encode($response);
 function updateStatus(String $visit, String $id){
     global $koneksi;
     mysqli_query($koneksi, "UPDATE `antrian_poli` SET `status` = '1' WHERE `nomor_visit` = '$visit' AND `id_customer` = '$id'");
-    // mysqli_query($koneksi, "UPDATE pasien_visit SET visit_status = '1' WHERE visit_ID = '$visit' AND id_customer = '$id'");
 }
