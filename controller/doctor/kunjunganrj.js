@@ -175,12 +175,10 @@ $(function () {
                     APP.addValueInput("#nmDiag3", d.nmDiag3);
                   }
                   $("#kdStatusPulang").val(d.kdStatusPulang).trigger("change");
-                  $("#simpan_pemeriksaan")
-                    .text("Update Pemeriksaan")
-                    .removeClass("btn-primary")
-                    .addClass("btn-danger");
+                  $("#simpan_pemeriksaan").text("Update Pemeriksaan").removeClass("btn-primary").addClass("btn-danger");
                   if (d.noKunjungan != null) {
                     statusEdit = true;
+                    $(".btn-printkunjungan").removeClass("d-none");
                   }
                   checkRujuk(d.subSpesialis, d.kdkhSpesialis);
                   window.kdTacc = d.kdTacc;
@@ -191,7 +189,6 @@ $(function () {
                   window.tglEstRujuk = d.tglEstRujuk;
                   window.kdfaskes = d.kdfaskes;
                   window.nmfaskes = d.nmfaskes;
-
                   if (d.kdppk != "") {
                     $(".btn-print").removeClass("d-none");
                   }
@@ -362,6 +359,10 @@ $(function () {
   $("#btn-print").on("click", function () {
     const nomor = $("#noKunjungan").val();
     window.open("controller/doctor/cetakan-rujukan.php?id=" + nomor, "_blank");
+  });
+   $("#btn-printkunjungan").on("click", function () {
+    const nomor = $("#noKunjungan").val();
+    window.open("controller/doctor/cetakan-kunjungan.php?id=" + nomor, "_blank");
   });
 
   // BTN INSERT

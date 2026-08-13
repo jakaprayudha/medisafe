@@ -29,7 +29,7 @@ $no_rujukan       = $data['no_rujukan'] ?? '';
 $no_kunjungan     = $data['noKunjungan'] ?? '';
 
 // ================= DATA TAMBAHAN =================
-$fktp         = $data['clinic_name'].'('.$data['kodePPK'] .')';
+$fktp         = $data['clinic_name'] . '(' . $data['kodePPK'] . ')';
 $kabupaten    = "KAB. DELI SERDANG(0032)";
 $tujuan_poli  = empty($data['nmSubSpesialis1']) ? $data['nmKategori'] : $data['nmSubSpesialis1'];
 $tujuan_rs    = $data['nmfaskes'];
@@ -67,11 +67,11 @@ $tgl_cetak = date('d-m-Y');
             background-color: white;
             width: 210mm;
             min-height: 297mm;
-            padding: 8mm 15mm;
+            padding: 10mm 15mm;
             box-sizing: border-box;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             font-size: 12px;
-            line-height: 1.2; 
+            line-height: 1.3;
             color: #000;
         }
 
@@ -80,14 +80,14 @@ $tgl_cetak = date('d-m-Y');
         }
 
         .table-no-border td {
-            padding: 2px 0;
+            padding: 3px 0;
             vertical-align: top;
         }
 
         .kotak-header {
             border: 1px solid black;
-            padding: 8px;
-            margin-bottom: 12px;
+            padding: 10px;
+            margin-bottom: 15px;
         }
 
         .barcode-dummy {
@@ -103,7 +103,7 @@ $tgl_cetak = date('d-m-Y');
 
         .box-char {
             border: 1px solid black;
-            padding: 2px 8px;
+            padding: 2px 10px;
             display: inline-block;
             text-align: center;
             font-weight: bold;
@@ -114,12 +114,22 @@ $tgl_cetak = date('d-m-Y');
             height: 14px;
             border: 1px solid black;
             display: inline-block;
+            vertical-align: middle;
         }
 
         hr.divider {
             border: 0;
             border-top: 1px solid black;
-            margin: 15px 0 10px 0;
+            margin: 20px 0 15px 0;
+        }
+
+        .footer {
+            margin-top: 10px;
+            padding-bottom: 10px;
+            text-align: center;
+            font-size: 11px;
+            color: #555;
+            line-height: 1.4;
         }
     </style>
 </head>
@@ -127,7 +137,7 @@ $tgl_cetak = date('d-m-Y');
 <body>
     <div class="page">
         <!-- HEADER -->
-        <table width="100%" style="margin-bottom: 10px;">
+        <table width="100%" style="margin-bottom: 15px;">
             <tr>
                 <td width="50%" valign="middle">
                     <img src="../../assets/images/logos/bpjslogo.svg" alt="Logo BPJS" style="height: 35px;">
@@ -135,7 +145,7 @@ $tgl_cetak = date('d-m-Y');
                 <td width="50%" align="right" valign="middle">
                     <table class="table-no-border" style="width: 100%; text-align: left; font-weight: bold; font-size: 12px;">
                         <tr>
-                            <td width="130">Kedeputian Wilayah</td>
+                            <td width="140">Kedeputian Wilayah</td>
                             <td width="10">:</td>
                             <td><?= $kedeputian ?></td>
                         </tr>
@@ -149,7 +159,7 @@ $tgl_cetak = date('d-m-Y');
             </tr>
         </table>
 
-        <h3 style="text-align: center; margin: 5px 0 15px 0; font-size: 15px;">Surat Rujukan FKTP</h3>
+        <h3 style="text-align: center; margin: 10px 0 15px 0; font-size: 15px;">Surat Rujukan FKTP</h3>
 
         <div class="kotak-header">
             <table width="100%" class="table-no-border">
@@ -157,7 +167,7 @@ $tgl_cetak = date('d-m-Y');
                     <td width="65%">
                         <table width="100%" class="table-no-border">
                             <tr>
-                                <td width="120">No. Rujukan</td>
+                                <td width="130">No. Rujukan</td>
                                 <td width="10">:</td>
                                 <td><?= $noKunjung ?></td>
                             </tr>
@@ -180,9 +190,9 @@ $tgl_cetak = date('d-m-Y');
             </table>
         </div>
 
-        <table class="table-no-border" width="100%" style="margin-bottom: 10px;">
+        <table class="table-no-border" width="100%" style="margin-bottom: 12px;">
             <tr>
-                <td width="140">Kepada Yth. TS Dokter</td>
+                <td width="150">Kepada Yth. TS Dokter</td>
                 <td width="10">:</td>
                 <td><?= $tujuan_poli ?></td>
             </tr>
@@ -193,17 +203,16 @@ $tgl_cetak = date('d-m-Y');
             </tr>
         </table>
 
-        <p style="margin-top: 5px; margin-bottom: 10px;">Mohon pemeriksaan dan penanganan lebih lanjut pasien :</p>
+        <p style="margin-top: 10px; margin-bottom: 12px;">Mohon pemeriksaan dan penanganan lebih lanjut pasien :</p>
 
-        <table class="table-no-border" width="100%" style="margin-bottom: 15px;">
+        <table class="table-no-border" width="100%" style="margin-bottom: 20px;">
             <tr>
-                <td width="110">Nama</td>
+                <td width="120">Nama</td>
                 <td width="10">:</td>
-                <!-- Lebar kolom ini diperbesar menjadi 320 agar "Umur" terdorong ke kanan -->
                 <td width="320"><?= $nama_pasien ?></td>
-                <td width="50">Umur :</td>
-                <td width="30"><?= $umur ?></td>
-                <td width="60">Tahun :</td>
+                <td width="55">Umur :</td>
+                <td width="35"><?= $umur ?></td>
+                <td width="65">Tahun :</td>
                 <td><?= $tgl_lahir ?></td>
             </tr>
             <tr>
@@ -230,20 +239,19 @@ $tgl_cetak = date('d-m-Y');
         </table>
 
         <!-- FOOTER TTD -->
-        <!-- Lebar tabel diubah jadi 68% kiri dan 32% kanan agar tanda tangan geser kanan -->
-        <table width="100%" class="table-no-border">
+        <table width="100%" class="table-no-border" style="margin-top: 10px;">
             <tr>
                 <td width="68%">Atas bantuannya, diucapkan terima kasih</td>
                 <td width="32%" align="center">Salam sejawat,<br><?= $tgl_cetak ?></td>
             </tr>
         </table>
-        
+
         <table width="100%" class="table-no-border" style="margin-top: 10px;">
             <tr>
                 <td width="68%" valign="top">
                     <table class="table-no-border">
                         <tr>
-                            <td width="150">Tgl. Rencana Berkunjung</td>
+                            <td width="160">Tgl. Rencana Berkunjung</td>
                             <td width="10">:</td>
                             <td><?= $tgl_kunjung ?></td>
                         </tr>
@@ -258,7 +266,7 @@ $tgl_cetak = date('d-m-Y');
                         <span style="white-space: nowrap; font-weight: bold;"><?= date('d-m-Y', strtotime($tgl_kunjung_db . ' +3 months')) ?></span>
                     </div>
                 </td>
-                <td width="32%" align="center" valign="bottom" style="padding-top: 25px;">
+                <td width="32%" align="center" valign="bottom" style="padding-top: 40px;">
                     <?= $nama_dokter ?>
                 </td>
             </tr>
@@ -266,14 +274,14 @@ $tgl_cetak = date('d-m-Y');
 
         <hr class="divider">
 
-        <h4 style="text-align: center; text-decoration: underline; margin: 5px 0 10px 0; font-size: 13px;">SURAT RUJUKAN BALIK</h4>
+        <h4 style="text-align: center; text-decoration: underline; margin: 10px 0 15px 0; font-size: 13px;">SURAT RUJUKAN BALIK</h4>
 
-        <p style="margin-top: 0; margin-bottom: 10px;">Teman sejawat Yth.<br>Mohon kontrol selanjutnya penderita :</p>
+        <p style="margin-top: 0; margin-bottom: 15px;">Teman sejawat Yth.<br>Mohon kontrol selanjutnya penderita :</p>
 
         <!-- RUJUKAN BALIK FORM -->
-        <table class="table-no-border" width="100%" style="margin-bottom: 10px;">
+        <table class="table-no-border" width="100%" style="margin-bottom: 15px;">
             <tr>
-                <td width="80">Nama</td>
+                <td width="90">Nama</td>
                 <td width="10">:</td>
                 <td>.........................................................................................................................................................</td>
             </tr>
@@ -289,7 +297,7 @@ $tgl_cetak = date('d-m-Y');
             </tr>
         </table>
 
-        <p style="margin-bottom: 8px;">Tindak lanjut yang dianjurkan</p>
+        <p style="margin-bottom: 10px;">Tindak lanjut yang dianjurkan</p>
 
         <!-- TINDAK LANJUT -->
         <table width="100%" class="table-no-border">
@@ -297,20 +305,26 @@ $tgl_cetak = date('d-m-Y');
                 <td width="60%" valign="top">
                     <table class="table-no-border" width="100%">
                         <tr>
-                            <td width="25" style="padding-bottom: 5px;"><div class="checkbox"></div></td>
+                            <td width="30" style="padding-bottom: 5px;">
+                                <div class="checkbox"></div>
+                            </td>
                             <td style="padding-bottom: 5px;">
                                 Pengobatan dengan obat-obatan :<br>
-                                ........................................................................................
+                                <span style="display: inline-block; margin-top: 5px;">........................................................................................</span>
                             </td>
                         </tr>
                         <tr>
-                            <td style="padding-bottom: 5px;"><div class="checkbox"></div></td>
+                            <td style="padding-bottom: 5px;">
+                                <div class="checkbox"></div>
+                            </td>
                             <td style="padding-bottom: 5px;">
                                 Kontrol kembali ke RS tanggal : .................................
                             </td>
                         </tr>
                         <tr>
-                            <td style="padding-bottom: 5px;"><div class="checkbox"></div></td>
+                            <td style="padding-bottom: 5px;">
+                                <div class="checkbox"></div>
+                            </td>
                             <td style="padding-bottom: 5px;">
                                 Lain-lain : ......................................................................
                             </td>
@@ -320,27 +334,39 @@ $tgl_cetak = date('d-m-Y');
                 <td width="40%" valign="top">
                     <table class="table-no-border" width="100%">
                         <tr>
-                            <td width="25" style="padding-bottom: 5px;"><div class="checkbox"></div></td>
+                            <td width="30" style="padding-bottom: 5px;">
+                                <div class="checkbox"></div>
+                            </td>
                             <td style="padding-bottom: 5px;">Perlu rawat inap</td>
                         </tr>
                         <tr>
-                            <td style="padding-bottom: 5px;"><div class="checkbox"></div></td>
+                            <td style="padding-bottom: 5px;">
+                                <div class="checkbox"></div>
+                            </td>
                             <td style="padding-bottom: 5px;">Konsultasi selesai</td>
                         </tr>
                     </table>
-                    
-                    <div style="margin-top: 5px;">
+
+                    <div style="margin-top: 10px;">
                         ..................................... tgl .....................................
                     </div>
 
-                    <div style="text-align: right; margin-top: 15px; padding-right: 20px;">
-                        Dokter RS,<br><br><br>
+                    <div style="text-align: right; margin-top: 30px; padding-right: 20px;">
+                        Dokter RS,<br><br><br><br>
                         (...................................................)
                     </div>
                 </td>
             </tr>
         </table>
-
+        
+        <div style="margin-top: 20px;">
+            <hr style="border: 0; border-top: 1px solid black; margin-bottom: 10px;">
+            <div class="footer">
+                Surat ini diterbitkan melalui Sistem Informasi Klinik <strong>Medisafe</strong> dan merupakan
+                dokumen resmi fasilitas pelayanan kesehatan. <br> <i>www.medisafe.id</i>
+            </div>
+        </div>
     </div>
 </body>
+
 </html>
