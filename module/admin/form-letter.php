@@ -478,7 +478,7 @@ require '../../controller/view.php';
 
                     <!-- BUTTON -->
 
-                    <a href="module/admisi/form-letter/death"
+                    <a href="module/letter/form-death"
                       class="btn btn-dark btn-sm"
                       style="
                                     width:145px;

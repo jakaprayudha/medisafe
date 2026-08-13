@@ -5,8 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Surat Keterangan Berobat</title>
-  <link rel="stylesheet" href="surat-berobat.css" />
+  <title>Surat Keterangan Catatan Kematian</title>
+  <link rel="stylesheet" href="surat-kematian.css" />
 </head>
 
 <body>
@@ -28,11 +28,13 @@
     <!-- =================================
              KOP SURAT
         ================================== -->
-    <?php include 'kop-surat.php' ?>
 
+    <?php include 'kop-surat.php' ?>
     <!-- =================================
              JUDUL
         ================================== -->
+
+
     <?php
 
     $id = $_GET['id'] ?? '';
@@ -68,7 +70,7 @@
 */
 
     $urlVerifikasi =
-      'https://app.medisafe.id/module/letter/verifikasi-surat-berobat?id='
+      'https://app.medisafe.id/module/letter/verifikasi-surat-kematian?id='
       . urlencode(md5($id));
 
 
@@ -115,18 +117,16 @@
         mp.patient_gender,
         mp.patient_address,
         pv.id_doctor,
-        pv.visit_time,
-        pv.id_poli,
-        mp.nomor_rm,
         pv.visit_date,
-        dc.sip_number
-     FROM surat_berobat ss
+        dc.sip_number,
+        dc.doctor_name
+     FROM surat_kematian ss
      INNER JOIN pasien_visit pv 
         ON pv.id_visit = ss.id_visit
     INNER JOIN ms_patient mp
         ON mp.id_patient = pv.id_patient
     LEFT JOIN ms_doctor dc 
-        ON dc.doctor_name = pv.id_doctor
+        ON dc.id_doctor = ss.dokter_menyatakan
      WHERE ss.id = '$id'
      LIMIT 1"
     );
@@ -164,9 +164,67 @@
     }
     ?>
 
+    <?php
+
+    function terbilang($angka)
+    {
+      $angka = (int) $angka;
+
+      $bilangan = [
+        '',
+        'satu',
+        'dua',
+        'tiga',
+        'empat',
+        'lima',
+        'enam',
+        'tujuh',
+        'delapan',
+        'sembilan',
+        'sepuluh',
+        'sebelas'
+      ];
+
+      if ($angka < 12) {
+        return $bilangan[$angka];
+      }
+
+      if ($angka < 20) {
+        return terbilang($angka - 10) . ' belas';
+      }
+
+      if ($angka < 100) {
+        return terbilang((int) ($angka / 10))
+          . ' puluh '
+          . terbilang($angka % 10);
+      }
+
+      if ($angka < 200) {
+        return 'seratus ' . terbilang($angka - 100);
+      }
+
+      if ($angka < 1000) {
+        return terbilang((int) ($angka / 100))
+          . ' ratus '
+          . terbilang($angka % 100);
+      }
+
+      if ($angka < 2000) {
+        return 'seribu ' . terbilang($angka - 1000);
+      }
+
+      if ($angka < 1000000) {
+        return terbilang((int) ($angka / 1000))
+          . ' ribu '
+          . terbilang($angka % 1000);
+      }
+
+      return (string) $angka;
+    }
+    ?>
 
     <div class="judul">
-      <h1>Surat Keterangan Berobat</h1>
+      <h1>Surat Keterangan Catatan Kematian</h1>
 
       <div class="nomor">Nomor: <?= $dataSurat['nomor_surat'] ?></div>
     </div>
@@ -178,12 +236,16 @@
     <div class="isi">
       <div class="pembuka">
         Yang bertanda tangan di bawah ini, Dokter pada
-        <strong><?= $dataClinic['clinic_name'] ?></strong>, menerangkan bahwa:
+        <strong><?= $dataClinic['clinic_name'] ?></strong>, berdasarkan catatan pelayanan
+        kesehatan dan/atau hasil pemeriksaan yang dilakukan, menerangkan
+        bahwa:
       </div>
 
       <!-- =================================
-                 IDENTITAS PASIEN
+                 IDENTITAS ALMARHUM/ALMARHUMAH
             ================================== -->
+
+
       <table class="identitas">
         <tr>
           <td class="label">Nama Lengkap</td>
@@ -217,81 +279,91 @@
       </table>
 
       <!-- =================================
-                 KETERANGAN BEROBAT
+                 CATATAN KEMATIAN
             ================================== -->
 
-      <div class="keterangan">
-        Dengan ini menerangkan bahwa pasien tersebut di atas
-        <strong>benar telah datang dan mendapatkan pelayanan kesehatan /
-          pemeriksaan medis</strong>
-        di <strong><?= $dataClinic['clinic_name'] ?></strong> pada tanggal
-        <strong><?= tanggalIndonesia($dataSurat['visit_date']) ?></strong>.
-      </div>
+      <div class="section-title">Catatan Kematian</div>
 
-      <!-- =================================
-                 DETAIL KUNJUNGAN
-            ================================== -->
-
-      <table class="detail-kunjungan">
+      <table class="kematian">
         <thead>
           <tr>
             <th>Keterangan</th>
 
-            <th>Detail</th>
+            <th>Data</th>
           </tr>
         </thead>
 
         <tbody>
           <tr>
-            <td>Tanggal Berobat</td>
+            <td class="label">Tanggal Kematian</td>
 
-            <td><?= tanggalIndonesia($dataSurat['visit_date']) ?></td>
+            <td><?= tanggalIndonesia($dataSurat['tanggal_kematian']) ?></td>
           </tr>
 
           <tr>
-            <td>Waktu Pelayanan</td>
+            <td class="label">Waktu Kematian</td>
 
-            <td><?= $dataSurat['visit_time'] ?></td>
+            <td><?= $dataSurat['waktu_kematian'] ?> WIB</td>
           </tr>
 
           <tr>
-            <td>Poli / Unit Pelayanan</td>
+            <td class="label">Tempat Kematian</td>
 
-            <td><?= $dataSurat['id_poli'] ?></td>
+            <td><?= $dataClinic['clinic_name'] ?></td>
           </tr>
 
           <tr>
-            <td>Dokter Pemeriksa</td>
+            <td class="label">Ruangan / Unit</td>
 
-            <td><?= $dataSurat['id_doctor'] ?></td>
+            <td><?= $dataSurat['ruangan'] ?></td>
           </tr>
 
           <tr>
-            <td>Nomor Rekam Medis</td>
+            <td class="label">Dokter yang Menyatakan</td>
 
-            <td><?= $dataSurat['nomor_rm'] ?></td>
+            <td><?= $dataSurat['doctor_name'] ?></td>
           </tr>
         </tbody>
       </table>
 
       <!-- =================================
-                 KETERANGAN TAMBAHAN
+                 PERNYATAAN
             ================================== -->
 
-      <div class="tambahan">
-        Surat keterangan ini diberikan kepada yang bersangkutan untuk dapat
-        dipergunakan sebagai bukti bahwa yang bersangkutan telah menjalani
-        pemeriksaan dan mendapatkan pelayanan kesehatan pada fasilitas
-        pelayanan kesehatan kami.
+      <div class="section-title">Pernyataan</div>
+
+      <div class="pernyataan-box">
+        <strong>
+          Menerangkan bahwa yang bersangkutan telah dinyatakan meninggal dunia
+          pada tanggal
+          <u><?= tanggalIndonesia($dataSurat['tanggal_kematian']) ?></u>, pukul <u><?= $dataSurat['waktu_kematian'] ?> WIB</u>, di
+          <u><?= $dataClinic['clinic_name'] ?></u>.
+        </strong>
+
+        <br /><br />
+
+        Keterangan ini dibuat berdasarkan catatan pelayanan kesehatan dan
+        pemeriksaan yang dilakukan oleh tenaga medis yang berwenang pada
+        fasilitas pelayanan kesehatan tersebut.
       </div>
 
       <!-- =================================
-                 KESIMPULAN
+                 CATATAN
             ================================== -->
 
-      <div class="kesimpulan">
-        Demikian surat keterangan berobat ini dibuat dengan sebenar-benarnya
-        untuk dapat dipergunakan sebagaimana mestinya.
+      <div class="catatan">
+        Catatan: Surat ini merupakan catatan/keterangan pelayanan fasilitas
+        kesehatan dan bukan merupakan dokumen kependudukan atau akta kematian
+        yang diterbitkan oleh instansi yang berwenang.
+      </div>
+
+      <!-- =================================
+                 PENUTUP
+            ================================== -->
+
+      <div class="pernyataan">
+        Demikian surat keterangan catatan kematian ini dibuat dengan
+        sebenar-benarnya untuk dapat dipergunakan sebagaimana mestinya.
       </div>
 
       <!-- =================================
