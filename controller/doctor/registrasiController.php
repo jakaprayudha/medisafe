@@ -1,5 +1,6 @@
 <?php
 include '../../database/connect.php';
+header('Content-Type: application/json');
 $method = $_SERVER['REQUEST_METHOD'];
 switch ($method) {
    case 'GET':
@@ -28,8 +29,7 @@ switch ($method) {
 }
 
 // Function untuk Create
-function getData()
-{
+function getData(){
    global $koneksi;
 
    $role = $_SESSION['roles'] ?? null;
@@ -53,7 +53,12 @@ function getData()
                 pasien_visit.*,
                 ms_patient.*,
                 ms_provider.provider_name,
-                ap.status AS status_panggil
+                ap.status AS status_panggil,
+                CASE 
+                    WHEN pasien_visit.id_provider = '1' AND pp.nomor_visit IS NOT NULL THEN 1 
+                    WHEN pasien_visit.id_provider = '1' AND pp.nomor_visit IS NULL THEN 0 
+                    ELSE NULL 
+                END AS status_pcare
             FROM pasien_visit
             LEFT JOIN ms_patient
                 ON ms_patient.id_patient = pasien_visit.id_patient
@@ -62,6 +67,8 @@ function getData()
             LEFT JOIN antrian_poli ap
                 ON ap.nomor_visit = pasien_visit.visit_ID
                 AND ap.id_customer = pasien_visit.id_customer
+            LEFT JOIN pcare_pendaftaran pp
+                ON pp.nomor_visit = pasien_visit.visit_ID
             WHERE pasien_visit.source_hub <> 'Rawat Inap'
             AND pasien_visit.id_customer = ? AND pasien_visit.created_user != 'JKNSehat'";
 
