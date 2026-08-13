@@ -487,10 +487,11 @@ $rm = $_GET['rm'];
                       </div>
                     </div>
                     <hr>
-                    <div class="btn-print d-none">
-                      <button type="button" class="btn btn-info" id="btn-print">
-                        Print
-                      </button>
+                    <div class="d-flex justify-content-center align-items-center gap-3 mt-3" id="printActions">
+                      <button type="button" class="btn btn-success px-4 py-2 shadow-sm rounded-pill btn-printkunjungan d-none" id="btn-printkunjungan">
+                        <i class="bi bi-printer-fill me-2"></i> Print Kunjungan </button>
+                      <button type="button" class="btn btn-info text-white px-4 py-2 shadow-sm rounded-pill btn-print d-none" id="btn-print">
+                        <i class="bi bi-file-earmark-text-fill me-2"></i> Print Rujukan </button>
                     </div>
                     <hr>
                     <div class="d-grid">

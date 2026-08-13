@@ -1,0 +1,386 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #f2f2f2;
+  font-family: "Times New Roman", Times, serif;
+  color: #000;
+}
+
+/* =========================
+   A4 PAGE
+========================= */
+
+.page {
+  width: 210mm;
+  height: 297mm;
+  margin: 20px auto;
+  padding: 12mm 16mm 14mm 16mm;
+  background: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+/* =========================
+   KOP SURAT
+========================= */
+
+.kop {
+  display: flex;
+  align-items: center;
+  border-bottom: 2.5px solid #000;
+  padding-bottom: 5px;
+}
+
+.kop-logo {
+  width: 23mm;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.kop-logo img {
+  max-width: 20mm;
+  max-height: 20mm;
+  object-fit: contain;
+}
+
+.kop-content {
+  flex: 1;
+  text-align: center;
+  line-height: 1.15;
+}
+
+.kop-content .nama-instansi {
+  font-size: 14pt;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.kop-content .nama-klinik {
+  font-size: 17pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.kop-content .alamat {
+  font-size: 8.5pt;
+  margin-top: 2px;
+}
+
+.kop-content .kontak {
+  font-size: 8.5pt;
+  margin-top: 1px;
+}
+
+.kop-empty {
+  width: 23mm;
+  flex-shrink: 0;
+}
+
+/* =========================
+   JUDUL
+========================= */
+
+.judul {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.judul h1 {
+  margin: 0;
+  font-size: 14pt;
+  text-decoration: underline;
+  text-transform: uppercase;
+}
+
+.nomor {
+  margin-top: 3px;
+  font-size: 10pt;
+}
+
+/* =========================
+   ISI SURAT
+========================= */
+
+.isi {
+  margin-top: 16px;
+  font-size: 11pt;
+  line-height: 1.35;
+}
+
+.pembuka {
+  text-align: justify;
+  margin-bottom: 8px;
+}
+
+/* =========================
+   IDENTITAS
+========================= */
+
+.identitas {
+  width: 100%;
+  margin: 5px 0 10px 0;
+  border-collapse: collapse;
+}
+
+.identitas td {
+  vertical-align: top;
+  padding: 2px 0;
+  font-size: 11pt;
+}
+
+.identitas .label {
+  width: 43mm;
+}
+
+.identitas .separator {
+  width: 6mm;
+  text-align: center;
+}
+
+.identitas .value {
+  font-weight: bold;
+}
+
+/* =========================
+   PERNYATAAN
+========================= */
+
+.pernyataan {
+  text-align: justify;
+  margin-top: 6px;
+}
+
+/* =========================
+   PEMERIKSAAN
+========================= */
+
+.pemeriksaan {
+  margin-top: 10px;
+  width: 100%;
+  border-collapse: collapse;
+  page-break-inside: avoid;
+}
+
+.pemeriksaan th,
+.pemeriksaan td {
+  border: 1px solid #000;
+  padding: 4px 6px;
+  font-size: 9.5pt;
+  line-height: 1.2;
+}
+
+.pemeriksaan th {
+  text-align: center;
+  font-weight: bold;
+  padding: 5px;
+}
+
+.pemeriksaan td:nth-child(1) {
+  width: 45%;
+}
+
+.pemeriksaan td:nth-child(2) {
+  width: 20%;
+  text-align: center;
+}
+
+.pemeriksaan td:nth-child(3) {
+  width: 35%;
+}
+
+/* =========================
+   KEPERLUAN
+========================= */
+
+.keperluan {
+  margin-top: 10px;
+  text-align: justify;
+  line-height: 1.35;
+}
+
+/* =========================
+   KESIMPULAN
+========================= */
+
+.kesimpulan {
+  margin-top: 8px;
+  text-align: justify;
+  line-height: 1.35;
+}
+
+.kesimpulan strong {
+  text-transform: uppercase;
+}
+
+.ttd-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  margin-top: 14mm;
+}
+
+.ttd {
+  width: 75mm;
+  text-align: center;
+  font-size: 10pt;
+}
+
+/* QR tepat di tengah blok tanda tangan */
+.qr-verifikasi {
+  width: 100%;
+  text-align: center;
+  font-size: 6.5pt;
+  margin: 0;
+}
+
+.qr-verifikasi img {
+  width: 22mm;
+  height: 22mm;
+  display: block;
+  margin: 0 auto 2px auto;
+}
+
+/* =========================
+   FOOTER
+========================= */
+
+.footer {
+  position: absolute;
+  bottom: 7mm;
+  left: 16mm;
+  right: 16mm;
+  border-top: 1px solid #999;
+  padding-top: 3px;
+  text-align: center;
+  font-size: 7pt;
+  color: #555;
+}
+
+/* =========================
+   PRINT
+========================= */
+
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body {
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+  }
+
+  .page {
+    width: 210mm;
+    height: 297mm;
+    min-height: 297mm;
+    margin: 0;
+    padding: 12mm 16mm 14mm 16mm;
+    box-shadow: none;
+    overflow: hidden;
+    page-break-after: avoid;
+    page-break-before: avoid;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  table,
+  tr,
+  td,
+  th {
+    page-break-inside: avoid;
+  }
+
+  .kop,
+  .judul,
+  .isi,
+  .pemeriksaan,
+  .ttd-wrapper {
+    page-break-inside: avoid;
+  }
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+.toolbar {
+  width: 210mm;
+  margin: 15px auto;
+  text-align: right;
+}
+
+.btn-print {
+  border: none;
+  background: #198754;
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-print:hover {
+  background: #157347;
+}
+
+/* =====================================
+           DETAIL KUNJUNGAN
+        ===================================== */
+
+.detail-kunjungan {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 22px;
+}
+
+.detail-kunjungan th,
+.detail-kunjungan td {
+  border: 1px solid #000;
+  padding: 8px 10px;
+  font-size: 11.5pt;
+}
+
+.detail-kunjungan th {
+  text-align: center;
+  font-weight: bold;
+}
+
+.detail-kunjungan td:first-child {
+  width: 45%;
+}
+
+/* =====================================
+           KETERANGAN TAMBAHAN
+        ===================================== */
+
+.tambahan {
+  margin-top: 22px;
+  text-align: justify;
+}
+
+/* =====================================
+           KESIMPULAN
+        ===================================== */
+
+.kesimpulan {
+  margin-top: 22px;
+  text-align: justify;
+}
+
+.highlight {
+  font-weight: bold;
+}
