@@ -245,11 +245,17 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
               `;
               } else {
                 actionBtn = `
-                  <a href="module/admin/${pemeriksaanFile}?no=${row.visit_ID}&rm=${row.nomor_rm}"
-                    class="btn btn-sm btn-primary"
-                    title="Pemeriksaan">
+                 <button
+                    type="button"
+                    class="btn btn-sm btn-primary btn-pemeriksaan"
+                    title="Pemeriksaan"
+                    data-url="module/admin/${pemeriksaanFile}"
+                    data-no="${row.visit_ID}"
+                    data-visitidpasien="${row.id_visit}"
+                    data-provider="${row.id_provider}"
+                    data-rm="${row.nomor_rm}">
                     <i class="ti ti-stethoscope"></i>
-                  </a>
+                </button>
                 `;
               }
 
@@ -511,6 +517,66 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
       error: function(xhr, status, error) {
         console.error('Gagal mengambil data provider:', error);
         $('#provider').html('<option value="">Gagal memuat data</option>');
+      }
+    });
+
+    $(document).on('click', '.btn-pemeriksaan', function() {
+      const url = $(this).data('url');
+      const no = $(this).data('no');
+      const rm = $(this).data('rm');
+      const id_visit = $(this).data('visitidpasien');
+      const provider = $(this).data('provider');
+      if (provider != 1) {
+        window.location.href = `${url}?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}`;
+      } else {
+        $.ajax({
+          url: 'controller/admisi/services/validateicare',
+          type: 'POST',
+          dataType: 'json',
+          data: {
+            id: id_visit
+          },
+          beforeSend: function() {
+            Swal.fire({
+              title: 'Memeriksa...',
+              text: 'Mohon tunggu',
+              allowOutsideClick: false,
+              showConfirmButton: false,
+              didOpen: () => {
+                Swal.showLoading();
+              }
+            });
+          },
+          success: function(response) {
+            if (response.success) {
+              const urlIcare = response.message.data.url;
+              window.open(urlIcare, '_blank');
+              window.location.href = `${url}?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}`;
+            } else {
+              Swal.fire({
+                icon: 'warning',
+                title: 'ICare tidak dapat dibuka',
+                text: response.message?.message || 'Coba beberapa saat lagi.',
+                showCancelButton: true,
+                confirmButtonText: 'Buka Tanpa ICare',
+                cancelButtonText: 'Kembali',
+                reverseButtons: true
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  window.location.href =
+                    `${url}?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}`;
+                }
+              });
+            }
+          },
+          error: function() {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'Gagal melakukan validasi.'
+            });
+          }
+        });
       }
     });
   });

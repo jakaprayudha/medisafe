@@ -74,50 +74,6 @@ function bpjsPost($endpoint, array $payload, $method = "POST"){
 
     return bpjsDecryptResponse($response, $const_id, $secretKey, $tStamp);
 }
-function bpjsPostIcare(array $payload){
-    global $const_id, $secretKey, $tStamp, $encodedSignature, $userkey, $encodedAuthorization;
-    $headers = array(
-        "X-cons-id: " . $const_id,
-        "X-timestamp: " . $tStamp,
-        "X-signature: " . $encodedSignature,
-        "X-authorization: Basic " . $encodedAuthorization,
-        "user_key: " . $userkey,
-        "Content-Type: application/json",
-    );
-    $url = 'https://apijkn.bpjs-kesehatan.go.id/wsihs/api/pcare/validate';
-    // $url = 'https://apijkn-dev.bpjs-kesehatan.go.id/ihs_dev/api/pcare/validate';
-    // echo '<pre>';
-    // print_r($payload);
-    // echo '</pre>';
-    // echo "<pre>";
-    // print_r($headers);
-    // echo "</pre>";
-    // echo "\n";
-    // echo $url;
-    // echo "\n";
-    // die();
-    $ch = curl_init();
-    curl_setopt_array($ch, [
-        CURLOPT_URL => $url,
-        CURLOPT_HTTPHEADER => $headers,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 20,
-        CURLOPT_SSL_VERIFYPEER => false,
-        CURLOPT_CUSTOMREQUEST => "POST",
-        CURLOPT_POSTFIELDS => json_encode($payload)
-    ]);
-
-    $response = curl_exec($ch);
-    $err = curl_error($ch);
-    curl_close($ch);
-    // echo $response;die();
-    // echo $err;die();
-    if (!$response) {
-        return bpjsError("Tidak ada response dari server BPJS");
-    }
-
-    return bpjsDecryptResponse($response, $const_id, $secretKey, $tStamp);
-}
 function bpjsDelete($endpoint)
 {
     global $base_url, $service, $const_id, $secretKey, $tStamp, $encodedSignature, $userkey, $encodedAuthorization;
