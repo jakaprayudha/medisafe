@@ -105,11 +105,19 @@ require '../../controller/view.php';
   require '../admin/library.php';
   ?>
 </body>
+<!-- =========================================================
+     MODAL SURAT KETERANGAN KEMATIAN
+========================================================= -->
+
 <div class="modal fade" id="programModal" tabindex="-1">
 
   <div class="modal-dialog">
 
     <form id="programForm" class="modal-content">
+
+      <!-- =====================================================
+           HEADER
+      ====================================================== -->
 
       <div class="modal-header">
 
@@ -126,9 +134,15 @@ require '../../controller/view.php';
       </div>
 
 
+      <!-- =====================================================
+           BODY
+      ====================================================== -->
+
       <div class="modal-body">
 
-        <!-- ID SURAT -->
+        <!-- ===================================================
+             ID SURAT
+        ==================================================== -->
 
         <input
           type="hidden"
@@ -136,7 +150,22 @@ require '../../controller/view.php';
           id="id">
 
 
-        <!-- ID PATIENT -->
+        <!-- ===================================================
+             ID CUSTOMER
+             Tidak digunakan sebagai sumber utama.
+             Controller tetap mengambil dari SESSION.
+        ==================================================== -->
+
+        <input
+          type="hidden"
+          name="id_customer"
+          id="id_customer"
+          value="<?= htmlspecialchars($_SESSION['id_customer'] ?? '') ?>">
+
+
+        <!-- ===================================================
+             ID PATIENT
+        ==================================================== -->
 
         <input
           type="hidden"
@@ -144,7 +173,9 @@ require '../../controller/view.php';
           id="id_patient">
 
 
-        <!-- ID VISIT -->
+        <!-- ===================================================
+             ID VISIT
+        ==================================================== -->
 
         <input
           type="hidden"
@@ -152,13 +183,54 @@ require '../../controller/view.php';
           id="id_visit">
 
 
-        <!-- PASIEN -->
+        <!-- ===================================================
+             NOMOR SURAT
+        ==================================================== -->
 
         <div class="mb-3">
 
-          <label class="form-label">
-            Nama Pasien
+          <label
+            for="nomor_surat"
+            class="form-label">
+
+            Nomor Surat
+
           </label>
+
+
+          <input
+            type="text"
+            name="nomor_surat"
+            id="nomor_surat"
+            class="form-control"
+            placeholder="Nomor surat">
+
+
+          <!-- INFORMASI MODE -->
+
+          <div
+            id="nomor_surat_info"
+            class="mt-2">
+
+          </div>
+
+        </div>
+
+
+        <!-- ===================================================
+             PASIEN
+        ==================================================== -->
+
+        <div class="mb-3">
+
+          <label
+            for="id_patient_select"
+            class="form-label">
+
+            Nama Pasien
+
+          </label>
+
 
           <select
             name="id_patient_select"
@@ -171,13 +243,20 @@ require '../../controller/view.php';
         </div>
 
 
-        <!-- TANGGAL SURAT -->
+        <!-- ===================================================
+             TANGGAL SURAT
+        ==================================================== -->
 
         <div class="mb-3">
 
-          <label class="form-label">
+          <label
+            for="tanggal_surat"
+            class="form-label">
+
             Tanggal Surat
+
           </label>
+
 
           <input
             type="date"
@@ -190,15 +269,26 @@ require '../../controller/view.php';
         </div>
 
 
+        <!-- ===================================================
+             DATA KEMATIAN
+        ==================================================== -->
+
         <div class="row">
 
-          <!-- TANGGAL KEMATIAN -->
+          <!-- =================================================
+               TANGGAL KEMATIAN
+          ================================================== -->
 
           <div class="col-md-6 mb-3">
 
-            <label class="form-label">
+            <label
+              for="tanggal_kematian"
+              class="form-label">
+
               Tanggal Kematian
+
             </label>
+
 
             <input
               type="date"
@@ -210,13 +300,20 @@ require '../../controller/view.php';
           </div>
 
 
-          <!-- WAKTU KEMATIAN -->
+          <!-- =================================================
+               WAKTU KEMATIAN
+          ================================================== -->
 
           <div class="col-md-6 mb-3">
 
-            <label class="form-label">
+            <label
+              for="waktu_kematian"
+              class="form-label">
+
               Waktu Kematian
+
             </label>
+
 
             <input
               type="time"
@@ -228,13 +325,20 @@ require '../../controller/view.php';
           </div>
 
 
-          <!-- RUANGAN -->
+          <!-- =================================================
+               RUANGAN
+          ================================================== -->
 
           <div class="col-md-6 mb-3">
 
-            <label class="form-label">
+            <label
+              for="ruangan"
+              class="form-label">
+
               Ruangan
+
             </label>
+
 
             <input
               type="text"
@@ -247,13 +351,20 @@ require '../../controller/view.php';
           </div>
 
 
-          <!-- DOKTER -->
+          <!-- =================================================
+               DOKTER MENYATAKAN
+          ================================================== -->
 
           <div class="col-md-6 mb-3">
 
-            <label class="form-label">
+            <label
+              for="dokter_menyatakan"
+              class="form-label">
+
               Dokter yang Menyatakan
+
             </label>
+
 
             <select
               class="form-select"
@@ -265,31 +376,35 @@ require '../../controller/view.php';
                 Pilih Dokter
               </option>
 
+
               <?php
 
               $idcust =
-                $_SESSION['id_customer'];
+                $_SESSION['id_customer'] ?? '';
 
-              $getdokter = tampildata("SELECT
-                    id_doctor,
-                    doctor_name
-
+              $getdokter = tampildata("
+                  SELECT
+                      id_doctor,
+                      doctor_name
                   FROM ms_doctor
-
                   WHERE doctor_status = 1
                     AND id_customer = '$idcust'
-
                   ORDER BY doctor_name ASC
-                ");
+              ");
 
               ?>
+
 
               <?php foreach ($getdokter as $dct): ?>
 
                 <option
-                  value="<?= htmlspecialchars($dct['id_doctor']) ?>">
+                  value="<?= htmlspecialchars(
+                            $dct['id_doctor']
+                          ) ?>">
 
-                  <?= htmlspecialchars($dct['doctor_name']) ?>
+                  <?= htmlspecialchars(
+                    $dct['doctor_name']
+                  ) ?>
 
                 </option>
 
@@ -303,6 +418,10 @@ require '../../controller/view.php';
 
       </div>
 
+
+      <!-- =====================================================
+           FOOTER
+      ====================================================== -->
 
       <div class="modal-footer">
 
@@ -318,7 +437,8 @@ require '../../controller/view.php';
 
         <button
           type="submit"
-          class="btn btn-primary">
+          class="btn btn-primary"
+          id="btnSimpanSurat">
 
           <i class="fas fa-save me-1"></i>
 
@@ -333,299 +453,40 @@ require '../../controller/view.php';
   </div>
 
 </div>
-
 <script>
-  $('#programModal').on('shown.bs.modal', function() {
+  /*
+|--------------------------------------------------------------------------
+| API
+|--------------------------------------------------------------------------
+*/
 
-
-    const $select =
-      $('#id_patient_select');
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | DESTROY SELECT2 JIKA SUDAH ADA
-    |--------------------------------------------------------------------------
-    */
-
-    if (
-      $select.hasClass(
-        'select2-hidden-accessible'
-      )
-    ) {
-
-      $select.select2('destroy');
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | SELECT2
-    |--------------------------------------------------------------------------
-    */
-
-    $select.select2({
-
-      dropdownParent: $('#programModal'),
-
-      width: '100%',
-
-      placeholder: 'Cari Pasien Kunjungan...',
-
-      allowClear: true,
-
-      minimumInputLength: 2,
-
-      ajax: {
-
-        url: 'controller/admisi/patientVisitControllerInOut',
-
-        type: 'GET',
-
-        dataType: 'json',
-
-        delay: 300,
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | PARAMETER SEARCH
-        |--------------------------------------------------------------------------
-        */
-
-        data: function(params) {
-
-          return {
-
-            search: params.term || ''
-
-          };
-
-        },
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | HASIL SEARCH
-        |--------------------------------------------------------------------------
-        */
-
-        processResults: function(response) {
-
-
-          let items =
-            response.data ?
-            response.data : [];
-
-
-          return {
-
-            results:
-
-              items.map(function(item) {
-
-                return {
-
-                  /*
-                  |----------------------------------------------
-                  | SELECT2 VALUE
-                  |----------------------------------------------
-                  */
-
-                  id: item.id_patient,
-
-
-                  /*
-                  |----------------------------------------------
-                  | TAMPILAN
-                  |----------------------------------------------
-                  */
-
-                  text:
-
-                    item.patient_name +
-
-                    ' | RM: ' +
-
-                    (
-                      item.nomor_rm ||
-                      '-'
-                    ) +
-
-                    ' | ' +
-
-                    (
-                      item.visit_date ||
-                      '-'
-                    ),
-
-
-                  /*
-                  |----------------------------------------------
-                  | DATA TAMBAHAN
-                  |----------------------------------------------
-                  */
-
-                  id_patient: item.id_patient,
-
-                  id_visit: item.id_visit,
-
-                  visit_ID: item.visit_ID,
-
-                  patient_name: item.patient_name,
-
-                  nomor_rm: item.nomor_rm,
-
-                  patient_nik: item.patient_nik,
-
-                  visit_date: item.visit_date,
-
-                  id_doctor: item.id_doctor,
-
-                  tanggal_pulang: item.tanggal_pulang,
-
-
-
-                };
-
-              })
-
-          };
-
-        },
-
-
-        cache: true
-
-      }
-
-    });
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | SAAT PASIEN / VISIT DIPILIH
-    |--------------------------------------------------------------------------
-    */
-
-    $select.off(
-      'select2:select'
-    );
-
-
-    $select.on(
-      'select2:select',
-      function(e) {
-
-
-        const data =
-          e.params.data;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | ID PATIENT
-        |--------------------------------------------------------------------------
-        */
-
-        $('#id_patient').val(
-          data.id_patient
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | ID VISIT
-        |--------------------------------------------------------------------------
-        */
-
-        $('#id_visit').val(
-          data.id_visit
-        );
-
-        /*
-               |--------------------------------------------------------------------------
-               | TANGGAL MULAI
-               |--------------------------------------------------------------------------
-               */
-
-        if (data.visit_date) {
-
-          $('#tanggal_mulai').val(
-            data.visit_date
-          );
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | DEFAULT SELESAI = TANGGAL MULAI
-        |--------------------------------------------------------------------------
-        */
-
-        if (data.visit_date) {
-
-          $('#tanggal_selesai').val(
-            data.visit_date
-          );
-
-        }
-
-
-        hitungLamaSakit();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | DEBUG
-        |--------------------------------------------------------------------------
-        */
-
-        console.log(
-          'Visit dipilih:',
-          data
-        );
-
-      }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | CLEAR SELECT
-    |--------------------------------------------------------------------------
-    */
-
-    $select.off(
-      'select2:clear'
-    );
-
-
-    $select.on(
-      'select2:clear',
-      function() {
-
-
-        $('#id_patient').val('');
-
-        $('#id_visit').val('');
-
-        $('#tanggal_mulai').val('');
-
-        $('#tanggal_pulang').val('');
-
-      }
-    );
-
-  });
-</script>
-
-<script>
   const apiUrl =
     'controller/letter/suratKematianController';
 
+
+  /*
+  |--------------------------------------------------------------------------
+  | API SETTING NOMOR SURAT
+  |--------------------------------------------------------------------------
+  |
+  | Tabel:
+  | setting_surat
+  |
+  | Untuk kematian:
+  | format_kematian
+  | nomor_kematian
+  |
+  */
+
+  const settingApiUrl =
+    'controller/letter/settingSuratController';
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | DOCUMENT READY
+  |--------------------------------------------------------------------------
+  */
 
   $(document).ready(function() {
 
@@ -642,6 +503,8 @@ require '../../controller/view.php';
         processing: true,
 
         serverSide: false,
+
+        scrollX: true,
 
         ajax: {
 
@@ -672,7 +535,6 @@ require '../../controller/view.php';
               function(row) {
 
                 return {
-
 
                   /*
                   |--------------------------------------------------------------------------
@@ -862,12 +724,18 @@ require '../../controller/view.php';
       $('#id_patient_select');
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | INIT PATIENT SELECT
+    |--------------------------------------------------------------------------
+    */
+
     function initPatientSelect() {
 
 
       /*
       |--------------------------------------------------------------------------
-      | DESTROY SELECT2
+      | DESTROY SELECT2 JIKA SUDAH ADA
       |--------------------------------------------------------------------------
       */
 
@@ -886,7 +754,7 @@ require '../../controller/view.php';
 
       /*
       |--------------------------------------------------------------------------
-      | INIT
+      | INIT SELECT2
       |--------------------------------------------------------------------------
       */
 
@@ -923,7 +791,8 @@ require '../../controller/view.php';
 
             return {
 
-              search: params.term || ''
+              search: params.term ||
+                ''
 
             };
 
@@ -1069,11 +938,6 @@ require '../../controller/view.php';
           |--------------------------------------------------------------------------
           | DEFAULT TANGGAL KEMATIAN
           |--------------------------------------------------------------------------
-          |
-          | Jika visit_date tersedia,
-          | gunakan sebagai default.
-          |
-          |--------------------------------------------------------------------------
           */
 
           if (
@@ -1142,7 +1006,478 @@ require '../../controller/view.php';
 
     /*
     |--------------------------------------------------------------------------
-    | TAMBAH
+    | RESET NOMOR SURAT
+    |--------------------------------------------------------------------------
+    */
+
+    function resetNomorSurat() {
+
+      $('#nomor_surat')
+        .val('')
+        .prop(
+          'disabled',
+          false
+        )
+        .prop(
+          'readonly',
+          false
+        )
+        .prop(
+          'required',
+          true
+        );
+
+      $('#nomor_surat_info')
+        .html('');
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SET MODE NOMOR MANUAL
+    |--------------------------------------------------------------------------
+    */
+
+    function setNomorManual() {
+
+      $('#nomor_surat')
+        .prop(
+          'disabled',
+          false
+        )
+        .prop(
+          'readonly',
+          false
+        )
+        .prop(
+          'required',
+          true
+        )
+        .attr(
+          'placeholder',
+          'Masukkan nomor surat'
+        );
+
+
+      $('#nomor_surat_info')
+        .html(`
+
+        <div class="alert alert-warning py-2 px-3 mb-0">
+
+          <i class="fas fa-keyboard me-1"></i>
+
+          <strong>Mode Manual</strong><br>
+
+          Nomor surat harus diisi secara manual.
+
+        </div>
+
+      `);
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SET MODE AUTO
+    |--------------------------------------------------------------------------
+    */
+
+    function setNomorAuto(
+      format,
+      nomor
+    ) {
+
+      $('#nomor_surat')
+        .val('')
+        .prop(
+          'disabled',
+          true
+        )
+        .prop(
+          'readonly',
+          true
+        )
+        .prop(
+          'required',
+          false
+        )
+        .attr(
+          'placeholder',
+          'Nomor dibuat otomatis'
+        );
+
+
+      $('#nomor_surat_info')
+        .html(`
+
+        <div class="alert alert-info py-2 px-3 mb-0">
+
+          <i class="fas fa-robot me-1"></i>
+
+          <strong>Mode Otomatis</strong><br>
+
+          Nomor surat akan dibuat otomatis oleh sistem.
+
+          ${
+            format
+              ? `<br>
+                 <small>
+                   Format:
+                   <strong>${escapeHtml(format)}</strong>
+                 </small>`
+              : ''
+          }
+
+          ${
+            nomor !== undefined &&
+            nomor !== null
+              ? `<br>
+                 <small>
+                   Nomor terakhir:
+                   <strong>${escapeHtml(String(nomor))}</strong>
+                 </small>`
+              : ''
+          }
+
+        </div>
+
+      `);
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ESCAPE HTML
+    |--------------------------------------------------------------------------
+    */
+
+    function escapeHtml(
+      value
+    ) {
+
+      return String(value)
+        .replace(
+          /&/g,
+          '&amp;'
+        )
+        .replace(
+          /</g,
+          '&lt;'
+        )
+        .replace(
+          />/g,
+          '&gt;'
+        )
+        .replace(
+          /"/g,
+          '&quot;'
+        )
+        .replace(
+          /'/g,
+          '&#039;'
+        );
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CHECK SETTING NOMOR SURAT
+    |--------------------------------------------------------------------------
+    |
+    | Khusus surat kematian:
+    |
+    | mode_nomor
+    | format_kematian
+    | nomor_kematian
+    |
+    |--------------------------------------------------------------------------
+    */
+
+    function checkSettingNomorSurat() {
+
+      return fetch(
+          settingApiUrl +
+          '?check=1'
+        )
+
+        .then(
+          function(res) {
+
+            if (
+              !res.ok
+            ) {
+
+              throw new Error(
+                'HTTP ' +
+                res.status
+              );
+
+            }
+
+            return res.json();
+
+          }
+        )
+
+        .then(
+          function(resp) {
+
+            console.log(
+              'Setting nomor surat:',
+              resp
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | SETTING BELUM ADA
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+              resp.status ===
+              'setting_required' ||
+              resp.status ===
+              'not_found' ||
+              resp.setting_not_found ===
+              true
+            ) {
+
+              return {
+
+                success: false,
+
+                settingRequired: true,
+
+                message: resp.message ||
+                  'Setting nomor surat belum dibuat.'
+
+              };
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ERROR
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+              resp.status !==
+              'success'
+            ) {
+
+              return {
+
+                success: false,
+
+                settingRequired: false,
+
+                message: resp.message ||
+                  'Gagal membaca setting nomor surat.'
+
+              };
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | AMBIL DATA SETTING
+            |--------------------------------------------------------------------------
+            */
+
+            let setting =
+              resp.data ||
+              resp.setting || {};
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | MODE
+            |--------------------------------------------------------------------------
+            */
+
+            let mode =
+              String(
+                setting.mode_nomor ||
+                ''
+              )
+              .toUpperCase();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | VALIDASI MODE
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+              mode !== 'AUTO' &&
+              mode !== 'MANUAL'
+            ) {
+
+              return {
+
+                success: false,
+
+                settingRequired: true,
+
+                message: 'Mode penomoran surat belum ditentukan.'
+
+              };
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | KHUSUS KEMATIAN
+            |--------------------------------------------------------------------------
+            */
+
+            return {
+
+              success: true,
+
+              settingRequired: false,
+
+              mode: mode,
+
+              format: setting.format_kematian ||
+                'SKM/{NO}/{MM}/{YYYY}',
+
+              nomor: setting.nomor_kematian ||
+                0
+
+            };
+
+          }
+        );
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SHOW SETTING REQUIRED ALERT
+    |--------------------------------------------------------------------------
+    */
+
+    function showSettingRequired(
+      message
+    ) {
+
+      Swal.fire({
+
+        title: 'Setting Nomor Surat Belum Ada',
+
+        text: message ||
+          'Silakan lakukan setting nomor surat terlebih dahulu.',
+
+        icon: 'warning',
+
+        showCancelButton: true,
+
+        confirmButtonText: 'Buka Setting Surat',
+
+        cancelButtonText: 'Batal',
+
+        confirmButtonColor: '#0d6efd'
+
+      }).then(
+        function(result) {
+
+          if (
+            result.isConfirmed
+          ) {
+
+            window.location.href =
+              'module/letter/setting-surat';
+
+          }
+
+        }
+      );
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | APPLY SETTING TO MODAL
+    |--------------------------------------------------------------------------
+    */
+
+    function applyNomorSetting(
+      setting
+    ) {
+
+      if (
+        !setting ||
+        !setting.success
+      ) {
+
+        return false;
+
+      }
+
+
+      /*
+      |--------------------------------------------------------------------------
+      | MANUAL
+      |--------------------------------------------------------------------------
+      */
+
+      if (
+        setting.mode ===
+        'MANUAL'
+      ) {
+
+        setNomorManual();
+
+        return true;
+
+      }
+
+
+      /*
+      |--------------------------------------------------------------------------
+      | AUTO
+      |--------------------------------------------------------------------------
+      */
+
+      if (
+        setting.mode ===
+        'AUTO'
+      ) {
+
+        setNomorAuto(
+
+          setting.format,
+
+          setting.nomor
+
+        );
+
+        return true;
+
+      }
+
+
+      return false;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | TAMBAH SURAT
     |--------------------------------------------------------------------------
     */
 
@@ -1154,109 +1489,217 @@ require '../../controller/view.php';
 
           /*
           |--------------------------------------------------------------------------
-          | RESET FORM
+          | CEK SETTING DULU
           |--------------------------------------------------------------------------
           */
 
-          $('#programForm')[0]
-            .reset();
+          checkSettingNomorSurat()
+
+            .then(
+              function(setting) {
 
 
-          $('#id')
-            .val('');
+                /*
+                |--------------------------------------------------------------------------
+                | SETTING BELUM ADA
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                  setting.settingRequired
+                ) {
+
+                  showSettingRequired(
+                    setting.message
+                  );
+
+                  return;
+
+                }
 
 
-          $('#id_patient')
-            .val('');
+                /*
+                |--------------------------------------------------------------------------
+                | ERROR CEK SETTING
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                  !setting.success
+                ) {
+
+                  Swal.fire(
+                    'Gagal!',
+                    setting.message ||
+                    'Gagal membaca setting nomor surat.',
+                    'error'
+                  );
+
+                  return;
+
+                }
 
 
-          $('#id_visit')
-            .val('');
+                /*
+                |--------------------------------------------------------------------------
+                | RESET FORM
+                |--------------------------------------------------------------------------
+                */
+
+                $('#programForm')[0]
+                  .reset();
 
 
-          /*
-          |--------------------------------------------------------------------------
-          | RESET PATIENT SELECT
-          |--------------------------------------------------------------------------
-          */
+                /*
+                |--------------------------------------------------------------------------
+                | ID
+                |--------------------------------------------------------------------------
+                */
 
-          $('#id_patient_select')
-            .val(null)
-            .trigger('change');
+                $('#id')
+                  .val('');
 
 
-          /*
-          |--------------------------------------------------------------------------
-          | TANGGAL SURAT
-          |--------------------------------------------------------------------------
-          */
+                $('#id_patient')
+                  .val('');
 
-          $('#tanggal_surat')
-            .val(
-              '<?= date('Y-m-d') ?>'
+
+                $('#id_visit')
+                  .val('');
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | RESET PATIENT
+                |--------------------------------------------------------------------------
+                */
+
+                $('#id_patient_select')
+                  .val(null)
+                  .trigger(
+                    'change'
+                  );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | TANGGAL SURAT
+                |--------------------------------------------------------------------------
+                */
+
+                $('#tanggal_surat')
+                  .val(
+                    '<?= date('Y-m-d') ?>'
+                  );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | TANGGAL KEMATIAN
+                |--------------------------------------------------------------------------
+                */
+
+                $('#tanggal_kematian')
+                  .val('');
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | WAKTU
+                |--------------------------------------------------------------------------
+                */
+
+                $('#waktu_kematian')
+                  .val('');
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | RUANGAN
+                |--------------------------------------------------------------------------
+                */
+
+                $('#ruangan')
+                  .val('');
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | DOKTER
+                |--------------------------------------------------------------------------
+                */
+
+                $('#dokter_menyatakan')
+                  .val('')
+                  .trigger(
+                    'change'
+                  );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | NOMOR SURAT
+                |--------------------------------------------------------------------------
+                */
+
+                $('#nomor_surat')
+                  .val('');
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | APPLY MODE
+                |--------------------------------------------------------------------------
+                */
+
+                applyNomorSetting(
+                  setting
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | TITLE
+                |--------------------------------------------------------------------------
+                */
+
+                $('#programModal .modal-title')
+                  .text(
+                    'Tambah Surat Keterangan Kematian'
+                  );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | SHOW MODAL
+                |--------------------------------------------------------------------------
+                */
+
+                $('#programModal')
+                  .modal(
+                    'show'
+                  );
+
+              }
+            )
+
+            .catch(
+              function(error) {
+
+                console.error(
+                  'Setting error:',
+                  error
+                );
+
+
+                Swal.fire(
+                  'Error!',
+                  'Gagal memeriksa setting nomor surat.',
+                  'error'
+                );
+
+              }
             );
-
-
-          /*
-          |--------------------------------------------------------------------------
-          | TANGGAL KEMATIAN
-          |--------------------------------------------------------------------------
-          */
-
-          $('#tanggal_kematian')
-            .val('');
-
-
-          /*
-          |--------------------------------------------------------------------------
-          | WAKTU
-          |--------------------------------------------------------------------------
-          */
-
-          $('#waktu_kematian')
-            .val('');
-
-
-          /*
-          |--------------------------------------------------------------------------
-          | RUANGAN
-          |--------------------------------------------------------------------------
-          */
-
-          $('#ruangan')
-            .val('');
-
-
-          /*
-          |--------------------------------------------------------------------------
-          | DOKTER
-          |--------------------------------------------------------------------------
-          */
-
-          $('#dokter_menyatakan')
-            .val('');
-
-
-          /*
-          |--------------------------------------------------------------------------
-          | TITLE
-          |--------------------------------------------------------------------------
-          */
-
-          $('#programModal .modal-title')
-            .text(
-              'Tambah Surat Keterangan Kematian'
-            );
-
-
-          /*
-          |--------------------------------------------------------------------------
-          | SHOW
-          |--------------------------------------------------------------------------
-          */
-
-          $('#programModal')
-            .modal('show');
 
         }
       );
@@ -1298,7 +1741,9 @@ require '../../controller/view.php';
           |--------------------------------------------------------------------------
           */
 
-          if (!idPatient) {
+          if (
+            !idPatient
+          ) {
 
             Swal.fire(
               'Perhatian!',
@@ -1317,7 +1762,9 @@ require '../../controller/view.php';
           |--------------------------------------------------------------------------
           */
 
-          if (!idVisit) {
+          if (
+            !idVisit
+          ) {
 
             Swal.fire(
               'Perhatian!',
@@ -1326,6 +1773,47 @@ require '../../controller/view.php';
             );
 
             return;
+
+          }
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | VALIDASI NOMOR SURAT
+          |--------------------------------------------------------------------------
+          |
+          | Hanya validasi jika input aktif.
+          |
+          |--------------------------------------------------------------------------
+          */
+
+          const nomorDisabled =
+            $('#nomor_surat')
+            .prop(
+              'disabled'
+            );
+
+
+          if (
+            !id &&
+            !nomorDisabled
+          ) {
+
+            if (
+              !$('#nomor_surat')
+              .val()
+              .trim()
+            ) {
+
+              Swal.fire(
+                'Perhatian!',
+                'Nomor surat wajib diisi karena menggunakan mode manual.',
+                'warning'
+              );
+
+              return;
+
+            }
 
           }
 
@@ -1381,7 +1869,9 @@ require '../../controller/view.php';
           */
 
           if (
-            !$('#ruangan').val()
+            !$('#ruangan')
+            .val()
+            .trim()
           ) {
 
             Swal.fire(
@@ -1465,6 +1955,7 @@ require '../../controller/view.php';
           fetch(
 
               apiUrl +
+
               (
                 id ?
                 '?id=' + id :
@@ -1491,7 +1982,47 @@ require '../../controller/view.php';
             .then(
               function(res) {
 
-                return res.json();
+                return res.text();
+
+              }
+            )
+
+            .then(
+              function(text) {
+
+                /*
+                |--------------------------------------------------------------------------
+                | DEBUG RESPONSE
+                |--------------------------------------------------------------------------
+                */
+
+                console.log(
+                  'Response server:',
+                  text
+                );
+
+
+                let data;
+
+
+                try {
+
+                  data =
+                    JSON.parse(
+                      text
+                    );
+
+                } catch (error) {
+
+                  throw new Error(
+                    text ||
+                    'Response server bukan JSON.'
+                  );
+
+                }
+
+
+                return data;
 
               }
             )
@@ -1510,6 +2041,32 @@ require '../../controller/view.php';
                   );
 
 
+                /*
+                |--------------------------------------------------------------------------
+                | SETTING REQUIRED
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                  data.status ===
+                  'setting_required'
+                ) {
+
+                  showSettingRequired(
+                    data.message
+                  );
+
+                  return;
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | SUCCESS
+                |--------------------------------------------------------------------------
+                */
+
                 if (
                   data.status ===
                   'success'
@@ -1518,13 +2075,16 @@ require '../../controller/view.php';
 
                   Swal.fire(
                     'Berhasil!',
-                    data.message,
+                    data.message ||
+                    'Data berhasil disimpan.',
                     'success'
                   );
 
 
                   $('#programModal')
-                    .modal('hide');
+                    .modal(
+                      'hide'
+                    );
 
 
                   table.ajax.reload(
@@ -1533,17 +2093,23 @@ require '../../controller/view.php';
                   );
 
 
-                } else {
-
-
-                  Swal.fire(
-                    'Gagal!',
-                    data.message ||
-                    'Terjadi kesalahan.',
-                    'error'
-                  );
+                  return;
 
                 }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | ERROR
+                |--------------------------------------------------------------------------
+                */
+
+                Swal.fire(
+                  'Gagal!',
+                  data.message ||
+                  'Terjadi kesalahan.',
+                  'error'
+                );
 
               }
             )
@@ -1562,12 +2128,14 @@ require '../../controller/view.php';
 
 
                 console.error(
+                  'Submit error:',
                   error
                 );
 
 
                 Swal.fire(
                   'Error!',
+                  error.message ||
                   'Terjadi kesalahan pada server.',
                   'error'
                 );
@@ -1661,6 +2229,49 @@ require '../../controller/view.php';
 
                 /*
                 |--------------------------------------------------------------------------
+                | NOMOR SURAT
+                |--------------------------------------------------------------------------
+                |
+                | NOMOR LAMA TIDAK BOLEH DIUBAH
+                |
+                |--------------------------------------------------------------------------
+                */
+
+                $('#nomor_surat')
+                  .val(
+                    d.nomor_surat ||
+                    ''
+                  )
+                  .prop(
+                    'disabled',
+                    false
+                  )
+                  .prop(
+                    'readonly',
+                    true
+                  )
+                  .prop(
+                    'required',
+                    false
+                  );
+
+
+                $('#nomor_surat_info')
+                  .html(`
+
+                  <div class="alert alert-secondary py-2 px-3 mb-0">
+
+                    <i class="fas fa-lock me-1"></i>
+
+                    Nomor surat tersimpan dan tidak dapat diubah saat edit.
+
+                  </div>
+
+                `);
+
+
+                /*
+                |--------------------------------------------------------------------------
                 | TANGGAL SURAT
                 |--------------------------------------------------------------------------
                 */
@@ -1721,6 +2332,9 @@ require '../../controller/view.php';
                   .val(
                     d.dokter_menyatakan ||
                     ''
+                  )
+                  .trigger(
+                    'change'
                   );
 
 
@@ -1734,7 +2348,9 @@ require '../../controller/view.php';
                   new Option(
 
                     d.patient_name +
+
                     ' - RM ' +
+
                     (
                       d.nomor_rm ||
                       '-'
@@ -1904,7 +2520,8 @@ require '../../controller/view.php';
 
                         Swal.fire(
                           'Gagal!',
-                          data.message,
+                          data.message ||
+                          'Gagal menghapus data.',
                           'error'
                         );
 
@@ -1931,6 +2548,59 @@ require '../../controller/view.php';
                   );
 
               }
+            );
+
+        }
+      );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RESET MODAL SAAT DITUTUP
+    |--------------------------------------------------------------------------
+    */
+
+    $('#programModal')
+      .on(
+        'hidden.bs.modal',
+        function() {
+
+          /*
+          |--------------------------------------------------------------------------
+          | RESET NOMOR
+          |--------------------------------------------------------------------------
+          */
+
+          $('#nomor_surat')
+            .val('')
+            .prop(
+              'disabled',
+              false
+            )
+            .prop(
+              'readonly',
+              false
+            )
+            .prop(
+              'required',
+              true
+            );
+
+
+          $('#nomor_surat_info')
+            .html('');
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | RESET SELECT2
+          |--------------------------------------------------------------------------
+          */
+
+          $('#id_patient_select')
+            .val(null)
+            .trigger(
+              'change'
             );
 
         }

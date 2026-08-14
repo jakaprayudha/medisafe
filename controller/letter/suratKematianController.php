@@ -9,11 +9,26 @@ header('Content-Type: application/json');
 
 /*
 |--------------------------------------------------------------------------
+| MYSQLI ERROR
+|--------------------------------------------------------------------------
+*/
+
+mysqli_report(
+   MYSQLI_REPORT_ERROR |
+      MYSQLI_REPORT_STRICT
+);
+
+
+/*
+|--------------------------------------------------------------------------
 | VALIDASI SESSION
 |--------------------------------------------------------------------------
 */
 
-if (!isset($_SESSION['id_customer'])) {
+if (
+   !isset($_SESSION['id_customer']) ||
+   $_SESSION['id_customer'] === ''
+) {
 
    echo json_encode([
       'status'  => 'error',
@@ -24,9 +39,12 @@ if (!isset($_SESSION['id_customer'])) {
 }
 
 
-$id_customer = $_SESSION['id_customer'];
+$id_customer =
+   (string) $_SESSION['id_customer'];
 
-$method = $_SERVER['REQUEST_METHOD'];
+
+$method =
+   $_SERVER['REQUEST_METHOD'];
 
 
 /*
@@ -35,56 +53,548 @@ $method = $_SERVER['REQUEST_METHOD'];
 |--------------------------------------------------------------------------
 */
 
-switch ($method) {
+try {
 
-   case 'POST':
+   switch ($method) {
 
-      createData($id_customer);
+      case 'POST':
 
-      break;
-
-
-   case 'GET':
-
-      if (
-         isset($_GET['id']) &&
-         $_GET['id'] !== ''
-      ) {
-
-         getID(
-            $_GET['id'],
+         createData(
             $id_customer
          );
-      } else {
 
-         getData($id_customer);
-      }
-
-      break;
+         break;
 
 
-   case 'PUT':
+      case 'GET':
 
-      updateData($id_customer);
+         if (
+            isset($_GET['id']) &&
+            $_GET['id'] !== ''
+         ) {
 
-      break;
+            getID(
+               $_GET['id'],
+               $id_customer
+            );
+         } else {
+
+            getData(
+               $id_customer
+            );
+         }
+
+         break;
 
 
-   case 'DELETE':
+      case 'PUT':
 
-      deleteData($id_customer);
+         updateData(
+            $id_customer
+         );
 
-      break;
+         break;
 
 
-   default:
+      case 'DELETE':
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' => 'Method tidak diizinkan.'
-      ]);
+         deleteData(
+            $id_customer
+         );
 
-      break;
+         break;
+
+
+      default:
+
+         responseJson(
+            'error',
+            'Method tidak diizinkan.'
+         );
+   }
+} catch (
+   Throwable $e
+) {
+
+   echo json_encode([
+
+      'status' =>
+      'error',
+
+      'message' =>
+      $e->getMessage()
+
+   ]);
+
+   exit;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| RESPONSE JSON
+|--------------------------------------------------------------------------
+*/
+
+function responseJson(
+   $status,
+   $message,
+   $data = null
+) {
+
+   $response = [
+
+      'status' =>
+      $status,
+
+      'message' =>
+      $message
+
+   ];
+
+
+   if (
+      $data !== null
+   ) {
+
+      $response['data'] =
+         $data;
+   }
+
+
+   echo json_encode(
+      $response
+   );
+
+   exit;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| USER
+|--------------------------------------------------------------------------
+*/
+
+function getCurrentUser()
+{
+
+   return
+
+      $_SESSION['uid_user']
+
+      ??
+
+      $_SESSION['id_user']
+
+      ??
+
+      $_SESSION['username']
+
+      ??
+
+      'system';
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| GET SETTING SURAT KEMATIAN
+|--------------------------------------------------------------------------
+|
+| Struktur setting_surat:
+|
+| mode_nomor
+| format_kematian
+| nomor_kematian
+|
+|--------------------------------------------------------------------------
+*/
+
+function getSettingSuratKematian(
+   $id_customer
+) {
+
+   global $koneksi;
+
+
+   $query = "
+
+      SELECT
+
+         id,
+         id_customer,
+         mode_nomor,
+         format_kematian,
+         nomor_kematian
+
+      FROM setting_surat
+
+      WHERE id_customer = ?
+
+      LIMIT 1
+
+   ";
+
+
+   $stmt =
+      $koneksi->prepare(
+         $query
+      );
+
+
+   if (!$stmt) {
+
+      return [
+
+         'status' =>
+         false,
+
+         'message' =>
+         'Prepare setting nomor surat gagal: '
+            . $koneksi->error
+
+      ];
+   }
+
+
+   $stmt->bind_param(
+      "s",
+      $id_customer
+   );
+
+
+   $stmt->execute();
+
+
+   $result =
+      $stmt->get_result();
+
+
+   if (
+      $result->num_rows === 0
+   ) {
+
+      $stmt->close();
+
+
+      return [
+
+         'status' =>
+         false,
+
+         'setting_not_found' =>
+         true,
+
+         'message' =>
+         'Setting nomor Surat Keterangan Kematian belum dibuat.'
+
+      ];
+   }
+
+
+   $setting =
+      $result->fetch_assoc();
+
+
+   $stmt->close();
+
+
+   return [
+
+      'status' =>
+      true,
+
+      'setting' =>
+      $setting
+
+   ];
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| GENERATE NOMOR SURAT
+|--------------------------------------------------------------------------
+|
+| AUTO:
+|
+| format_kematian = SKM/{NO}/{MM}/{YYYY}
+|
+| nomor_kematian = 10
+|
+| hasil:
+|
+| SKM/11/08/2026
+|
+|--------------------------------------------------------------------------
+*/
+
+function generateNomorKematian(
+   $tanggal_surat,
+   $setting
+) {
+
+   $format =
+      trim(
+         $setting['format_kematian']
+            ?? ''
+      );
+
+
+   if (
+      $format === ''
+   ) {
+
+      $format =
+         'SKM/{NO}/{MM}/{YYYY}';
+   }
+
+
+   /*
+   |--------------------------------------------------------------------------
+   | NOMOR SAAT INI
+   |--------------------------------------------------------------------------
+   */
+
+   $currentNumber =
+      (int) (
+         $setting['nomor_kematian']
+         ?? 0
+      );
+
+
+   /*
+   |--------------------------------------------------------------------------
+   | NOMOR BERIKUTNYA
+   |--------------------------------------------------------------------------
+   */
+
+   $nextNumber =
+      $currentNumber + 1;
+
+
+   /*
+   |--------------------------------------------------------------------------
+   | TANGGAL
+   |--------------------------------------------------------------------------
+   */
+
+   $timestamp =
+      strtotime(
+         $tanggal_surat
+      );
+
+
+   if (
+      !$timestamp
+   ) {
+
+      $timestamp =
+         time();
+   }
+
+
+   $year =
+      date(
+         'Y',
+         $timestamp
+      );
+
+
+   $month =
+      date(
+         'm',
+         $timestamp
+      );
+
+
+   $day =
+      date(
+         'd',
+         $timestamp
+      );
+
+
+   /*
+   |--------------------------------------------------------------------------
+   | FORMAT NOMOR
+   |--------------------------------------------------------------------------
+   |
+   | Mendukung:
+   |
+   | {NO}
+   | {NO:4}
+   |
+   |--------------------------------------------------------------------------
+   */
+
+   $numberFormatted =
+      (string) $nextNumber;
+
+
+   if (
+      preg_match(
+         '/\{NO:(\d+)\}/i',
+         $format,
+         $matches
+      )
+   ) {
+
+      $length =
+         (int) $matches[1];
+
+
+      $numberFormatted =
+         str_pad(
+            $nextNumber,
+            $length,
+            '0',
+            STR_PAD_LEFT
+         );
+   }
+
+
+   /*
+   |--------------------------------------------------------------------------
+   | REPLACE NOMOR
+   |--------------------------------------------------------------------------
+   */
+
+   $format =
+      preg_replace(
+         '/\{NO:\d+\}/i',
+         $numberFormatted,
+         $format
+      );
+
+
+   $format =
+      str_replace(
+         '{NO}',
+         $numberFormatted,
+         $format
+      );
+
+
+   /*
+   |--------------------------------------------------------------------------
+   | REPLACE TANGGAL
+   |--------------------------------------------------------------------------
+   */
+
+   $format =
+      str_replace(
+         '{YYYY}',
+         $year,
+         $format
+      );
+
+
+   $format =
+      str_replace(
+         '{MM}',
+         $month,
+         $format
+      );
+
+
+   $format =
+      str_replace(
+         '{DD}',
+         $day,
+         $format
+      );
+
+
+   return [
+
+      'status' =>
+      true,
+
+      'nomor_surat' =>
+      $format,
+
+      'nomor' =>
+      $nextNumber
+
+   ];
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| VALIDASI VISIT
+|--------------------------------------------------------------------------
+*/
+
+function validateVisit(
+   $id_visit,
+   $id_patient,
+   $id_customer
+) {
+
+   global $koneksi;
+
+
+   $query = "
+
+      SELECT
+
+         pv.id_visit,
+         pv.id_patient,
+         pv.id_customer,
+         pv.id_doctor,
+         pv.id_poli
+
+      FROM pasien_visit pv
+
+      WHERE pv.id_visit = ?
+
+      AND pv.id_patient = ?
+
+      AND pv.id_customer = ?
+
+      LIMIT 1
+
+   ";
+
+
+   $stmt =
+      $koneksi->prepare(
+         $query
+      );
+
+
+   if (!$stmt) {
+
+      return false;
+   }
+
+
+   $stmt->bind_param(
+      "sss",
+      $id_visit,
+      $id_patient,
+      $id_customer
+   );
+
+
+   $stmt->execute();
+
+
+   $result =
+      $stmt->get_result();
+
+
+   $valid =
+      $result->num_rows > 0;
+
+
+   $stmt->close();
+
+
+   return $valid;
 }
 
 
@@ -94,372 +604,419 @@ switch ($method) {
 |--------------------------------------------------------------------------
 */
 
-function createData($id_customer)
-{
+function createData(
+   $id_customer
+) {
+
    global $koneksi;
 
 
    /*
-    |--------------------------------------------------------------------------
-    | DATA POST
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | INPUT
+   |--------------------------------------------------------------------------
+   */
 
    $id_patient =
-      trim($_POST['id_patient'] ?? '');
+      trim(
+         $_POST['id_patient']
+            ?? ''
+      );
 
 
    $id_visit =
-      trim($_POST['id_visit'] ?? '');
+      trim(
+         $_POST['id_visit']
+            ?? ''
+      );
+
+
+   $nomorManual =
+      trim(
+         $_POST['nomor_surat']
+            ?? ''
+      );
 
 
    $tanggal_surat =
-      $_POST['tanggal_surat']
-      ?? date('Y-m-d');
+      trim(
+         $_POST['tanggal_surat']
+            ?? date('Y-m-d')
+      );
 
 
    $tanggal_kematian =
-      $_POST['tanggal_kematian']
-      ?? '';
+      trim(
+         $_POST['tanggal_kematian']
+            ?? ''
+      );
 
 
    $waktu_kematian =
-      $_POST['waktu_kematian']
-      ?? '';
+      trim(
+         $_POST['waktu_kematian']
+            ?? ''
+      );
 
 
    $ruangan =
-      trim($_POST['ruangan'] ?? '');
+      trim(
+         $_POST['ruangan']
+            ?? ''
+      );
 
 
    $dokter_menyatakan =
-      trim($_POST['dokter_menyatakan'] ?? '');
+      trim(
+         $_POST['dokter_menyatakan']
+            ?? ''
+      );
 
 
    /*
-    |--------------------------------------------------------------------------
-    | VALIDASI
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | VALIDASI
+   |--------------------------------------------------------------------------
+   */
 
-   if (empty($id_patient)) {
+   if (
+      $id_patient === ''
+   ) {
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' => 'Pasien wajib dipilih.'
-      ]);
-
-      return;
+      responseJson(
+         'error',
+         'Pasien wajib dipilih.'
+      );
    }
 
 
-   if (empty($id_visit)) {
+   if (
+      $id_visit === ''
+   ) {
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' => 'Visit pasien tidak ditemukan.'
-      ]);
-
-      return;
+      responseJson(
+         'error',
+         'Visit pasien tidak ditemukan.'
+      );
    }
 
 
-   if (empty($tanggal_surat)) {
+   if (
+      $tanggal_surat === ''
+   ) {
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' => 'Tanggal surat wajib diisi.'
-      ]);
-
-      return;
+      responseJson(
+         'error',
+         'Tanggal surat wajib diisi.'
+      );
    }
 
 
-   if (empty($tanggal_kematian)) {
+   if (
+      $tanggal_kematian === ''
+   ) {
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' => 'Tanggal kematian wajib diisi.'
-      ]);
-
-      return;
+      responseJson(
+         'error',
+         'Tanggal kematian wajib diisi.'
+      );
    }
 
 
-   if (empty($waktu_kematian)) {
+   if (
+      $waktu_kematian === ''
+   ) {
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' => 'Waktu kematian wajib diisi.'
-      ]);
-
-      return;
+      responseJson(
+         'error',
+         'Waktu kematian wajib diisi.'
+      );
    }
 
 
-   if (empty($ruangan)) {
+   if (
+      $ruangan === ''
+   ) {
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' => 'Ruangan wajib diisi.'
-      ]);
-
-      return;
+      responseJson(
+         'error',
+         'Ruangan wajib diisi.'
+      );
    }
 
 
-   if (empty($dokter_menyatakan)) {
+   if (
+      $dokter_menyatakan === ''
+   ) {
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' => 'Dokter yang menyatakan wajib dipilih.'
-      ]);
-
-      return;
+      responseJson(
+         'error',
+         'Dokter yang menyatakan wajib dipilih.'
+      );
    }
 
 
    /*
-    |--------------------------------------------------------------------------
-    | VALIDASI VISIT
-    |--------------------------------------------------------------------------
-    |
-    | Pastikan:
-    | - visit ada
-    | - patient sesuai
-    | - customer sesuai
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | VALIDASI VISIT
+   |--------------------------------------------------------------------------
+   */
 
-   $checkVisit = $koneksi->prepare("
-        SELECT
-            pv.id_visit,
-            pv.id_patient,
-            pv.id_customer
+   if (
+      !validateVisit(
+         $id_visit,
+         $id_patient,
+         $id_customer
+      )
+   ) {
 
-        FROM pasien_visit pv
-
-        WHERE pv.id_visit = ?
-          AND pv.id_patient = ?
-          AND pv.id_customer = ?
-
-        LIMIT 1
-    ");
+      responseJson(
+         'error',
+         'Visit pasien tidak valid atau bukan milik fasilitas kesehatan ini.'
+      );
+   }
 
 
-   if (!$checkVisit) {
+   /*
+   |--------------------------------------------------------------------------
+   | SETTING NOMOR SURAT
+   |--------------------------------------------------------------------------
+   */
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' =>
-         'Prepare validasi visit gagal: '
+   $settingResult =
+      getSettingSuratKematian(
+         $id_customer
+      );
+
+
+   if (
+      !$settingResult['status']
+   ) {
+
+      responseJson(
+
+         'setting_required',
+
+         $settingResult['message'],
+
+         [
+
+            'redirect' =>
+            'module/letter/setting-surat'
+
+         ]
+
+      );
+   }
+
+
+   $setting =
+      $settingResult['setting'];
+
+
+   /*
+   |--------------------------------------------------------------------------
+   | MODE NOMOR
+   |--------------------------------------------------------------------------
+   */
+
+   $mode =
+      strtoupper(
+         trim(
+            $setting['mode_nomor']
+               ?? ''
+         )
+      );
+
+
+   if (
+      $mode !== 'AUTO'
+      &&
+      $mode !== 'MANUAL'
+   ) {
+
+      responseJson(
+
+         'setting_required',
+
+         'Mode penomoran surat belum ditentukan.',
+
+         [
+
+            'redirect' =>
+            'module/letter/setting-surat'
+
+         ]
+
+      );
+   }
+
+
+   /*
+   |--------------------------------------------------------------------------
+   | NOMOR SURAT
+   |--------------------------------------------------------------------------
+   */
+
+   $nomor_surat =
+      '';
+
+
+   $generatedNumber =
+      null;
+
+
+   if (
+      $mode === 'MANUAL'
+   ) {
+
+      /*
+      |--------------------------------------------------------------------------
+      | MANUAL
+      |--------------------------------------------------------------------------
+      */
+
+      if (
+         $nomorManual === ''
+      ) {
+
+         responseJson(
+            'error',
+            'Nomor surat wajib diisi karena menggunakan mode manual.'
+         );
+      }
+
+
+      $nomor_surat =
+         $nomorManual;
+   } else {
+
+      /*
+      |--------------------------------------------------------------------------
+      | AUTO
+      |--------------------------------------------------------------------------
+      */
+
+      $generatedNumber =
+         generateNomorKematian(
+            $tanggal_surat,
+            $setting
+         );
+
+
+      if (
+         !$generatedNumber['status']
+      ) {
+
+         responseJson(
+            'error',
+            'Gagal membuat nomor surat.'
+         );
+      }
+
+
+      $nomor_surat =
+         $generatedNumber['nomor_surat'];
+   }
+
+
+   /*
+   |--------------------------------------------------------------------------
+   | CEK DUPLIKAT NOMOR
+   |--------------------------------------------------------------------------
+   */
+
+   $checkNomor =
+      $koneksi->prepare("
+
+         SELECT id
+
+         FROM surat_kematian
+
+         WHERE nomor_surat = ?
+
+         AND id_customer = ?
+
+         LIMIT 1
+
+      ");
+
+
+   if (!$checkNomor) {
+
+      responseJson(
+         'error',
+         'Prepare cek nomor surat gagal: '
             . $koneksi->error
-      ]);
-
-      return;
+      );
    }
 
 
-   $checkVisit->bind_param(
-      "ssi",
-      $id_visit,
-      $id_patient,
+   $checkNomor->bind_param(
+      "ss",
+      $nomor_surat,
       $id_customer
    );
 
 
-   $checkVisit->execute();
+   $checkNomor->execute();
 
 
-   $visitResult =
-      $checkVisit->get_result();
-
-
-   if (
-      $visitResult->num_rows === 0
-   ) {
-
-      $checkVisit->close();
-
-      echo json_encode([
-         'status'  => 'error',
-         'message' =>
-         'Visit pasien tidak valid atau bukan milik fasilitas kesehatan ini.'
-      ]);
-
-      return;
-   }
-
-
-   $checkVisit->close();
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | NOMOR SURAT OTOMATIS
-    |--------------------------------------------------------------------------
-    |
-    | SKM = Surat Keterangan Kematian
-    |
-    | Contoh:
-    |
-    | SKM/20260813/0001
-    | SKM/20260813/0002
-    |
-    | Nomor kembali ke 0001 untuk customer berbeda.
-    |--------------------------------------------------------------------------
-    */
-
-   $tanggalNomor =
-      date(
-         'Ymd',
-         strtotime($tanggal_surat)
-      );
-
-
-   $prefix =
-      "SKM/"
-      . $tanggalNomor
-      . "/";
-
-
-   $likeNomor =
-      $prefix . "%";
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | CARI NOMOR TERAKHIR PER CUSTOMER
-    |--------------------------------------------------------------------------
-    */
-
-   $stmtNomor = $koneksi->prepare("
-        SELECT
-            sk.nomor_surat
-
-        FROM surat_kematian sk
-
-        INNER JOIN pasien_visit pv
-            ON pv.id_visit = sk.id_visit
-
-        WHERE pv.id_customer = ?
-          AND sk.nomor_surat LIKE ?
-
-        ORDER BY sk.id DESC
-
-        LIMIT 1
-    ");
-
-
-   if (!$stmtNomor) {
-
-      echo json_encode([
-         'status'  => 'error',
-         'message' =>
-         'Prepare nomor surat gagal: '
-            . $koneksi->error
-      ]);
-
-      return;
-   }
-
-
-   $stmtNomor->bind_param(
-      "is",
-      $id_customer,
-      $likeNomor
-   );
-
-
-   $stmtNomor->execute();
-
-
-   $resultNomor =
-      $stmtNomor->get_result();
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | NOMOR AWAL
-    |--------------------------------------------------------------------------
-    */
-
-   $nextNumber = 1;
+   $nomorResult =
+      $checkNomor->get_result();
 
 
    if (
-      $resultNomor->num_rows > 0
+      $nomorResult->num_rows > 0
    ) {
 
-      $rowNomor =
-         $resultNomor->fetch_assoc();
+      $checkNomor->close();
 
 
-      $nomorTerakhir =
-         $rowNomor['nomor_surat'];
-
-
-      $lastNumber =
-         (int) substr(
-            $nomorTerakhir,
-            strrpos(
-               $nomorTerakhir,
-               '/'
-            ) + 1
-         );
-
-
-      $nextNumber =
-         $lastNumber + 1;
+      responseJson(
+         'error',
+         'Nomor surat sudah digunakan.'
+      );
    }
 
 
-   $stmtNomor->close();
+   $checkNomor->close();
 
 
    /*
-    |--------------------------------------------------------------------------
-    | FORMAT NOMOR
-    |--------------------------------------------------------------------------
-    */
-
-   $nomor_surat =
-      $prefix
-      .
-      str_pad(
-         $nextNumber,
-         4,
-         '0',
-         STR_PAD_LEFT
-      );
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | CREATED BY
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | USER
+   |--------------------------------------------------------------------------
+   */
 
    $created_by =
-      $_SESSION['uid_user']
-      ??
-      $_SESSION['username']
-      ??
-      'system';
+      getCurrentUser();
 
 
    /*
-    |--------------------------------------------------------------------------
-    | INSERT
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | TRANSACTION
+   |--------------------------------------------------------------------------
+   */
 
-   $query = "
+   $koneksi->begin_transaction();
 
-        INSERT INTO surat_kematian (
+
+   try {
+
+      /*
+      |--------------------------------------------------------------------------
+      | INSERT SURAT
+      |--------------------------------------------------------------------------
+      */
+
+      $query = "
+
+         INSERT INTO surat_kematian (
 
             id_visit,
             id_patient,
+            id_customer,
             nomor_surat,
             tanggal_surat,
             tanggal_kematian,
@@ -468,10 +1025,11 @@ function createData($id_customer)
             dokter_menyatakan,
             created_by
 
-        )
+         )
 
-        VALUES (
+         VALUES (
 
+            ?,
             ?,
             ?,
             ?,
@@ -482,141 +1040,266 @@ function createData($id_customer)
             ?,
             ?
 
-        )
+         )
 
-    ";
-
-
-   $stmt =
-      $koneksi->prepare($query);
+      ";
 
 
-   if (!$stmt) {
-
-      echo json_encode([
-         'status'  => 'error',
-         'message' =>
-         'Prepare insert gagal: '
-            . $koneksi->error
-      ]);
-
-      return;
-   }
+      $stmt =
+         $koneksi->prepare(
+            $query
+         );
 
 
-   /*
-    |--------------------------------------------------------------------------
-    | 9 FIELD = 9 STRING
-    |--------------------------------------------------------------------------
-    */
+      if (!$stmt) {
 
-   $stmt->bind_param(
-      "sssssssss",
-      $id_visit,
-      $id_patient,
-      $nomor_surat,
-      $tanggal_surat,
-      $tanggal_kematian,
-      $waktu_kematian,
-      $ruangan,
-      $dokter_menyatakan,
-      $created_by
-   );
+         throw new Exception(
+            'Prepare insert gagal: '
+               . $koneksi->error
+         );
+      }
 
 
-   if ($stmt->execute()) {
+      $stmt->bind_param(
+         "ssssssssss",
+         $id_visit,
+         $id_patient,
+         $id_customer,
+         $nomor_surat,
+         $tanggal_surat,
+         $tanggal_kematian,
+         $waktu_kematian,
+         $ruangan,
+         $dokter_menyatakan,
+         $created_by
+      );
+
+
+      $stmt->execute();
+
 
       $newId =
          $stmt->insert_id;
 
 
-      echo json_encode([
-         'status'      => 'success',
-         'message'     =>
+      $stmt->close();
+
+
+      /*
+      |--------------------------------------------------------------------------
+      | UPDATE COUNTER AUTO
+      |--------------------------------------------------------------------------
+      */
+
+      if (
+         $mode === 'AUTO'
+      ) {
+
+         $nextNumber =
+            (int)
+            $generatedNumber['nomor'];
+
+
+         $updateCounter =
+            $koneksi->prepare("
+
+               UPDATE setting_surat
+
+               SET
+
+                  nomor_kematian = ?,
+
+                  updated_at = NOW(),
+
+                  updated_by = ?
+
+               WHERE id_customer = ?
+
+            ");
+
+
+         if (!$updateCounter) {
+
+            throw new Exception(
+               'Prepare update counter gagal: '
+                  . $koneksi->error
+            );
+         }
+
+
+         $updateCounter->bind_param(
+            "iss",
+            $nextNumber,
+            $created_by,
+            $id_customer
+         );
+
+
+         $updateCounter->execute();
+
+
+         if (
+            $updateCounter->affected_rows < 0
+         ) {
+
+            throw new Exception(
+               'Counter nomor kematian gagal diperbarui.'
+            );
+         }
+
+
+         $updateCounter->close();
+      }
+
+
+      /*
+      |--------------------------------------------------------------------------
+      | COMMIT
+      |--------------------------------------------------------------------------
+      */
+
+      $koneksi->commit();
+
+
+      responseJson(
+
+         'success',
+
          'Surat keterangan kematian berhasil disimpan.',
-         'id'          => $newId,
-         'nomor_surat' => $nomor_surat
-      ]);
-   } else {
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' =>
-         'Gagal menyimpan data: '
-            . $stmt->error
-      ]);
+         [
+
+            'id' =>
+            $newId,
+
+            'id_customer' =>
+            $id_customer,
+
+            'nomor_surat' =>
+            $nomor_surat,
+
+            'mode_nomor' =>
+            $mode
+
+         ]
+
+      );
+   } catch (
+      Throwable $e
+   ) {
+
+      /*
+      |--------------------------------------------------------------------------
+      | ROLLBACK
+      |--------------------------------------------------------------------------
+      */
+
+      $koneksi->rollback();
+
+
+      responseJson(
+
+         'error',
+
+         'Gagal menyimpan surat: '
+            . $e->getMessage()
+
+      );
    }
-
-
-   $stmt->close();
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| READ ALL
+| GET ALL
 |--------------------------------------------------------------------------
 */
 
-function getData($id_customer)
-{
+function getData(
+   $id_customer
+) {
+
    global $koneksi;
 
 
    $query = "
 
-        SELECT
+      SELECT
 
-            sk.*,
+         sk.id,
+         sk.id_visit,
+         sk.id_patient,
+         sk.id_customer,
+         sk.nomor_surat,
+         sk.tanggal_surat,
+         sk.tanggal_kematian,
+         sk.waktu_kematian,
+         sk.ruangan,
+         sk.dokter_menyatakan,
+         sk.created_at,
+         sk.updated_at,
+         sk.created_by,
+         sk.updated_by,
 
-            mp.patient_name,
-            mp.nomor_rm,
-            mp.patient_nik,
-            mp.patient_datebirth,
+         mp.patient_name,
+         mp.nomor_rm,
+         mp.patient_nik,
+         mp.patient_datebirth,
 
-            pv.id_doctor,
-            pv.id_poli,
-            pv.visit_ID,
-            pv.visit_date,
+         pv.id_doctor,
+         pv.id_poli,
+         pv.visit_ID,
+         pv.visit_date,
 
-            md.doctor_name
+         md.doctor_name
 
-        FROM surat_kematian sk
+      FROM surat_kematian sk
 
-        INNER JOIN pasien_visit pv
-            ON pv.id_visit = sk.id_visit
-            AND pv.id_customer = ?
+      INNER JOIN ms_patient mp
 
-        INNER JOIN ms_patient mp
-            ON mp.id_patient = sk.id_patient
+         ON mp.id_patient =
+            sk.id_patient
 
-        LEFT JOIN ms_doctor md
-            ON md.id_doctor = sk.dokter_menyatakan
+      INNER JOIN pasien_visit pv
 
-        ORDER BY sk.id DESC
+         ON pv.id_visit =
+            sk.id_visit
 
-    ";
+         AND pv.id_customer =
+            sk.id_customer
+
+      LEFT JOIN ms_doctor md
+
+         ON md.id_doctor =
+            sk.dokter_menyatakan
+
+      WHERE sk.id_customer = ?
+
+      ORDER BY
+
+         sk.id DESC
+
+   ";
 
 
    $stmt =
-      $koneksi->prepare($query);
+      $koneksi->prepare(
+         $query
+      );
 
 
    if (!$stmt) {
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' =>
-         'Prepare query gagal: '
+      responseJson(
+         'error',
+         'Prepare GET gagal: '
             . $koneksi->error
-      ]);
-
-      return;
+      );
    }
 
 
    $stmt->bind_param(
-      "i",
+      "s",
       $id_customer
    );
 
@@ -634,85 +1317,126 @@ function getData($id_customer)
       );
 
 
-   echo json_encode([
-      'status' => 'success',
-      'data'   => $data
-   ]);
-
-
    $stmt->close();
+
+
+   responseJson(
+      'success',
+      'Data berhasil diambil.',
+      $data
+   );
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| READ BY ID
+| GET BY ID
 |--------------------------------------------------------------------------
 */
 
-function getID($id, $id_customer)
-{
+function getID(
+   $id,
+   $id_customer
+) {
+
    global $koneksi;
+
+
+   $id =
+      (int) $id;
+
+
+   if (
+      $id <= 0
+   ) {
+
+      responseJson(
+         'error',
+         'ID surat tidak valid.'
+      );
+   }
 
 
    $query = "
 
-        SELECT
+      SELECT
 
-            sk.*,
+         sk.id,
+         sk.id_visit,
+         sk.id_patient,
+         sk.id_customer,
+         sk.nomor_surat,
+         sk.tanggal_surat,
+         sk.tanggal_kematian,
+         sk.waktu_kematian,
+         sk.ruangan,
+         sk.dokter_menyatakan,
+         sk.created_at,
+         sk.updated_at,
+         sk.created_by,
+         sk.updated_by,
 
-            mp.patient_name,
-            mp.nomor_rm,
-            mp.patient_nik,
-            mp.patient_datebirth,
+         mp.patient_name,
+         mp.nomor_rm,
+         mp.patient_nik,
+         mp.patient_datebirth,
 
-            pv.id_doctor,
-            pv.id_poli,
-            pv.visit_ID,
-            pv.visit_date,
+         pv.id_doctor,
+         pv.id_poli,
+         pv.visit_ID,
+         pv.visit_date,
 
-            md.doctor_name
+         md.doctor_name
 
-        FROM surat_kematian sk
+      FROM surat_kematian sk
 
-        INNER JOIN pasien_visit pv
-            ON pv.id_visit = sk.id_visit
-            AND pv.id_customer = ?
+      INNER JOIN ms_patient mp
 
-        INNER JOIN ms_patient mp
-            ON mp.id_patient = sk.id_patient
+         ON mp.id_patient =
+            sk.id_patient
 
-        LEFT JOIN ms_doctor md
-            ON md.id_doctor = sk.dokter_menyatakan
+      INNER JOIN pasien_visit pv
 
-        WHERE sk.id = ?
+         ON pv.id_visit =
+            sk.id_visit
 
-        LIMIT 1
+         AND pv.id_customer =
+            sk.id_customer
 
-    ";
+      LEFT JOIN ms_doctor md
+
+         ON md.id_doctor =
+            sk.dokter_menyatakan
+
+      WHERE sk.id = ?
+
+      AND sk.id_customer = ?
+
+      LIMIT 1
+
+   ";
 
 
    $stmt =
-      $koneksi->prepare($query);
+      $koneksi->prepare(
+         $query
+      );
 
 
    if (!$stmt) {
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' =>
-         'Prepare query gagal: '
+      responseJson(
+         'error',
+         'Prepare GET ID gagal: '
             . $koneksi->error
-      ]);
-
-      return;
+      );
    }
 
 
    $stmt->bind_param(
-      "ii",
-      $id_customer,
-      $id
+      "is",
+      $id,
+      $id_customer
    );
 
 
@@ -724,25 +1448,77 @@ function getID($id, $id_customer)
 
 
    if (
-      $result->num_rows > 0
+      $result->num_rows === 0
    ) {
 
-      echo json_encode([
-         'status' => 'success',
-         'data'   =>
-         $result->fetch_assoc()
-      ]);
-   } else {
+      $stmt->close();
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' =>
+
+      responseJson(
+         'error',
          'Data surat tidak ditemukan.'
-      ]);
+      );
    }
 
 
+   $data =
+      $result->fetch_assoc();
+
+
    $stmt->close();
+
+
+   /*
+   |--------------------------------------------------------------------------
+   | SETTING NOMOR
+   |--------------------------------------------------------------------------
+   */
+
+   $settingResult =
+      getSettingSuratKematian(
+         $id_customer
+      );
+
+
+   if (
+      $settingResult['status']
+   ) {
+
+      $setting =
+         $settingResult['setting'];
+
+
+      $data['mode_nomor'] =
+         $setting['mode_nomor']
+         ?? '';
+
+
+      $data['format_kematian'] =
+         $setting['format_kematian']
+         ?? '';
+
+
+      $data['nomor_kematian'] =
+         $setting['nomor_kematian']
+         ?? 0;
+   } else {
+
+      $data['mode_nomor'] =
+         '';
+
+      $data['format_kematian'] =
+         '';
+
+      $data['nomor_kematian'] =
+         0;
+   }
+
+
+   responseJson(
+      'success',
+      'Data surat berhasil diambil.',
+      $data
+   );
 }
 
 
@@ -750,222 +1526,250 @@ function getID($id, $id_customer)
 |--------------------------------------------------------------------------
 | UPDATE
 |--------------------------------------------------------------------------
+|
+| Nomor surat TIDAK DIUBAH.
+|
+|--------------------------------------------------------------------------
 */
 
-function updateData($id_customer)
-{
+function updateData(
+   $id_customer
+) {
+
    global $koneksi;
 
 
    /*
-    |--------------------------------------------------------------------------
-    | PARSE PUT
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | BACA PUT
+   |--------------------------------------------------------------------------
+   */
+
+   $rawInput =
+      file_get_contents(
+         'php://input'
+      );
+
 
    parse_str(
-      file_get_contents(
-         "php://input"
-      ),
-      $_PUT
+      $rawInput,
+      $putData
    );
 
 
    /*
-    |--------------------------------------------------------------------------
-    | ID
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | ID
+   |--------------------------------------------------------------------------
+   */
 
    $id =
-      $_PUT['id']
+      $putData['id']
       ??
       $_GET['id']
       ??
       '';
 
 
-   if (empty($id)) {
+   $id =
+      (int) $id;
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' =>
+
+   if (
+      $id <= 0
+   ) {
+
+      responseJson(
+         'error',
          'ID surat tidak ditemukan.'
-      ]);
-
-      return;
+      );
    }
 
 
    /*
-    |--------------------------------------------------------------------------
-    | DATA
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | DATA
+   |--------------------------------------------------------------------------
+   */
 
    $tanggal_surat =
-      $_PUT['tanggal_surat']
-      ?? '';
+      trim(
+         $putData['tanggal_surat']
+            ?? ''
+      );
 
 
    $tanggal_kematian =
-      $_PUT['tanggal_kematian']
-      ?? '';
+      trim(
+         $putData['tanggal_kematian']
+            ?? ''
+      );
 
 
    $waktu_kematian =
-      $_PUT['waktu_kematian']
-      ?? '';
+      trim(
+         $putData['waktu_kematian']
+            ?? ''
+      );
 
 
    $ruangan =
       trim(
-         $_PUT['ruangan']
+         $putData['ruangan']
             ?? ''
       );
 
 
    $dokter_menyatakan =
       trim(
-         $_PUT['dokter_menyatakan']
+         $putData['dokter_menyatakan']
             ?? ''
       );
 
 
    /*
-    |--------------------------------------------------------------------------
-    | VALIDASI
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | VALIDASI
+   |--------------------------------------------------------------------------
+   */
 
-   if (empty($tanggal_surat)) {
+   if (
+      $tanggal_surat === ''
+   ) {
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' =>
+      responseJson(
+         'error',
          'Tanggal surat wajib diisi.'
-      ]);
-
-      return;
+      );
    }
 
 
-   if (empty($tanggal_kematian)) {
+   if (
+      $tanggal_kematian === ''
+   ) {
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' =>
+      responseJson(
+         'error',
          'Tanggal kematian wajib diisi.'
-      ]);
-
-      return;
+      );
    }
 
 
-   if (empty($waktu_kematian)) {
+   if (
+      $waktu_kematian === ''
+   ) {
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' =>
+      responseJson(
+         'error',
          'Waktu kematian wajib diisi.'
-      ]);
-
-      return;
+      );
    }
 
 
-   if (empty($ruangan)) {
+   if (
+      $ruangan === ''
+   ) {
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' =>
+      responseJson(
+         'error',
          'Ruangan wajib diisi.'
-      ]);
-
-      return;
+      );
    }
 
 
-   if (empty($dokter_menyatakan)) {
+   if (
+      $dokter_menyatakan === ''
+   ) {
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' =>
+      responseJson(
+         'error',
          'Dokter yang menyatakan wajib dipilih.'
-      ]);
-
-      return;
+      );
    }
 
 
    /*
-    |--------------------------------------------------------------------------
-    | UPDATED BY
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | UPDATED BY
+   |--------------------------------------------------------------------------
+   */
 
    $updated_by =
-      $_SESSION['uid_user']
-      ??
-      $_SESSION['username']
-      ??
-      'system';
+      getCurrentUser();
 
 
    /*
-    |--------------------------------------------------------------------------
-    | UPDATE
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | UPDATE
+   |--------------------------------------------------------------------------
+   |
+   | Nomor surat sengaja TIDAK dimasukkan.
+   |
+   |--------------------------------------------------------------------------
+   */
 
    $query = "
 
-        UPDATE surat_kematian sk
+      UPDATE surat_kematian
 
-        INNER JOIN pasien_visit pv
-            ON pv.id_visit = sk.id_visit
+      SET
 
-        SET
+         tanggal_surat = ?,
 
-            sk.tanggal_surat = ?,
-            sk.tanggal_kematian = ?,
-            sk.waktu_kematian = ?,
-            sk.ruangan = ?,
-            sk.dokter_menyatakan = ?,
-            sk.updated_at = NOW(),
-            sk.updated_by = ?
+         tanggal_kematian = ?,
 
-        WHERE sk.id = ?
-          AND pv.id_customer = ?
+         waktu_kematian = ?,
 
-    ";
+         ruangan = ?,
+
+         dokter_menyatakan = ?,
+
+         updated_at = NOW(),
+
+         updated_by = ?
+
+      WHERE id = ?
+
+      AND id_customer = ?
+
+   ";
 
 
    $stmt =
-      $koneksi->prepare($query);
+      $koneksi->prepare(
+         $query
+      );
 
 
    if (!$stmt) {
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' =>
-         'Prepare update gagal: '
+      responseJson(
+         'error',
+         'Prepare UPDATE gagal: '
             . $koneksi->error
-      ]);
-
-      return;
+      );
    }
 
 
    /*
-    |--------------------------------------------------------------------------
-    | 8 PARAMETER
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | PARAMETER
+   |--------------------------------------------------------------------------
+   |
+   | tanggal_surat      = s
+   | tanggal_kematian   = s
+   | waktu_kematian     = s
+   | ruangan            = s
+   | dokter_menyatakan  = s
+   | updated_by         = s
+   | id                 = i
+   | id_customer        = s
+   |
+   |--------------------------------------------------------------------------
+   */
 
    $stmt->bind_param(
-      "ssssssii",
+      "ssssss is",
       $tanggal_surat,
       $tanggal_kematian,
       $waktu_kematian,
@@ -977,25 +1781,54 @@ function updateData($id_customer)
    );
 
 
-   if ($stmt->execute()) {
+   /*
+   |--------------------------------------------------------------------------
+   | IMPORTANT
+   |--------------------------------------------------------------------------
+   | mysqli bind_param TIDAK BOLEH memiliki spasi.
+   |
+   */
 
-      echo json_encode([
-         'status'  => 'success',
-         'message' =>
-         'Surat keterangan kematian berhasil diperbarui.'
-      ]);
-   } else {
+   $stmt->bind_param(
+      "ssssssis",
+      $tanggal_surat,
+      $tanggal_kematian,
+      $waktu_kematian,
+      $ruangan,
+      $dokter_menyatakan,
+      $updated_by,
+      $id,
+      $id_customer
+   );
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' =>
-         'Gagal memperbarui surat: '
-            . $stmt->error
-      ]);
-   }
+
+   $stmt->execute();
+
+
+   $affected =
+      $stmt->affected_rows;
 
 
    $stmt->close();
+
+
+   responseJson(
+
+      'success',
+
+      'Surat keterangan kematian berhasil diperbarui.',
+
+      [
+
+         'id' =>
+         $id,
+
+         'affected_rows' =>
+         $affected
+
+      ]
+
+   );
 }
 
 
@@ -1005,8 +1838,10 @@ function updateData($id_customer)
 |--------------------------------------------------------------------------
 */
 
-function deleteData($id_customer)
-{
+function deleteData(
+   $id_customer
+) {
+
    global $koneksi;
 
 
@@ -1015,92 +1850,84 @@ function deleteData($id_customer)
       ?? '';
 
 
-   if (empty($id)) {
+   $id =
+      (int) $id;
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' =>
+
+   if (
+      $id <= 0
+   ) {
+
+      responseJson(
+         'error',
          'ID surat tidak ditemukan.'
-      ]);
-
-      return;
+      );
    }
 
 
    /*
-    |--------------------------------------------------------------------------
-    | DELETE AMAN PER CUSTOMER
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | DELETE
+   |--------------------------------------------------------------------------
+   */
 
    $query = "
 
-        DELETE sk
+      DELETE FROM surat_kematian
 
-        FROM surat_kematian sk
+      WHERE id = ?
 
-        INNER JOIN pasien_visit pv
-            ON pv.id_visit = sk.id_visit
+      AND id_customer = ?
 
-        WHERE sk.id = ?
-          AND pv.id_customer = ?
-
-    ";
+   ";
 
 
    $stmt =
-      $koneksi->prepare($query);
+      $koneksi->prepare(
+         $query
+      );
 
 
    if (!$stmt) {
 
-      echo json_encode([
-         'status'  => 'error',
-         'message' =>
-         'Prepare delete gagal: '
+      responseJson(
+         'error',
+         'Prepare DELETE gagal: '
             . $koneksi->error
-      ]);
-
-      return;
+      );
    }
 
 
    $stmt->bind_param(
-      "ii",
+      "is",
       $id,
       $id_customer
    );
 
 
-   if ($stmt->execute()) {
+   $stmt->execute();
 
-      if (
-         $stmt->affected_rows > 0
-      ) {
 
-         echo json_encode([
-            'status'  => 'success',
-            'message' =>
-            'Surat keterangan kematian berhasil dihapus.'
-         ]);
-      } else {
-
-         echo json_encode([
-            'status'  => 'error',
-            'message' =>
-            'Data tidak ditemukan atau tidak memiliki akses.'
-         ]);
-      }
-   } else {
-
-      echo json_encode([
-         'status'  => 'error',
-         'message' =>
-         'Gagal menghapus surat: '
-            . $stmt->error
-      ]);
-   }
+   $affected =
+      $stmt->affected_rows;
 
 
    $stmt->close();
+
+
+   if (
+      $affected > 0
+   ) {
+
+      responseJson(
+         'success',
+         'Surat keterangan kematian berhasil dihapus.'
+      );
+   }
+
+
+   responseJson(
+      'error',
+      'Data tidak ditemukan atau bukan milik fasilitas kesehatan ini.'
+   );
 }
