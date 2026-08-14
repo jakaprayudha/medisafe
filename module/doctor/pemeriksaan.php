@@ -555,7 +555,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
             } else {
               Swal.fire({
                 icon: 'warning',
-                title: 'ICare tidak dapat dibuka',
+                title: 'ICare tidak dapat diakses',
                 text: response.message?.message || 'Coba beberapa saat lagi.',
                 showCancelButton: true,
                 confirmButtonText: 'Buka Tanpa ICare',
