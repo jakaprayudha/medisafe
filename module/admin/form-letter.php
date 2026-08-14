@@ -589,7 +589,7 @@ require '../../controller/view.php';
 
                     <!-- BUTTON -->
 
-                    <a href="module/admisi/form-letter/eye"
+                    <a href="module/letter/form-eye"
                       class="btn btn-warning btn-sm"
                       style="
                                     width:145px;

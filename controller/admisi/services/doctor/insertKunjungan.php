@@ -74,6 +74,10 @@ $nmSubSpesialis1 = $_POST['nmSubSpesialis1'];
 $nmfaskes = $_POST['nmfaskes'];
 $jadwal = $_POST['jadwal'] ?? null;
 $status_pasien = $_POST['status_pasien'] ?? null;
+$deskripsiAlergiObat = $_POST['ketAlergiObat'] ?? null;
+$deskripsiAlergiUdara = $_POST['ketAlergiUdara'] ?? null;
+$deskripsiAlergiMakan = $_POST['ketAlergiMakan'] ?? null;
+
 if ($status_pasien == "UMUM") {
     $stmt1 = $koneksi->prepare("UPDATE pasien_visit SET
                 tekanan_darah = ?,
@@ -102,12 +106,15 @@ if ($status_pasien == "UMUM") {
                 lingkar_perut = ?,
                 alergiMakan = ?,
                 alergiUdara = ?,
-                alergiObat = ?
+                alergiObat = ?,
+                desAlObat = ?,
+                desAlUdara = ?,
+                desAlMakan = ?
             WHERE visit_ID = ? AND id_patient = ?
         ");
 
     $stmt1->bind_param(
-        "sssssssssssssssssssssssssssss",
+        "ssssssssssssssssssssssssssssssss",
         $tekanandarah,
         $suhu,
         $heartRate,
@@ -135,6 +142,9 @@ if ($status_pasien == "UMUM") {
         $alergiMakan,
         $alergiUdara,
         $alergiObat,
+        $deskripsiAlergiObat,
+        $deskripsiAlergiUdara,
+        $deskripsiAlergiMakan,
         $nomor_visit,
         $id_patient
     );
@@ -242,23 +252,23 @@ if ($status_pasien == "UMUM") {
             $message = 'Berhasil Membuat Kunjungan';
             $noKunjungan = $result['data'][0]['message'];
             $stmt = $koneksi->prepare("INSERT INTO pcare_kunjungan (
-            noKunjungan, noKartu, tglDaftar, kdPoli,nmPoli, keluhan, kdSadar,
-            sistole, diastole, beratBadan, tinggiBadan, respRate, heartRate,
-            lingkarPerut, kdStatusPulang, tglPulang, kdDokter,nmDokter,
-            kdDiag1, kdDiag2, kdDiag3, nmDiag1, nmDiag2, nmDiag3, kdPoliRujukInternal,
-            tglEstRujuk, kdppk, subSpesialis, kdsarana, kdKhusus, kdkhSpesialis,
-            catatan, kdTacc, alasanTacc, anamnesa,
-            alergiMakan, alergiUdara, alergiObat,
-            kdPrognosa, terapiObat, terapiNonObat,
-            bmhp, suhu, noLP, nmKategori, nmSubSpesialis1, nmfaskes, jdwpraktek
-            ) VALUES (
-            ?,?,?,?,?,?,
-            ?,?,?,?,?,?,
-            ?,?,?,?,?,
-            ?,?,?,?,?,
-            ?,?,?,?,?,
-            ?,?,?,?,?,
-            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                noKunjungan, noKartu, tglDaftar, kdPoli,nmPoli, keluhan, kdSadar,
+                sistole, diastole, beratBadan, tinggiBadan, respRate, heartRate,
+                lingkarPerut, kdStatusPulang, tglPulang, kdDokter,nmDokter,
+                kdDiag1, kdDiag2, kdDiag3, nmDiag1, nmDiag2, nmDiag3, kdPoliRujukInternal,
+                tglEstRujuk, kdppk, subSpesialis, kdsarana, kdKhusus, kdkhSpesialis,
+                catatan, kdTacc, alasanTacc, anamnesa,
+                alergiMakan, alergiUdara, alergiObat,
+                kdPrognosa, terapiObat, terapiNonObat,
+                bmhp, suhu, noLP, nmKategori, nmSubSpesialis1, nmfaskes, jdwpraktek
+                ) VALUES (
+                ?,?,?,?,?,?,
+                ?,?,?,?,?,?,
+                ?,?,?,?,?,
+                ?,?,?,?,?,
+                ?,?,?,?,?,
+                ?,?,?,?,?,
+                ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
             $stmt->bind_param(
                 "ssssssssssssssssssssssssssssssssssssssssssssssss",
@@ -334,13 +344,13 @@ if ($status_pasien == "UMUM") {
                 kondisi_keluar = ?,
                 saturasi = ?,
                 diagnosa_sekunder = ?,
-                noKunjung = ?
-
-            WHERE visit_ID = ? AND id_patient = ?
-        ");
-
+                noKunjung = ?,
+                desAlObat = ?,
+                desAlUdara = ?,
+                desAlMakan = ?
+            WHERE visit_ID = ? AND id_patient = ?");
             $stmt1->bind_param(
-                "sssssssssssssssssssssssss",
+                "ssssssssssssssssssssssssssss",
                 $kdPrognosa,
                 $tekanandarah,
                 $suhu,
@@ -350,7 +360,7 @@ if ($status_pasien == "UMUM") {
                 $berat,
                 $bmi,
                 $bmi_keterangan,
-                $anamnesa, // masuk ke anamnesa
+                $anamnesa,
                 $keluhan,
                 $riwayat_alergi,
                 $riwayat_penyakit_pribadi,
@@ -364,62 +374,65 @@ if ($status_pasien == "UMUM") {
                 $saturasi,
                 $diagnosa_sekunder,
                 $noKunjungan,
+                $deskripsiAlergiObat,
+                $deskripsiAlergiUdara,
+                $deskripsiAlergiMakan,
                 $nomor_visit,
                 $id_patient
             );
         } else {
             $message = "Berhasil Update Kunjungan";
             $stmt = $koneksi->prepare("UPDATE pcare_kunjungan SET
-            noKartu = ?,
-            tglDaftar = ?,
-            kdPoli = ?,
-            nmPoli = ?,
-            keluhan = ?,
-            kdSadar = ?,
-            sistole = ?,
-            diastole = ?,
-            beratBadan = ?,
-            tinggiBadan = ?,
-            respRate = ?,
-            heartRate = ?,
-            lingkarPerut = ?,
-            kdStatusPulang = ?,
-            tglPulang = ?,
-            kdDokter = ?,
-            nmDokter = ?,
-            kdDiag1 = ?,
-            kdDiag2 = ?,
-            kdDiag3 = ?,
-            nmDiag1 = ?,
-            nmDiag2 = ?,
-            nmDiag3 = ?,
-            kdPoliRujukInternal = ?,
-            tglEstRujuk = ?,
-            kdppk = ?,
-            subSpesialis = ?,
-            kdsarana = ?,
-            kdKhusus = ?,
-            kdkhSpesialis = ?,
-            catatan = ?,
-            kdTacc = ?,
-            alasanTacc = ?,
-            anamnesa = ?,
-            alergiMakan = ?,
-            alergiUdara = ?,
-            alergiObat = ?,
-            kdPrognosa = ?,
-            terapiObat = ?,
-            terapiNonObat = ?,
-            bmhp = ?,
-            suhu = ?,
-            noLP = ?,
-            nmKategori = ?,
-            nmSubSpesialis1 = ?,
-            nmfaskes = ?
-        WHERE noKunjungan = ?
-        ");
+                noKartu = ?,
+                tglDaftar = ?,
+                kdPoli = ?,
+                nmPoli = ?,
+                keluhan = ?,
+                kdSadar = ?,
+                sistole = ?,
+                diastole = ?,
+                beratBadan = ?,
+                tinggiBadan = ?,
+                respRate = ?,
+                heartRate = ?,
+                lingkarPerut = ?,
+                kdStatusPulang = ?,
+                tglPulang = ?,
+                kdDokter = ?,
+                nmDokter = ?,
+                kdDiag1 = ?,
+                kdDiag2 = ?,
+                kdDiag3 = ?,
+                nmDiag1 = ?,
+                nmDiag2 = ?,
+                nmDiag3 = ?,
+                kdPoliRujukInternal = ?,
+                tglEstRujuk = ?,
+                kdppk = ?,
+                subSpesialis = ?,
+                kdsarana = ?,
+                kdKhusus = ?,
+                kdkhSpesialis = ?,
+                catatan = ?,
+                kdTacc = ?,
+                alasanTacc = ?,
+                anamnesa = ?,
+                alergiMakan = ?,
+                alergiUdara = ?,
+                alergiObat = ?,
+                kdPrognosa = ?,
+                terapiObat = ?,
+                terapiNonObat = ?,
+                bmhp = ?,
+                suhu = ?,
+                noLP = ?,
+                nmKategori = ?,
+                nmSubSpesialis1 = ?,
+                nmfaskes = ?,
+                jdwpraktek = ?
+                WHERE noKunjungan = ?");
             $stmt->bind_param(
-                "sssssssssssssssssssssssssssssssssssssssssssssss",
+                "ssssssssssssssssssssssssssssssssssssssssssssssss",
                 $noKartu,
                 $DBtglDatar,
                 $kdPoli,
@@ -466,6 +479,7 @@ if ($status_pasien == "UMUM") {
                 $nmKategori,
                 $nmSubSpesialis1,
                 $nmfaskes,
+                $jadwal,
                 $noKunjungan
             );
             $stmt1 = $koneksi->prepare("UPDATE pasien_visit SET
@@ -491,13 +505,15 @@ if ($status_pasien == "UMUM") {
                 kondisi_keluar = ?,
                 saturasi = ?,
                 diagnosa_sekunder = ?,
-                noKunjung = ?
-
+                noKunjung = ?,
+                desAlObat = ?,
+                desAlUdara = ?,
+                desAlMakan = ?
             WHERE visit_ID = ? AND id_patient = ?
-        ");
+            ");
 
             $stmt1->bind_param(
-                "sssssssssssssssssssssssss",
+                "ssssssssssssssssssssssssssss",
                 $kdPrognosa,
                 $tekanandarah,
                 $suhu,
@@ -521,6 +537,9 @@ if ($status_pasien == "UMUM") {
                 $saturasi,
                 $diagnosa_sekunder,
                 $noKunjungan,
+                $deskripsiAlergiObat,
+                $deskripsiAlergiUdara,
+                $deskripsiAlergiMakan,
                 $nomor_visit,
                 $id_patient
             );

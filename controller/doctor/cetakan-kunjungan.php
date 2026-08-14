@@ -2,7 +2,7 @@
 include '../../database/connect.php';
 $id_customer = $_SESSION['id_customer'];
 $noKunjung = $_GET['id'];
-$stmt = $koneksi->prepare("SELECT sc.clinic_name, pc.KodePPK, pv.*, pk.tglEstRujuk, pk.kdDiag1, pk.nmDiag1, pk.nmKategori, pk.nmfaskes, p.patient_name, p.patient_gender, p.patient_datebirth, p.patient_bpjs FROM pasien_visit pv LEFT JOIN ms_patient p ON pv.nokartu = p.patient_bpjs INNER JOIN pcare_kunjungan AS pk ON pv.noKunjung = pk.noKunjungan INNER JOIN setting_clinic AS sc ON sc.id_customer = pv.id_customer INNER JOIN setting_pcare AS pc ON pc.id_customer = pv.id_customer WHERE pv.noKunjung = ? AND pv.id_customer = ?");
+$stmt = $koneksi->prepare("SELECT pk.jdwpraktek, sc.clinic_name, pc.KodePPK, pv.*, pk.tglEstRujuk, pk.kdDiag1, pk.nmDiag1,pk.nmSubSpesialis1, pk.nmKategori, pk.nmfaskes, p.patient_name, p.patient_gender, p.patient_datebirth, p.patient_bpjs FROM pasien_visit pv INNER JOIN ms_patient p ON pv.id_patient = p.id_patient INNER JOIN pcare_kunjungan AS pk ON pv.noKunjung = pk.noKunjungan INNER JOIN setting_clinic AS sc ON sc.id_customer = pv.id_customer INNER JOIN setting_pcare AS pc ON pc.id_customer = pv.id_customer WHERE pv.noKunjung = ? AND pv.id_customer = ?");
 $stmt->bind_param('ss', $noKunjung, $id_customer);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -12,22 +12,22 @@ if (!$data) {
 }
 
 // ================= DATA PASIEN =================
-$nama_pasien   = $data['patient_name'] ?? 'NAZLI AZWANY';
-$no_bpjs       = $data['patient_bpjs'] ?? '0000006565048';
+$nama_pasien   = $data['patient_name'];
+$no_bpjs       = $data['patient_bpjs'];
 $jenis_kelamin = ($data['patient_gender'] ?? 'P') == 'L' ? 'L' : 'P';
-$tgl_lahir     = $data['patient_birthdate'] ?? '1976-02-03';
+$tgl_lahir     = $data['patient_birthdate'];
 $umur          = $tgl_lahir ? date_diff(date_create($tgl_lahir), date_create('today'))->y : '50';
 
 // ================= DATA KUNJUNGAN =================
-$diagnosa         = ($data['kdDiag1'] ?? 'K04.0') . " - " . ($data['nmDiag1'] ?? 'Pulpitis');
-$catatan          = $data['catatan'] ?? '';
-$telah_diberikan  = $data['tindakan'] ?? 'RUJUK SP..KONSERVASI';
-$no_kunjungan     = $data['noKunjungan'] ?? '0032B0370826Y001518';
+$diagnosa         = ($data['kdDiag1']) . " - " . ($data['nmDiag1']);
+$catatan          = $data['catatan'];
+$telah_diberikan  = $data['tindakan'];
+$no_kunjungan     = $noKunjung;
 
 // ================= DATA TAMBAHAN =================
-$fktp         = ($data['clinic_name'] ?? 'MEDISAFE CS') . '(' . ($data['KodePPK'] ?? '0032B037') . ')';
+$fktp         = ($data['clinic_name'] ?? 'MEDISAFE CS') . '(' . ($data['KodePPK']) . ')';
 $kabupaten    = "KAB. DELI SERDANG(0032)";
-$nama_dokter  = $data['id_doctor'] ?? 'Jaka Prayudha';
+$nama_dokter  = $data['id_doctor'];
 
 // ================= HEADER =================
 $kedeputian = "KEDEPUTIAN WILAYAH I";
