@@ -1,0 +1,691 @@
+* {
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #f2f2f2;
+  font-family: "Times New Roman", Times, serif;
+  color: #000;
+}
+
+/* =========================================================
+   A4 PAGE
+========================================================= */
+
+.page {
+  width: 210mm;
+  min-height: 297mm;
+  height: auto;
+
+  margin: 20px auto;
+  padding: 10mm 14mm 16mm 14mm;
+
+  background: #fff;
+  position: relative;
+
+  overflow: visible;
+}
+/* =========================================================
+   KOP SURAT
+========================================================= */
+
+.kop {
+  display: flex;
+  align-items: center;
+
+  border-bottom: 2.2px solid #000;
+
+  padding-bottom: 4px;
+
+  width: 100%;
+}
+
+.kop-logo {
+  width: 22mm;
+
+  text-align: center;
+
+  flex-shrink: 0;
+}
+
+.kop-logo img {
+  max-width: 18mm;
+  max-height: 18mm;
+
+  width: auto;
+  height: auto;
+
+  object-fit: contain;
+}
+
+.kop-content {
+  flex: 1;
+
+  text-align: center;
+
+  line-height: 1.1;
+
+  min-width: 0;
+}
+
+.kop-content .nama-instansi {
+  font-size: 13pt;
+
+  font-weight: bold;
+
+  text-transform: uppercase;
+}
+
+.kop-content .nama-klinik {
+  font-size: 16pt;
+
+  font-weight: bold;
+
+  text-transform: uppercase;
+
+  margin-top: 1px;
+}
+
+.kop-content .alamat {
+  font-size: 8pt;
+
+  margin-top: 2px;
+}
+
+.kop-content .kontak {
+  font-size: 8pt;
+
+  margin-top: 1px;
+}
+
+.kop-empty {
+  width: 22mm;
+
+  flex-shrink: 0;
+}
+
+/* =========================================================
+   JUDUL
+========================================================= */
+
+.judul {
+  text-align: center;
+
+  margin-top: 12px;
+}
+
+.judul h1 {
+  margin: 0;
+
+  font-size: 13pt;
+
+  text-decoration: underline;
+
+  text-transform: uppercase;
+}
+
+.nomor {
+  margin-top: 2px;
+
+  font-size: 9.5pt;
+}
+
+/* =========================================================
+   ISI SURAT
+========================================================= */
+
+.isi {
+  margin-top: 12px;
+
+  font-size: 10.5pt;
+
+  line-height: 1.25;
+
+  /*
+   * Jangan gunakan page-break-inside: avoid
+   * di seluruh isi karena kontennya panjang.
+   */
+}
+
+.pembuka {
+  text-align: justify;
+
+  margin-bottom: 6px;
+}
+
+/* =========================================================
+   IDENTITAS
+========================================================= */
+
+.identitas {
+  width: 100%;
+
+  margin: 4px 0 7px 0;
+
+  border-collapse: collapse;
+
+  table-layout: fixed;
+}
+
+.identitas td {
+  vertical-align: top;
+
+  padding: 1.5px 0;
+
+  font-size: 10.5pt;
+
+  line-height: 1.15;
+}
+
+.identitas .label {
+  width: 40mm;
+}
+
+.identitas .separator {
+  width: 5mm;
+
+  text-align: center;
+}
+
+.identitas .value {
+  font-weight: bold;
+}
+
+/* =========================================================
+   PERNYATAAN
+========================================================= */
+
+.pernyataan {
+  text-align: justify;
+
+  margin-top: 5px;
+
+  line-height: 1.25;
+}
+
+/* =========================================================
+   TABEL UMUM
+========================================================= */
+
+table.data-table {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  margin-top: 4px;
+
+  table-layout: fixed;
+}
+
+table.data-table th,
+table.data-table td {
+  border: 1px solid #000;
+
+  padding: 3px 5px;
+
+  font-size: 8.5pt;
+
+  line-height: 1.1;
+
+  vertical-align: middle;
+}
+
+table.data-table th {
+  text-align: center;
+
+  font-weight: bold;
+
+  background: #f5f5f5;
+
+  padding: 3.5px 5px;
+}
+
+.center {
+  text-align: center;
+}
+
+.left {
+  text-align: left;
+}
+
+/* =========================================================
+   PEMERIKSAAN
+========================================================= */
+
+.pemeriksaan {
+  margin-top: 7px;
+
+  width: 100%;
+
+  border-collapse: collapse;
+
+  table-layout: fixed;
+}
+
+.pemeriksaan th,
+.pemeriksaan td {
+  border: 1px solid #000;
+
+  padding: 3px 5px;
+
+  font-size: 8.5pt;
+
+  line-height: 1.1;
+
+  vertical-align: middle;
+}
+
+.pemeriksaan th {
+  text-align: center;
+
+  font-weight: bold;
+
+  padding: 4px 5px;
+}
+
+.pemeriksaan td:nth-child(1) {
+  width: 45%;
+}
+
+.pemeriksaan td:nth-child(2) {
+  width: 20%;
+
+  text-align: center;
+}
+
+.pemeriksaan td:nth-child(3) {
+  width: 35%;
+}
+
+/* =========================================================
+   TANDA VITAL
+========================================================= */
+
+.vital td:first-child {
+  width: 40%;
+}
+
+.vital td:nth-child(2) {
+  width: 25%;
+
+  text-align: center;
+}
+
+.vital td:nth-child(3) {
+  width: 35%;
+}
+
+/* =========================================================
+   PEMERIKSAAN LAB
+========================================================= */
+
+.lab td:first-child {
+  width: 45%;
+}
+
+.lab td:nth-child(2) {
+  width: 25%;
+
+  text-align: center;
+}
+
+.lab td:nth-child(3) {
+  width: 30%;
+}
+
+/* =========================================================
+   VISUS
+========================================================= */
+
+.visus th,
+.visus td {
+  text-align: center;
+}
+
+.visus .mata {
+  text-align: left;
+
+  width: 28%;
+}
+
+/* =========================================================
+   REFRAKSI
+========================================================= */
+
+.refraksi th,
+.refraksi td {
+  text-align: center;
+
+  font-size: 8pt;
+
+  padding: 3px 3px;
+
+  line-height: 1.05;
+}
+
+/* =========================================================
+   PEMERIKSAAN MATA LAINNYA
+========================================================= */
+
+.mata-lain td:first-child {
+  width: 40%;
+}
+
+.mata-lain td:nth-child(2),
+.mata-lain td:nth-child(3) {
+  width: 30%;
+
+  text-align: center;
+}
+
+/* =========================================================
+   KEPERLUAN
+========================================================= */
+
+.keperluan {
+  margin-top: 7px;
+
+  text-align: justify;
+
+  line-height: 1.25;
+}
+
+/* =========================================================
+   KESIMPULAN
+========================================================= */
+
+.kesimpulan {
+  margin-top: 6px;
+
+  text-align: justify;
+
+  line-height: 1.25;
+}
+
+.kesimpulan strong {
+  text-transform: uppercase;
+}
+
+/* =========================================================
+   KESIMPULAN BOX
+========================================================= */
+
+.kesimpulan-box {
+  border: 1px solid #000;
+
+  padding: 6px 8px;
+
+  margin-top: 4px;
+
+  /*
+   * Jangan terlalu tinggi.
+   */
+  min-height: 0;
+
+  text-align: justify;
+
+  font-size: 9pt;
+
+  line-height: 1.15;
+}
+
+.kesimpulan-box p {
+  margin: 0 0 3px 0;
+}
+
+/* =========================================================
+   REKOMENDASI
+========================================================= */
+
+.rekomendasi-box {
+  border: 1px solid #000;
+
+  padding: 6px 8px;
+
+  margin-top: 4px;
+
+  min-height: 0;
+
+  text-align: justify;
+
+  font-size: 9pt;
+
+  line-height: 1.15;
+}
+
+/* =========================================================
+   TANDA TANGAN + QR
+========================================================= */
+
+.ttd-wrapper {
+  display: flex;
+
+  justify-content: flex-end;
+
+  align-items: flex-end;
+
+  margin-top: 8mm;
+
+  /*
+   * Pastikan blok tanda tangan tidak
+   * terlalu dekat dengan footer.
+   */
+  min-height: 35mm;
+}
+
+.ttd {
+  width: 75mm;
+
+  text-align: center;
+
+  font-size: 9pt;
+}
+
+/* =========================================================
+   QR VERIFIKASI
+========================================================= */
+
+.qr-verifikasi {
+  width: 100%;
+
+  text-align: center;
+
+  font-size: 6pt;
+
+  margin: 0;
+}
+
+.qr-verifikasi img {
+  width: 20mm;
+
+  height: 20mm;
+
+  display: block;
+
+  margin: 0 auto 1.5px auto;
+}
+
+/* =========================================================
+   CATATAN
+========================================================= */
+
+.catatan {
+  margin-top: 6px;
+
+  font-size: 7.5pt;
+
+  line-height: 1.1;
+
+  font-style: italic;
+
+  text-align: justify;
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.footer {
+  position: absolute;
+
+  bottom: 5mm;
+
+  left: 14mm;
+
+  right: 14mm;
+
+  border-top: 1px solid #999;
+
+  padding-top: 2px;
+
+  text-align: center;
+
+  font-size: 6.5pt;
+
+  line-height: 1;
+
+  color: #555;
+}
+
+/* =========================================================
+   BUTTON / TOOLBAR
+========================================================= */
+
+.toolbar {
+  width: 210mm;
+
+  margin: 15px auto;
+
+  text-align: right;
+}
+
+.btn-print {
+  border: none;
+
+  background: #198754;
+
+  color: #fff;
+
+  padding: 10px 18px;
+
+  border-radius: 5px;
+
+  cursor: pointer;
+
+  font-size: 14px;
+}
+
+.btn-print:hover {
+  background: #157347;
+}
+
+/* =========================================================
+   PRINT
+========================================================= */
+
+@page {
+  size: A4 portrait;
+
+  margin: 0;
+}
+
+@media print {
+  html,
+  body {
+    width: 210mm;
+
+    height: 297mm;
+
+    margin: 0;
+
+    padding: 0;
+
+    background: #fff;
+  }
+
+  .page {
+    width: 210mm;
+
+    height: 297mm;
+
+    margin: 0;
+
+    padding: 10mm 14mm 16mm 14mm;
+
+    background: #fff;
+
+    box-shadow: none;
+
+    overflow: hidden;
+
+    page-break-after: avoid;
+
+    page-break-before: avoid;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  table,
+  tr,
+  td,
+  th {
+    page-break-inside: avoid;
+  }
+
+  /*
+   * Hanya komponen yang memang harus utuh
+   * diberi avoid.
+   */
+  .kop,
+  .judul,
+  .pemeriksaan,
+  .ttd-wrapper {
+    page-break-inside: avoid;
+  }
+
+  /*
+   * Jangan paksa seluruh .isi tetap satu halaman.
+   */
+  .isi {
+    page-break-inside: auto;
+  }
+}
+
+/* =========================================================
+   DOMPDF / PDF SAFETY
+========================================================= */
+
+img {
+  max-width: 100%;
+
+  page-break-inside: avoid;
+}
+
+h1,
+h2,
+h3,
+p {
+  page-break-after: avoid;
+}
+
+table {
+  page-break-inside: avoid;
+}
+
+tr {
+  page-break-inside: avoid;
+}
+
+td,
+th {
+  page-break-inside: avoid;
+}
