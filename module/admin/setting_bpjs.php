@@ -172,42 +172,31 @@ $antrol = mysqli_fetch_assoc(mysqli_query(
                       <?php } ?>
                     </div>
                     <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab" tabindex="0">
-                      <div class="alert alert-danger" role="alert">
-                        Proses Integrasi (Bridging) I Care sedang dalam tahap koordinasi menunggu jadwal UAT, untuk informasi lebih lanjut silakan hubungi tim IT kami. Terima kasih atas pengertiannya.
+                      <div class="p-3">
+                        <!-- Header Tabel -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                          <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-user-md me-2 text-primary"></i>Data Dokter ICare
+                          </h6>
+                        </div>
+                        <div class="table-responsive" data-simplebar>
+                          <table class="table table-hover align-middle table-bordered mb-0" id="dokterTable">
+                            <thead class="table-light">
+                              <tr>
+                                <th>Nama Dokter</th>
+                                <th class="text-center" width="120">Username</th>
+                                <th class="text-center" width="120">Password</th>
+                                <th class="text-center" width="120">Aksi</th>
+                              </tr>
+                            </thead>
+                            <tbody id="dokterTableBody">
+                              <tr>
+                                <td colspan="4" class="text-center text-muted">Memuat data...</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
-                      <!-- <div class="row mt-4">
-                        <div class="col-12">
-                          <div class="mb-3">
-                            <label for="username_antrol" class="form-label">Username I Care</label>
-                            <input type="text" class="form-control" id="username_antrol" name="username_antrol" required>
-                          </div>
-                        </div>
-                        <div class="col-12">
-                          <div class="mb-3">
-                            <label for="password_antrol" class="form-label">Password I Care</label>
-                            <input type="text" class="form-control" id="password_antrol" name="password_antrol" required>
-                          </div>
-                        </div>
-                        <div class="col-12">
-                          <div class="mb-3">
-                            <label for="consumer_id" class="form-label">Consumer ID</label>
-                            <input type="text" class="form-control" id="consumer_id" name="consumer_id" required>
-                          </div>
-                        </div>
-                        <div class="col-12">
-                          <div class="mb-3">
-                            <label for="secret_key" class="form-label">Secret Key</label>
-                            <input type="text" class="form-control" id="secret_key" name="secret_key" required>
-                          </div>
-                        </div>
-                        <div class="col-12">
-                          <div class="mb-3">
-                            <label for="user_key" class="form-label">User Key</label>
-                            <input type="text" class="form-control" id="user_key" name="user_key" required>
-                          </div>
-                        </div>
-                      </div> -->
-                      <!-- <button class="btn btn-primary col-12">Simpan</button> -->
                     </div>
                     <div class="tab-pane fade" id="nav-dokter" role="tabpanel" aria-labelledby="nav-dokter-tab" tabindex="0">
                       <div class="d-flex justify-content-between align-items-center mb-3">
@@ -549,6 +538,61 @@ $antrol = mysqli_fetch_assoc(mysqli_query(
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <div class="modal fade" id="modalEditDokter" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-warning text-white">
+            <h5 class="modal-title">
+              <i class="fas fa-user-edit me-2"></i>
+              Edit iCare
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <form id="formEditDokter">
+            <div class="modal-body">
+              <input type="hidden" id="editId" name="id">
+              <div class="mb-3">
+                <label class="form-label fw-bold">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="editUsername"
+                  name="username"
+                  required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold">
+                  Password
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="editPassword"
+                  name="password"
+                  required>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal">
+                Batal
+              </button>
+              <button
+                type="submit"
+                class="btn btn-warning">
+                <i class="fas fa-save me-1"></i>
+                Simpan
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
     <script>
@@ -1131,7 +1175,7 @@ $antrol = mysqli_fetch_assoc(mysqli_query(
         let html = '<option value="">- Pilih Poliklinik -</option>';
         if (res.success) {
           $.each(res.data, function(i, row) {
-            if (row.poliSakit == '1'){
+            if (row.poliSakit == '1') {
               html += `<option value="${row.kdPoli}">${row.nmPoli}</option>`;
             }
           });
@@ -1352,6 +1396,133 @@ $antrol = mysqli_fetch_assoc(mysqli_query(
           }
         });
       }
+    });
+  });
+</script>
+
+<script>
+  $(document).ready(function() {
+    const apiUrl = 'module/admin/getDataIcare';
+    const $tableBody = $('#dokterTableBody');
+    const $btnSync = $('#btnTambah');
+    function loadDataDokter() {
+      $tableBody.html('<tr><td colspan="4" class="text-center">Memuat data dari server... <i class="fas fa-spinner fa-spin"></i></td></tr>');
+      $.ajax({
+        url: apiUrl,
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+          $tableBody.empty();
+          if (response.success && response.data && response.data.length > 0) {
+            let rows = '';
+            $.each(response.data, function(index, dokter) {
+              const statusBadge = (dokter.status === "1" || dokter.status === 1) ?
+                '<span class="badge bg-success">Aktif</span>' :
+                '<span class="badge bg-danger">Nonaktif</span>';
+              rows += `
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div>
+                                            <h6 class="mb-0">${dokter.nmDokter}</h6>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">${dokter.icare_username ?? 'Belum Diisi'}</td>
+                                <td class="text-center">${dokter.icare_password ?? 'Belum Diisi'}</td>
+                                <td class="text-center">
+                                <button 
+                                    type="button"
+                                    class="btn btn-sm btn-warning text-white me-1 btn-edit-dokter"
+                                    title="Edit"
+                                    data-id="${dokter.id}" data-username="${dokter.icare_username}" data-password="${dokter.icare_password}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </td>
+                            </tr>
+                        `;
+            });
+            $tableBody.append(rows);
+          } else {
+            $tableBody.html('<tr><td colspan="4" class="text-center text-muted">Data dokter belum tersedia.</td></tr>');
+          }
+        },
+        error: function(xhr, status, error) {
+          console.error('Terjadi kesalahan Ajax:', error);
+          $tableBody.html('<tr><td colspan="4" class="text-center text-danger"><i class="fas fa-exclamation-triangle"></i> Gagal mengambil data dari server.</td></tr>');
+        }
+      });
+    }
+    loadDataDokter();
+    $btnSync.on('click', function(e) {
+      e.preventDefault();
+      loadDataDokter();
+    });
+
+    $(document).on('click', '.btn-edit-dokter', function() {
+      const id = $(this).data('id');
+      const username = $(this).data('username');
+      const password = $(this).data('password');
+      $('#editId').val(id);
+      $('#editUsername').val(username);
+      $('#editPassword').val(password);
+      $('#modalEditDokter').modal('show');
+    });
+
+    $('#formEditDokter').on('submit', function(e) {
+      e.preventDefault();
+      const id = $('#editId').val();
+      const username = $('#editUsername').val();
+      const password = $('#editPassword').val();
+      $.ajax({
+        url: 'module/admin/updateDataIcare',
+        type: 'POST',
+        dataType: 'json',
+        data: {
+          id: id,
+          username: username,
+          password: password
+        },
+        beforeSend: function() {
+          $('#formEditDokter button[type="submit"]')
+            .prop('disabled', true)
+            .html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
+        },
+        success: function(response) {
+          if (response.success) {
+            $('#modalEditDokter').modal('hide');
+            Swal.fire({
+              icon: 'success',
+              title: 'Berhasil!',
+              text: response.message || 'Data iCare berhasil disimpan.',
+              timer: 1500,
+              showConfirmButton: false
+            });
+            loadDataDokter();
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Gagal!',
+              text: response.message || 'Data gagal disimpan.'
+            });
+          }
+        },
+        error: function(xhr, status, error) {
+          console.error('Error AJAX:', error);
+          console.error('Response:', xhr.responseText);
+          Swal.fire({
+            icon: 'error',
+            title: 'Terjadi Kesalahan!',
+            text: 'Tidak dapat menyimpan data ke server.'
+          });
+        },
+        complete: function() {
+          $('#formEditDokter button[type="submit"]')
+            .prop('disabled', false)
+            .html('<i class="fas fa-save me-1"></i> Simpan');
+
+        }
+      });
     });
   });
 </script>
