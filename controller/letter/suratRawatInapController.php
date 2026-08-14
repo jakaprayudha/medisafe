@@ -13,7 +13,10 @@ header('Content-Type: application/json; charset=utf-8');
 |--------------------------------------------------------------------------
 */
 
-if (!isset($_SESSION['id_customer']) || $_SESSION['id_customer'] === '') {
+if (
+   !isset($_SESSION['id_customer']) ||
+   $_SESSION['id_customer'] === ''
+) {
 
    echo json_encode([
       'status'  => 'error',
@@ -99,7 +102,7 @@ switch ($method) {
 
    default:
 
-      echo json_encode([
+      responseJson([
          'status'  => 'error',
          'message' => 'Method tidak diizinkan.'
       ]);
@@ -110,7 +113,7 @@ switch ($method) {
 
 /*
 |--------------------------------------------------------------------------
-| HELPER RESPONSE
+| RESPONSE JSON
 |--------------------------------------------------------------------------
 */
 
@@ -127,7 +130,7 @@ function responseJson($data)
 
 /*
 |--------------------------------------------------------------------------
-| GET SETTING NOMOR SURAT RAWAT INAP
+| GET SETTING NOMOR SURAT
 |--------------------------------------------------------------------------
 */
 
@@ -165,10 +168,13 @@ function getSettingNomorSurat($id_customer)
    if (!$stmt) {
 
       return [
+
          'status'  => 'error',
+
          'message' =>
          'Prepare setting nomor surat gagal: ' .
             $koneksi->error
+
       ];
    }
 
@@ -182,15 +188,22 @@ function getSettingNomorSurat($id_customer)
    $stmt->execute();
 
 
-   $result = $stmt->get_result();
+   $result =
+      $stmt->get_result();
 
 
-   if ($result->num_rows === 0) {
+   if (
+      $result->num_rows === 0
+   ) {
 
       $stmt->close();
 
+
       return [
-         'status' => 'setting_required'
+
+         'status' =>
+         'setting_required'
+
       ];
    }
 
@@ -222,16 +235,22 @@ function getSettingNomorSurat($id_customer)
    ) {
 
       return [
+
          'status'  => 'error',
+
          'message' =>
          'Mode penomoran surat rawat inap belum valid.'
+
       ];
    }
 
 
    return [
+
       'status' => 'success',
+
       'data'   => $setting
+
    ];
 }
 
@@ -239,12 +258,6 @@ function getSettingNomorSurat($id_customer)
 /*
 |--------------------------------------------------------------------------
 | CHECK SETTING
-|--------------------------------------------------------------------------
-|
-| Dipanggil JavaScript:
-|
-| GET ?check_setting=1
-|
 |--------------------------------------------------------------------------
 */
 
@@ -262,9 +275,13 @@ function checkSettingNomorSurat($id_customer)
    ) {
 
       responseJson([
-         'status'  => 'setting_required',
+
+         'status' =>
+         'setting_required',
+
          'message' =>
          'Setting nomor surat rawat inap belum dibuat.'
+
       ]);
    }
 
@@ -308,16 +325,16 @@ function checkSettingNomorSurat($id_customer)
 
 /*
 |--------------------------------------------------------------------------
-| FORMAT NOMOR SURAT
+| GENERATE NOMOR SURAT
 |--------------------------------------------------------------------------
 |
-| Contoh:
+| Supported:
 |
-| SRI/{NO}/{MM}/{YYYY}
-|
-| menjadi:
-|
-| SRI/001/08/2026
+| {NO}
+| {DD}
+| {MM}
+| {YYYY}
+| {YY}
 |
 |--------------------------------------------------------------------------
 */
@@ -369,19 +386,7 @@ function generateNomorSurat(
 
    /*
     |--------------------------------------------------------------------------
-    | JUMLAH DIGIT NOMOR
-    |--------------------------------------------------------------------------
-    |
-    | Default 3 digit.
-    |
-    | Jika format:
-    |
-    | SRI/{NO}/{MM}/{YYYY}
-    |
-    | hasil:
-    |
-    | SRI/001/08/2026
-    |
+    | NOMOR 3 DIGIT
     |--------------------------------------------------------------------------
     */
 
@@ -396,7 +401,7 @@ function generateNomorSurat(
 
    /*
     |--------------------------------------------------------------------------
-    | REPLACE PLACEHOLDER
+    | REPLACE
     |--------------------------------------------------------------------------
     */
 
@@ -448,7 +453,67 @@ function generateNomorSurat(
 
 /*
 |--------------------------------------------------------------------------
-| VALIDASI VISIT RAWAT INAP
+| HITUNG LAMA RAWAT
+|--------------------------------------------------------------------------
+*/
+
+function hitungLamaRawat(
+   $tanggal_masuk,
+   $tanggal_pulang
+) {
+
+   if (
+      empty($tanggal_masuk) ||
+      empty($tanggal_pulang)
+   ) {
+
+      return '';
+   }
+
+
+   try {
+
+      $start =
+         new DateTime(
+            $tanggal_masuk
+         );
+
+
+      $end =
+         new DateTime(
+            $tanggal_pulang
+         );
+
+
+      $lama =
+         $start
+         ->diff($end)
+         ->days;
+
+
+      /*
+        |--------------------------------------------------------------------------
+        | MINIMAL 1 HARI
+        |--------------------------------------------------------------------------
+        */
+
+      if ($lama < 1) {
+
+         $lama = 1;
+      }
+
+
+      return (string) $lama;
+   } catch (Throwable $e) {
+
+      return '';
+   }
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| GET VISIT RAWAT INAP
 |--------------------------------------------------------------------------
 */
 
@@ -516,10 +581,13 @@ function getVisitRawatInap(
    if (!$stmt) {
 
       return [
+
          'status'  => 'error',
+
          'message' =>
          'Prepare validasi visit gagal: ' .
             $koneksi->error
+
       ];
    }
 
@@ -545,10 +613,14 @@ function getVisitRawatInap(
 
       $stmt->close();
 
+
       return [
+
          'status'  => 'error',
+
          'message' =>
          'Visit rawat inap tidak valid atau bukan milik fasilitas kesehatan ini.'
+
       ];
    }
 
@@ -561,8 +633,13 @@ function getVisitRawatInap(
 
 
    return [
-      'status' => 'success',
-      'data'   => $data
+
+      'status' =>
+      'success',
+
+      'data' =>
+      $data
+
    ];
 }
 
@@ -580,7 +657,7 @@ function createData($id_customer)
 
    /*
     |--------------------------------------------------------------------------
-    | DATA POST
+    | POST
     |--------------------------------------------------------------------------
     */
 
@@ -611,48 +688,51 @@ function createData($id_customer)
 
    /*
     |--------------------------------------------------------------------------
-    | VALIDASI PASIEN
+    | VALIDASI
     |--------------------------------------------------------------------------
     */
 
-   if ($id_patient === '') {
+   if (
+      $id_patient === ''
+   ) {
 
       responseJson([
+
          'status'  => 'error',
+
          'message' =>
          'Pasien wajib dipilih.'
+
       ]);
    }
 
 
-   /*
-    |--------------------------------------------------------------------------
-    | VALIDASI VISIT
-    |--------------------------------------------------------------------------
-    */
-
-   if ($id_visit === '') {
+   if (
+      $id_visit === ''
+   ) {
 
       responseJson([
+
          'status'  => 'error',
+
          'message' =>
          'Visit pasien tidak ditemukan.'
+
       ]);
    }
 
 
-   /*
-    |--------------------------------------------------------------------------
-    | VALIDASI TANGGAL
-    |--------------------------------------------------------------------------
-    */
-
-   if ($tanggal_surat === '') {
+   if (
+      $tanggal_surat === ''
+   ) {
 
       responseJson([
+
          'status'  => 'error',
+
          'message' =>
          'Tanggal surat wajib diisi.'
+
       ]);
    }
 
@@ -669,32 +749,22 @@ function createData($id_customer)
       );
 
 
-   /*
-    |--------------------------------------------------------------------------
-    | SETTING BELUM ADA
-    |--------------------------------------------------------------------------
-    */
-
    if (
       $setting['status'] ===
       'setting_required'
    ) {
 
       responseJson([
-         'status'  =>
+
+         'status' =>
          'setting_required',
 
          'message' =>
          'Setting nomor surat rawat inap belum dibuat.'
+
       ]);
    }
 
-
-   /*
-    |--------------------------------------------------------------------------
-    | ERROR SETTING
-    |--------------------------------------------------------------------------
-    */
 
    if (
       $setting['status'] !==
@@ -721,14 +791,13 @@ function createData($id_customer)
 
    $formatNomor =
       trim(
-         $settingData['format_rawat_inap']
-            ?? ''
+         $settingData['format_rawat_inap'] ?? ''
       );
 
 
    /*
     |--------------------------------------------------------------------------
-    | VALIDASI FORMAT AUTO
+    | VALIDASI AUTO FORMAT
     |--------------------------------------------------------------------------
     */
 
@@ -738,9 +807,12 @@ function createData($id_customer)
    ) {
 
       responseJson([
+
          'status'  => 'error',
+
          'message' =>
          'Format nomor surat rawat inap belum diatur.'
+
       ]);
    }
 
@@ -753,9 +825,13 @@ function createData($id_customer)
 
    $visit =
       getVisitRawatInap(
+
          $id_visit,
+
          $id_patient,
+
          $id_customer
+
       );
 
 
@@ -800,6 +876,27 @@ function createData($id_customer)
       ?? '';
 
 
+   $ruangan =
+      trim(
+         $_POST['ruangan'] ?? ''
+      );
+
+   /*
+    |--------------------------------------------------------------------------
+    | LAMA RAWAT
+    |--------------------------------------------------------------------------
+    */
+
+   $lama =
+      hitungLamaRawat(
+
+         $tanggal_masuk,
+
+         $tanggal_pulang
+
+      );
+
+
    /*
     |--------------------------------------------------------------------------
     | NOMOR SURAT
@@ -832,16 +929,20 @@ function createData($id_customer)
       ) {
 
          responseJson([
-            'status'  => 'error',
+
+            'status' =>
+            'error',
+
             'message' =>
             'Nomor surat wajib diisi karena mode penomoran MANUAL.'
+
          ]);
       }
 
 
       /*
         |--------------------------------------------------------------------------
-        | CEK NOMOR DUPLIKAT
+        | CEK DUPLIKAT NOMOR
         |--------------------------------------------------------------------------
         */
 
@@ -864,10 +965,13 @@ function createData($id_customer)
       if (!$checkNomor) {
 
          responseJson([
+
             'status'  => 'error',
+
             'message' =>
             'Prepare pengecekan nomor surat gagal: ' .
                $koneksi->error
+
          ]);
       }
 
@@ -892,10 +996,14 @@ function createData($id_customer)
 
          $checkNomor->close();
 
+
          responseJson([
+
             'status'  => 'error',
+
             'message' =>
             'Nomor surat tersebut sudah digunakan.'
+
          ]);
       }
 
@@ -959,8 +1067,10 @@ function createData($id_customer)
          if (!$stmtSetting) {
 
             throw new Exception(
+
                'Prepare lock setting gagal: ' .
                   $koneksi->error
+
             );
          }
 
@@ -984,6 +1094,7 @@ function createData($id_customer)
 
             $stmtSetting->close();
 
+
             throw new Exception(
                'SETTING_REQUIRED'
             );
@@ -995,6 +1106,32 @@ function createData($id_customer)
 
 
          $stmtSetting->close();
+
+
+         /*
+            |--------------------------------------------------------------------------
+            | CEK MODE LAGI
+            |--------------------------------------------------------------------------
+            */
+
+         $lockedMode =
+            strtoupper(
+               trim(
+                  $lockedSetting['mode_nomor'] ?? ''
+               )
+            );
+
+
+         if (
+            $lockedMode !== 'AUTO'
+         ) {
+
+            throw new Exception(
+
+               'Mode penomoran telah berubah. Silakan refresh halaman.'
+
+            );
+         }
 
 
          /*
@@ -1015,7 +1152,7 @@ function createData($id_customer)
 
          /*
             |--------------------------------------------------------------------------
-            | FORMAT TERBARU DARI DATABASE
+            | FORMAT
             |--------------------------------------------------------------------------
             */
 
@@ -1030,7 +1167,9 @@ function createData($id_customer)
          ) {
 
             throw new Exception(
+
                'Format nomor surat rawat inap belum diatur.'
+
             );
          }
 
@@ -1043,9 +1182,13 @@ function createData($id_customer)
 
          $nomor_surat =
             generateNomorSurat(
+
                $formatNomor,
+
                $nextNumber,
+
                $tanggal_surat
+
             );
 
 
@@ -1074,16 +1217,22 @@ function createData($id_customer)
          if (!$stmtUpdateSetting) {
 
             throw new Exception(
+
                'Prepare update counter gagal: ' .
                   $koneksi->error
+
             );
          }
 
 
          $stmtUpdateSetting->bind_param(
+
             "is",
+
             $nextNumber,
+
             $id_customer
+
          );
 
 
@@ -1099,8 +1248,10 @@ function createData($id_customer)
 
 
             throw new Exception(
+
                'Gagal update nomor surat: ' .
                   $error
+
             );
          }
 
@@ -1110,7 +1261,7 @@ function createData($id_customer)
 
          /*
             |--------------------------------------------------------------------------
-            | INSERT
+            | CREATED BY
             |--------------------------------------------------------------------------
             */
 
@@ -1121,6 +1272,12 @@ function createData($id_customer)
             ??
             'system';
 
+
+         /*
+            |--------------------------------------------------------------------------
+            | INSERT AUTO
+            |--------------------------------------------------------------------------
+            */
 
          $query = "
 
@@ -1146,14 +1303,21 @@ function createData($id_customer)
 
                     keterangan,
 
-                    created_by
+                    created_by,
+
+                    ruangan,
+
+                    lama
 
                 )
 
                 VALUES (
 
                     ?, ?, ?, ?, ?, ?,
-                    ?, ?, ?, ?, ?
+
+                    ?, ?, ?, ?, ?,
+
+                    ?, ?
 
                 )
 
@@ -1169,15 +1333,17 @@ function createData($id_customer)
          if (!$stmt) {
 
             throw new Exception(
+
                'Prepare insert gagal: ' .
                   $koneksi->error
+
             );
          }
 
 
          $stmt->bind_param(
 
-            "sssssssssss",
+            "sssssssssssss",
 
             $id_visit,
 
@@ -1199,7 +1365,11 @@ function createData($id_customer)
 
             $keterangan,
 
-            $created_by
+            $created_by,
+
+            $ruangan,
+
+            $lama
 
          );
 
@@ -1216,8 +1386,10 @@ function createData($id_customer)
 
 
             throw new Exception(
+
                'Gagal menyimpan data: ' .
                   $error
+
             );
          }
 
@@ -1273,21 +1445,25 @@ function createData($id_customer)
          ) {
 
             responseJson([
-               'status'  =>
+
+               'status' =>
                'setting_required',
 
                'message' =>
                'Setting nomor surat rawat inap belum dibuat.'
+
             ]);
          }
 
 
          responseJson([
-            'status'  =>
+
+            'status' =>
             'error',
 
             'message' =>
             $e->getMessage()
+
          ]);
       }
    }
@@ -1295,7 +1471,7 @@ function createData($id_customer)
 
    /*
     |--------------------------------------------------------------------------
-    | MODE MANUAL INSERT
+    | MODE MANUAL
     |--------------------------------------------------------------------------
     */
 
@@ -1336,14 +1512,21 @@ function createData($id_customer)
 
                 keterangan,
 
-                created_by
+                created_by,
+
+                ruangan,
+
+                lama
 
             )
 
             VALUES (
 
                 ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?
+
+                ?, ?, ?, ?, ?,
+
+                ?, ?
 
             )
 
@@ -1359,17 +1542,20 @@ function createData($id_customer)
       if (!$stmt) {
 
          responseJson([
+
             'status'  => 'error',
+
             'message' =>
             'Prepare insert gagal: ' .
                $koneksi->error
+
          ]);
       }
 
 
       $stmt->bind_param(
 
-         "sssssssssss",
+         "sssssssssssss",
 
          $id_visit,
 
@@ -1391,7 +1577,11 @@ function createData($id_customer)
 
          $keterangan,
 
-         $created_by
+         $created_by,
+
+         $ruangan,
+
+         $lama
 
       );
 
@@ -1436,31 +1626,37 @@ function createData($id_customer)
 
 
       responseJson([
+
          'status'  => 'error',
+
          'message' =>
          'Gagal menyimpan data: ' .
             $error
+
       ]);
    }
 
 
    /*
     |--------------------------------------------------------------------------
-    | MODE TIDAK VALID
+    | MODE INVALID
     |--------------------------------------------------------------------------
     */
 
    responseJson([
+
       'status'  => 'error',
+
       'message' =>
       'Mode penomoran surat tidak valid.'
+
    ]);
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| GET ALL
+| GET DATA
 |--------------------------------------------------------------------------
 */
 
@@ -1509,7 +1705,7 @@ function getData($id_customer)
 
         LEFT JOIN ms_doctor md
 
-            ON md.doctor_code =
+            ON md.id_doctor =
                sri.id_doctor
 
         WHERE sri.id_customer = ?
@@ -1530,18 +1726,25 @@ function getData($id_customer)
    if (!$stmt) {
 
       responseJson([
+
          'status'  => 'error',
+
          'message' =>
          'Prepare query gagal: ' .
             $koneksi->error
+
       ]);
    }
 
 
    $stmt->bind_param(
+
       "ss",
+
       $id_customer,
+
       $id_customer
+
    );
 
 
@@ -1575,7 +1778,7 @@ function getData($id_customer)
 
 /*
 |--------------------------------------------------------------------------
-| GET BY ID
+| GET DETAIL
 |--------------------------------------------------------------------------
 */
 
@@ -1627,7 +1830,7 @@ function getID(
 
         LEFT JOIN ms_doctor md
 
-            ON md.doctor_code =
+            ON md.id_doctor =
                sri.id_doctor
 
         WHERE sri.id = ?
@@ -1648,19 +1851,27 @@ function getID(
    if (!$stmt) {
 
       responseJson([
+
          'status'  => 'error',
+
          'message' =>
          'Prepare query gagal: ' .
             $koneksi->error
+
       ]);
    }
 
 
    $stmt->bind_param(
+
       "sis",
+
       $id_customer,
+
       $id,
+
       $id_customer
+
    );
 
 
@@ -1679,9 +1890,12 @@ function getID(
 
 
       responseJson([
+
          'status'  => 'error',
+
          'message' =>
          'Data surat rawat inap tidak ditemukan.'
+
       ]);
    }
 
@@ -1710,7 +1924,9 @@ function getID(
 | UPDATE
 |--------------------------------------------------------------------------
 |
-| NOMOR SURAT TIDAK DIUBAH
+| Nomor surat tidak diubah.
+|
+| ruangan dan lama juga diperbarui dari visit.
 |
 |--------------------------------------------------------------------------
 */
@@ -1727,10 +1943,13 @@ function updateData($id_customer)
     */
 
    parse_str(
+
       file_get_contents(
          "php://input"
       ),
+
       $data
+
    );
 
 
@@ -1748,12 +1967,17 @@ function updateData($id_customer)
       '';
 
 
-   if ($id === '') {
+   if (
+      $id === ''
+   ) {
 
       responseJson([
+
          'status'  => 'error',
+
          'message' =>
          'ID surat tidak ditemukan.'
+
       ]);
    }
 
@@ -1789,66 +2013,93 @@ function updateData($id_customer)
    ) {
 
       responseJson([
+
          'status'  => 'error',
+
          'message' =>
          'Tanggal surat wajib diisi.'
+
       ]);
    }
 
 
    /*
     |--------------------------------------------------------------------------
-    | CEK DATA
+    | AMBIL DATA SURAT + VISIT
     |--------------------------------------------------------------------------
     */
 
+   $queryCheck = "
+
+        SELECT
+
+            sri.id,
+
+            sri.id_visit,
+
+            sri.id_patient,
+
+            sri.nomor_surat,
+
+            pv.visit_date,
+
+            rsm.ruangan,
+
+            rsm.tanggal_pulang
+
+        FROM surat_rawat_inap sri
+
+        INNER JOIN pasien_visit pv
+
+            ON pv.id_visit =
+               sri.id_visit
+
+        LEFT JOIN resume_medis rsm
+
+            ON rsm.visit_ID =
+               pv.visit_ID
+
+        WHERE sri.id = ?
+
+          AND sri.id_customer = ?
+
+          AND pv.id_customer = ?
+
+        LIMIT 1
+
+    ";
+
+
    $check =
-      $koneksi->prepare("
-
-            SELECT
-
-                sri.id,
-
-                sri.id_visit,
-
-                sri.id_patient,
-
-                sri.nomor_surat
-
-            FROM surat_rawat_inap sri
-
-            INNER JOIN pasien_visit pv
-
-                ON pv.id_visit =
-                   sri.id_visit
-
-            WHERE sri.id = ?
-
-              AND sri.id_customer = ?
-
-              AND pv.id_customer = ?
-
-            LIMIT 1
-
-        ");
+      $koneksi->prepare(
+         $queryCheck
+      );
 
 
    if (!$check) {
 
       responseJson([
+
          'status'  => 'error',
+
          'message' =>
          'Prepare validasi update gagal: ' .
             $koneksi->error
+
       ]);
    }
 
 
    $check->bind_param(
+
       "iss",
+
       $id,
+
       $id_customer,
+
       $id_customer
+
    );
 
 
@@ -1867,14 +2118,52 @@ function updateData($id_customer)
 
 
       responseJson([
+
          'status'  => 'error',
+
          'message' =>
          'Data surat tidak ditemukan atau bukan milik fasilitas kesehatan ini.'
+
       ]);
    }
 
 
+   $existing =
+      $result->fetch_assoc();
+
+
    $check->close();
+
+
+   /*
+    |--------------------------------------------------------------------------
+    | DATA VISIT
+    |--------------------------------------------------------------------------
+    */
+
+   $tanggal_masuk =
+      $existing['visit_date']
+      ?? null;
+
+
+   $tanggal_pulang =
+      $existing['tanggal_pulang']
+      ?? null;
+
+
+   $ruangan =
+      $existing['ruangan']
+      ?? '';
+
+
+   $lama =
+      hitungLamaRawat(
+
+         $tanggal_masuk,
+
+         $tanggal_pulang
+
+      );
 
 
    /*
@@ -1896,7 +2185,7 @@ function updateData($id_customer)
     | UPDATE
     |--------------------------------------------------------------------------
     |
-    | NOMOR SURAT SENGAJA TIDAK DIUPDATE.
+    | nomor_surat sengaja tidak diubah.
     |
     |--------------------------------------------------------------------------
     */
@@ -1910,6 +2199,10 @@ function updateData($id_customer)
             tanggal_surat = ?,
 
             keterangan = ?,
+
+            ruangan = ?,
+
+            lama = ?,
 
             updated_at = NOW(),
 
@@ -1931,24 +2224,36 @@ function updateData($id_customer)
    if (!$stmt) {
 
       responseJson([
+
          'status'  => 'error',
+
          'message' =>
          'Prepare update gagal: ' .
             $koneksi->error
+
       ]);
    }
 
 
    $stmt->bind_param(
-      "sssis",
+
+      "sssss is",
+
       $tanggal_surat,
+
       $keterangan,
+
+      $ruangan,
+
+      $lama,
+
       $updated_by,
+
       $id,
+
       $id_customer
+
    );
-
-
    if (
       $stmt->execute()
    ) {
@@ -1976,10 +2281,13 @@ function updateData($id_customer)
 
 
    responseJson([
+
       'status'  => 'error',
+
       'message' =>
       'Gagal memperbarui surat: ' .
          $error
+
    ]);
 }
 
@@ -2000,21 +2308,20 @@ function deleteData($id_customer)
       ?? '';
 
 
-   if ($id === '') {
+   if (
+      $id === ''
+   ) {
 
       responseJson([
+
          'status'  => 'error',
+
          'message' =>
          'ID surat tidak ditemukan.'
+
       ]);
    }
 
-
-   /*
-    |--------------------------------------------------------------------------
-    | DELETE
-    |--------------------------------------------------------------------------
-    */
 
    $query = "
 
@@ -2036,18 +2343,25 @@ function deleteData($id_customer)
    if (!$stmt) {
 
       responseJson([
+
          'status'  => 'error',
+
          'message' =>
          'Prepare delete gagal: ' .
             $koneksi->error
+
       ]);
    }
 
 
    $stmt->bind_param(
+
       "is",
+
       $id,
+
       $id_customer
+
    );
 
 

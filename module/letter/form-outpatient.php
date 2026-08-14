@@ -413,6 +413,44 @@ require '../../controller/view.php';
 
               </div>
 
+              <!-- RUANGAN -->
+              <div class="col-md-6 mb-3">
+
+                <label for="ruangan" class="form-label">
+                  Ruangan
+                </label>
+
+                <input
+                  type="text"
+                  name="ruangan"
+                  id="ruangan"
+                  class="form-control">
+
+              </div>
+
+
+              <!-- LAMA RAWAT -->
+              <div class="col-md-6 mb-3">
+
+                <label for="lama" class="form-label">
+                  Lama Rawat
+                </label>
+
+                <div class="input-group">
+
+                  <input
+                    type="text"
+                    name="lama"
+                    id="lama"
+                    class="form-control">
+
+                  <span class="input-group-text">
+                    hari
+                  </span>
+
+                </div>
+
+              </div>
 
             </div>
 
@@ -505,7 +543,125 @@ require '../../controller/view.php';
   const patientVisitUrl =
     'controller/admisi/patientVisitRawatInapController';
 
+  /*
+  |--------------------------------------------------------------------------
+  | HITUNG LAMA RAWAT
+  |--------------------------------------------------------------------------
+  */
 
+  function hitungLamaRawat() {
+
+    const tanggalMasuk =
+      $('#tanggal_masuk').val();
+
+    const tanggalPulang =
+      $('#tanggal_pulang').val();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | BELUM LENGKAP
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+      !tanggalMasuk ||
+      !tanggalPulang
+    ) {
+
+      $('#lama').val('');
+
+      return;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PARSE DATE
+    |--------------------------------------------------------------------------
+    */
+
+    const masuk =
+      new Date(
+        tanggalMasuk + 'T00:00:00'
+      );
+
+
+    const pulang =
+      new Date(
+        tanggalPulang + 'T00:00:00'
+      );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDASI
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+      isNaN(masuk.getTime()) ||
+      isNaN(pulang.getTime())
+    ) {
+
+      $('#lama').val('');
+
+      return;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SELISIH HARI
+    |--------------------------------------------------------------------------
+    */
+
+    const selisih =
+      pulang.getTime() -
+      masuk.getTime();
+
+
+    let lama =
+      Math.floor(
+        selisih /
+        (1000 * 60 * 60 * 24)
+      );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RAWAT DI HARI YANG SAMA
+    |--------------------------------------------------------------------------
+    |
+    | Misalnya:
+    | 14-08-2026 masuk
+    | 14-08-2026 pulang
+    |
+    | Tetap dihitung 1 hari.
+    |
+    |--------------------------------------------------------------------------
+    */
+
+    if (lama < 1) {
+
+      lama = 1;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | TAMPILKAN
+    |--------------------------------------------------------------------------
+    */
+
+    $('#lama').val(
+      lama
+    );
+
+  }
   /*
   |--------------------------------------------------------------------------
   | HELPER SET VALUE
@@ -1640,7 +1796,13 @@ require '../../controller/view.php';
                 ''
               );
 
+            /*
+            |--------------------------------------------------------------------------
+            | HITUNG LAMA RAWAT
+            |--------------------------------------------------------------------------
+            */
 
+            hitungLamaRawat();
             /*
             |--------------------------------------------------------------------------
             | DOKTER
