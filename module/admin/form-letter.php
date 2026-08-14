@@ -324,7 +324,7 @@ require '../../controller/view.php';
                       <div>
 
                         <h5 class="fw-semibold mb-1">
-                          Surat Keterangan Berobat
+                          Surat Berobat
                         </h5>
 
                         <span class="badge bg-primary-subtle text-primary">
@@ -565,8 +565,7 @@ require '../../controller/view.php';
                   <p class="text-muted mb-4">
 
                     Hasil pemeriksaan mata meliputi visus,
-                    refraksi, pemeriksaan mata, tanda vital,
-                    serta pemeriksaan laboratorium penunjang.
+                    refraksi, pemeriksaan mata, tanda vital dan penunjang medis
 
                   </p>
 
@@ -601,6 +600,119 @@ require '../../controller/view.php';
                                     gap:5px;
                                     white-space:nowrap;
                                ">
+
+                      <iconify-icon
+                        icon="material-symbols:arrow-forward">
+                      </iconify-icon>
+
+                      Buat Surat
+
+                    </a>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- ======================================
+     6. SURAT KETERANGAN RAWAT INAP
+======================================= -->
+
+            <div class="col-xl-4 col-md-6">
+
+              <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                  <div class="d-flex align-items-start mb-4">
+
+                    <div class="d-flex align-items-center gap-3">
+
+                      <!-- ICON -->
+
+                      <div
+                        class="rounded-circle bg-info-subtle
+                   d-flex align-items-center justify-content-center"
+                        style="
+              width:52px;
+              height:52px;
+              flex:0 0 52px;
+            ">
+
+                        <iconify-icon
+                          icon="material-symbols:bed-outline"
+                          width="28"
+                          class="text-info">
+                        </iconify-icon>
+
+                      </div>
+
+
+                      <!-- TITLE -->
+
+                      <div>
+
+                        <h5 class="fw-semibold mb-1">
+                          Surat Rawat Inap
+                        </h5>
+
+                        <span class="badge bg-info-subtle text-info">
+                          Rawat Inap
+                        </span>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+
+                  <!-- DESCRIPTION -->
+
+                  <p class="text-muted mb-4">
+
+                    Surat keterangan yang menerangkan bahwa pasien
+                    menjalani perawatan rawat inap, termasuk periode
+                    perawatan.
+
+                  </p>
+
+
+                  <!-- FOOTER -->
+
+                  <div
+                    class="d-flex align-items-center justify-content-between">
+
+                    <small class="text-muted">
+
+                      <iconify-icon
+                        icon="material-symbols:local-hotel-outline"
+                        style="vertical-align:middle;">
+                      </iconify-icon>
+
+                      Rawat Inap
+
+                    </small>
+
+
+                    <!-- BUTTON -->
+
+                    <a
+                      href="module/letter/form-outpatient"
+                      class="btn btn-info btn-sm text-white"
+                      style="
+            width:145px;
+            height:46px;
+            padding:0 15px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:5px;
+            white-space:nowrap;
+          ">
 
                       <iconify-icon
                         icon="material-symbols:arrow-forward">
