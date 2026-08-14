@@ -71,11 +71,26 @@ require '../../controller/view.php';
   require '../admin/library.php';
   ?>
 </body>
-<div class="modal fade" id="programModal" tabindex="-1">
+<!-- =========================================================
+     MODAL SURAT KETERANGAN SAKIT
+========================================================= -->
 
-  <div class="modal-dialog">
+<div
+  class="modal fade"
+  id="programModal"
+  tabindex="-1"
+  aria-hidden="true">
 
-    <form id="programForm" class="modal-content">
+  <div class="modal-dialog modal-lg">
+
+    <form
+      id="programForm"
+      class="modal-content">
+
+
+      <!-- =====================================================
+           HEADER
+      ====================================================== -->
 
       <div class="modal-header">
 
@@ -92,10 +107,16 @@ require '../../controller/view.php';
       </div>
 
 
+      <!-- =====================================================
+           BODY
+      ====================================================== -->
+
       <div class="modal-body">
 
 
-        <!-- ID SURAT -->
+        <!-- ===================================================
+             ID SURAT
+        ==================================================== -->
 
         <input
           type="hidden"
@@ -103,7 +124,9 @@ require '../../controller/view.php';
           id="id">
 
 
-        <!-- ID PATIENT -->
+        <!-- ===================================================
+             ID PATIENT
+        ==================================================== -->
 
         <input
           type="hidden"
@@ -111,7 +134,9 @@ require '../../controller/view.php';
           id="id_patient">
 
 
-        <!-- ID VISIT -->
+        <!-- ===================================================
+             ID VISIT
+        ==================================================== -->
 
         <input
           type="hidden"
@@ -119,13 +144,100 @@ require '../../controller/view.php';
           id="id_visit">
 
 
-        <!-- PASIEN -->
+        <!-- ===================================================
+             NOMOR SURAT MANUAL
+        ==================================================== -->
+
+        <div
+          class="mb-3"
+          id="nomorSuratWrapper">
+
+          <label
+            for="nomor_surat"
+            class="form-label">
+
+            Nomor Surat
+
+            <span class="text-danger">
+              *
+            </span>
+
+          </label>
+
+
+          <input
+            type="text"
+            name="nomor_surat"
+            id="nomor_surat"
+            class="form-control"
+            placeholder="Masukkan nomor surat">
+
+
+          <div
+            id="nomorSuratHelp"
+            class="form-text text-muted">
+          </div>
+
+        </div>
+
+
+        <!-- ===================================================
+             INFO AUTO
+        ==================================================== -->
+
+        <div
+          class="alert alert-primary d-none"
+          id="nomorSuratAutoInfo">
+
+          <div class="d-flex align-items-start">
+
+            <iconify-icon
+              icon="material-symbols:auto-awesome"
+              width="24"
+              class="me-2">
+            </iconify-icon>
+
+
+            <div>
+
+              <strong>
+                Nomor Surat Otomatis
+              </strong>
+
+
+              <div class="small mt-1">
+
+                Nomor surat akan dibuat otomatis
+                oleh sistem berdasarkan pengaturan
+                nomor surat fasilitas kesehatan.
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- ===================================================
+             PASIEN
+        ==================================================== -->
 
         <div class="mb-3">
 
-          <label class="form-label">
+          <label
+            for="id_patient_select"
+            class="form-label">
+
             Nama Pasien
+
+            <span class="text-danger">
+              *
+            </span>
+
           </label>
+
 
           <select
             name="id_patient_select"
@@ -137,13 +249,24 @@ require '../../controller/view.php';
         </div>
 
 
-        <!-- TANGGAL SURAT -->
+        <!-- ===================================================
+             TANGGAL SURAT
+        ==================================================== -->
 
         <div class="mb-3">
 
-          <label class="form-label">
+          <label
+            for="tanggal_surat"
+            class="form-label">
+
             Tanggal Surat
+
+            <span class="text-danger">
+              *
+            </span>
+
           </label>
+
 
           <input
             type="date"
@@ -156,18 +279,29 @@ require '../../controller/view.php';
         </div>
 
 
-        <!-- PERIODE SAKIT -->
+        <!-- ===================================================
+             PERIODE SAKIT
+        ==================================================== -->
 
         <div class="row">
 
 
-          <!-- MULAI -->
+          <!-- TANGGAL MULAI -->
 
           <div class="col-md-6 mb-3">
 
-            <label class="form-label">
+            <label
+              for="tanggal_mulai"
+              class="form-label">
+
               Tanggal Mulai
+
+              <span class="text-danger">
+                *
+              </span>
+
             </label>
+
 
             <input
               type="date"
@@ -179,13 +313,22 @@ require '../../controller/view.php';
           </div>
 
 
-          <!-- SELESAI -->
+          <!-- TANGGAL SELESAI -->
 
           <div class="col-md-6 mb-3">
 
-            <label class="form-label">
+            <label
+              for="tanggal_selesai"
+              class="form-label">
+
               Tanggal Selesai
+
+              <span class="text-danger">
+                *
+              </span>
+
             </label>
+
 
             <input
               type="date"
@@ -199,21 +342,30 @@ require '../../controller/view.php';
         </div>
 
 
-        <!-- LAMA -->
+        <!-- ===================================================
+             LAMA
+        ==================================================== -->
 
         <div class="mb-3">
 
-          <label class="form-label">
+          <label
+            for="lama"
+            class="form-label">
+
             Lama Istirahat
+
           </label>
+
 
           <div class="input-group">
 
             <input
               type="text"
               id="lama"
+              name="lama"
               class="form-control"
               readonly>
+
 
             <span class="input-group-text">
               Hari
@@ -221,22 +373,35 @@ require '../../controller/view.php';
 
           </div>
 
+
+          <div class="form-text">
+            Lama sakit dihitung otomatis berdasarkan
+            tanggal mulai dan tanggal selesai.
+          </div>
+
         </div>
 
 
-        <!-- KETERANGAN -->
+        <!-- ===================================================
+             KETERANGAN
+        ==================================================== -->
 
         <div class="mb-3">
 
-          <label class="form-label">
+          <label
+            for="keterangan"
+            class="form-label">
+
             Keterangan
+
           </label>
+
 
           <textarea
             name="keterangan"
             id="keterangan"
             class="form-control"
-            rows="3"
+            rows="4"
             placeholder="Keterangan tambahan..."></textarea>
 
         </div>
@@ -244,6 +409,10 @@ require '../../controller/view.php';
 
       </div>
 
+
+      <!-- =====================================================
+           FOOTER
+      ====================================================== -->
 
       <div class="modal-footer">
 
@@ -268,6 +437,7 @@ require '../../controller/view.php';
         </button>
 
       </div>
+
 
     </form>
 
