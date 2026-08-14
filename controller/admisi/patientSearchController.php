@@ -14,7 +14,6 @@ $query = "SELECT id_patient, patient_name, nomor_rm, patient_datebirth, patient_
       OR patient_nik LIKE ?
       OR patient_bpjs LIKE ?
   )
-  LIMIT 20
 ";
 
 $stmt = $koneksi->prepare($query);

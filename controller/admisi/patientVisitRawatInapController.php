@@ -57,19 +57,19 @@ $query = "SELECT
         mp.patient_bpjs,
         mp.patient_datebirth,
 
-        /* TANGGAL */
+        /* TAMBAHAN */
 
-        pv.visit_date,
-        pv.visit_out,
-        rms.tanggal_pulang
+        pv.saturasi,
+        rsm.diagnosa,
+        rsm.tanggal_pulang
 
     FROM pasien_visit pv
 
     INNER JOIN ms_patient mp
         ON mp.id_patient = pv.id_patient
-
-    LEFT JOIN resume_medis rms
-        ON rms.visit_ID = pv.visit_ID  
+   
+   LEFT JOIN resume_medis rsm 
+      ON rsm.visit_ID = pv.visit_ID
 
     WHERE pv.id_customer = ?
 
@@ -78,13 +78,13 @@ $query = "SELECT
             OR mp.patient_nik LIKE ?
             OR mp.patient_bpjs LIKE ?
             OR mp.nomor_rm LIKE ?
-          )
+          ) AND pv.status_rawatinap = 1
 
     ORDER BY
         pv.visit_date DESC,
         pv.id_visit DESC
 
-
+  
 ";
 
 

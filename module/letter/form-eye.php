@@ -178,15 +178,15 @@ require '../../controller/view.php';
   require '../admin/library.php';
   ?>
 
-
   <!-- =====================================================
-     MODAL
+     MODAL SURAT HASIL PEMERIKSAAN MATA
 ===================================================== -->
 
   <div
     class="modal fade"
     id="programModal"
-    tabindex="-1">
+    tabindex="-1"
+    aria-hidden="true">
 
 
     <div
@@ -198,7 +198,9 @@ require '../../controller/view.php';
         class="modal-content">
 
 
-        <!-- HEADER -->
+        <!-- =================================================
+           HEADER
+      ================================================== -->
 
         <div class="modal-header">
 
@@ -218,10 +220,16 @@ require '../../controller/view.php';
         </div>
 
 
-        <!-- BODY -->
+        <!-- =================================================
+           BODY
+      ================================================= -->
 
         <div class="modal-body">
 
+
+          <!-- =================================================
+             HIDDEN ID
+        ================================================== -->
 
           <input
             type="hidden"
@@ -229,11 +237,33 @@ require '../../controller/view.php';
             id="id">
 
 
+          <!-- =================================================
+             ID CUSTOMER
+             Controller tetap validasi dari SESSION
+        ================================================== -->
+
+          <input
+            type="hidden"
+            name="id_customer"
+            id="id_customer"
+            value="<?= htmlspecialchars(
+                      $_SESSION['id_customer'] ?? ''
+                    ) ?>">
+
+
+          <!-- =================================================
+             ID PATIENT
+        ================================================== -->
+
           <input
             type="hidden"
             name="id_patient"
             id="id_patient">
 
+
+          <!-- =================================================
+             ID VISIT
+        ================================================== -->
 
           <input
             type="hidden"
@@ -242,16 +272,19 @@ require '../../controller/view.php';
 
 
           <!-- =================================================
-             IDENTITAS
-        ================================================= -->
+             A. IDENTITAS PASIEN
+        ================================================== -->
 
           <div class="card border mb-3">
 
             <div class="card-header bg-light">
 
               <strong>
+
                 <i class="fas fa-user me-1"></i>
-                Pasien
+
+                Identitas Pasien
+
               </strong>
 
             </div>
@@ -261,9 +294,14 @@ require '../../controller/view.php';
 
               <div class="row">
 
+
+                <!-- PASIEN -->
+
                 <div class="col-md-8 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="id_patient_select"
+                    class="form-label">
 
                     Nama Pasien
 
@@ -281,9 +319,45 @@ require '../../controller/view.php';
                 </div>
 
 
+                <!-- NOMOR SURAT -->
+
                 <div class="col-md-4 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="nomor_surat"
+                    class="form-label">
+
+                    Nomor Surat
+
+                  </label>
+
+
+                  <input
+                    type="text"
+                    name="nomor_surat"
+                    id="nomor_surat"
+                    class="form-control"
+                    placeholder="Nomor surat">
+
+
+                  <!-- INFORMASI MODE NOMOR -->
+
+                  <div
+                    id="nomor_surat_info"
+                    class="mt-2">
+
+                  </div>
+
+                </div>
+
+
+                <!-- TANGGAL SURAT -->
+
+                <div class="col-md-4 mb-0">
+
+                  <label
+                    for="tanggal_surat"
+                    class="form-label">
 
                     Tanggal Surat
 
@@ -300,6 +374,7 @@ require '../../controller/view.php';
 
                 </div>
 
+
               </div>
 
             </div>
@@ -308,8 +383,8 @@ require '../../controller/view.php';
 
 
           <!-- =================================================
-             TANDA VITAL
-        ================================================= -->
+             B. TANDA VITAL
+        ================================================== -->
 
           <div class="card border mb-3">
 
@@ -330,11 +405,19 @@ require '../../controller/view.php';
 
               <div class="row">
 
+
+                <!-- TEKANAN DARAH -->
+
                 <div class="col-md-3 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="tekanan_darah"
+                    class="form-label">
+
                     Tekanan Darah
+
                   </label>
+
 
                   <input
                     type="text"
@@ -346,11 +429,18 @@ require '../../controller/view.php';
                 </div>
 
 
+                <!-- NADI -->
+
                 <div class="col-md-3 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="nadi"
+                    class="form-label">
+
                     Nadi
+
                   </label>
+
 
                   <input
                     type="text"
@@ -362,11 +452,18 @@ require '../../controller/view.php';
                 </div>
 
 
+                <!-- SUHU -->
+
                 <div class="col-md-3 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="suhu"
+                    class="form-label">
+
                     Suhu
+
                   </label>
+
 
                   <input
                     type="text"
@@ -378,11 +475,18 @@ require '../../controller/view.php';
                 </div>
 
 
+                <!-- RESPIRASI -->
+
                 <div class="col-md-3 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="respirasi"
+                    class="form-label">
+
                     Respirasi
+
                   </label>
+
 
                   <input
                     type="text"
@@ -393,6 +497,7 @@ require '../../controller/view.php';
 
                 </div>
 
+
               </div>
 
             </div>
@@ -401,8 +506,8 @@ require '../../controller/view.php';
 
 
           <!-- =================================================
-             PEMERIKSAAN LAB
-        ================================================= -->
+             C. PEMERIKSAAN LABORATORIUM
+        ================================================== -->
 
           <div class="card border mb-3">
 
@@ -421,15 +526,21 @@ require '../../controller/view.php';
 
             <div class="card-body">
 
-
               <div class="row">
 
 
+                <!-- GDS -->
+
                 <div class="col-md-6 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="gula_darah_sewaktu"
+                    class="form-label">
+
                     Gula Darah Sewaktu
+
                   </label>
+
 
                   <input
                     type="text"
@@ -441,11 +552,18 @@ require '../../controller/view.php';
                 </div>
 
 
+                <!-- KETERANGAN GDS -->
+
                 <div class="col-md-6 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="gula_darah_keterangan"
+                    class="form-label">
+
                     Keterangan Gula Darah
+
                   </label>
+
 
                   <input
                     type="text"
@@ -457,11 +575,18 @@ require '../../controller/view.php';
                 </div>
 
 
+                <!-- KOLESTEROL -->
+
                 <div class="col-md-6 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="kolesterol_total"
+                    class="form-label">
+
                     Kolesterol Total
+
                   </label>
+
 
                   <input
                     type="text"
@@ -473,11 +598,18 @@ require '../../controller/view.php';
                 </div>
 
 
+                <!-- KETERANGAN KOLESTEROL -->
+
                 <div class="col-md-6 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="kolesterol_keterangan"
+                    class="form-label">
+
                     Keterangan Kolesterol
+
                   </label>
+
 
                   <input
                     type="text"
@@ -489,11 +621,18 @@ require '../../controller/view.php';
                 </div>
 
 
+                <!-- ASAM URAT -->
+
                 <div class="col-md-6 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="asam_urat"
+                    class="form-label">
+
                     Asam Urat
+
                   </label>
+
 
                   <input
                     type="text"
@@ -505,11 +644,18 @@ require '../../controller/view.php';
                 </div>
 
 
+                <!-- KETERANGAN ASAM URAT -->
+
                 <div class="col-md-6 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="asam_urat_keterangan"
+                    class="form-label">
+
                     Keterangan Asam Urat
+
                   </label>
+
 
                   <input
                     type="text"
@@ -520,11 +666,18 @@ require '../../controller/view.php';
                 </div>
 
 
+                <!-- HEMOGLOBIN -->
+
                 <div class="col-md-6 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="hemoglobin"
+                    class="form-label">
+
                     Hemoglobin
+
                   </label>
+
 
                   <input
                     type="text"
@@ -536,11 +689,18 @@ require '../../controller/view.php';
                 </div>
 
 
+                <!-- KETERANGAN HEMOGLOBIN -->
+
                 <div class="col-md-6 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="hemoglobin_keterangan"
+                    class="form-label">
+
                     Keterangan Hemoglobin
+
                   </label>
+
 
                   <input
                     type="text"
@@ -559,8 +719,8 @@ require '../../controller/view.php';
 
 
           <!-- =================================================
-             VISUS
-        ================================================= -->
+             D. PEMERIKSAAN VISUS
+        ================================================== -->
 
           <div class="card border mb-3">
 
@@ -580,6 +740,8 @@ require '../../controller/view.php';
             <div class="card-body">
 
 
+              <!-- OD -->
+
               <h6 class="fw-bold mb-3">
 
                 Mata Kanan (OD)
@@ -589,11 +751,15 @@ require '../../controller/view.php';
 
               <div class="row">
 
+
                 <div class="col-md-3 mb-3">
 
                   <label class="form-label">
+
                     Tanpa Koreksi - Jauh
+
                   </label>
+
 
                   <input
                     type="text"
@@ -607,8 +773,11 @@ require '../../controller/view.php';
                 <div class="col-md-3 mb-3">
 
                   <label class="form-label">
+
                     Tanpa Koreksi - Dekat
+
                   </label>
+
 
                   <input
                     type="text"
@@ -622,8 +791,11 @@ require '../../controller/view.php';
                 <div class="col-md-3 mb-3">
 
                   <label class="form-label">
+
                     Dengan Koreksi - Jauh
+
                   </label>
+
 
                   <input
                     type="text"
@@ -637,8 +809,11 @@ require '../../controller/view.php';
                 <div class="col-md-3 mb-3">
 
                   <label class="form-label">
+
                     Dengan Koreksi - Dekat
+
                   </label>
+
 
                   <input
                     type="text"
@@ -648,11 +823,14 @@ require '../../controller/view.php';
 
                 </div>
 
+
               </div>
 
 
               <hr>
 
+
+              <!-- OS -->
 
               <h6 class="fw-bold mb-3">
 
@@ -663,11 +841,15 @@ require '../../controller/view.php';
 
               <div class="row">
 
+
                 <div class="col-md-3 mb-3">
 
                   <label class="form-label">
+
                     Tanpa Koreksi - Jauh
+
                   </label>
+
 
                   <input
                     type="text"
@@ -681,8 +863,11 @@ require '../../controller/view.php';
                 <div class="col-md-3 mb-3">
 
                   <label class="form-label">
+
                     Tanpa Koreksi - Dekat
+
                   </label>
+
 
                   <input
                     type="text"
@@ -696,8 +881,11 @@ require '../../controller/view.php';
                 <div class="col-md-3 mb-3">
 
                   <label class="form-label">
+
                     Dengan Koreksi - Jauh
+
                   </label>
+
 
                   <input
                     type="text"
@@ -711,8 +899,11 @@ require '../../controller/view.php';
                 <div class="col-md-3 mb-3">
 
                   <label class="form-label">
+
                     Dengan Koreksi - Dekat
+
                   </label>
+
 
                   <input
                     type="text"
@@ -721,6 +912,7 @@ require '../../controller/view.php';
                     class="form-control">
 
                 </div>
+
 
               </div>
 
@@ -731,8 +923,8 @@ require '../../controller/view.php';
 
 
           <!-- =================================================
-             REFRAKSI
-        ================================================= -->
+             E. PEMERIKSAAN REFRAKSI
+        ================================================== -->
 
           <div class="card border mb-3">
 
@@ -752,6 +944,8 @@ require '../../controller/view.php';
             <div class="card-body">
 
 
+              <!-- OD -->
+
               <h6 class="fw-bold">
 
                 OD - Mata Kanan
@@ -761,11 +955,13 @@ require '../../controller/view.php';
 
               <div class="row">
 
+
                 <div class="col-md-3 mb-3">
 
                   <label class="form-label">
                     SPH
                   </label>
+
 
                   <input
                     type="text"
@@ -782,6 +978,7 @@ require '../../controller/view.php';
                     CYL
                   </label>
 
+
                   <input
                     type="text"
                     name="refraksi_od_cyl"
@@ -796,6 +993,7 @@ require '../../controller/view.php';
                   <label class="form-label">
                     AXIS
                   </label>
+
 
                   <input
                     type="text"
@@ -812,6 +1010,7 @@ require '../../controller/view.php';
                     ADD
                   </label>
 
+
                   <input
                     type="text"
                     name="refraksi_od_add"
@@ -820,11 +1019,14 @@ require '../../controller/view.php';
 
                 </div>
 
+
               </div>
 
 
               <hr>
 
+
+              <!-- OS -->
 
               <h6 class="fw-bold">
 
@@ -835,11 +1037,13 @@ require '../../controller/view.php';
 
               <div class="row">
 
+
                 <div class="col-md-3 mb-3">
 
                   <label class="form-label">
                     SPH
                   </label>
+
 
                   <input
                     type="text"
@@ -856,6 +1060,7 @@ require '../../controller/view.php';
                     CYL
                   </label>
 
+
                   <input
                     type="text"
                     name="refraksi_os_cyl"
@@ -870,6 +1075,7 @@ require '../../controller/view.php';
                   <label class="form-label">
                     AXIS
                   </label>
+
 
                   <input
                     type="text"
@@ -886,6 +1092,7 @@ require '../../controller/view.php';
                     ADD
                   </label>
 
+
                   <input
                     type="text"
                     name="refraksi_os_add"
@@ -894,16 +1101,24 @@ require '../../controller/view.php';
 
                 </div>
 
+
               </div>
 
 
+              <!-- PD -->
+
               <div class="row">
 
-                <div class="col-md-4">
+                <div class="col-md-4 mb-0">
 
-                  <label class="form-label">
+                  <label
+                    for="pd"
+                    class="form-label">
+
                     PD
+
                   </label>
+
 
                   <input
                     type="text"
@@ -922,8 +1137,8 @@ require '../../controller/view.php';
 
 
           <!-- =================================================
-             PEMERIKSAAN LAIN
-        ================================================= -->
+             F. PEMERIKSAAN MATA LAINNYA
+        ================================================== -->
 
           <div class="card border mb-3">
 
@@ -942,44 +1157,67 @@ require '../../controller/view.php';
 
             <div class="card-body">
 
-
               <div class="row">
+
+
+                <!-- TIO OD -->
 
                 <div class="col-md-6 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="tio_od"
+                    class="form-label">
+
                     TIO OD
+
                   </label>
+
 
                   <input
                     type="text"
                     name="tio_od"
                     id="tio_od"
-                    class="form-control">
+                    class="form-control"
+                    placeholder="mmHg">
 
                 </div>
 
 
+                <!-- TIO OS -->
+
                 <div class="col-md-6 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="tio_os"
+                    class="form-label">
+
                     TIO OS
+
                   </label>
+
 
                   <input
                     type="text"
                     name="tio_os"
                     id="tio_os"
-                    class="form-control">
+                    class="form-control"
+                    placeholder="mmHg">
 
                 </div>
 
 
+                <!-- ANTERIOR OD -->
+
                 <div class="col-md-6 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="segmen_anterior_od"
+                    class="form-label">
+
                     Segmen Anterior OD
+
                   </label>
+
 
                   <textarea
                     name="segmen_anterior_od"
@@ -990,11 +1228,18 @@ require '../../controller/view.php';
                 </div>
 
 
+                <!-- ANTERIOR OS -->
+
                 <div class="col-md-6 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="segmen_anterior_os"
+                    class="form-label">
+
                     Segmen Anterior OS
+
                   </label>
+
 
                   <textarea
                     name="segmen_anterior_os"
@@ -1005,11 +1250,18 @@ require '../../controller/view.php';
                 </div>
 
 
+                <!-- POSTERIOR OD -->
+
                 <div class="col-md-6 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="segmen_posterior_od"
+                    class="form-label">
+
                     Segmen Posterior OD
+
                   </label>
+
 
                   <textarea
                     name="segmen_posterior_od"
@@ -1020,11 +1272,18 @@ require '../../controller/view.php';
                 </div>
 
 
+                <!-- POSTERIOR OS -->
+
                 <div class="col-md-6 mb-3">
 
-                  <label class="form-label">
+                  <label
+                    for="segmen_posterior_os"
+                    class="form-label">
+
                     Segmen Posterior OS
+
                   </label>
+
 
                   <textarea
                     name="segmen_posterior_os"
@@ -1034,8 +1293,8 @@ require '../../controller/view.php';
 
                 </div>
 
-              </div>
 
+              </div>
 
             </div>
 
@@ -1043,8 +1302,8 @@ require '../../controller/view.php';
 
 
           <!-- =================================================
-             KESIMPULAN
-        ================================================= -->
+             G. KESIMPULAN & REKOMENDASI
+        ================================================== -->
 
           <div class="card border mb-3">
 
@@ -1064,11 +1323,18 @@ require '../../controller/view.php';
             <div class="card-body">
 
 
+              <!-- KESIMPULAN -->
+
               <div class="mb-3">
 
-                <label class="form-label">
+                <label
+                  for="kesimpulan"
+                  class="form-label">
+
                   Kesimpulan
+
                 </label>
+
 
                 <textarea
                   name="kesimpulan"
@@ -1080,11 +1346,18 @@ require '../../controller/view.php';
               </div>
 
 
+              <!-- REKOMENDASI -->
+
               <div class="mb-0">
 
-                <label class="form-label">
+                <label
+                  for="rekomendasi"
+                  class="form-label">
+
                   Rekomendasi
+
                 </label>
+
 
                 <textarea
                   name="rekomendasi"
@@ -1104,7 +1377,9 @@ require '../../controller/view.php';
         </div>
 
 
-        <!-- FOOTER -->
+        <!-- =================================================
+           FOOTER
+      ================================================== -->
 
         <div class="modal-footer">
 
@@ -1120,7 +1395,8 @@ require '../../controller/view.php';
 
           <button
             type="submit"
-            class="btn btn-primary">
+            class="btn btn-primary"
+            id="btnSimpanSurat">
 
             <i class="fas fa-save me-1"></i>
 
@@ -1136,273 +1412,751 @@ require '../../controller/view.php';
     </div>
 
   </div>
-  <script>
-    const apiUrl =
-      'controller/letter/suratPemeriksaanMataController';
+</body>
+<script>
+  const apiUrl =
+    'controller/letter/suratPemeriksaanMataController';
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | HELPER SET VALUE
+  |--------------------------------------------------------------------------
+  */
+
+  function setValue(id, value) {
+
+    $('#' + id).val(
+      value !== null &&
+      value !== undefined ?
+      value :
+      ''
+    );
+
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | HELPER ESCAPE HTML
+  |--------------------------------------------------------------------------
+  */
+
+  function escapeHtml(value) {
+
+    if (
+      value === null ||
+      value === undefined
+    ) {
+
+      return '';
+
+    }
+
+    return $('<div>')
+      .text(value)
+      .html();
+
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | RESET NOMOR SURAT
+  |--------------------------------------------------------------------------
+  */
+
+  function resetNomorSurat() {
+
+    $('#nomor_surat')
+      .val('')
+      .prop('readonly', false)
+      .removeClass('bg-light');
+
+    $('#nomor_surat_info')
+      .html('');
+
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | TAMPILKAN MODE NOMOR
+  |--------------------------------------------------------------------------
+  */
+
+  function tampilkanModeNomor(
+    mode,
+    format = '',
+    nomor = ''
+  ) {
+
+    mode =
+      String(mode || '')
+      .toUpperCase();
 
 
     /*
     |--------------------------------------------------------------------------
-    | HELPER
+    | MANUAL
     |--------------------------------------------------------------------------
     */
 
-    function setValue(id, value) {
+    if (mode === 'MANUAL') {
 
-      $('#' + id).val(
-        value !== null &&
-        value !== undefined ?
-        value :
-        ''
-      );
+      $('#nomor_surat')
+        .prop('readonly', false)
+        .removeClass('bg-light')
+        .attr(
+          'placeholder',
+          'Masukkan nomor surat'
+        );
+
+
+      $('#nomor_surat_info')
+        .html(`
+
+          <div class="alert alert-warning py-2 mb-0">
+
+            <div class="d-flex align-items-center">
+
+              <i class="fas fa-keyboard me-2"></i>
+
+              <div>
+
+                <strong>Penomoran Manual</strong>
+
+                <div class="small">
+                  Nomor surat diisi secara manual oleh pengguna.
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        `);
+
+
+      return;
 
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | INIT SELECT2
+    | AUTO
     |--------------------------------------------------------------------------
     */
 
-    function initPatientSelect() {
+    if (mode === 'AUTO') {
 
-      const $select =
-        $('#id_patient_select');
+      $('#nomor_surat')
+        .val('')
+        .prop('readonly', true)
+        .addClass('bg-light')
+        .attr(
+          'placeholder',
+          'Nomor surat dibuat otomatis'
+        );
 
 
-      if (
-        $select.hasClass(
-          'select2-hidden-accessible'
-        )
-      ) {
+      let infoFormat =
+        format || 'Format otomatis';
 
-        $select.select2('destroy');
+
+      let infoNomor =
+        nomor !== '' ?
+        nomor :
+        '-';
+
+
+      $('#nomor_surat_info')
+        .html(`
+
+          <div class="alert alert-success py-2 mb-0">
+
+            <div class="d-flex align-items-center">
+
+              <i class="fas fa-robot me-2"></i>
+
+              <div>
+
+                <strong>Penomoran Otomatis</strong>
+
+                <div class="small">
+                  Format:
+                  <strong>
+                    ${escapeHtml(infoFormat)}
+                  </strong>
+                </div>
+
+                <div class="small">
+                  Nomor terakhir:
+                  <strong>
+                    ${escapeHtml(infoNomor)}
+                  </strong>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        `);
+
+
+      return;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | BELUM DISETTING
+    |--------------------------------------------------------------------------
+    */
+
+    $('#nomor_surat')
+      .val('')
+      .prop('readonly', true)
+      .addClass('bg-light')
+      .attr(
+        'placeholder',
+        'Setting nomor surat belum tersedia'
+      );
+
+
+    $('#nomor_surat_info')
+      .html(`
+
+        <div class="alert alert-danger py-2 mb-0">
+
+          <i class="fas fa-exclamation-triangle me-1"></i>
+
+          Penomoran surat belum dikonfigurasi.
+
+        </div>
+
+      `);
+
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | CHECK SETTING NOMOR SURAT
+  |--------------------------------------------------------------------------
+  |
+  | Endpoint controller harus mendukung:
+  |
+  | ?check_setting=1
+  |
+  |--------------------------------------------------------------------------
+  */
+
+  function checkSettingNomorSurat(
+    callback
+  ) {
+
+    fetch(
+        apiUrl +
+        '?check_setting=1'
+      )
+
+      .then(
+        res =>
+        res.json()
+      )
+
+      .then(
+        response => {
+
+          /*
+          |--------------------------------------------------------------------------
+          | SETTING TIDAK ADA
+          |--------------------------------------------------------------------------
+          */
+
+          if (
+            response.status ===
+            'setting_required'
+          ) {
+
+            Swal.fire({
+
+                icon: 'warning',
+
+                title: 'Setting Nomor Surat Belum Ada',
+
+                html: `
+
+                <div class="text-center">
+
+                  <p class="mb-3">
+                    Setting nomor surat untuk
+                    <strong>
+                      Surat Hasil Pemeriksaan Mata
+                    </strong>
+                    belum dikonfigurasi.
+                  </p>
+
+                  <p class="text-muted small mb-0">
+
+                    Silakan atur mode
+                    <strong>Manual</strong>
+                    atau
+                    <strong>Otomatis</strong>
+                    terlebih dahulu.
+
+                  </p>
+
+                </div>
+
+              `,
+
+                showCancelButton: true,
+
+                confirmButtonText: '<i class="fas fa-cog me-1"></i> Setting Nomor Surat',
+
+                cancelButtonText: 'Batal',
+
+                confirmButtonColor: '#0d6efd'
+
+              })
+
+              .then(
+                result => {
+
+                  if (
+                    result.isConfirmed
+                  ) {
+
+                    window.location.href =
+                      'module/letter/setting-surat';
+
+                  }
+
+                }
+              );
+
+
+            return;
+
+          }
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | ERROR
+          |--------------------------------------------------------------------------
+          */
+
+          if (
+            response.status !==
+            'success'
+          ) {
+
+            Swal.fire(
+              'Gagal!',
+              response.message ||
+              'Gagal membaca setting nomor surat.',
+              'error'
+            );
+
+            return;
+
+          }
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | AMBIL DATA SETTING
+          |--------------------------------------------------------------------------
+          */
+
+          let setting =
+            response.data ||
+            response.setting || {};
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | BEBERAPA CONTROLLER MENGEMBALIKAN:
+          |
+          | data: {
+          |   mode_nomor,
+          |   format_mata,
+          |   nomor_mata
+          | }
+          |
+          |--------------------------------------------------------------------------
+          */
+
+          let mode =
+            setting.mode_nomor ||
+            response.mode_nomor ||
+            '';
+
+
+          let format =
+            setting.format_mata ||
+            response.format_mata ||
+            '';
+
+
+          let nomor =
+            setting.nomor_mata ??
+            response.nomor_mata ??
+            0;
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | MODE VALID
+          |--------------------------------------------------------------------------
+          */
+
+          if (
+            mode !== 'AUTO' &&
+            mode !== 'MANUAL'
+          ) {
+
+            Swal.fire({
+
+                icon: 'warning',
+
+                title: 'Mode Nomor Surat Belum Valid',
+
+                text: 'Silakan periksa kembali setting nomor surat.',
+
+                confirmButtonText: 'Buka Setting'
+
+              })
+              .then(
+                () => {
+
+                  window.location.href =
+                    'module/letter/setting-surat';
+
+                }
+              );
+
+
+            return;
+
+          }
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | CALLBACK
+          |--------------------------------------------------------------------------
+          */
+
+          if (
+            typeof callback ===
+            'function'
+          ) {
+
+            callback({
+
+              mode_nomor: mode,
+
+              format_mata: format,
+
+              nomor_mata: nomor
+
+            });
+
+          }
+
+        }
+      )
+
+      .catch(
+        error => {
+
+          console.error(
+            'checkSettingNomorSurat:',
+            error
+          );
+
+
+          Swal.fire(
+            'Error!',
+            'Tidak dapat membaca setting nomor surat.',
+            'error'
+          );
+
+        }
+      );
+
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | INIT SELECT2 PASIEN
+  |--------------------------------------------------------------------------
+  */
+
+  function initPatientSelect() {
+
+    const $select =
+      $('#id_patient_select');
+
+
+    if (
+      $select.hasClass(
+        'select2-hidden-accessible'
+      )
+    ) {
+
+      $select.select2(
+        'destroy'
+      );
+
+    }
+
+
+    $select.select2({
+
+      dropdownParent: $('#programModal'),
+
+      width: '100%',
+
+      placeholder: 'Cari Pasien Kunjungan...',
+
+      allowClear: true,
+
+      minimumInputLength: 2,
+
+      ajax: {
+
+        url: 'controller/admisi/patientVisitControllerInOut',
+
+        type: 'GET',
+
+        dataType: 'json',
+
+        delay: 300,
+
+
+        data: function(params) {
+
+          return {
+
+            search: params.term ||
+              ''
+
+          };
+
+        },
+
+
+        processResults: function(response) {
+
+          let items =
+            response.data || [];
+
+
+          return {
+
+            results:
+
+              items.map(
+                function(item) {
+
+                  return {
+
+                    id: item.id_patient,
+
+                    text:
+
+                      item.patient_name +
+                      ' | RM: ' +
+                      (
+                        item.nomor_rm ||
+                        '-'
+                      ) +
+                      ' | ' +
+                      (
+                        item.visit_date ||
+                        '-'
+                      ),
+
+                    id_patient: item.id_patient,
+
+                    id_visit: item.id_visit,
+
+                    visit_ID: item.visit_ID,
+
+                    patient_name: item.patient_name,
+
+                    nomor_rm: item.nomor_rm,
+
+                    patient_nik: item.patient_nik,
+
+                    visit_date: item.visit_date,
+
+                    id_doctor: item.id_doctor,
+
+                    tekanan_darah: item.tekanan_darah,
+
+                    nadi: item.nadi,
+
+                    suhu: item.suhu,
+
+                    respirasi: item.respirasi
+
+                  };
+
+                }
+              )
+
+          };
+
+        },
+
+
+        cache: true
 
       }
 
+    });
 
-      $select.select2({
 
-        dropdownParent: $('#programModal'),
+    /*
+    |--------------------------------------------------------------------------
+    | SELECT PATIENT
+    |--------------------------------------------------------------------------
+    */
 
-        width: '100%',
+    $select.off(
+      'select2:select'
+    );
 
-        placeholder: 'Cari Pasien Kunjungan...',
 
-        allowClear: true,
+    $select.on(
+      'select2:select',
+      function(e) {
 
-        minimumInputLength: 2,
+        const data =
+          e.params.data;
 
-        ajax: {
 
-          url: 'controller/admisi/patientVisitControllerInOut',
+        /*
+        |--------------------------------------------------------------------------
+        | RELASI
+        |--------------------------------------------------------------------------
+        */
 
-          type: 'GET',
+        setValue(
+          'id_patient',
+          data.id_patient
+        );
 
-          dataType: 'json',
 
-          delay: 300,
+        setValue(
+          'id_visit',
+          data.id_visit
+        );
 
 
-          data: function(params) {
+        /*
+        |--------------------------------------------------------------------------
+        | TANDA VITAL
+        |--------------------------------------------------------------------------
+        */
 
-            return {
+        setValue(
+          'tekanan_darah',
+          data.tekanan_darah
+        );
 
-              search: params.term || ''
 
-            };
+        setValue(
+          'nadi',
+          data.nadi
+        );
 
-          },
 
+        setValue(
+          'suhu',
+          data.suhu
+        );
 
-          processResults: function(response) {
 
-            let items =
-              response.data || [];
+        setValue(
+          'respirasi',
+          data.respirasi
+        );
 
 
-            return {
+        console.log(
+          'Visit pemeriksaan mata:',
+          data
+        );
 
-              results:
+      }
+    );
 
-                items.map(
-                  function(item) {
 
-                    return {
+    /*
+    |--------------------------------------------------------------------------
+    | CLEAR
+    |--------------------------------------------------------------------------
+    */
 
-                      id: item.id_patient,
+    $select.off(
+      'select2:clear'
+    );
 
-                      text:
 
-                        item.patient_name +
-                        ' | RM: ' +
-                        (
-                          item.nomor_rm ||
-                          '-'
-                        ) +
-                        ' | ' +
-                        (
-                          item.visit_date ||
-                          '-'
-                        ),
+    $select.on(
+      'select2:clear',
+      function() {
 
-                      id_patient: item.id_patient,
+        $('#id_patient')
+          .val('');
 
-                      id_visit: item.id_visit,
 
-                      visit_ID: item.visit_ID,
+        $('#id_visit')
+          .val('');
 
-                      patient_name: item.patient_name,
 
-                      nomor_rm: item.nomor_rm,
+        $('#tekanan_darah')
+          .val('');
 
-                      patient_nik: item.patient_nik,
 
-                      visit_date: item.visit_date,
+        $('#nadi')
+          .val('');
 
-                      id_doctor: item.id_doctor,
 
-                      tekanan_darah: item.tekanan_darah,
+        $('#suhu')
+          .val('');
 
-                      nadi: item.nadi,
 
-                      suhu: item.suhu,
+        $('#respirasi')
+          .val('');
 
-                      respirasi: item.respirasi
+      }
+    );
 
-                    };
+  }
 
-                  }
-                )
 
-            };
+  /*
+  |--------------------------------------------------------------------------
+  | DOCUMENT READY
+  |--------------------------------------------------------------------------
+  */
 
-          },
-
-          cache: true
-
-        }
-
-      });
-
-
-      /*
-      |--------------------------------------------------------------------------
-      | SELECT
-      |--------------------------------------------------------------------------
-      */
-
-      $select.off(
-        'select2:select'
-      );
-
-
-      $select.on(
-        'select2:select',
-        function(e) {
-
-          const data =
-            e.params.data;
-
-
-          /*
-          |--------------------------------------------------------------------------
-          | RELASI
-          |--------------------------------------------------------------------------
-          */
-
-          setValue(
-            'id_patient',
-            data.id_patient
-          );
-
-
-          setValue(
-            'id_visit',
-            data.id_visit
-          );
-
-
-          /*
-          |--------------------------------------------------------------------------
-          | TANDA VITAL DARI VISIT
-          |--------------------------------------------------------------------------
-          */
-
-          setValue(
-            'tekanan_darah',
-            data.tekanan_darah
-          );
-
-
-          setValue(
-            'nadi',
-            data.nadi
-          );
-
-
-          setValue(
-            'suhu',
-            data.suhu
-          );
-
-
-          setValue(
-            'respirasi',
-            data.respirasi
-          );
-
-
-          console.log(
-            'Visit pemeriksaan mata:',
-            data
-          );
-
-        }
-      );
-
-
-      /*
-      |--------------------------------------------------------------------------
-      | CLEAR
-      |--------------------------------------------------------------------------
-      */
-
-      $select.off(
-        'select2:clear'
-      );
-
-
-      $select.on(
-        'select2:clear',
-        function() {
-
-          $('#id_patient')
-            .val('');
-
-          $('#id_visit')
-            .val('');
-
-          $('#tekanan_darah')
-            .val('');
-
-          $('#nadi')
-            .val('');
-
-          $('#suhu')
-            .val('');
-
-          $('#respirasi')
-            .val('');
-
-        }
-      );
-
-    }
-  </script>
-  <script>
-    $(document).ready(function() {
+  $(document).ready(
+    function() {
 
 
       /*
@@ -1426,6 +2180,7 @@ require '../../controller/view.php';
 
             type: 'GET',
 
+
             dataSrc: function(json) {
 
               if (
@@ -1440,15 +2195,22 @@ require '../../controller/view.php';
                   'error'
                 );
 
+
                 return [];
 
               }
 
 
-              return json.data.map(
+              return (
+
+                json.data || []
+
+              ).map(
                 function(row) {
 
                   return {
+
+                    id: row.id,
 
                     nomor_surat: row.nomor_surat ||
                       '-',
@@ -1479,50 +2241,51 @@ require '../../controller/view.php';
 
                     actions: `
 
-                  <div class="text-end">
+                        <div class="text-end">
 
-                    <div
-                      class="btn-group btn-group-sm"
-                      role="group">
-
-
-                      <a
-                        class="btn btn-primary"
-                        href="module/letter/print/surat-pemeriksaan-mata?id=${row.id}"
-                        target="_blank"
-                        title="Cetak Surat">
-
-                        <i class="fas fa-print"></i>
-
-                      </a>
+                          <div
+                            class="btn-group btn-group-sm"
+                            role="group">
 
 
-                      <a
-                        class="btn btn-warning edit-btn"
-                        href="javascript:;"
-                        data-id="${row.id}"
-                        title="Edit">
+                            <a
+                              class="btn btn-primary"
+                              href="module/letter/print/surat-pemeriksaan-mata?id=${row.id}"
+                              target="_blank"
+                              title="Cetak Surat">
 
-                        <i class="fas fa-edit"></i>
+                              <i class="fas fa-print"></i>
 
-                      </a>
+                            </a>
 
 
-                      <a
-                        class="btn btn-danger delete-btn"
-                        href="javascript:;"
-                        data-id="${row.id}"
-                        title="Hapus">
+                            <a
+                              class="btn btn-warning edit-btn"
+                              href="javascript:;"
+                              data-id="${row.id}"
+                              title="Edit">
 
-                        <i class="fas fa-trash"></i>
+                              <i class="fas fa-edit"></i>
 
-                      </a>
+                            </a>
 
-                    </div>
 
-                  </div>
+                            <a
+                              class="btn btn-danger delete-btn"
+                              href="javascript:;"
+                              data-id="${row.id}"
+                              title="Hapus">
 
-                `
+                              <i class="fas fa-trash"></i>
+
+                            </a>
+
+
+                          </div>
+
+                        </div>
+
+                      `
 
                   };
 
@@ -1575,8 +2338,14 @@ require '../../controller/view.php';
 
           ],
 
+
           order: [
-            [1, 'desc']
+
+            [
+              1,
+              'desc'
+            ]
+
           ]
 
         });
@@ -1584,7 +2353,7 @@ require '../../controller/view.php';
 
       /*
       |--------------------------------------------------------------------------
-      | SELECT2
+      | INIT SELECT2
       |--------------------------------------------------------------------------
       */
 
@@ -1601,21 +2370,53 @@ require '../../controller/view.php';
         'click',
         function() {
 
+
+          /*
+          |--------------------------------------------------------------------------
+          | RESET FORM
+          |--------------------------------------------------------------------------
+          */
+
           $('#programForm')[0]
             .reset();
 
 
-          $('#id').val('');
+          $('#id')
+            .val('');
 
-          $('#id_patient').val('');
 
-          $('#id_visit').val('');
+          $('#id_customer')
+            .val(
+              '<?= htmlspecialchars(
+                  $_SESSION['id_customer'] ?? ''
+                ) ?>'
+            );
 
+
+          $('#id_patient')
+            .val('');
+
+
+          $('#id_visit')
+            .val('');
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | RESET SELECT2
+          |--------------------------------------------------------------------------
+          */
 
           $('#id_patient_select')
             .val(null)
             .trigger('change');
 
+
+          /*
+          |--------------------------------------------------------------------------
+          | TANGGAL SURAT
+          |--------------------------------------------------------------------------
+          */
 
           $('#tanggal_surat')
             .val(
@@ -1623,14 +2424,58 @@ require '../../controller/view.php';
             );
 
 
+          /*
+          |--------------------------------------------------------------------------
+          | RESET NOMOR
+          |--------------------------------------------------------------------------
+          */
+
+          resetNomorSurat();
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | TITLE
+          |--------------------------------------------------------------------------
+          */
+
           $('#programModal .modal-title')
             .text(
               'Tambah Surat Hasil Pemeriksaan Mata'
             );
 
 
-          $('#programModal')
-            .modal('show');
+          /*
+          |--------------------------------------------------------------------------
+          | CEK SETTING SEBELUM MODAL
+          |--------------------------------------------------------------------------
+          */
+
+          checkSettingNomorSurat(
+            function(setting) {
+
+              tampilkanModeNomor(
+
+                setting.mode_nomor,
+
+                setting.format_mata,
+
+                setting.nomor_mata
+
+              );
+
+
+              /*
+              |--------------------------------------------------------------------------
+              | BUKA MODAL
+              |--------------------------------------------------------------------------
+              */
+
+              $('#programModal')
+                .modal('show');
+
+            }
+          );
 
         }
       );
@@ -1661,9 +2506,15 @@ require '../../controller/view.php';
             $('#id_visit').val();
 
 
+          const nomorSurat =
+            $.trim(
+              $('#nomor_surat').val()
+            );
+
+
           /*
           |--------------------------------------------------------------------------
-          | VALIDASI
+          | VALIDASI PASIEN
           |--------------------------------------------------------------------------
           */
 
@@ -1680,6 +2531,12 @@ require '../../controller/view.php';
           }
 
 
+          /*
+          |--------------------------------------------------------------------------
+          | VALIDASI VISIT
+          |--------------------------------------------------------------------------
+          */
+
           if (!idVisit) {
 
             Swal.fire(
@@ -1687,6 +2544,38 @@ require '../../controller/view.php';
               'Visit pasien tidak ditemukan.',
               'warning'
             );
+
+            return;
+
+          }
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | VALIDASI NOMOR MANUAL
+          |--------------------------------------------------------------------------
+          |
+          | Hanya berlaku jika input aktif.
+          |
+          |--------------------------------------------------------------------------
+          */
+
+          if (
+            !$('#nomor_surat')
+            .prop('readonly') &&
+            !nomorSurat
+          ) {
+
+            Swal.fire(
+              'Perhatian!',
+              'Nomor surat wajib diisi.',
+              'warning'
+            );
+
+
+            $('#nomor_surat')
+              .focus();
+
 
             return;
 
@@ -1704,6 +2593,12 @@ require '../../controller/view.php';
               new FormData(this)
             );
 
+
+          /*
+          |--------------------------------------------------------------------------
+          | SUBMIT BUTTON
+          |--------------------------------------------------------------------------
+          */
 
           const submitButton =
             $(this).find(
@@ -1734,16 +2629,18 @@ require '../../controller/view.php';
           fetch(
 
               apiUrl +
+
               (
                 id ?
-                '?id=' + id :
+                '?id=' + encodeURIComponent(id) :
                 ''
               ),
 
               {
 
                 method: id ?
-                  'PUT' : 'POST',
+                  'PUT' :
+                  'POST',
 
                 headers: {
 
@@ -1765,6 +2662,7 @@ require '../../controller/view.php';
             .then(
               data => {
 
+
                 submitButton
                   .prop(
                     'disabled',
@@ -1775,6 +2673,60 @@ require '../../controller/view.php';
                   );
 
 
+                /*
+                |--------------------------------------------------------------------------
+                | SETTING REQUIRED
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                  data.status ===
+                  'setting_required'
+                ) {
+
+                  Swal.fire({
+
+                      icon: 'warning',
+
+                      title: 'Setting Nomor Surat Belum Ada',
+
+                      text: data.message ||
+                        'Silakan setting nomor surat terlebih dahulu.',
+
+                      showCancelButton: true,
+
+                      confirmButtonText: 'Buka Setting',
+
+                      cancelButtonText: 'Batal'
+
+                    })
+                    .then(
+                      result => {
+
+                        if (
+                          result.isConfirmed
+                        ) {
+
+                          window.location.href =
+                            'module/letter/setting-surat';
+
+                        }
+
+                      }
+                    );
+
+
+                  return;
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | SUCCESS
+                |--------------------------------------------------------------------------
+                */
+
                 if (
                   data.status ===
                   'success'
@@ -1782,7 +2734,8 @@ require '../../controller/view.php';
 
                   Swal.fire(
                     'Berhasil!',
-                    data.message,
+                    data.message ||
+                    'Surat berhasil disimpan.',
                     'success'
                   );
 
@@ -1797,15 +2750,23 @@ require '../../controller/view.php';
                   );
 
 
-                } else {
-
-                  Swal.fire(
-                    'Gagal!',
-                    data.message,
-                    'error'
-                  );
+                  return;
 
                 }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | ERROR
+                |--------------------------------------------------------------------------
+                */
+
+                Swal.fire(
+                  'Gagal!',
+                  data.message ||
+                  'Gagal menyimpan surat.',
+                  'error'
+                );
 
               }
             )
@@ -1813,7 +2774,10 @@ require '../../controller/view.php';
             .catch(
               error => {
 
-                console.error(error);
+                console.error(
+                  'Submit surat mata:',
+                  error
+                );
 
 
                 submitButton
@@ -1854,10 +2818,25 @@ require '../../controller/view.php';
             $(this).data('id');
 
 
+          if (!id) {
+
+            Swal.fire(
+              'Error!',
+              'ID surat tidak ditemukan.',
+              'error'
+            );
+
+            return;
+
+          }
+
+
           fetch(
+
               apiUrl +
               '?id=' +
-              id
+              encodeURIComponent(id)
+
             )
 
             .then(
@@ -1868,6 +2847,13 @@ require '../../controller/view.php';
             .then(
               resp => {
 
+
+                /*
+                |--------------------------------------------------------------------------
+                | ERROR
+                |--------------------------------------------------------------------------
+                */
+
                 if (
                   resp.status !==
                   'success'
@@ -1875,9 +2861,11 @@ require '../../controller/view.php';
 
                   Swal.fire(
                     'Gagal!',
-                    resp.message,
+                    resp.message ||
+                    'Gagal mengambil data surat.',
                     'error'
                   );
+
 
                   return;
 
@@ -1894,21 +2882,75 @@ require '../../controller/view.php';
                 |--------------------------------------------------------------------------
                 */
 
-                $('#id')
-                  .val(d.id);
+                setValue(
+                  'id',
+                  d.id
+                );
 
 
-                $('#id_patient')
-                  .val(d.id_patient);
+                setValue(
+                  'id_customer',
+                  d.id_customer
+                );
 
 
-                $('#id_visit')
-                  .val(d.id_visit);
+                setValue(
+                  'id_patient',
+                  d.id_patient
+                );
+
+
+                setValue(
+                  'id_visit',
+                  d.id_visit
+                );
 
 
                 /*
                 |--------------------------------------------------------------------------
-                | SURAT
+                | NOMOR SURAT
+                |--------------------------------------------------------------------------
+                |
+                | Saat EDIT nomor surat lama selalu ditampilkan.
+                | Tidak generate nomor baru.
+                |
+                |--------------------------------------------------------------------------
+                */
+
+                setValue(
+                  'nomor_surat',
+                  d.nomor_surat
+                );
+
+
+                $('#nomor_surat')
+                  .prop(
+                    'readonly',
+                    true
+                  )
+                  .addClass(
+                    'bg-light'
+                  );
+
+
+                $('#nomor_surat_info')
+                  .html(`
+
+                    <div class="alert alert-secondary py-2 mb-0">
+
+                      <i class="fas fa-lock me-1"></i>
+
+                      Nomor surat terkunci karena
+                      data sedang diedit.
+
+                    </div>
+
+                  `);
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | TANGGAL SURAT
                 |--------------------------------------------------------------------------
                 */
 
@@ -1920,7 +2962,7 @@ require '../../controller/view.php';
 
                 /*
                 |--------------------------------------------------------------------------
-                | VITAL
+                | TANDA VITAL
                 |--------------------------------------------------------------------------
                 */
 
@@ -1929,15 +2971,18 @@ require '../../controller/view.php';
                   d.tekanan_darah
                 );
 
+
                 setValue(
                   'nadi',
                   d.nadi
                 );
 
+
                 setValue(
                   'suhu',
                   d.suhu
                 );
+
 
                 setValue(
                   'respirasi',
@@ -1956,35 +3001,42 @@ require '../../controller/view.php';
                   d.gula_darah_sewaktu
                 );
 
+
                 setValue(
                   'gula_darah_keterangan',
                   d.gula_darah_keterangan
                 );
+
 
                 setValue(
                   'kolesterol_total',
                   d.kolesterol_total
                 );
 
+
                 setValue(
                   'kolesterol_keterangan',
                   d.kolesterol_keterangan
                 );
+
 
                 setValue(
                   'asam_urat',
                   d.asam_urat
                 );
 
+
                 setValue(
                   'asam_urat_keterangan',
                   d.asam_urat_keterangan
                 );
 
+
                 setValue(
                   'hemoglobin',
                   d.hemoglobin
                 );
+
 
                 setValue(
                   'hemoglobin_keterangan',
@@ -2003,15 +3055,18 @@ require '../../controller/view.php';
                   d.visus_od_tanpa_koreksi_jauh
                 );
 
+
                 setValue(
                   'visus_od_tanpa_koreksi_dekat',
                   d.visus_od_tanpa_koreksi_dekat
                 );
 
+
                 setValue(
                   'visus_od_dengan_koreksi_jauh',
                   d.visus_od_dengan_koreksi_jauh
                 );
+
 
                 setValue(
                   'visus_od_dengan_koreksi_dekat',
@@ -2030,15 +3085,18 @@ require '../../controller/view.php';
                   d.visus_os_tanpa_koreksi_jauh
                 );
 
+
                 setValue(
                   'visus_os_tanpa_koreksi_dekat',
                   d.visus_os_tanpa_koreksi_dekat
                 );
 
+
                 setValue(
                   'visus_os_dengan_koreksi_jauh',
                   d.visus_os_dengan_koreksi_jauh
                 );
+
 
                 setValue(
                   'visus_os_dengan_koreksi_dekat',
@@ -2057,15 +3115,18 @@ require '../../controller/view.php';
                   d.refraksi_od_sph
                 );
 
+
                 setValue(
                   'refraksi_od_cyl',
                   d.refraksi_od_cyl
                 );
 
+
                 setValue(
                   'refraksi_od_axis',
                   d.refraksi_od_axis
                 );
+
 
                 setValue(
                   'refraksi_od_add',
@@ -2084,15 +3145,18 @@ require '../../controller/view.php';
                   d.refraksi_os_sph
                 );
 
+
                 setValue(
                   'refraksi_os_cyl',
                   d.refraksi_os_cyl
                 );
 
+
                 setValue(
                   'refraksi_os_axis',
                   d.refraksi_os_axis
                 );
+
 
                 setValue(
                   'refraksi_os_add',
@@ -2123,6 +3187,7 @@ require '../../controller/view.php';
                   d.tio_od
                 );
 
+
                 setValue(
                   'tio_os',
                   d.tio_os
@@ -2131,7 +3196,7 @@ require '../../controller/view.php';
 
                 /*
                 |--------------------------------------------------------------------------
-                | SEGMENT
+                | SEGMENT ANTERIOR
                 |--------------------------------------------------------------------------
                 */
 
@@ -2140,15 +3205,24 @@ require '../../controller/view.php';
                   d.segmen_anterior_od
                 );
 
+
                 setValue(
                   'segmen_anterior_os',
                   d.segmen_anterior_os
                 );
 
+
+                /*
+                |--------------------------------------------------------------------------
+                | SEGMENT POSTERIOR
+                |--------------------------------------------------------------------------
+                */
+
                 setValue(
                   'segmen_posterior_od',
                   d.segmen_posterior_od
                 );
+
 
                 setValue(
                   'segmen_posterior_os',
@@ -2182,7 +3256,7 @@ require '../../controller/view.php';
 
                 /*
                 |--------------------------------------------------------------------------
-                | SELECT2
+                | SELECT2 PASIEN
                 |--------------------------------------------------------------------------
                 */
 
@@ -2243,7 +3317,10 @@ require '../../controller/view.php';
             .catch(
               error => {
 
-                console.error(error);
+                console.error(
+                  'Edit surat mata:',
+                  error
+                );
 
 
                 Swal.fire(
@@ -2272,6 +3349,19 @@ require '../../controller/view.php';
 
           const id =
             $(this).data('id');
+
+
+          if (!id) {
+
+            Swal.fire(
+              'Error!',
+              'ID surat tidak ditemukan.',
+              'error'
+            );
+
+            return;
+
+          }
 
 
           Swal.fire({
@@ -2308,7 +3398,7 @@ require '../../controller/view.php';
 
                     apiUrl +
                     '?id=' +
-                    id,
+                    encodeURIComponent(id),
 
                     {
 
@@ -2333,7 +3423,8 @@ require '../../controller/view.php';
 
                         Swal.fire(
                           'Berhasil!',
-                          data.message,
+                          data.message ||
+                          'Data berhasil dihapus.',
                           'success'
                         );
 
@@ -2343,11 +3434,13 @@ require '../../controller/view.php';
                           false
                         );
 
+
                       } else {
 
                         Swal.fire(
                           'Gagal!',
-                          data.message,
+                          data.message ||
+                          'Gagal menghapus data.',
                           'error'
                         );
 
@@ -2359,7 +3452,10 @@ require '../../controller/view.php';
                   .catch(
                     error => {
 
-                      console.error(error);
+                      console.error(
+                        'Delete surat mata:',
+                        error
+                      );
 
 
                       Swal.fire(
@@ -2378,5 +3474,89 @@ require '../../controller/view.php';
       );
 
 
-    });
-  </script>
+      /*
+      |--------------------------------------------------------------------------
+      | RESET MODAL SETELAH DITUTUP
+      |--------------------------------------------------------------------------
+      */
+
+      $('#programModal').on(
+        'hidden.bs.modal',
+        function() {
+
+          /*
+          |--------------------------------------------------------------------------
+          | RESET FORM
+          |--------------------------------------------------------------------------
+          */
+
+          $('#programForm')[0]
+            .reset();
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | RESET HIDDEN
+          |--------------------------------------------------------------------------
+          */
+
+          $('#id')
+            .val('');
+
+
+          $('#id_patient')
+            .val('');
+
+
+          $('#id_visit')
+            .val('');
+
+
+          $('#id_customer')
+            .val(
+              '<?= htmlspecialchars(
+                  $_SESSION['id_customer'] ?? ''
+                ) ?>'
+            );
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | RESET SELECT2
+          |--------------------------------------------------------------------------
+          */
+
+          $('#id_patient_select')
+            .val(null)
+            .trigger('change');
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | RESET NOMOR
+          |--------------------------------------------------------------------------
+          */
+
+          resetNomorSurat();
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | RESET TITLE
+          |--------------------------------------------------------------------------
+          */
+
+          $('#programModal .modal-title')
+            .text(
+              'Tambah Surat Hasil Pemeriksaan Mata'
+            );
+
+        }
+      );
+
+
+    }
+  );
+</script>
+
+</html>

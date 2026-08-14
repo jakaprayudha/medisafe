@@ -95,7 +95,7 @@ $query = "
         pv.visit_date DESC,
         pv.id_visit DESC
 
-    LIMIT 20
+
 ";
 
 

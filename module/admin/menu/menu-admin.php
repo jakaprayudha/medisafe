@@ -46,6 +46,7 @@
             <li><a href="module/admin/setting_satusehat">Integrasi Satu Sehat</a></li>
             <li><a href="module/admin/setting_faskes">Faskes</a></li>
             <li><a href="module/admin/setting_margin">Margin Farmasi</a></li>
+            <li><a href="module/admin/setting_surat">Penomoran Surat</a></li>
          </ul>
       </li>
 

@@ -118,6 +118,61 @@ require '../../controller/view.php';
           name="id_visit"
           id="id_visit">
 
+        <!-- ======================================
+     NOMOR SURAT
+======================================= -->
+
+        <div class="mb-3" id="nomorSuratWrapper">
+
+          <label class="form-label">
+            Nomor Surat
+            <span class="text-danger">*</span>
+          </label>
+
+          <input
+            type="text"
+            name="nomor_surat"
+            id="nomor_surat"
+            class="form-control"
+            placeholder="Masukkan nomor surat">
+
+          <div
+            class="form-text text-muted"
+            id="nomorSuratHelp">
+          </div>
+
+        </div>
+
+
+        <!-- INFO NOMOR OTOMATIS -->
+
+        <div
+          class="alert alert-primary d-none"
+          id="nomorSuratAutoInfo">
+
+          <div class="d-flex align-items-center">
+
+            <iconify-icon
+              icon="material-symbols:auto-awesome"
+              width="22"
+              class="me-2">
+            </iconify-icon>
+
+            <div>
+
+              <strong>Nomor Surat Otomatis</strong>
+
+              <div class="small mt-1">
+                Nomor surat akan dibuat otomatis oleh sistem
+                berdasarkan pengaturan penomoran surat.
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
 
         <!-- PASIEN -->
 
@@ -630,6 +685,43 @@ require '../../controller/view.php';
           data.id_visit
         );
 
+        /* ----------------------------------------------
+   VALIDASI NOMOR SURAT
+---------------------------------------------- */
+
+        const nomorSurat =
+          $('#nomor_surat').val().trim();
+
+
+        const modeNomor =
+          String(
+            settingNomorSurat?.mode_nomor || ''
+          ).toUpperCase();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | MANUAL
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+          modeNomor === 'MANUAL' &&
+          !nomorSurat
+        ) {
+
+          Swal.fire(
+            'Perhatian!',
+            'Nomor surat wajib diisi karena mode penomoran adalah manual.',
+            'warning'
+          );
+
+          $('#nomor_surat').focus();
+
+          return;
+
+        }
+
 
         /*
         |--------------------------------------------------------------------------
@@ -777,7 +869,285 @@ require '../../controller/view.php';
 </script>
 
 <script>
-  const apiUrl = 'controller/letter/suratSehatController';
+  const apiUrl =
+    'controller/letter/suratSehatController';
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | SETTING NOMOR SURAT
+  |--------------------------------------------------------------------------
+  */
+
+  const settingSuratApi =
+    'controller/letter/settingSuratController';
+
+
+  const settingSuratPage =
+    'module/letter/setting-surat';
+
+
+  const jenisSurat =
+    'sehat';
+
+
+  let settingNomorSurat =
+    null;
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | CHECK SETTING NOMOR SURAT
+  |--------------------------------------------------------------------------
+  */
+
+  function checkSettingNomorSurat() {
+
+    return fetch(
+        settingSuratApi, {
+          method: 'GET',
+          cache: 'no-store'
+        }
+      )
+
+      .then(function(response) {
+
+        if (!response.ok) {
+
+          throw new Error(
+            'HTTP Error ' +
+            response.status
+          );
+
+        }
+
+        return response.json();
+
+      })
+
+      .then(function(response) {
+
+        console.log(
+          'SETTING NOMOR SURAT:',
+          response
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESPONSE ERROR
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+          response.status !==
+          'success'
+        ) {
+
+          throw new Error(
+            response.message ||
+            'Gagal mengambil setting nomor surat.'
+          );
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DATA
+        |--------------------------------------------------------------------------
+        */
+
+        settingNomorSurat =
+          response.data || null;
+
+
+        return settingNomorSurat;
+
+      });
+
+  }
+
+  /*
+|--------------------------------------------------------------------------
+| APPLY SETTING NOMOR SURAT
+|--------------------------------------------------------------------------
+*/
+
+  function applyNomorSuratSetting(
+    setting,
+    nomorSurat
+  ) {
+
+    const wrapper =
+      $('#nomorSuratWrapper');
+
+
+    const input =
+      $('#nomor_surat');
+
+
+    const help =
+      $('#nomorSuratHelp');
+
+
+    const autoInfo =
+      $('#nomorSuratAutoInfo');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RESET
+    |--------------------------------------------------------------------------
+    */
+
+    wrapper.addClass(
+      'd-none'
+    );
+
+
+    autoInfo.addClass(
+      'd-none'
+    );
+
+
+    input
+      .prop(
+        'required',
+        false
+      )
+      .prop(
+        'readonly',
+        false
+      )
+      .val(
+        nomorSurat || ''
+      );
+
+
+    help.html('');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SETTING TIDAK ADA
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+      !setting ||
+      !setting.id
+    ) {
+
+      return;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MODE
+    |--------------------------------------------------------------------------
+    */
+
+    const mode =
+      String(
+        setting.mode_nomor || ''
+      ).toUpperCase();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MANUAL
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+      mode === 'MANUAL'
+    ) {
+
+      wrapper.removeClass(
+        'd-none'
+      );
+
+
+      input
+        .prop(
+          'required',
+          true
+        )
+        .prop(
+          'readonly',
+          false
+        )
+        .val(
+          nomorSurat || ''
+        );
+
+
+      help.html(
+        `
+      <span class="text-primary">
+        <i class="fas fa-edit me-1"></i>
+        Nomor surat diisi secara manual.
+      </span>
+      `
+      );
+
+
+      return;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | AUTO
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+      mode === 'AUTO'
+    ) {
+
+      wrapper.addClass(
+        'd-none'
+      );
+
+
+      input
+        .prop(
+          'required',
+          false
+        )
+        .prop(
+          'readonly',
+          true
+        )
+        .val('');
+
+
+      autoInfo.removeClass(
+        'd-none'
+      );
+
+
+      return;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MODE INVALID
+    |--------------------------------------------------------------------------
+    */
+
+    throw new Error(
+      'Mode nomor surat tidak valid.'
+    );
+
+  }
 
 
   $(document).ready(function() {
@@ -1053,38 +1423,163 @@ require '../../controller/view.php';
     /* ==========================================================
        TAMBAH SURAT
     ========================================================== */
+    /* ==========================================================
+       TAMBAH SURAT
+    ========================================================== */
 
-    $('#btnTambah').on('click', function() {
-
-
-      $('#programForm')[0].reset();
-
-
-      $('#id').val('');
-
-      $('#id_patient').val('');
-
-      $('#id_visit').val('');
+    $('#btnTambah').on(
+      'click',
+      function() {
 
 
-      $('#id_patient_select')
-        .val(null)
-        .trigger('change');
+        /*
+        |--------------------------------------------------------------------------
+        | CEK SETTING TERLEBIH DAHULU
+        |--------------------------------------------------------------------------
+        */
+
+        Swal.fire({
+
+          title: 'Memeriksa Pengaturan...',
+
+          text: 'Memeriksa mode nomor surat.',
+
+          allowOutsideClick: false,
+
+          allowEscapeKey: false,
+
+          showConfirmButton: false,
+
+          didOpen: function() {
+
+            Swal.showLoading();
+
+          }
+
+        });
 
 
-      $('#tanggal_surat').val(
-        '<?= date('Y-m-d') ?>'
-      );
+        checkSettingNomorSurat()
+
+          .then(function(setting) {
 
 
-      $('#programModal .modal-title').text(
-        'Tambah Surat Keterangan Sehat'
-      );
+            /*
+            |--------------------------------------------------------------------------
+            | TUTUP LOADING
+            |--------------------------------------------------------------------------
+            */
+
+            Swal.close();
 
 
-      $('#programModal').modal('show');
+            /*
+            |--------------------------------------------------------------------------
+            | BELUM ADA SETTING
+            |--------------------------------------------------------------------------
+            */
 
-    });
+            if (
+              !setting ||
+              !setting.id
+            ) {
+
+              alertSettingBelumAda();
+
+              return;
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | RESET FORM
+            |--------------------------------------------------------------------------
+            */
+
+            $('#programForm')[0].reset();
+
+
+            $('#id').val('');
+
+            $('#id_patient').val('');
+
+            $('#id_visit').val('');
+
+            $('#nomor_surat').val('');
+
+
+            $('#id_patient_select')
+              .val(null)
+              .trigger('change');
+
+
+            $('#tanggal_surat').val(
+              '<?= date('Y-m-d') ?>'
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | APPLY SETTING NOMOR SURAT
+            |--------------------------------------------------------------------------
+            */
+
+            applyNomorSuratSetting(
+              setting
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | TITLE
+            |--------------------------------------------------------------------------
+            */
+
+            $('#programModal .modal-title')
+              .text(
+                'Tambah Surat Keterangan Sehat'
+              );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | SHOW MODAL
+            |--------------------------------------------------------------------------
+            */
+
+            $('#programModal')
+              .modal('show');
+
+          })
+
+          .catch(function(error) {
+
+
+            Swal.close();
+
+
+            console.error(
+              'CHECK SETTING ERROR:',
+              error
+            );
+
+
+            Swal.fire({
+
+              icon: 'error',
+
+              title: 'Gagal Memeriksa Setting',
+
+              text: error.message ||
+                'Pengaturan nomor surat gagal diperiksa.'
+
+            });
+
+          });
+
+      }
+    );
 
 
     /* ==========================================================
@@ -1278,6 +1773,10 @@ require '../../controller/view.php';
        EDIT
     ========================================================== */
 
+    /* ==========================================================
+   EDIT
+========================================================== */
+
     $(document).on(
       'click',
       '.edit-btn',
@@ -1287,6 +1786,12 @@ require '../../controller/view.php';
         let id =
           $(this).data('id');
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | AMBIL DATA SURAT
+        |--------------------------------------------------------------------------
+        */
 
         fetch(
             apiUrl +
@@ -1304,119 +1809,9 @@ require '../../controller/view.php';
 
 
             if (
-              resp.status ===
+              resp.status !==
               'success'
             ) {
-
-
-              let d =
-                resp.data;
-
-
-              /*
-              |--------------------------------------------------------------------------
-              | ID
-              |--------------------------------------------------------------------------
-              */
-
-              $('#id').val(
-                d.id
-              );
-
-
-              $('#id_patient').val(
-                d.id_patient
-              );
-
-
-              $('#id_visit').val(
-                d.id_visit
-              );
-
-
-              /*
-              |--------------------------------------------------------------------------
-              | FIELD
-              |--------------------------------------------------------------------------
-              */
-
-              $('#tanggal_surat').val(
-                d.tanggal_surat
-              );
-
-
-              $('#tekanan_darah').val(
-                d.tekanan_darah
-              );
-
-
-              $('#nadi').val(
-                d.nadi
-              );
-
-
-              $('#berat_badan').val(
-                d.berat_badan
-              );
-
-
-              $('#tinggi_badan').val(
-                d.tinggi_badan
-              );
-
-
-              $('#keperluan').val(
-                d.keperluan
-              );
-
-
-              $('#keterangan').val(
-                d.keterangan
-              );
-
-
-              /*
-              |--------------------------------------------------------------------------
-              | SELECT2 PATIENT
-              |--------------------------------------------------------------------------
-              */
-
-              const option =
-                new Option(
-                  d.patient_name +
-                  ' - RM ' +
-                  (d.nomor_rm || '-'),
-
-                  d.id_patient,
-
-                  true,
-                  true
-                );
-
-
-              $('#id_patient_select')
-                .empty()
-                .append(option)
-                .trigger('change');
-
-
-              /*
-              |--------------------------------------------------------------------------
-              | MODAL
-              |--------------------------------------------------------------------------
-              */
-
-              $('#programModal .modal-title')
-                .text(
-                  'Edit Surat Keterangan Sehat'
-                );
-
-
-              $('#programModal')
-                .modal('show');
-
-            } else {
-
 
               Swal.fire(
                 'Gagal!',
@@ -1424,13 +1819,216 @@ require '../../controller/view.php';
                 'error'
               );
 
+              return;
+
             }
+
+
+            let d =
+              resp.data;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | CHECK SETTING NOMOR SURAT
+            |--------------------------------------------------------------------------
+            */
+
+            return checkSettingNomorSurat()
+
+              .then(function(setting) {
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | BELUM ADA SETTING
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                  !setting ||
+                  !setting.id
+                ) {
+
+                  alertSettingBelumAda();
+
+                  return;
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | ID
+                |--------------------------------------------------------------------------
+                */
+
+                $('#id').val(
+                  d.id
+                );
+
+
+                $('#id_patient').val(
+                  d.id_patient
+                );
+
+
+                $('#id_visit').val(
+                  d.id_visit
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | NOMOR SURAT
+                |--------------------------------------------------------------------------
+                */
+
+                applyNomorSuratSetting(
+                  setting,
+                  d.nomor_surat || ''
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | TANGGAL
+                |--------------------------------------------------------------------------
+                */
+
+                $('#tanggal_surat').val(
+                  d.tanggal_surat
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | PEMERIKSAAN FISIK
+                |--------------------------------------------------------------------------
+                */
+
+                $('#tekanan_darah').val(
+                  d.tekanan_darah || ''
+                );
+
+
+                $('#nadi').val(
+                  d.nadi || ''
+                );
+
+
+                $('#suhu').val(
+                  d.suhu || ''
+                );
+
+
+                $('#respirasi').val(
+                  d.respirasi || ''
+                );
+
+
+                $('#berat_badan').val(
+                  d.berat_badan || ''
+                );
+
+
+                $('#tinggi_badan').val(
+                  d.tinggi_badan || ''
+                );
+
+
+                $('#bmi').val(
+                  d.bmi || ''
+                );
+
+
+                $('#bmi_keterangan').val(
+                  d.bmi_keterangan || ''
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | KEPERLUAN
+                |--------------------------------------------------------------------------
+                */
+
+                $('#keperluan').val(
+                  d.keperluan || ''
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | KETERANGAN
+                |--------------------------------------------------------------------------
+                */
+
+                $('#keterangan').val(
+                  d.keterangan || ''
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | SELECT2 PATIENT
+                |--------------------------------------------------------------------------
+                */
+
+                const option =
+                  new Option(
+
+                    d.patient_name +
+                    ' - RM ' +
+                    (
+                      d.nomor_rm ||
+                      '-'
+                    ),
+
+                    d.id_patient,
+
+                    true,
+
+                    true
+
+                  );
+
+
+                $('#id_patient_select')
+                  .empty()
+                  .append(option)
+                  .trigger('change');
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | MODAL TITLE
+                |--------------------------------------------------------------------------
+                */
+
+                $('#programModal .modal-title')
+                  .text(
+                    'Edit Surat Keterangan Sehat'
+                  );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | SHOW MODAL
+                |--------------------------------------------------------------------------
+                */
+
+                $('#programModal')
+                  .modal('show');
+
+              });
 
           })
 
           .catch(function(error) {
 
             console.error(error);
+
 
             Swal.fire(
               'Error!',
@@ -1558,6 +2156,198 @@ require '../../controller/view.php';
       }
 
     );
+
+    /*
+|--------------------------------------------------------------------------
+| SET UI NOMOR SURAT
+|--------------------------------------------------------------------------
+*/
+
+    function applyNomorSuratSetting(
+      setting,
+      nomorSurat = ''
+    ) {
+
+      const wrapper =
+        $('#nomorSuratWrapper');
+
+      const input =
+        $('#nomor_surat');
+
+      const help =
+        $('#nomorSuratHelp');
+
+      const autoInfo =
+        $('#nomorSuratAutoInfo');
+
+
+      /*
+      |--------------------------------------------------------------------------
+      | RESET
+      |--------------------------------------------------------------------------
+      */
+
+      wrapper.addClass('d-none');
+
+      autoInfo.addClass('d-none');
+
+      input
+        .prop('required', false)
+        .prop('readonly', false)
+        .val(nomorSurat || '');
+
+      help.html('');
+
+
+      /*
+      |--------------------------------------------------------------------------
+      | BELUM ADA SETTING
+      |--------------------------------------------------------------------------
+      */
+
+      if (
+        !setting ||
+        !setting.id
+      ) {
+
+        return;
+
+      }
+
+
+      const mode =
+        String(
+          setting.mode_nomor || ''
+        ).toUpperCase();
+
+
+      /*
+      |--------------------------------------------------------------------------
+      | MANUAL
+      |--------------------------------------------------------------------------
+      */
+
+      if (
+        mode === 'MANUAL'
+      ) {
+
+        wrapper.removeClass('d-none');
+
+        input
+          .prop('required', true)
+          .prop('readonly', false)
+          .val(nomorSurat || '');
+
+
+        help.html(
+          `
+      <span class="text-primary">
+        <i class="fas fa-edit me-1"></i>
+        Nomor surat diisi secara manual.
+      </span>
+      `
+        );
+
+
+        return;
+
+      }
+
+
+      /*
+      |--------------------------------------------------------------------------
+      | AUTO
+      |--------------------------------------------------------------------------
+      */
+
+      if (
+        mode === 'AUTO'
+      ) {
+
+        wrapper.addClass('d-none');
+
+        input
+          .prop('required', false)
+          .prop('readonly', true)
+          .val('');
+
+
+        autoInfo.removeClass('d-none');
+
+
+        return;
+
+      }
+
+
+      /*
+      |--------------------------------------------------------------------------
+      | MODE INVALID
+      |--------------------------------------------------------------------------
+      */
+
+      wrapper.addClass('d-none');
+
+    }
+
+    /*
+|--------------------------------------------------------------------------
+| ALERT SETTING BELUM ADA
+|--------------------------------------------------------------------------
+*/
+
+    function alertSettingBelumAda() {
+
+      return Swal.fire({
+
+          icon: 'warning',
+
+          title: 'Nomor Surat Belum Diatur',
+
+          html: `
+      <div class="text-muted">
+
+        Pengaturan nomor surat untuk
+        <strong>Surat Keterangan Sehat</strong>
+        belum tersedia.
+
+        <br><br>
+
+        Silakan atur terlebih dahulu
+        mode penomoran surat
+        <strong>Manual</strong> atau
+        <strong>Otomatis</strong>.
+
+      </div>
+      `,
+
+          showCancelButton: true,
+
+          confirmButtonText: `
+      <i class="fas fa-cog me-1"></i>
+      Setting Nomor Surat
+      `,
+
+          cancelButtonText: 'Batal',
+
+          reverseButtons: true
+
+        })
+
+        .then(function(result) {
+
+          if (
+            result.isConfirmed
+          ) {
+
+            window.location.href =
+              settingSuratPage;
+
+          }
+
+        });
+
+    }
 
 
   });
