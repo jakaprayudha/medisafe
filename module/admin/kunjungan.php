@@ -242,24 +242,37 @@ $rm = $_GET['rm'];
                     </div>
                     <div class="col-12" id="formalergi">
                       <div class="row">
+
+                        <!-- Alergi Makan -->
                         <div class="col-md-4">
                           <label class="form-label form-label-sm">
                             Alergi Makan
                           </label>
-                          <select class="form-select" name="alergiMakan" id="alergiMakan"></select>
+                          <select class="form-select mb-2" name="alergiMakan" id="alergiMakan">
+                          </select>
+                          <textarea class="form-control form-control-sm" name="ketAlergiMakan" id="ketAlergiMakan" rows="2" placeholder="..." disabled></textarea>
                         </div>
+
+                        <!-- Alergi Udara -->
                         <div class="col-md-4">
                           <label class="form-label form-label-sm">
                             Alergi Udara
                           </label>
-                          <select class="form-select" name="alergiUdara" id="alergiUdara"></select>
+                          <select class="form-select mb-2" name="alergiUdara" id="alergiUdara">
+                          </select>
+                          <textarea class="form-control form-control-sm" name="ketAlergiUdara" id="ketAlergiUdara" rows="2" placeholder="..." disabled></textarea>
                         </div>
+
+                        <!-- Alergi Obat -->
                         <div class="col-md-4">
                           <label class="form-label form-label-sm">
                             Alergi Obat
                           </label>
-                          <select class="form-select" name="alergiObat" id="alergiObat"></select>
+                          <select class="form-select mb-2" name="alergiObat" id="alergiObat">
+                          </select>
+                          <textarea class="form-control form-control-sm" name="ketAlergiObat" id="ketAlergiObat" rows="2" placeholder="..." disabled></textarea>
                         </div>
+
                       </div>
                     </div>
                     <hr>
@@ -435,7 +448,7 @@ $rm = $_GET['rm'];
                           <div class="col-10">
                             <input type="text" id="nmfaskes" name="nmfaskes" class="form-control" readonly>
                             <input type="hidden" name="kdppk" id="kdfaskes">
-                            <input type="hidden" name="jadwal" id="jadwal">
+                            <input type="text" name="jadwal" id="jadwal">
                           </div>
                         </div>
                       </div>

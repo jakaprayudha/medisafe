@@ -54,6 +54,12 @@ $(function () {
               // APP.cetakhtml('#idUmur', d.umur);
               // APP.cetakhtml('#nomor_bpjs', d.noKartu || '-');
               // APP.cetakhtml('#nomor_nik', d.patient_nik);
+              $("#alergiMakan").val(d.alergiMakan).trigger("change");
+              $("#alergiUdara").val(d.alergiUdara).trigger("change");
+              $("#alergiObat").val(d.alergiObat).trigger("change");
+              APP.cetak("#ketAlergiMakan", d.deskripsiAlergiMakan);
+              APP.cetak("#ketAlergiUdara", d.deskripsiAlergiUdara);
+              APP.cetak("#ketAlergiObat", d.deskripsiAlergiObat);
               APP.hitungBMI();
               if (d.kdDiag1 != null) {
                 APP.addValueSelect(
@@ -148,6 +154,9 @@ $(function () {
                   $("#alergiMakan").val(d.alergiMakan).trigger("change");
                   $("#alergiUdara").val(d.alergiUdara).trigger("change");
                   $("#alergiObat").val(d.alergiObat).trigger("change");
+                  APP.cetak("#ketAlergiMakan", d.desAlMakan);
+                  APP.cetak("#ketAlergiUdara", d.desAlUdara);
+                  APP.cetak("#ketAlergiObat", d.desAlObat);
                   $("#kondisi_masuk").val(d.kdPrognosa).trigger("change");
                   $("#kdSadar").val(d.kdSadar).trigger("change");
                   if (d.kdDiag1 != null) {
@@ -360,7 +369,7 @@ $(function () {
     const nomor = $("#noKunjungan").val();
     window.open("controller/doctor/cetakan-rujukan.php?id=" + nomor, "_blank");
   });
-   $("#btn-printkunjungan").on("click", function () {
+  $("#btn-printkunjungan").on("click", function () {
     const nomor = $("#noKunjungan").val();
     window.open("controller/doctor/cetakan-kunjungan.php?id=" + nomor, "_blank");
   });
@@ -651,4 +660,17 @@ $(function () {
     $("#kdfaskes").val(kdfaskes);
     $("#nmfaskes").val(nmfaskes);
   }
+  function setupAlergiToogle(id, idtextarea) {
+    $('#' + id).on('change', function () {
+      if ($(this).val() == '00') {
+        $('#' + idtextarea).prop('disabled', true).val('');
+      } else {
+        $('#' + idtextarea).prop('disabled', false).val('');
+      }
+    }).trigger('change');
+  }
+  setupAlergiToogle('alergiMakan', 'ketAlergiMakan');
+  setupAlergiToogle('alergiUdara', 'ketAlergiUdara');
+  setupAlergiToogle('alergiObat', 'ketAlergiObat');
+
 });
