@@ -110,6 +110,9 @@ require '../../controller/view.php';
 <!-- ==========================================================
      MODAL SURAT KETERANGAN RAWAT INAP
 =========================================================== -->
+<!-- =====================================================
+     MODAL SURAT KETERANGAN RAWAT INAP
+===================================================== -->
 
 <div
   class="modal fade"
@@ -117,15 +120,16 @@ require '../../controller/view.php';
   tabindex="-1"
   aria-hidden="true">
 
-  <div class="modal-dialog modal-lg">
+  <div
+    class="modal-dialog modal-lg modal-dialog-scrollable">
 
     <form
       id="programForm"
       class="modal-content">
 
-      <!-- ==================================================
+      <!-- =================================================
            HEADER
-      =================================================== -->
+      ================================================== -->
 
       <div class="modal-header">
 
@@ -136,14 +140,15 @@ require '../../controller/view.php';
         <button
           type="button"
           class="btn-close"
-          data-bs-dismiss="modal"></button>
+          data-bs-dismiss="modal">
+        </button>
 
       </div>
 
 
-      <!-- ==================================================
+      <!-- =================================================
            BODY
-      =================================================== -->
+      ================================================== -->
 
       <div class="modal-body">
 
@@ -153,6 +158,17 @@ require '../../controller/view.php';
           type="hidden"
           name="id"
           id="id">
+
+
+        <!-- ID CUSTOMER -->
+
+        <input
+          type="hidden"
+          name="id_customer"
+          id="id_customer"
+          value="<?= htmlspecialchars(
+                    $_SESSION['id_customer'] ?? ''
+                  ) ?>">
 
 
         <!-- ID PATIENT -->
@@ -171,167 +187,279 @@ require '../../controller/view.php';
           id="id_visit">
 
 
-        <!-- ==================================================
-             PASIEN
-        =================================================== -->
+        <!-- =================================================
+             IDENTITAS SURAT
+        ================================================== -->
 
-        <div class="mb-3">
+        <div class="card border mb-3">
 
-          <label
-            for="id_patient_select"
-            class="form-label">
-            Nama Pasien
-          </label>
+          <div class="card-header bg-light">
 
-          <select
-            name="id_patient_select"
-            id="id_patient_select"
-            class="form-select"
-            required>
-          </select>
+            <strong>
+
+              <i class="fas fa-file-medical me-1"></i>
+
+              Identitas Surat
+
+            </strong>
+
+          </div>
+
+
+          <div class="card-body">
+
+            <div class="row">
+
+
+              <!-- PASIEN -->
+
+              <div class="col-md-8 mb-3">
+
+                <label
+                  for="id_patient_select"
+                  class="form-label">
+
+                  Nama Pasien
+
+                </label>
+
+
+                <select
+                  name="id_patient_select"
+                  id="id_patient_select"
+                  class="form-select"
+                  required>
+
+                </select>
+
+              </div>
+
+
+              <!-- NOMOR SURAT -->
+
+              <div class="col-md-4 mb-3">
+
+                <label
+                  for="nomor_surat"
+                  class="form-label">
+
+                  Nomor Surat
+
+                </label>
+
+
+                <input
+                  type="text"
+                  name="nomor_surat"
+                  id="nomor_surat"
+                  class="form-control"
+                  placeholder="Nomor surat">
+
+
+                <!-- INFORMASI MODE -->
+
+                <div
+                  id="nomor_surat_info"
+                  class="mt-2">
+
+                </div>
+
+              </div>
+
+
+              <!-- TANGGAL SURAT -->
+
+              <div class="col-md-4">
+
+                <label
+                  for="tanggal_surat"
+                  class="form-label">
+
+                  Tanggal Surat
+
+                </label>
+
+
+                <input
+                  type="date"
+                  name="tanggal_surat"
+                  id="tanggal_surat"
+                  value="<?= date('Y-m-d') ?>"
+                  class="form-control"
+                  required>
+
+              </div>
+
+
+            </div>
+
+          </div>
 
         </div>
 
 
-        <!-- ==================================================
-             TANGGAL SURAT
-        =================================================== -->
-
-        <div class="mb-3">
-
-          <label
-            for="tanggal_surat"
-            class="form-label">
-            Tanggal Surat
-          </label>
-
-          <input
-            type="date"
-            name="tanggal_surat"
-            id="tanggal_surat"
-            value="<?= date('Y-m-d') ?>"
-            class="form-control"
-            required>
-
-        </div>
-
-
-        <!-- ==================================================
+        <!-- =================================================
              INFORMASI RAWAT INAP
-        =================================================== -->
+        ================================================== -->
 
-        <div class="row">
+        <div class="card border mb-3">
 
+          <div class="card-header bg-light">
 
-          <!-- DIAGNOSA -->
+            <strong>
 
-          <div class="col-md-12 mb-3">
+              <i class="fas fa-bed me-1"></i>
 
-            <label
-              for="diagnosa"
-              class="form-label">
-              Diagnosa
-            </label>
+              Informasi Rawat Inap
 
-            <input
-              type="text"
-              name="diagnosa"
-              id="diagnosa"
-              class="form-control"
-              readonly>
+            </strong>
 
           </div>
 
 
-          <!-- TANGGAL MASUK -->
+          <div class="card-body">
 
-          <div class="col-md-6 mb-3">
-
-            <label
-              for="visit_date"
-              class="form-label">
-              Tanggal Masuk
-            </label>
-
-            <input
-              type="date"
-              name="visit_date"
-              id="visit_date"
-              class="form-control"
-              readonly>
-
-          </div>
+            <div class="row">
 
 
-          <!-- TANGGAL PULANG -->
+              <!-- DIAGNOSA -->
 
-          <div class="col-md-6 mb-3">
+              <div class="col-md-12 mb-3">
 
-            <label
-              for="tanggal_pulang"
-              class="form-label">
-              Tanggal Pulang
-            </label>
+                <label
+                  for="diagnosa"
+                  class="form-label">
 
-            <input
-              type="date"
-              name="tanggal_pulang"
-              id="tanggal_pulang"
-              class="form-control"
-              readonly>
+                  Diagnosa
 
-          </div>
+                </label>
 
 
-          <!-- DPJP -->
+                <input
+                  type="text"
+                  name="diagnosa"
+                  id="diagnosa"
+                  class="form-control"
+                  readonly>
 
-          <div class="col-md-12 mb-3">
+              </div>
 
-            <label
-              for="id_doctor"
-              class="form-label">
-              Dokter / DPJP
-            </label>
 
-            <input
-              type="text"
-              name="id_doctor"
-              id="id_doctor"
-              class="form-control"
-              readonly>
+              <!-- TANGGAL MASUK -->
+
+              <div class="col-md-6 mb-3">
+
+                <label
+                  for="tanggal_masuk"
+                  class="form-label">
+
+                  Tanggal Masuk
+
+                </label>
+
+
+                <input
+                  type="date"
+                  name="tanggal_masuk"
+                  id="tanggal_masuk"
+                  class="form-control"
+                  readonly>
+
+              </div>
+
+
+              <!-- TANGGAL PULANG -->
+
+              <div class="col-md-6 mb-3">
+
+                <label
+                  for="tanggal_pulang"
+                  class="form-label">
+
+                  Tanggal Pulang
+
+                </label>
+
+
+                <input
+                  type="date"
+                  name="tanggal_pulang"
+                  id="tanggal_pulang"
+                  class="form-control"
+                  readonly>
+
+              </div>
+
+
+              <!-- DPJP -->
+
+              <div class="col-md-12 mb-3">
+
+                <label
+                  for="id_doctor"
+                  class="form-label">
+
+                  Dokter / DPJP
+
+                </label>
+
+
+                <input
+                  type="text"
+                  name="id_doctor"
+                  id="id_doctor"
+                  class="form-control"
+                  readonly>
+
+              </div>
+
+
+            </div>
 
           </div>
 
         </div>
 
 
-        <!-- ==================================================
+        <!-- =================================================
              KETERANGAN
-        =================================================== -->
+        ================================================== -->
 
-        <div class="mb-3">
+        <div class="card border mb-3">
 
-          <label
-            for="keterangan"
-            class="form-label">
-            Keterangan
-          </label>
+          <div class="card-header bg-light">
 
-          <textarea
-            name="keterangan"
-            id="keterangan"
-            class="form-control"
-            rows="4"
-            placeholder="Keterangan tambahan mengenai rawat inap..."></textarea>
+            <strong>
+
+              <i class="fas fa-comment-medical me-1"></i>
+
+              Keterangan
+
+            </strong>
+
+          </div>
+
+
+          <div class="card-body">
+
+            <textarea
+              name="keterangan"
+              id="keterangan"
+              class="form-control"
+              rows="4"
+              placeholder="Keterangan tambahan mengenai rawat inap..."></textarea>
+
+          </div>
 
         </div>
+
 
       </div>
 
 
-      <!-- ==================================================
+      <!-- =================================================
            FOOTER
-      =================================================== -->
+      ================================================== -->
 
       <div class="modal-footer">
 
@@ -339,13 +467,16 @@ require '../../controller/view.php';
           type="button"
           class="btn btn-light"
           data-bs-dismiss="modal">
+
           Batal
+
         </button>
 
 
         <button
           type="submit"
-          class="btn btn-primary">
+          class="btn btn-primary"
+          id="btnSimpanSurat">
 
           <i class="fas fa-save me-1"></i>
 
@@ -355,6 +486,7 @@ require '../../controller/view.php';
 
       </div>
 
+
     </form>
 
   </div>
@@ -362,10 +494,10 @@ require '../../controller/view.php';
 </div>
 <script>
   /*
-|--------------------------------------------------------------------------
-| URL
-|--------------------------------------------------------------------------
-*/
+  |--------------------------------------------------------------------------
+  | URL
+  |--------------------------------------------------------------------------
+  */
 
   const apiUrl =
     'controller/letter/suratRawatInapController';
@@ -376,39 +508,327 @@ require '../../controller/view.php';
 
   /*
   |--------------------------------------------------------------------------
-  | DOCUMENT READY
+  | HELPER SET VALUE
   |--------------------------------------------------------------------------
   */
 
-  $(document).ready(function() {
+  function setValue(id, value) {
+
+    $('#' + id).val(
+      value !== null &&
+      value !== undefined ?
+      value :
+      ''
+    );
+
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | ESCAPE HTML
+  |--------------------------------------------------------------------------
+  */
+
+  function escapeHtml(value) {
+
+    if (
+      value === null ||
+      value === undefined
+    ) {
+
+      return '';
+
+    }
+
+    return $('<div>')
+      .text(value)
+      .html();
+
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | RESET NOMOR SURAT
+  |--------------------------------------------------------------------------
+  */
+
+  function resetNomorSurat() {
+
+    $('#nomor_surat')
+      .val('')
+      .prop('readonly', true)
+      .addClass('bg-light')
+      .attr(
+        'placeholder',
+        'Nomor surat'
+      );
+
+
+    $('#nomor_surat_info')
+      .html('');
+
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | TAMPILKAN MODE NOMOR SURAT
+  |--------------------------------------------------------------------------
+  */
+
+  function tampilkanModeNomor(
+    mode,
+    format = '',
+    nomor = ''
+  ) {
+
+    mode =
+      String(mode || '')
+      .toUpperCase();
 
 
     /*
     |--------------------------------------------------------------------------
-    | DATATABLE
+    | MANUAL
     |--------------------------------------------------------------------------
     */
 
-    const table = $('#periodeTable').DataTable({
+    if (mode === 'MANUAL') {
 
-      processing: true,
+      $('#nomor_surat')
+        .val('')
+        .prop('readonly', false)
+        .removeClass('bg-light')
+        .attr(
+          'placeholder',
+          'Masukkan nomor surat'
+        );
 
-      serverSide: false,
 
-      responsive: true,
+      $('#nomor_surat_info')
+        .html(`
 
-      ajax: {
+          <div class="alert alert-warning py-2 mb-0">
 
-        url: apiUrl,
+            <div class="d-flex align-items-center">
 
-        type: 'GET',
+              <i class="fas fa-keyboard me-2"></i>
 
-        dataSrc: function(json) {
+              <div>
+
+                <strong>Penomoran Manual</strong>
+
+                <div class="small">
+                  Nomor surat diisi secara manual.
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        `);
+
+
+      return;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | AUTO
+    |--------------------------------------------------------------------------
+    */
+
+    if (mode === 'AUTO') {
+
+      $('#nomor_surat')
+        .val('')
+        .prop('readonly', true)
+        .addClass('bg-light')
+        .attr(
+          'placeholder',
+          'Nomor surat dibuat otomatis'
+        );
+
+
+      $('#nomor_surat_info')
+        .html(`
+
+          <div class="alert alert-success py-2 mb-0">
+
+            <div class="d-flex align-items-center">
+
+              <i class="fas fa-robot me-2"></i>
+
+              <div>
+
+                <strong>Penomoran Otomatis</strong>
+
+                <div class="small">
+                  Format:
+                  <strong>
+                    ${escapeHtml(format || '-')}
+                  </strong>
+                </div>
+
+                <div class="small">
+                  Nomor terakhir:
+                  <strong>
+                    ${escapeHtml(nomor)}
+                  </strong>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        `);
+
+
+      return;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MODE TIDAK VALID
+    |--------------------------------------------------------------------------
+    */
+
+    $('#nomor_surat')
+      .val('')
+      .prop('readonly', true)
+      .addClass('bg-light');
+
+
+    $('#nomor_surat_info')
+      .html(`
+
+        <div class="alert alert-danger py-2 mb-0">
+
+          <i class="fas fa-exclamation-triangle me-1"></i>
+
+          Mode penomoran surat belum dikonfigurasi.
+
+        </div>
+
+      `);
+
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | CHECK SETTING NOMOR SURAT
+  |--------------------------------------------------------------------------
+  |
+  | Controller:
+  |
+  | ?check_setting=1
+  |
+  |--------------------------------------------------------------------------
+  */
+
+  function checkSettingNomorSurat(callback) {
+
+    fetch(
+        apiUrl +
+        '?check_setting=1'
+      )
+
+      .then(
+        function(res) {
+
+          return res.json();
+
+        }
+      )
+
+      .then(
+        function(response) {
+
 
           console.log(
-            'DATA SURAT RAWAT INAP:',
-            json
+            'SETTING NOMOR RAWAT INAP:',
+            response
           );
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | SETTING BELUM ADA
+          |--------------------------------------------------------------------------
+          */
+
+          if (
+            response.status ===
+            'setting_required'
+          ) {
+
+            Swal.fire({
+
+                icon: 'warning',
+
+                title: 'Setting Nomor Surat Belum Ada',
+
+                html: `
+
+                <p class="mb-2">
+
+                  Setting nomor surat untuk
+                  <strong>
+                    Surat Keterangan Rawat Inap
+                  </strong>
+                  belum dibuat.
+
+                </p>
+
+                <p class="text-muted small mb-0">
+
+                  Silakan atur mode penomoran
+                  Manual atau Otomatis terlebih dahulu.
+
+                </p>
+
+              `,
+
+                showCancelButton: true,
+
+                confirmButtonText: '<i class="fas fa-cog me-1"></i> Setting Nomor Surat',
+
+                cancelButtonText: 'Batal',
+
+                confirmButtonColor: '#0d6efd'
+
+              })
+
+              .then(
+                function(result) {
+
+                  if (
+                    result.isConfirmed
+                  ) {
+
+                    window.location.href =
+                      'module/letter/setting-surat';
+
+                  }
+
+                }
+              );
+
+
+            return;
+
+          }
 
 
           /*
@@ -418,289 +838,446 @@ require '../../controller/view.php';
           */
 
           if (
-            json.status !== 'success'
+            response.status !==
+            'success'
           ) {
 
             Swal.fire(
               'Gagal!',
-              json.message ||
-              'Gagal mengambil data surat.',
+              response.message ||
+              'Gagal membaca setting nomor surat.',
               'error'
             );
 
-            return [];
+            return;
 
           }
 
 
           /*
           |--------------------------------------------------------------------------
-          | RETURN DATA
+          | DATA SETTING
           |--------------------------------------------------------------------------
           */
 
-          return json.data.map(function(row) {
+          const setting =
+            response.data ||
+            response.setting || {};
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | ACTION BUTTON
-            |--------------------------------------------------------------------------
-            */
-
-            const actions = `
-
-            <div class="text-end">
-
-              <div
-                class="btn-group btn-group-sm"
-                role="group"
-              >
-
-                <!-- CETAK -->
-
-                <a
-                  class="btn btn-primary"
-                  href="module/letter/print/surat-keterangan-rawat-inap?id=${encodeURIComponent(row.id)}"
-                  target="_blank"
-                  title="Cetak Surat"
-                >
-                  <i class="fas fa-print"></i>
-                </a>
+          const mode =
+            setting.mode_nomor ||
+            response.mode_nomor ||
+            '';
 
 
-                <!-- EDIT -->
-
-                <a
-                  class="btn btn-warning edit-btn"
-                  href="javascript:void(0);"
-                  data-id="${row.id}"
-                  title="Edit"
-                >
-                  <i class="fas fa-edit"></i>
-                </a>
+          const format =
+            setting.format_rawat_inap ||
+            response.format_rawat_inap ||
+            '';
 
 
-                <!-- DELETE -->
-
-                <a
-                  class="btn btn-danger delete-btn"
-                  href="javascript:void(0);"
-                  data-id="${row.id}"
-                  title="Hapus"
-                >
-                  <i class="fas fa-trash"></i>
-                </a>
-
-              </div>
-
-            </div>
-
-          `;
+          const nomor =
+            setting.nomor_rawat_inap ??
+            response.nomor_rawat_inap ??
+            0;
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | RETURN ROW
-            |--------------------------------------------------------------------------
-            */
+          /*
+          |--------------------------------------------------------------------------
+          | VALIDASI MODE
+          |--------------------------------------------------------------------------
+          */
 
-            return {
+          if (
+            mode !== 'AUTO' &&
+            mode !== 'MANUAL'
+          ) {
 
-              id: row.id || '',
+            Swal.fire({
 
-              nomor_surat: row.nomor_surat || '-',
+                icon: 'warning',
 
-              tanggal_surat: row.tanggal_surat || '-',
+                title: 'Mode Penomoran Belum Valid',
 
-              patient_name: row.patient_name || '-',
+                text: 'Silakan periksa setting nomor surat rawat inap.',
 
-              doctor_name: row.doctor_name || '-',
+                showCancelButton: true,
 
-              visit_date: row.visit_date || '-',
+                confirmButtonText: 'Buka Setting',
 
-              tanggal_masuk: row.tanggal_masuk ||
-                row.visit_date ||
-                '-',
+                cancelButtonText: 'Batal'
 
-              tanggal_pulang: row.tanggal_pulang || '-',
+              })
 
-              diagnosa: row.diagnosa || '-',
+              .then(
+                function(result) {
 
-              keterangan: row.keterangan || '-',
+                  if (
+                    result.isConfirmed
+                  ) {
 
-              actions: actions
+                    window.location.href =
+                      'module/letter/setting-surat';
 
-            };
+                  }
 
-          });
+                }
+              );
 
-        },
 
-        error: function(xhr) {
+            return;
+
+          }
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | CALLBACK
+          |--------------------------------------------------------------------------
+          */
+
+          if (
+            typeof callback ===
+            'function'
+          ) {
+
+            callback({
+
+              mode_nomor: mode,
+
+              format_rawat_inap: format,
+
+              nomor_rawat_inap: nomor
+
+            });
+
+          }
+
+        }
+      )
+
+      .catch(
+        function(error) {
 
           console.error(
-            'DataTable Error:',
-            xhr.responseText
+            'checkSettingNomorSurat:',
+            error
           );
+
 
           Swal.fire(
             'Error!',
-            'Gagal mengambil data surat rawat inap.',
+            'Tidak dapat membaca setting nomor surat.',
             'error'
           );
 
         }
+      );
 
-      },
+  }
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | DOCUMENT READY
+  |--------------------------------------------------------------------------
+  */
+
+  $(document).ready(
+    function() {
 
 
       /*
       |--------------------------------------------------------------------------
-      | COLUMNS
+      | DATATABLE
       |--------------------------------------------------------------------------
       */
 
-      columns: [
+      const table =
+        $('#periodeTable').DataTable({
 
-        {
-          data: 'nomor_surat'
-        },
+          processing: true,
 
-        {
-          data: 'tanggal_surat'
-        },
+          serverSide: false,
 
-        {
-          data: 'patient_name'
-        },
+          responsive: true,
 
-        {
-          data: 'doctor_name'
-        },
+          scrollX: true,
 
-        {
-          data: 'tanggal_masuk'
-        },
+          ajax: {
 
-        {
-          data: 'tanggal_pulang'
-        },
+            url: apiUrl,
 
-        {
-          data: 'diagnosa'
-        },
+            type: 'GET',
 
-        {
-          data: 'actions',
+            dataSrc: function(json) {
 
-          orderable: false,
 
-          searchable: false,
+              console.log(
+                'DATA SURAT RAWAT INAP:',
+                json
+              );
 
-          className: 'text-center'
+
+              /*
+              |--------------------------------------------------------------------------
+              | ERROR
+              |--------------------------------------------------------------------------
+              */
+
+              if (
+                json.status !==
+                'success'
+              ) {
+
+                Swal.fire(
+                  'Gagal!',
+                  json.message ||
+                  'Gagal mengambil data surat.',
+                  'error'
+                );
+
+
+                return [];
+
+              }
+
+
+              /*
+              |--------------------------------------------------------------------------
+              | DATA
+              |--------------------------------------------------------------------------
+              */
+
+              return (
+                json.data || []
+              ).map(
+                function(row) {
+
+
+                  /*
+                  |--------------------------------------------------------------------------
+                  | ACTION
+                  |--------------------------------------------------------------------------
+                  */
+
+                  const actions = `
+
+                      <div class="text-end">
+
+                        <div
+                          class="btn-group btn-group-sm"
+                          role="group">
+
+                          <!-- CETAK -->
+
+                          <a
+                            class="btn btn-primary"
+                            href="module/letter/print/surat-keterangan-rawat-inap?id=${encodeURIComponent(row.id)}"
+                            target="_blank"
+                            title="Cetak Surat">
+
+                            <i class="fas fa-print"></i>
+
+                          </a>
+
+
+                          <!-- EDIT -->
+
+                          <a
+                            class="btn btn-warning edit-btn"
+                            href="javascript:void(0);"
+                            data-id="${row.id}"
+                            title="Edit">
+
+                            <i class="fas fa-edit"></i>
+
+                          </a>
+
+
+                          <!-- DELETE -->
+
+                          <a
+                            class="btn btn-danger delete-btn"
+                            href="javascript:void(0);"
+                            data-id="${row.id}"
+                            title="Hapus">
+
+                            <i class="fas fa-trash"></i>
+
+                          </a>
+
+                        </div>
+
+                      </div>
+
+                    `;
+
+
+                  /*
+                  |--------------------------------------------------------------------------
+                  | RETURN
+                  |--------------------------------------------------------------------------
+                  */
+
+                  return {
+
+                    id: row.id ||
+                      '',
+
+                    nomor_surat: row.nomor_surat ||
+                      '-',
+
+                    tanggal_surat: row.tanggal_surat ||
+                      '-',
+
+                    patient_name: row.patient_name ||
+                      '-',
+
+                    doctor_name: row.id_doctor ||
+                      '-',
+
+                    visit_date: row.visit_date ||
+                      '-',
+
+                    tanggal_masuk: row.tanggal_masuk ||
+                      row.visit_date ||
+                      '-',
+
+                    tanggal_pulang: row.tanggal_pulang ||
+                      '-',
+
+                    diagnosa: row.diagnosa ||
+                      '-',
+
+                    keterangan: row.keterangan ||
+                      '-',
+
+                    actions: actions
+
+                  };
+
+                }
+              );
+
+            },
+
+
+            error: function(xhr) {
+
+              console.error(
+                'DataTable Error:',
+                xhr.responseText
+              );
+
+
+              Swal.fire(
+                'Error!',
+                'Gagal mengambil data surat rawat inap.',
+                'error'
+              );
+
+            }
+
+          },
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | COLUMNS
+          |--------------------------------------------------------------------------
+          */
+
+          columns: [
+
+            {
+              data: 'nomor_surat'
+            },
+
+            {
+              data: 'tanggal_surat'
+            },
+
+            {
+              data: 'patient_name'
+            },
+
+            {
+              data: 'doctor_name'
+            },
+
+            {
+              data: 'tanggal_masuk'
+            },
+
+            {
+              data: 'tanggal_pulang'
+            },
+
+            {
+              data: 'diagnosa'
+            },
+
+            {
+              data: 'actions',
+
+              orderable: false,
+
+              searchable: false,
+
+              className: 'text-center'
+
+            }
+
+          ],
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | LANGUAGE
+          |--------------------------------------------------------------------------
+          */
+
+          language: {
+
+            emptyTable: 'Belum ada data surat rawat inap.',
+
+            processing: 'Memuat data...',
+
+            search: 'Cari:',
+
+            lengthMenu: 'Tampilkan _MENU_ data',
+
+            info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',
+
+            infoEmpty: 'Tidak ada data',
+
+            zeroRecords: 'Data tidak ditemukan.'
+
+          }
+
+        });
+
+
+      /*
+      |--------------------------------------------------------------------------
+      | CUSTOM SEARCH
+      |--------------------------------------------------------------------------
+      */
+
+      $('#customSearch').on(
+        'keyup',
+        function() {
+
+          table
+            .search(
+              this.value
+            )
+            .draw();
 
         }
-
-      ],
-
-
-      /*
-      |--------------------------------------------------------------------------
-      | LANGUAGE
-      |--------------------------------------------------------------------------
-      */
-
-      language: {
-
-        emptyTable: 'Belum ada data surat rawat inap.',
-
-        processing: 'Memuat data...',
-
-        search: 'Cari:',
-
-        lengthMenu: 'Tampilkan _MENU_ data',
-
-        info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',
-
-        infoEmpty: 'Tidak ada data',
-
-        zeroRecords: 'Data tidak ditemukan.'
-
-      }
-
-    });
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | CUSTOM SEARCH
-    |--------------------------------------------------------------------------
-    */
-
-    $('#customSearch').on(
-      'keyup',
-      function() {
-
-        table
-          .search(this.value)
-          .draw();
-
-      }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | FUNCTION INIT SELECT2
-    |--------------------------------------------------------------------------
-    |
-    | SATU-SATUNYA tempat Select2 dibuat.
-    |
-    |--------------------------------------------------------------------------
-    */
-
-    function initPatientSelect() {
-
-
-      const $select =
-        $('#id_patient_select');
-
-
-      /*
-      |--------------------------------------------------------------------------
-      | CEK ELEMENT
-      |--------------------------------------------------------------------------
-      */
-
-      if (
-        !$select.length
-      ) {
-
-        console.error(
-          '#id_patient_select tidak ditemukan.'
-        );
-
-        return;
-
-      }
-
-
-      /*
-      |--------------------------------------------------------------------------
-      | DESTROY SELECT2 LAMA
-      |--------------------------------------------------------------------------
-      */
-
-      if (
-        $select.hasClass(
-          'select2-hidden-accessible'
-        )
-      ) {
-
-        $select.select2('destroy');
-
-      }
+      );
 
 
       /*
@@ -709,750 +1286,926 @@ require '../../controller/view.php';
       |--------------------------------------------------------------------------
       */
 
-      $select.select2({
-
-        dropdownParent: $('#programModal'),
-
-        width: '100%',
-
-        placeholder: 'Cari pasien rawat inap...',
-
-        allowClear: true,
-
-        minimumInputLength: 1,
-
-        ajax: {
-
-          url: patientVisitUrl,
-
-          type: 'GET',
-
-          dataType: 'json',
-
-          delay: 300,
+      function initPatientSelect() {
 
 
-          /*
-          |--------------------------------------------------------------------------
-          | SEARCH PARAMETER
-          |--------------------------------------------------------------------------
-          */
-
-          data: function(params) {
-
-            return {
-
-              search: params.term || ''
-
-            };
-
-          },
+        const $select =
+          $('#id_patient_select');
 
 
-          /*
-          |--------------------------------------------------------------------------
-          | PROCESS RESULT
-          |--------------------------------------------------------------------------
-          */
+        /*
+        |--------------------------------------------------------------------------
+        | CEK ELEMENT
+        |--------------------------------------------------------------------------
+        */
 
-          processResults: function(response) {
+        if (
+          !$select.length
+        ) {
+
+          console.error(
+            '#id_patient_select tidak ditemukan.'
+          );
+
+          return;
+
+        }
 
 
-            console.log(
-              'RESPONSE PASIEN:',
-              response
-            );
+        /*
+        |--------------------------------------------------------------------------
+        | DESTROY SELECT2 LAMA
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+          $select.hasClass(
+            'select2-hidden-accessible'
+          )
+        ) {
+
+          $select.select2(
+            'destroy'
+          );
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | INIT
+        |--------------------------------------------------------------------------
+        */
+
+        $select.select2({
+
+          dropdownParent: $('#programModal'),
+
+          width: '100%',
+
+          placeholder: 'Cari pasien rawat inap...',
+
+          allowClear: true,
+
+          minimumInputLength: 1,
+
+          ajax: {
+
+            url: patientVisitUrl,
+
+            type: 'GET',
+
+            dataType: 'json',
+
+            delay: 300,
 
 
             /*
             |--------------------------------------------------------------------------
-            | VALIDASI RESPONSE
+            | SEARCH
             |--------------------------------------------------------------------------
             */
 
-            if (
-              !response ||
-              response.status !== 'success'
-            ) {
+            data: function(params) {
 
-              console.error(
-                'Response pasien tidak valid:',
+              return {
+
+                search: params.term ||
+                  ''
+
+              };
+
+            },
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | RESULT
+            |--------------------------------------------------------------------------
+            */
+
+            processResults: function(response) {
+
+
+              console.log(
+                'RESPONSE PASIEN:',
                 response
               );
 
-              return {
-                results: []
-              };
-
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | DATA
-            |--------------------------------------------------------------------------
-            */
-
-            const items =
-              response.data || [];
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | MAPPING
-            |--------------------------------------------------------------------------
-            */
-
-            return {
-
-              results:
-
-                items.map(
-                  function(item) {
-
-                    return {
-
-                      /*
-                      |----------------------------------------
-                      | SELECT2 VALUE
-                      |----------------------------------------
-                      */
-
-                      id: item.id_patient,
-
-
-                      /*
-                      |----------------------------------------
-                      | TEXT
-                      |----------------------------------------
-                      */
-
-                      text:
-
-                        (
-                          item.patient_name ||
-                          '-'
-                        )
-
-                        +
-
-                        ' | RM: '
-
-                        +
-
-                        (
-                          item.nomor_rm ||
-                          '-'
-                        )
-
-                        +
-
-                        ' | Masuk: '
-
-                        +
-
-                        (
-                          item.visit_date ||
-                          '-'
-                        ),
-
-
-                      /*
-                      |----------------------------------------
-                      | DATA
-                      |----------------------------------------
-                      */
-
-                      id_patient: item.id_patient || '',
-
-                      id_visit: item.id_visit || '',
-
-                      visit_ID: item.visit_ID || '',
-
-                      patient_name: item.patient_name || '',
-
-                      nomor_rm: item.nomor_rm || '',
-
-                      patient_nik: item.patient_nik || '',
-
-                      patient_bpjs: item.patient_bpjs || '',
-
-                      visit_date: item.visit_date || '',
-
-                      tanggal_pulang: item.tanggal_pulang || '',
-
-                      diagnosa: item.diagnosa || '',
-
-                      id_doctor: item.id_doctor || '',
-
-                      id_poli: item.id_poli || '',
-
-                      saturasi: item.saturasi || ''
-
-                    };
-
-                  }
-                )
-
-            };
-
-          },
-
-
-          /*
-          |--------------------------------------------------------------------------
-          | AJAX ERROR
-          |--------------------------------------------------------------------------
-          */
-
-          error: function(xhr) {
-
-            console.error(
-              'Patient Search Error:',
-              xhr.responseText
-            );
-
-          },
-
-
-          cache: true
-
-        }
-
-      });
-
-
-      /*
-      |--------------------------------------------------------------------------
-      | SELECT PASIEN
-      |--------------------------------------------------------------------------
-      */
-
-      $select.off(
-        'select2:select'
-      );
-
-
-      $select.on(
-        'select2:select',
-        function(e) {
-
-
-          const data =
-            e.params.data;
-
-
-          console.log(
-            'PASIEN DIPILIH:',
-            data
-          );
-
-
-          /*
-          |--------------------------------------------------------------------------
-          | ID PATIENT
-          |--------------------------------------------------------------------------
-          */
-
-          $('#id_patient')
-            .val(
-              data.id_patient || ''
-            );
-
-
-          /*
-          |--------------------------------------------------------------------------
-          | ID VISIT
-          |--------------------------------------------------------------------------
-          */
-
-          $('#id_visit')
-            .val(
-              data.id_visit || ''
-            );
-
-
-          /*
-          |--------------------------------------------------------------------------
-          | DIAGNOSA
-          |--------------------------------------------------------------------------
-          */
-
-          $('#diagnosa')
-            .val(
-              data.diagnosa || ''
-            );
-
-
-          /*
-          |--------------------------------------------------------------------------
-          | TANGGAL MASUK
-          |--------------------------------------------------------------------------
-          */
-
-          $('#visit_date')
-            .val(
-              data.visit_date || ''
-            );
-
-
-          $('#tanggal_masuk')
-            .val(
-              data.visit_date || ''
-            );
-
-
-          /*
-          |--------------------------------------------------------------------------
-          | TANGGAL PULANG
-          |--------------------------------------------------------------------------
-          */
-
-          $('#tanggal_pulang')
-            .val(
-              data.tanggal_pulang || ''
-            );
-
-
-          /*
-          |--------------------------------------------------------------------------
-          | DOKTER
-          |--------------------------------------------------------------------------
-          */
-
-          $('#id_doctor')
-            .val(
-              data.id_doctor || ''
-            );
-
-
-          /*
-          |--------------------------------------------------------------------------
-          | DEBUG
-          |--------------------------------------------------------------------------
-          */
-
-          console.log(
-            'ID PATIENT:',
-            data.id_patient
-          );
-
-          console.log(
-            'ID VISIT:',
-            data.id_visit
-          );
-
-          console.log(
-            'DIAGNOSA:',
-            data.diagnosa
-          );
-
-          console.log(
-            'TANGGAL MASUK:',
-            data.visit_date
-          );
-
-          console.log(
-            'TANGGAL PULANG:',
-            data.tanggal_pulang
-          );
-
-          console.log(
-            'DOKTER:',
-            data.id_doctor
-          );
-
-        }
-      );
-
-
-      /*
-      |--------------------------------------------------------------------------
-      | CLEAR
-      |--------------------------------------------------------------------------
-      */
-
-      $select.off(
-        'select2:clear'
-      );
-
-
-      $select.on(
-        'select2:clear',
-        function() {
-
-
-          $('#id_patient')
-            .val('');
-
-
-          $('#id_visit')
-            .val('');
-
-
-          $('#diagnosa')
-            .val('');
-
-
-          $('#visit_date')
-            .val('');
-
-
-          $('#tanggal_masuk')
-            .val('');
-
-
-          $('#tanggal_pulang')
-            .val('');
-
-
-          $('#id_doctor')
-            .val('');
-
-        }
-      );
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | INIT SELECT2 SAAT MODAL DIBUKA
-    |--------------------------------------------------------------------------
-    */
-
-    $('#programModal').on(
-      'shown.bs.modal',
-      function() {
-
-        initPatientSelect();
-
-      }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | TAMBAH SURAT
-    |--------------------------------------------------------------------------
-    */
-
-    $('#btnTambah').on(
-      'click',
-      function() {
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | RESET FORM
-        |--------------------------------------------------------------------------
-        */
-
-        const form =
-          $('#programForm')[0];
-
-
-        if (form) {
-
-          form.reset();
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | RESET HIDDEN
-        |--------------------------------------------------------------------------
-        */
-
-        $('#id')
-          .val('');
-
-
-        $('#id_patient')
-          .val('');
-
-
-        $('#id_visit')
-          .val('');
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | RESET SELECT2
-        |--------------------------------------------------------------------------
-        */
-
-        $('#id_patient_select')
-          .val(null)
-          .trigger('change');
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | TANGGAL SURAT
-        |--------------------------------------------------------------------------
-        */
-
-        $('#tanggal_surat')
-          .val(
-            '<?= date('Y-m-d') ?>'
-          );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | RESET DATA RAWAT INAP
-        |--------------------------------------------------------------------------
-        */
-
-        $('#diagnosa')
-          .val('');
-
-
-        $('#visit_date')
-          .val('');
-
-
-        $('#tanggal_masuk')
-          .val('');
-
-
-        $('#tanggal_pulang')
-          .val('');
-
-
-        $('#id_doctor')
-          .val('');
-
-
-        $('#keterangan')
-          .val('');
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | TITLE
-        |--------------------------------------------------------------------------
-        */
-
-        $('#programModal .modal-title')
-          .text(
-            'Tambah Surat Keterangan Rawat Inap'
-          );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | SHOW
-        |--------------------------------------------------------------------------
-        */
-
-        $('#programModal')
-          .modal('show');
-
-      }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | SUBMIT FORM
-    |--------------------------------------------------------------------------
-    */
-
-    $('#programForm').on(
-      'submit',
-      function(e) {
-
-        e.preventDefault();
-
-
-        const form =
-          this;
-
-
-        const id =
-          $('#id').val();
-
-
-        const idPatient =
-          $('#id_patient').val();
-
-
-        const idVisit =
-          $('#id_visit').val();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDASI PASIEN
-        |--------------------------------------------------------------------------
-        */
-
-        if (!idPatient) {
-
-          Swal.fire(
-            'Perhatian!',
-            'Silakan pilih pasien terlebih dahulu.',
-            'warning'
-          );
-
-          return;
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDASI VISIT
-        |--------------------------------------------------------------------------
-        */
-
-        if (!idVisit) {
-
-          Swal.fire(
-            'Perhatian!',
-            'Visit rawat inap pasien tidak ditemukan.',
-            'warning'
-          );
-
-          return;
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | FORM DATA
-        |--------------------------------------------------------------------------
-        */
-
-        const formData =
-          new URLSearchParams(
-            new FormData(form)
-          );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | BUTTON
-        |--------------------------------------------------------------------------
-        */
-
-        const submitButton =
-          $(form).find(
-            'button[type="submit"]'
-          );
-
-
-        const originalText =
-          submitButton.html();
-
-
-        submitButton
-          .prop(
-            'disabled',
-            true
-          )
-          .html(
-            '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...'
-          );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | REQUEST
-        |--------------------------------------------------------------------------
-        */
-
-        fetch(
-
-            apiUrl +
-
-            (
-              id ?
-              '?id=' +
-              encodeURIComponent(id) :
-              ''
-            ),
-
-            {
-
-              method: id ? 'PUT' : 'POST',
-
-              headers: {
-
-                'Content-Type': 'application/x-www-form-urlencoded'
-
-              },
-
-              body: formData
-
-            }
-
-          )
-
-          .then(
-            function(res) {
-
-              return res.json();
-
-            }
-          )
-
-          .then(
-            function(data) {
-
-
-              /*
-              |--------------------------------------------------------------------------
-              | RESTORE BUTTON
-              |--------------------------------------------------------------------------
-              */
-
-              submitButton
-                .prop(
-                  'disabled',
-                  false
-                )
-                .html(
-                  originalText
-                );
-
-
-              /*
-              |--------------------------------------------------------------------------
-              | SUCCESS
-              |--------------------------------------------------------------------------
-              */
 
               if (
-                data.status ===
+                !response ||
+                response.status !==
                 'success'
               ) {
 
+                console.error(
+                  'Response pasien tidak valid:',
+                  response
+                );
 
-                Swal.fire(
-                  'Berhasil!',
-                  data.message ||
-                  'Surat berhasil disimpan.',
+
+                return {
+
+                  results: []
+
+                };
+
+              }
+
+
+              const items =
+                response.data || [];
+
+
+              return {
+
+                results:
+
+                  items.map(
+                    function(item) {
+
+                      return {
+
+                        /*
+                        |------------------------------------
+                        | VALUE
+                        |------------------------------------
+                        */
+
+                        id: item.id_patient,
+
+
+                        /*
+                        |------------------------------------
+                        | TEXT
+                        |------------------------------------
+                        */
+
+                        text:
+
+                          (
+                            item.patient_name ||
+                            '-'
+                          )
+
+                          +
+
+                          ' | RM: '
+
+                          +
+
+                          (
+                            item.nomor_rm ||
+                            '-'
+                          )
+
+                          +
+
+                          ' | Masuk: '
+
+                          +
+
+                          (
+                            item.visit_date ||
+                            '-'
+                          ),
+
+
+                        /*
+                        |------------------------------------
+                        | DATA
+                        |------------------------------------
+                        */
+
+                        id_patient: item.id_patient ||
+                          '',
+
+                        id_visit: item.id_visit ||
+                          '',
+
+                        visit_ID: item.visit_ID ||
+                          '',
+
+                        patient_name: item.patient_name ||
+                          '',
+
+                        nomor_rm: item.nomor_rm ||
+                          '',
+
+                        patient_nik: item.patient_nik ||
+                          '',
+
+                        patient_bpjs: item.patient_bpjs ||
+                          '',
+
+                        visit_date: item.visit_date ||
+                          '',
+
+                        tanggal_pulang: item.tanggal_pulang ||
+                          '',
+
+                        diagnosa: item.diagnosa ||
+                          '',
+
+                        id_doctor: item.id_doctor ||
+                          '',
+
+                        id_poli: item.id_poli ||
+                          '',
+
+                        saturasi: item.saturasi ||
+                          ''
+
+                      };
+
+                    }
+                  )
+
+              };
+
+            },
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | AJAX ERROR
+            |--------------------------------------------------------------------------
+            */
+
+            error: function(xhr) {
+
+              console.error(
+                'Patient Search Error:',
+                xhr.responseText
+              );
+
+            },
+
+
+            cache: true
+
+          }
+
+        });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SELECT PASIEN
+        |--------------------------------------------------------------------------
+        */
+
+        $select.off(
+          'select2:select'
+        );
+
+
+        $select.on(
+          'select2:select',
+          function(e) {
+
+
+            const data =
+              e.params.data;
+
+
+            console.log(
+              'PASIEN DIPILIH:',
+              data
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ID PATIENT
+            |--------------------------------------------------------------------------
+            */
+
+            $('#id_patient')
+              .val(
+                data.id_patient ||
+                ''
+              );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ID VISIT
+            |--------------------------------------------------------------------------
+            */
+
+            $('#id_visit')
+              .val(
+                data.id_visit ||
+                ''
+              );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DIAGNOSA
+            |--------------------------------------------------------------------------
+            */
+
+            $('#diagnosa')
+              .val(
+                data.diagnosa ||
+                ''
+              );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | TANGGAL MASUK
+            |--------------------------------------------------------------------------
+            */
+
+            $('#tanggal_masuk')
+              .val(
+                data.visit_date ||
+                ''
+              );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | TANGGAL PULANG
+            |--------------------------------------------------------------------------
+            */
+
+            $('#tanggal_pulang')
+              .val(
+                data.tanggal_pulang ||
+                ''
+              );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DOKTER
+            |--------------------------------------------------------------------------
+            */
+
+            $('#id_doctor')
+              .val(
+                data.id_doctor ||
+                ''
+              );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DEBUG
+            |--------------------------------------------------------------------------
+            */
+
+            console.log(
+              'ID PATIENT:',
+              data.id_patient
+            );
+
+            console.log(
+              'ID VISIT:',
+              data.id_visit
+            );
+
+            console.log(
+              'DIAGNOSA:',
+              data.diagnosa
+            );
+
+            console.log(
+              'TANGGAL MASUK:',
+              data.visit_date
+            );
+
+            console.log(
+              'TANGGAL PULANG:',
+              data.tanggal_pulang
+            );
+
+            console.log(
+              'DOKTER:',
+              data.id_doctor
+            );
+
+          }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CLEAR SELECT2
+        |--------------------------------------------------------------------------
+        */
+
+        $select.off(
+          'select2:clear'
+        );
+
+
+        $select.on(
+          'select2:clear',
+          function() {
+
+
+            $('#id_patient')
+              .val('');
+
+
+            $('#id_visit')
+              .val('');
+
+
+            $('#diagnosa')
+              .val('');
+
+
+            $('#tanggal_masuk')
+              .val('');
+
+
+            $('#tanggal_pulang')
+              .val('');
+
+
+            $('#id_doctor')
+              .val('');
+
+          }
+        );
+
+      }
+
+
+      /*
+      |--------------------------------------------------------------------------
+      | INIT SELECT2 SAAT MODAL DIBUKA
+      |--------------------------------------------------------------------------
+      */
+
+      $('#programModal').on(
+        'shown.bs.modal',
+        function() {
+
+          initPatientSelect();
+
+        }
+      );
+
+
+      /*
+      |--------------------------------------------------------------------------
+      | TAMBAH SURAT
+      |--------------------------------------------------------------------------
+      */
+
+      $('#btnTambah').on(
+        'click',
+        function() {
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | RESET FORM
+          |--------------------------------------------------------------------------
+          */
+
+          const form =
+            $('#programForm')[0];
+
+
+          if (form) {
+
+            form.reset();
+
+          }
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | RESET ID
+          |--------------------------------------------------------------------------
+          */
+
+          $('#id')
+            .val('');
+
+
+          $('#id_patient')
+            .val('');
+
+
+          $('#id_visit')
+            .val('');
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | RESET SELECT2
+          |--------------------------------------------------------------------------
+          */
+
+          $('#id_patient_select')
+            .val(null)
+            .trigger('change');
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | TANGGAL SURAT
+          |--------------------------------------------------------------------------
+          */
+
+          $('#tanggal_surat')
+            .val(
+              '<?= date('Y-m-d') ?>'
+            );
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | RESET RAWAT INAP
+          |--------------------------------------------------------------------------
+          */
+
+          $('#diagnosa')
+            .val('');
+
+
+          $('#tanggal_masuk')
+            .val('');
+
+
+          $('#tanggal_pulang')
+            .val('');
+
+
+          $('#id_doctor')
+            .val('');
+
+
+          $('#keterangan')
+            .val('');
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | RESET NOMOR
+          |--------------------------------------------------------------------------
+          */
+
+          resetNomorSurat();
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | TITLE
+          |--------------------------------------------------------------------------
+          */
+
+          $('#programModal .modal-title')
+            .text(
+              'Tambah Surat Keterangan Rawat Inap'
+            );
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | CHECK SETTING TERLEBIH DAHULU
+          |--------------------------------------------------------------------------
+          */
+
+          checkSettingNomorSurat(
+            function(setting) {
+
+
+              tampilkanModeNomor(
+
+                setting.mode_nomor,
+
+                setting.format_rawat_inap,
+
+                setting.nomor_rawat_inap
+
+              );
+
+
+              /*
+              |--------------------------------------------------------------------------
+              | BUKA MODAL SETELAH SETTING VALID
+              |--------------------------------------------------------------------------
+              */
+
+              $('#programModal')
+                .modal('show');
+
+            }
+          );
+
+        }
+      );
+
+
+      /*
+      |--------------------------------------------------------------------------
+      | SUBMIT FORM
+      |--------------------------------------------------------------------------
+      */
+
+      $('#programForm').on(
+        'submit',
+        function(e) {
+
+          e.preventDefault();
+
+
+          const form =
+            this;
+
+
+          const id =
+            $('#id').val();
+
+
+          const idPatient =
+            $('#id_patient').val();
+
+
+          const idVisit =
+            $('#id_visit').val();
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | VALIDASI PASIEN
+          |--------------------------------------------------------------------------
+          */
+
+          if (!idPatient) {
+
+            Swal.fire(
+              'Perhatian!',
+              'Silakan pilih pasien terlebih dahulu.',
+              'warning'
+            );
+
+            return;
+
+          }
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | VALIDASI VISIT
+          |--------------------------------------------------------------------------
+          */
+
+          if (!idVisit) {
+
+            Swal.fire(
+              'Perhatian!',
+              'Visit rawat inap pasien tidak ditemukan.',
+              'warning'
+            );
+
+            return;
+
+          }
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | VALIDASI NOMOR MANUAL
+          |--------------------------------------------------------------------------
+          |
+          | Jika input nomor tidak readonly berarti MANUAL.
+          |
+          |--------------------------------------------------------------------------
+          */
+
+          const nomorReadonly =
+            $('#nomor_surat')
+            .prop('readonly');
+
+
+          const nomorSurat =
+            $.trim(
+              $('#nomor_surat').val()
+            );
+
+
+          if (
+            !nomorReadonly &&
+            !nomorSurat
+          ) {
+
+            Swal.fire(
+              'Perhatian!',
+              'Nomor surat wajib diisi karena penomoran menggunakan mode MANUAL.',
+              'warning'
+            );
+
+
+            $('#nomor_surat')
+              .focus();
+
+
+            return;
+
+          }
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | FORM DATA
+          |--------------------------------------------------------------------------
+          */
+
+          const formData =
+            new URLSearchParams(
+              new FormData(form)
+            );
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | BUTTON
+          |--------------------------------------------------------------------------
+          */
+
+          const submitButton =
+            $(form).find(
+              'button[type="submit"]'
+            );
+
+
+          const originalText =
+            submitButton.html();
+
+
+          submitButton
+            .prop(
+              'disabled',
+              true
+            )
+            .html(
+              '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...'
+            );
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | REQUEST
+          |--------------------------------------------------------------------------
+          */
+
+          fetch(
+
+              apiUrl +
+
+              (
+                id ?
+                '?id=' +
+                encodeURIComponent(id) :
+                ''
+              ),
+
+              {
+
+                method: id ?
+                  'PUT' : 'POST',
+
+                headers: {
+
+                  'Content-Type': 'application/x-www-form-urlencoded'
+
+                },
+
+                body: formData
+
+              }
+
+            )
+
+            .then(
+              function(res) {
+
+                return res.json();
+
+              }
+            )
+
+            .then(
+              function(data) {
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | RESTORE BUTTON
+                |--------------------------------------------------------------------------
+                */
+
+                submitButton
+                  .prop(
+                    'disabled',
+                    false
+                  )
+                  .html(
+                    originalText
+                  );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | SETTING REQUIRED
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                  data.status ===
+                  'setting_required'
+                ) {
+
+                  Swal.fire({
+
+                      icon: 'warning',
+
+                      title: 'Setting Nomor Surat Belum Ada',
+
+                      text: data.message ||
+                        'Silakan setting nomor surat terlebih dahulu.',
+
+                      showCancelButton: true,
+
+                      confirmButtonText: 'Buka Setting',
+
+                      cancelButtonText: 'Batal'
+
+                    })
+
+                    .then(
+                      function(result) {
+
+                        if (
+                          result.isConfirmed
+                        ) {
+
+                          window.location.href =
+                            'module/letter/setting-surat';
+
+                        }
+
+                      }
+                    );
+
+
+                  return;
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | SUCCESS
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                  data.status ===
                   'success'
-                );
+                ) {
 
 
-                $('#programModal')
-                  .modal('hide');
+                  Swal.fire(
+                    'Berhasil!',
+                    data.message ||
+                    'Surat keterangan rawat inap berhasil disimpan.',
+                    'success'
+                  );
 
 
-                table.ajax.reload(
-                  null,
-                  false
-                );
+                  $('#programModal')
+                    .modal('hide');
 
 
-              } else {
+                  table.ajax.reload(
+                    null,
+                    false
+                  );
 
+
+                  return;
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | ERROR
+                |--------------------------------------------------------------------------
+                */
 
                 Swal.fire(
                   'Gagal!',
@@ -1462,524 +2215,663 @@ require '../../controller/view.php';
                 );
 
               }
+            )
 
-            }
-          )
-
-          .catch(
-            function(error) {
+            .catch(
+              function(error) {
 
 
-              console.error(
-                'Submit Error:',
-                error
-              );
-
-
-              submitButton
-                .prop(
-                  'disabled',
-                  false
-                )
-                .html(
-                  originalText
+                console.error(
+                  'Submit Error:',
+                  error
                 );
 
 
-              Swal.fire(
-                'Error!',
-                'Response server bukan JSON atau terjadi kesalahan server.',
-                'error'
-              );
+                submitButton
+                  .prop(
+                    'disabled',
+                    false
+                  )
+                  .html(
+                    originalText
+                  );
 
-            }
-          );
-
-      }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | EDIT
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-      'click',
-      '.edit-btn',
-      function() {
-
-
-        const id =
-          $(this).data('id');
-
-
-        if (!id) {
-
-          Swal.fire(
-            'Error!',
-            'ID surat tidak ditemukan.',
-            'error'
-          );
-
-          return;
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | LOADING
-        |--------------------------------------------------------------------------
-        */
-
-        Swal.fire({
-
-          title: 'Memuat data...',
-
-          allowOutsideClick: false,
-
-          didOpen: function() {
-
-            Swal.showLoading();
-
-          }
-
-        });
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | GET DATA
-        |--------------------------------------------------------------------------
-        */
-
-        fetch(
-
-            apiUrl +
-            '?id=' +
-            encodeURIComponent(id)
-
-          )
-
-          .then(
-            function(res) {
-
-              return res.json();
-
-            }
-          )
-
-          .then(
-            function(resp) {
-
-
-              Swal.close();
-
-
-              if (
-                resp.status !==
-                'success'
-              ) {
 
                 Swal.fire(
-                  'Gagal!',
-                  resp.message ||
-                  'Data surat tidak ditemukan.',
+                  'Error!',
+                  'Response server bukan JSON atau terjadi kesalahan server.',
                   'error'
                 );
 
-                return;
-
               }
-
-
-              const d =
-                resp.data;
-
-
-              /*
-              |--------------------------------------------------------------------------
-              | HIDDEN ID
-              |--------------------------------------------------------------------------
-              */
-
-              $('#id')
-                .val(
-                  d.id || ''
-                );
-
-
-              $('#id_patient')
-                .val(
-                  d.id_patient || ''
-                );
-
-
-              $('#id_visit')
-                .val(
-                  d.id_visit || ''
-                );
-
-
-              /*
-              |--------------------------------------------------------------------------
-              | TANGGAL SURAT
-              |--------------------------------------------------------------------------
-              */
-
-              $('#tanggal_surat')
-                .val(
-                  d.tanggal_surat || ''
-                );
-
-
-              /*
-              |--------------------------------------------------------------------------
-              | DIAGNOSA
-              |--------------------------------------------------------------------------
-              */
-
-              $('#diagnosa')
-                .val(
-                  d.diagnosa || ''
-                );
-
-
-              /*
-              |--------------------------------------------------------------------------
-              | TANGGAL MASUK
-              |--------------------------------------------------------------------------
-              */
-
-              $('#visit_date')
-                .val(
-                  d.visit_date ||
-                  d.tanggal_masuk ||
-                  ''
-                );
-
-
-              $('#tanggal_masuk')
-                .val(
-                  d.tanggal_masuk ||
-                  d.visit_date ||
-                  ''
-                );
-
-
-              /*
-              |--------------------------------------------------------------------------
-              | TANGGAL PULANG
-              |--------------------------------------------------------------------------
-              */
-
-              $('#tanggal_pulang')
-                .val(
-                  d.tanggal_pulang ||
-                  ''
-                );
-
-
-              /*
-              |--------------------------------------------------------------------------
-              | DOKTER
-              |--------------------------------------------------------------------------
-              */
-
-              $('#id_doctor')
-                .val(
-                  d.id_doctor ||
-                  d.visit_doctor ||
-                  ''
-                );
-
-
-              /*
-              |--------------------------------------------------------------------------
-              | KETERANGAN
-              |--------------------------------------------------------------------------
-              */
-
-              $('#keterangan')
-                .val(
-                  d.keterangan ||
-                  ''
-                );
-
-
-              /*
-              |--------------------------------------------------------------------------
-              | PATIENT SELECT2
-              |--------------------------------------------------------------------------
-              */
-
-              const patientName =
-                d.patient_name ||
-                'Pasien';
-
-
-              const nomorRM =
-                d.nomor_rm ||
-                '-';
-
-
-              const tanggalMasuk =
-                d.tanggal_masuk ||
-                d.visit_date ||
-                '-';
-
-
-              /*
-              |--------------------------------------------------------------------------
-              | BUAT OPTION
-              |--------------------------------------------------------------------------
-              */
-
-              const option =
-                new Option(
-
-                  patientName +
-
-                  ' | RM: ' +
-
-                  nomorRM +
-
-                  ' | Masuk: ' +
-
-                  tanggalMasuk,
-
-                  d.id_patient,
-
-                  true,
-
-                  true
-
-                );
-
-
-              /*
-              |--------------------------------------------------------------------------
-              | APPEND OPTION
-              |--------------------------------------------------------------------------
-              */
-
-              $('#id_patient_select')
-                .empty()
-                .append(option)
-                .trigger('change');
-
-
-              /*
-              |--------------------------------------------------------------------------
-              | MODAL TITLE
-              |--------------------------------------------------------------------------
-              */
-
-              $('#programModal .modal-title')
-                .text(
-                  'Edit Surat Keterangan Rawat Inap'
-                );
-
-
-              /*
-              |--------------------------------------------------------------------------
-              | SHOW MODAL
-              |--------------------------------------------------------------------------
-              */
-
-              $('#programModal')
-                .modal('show');
-
-            }
-          )
-
-          .catch(
-            function(error) {
-
-
-              Swal.close();
-
-
-              console.error(
-                'Edit Error:',
-                error
-              );
-
-
-              Swal.fire(
-                'Error!',
-                'Gagal mengambil data surat.',
-                'error'
-              );
-
-            }
-          );
-
-      }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | DELETE
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-      'click',
-      '.delete-btn',
-      function() {
-
-
-        const id =
-          $(this).data('id');
-
-
-        if (!id) {
-
-          Swal.fire(
-            'Error!',
-            'ID surat tidak ditemukan.',
-            'error'
-          );
-
-          return;
+            );
 
         }
+      );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | CONFIRM
-        |--------------------------------------------------------------------------
-        */
+      /*
+      |--------------------------------------------------------------------------
+      | EDIT
+      |--------------------------------------------------------------------------
+      */
 
-        Swal.fire({
-
-            title: 'Hapus Surat?',
-
-            text: 'Data surat yang dihapus tidak dapat dikembalikan.',
-
-            icon: 'warning',
-
-            showCancelButton: true,
-
-            confirmButtonText: 'Ya, Hapus',
-
-            cancelButtonText: 'Batal',
-
-            confirmButtonColor: '#d33'
-
-          })
-
-          .then(
-            function(result) {
+      $(document).on(
+        'click',
+        '.edit-btn',
+        function() {
 
 
-              if (
-                !result.isConfirmed
-              ) {
+          const id =
+            $(this).data('id');
 
-                return;
+
+          if (!id) {
+
+            Swal.fire(
+              'Error!',
+              'ID surat tidak ditemukan.',
+              'error'
+            );
+
+            return;
+
+          }
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | LOADING
+          |--------------------------------------------------------------------------
+          */
+
+          Swal.fire({
+
+            title: 'Memuat data...',
+
+            allowOutsideClick: false,
+
+            didOpen: function() {
+
+              Swal.showLoading();
+
+            }
+
+          });
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | GET DETAIL
+          |--------------------------------------------------------------------------
+          */
+
+          fetch(
+
+              apiUrl +
+              '?id=' +
+              encodeURIComponent(id)
+
+            )
+
+            .then(
+              function(res) {
+
+                return res.json();
 
               }
+            )
+
+            .then(
+              function(resp) {
 
 
-              /*
-              |--------------------------------------------------------------------------
-              | DELETE
-              |--------------------------------------------------------------------------
-              */
-
-              fetch(
-
-                  apiUrl +
-                  '?id=' +
-                  encodeURIComponent(id),
-
-                  {
-
-                    method: 'DELETE'
-
-                  }
-
-                )
-
-                .then(
-                  function(res) {
-
-                    return res.json();
-
-                  }
-                )
-
-                .then(
-                  function(data) {
+                Swal.close();
 
 
-                    if (
-                      data.status ===
-                      'success'
-                    ) {
+                /*
+                |--------------------------------------------------------------------------
+                | ERROR
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                  resp.status !==
+                  'success'
+                ) {
+
+                  Swal.fire(
+                    'Gagal!',
+                    resp.message ||
+                    'Data surat tidak ditemukan.',
+                    'error'
+                  );
+
+                  return;
+
+                }
 
 
-                      Swal.fire(
-                        'Berhasil!',
-                        data.message ||
-                        'Surat berhasil dihapus.',
+                const d =
+                  resp.data;
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | ID
+                |--------------------------------------------------------------------------
+                */
+
+                $('#id')
+                  .val(
+                    d.id ||
+                    ''
+                  );
+
+
+                $('#id_patient')
+                  .val(
+                    d.id_patient ||
+                    ''
+                  );
+
+
+                $('#id_visit')
+                  .val(
+                    d.id_visit ||
+                    ''
+                  );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | NOMOR SURAT
+                |--------------------------------------------------------------------------
+                |
+                | EDIT:
+                | Nomor lama selalu dikunci.
+                |
+                |--------------------------------------------------------------------------
+                */
+
+                $('#nomor_surat')
+                  .val(
+                    d.nomor_surat ||
+                    ''
+                  )
+                  .prop(
+                    'readonly',
+                    true
+                  )
+                  .addClass(
+                    'bg-light'
+                  );
+
+
+                $('#nomor_surat_info')
+                  .html(`
+
+                    <div class="alert alert-secondary py-2 mb-0">
+
+                      <i class="fas fa-lock me-1"></i>
+
+                      Nomor surat dikunci karena
+                      data sedang diedit.
+
+                    </div>
+
+                  `);
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | TANGGAL SURAT
+                |--------------------------------------------------------------------------
+                */
+
+                $('#tanggal_surat')
+                  .val(
+                    d.tanggal_surat ||
+                    ''
+                  );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | DIAGNOSA
+                |--------------------------------------------------------------------------
+                */
+
+                $('#diagnosa')
+                  .val(
+                    d.diagnosa ||
+                    ''
+                  );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | TANGGAL MASUK
+                |--------------------------------------------------------------------------
+                */
+
+                $('#tanggal_masuk')
+                  .val(
+                    d.tanggal_masuk ||
+                    d.visit_date ||
+                    ''
+                  );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | TANGGAL PULANG
+                |--------------------------------------------------------------------------
+                */
+
+                $('#tanggal_pulang')
+                  .val(
+                    d.tanggal_pulang ||
+                    ''
+                  );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | DOKTER
+                |--------------------------------------------------------------------------
+                */
+
+                $('#id_doctor')
+                  .val(
+                    d.id_doctor ||
+                    ''
+                  );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | KETERANGAN
+                |--------------------------------------------------------------------------
+                */
+
+                $('#keterangan')
+                  .val(
+                    d.keterangan ||
+                    ''
+                  );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | PATIENT SELECT2
+                |--------------------------------------------------------------------------
+                */
+
+                const patientName =
+                  d.patient_name ||
+                  'Pasien';
+
+
+                const nomorRM =
+                  d.nomor_rm ||
+                  '-';
+
+
+                const tanggalMasuk =
+                  d.tanggal_masuk ||
+                  d.visit_date ||
+                  '-';
+
+
+                const option =
+                  new Option(
+
+                    patientName +
+
+                    ' | RM: ' +
+
+                    nomorRM +
+
+                    ' | Masuk: ' +
+
+                    tanggalMasuk,
+
+                    d.id_patient,
+
+                    true,
+
+                    true
+
+                  );
+
+
+                $('#id_patient_select')
+                  .empty()
+                  .append(
+                    option
+                  )
+                  .trigger(
+                    'change'
+                  );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | TITLE
+                |--------------------------------------------------------------------------
+                */
+
+                $('#programModal .modal-title')
+                  .text(
+                    'Edit Surat Keterangan Rawat Inap'
+                  );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | SHOW MODAL
+                |--------------------------------------------------------------------------
+                */
+
+                $('#programModal')
+                  .modal('show');
+
+              }
+            )
+
+            .catch(
+              function(error) {
+
+
+                Swal.close();
+
+
+                console.error(
+                  'Edit Error:',
+                  error
+                );
+
+
+                Swal.fire(
+                  'Error!',
+                  'Gagal mengambil data surat.',
+                  'error'
+                );
+
+              }
+            );
+
+        }
+      );
+
+
+      /*
+      |--------------------------------------------------------------------------
+      | DELETE
+      |--------------------------------------------------------------------------
+      */
+
+      $(document).on(
+        'click',
+        '.delete-btn',
+        function() {
+
+
+          const id =
+            $(this).data('id');
+
+
+          if (!id) {
+
+            Swal.fire(
+              'Error!',
+              'ID surat tidak ditemukan.',
+              'error'
+            );
+
+            return;
+
+          }
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | CONFIRM
+          |--------------------------------------------------------------------------
+          */
+
+          Swal.fire({
+
+              title: 'Hapus Surat?',
+
+              text: 'Data surat yang dihapus tidak dapat dikembalikan.',
+
+              icon: 'warning',
+
+              showCancelButton: true,
+
+              confirmButtonText: 'Ya, Hapus',
+
+              cancelButtonText: 'Batal',
+
+              confirmButtonColor: '#d33'
+
+            })
+
+            .then(
+              function(result) {
+
+
+                if (
+                  !result.isConfirmed
+                ) {
+
+                  return;
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | DELETE
+                |--------------------------------------------------------------------------
+                */
+
+                fetch(
+
+                    apiUrl +
+                    '?id=' +
+                    encodeURIComponent(id),
+
+                    {
+
+                      method: 'DELETE'
+
+                    }
+
+                  )
+
+                  .then(
+                    function(res) {
+
+                      return res.json();
+
+                    }
+                  )
+
+                  .then(
+                    function(data) {
+
+
+                      if (
+                        data.status ===
                         'success'
+                      ) {
+
+
+                        Swal.fire(
+                          'Berhasil!',
+                          data.message ||
+                          'Surat berhasil dihapus.',
+                          'success'
+                        );
+
+
+                        table.ajax.reload(
+                          null,
+                          false
+                        );
+
+
+                      } else {
+
+
+                        Swal.fire(
+                          'Gagal!',
+                          data.message ||
+                          'Data gagal dihapus.',
+                          'error'
+                        );
+
+                      }
+
+                    }
+                  )
+
+                  .catch(
+                    function(error) {
+
+
+                      console.error(
+                        'Delete Error:',
+                        error
                       );
-
-
-                      table.ajax.reload(
-                        null,
-                        false
-                      );
-
-
-                    } else {
 
 
                       Swal.fire(
-                        'Gagal!',
-                        data.message ||
-                        'Data gagal dihapus.',
+                        'Error!',
+                        'Gagal menghapus data.',
                         'error'
                       );
 
                     }
+                  );
 
-                  }
-                )
+              }
+            );
 
-                .catch(
-                  function(error) {
-
-
-                    console.error(
-                      'Delete Error:',
-                      error
-                    );
+        });
 
 
-                    Swal.fire(
-                      'Error!',
-                      'Gagal menghapus data.',
-                      'error'
-                    );
+      /*
+      |--------------------------------------------------------------------------
+      | RESET MODAL SETELAH DITUTUP
+      |--------------------------------------------------------------------------
+      */
 
-                  }
-                );
+      $('#programModal').on(
+        'hidden.bs.modal',
+        function() {
 
-            }
-          );
 
-      }
-    );
+          /*
+          |--------------------------------------------------------------------------
+          | RESET FORM
+          |--------------------------------------------------------------------------
+          */
 
-  });
+          const form =
+            $('#programForm')[0];
+
+
+          if (form) {
+
+            form.reset();
+
+          }
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | RESET ID
+          |--------------------------------------------------------------------------
+          */
+
+          $('#id')
+            .val('');
+
+
+          $('#id_patient')
+            .val('');
+
+
+          $('#id_visit')
+            .val('');
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | RESET SELECT2
+          |--------------------------------------------------------------------------
+          */
+
+          $('#id_patient_select')
+            .val(null)
+            .trigger('change');
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | RESET RAWAT INAP
+          |--------------------------------------------------------------------------
+          */
+
+          $('#diagnosa')
+            .val('');
+
+
+          $('#tanggal_masuk')
+            .val('');
+
+
+          $('#tanggal_pulang')
+            .val('');
+
+
+          $('#id_doctor')
+            .val('');
+
+
+          $('#keterangan')
+            .val('');
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | RESET NOMOR
+          |--------------------------------------------------------------------------
+          */
+
+          resetNomorSurat();
+
+
+          /*
+          |--------------------------------------------------------------------------
+          | RESET TITLE
+          |--------------------------------------------------------------------------
+          */
+
+          $('#programModal .modal-title')
+            .text(
+              'Tambah Surat Keterangan Rawat Inap'
+            );
+
+        }
+      );
+
+    }
+  );
 </script>
 
 </html>
