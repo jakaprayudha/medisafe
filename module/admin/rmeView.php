@@ -139,9 +139,12 @@ $visitData = mysqli_fetch_array($visitCheck);
          <div class="label">Nomor Visit</div>
          <div class="value"><?= $visit ?></div>
          <div class="label">Tanggal Kunjungan</div>
-         <div class="value"><?= $visitData['visit_date'] ?> <?= $visitData['visit_time'] ?></div>
+         <div class="value">
+            <?= date('F d, Y', strtotime($visitData['visit_date'])) ?>
+            <?= $visitData['visit_time'] ?>
+         </div>
          <div class="label">Dokter</div>
-         <div class="value"><?= $visitData['doctor_name'] ?></div>
+         <div class="value"><?= $visitData['id_doctor'] ?></div>
          <div class="label">Poli / Layanan</div>
          <div class="value"><?= $visitData['poli_name'] ?> (<?= $visitData['source_hub'] ?>)</div>
       </div>
@@ -151,9 +154,19 @@ $visitData = mysqli_fetch_array($visitCheck);
       <h2>Pemeriksaan Awal</h2>
       <div class="data-grid">
          <div class="label">Kondisi Masuk</div>
-         <div class="value"><?= $visitData['kondisi_masuk'] ?></div>
+         <div class="value">
+            <?= !empty($visitData['kondisi_masuk'])
+               ? htmlspecialchars($visitData['kondisi_masuk'])
+               : 'Lemah'
+            ?>
+         </div>
          <div class="label">Kondisi keluar</div>
-         <div class="value"><?= $visitData['kondisi_keluar'] ?></div>
+         <div class="value">
+            <?= !empty($visitData['kondisi_keluar'])
+               ? htmlspecialchars($visitData['kondisi_keluar'])
+               : 'Baik'
+            ?>
+         </div>
          <div class="label">Tekanan Darah</div>
          <div class="value"><?= $visitData['tekanan_darah'] ?> mmHg</div>
          <div class="label">Suhu</div>

@@ -125,7 +125,7 @@ require '../../controller/view.php';
             return {
               "tanggal": (row.visit_date ?? '-') + ' ' + (row.visit_time ?? '-'),
               "dokter": row.id_doctor ?? "-",
-              "layanan": row.id_poli ?? "-",
+              "layanan": row.source_hub ?? "-",
               "status_rawatinap": row.status_rawatinap,
               "actions": row.visit_ID
             };
