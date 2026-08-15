@@ -26,8 +26,9 @@ pv.tinggi_badan,
 pv.berat_badan,
 pv.bmi,
 pv.bmi_keterangan,
-pv.saturasi
-FROM pasien_visit AS PV WHERE id_visit = ? LIMIT 1;
+pv.saturasi,
+mp.patient_datebirth
+FROM pasien_visit AS PV LEFT JOIN ms_patient MP ON mp.id_patient = pv.id_patient WHERE id_visit = ? LIMIT 1;
 ";
 
 $stmt = $koneksi->prepare($query);
