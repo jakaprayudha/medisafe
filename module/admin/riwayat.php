@@ -88,13 +88,13 @@ require '../../controller/view.php';
                     </div>
 
                     <!-- 🔹 RIGHT BUTTON -->
-                    <div>
+                    <!-- <div>
                       <a href="module/admin/icareInternal" target="_blank">
                         <button type="button" class="btn btn-sm btn-primary d-flex align-items-center gap-1">
                           <i class="fas fa-print"></i> Review RME
                         </button>
                       </a>
-                    </div>
+                    </div> -->
 
                   </div>
                   <div class="row">
