@@ -273,7 +273,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                 antrian: row.visit_antrian,
                 source_hub: row.source_hub,
                 nomor_rm: row.nomor_rm,
-                nama_pasien: row.patient_name,
+                nama_pasien: row.patient_name_pcare,
                 gender: row.patient_gender,
                 jenis_bayar: row.provider_name,
                 status_visit: `
