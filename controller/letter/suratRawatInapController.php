@@ -1931,40 +1931,67 @@ function getID(
 |--------------------------------------------------------------------------
 */
 
+/*
+|--------------------------------------------------------------------------
+| UPDATE
+|--------------------------------------------------------------------------
+|
+| Update surat keterangan rawat inap.
+|
+| - Nomor surat tidak diubah
+| - Tanggal surat dapat diubah
+| - Keterangan dapat diubah
+| - Ruangan diambil dari form PUT
+| - Lama rawat dihitung otomatis dari tanggal masuk & tanggal pulang
+|
+|--------------------------------------------------------------------------
+*/
+
 function updateData($id_customer)
 {
    global $koneksi;
 
 
    /*
-    |--------------------------------------------------------------------------
-    | READ PUT
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | READ PUT DATA
+   |--------------------------------------------------------------------------
+   */
 
-   parse_str(
-
+   $rawInput =
       file_get_contents(
          "php://input"
-      ),
+      );
 
-      $data
 
-   );
+   $data = [];
+
+
+   if (
+      !empty($rawInput)
+   ) {
+
+      parse_str(
+         $rawInput,
+         $data
+      );
+   }
 
 
    /*
-    |--------------------------------------------------------------------------
-    | ID
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | ID
+   |--------------------------------------------------------------------------
+   */
 
    $id =
-      $data['id']
-      ??
-      $_GET['id']
-      ??
-      '';
+      trim(
+         $data['id']
+            ??
+            $_GET['id']
+            ??
+            ''
+      );
 
 
    if (
@@ -1983,30 +2010,52 @@ function updateData($id_customer)
 
 
    /*
-    |--------------------------------------------------------------------------
-    | FIELD
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | FIELD FORM
+   |--------------------------------------------------------------------------
+   */
 
    $tanggal_surat =
       trim(
          $data['tanggal_surat']
-            ?? ''
+            ??
+            ''
       );
 
 
    $keterangan =
       trim(
          $data['keterangan']
-            ?? ''
+            ??
+            ''
       );
 
 
    /*
-    |--------------------------------------------------------------------------
-    | VALIDASI
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | RUANGAN
+   |--------------------------------------------------------------------------
+   |
+   | PENTING:
+   | Karena request menggunakan PUT,
+   | jangan menggunakan $_POST['ruangan'].
+   |
+   |--------------------------------------------------------------------------
+   */
+
+   $ruangan =
+      trim(
+         $data['ruangan']
+            ??
+            ''
+      );
+
+
+   /*
+   |--------------------------------------------------------------------------
+   | VALIDASI TANGGAL SURAT
+   |--------------------------------------------------------------------------
+   */
 
    if (
       $tanggal_surat === ''
@@ -2024,50 +2073,56 @@ function updateData($id_customer)
 
 
    /*
-    |--------------------------------------------------------------------------
-    | AMBIL DATA SURAT + VISIT
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | AMBIL DATA SURAT + VISIT
+   |--------------------------------------------------------------------------
+   */
 
    $queryCheck = "
 
-        SELECT
+      SELECT
 
-            sri.id,
+         sri.id,
 
-            sri.id_visit,
+         sri.id_visit,
 
-            sri.id_patient,
+         sri.id_patient,
 
-            sri.nomor_surat,
+         sri.id_customer,
 
-            pv.visit_date,
+         sri.nomor_surat,
 
-            rsm.ruangan,
+         sri.ruangan,
 
-            rsm.tanggal_pulang
+         sri.lama,
 
-        FROM surat_rawat_inap sri
+         pv.visit_ID,
 
-        INNER JOIN pasien_visit pv
+         pv.visit_date,
 
-            ON pv.id_visit =
-               sri.id_visit
+         rsm.tanggal_pulang
 
-        LEFT JOIN resume_medis rsm
+      FROM surat_rawat_inap sri
 
-            ON rsm.visit_ID =
-               pv.visit_ID
+      INNER JOIN pasien_visit pv
 
-        WHERE sri.id = ?
+         ON pv.id_visit =
+            sri.id_visit
 
-          AND sri.id_customer = ?
+      LEFT JOIN resume_medis rsm
 
-          AND pv.id_customer = ?
+         ON rsm.visit_ID =
+            pv.visit_ID
 
-        LIMIT 1
+      WHERE sri.id = ?
 
-    ";
+        AND sri.id_customer = ?
+
+        AND pv.id_customer = ?
+
+      LIMIT 1
+
+   ";
 
 
    $check =
@@ -2076,7 +2131,9 @@ function updateData($id_customer)
       );
 
 
-   if (!$check) {
+   if (
+      !$check
+   ) {
 
       responseJson([
 
@@ -2089,6 +2146,12 @@ function updateData($id_customer)
       ]);
    }
 
+
+   /*
+   |--------------------------------------------------------------------------
+   | BIND
+   |--------------------------------------------------------------------------
+   */
 
    $check->bind_param(
 
@@ -2103,12 +2166,44 @@ function updateData($id_customer)
    );
 
 
-   $check->execute();
+   /*
+   |--------------------------------------------------------------------------
+   | EXECUTE
+   |--------------------------------------------------------------------------
+   */
+
+   if (
+      !$check->execute()
+   ) {
+
+      $error =
+         $check->error;
+
+
+      $check->close();
+
+
+      responseJson([
+
+         'status'  => 'error',
+
+         'message' =>
+         'Gagal validasi data surat: ' .
+            $error
+
+      ]);
+   }
 
 
    $result =
       $check->get_result();
 
+
+   /*
+   |--------------------------------------------------------------------------
+   | DATA TIDAK DITEMUKAN
+   |--------------------------------------------------------------------------
+   */
 
    if (
       $result->num_rows === 0
@@ -2128,6 +2223,12 @@ function updateData($id_customer)
    }
 
 
+   /*
+   |--------------------------------------------------------------------------
+   | EXISTING DATA
+   |--------------------------------------------------------------------------
+   */
+
    $existing =
       $result->fetch_assoc();
 
@@ -2136,25 +2237,28 @@ function updateData($id_customer)
 
 
    /*
-    |--------------------------------------------------------------------------
-    | DATA VISIT
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | DATA RAWAT INAP
+   |--------------------------------------------------------------------------
+   */
 
    $tanggal_masuk =
       $existing['visit_date']
-      ?? null;
+      ??
+      '';
 
 
    $tanggal_pulang =
       $existing['tanggal_pulang']
-      ?? null;
+      ??
+      '';
 
 
-   $ruangan =
-      $existing['ruangan']
-      ?? '';
-
+   /*
+   |--------------------------------------------------------------------------
+   | HITUNG LAMA RAWAT OTOMATIS
+   |--------------------------------------------------------------------------
+   */
 
    $lama =
       hitungLamaRawat(
@@ -2167,10 +2271,10 @@ function updateData($id_customer)
 
 
    /*
-    |--------------------------------------------------------------------------
-    | UPDATED BY
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | UPDATED BY
+   |--------------------------------------------------------------------------
+   */
 
    $updated_by =
       $_SESSION['uid_user']
@@ -2181,38 +2285,38 @@ function updateData($id_customer)
 
 
    /*
-    |--------------------------------------------------------------------------
-    | UPDATE
-    |--------------------------------------------------------------------------
-    |
-    | nomor_surat sengaja tidak diubah.
-    |
-    |--------------------------------------------------------------------------
-    */
+   |--------------------------------------------------------------------------
+   | UPDATE DATABASE
+   |--------------------------------------------------------------------------
+   |
+   | Nomor surat sengaja TIDAK diubah.
+   |
+   |--------------------------------------------------------------------------
+   */
 
    $query = "
 
-        UPDATE surat_rawat_inap
+      UPDATE surat_rawat_inap
 
-        SET
+      SET
 
-            tanggal_surat = ?,
+         tanggal_surat = ?,
 
-            keterangan = ?,
+         keterangan = ?,
 
-            ruangan = ?,
+         ruangan = ?,
 
-            lama = ?,
+         lama = ?,
 
-            updated_at = NOW(),
+         updated_at = NOW(),
 
-            updated_by = ?
+         updated_by = ?
 
-        WHERE id = ?
+      WHERE id = ?
 
-          AND id_customer = ?
+        AND id_customer = ?
 
-    ";
+   ";
 
 
    $stmt =
@@ -2221,7 +2325,9 @@ function updateData($id_customer)
       );
 
 
-   if (!$stmt) {
+   if (
+      !$stmt
+   ) {
 
       responseJson([
 
@@ -2235,9 +2341,31 @@ function updateData($id_customer)
    }
 
 
+   /*
+   |--------------------------------------------------------------------------
+   | BIND PARAMETER
+   |--------------------------------------------------------------------------
+   |
+   | 7 variabel:
+   |
+   | 1. tanggal_surat  = s
+   | 2. keterangan     = s
+   | 3. ruangan        = s
+   | 4. lama           = s
+   | 5. updated_by     = s
+   | 6. id             = i
+   | 7. id_customer    = s
+   |
+   | Jadi:
+   |
+   | "sssssis"
+   |
+   |--------------------------------------------------------------------------
+   */
+
    $stmt->bind_param(
 
-      "sssss is",
+      "sssssis",
 
       $tanggal_surat,
 
@@ -2254,39 +2382,72 @@ function updateData($id_customer)
       $id_customer
 
    );
+
+
+   /*
+   |--------------------------------------------------------------------------
+   | EXECUTE UPDATE
+   |--------------------------------------------------------------------------
+   */
+
    if (
-      $stmt->execute()
+      !$stmt->execute()
    ) {
+
+      $error =
+         $stmt->error;
+
 
       $stmt->close();
 
 
       responseJson([
 
-         'status' =>
-         'success',
+         'status'  => 'error',
 
          'message' =>
-         'Surat keterangan rawat inap berhasil diperbarui.'
+         'Gagal memperbarui surat: ' .
+            $error
 
       ]);
    }
 
 
-   $error =
-      $stmt->error;
-
+   /*
+   |--------------------------------------------------------------------------
+   | AFFECTED ROWS
+   |--------------------------------------------------------------------------
+   */
 
    $stmt->close();
 
 
+   /*
+   |--------------------------------------------------------------------------
+   | RESPONSE SUCCESS
+   |--------------------------------------------------------------------------
+   */
+
    responseJson([
 
-      'status'  => 'error',
+      'status' =>
+      'success',
 
       'message' =>
-      'Gagal memperbarui surat: ' .
-         $error
+      'Surat keterangan rawat inap berhasil diperbarui.',
+
+      'data' => [
+
+         'id' =>
+         $id,
+
+         'ruangan' =>
+         $ruangan,
+
+         'lama' =>
+         $lama
+
+      ]
 
    ]);
 }

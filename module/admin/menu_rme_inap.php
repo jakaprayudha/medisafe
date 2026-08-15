@@ -51,6 +51,9 @@
            <a href="module/admin/form_ekg?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
               <button class="nav-link <?= ($current == 'form_ekg.php') ? 'active' : '' ?>">EKG</button>
            </a>
+           <a href="module/admin/form_gizi?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+              <button class="nav-link <?= ($current == 'form_gizi.php') ? 'active' : '' ?>">Gizi & Nutrisi</button>
+           </a>
 
            <!-- <a href="module/admin/form_usg?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
                <button class="nav-link <?= ($current == 'form_usg.php') ? 'active' : '' ?>">USG</button>
