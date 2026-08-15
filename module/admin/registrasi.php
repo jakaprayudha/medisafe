@@ -1452,7 +1452,7 @@ date_default_timezone_set('Asia/Jakarta');
             showConfirmButton: false
           });
           $('#poliModal').modal('hide');
-          $('#periodeTable').DataTable().ajax.reload(null, false);
+          window.location.reload();
         } else {
           Swal.fire({
             icon: 'error',
