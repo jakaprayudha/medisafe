@@ -1238,7 +1238,7 @@ date_default_timezone_set('Asia/Jakarta');
             diagnosa = d.diagnosa_utama;
           }
           $('#d_diagnosa').text(diagnosa);
-          $('#d_tindakan').text(d.tindakan ?? '-');
+          $('#d_tindakan').text(d.tindakan_text ?? '-');
           $('#detailLoading').hide();
           $('#detailContent').fadeIn(200);
         },
