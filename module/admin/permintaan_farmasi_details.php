@@ -676,43 +676,71 @@ ORDER BY p.pharmacy_name_generic ASC
   // ACTION TOMBOL KIRIM
   // =========================
   $('#btnKirim').on('click', function() {
-
     Swal.fire({
       title: 'Kirim obat?',
       text: 'Pastikan data sudah benar',
       icon: 'question',
       showCancelButton: true,
       confirmButtonText: 'Ya, kirim',
-      cancelButtonText: 'Batal'
+      cancelButtonText: 'Batal',
+      reverseButtons: true
     }).then((result) => {
-
-      if (result.isConfirmed) {
-
-        fetch('controller/farmasi/kirimObat.php', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              id: idPermintaan
-            })
-          })
-          .then(res => res.json())
-          .then(res => {
-
-            if (res.status === 'success') {
-              Swal.fire('Berhasil!', 'Obat berhasil dikirim', 'success')
-                .then(() => location.reload());
-            } else {
-              Swal.fire('Gagal!', res.message || 'Terjadi error', 'error');
-            }
-
-          });
-
+      if (!result.isConfirmed) {
+        return;
       }
-
+      Swal.fire({
+        title: 'Sedang mengirim...',
+        text: 'Mohon tunggu, proses sedang berjalan.',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        allowEnterKey: false,
+        showConfirmButton: false,
+        showCancelButton: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      $.ajax({
+        url: 'controller/farmasi/kirimObat.php',
+        type: 'POST',
+        contentType: 'application/json',
+        dataType: 'json',
+        data: JSON.stringify({
+          id: idPermintaan
+        }),
+        success: function(res) {
+          if (res.status === 'success') {
+            Swal.fire({
+              icon: 'success',
+              title: 'Berhasil!',
+              text: 'Obat berhasil dikirim.',
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              confirmButtonText: 'OK'
+            }).then(() => {
+              location.reload();
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Gagal!',
+              text: res.message || 'Terjadi kesalahan.',
+              confirmButtonText: 'OK'
+            });
+          }
+        },
+        error: function(xhr, status, error) {
+          console.error('AJAX Error:', error);
+          console.error(xhr.responseText);
+          Swal.fire({
+            icon: 'error',
+            title: 'Terjadi Kesalahan!',
+            text: 'Tidak dapat terhubung ke server.',
+            confirmButtonText: 'OK'
+          });
+        }
+      });
     });
-
   });
 
   function handleSigna() {
