@@ -35,7 +35,7 @@ $cabang     = "LUBUK PAKAM";
 
 // ================= STATUS =================
 $status_peserta = "1";
-$tgl_cetak = date('d F Y'); 
+$tgl_cetak = date('d F Y');
 
 ?>
 
@@ -65,9 +65,9 @@ $tgl_cetak = date('d F Y');
         .page {
             background-color: white;
             /* Ukuran ditukar untuk A4 Landscape */
-            width: 297mm; 
-            min-height: 210mm; 
-            padding: 10mm 15mm; 
+            width: 297mm;
+            min-height: 210mm;
+            padding: 10mm 15mm;
             box-sizing: border-box;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             font-size: 13px;
@@ -90,13 +90,13 @@ $tgl_cetak = date('d F Y');
             margin-top: 15px;
             height: auto;
             /* Tinggi minimal dikurangi agar tidak tembus ke halaman 2 */
-            min-height: 400px; 
+            min-height: 400px;
             position: relative;
         }
 
         .barcode-dummy {
             height: 40px;
-            width: 280px; 
+            width: 280px;
             background-image: repeating-linear-gradient(to right,
                     #000 0, #000 2px, transparent 2px, transparent 4px,
                     #000 4px, #000 5px, transparent 5px, transparent 8px,
@@ -115,7 +115,7 @@ $tgl_cetak = date('d F Y');
         .divider-box {
             border-bottom: 1px solid black;
         }
-        
+
         .nowrap {
             white-space: nowrap;
         }
@@ -160,7 +160,7 @@ $tgl_cetak = date('d F Y');
 
         <!-- KOTAK UTAMA -->
         <div class="main-box">
-            
+
             <!-- SECTION ATAS (Kunjungan & Barcode) -->
             <div class="divider-box" style="padding: 15px 20px;">
                 <table width="100%" class="table-no-border">
@@ -238,12 +238,39 @@ $tgl_cetak = date('d F Y');
                         <td width="35%" align="center" valign="top">
                             Salam sejawat, <?= $tgl_cetak ?>
                             <br><br><br><br><br><br>
-                            dr. <?= $nama_dokter ?>
+                            <?php
+
+                            $namaDokter = trim($nama_dokter ?? '');
+
+                            /*
+|--------------------------------------------------------------------------
+| Hapus prefix dokter jika sudah ada
+| dr. / Dr. / DR. / dR.
+|--------------------------------------------------------------------------
+*/
+
+                            $namaDokter = preg_replace(
+                                '/^\s*dr\.?\s+/i',
+                                '',
+                                $namaDokter
+                            );
+
+                            /*
+|--------------------------------------------------------------------------
+| Tampilkan dengan format standar
+|--------------------------------------------------------------------------
+*/
+
+                            $namaDokterTampil = 'dr. ' . $namaDokter;
+
+                            ?>
+
+                            <?= htmlspecialchars($namaDokterTampil) ?>
                         </td>
                     </tr>
                 </table>
             </div>
-            
+
         </div> <!-- End of .main-box -->
 
         <!-- FOOTER DOKUMEN -->
