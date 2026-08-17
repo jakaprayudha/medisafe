@@ -73,11 +73,10 @@ $(function () {
     $('#pasienSelect').on('select2:select', function (e) {
         resetSemuaForm();
         let data = e.params.data;
-        const nik = (data.nik || "").trim();
-
-        const nomor = (nik === "" || nik === "-")
-            ? data.bpjs
-            : nik;
+        const nokartu = (data.bpjs || "").trim();
+        const nomor = (nokartu === "" || nokartu === "-")
+            ? data.nik
+            : nokartu;
         loadPasien(nomor, 'BPJS');
     });
     function loadPasien(nomor, tipe) {
@@ -129,6 +128,8 @@ $(function () {
                         APP.cetak('#Kelamin', sex === 'p' || sex === 'perempuan' ? "Perempuan" : "Laki - Laki");
                         APP.cetak('#tgllahir', response.data.tglLahir || '-');
                         APP.cetakhtml('#no_rekammedis', response.data.rm || '-');
+                        APP.cetakhtml('#status_prolanis', response.data.informasi.prolanis ?? '');
+                        APP.cetakhtml('#status_PRB', response.data.informasi.prb ?? '');
                         APP.cetak('#norm', response.data.rm || '-');
                         APP.cetak("#typePasien", tipe);
                         let nik = response.data.noKTP;

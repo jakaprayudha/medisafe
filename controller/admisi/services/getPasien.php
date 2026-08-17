@@ -57,7 +57,7 @@ if (!in_array($lengthkartu, [13, 16, 19])) {
         if (($result['code'] ?? '') != "200" || $result['data']['aktif'] != 'true') {
             $response = [
                 'success' => false,
-                'code' => $result['data']['aktif'] ?? false,
+                'code' => $result['data']['aktif'] ?? false,  
                 'message' => $result['data']['ketAktif'] ?? "Layanan BPJS sedang tidak dapat diakses.",
                 'data' => [
                     'noKartu' => $data['patient_bpjs'],
@@ -84,6 +84,11 @@ if (!in_array($lengthkartu, [13, 16, 19])) {
                     'rm' => $data['nomor_rm'] ?? null,
                     'kdProvider' => $result['data']['kdProviderPst']['kdProvider'] ?? null,
                     'nmProvider' => $result['data']['kdProviderPst']['nmProvider'] ?? null,
+                    'informasi' => [
+                        'tunggakan' => $result['data']['tunggakan'],
+                        'prb' => $result['data']['pstPrb'],
+                        'prolanis' => $result['data']['pstProl'],
+                    ]
                 ]
             ];
 

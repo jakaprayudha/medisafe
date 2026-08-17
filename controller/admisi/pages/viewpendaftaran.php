@@ -30,6 +30,12 @@
 
                         <div class="col-5 text-muted">No. Rekam Medis</div>
                         <div class="col-7" id="no_rekammedis">-</div>
+
+                        <div class="col-5 text-muted">Prolanis</div>
+                        <div class="col-7" id="status_prolanis" style="color:red"></div>
+                        
+                        <div class="col-5 text-muted">PRB</div>
+                        <div class="col-7" id="status_PRB" style="color:red"></div>
                     </div>
                 </div>
             </div>
