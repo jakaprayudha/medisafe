@@ -30,6 +30,12 @@
 
                         <div class="col-5 text-muted">No. Rekam Medis</div>
                         <div class="col-7" id="no_rekammedis">-</div>
+
+                        <div class="col-5 text-muted">Prolanis</div>
+                        <div class="col-7" id="status_prolanis" style="color:red"></div>
+                        
+                        <div class="col-5 text-muted">PRB</div>
+                        <div class="col-7" id="status_PRB" style="color:red"></div>
                     </div>
                 </div>
             </div>
@@ -43,6 +49,9 @@
                 <input type="hidden" name="typePatient" id="typePasien">
                 <input type="hidden" name="noHp" id="nohp">
                 <input type="hidden" name="norm" id="norm">
+                <input type="hidden" name="SProlanis" id="SProlanis">
+                <input type="hidden" name="SPRB" id="SPRB">
+                <input type="hidden" name="id_patient" id="id_patient">
                 <div class="card shadow-sm">
                     <div class="card-header bg-light fw-semibold">
                         Form Kunjungan Pasien

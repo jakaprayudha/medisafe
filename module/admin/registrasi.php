@@ -252,6 +252,10 @@ date_default_timezone_set('Asia/Jakarta');
                   <small class="text-muted">Kondisi Masuk</small>
                   <div id="d_kondisi_masuk">-</div>
                 </div>
+                <div class="col-md-6">
+                  <small class="text-muted">Umur</small>
+                  <div id="d_umur">-</div>
+                </div>
               </div>
             </div>
           </div>
@@ -307,12 +311,12 @@ date_default_timezone_set('Asia/Jakarta');
             </div>
           </div>
 
-          <div class="card border-0 shadow-sm mb-3">
+          <!-- <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
               <h6 class="fw-bold mb-2">📝 Catatan Screening</h6>
               <div id="d_catatan_screening" class="text-muted">-</div>
             </div>
-          </div>
+          </div> -->
 
           <!-- 🔬 DIAGNOSA -->
           <div class="card border-0 shadow-sm mb-3">
@@ -675,7 +679,7 @@ date_default_timezone_set('Asia/Jakarta');
   </div>
 </div>
 <script>
-  let currentTab = 'belum'; 
+  let currentTab = 'belum';
   $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
 
     const target = $(e.target).attr("id");
@@ -686,9 +690,9 @@ date_default_timezone_set('Asia/Jakarta');
       currentTab = 'selesai';
     } else if (target === 'batal-tab') {
       currentTab = 'batal';
-    }else if (target === 'kunjungsehat-tab'){
+    } else if (target === 'kunjungsehat-tab') {
       currentTab = 'sehat';
-    }else if (target === 'kunjungsehatbatal-tab'){
+    } else if (target === 'kunjungsehatbatal-tab') {
       currentTab = 'sehatbatal';
     }
 
@@ -1176,7 +1180,45 @@ date_default_timezone_set('Asia/Jakarta');
           $('#d_doctor_name').text(d.id_doctor ?? '-');
           $('#d_poli_name').text(d.id_poli ?? '-');
           $('#d_visit_date').text(d.visit_date + ' ' + d.visit_time);
-          $('#d_kondisi_masuk').text(d.kondisi_masuk ?? '-');
+          $('#d_kondisi_masuk').text(
+            d.kondisi_masuk && d.kondisi_masuk.trim() !== '' ?
+            d.kondisi_masuk :
+            'Lemah'
+          );
+
+
+          // ==========================================
+          // HITUNG UMUR BERDASARKAN TANGGAL VISIT
+          // ==========================================
+
+          if (d.patient_datebirth && d.visit_date) {
+
+            const tanggalLahir = new Date(d.patient_datebirth);
+            const tanggalVisit = new Date(d.visit_date);
+
+            let umur = tanggalVisit.getFullYear() - tanggalLahir.getFullYear();
+
+            const bulan =
+              tanggalVisit.getMonth() - tanggalLahir.getMonth();
+
+            // Belum ulang tahun pada tahun kunjungan
+            if (
+              bulan < 0 ||
+              (
+                bulan === 0 &&
+                tanggalVisit.getDate() < tanggalLahir.getDate()
+              )
+            ) {
+              umur--;
+            }
+
+            $('#d_umur').text(umur + ' Tahun');
+
+          } else {
+
+            $('#d_umur').text('-');
+
+          }
 
           $('#d_tekanan_darah').text(d.tekanan_darah ?? '-');
           $('#d_suhu').text(d.suhu ?? '-');
@@ -1193,10 +1235,10 @@ date_default_timezone_set('Asia/Jakarta');
           if (d.kdDiag1 || d.nmDiag1) {
             diagnosa = (d.kdDiag1 ?? '') + ' - ' + (d.nmDiag1 ?? '');
           } else if (d.diagnosa) {
-            diagnosa = d.diagnosa;
+            diagnosa = d.diagnosa_utama;
           }
           $('#d_diagnosa').text(diagnosa);
-          $('#d_tindakan').text(d.tindakan ?? '-');
+          $('#d_tindakan').text(d.tindakan_text ?? '-');
           $('#detailLoading').hide();
           $('#detailContent').fadeIn(200);
         },
