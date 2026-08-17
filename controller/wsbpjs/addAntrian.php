@@ -53,6 +53,10 @@ try {
     // echo json_encode($payload, JSON_PRETTY_PRINT);die();
     // $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getantrian.php", $payload);
     // if ($status_antrol && $tanggalperiksa == $tanggalSekarang) {
+    // $response = [
+    //         'success' => true
+    //     ];
+    // echo json_encode($response);die();
     if ($status_antrol) {
         $result = bpjsPost("/antrean/add", $payload);
     } else {

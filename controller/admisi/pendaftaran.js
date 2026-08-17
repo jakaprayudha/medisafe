@@ -132,6 +132,9 @@ $(function () {
                         APP.cetakhtml('#status_PRB', response.data.informasi.prb ?? '');
                         APP.cetak('#norm', response.data.rm || '-');
                         APP.cetak("#typePasien", tipe);
+                        APP.cetak("#SProlanis", response.data.informasi.prolanis);
+                        APP.cetak("#SPRB", response.data.informasi.prb);
+                        APP.cetak("#id_patient", response.data.id_patient);
                         let nik = response.data.noKTP;
                         APP.cetak('#noNIK', nik);
                         APP.cetakhtml('#nonik', nik);
