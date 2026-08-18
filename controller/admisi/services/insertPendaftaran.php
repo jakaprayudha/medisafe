@@ -33,9 +33,6 @@ $type = $_POST['typePatient'];
 $kdProv = $kunjSakit == 'true' ? $_POST['kdProv'] : '1';
 $norm = $_POST['norm'];
 $noHp = $_POST['noHp'];
-$id_patient = $_POST['id_patient'];
-$SProlanis = $_POST['SProlanis'];
-$SPRB = $_POST['SPRB'];
 $jampraktek = $_POST['jampraktek'];
 $payload = [
     "kdProviderPeserta" => $kdProviderPeserta,
@@ -93,7 +90,7 @@ if ($type == "BPJS") {
         $angkaantrean = $_POST['angkaantrean'];
         $kodeAntri       = $_POST['kodeAntri'];
         $created_user = "JKNOnsite";
-        if (!$kunjSakit) {
+        if (!$kunjSakit){
             $visit_ID = generateVisitID($koneksi, $idcustomer);
             $antrian = $noUrut;
             $created_user = "JKNSehat";
@@ -124,7 +121,13 @@ if ($type == "BPJS") {
         );
         $hasil = $stmt->execute();
         $stmt->close();
+        $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE (patient_bpjs = ? OR patient_nik = ?) AND id_customer = ?");
+        $stmt->bind_param('sss', $noKartu, $noNIK, $idcustomer);
+        $stmt->execute();
+        $chackpasien = $stmt->get_result()->fetch_assoc();
+
         $source_hub = "Poliklinik";
+        $id_patient = $chackpasien['id_patient'];
         $visit_time = date('H:i:s');
         $bmi = $_POST['bmi'];
         $bmiKet = $_POST['bmiKet'];
@@ -188,11 +191,10 @@ if ($type == "BPJS") {
             $kdDokter,
             $kdProv
         );
-        $stmtUpdate = $koneksi->prepare("UPDATE ms_patient SET Sprolanis = ?, SPRB = ? WHERE id_patient = ?");
-        $stmtUpdate->bind_param("sss", $SProlanis, $SPRB, $id_patient);
-        $stmtUpdate->execute();
-        $stmtUpdate->close();
         $hasil1 = $stmt->execute();
+        // $stmt2 = $koneksi->prepare("UPDATE ms_patient SET patient_nik = ?, patient_bpjs = ?, patient_datebirth = ? WHERE (patient_bpjs = ? OR patient_nik = ?) AND id_customer = ?");
+        // $stmt2->bind_param("ssssss", $noNIK, $noKartu, $tglLahir, $noKartu, $noNIK, $idcustomer);
+        // $hasil2 = $stmt2->execute();
         if ($hasil1) {
             $response = [
                 'success'  => true,
@@ -208,12 +210,18 @@ if ($type == "BPJS") {
     }
 } else {
     $visit_ID = generateVisitID($koneksi, $idcustomer);
+    $stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE (patient_nik = ? OR patient_bpjs = ?) AND id_customer = ?");
+    $stmt->bind_param('sss', $noNIK, $noKartu, $idcustomer);
+    $stmt->execute();
+    $chackpasien = $stmt->get_result()->fetch_assoc();
+
     $resultAntrian = createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tglDaftarDB, $jampraktek);
     $nomorantrean = $resultAntrian['display'];
     $angkaantrean = $resultAntrian['nomor'];
     $kodeAntri       = $resultAntrian['kode'];
     $created_user = "Onsite";
     $source_hub = "Poliklinik";
+    $id_patient = $chackpasien['id_patient'];
     $visit_time = date('H:i:s');
     $bmi = $_POST['bmi'];
     $bmiKet = $_POST['bmiKet'];
@@ -290,8 +298,7 @@ if ($type == "BPJS") {
     }
 }
 echo json_encode($response);
-function generateVisitID($koneksi, $idcustomer)
-{
+function generateVisitID($koneksi, $idcustomer){
     do {
         $date = date('ymd');
         $random = strtoupper(bin2hex(random_bytes(3)));
@@ -307,8 +314,7 @@ function generateVisitID($koneksi, $idcustomer)
 
     return $visitID;
 }
-function createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tglDaftarDB, $jampraktek)
-{
+function createAntrian($koneksi, $kdPoli, $idcustomer, $visit_ID, $kdDokter, $tglDaftarDB, $jampraktek){
     $cekantrian = $koneksi->prepare("SELECT 
                                     COALESCE(MAX(a.nomor), 0) AS last,
                                     (
