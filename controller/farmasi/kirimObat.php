@@ -56,33 +56,17 @@ $prov = $stmtProv->get_result()->fetch_assoc();
 
 $id_provider = $prov['id_provider'] ?? null;
 
-
 $stmt_statusRI = $koneksi->prepare("SELECT status_rawatinap FROM pasien_visit WHERE id_customer = ? AND visit_ID = ?");
 $stmt_statusRI->bind_param("ss", $id_customer, $nomor_visit);
 $stmt_statusRI->execute();
 $resultRI = $stmt_statusRI->get_result()->fetch_assoc();
 
-$status_RI = $resultRI['status_rawatinap'];
+$status_RI = $resultRI['status_rawatinap'] ?? null;
 
-// ================== DETAIL OBAT ==================
-$stmt2 = $koneksi->prepare("
-   SELECT p.pharmacy_name_generic, pd.qty, pd.signa 
-   FROM permintaan_pharmacy_details AS pd 
-   INNER JOIN ms_pharmacy AS p 
-   ON p.id_pharmacy = pd.id_pharmacy 
-   WHERE id_permintaan_farmasi = ?
-");
-$stmt2->bind_param('s', $id);
-$stmt2->execute();
-
-$result = $stmt2->get_result();
-$data_detailobat = $result->fetch_all(MYSQLI_ASSOC);
-
-$terapiObatArr = [];
-foreach ($data_detailobat as $row) {
-   $terapiObatArr[] = $row['pharmacy_name_generic'] . '/' . $row['signa'] . '/' . $row['qty'];
-}
-$terapiObat = implode(', ', $terapiObatArr);
+// Deklarasi variabel statement agar aman saat .close()
+$stmt1 = null;
+$stmt2 = null;
+$stmt3 = null;
 
 // ================== JIKA BUKAN BPJS ==================
 if ($id_provider != 1 || $status_RI == '1') {
@@ -92,7 +76,9 @@ if ($id_provider != 1 || $status_RI == '1') {
       WHERE id_permintaan_farmasi = ? 
       AND id_customer = ?
    ");
-   $stmt3->bind_param("ii", $id, $id_customer);
+   // Ubah "ii" menjadi "ss" (atau sesuaikan jika kolom bertipe integer di DB, misal "is")
+   $stmt3->bind_param("ss", $id, $id_customer);
+   
    if ($stmt3->execute()) {
       echo json_encode([
          'status' => 'success',
@@ -110,6 +96,7 @@ if ($id_provider != 1 || $status_RI == '1') {
    $stmt2->execute();
    $result = $stmt2->get_result();
    $data_detailobat = $result->fetch_all(MYSQLI_ASSOC);
+   
    $terapiObatArr = [];
    foreach ($data_detailobat as $row) {
       $terapiObatArr[] = $row['pharmacy_name_generic'] . '/' . $row['signa'] . '/' . $row['qty'];
@@ -130,8 +117,8 @@ if ($id_provider != 1 || $status_RI == '1') {
       "kdSadar" => $data['kdSadar'] ?? null,
       "sistole" => $data['sistole'] ?? null,
       "diastole" => $data['diastole'] ?? null,
-      "beratBadan" => (int)$data['beratBadan'] ?? null,
-      "tinggiBadan" => (int)$data['tinggiBadan'] ?? null,
+      "beratBadan" => (int)($data['beratBadan'] ?? 0),
+      "tinggiBadan" => (int)($data['tinggiBadan'] ?? 0),
       "respRate" => $data['respRate'] ?? null,
       "heartRate" => $data['heartRate'] ?? null,
       "lingkarPerut" => $data['lingkarPerut'] ?? null,
@@ -143,7 +130,7 @@ if ($id_provider != 1 || $status_RI == '1') {
       "kdDiag3" => $data['kdDiag3'] ?? null,
       "kdPoliRujukInternal" => $data['kdPoliRujukInternal'] ?? null,
       "rujukLanjut" => null,
-      "kdTacc" => (string)$data['kdTacc'] ?? null,
+      "kdTacc" => (string)($data['kdTacc'] ?? ''),
       "alasanTacc" => $data['alasanTacc'] ?? null,
       "anamnesa" => $data['anamnesa'] ?? null,
       "alergiMakan" => $data['alergiMakan'] ?? null,
@@ -156,20 +143,22 @@ if ($id_provider != 1 || $status_RI == '1') {
       "suhu" => $data['suhu'] ?? null
    ];
 
-   $result = bpjsPost("/kunjungan/v1", $payload, 'PUT');
-   if ($result['code'] != "200") {
-      $msg = $result['message'];
+   $resultBpjs = bpjsPost("/kunjungan/v1", $payload, 'PUT');
+   
+   if (($resultBpjs['code'] ?? '') != "200") {
+      $msg = $resultBpjs['message'] ?? null;
       if ($msg == null) {
          $msg = "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
       }
-      $response = [
+      echo json_encode([
          'status' => 'error',
          'message' => $msg,
-         'result' => $result
-      ];
+         'result' => $resultBpjs
+      ]);
    } else {
-      $stmt3 = $koneksi->prepare(" UPDATE permintaan_pharmacy SET status_permintaan = 1 WHERE id_permintaan_farmasi = ? AND id_customer = ?");
-      $stmt3->bind_param("ii", $id, $id_customer);
+      $stmt3 = $koneksi->prepare("UPDATE permintaan_pharmacy SET status_permintaan = 1 WHERE id_permintaan_farmasi = ? AND id_customer = ?");
+      $stmt3->bind_param("ss", $id, $id_customer);
+      
       if ($stmt3->execute()) {
          echo json_encode([
             'status' => 'success',
@@ -184,10 +173,10 @@ if ($id_provider != 1 || $status_RI == '1') {
    }
 }
 
-
 // ================== CLOSE ==================
-$stmt->close();
-$stmt1->close();
-$stmt2->close();
-$stmt3->close();
-$stmtProv->close();
+if ($stmt) $stmt->close();
+if ($stmt1) $stmt1->close();
+if ($stmt2) $stmt2->close();
+if ($stmt3) $stmt3->close();
+if ($stmtProv) $stmtProv->close();
+if (isset($stmt_statusRI)) $stmt_statusRI->close();
