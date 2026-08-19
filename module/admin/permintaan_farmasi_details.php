@@ -709,7 +709,7 @@ ORDER BY p.pharmacy_name_generic ASC
           id: idPermintaan
         }),
         success: function(res) {
-          if (res.status === 'success') {
+          if (res.status == 'success') {
             Swal.fire({
               icon: 'success',
               title: 'Berhasil!',
@@ -728,16 +728,6 @@ ORDER BY p.pharmacy_name_generic ASC
               confirmButtonText: 'OK'
             });
           }
-        },
-        error: function(xhr, status, error) {
-          console.error('AJAX Error:', error);
-          console.error(xhr.responseText);
-          Swal.fire({
-            icon: 'error',
-            title: 'Terjadi Kesalahan!',
-            text: 'Tidak dapat terhubung ke server.',
-            confirmButtonText: 'OK'
-          });
         }
       });
     });
