@@ -43,9 +43,7 @@ require '../../controller/view.php';
           ?>
           <div class="row">
             <div class="col-12">
-              <?php
-              require 'card-pasien.php';
-              ?>r
+              <?php require 'card-pasien.php';?>
             </div>
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
