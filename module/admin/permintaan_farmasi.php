@@ -60,6 +60,12 @@ require '../../controller/view.php';
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
                     </div>
                   </div>
+                  <div class="alert alert-danger d-flex align-items-center mb-4 peringatanAlergi d-none" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <div>
+                      <strong>Peringatan Alergi:</strong><span id="desAplergi"></span>.
+                    </div>
+                  </div>
                   <div class="table-responsive" data-simplebar>
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
@@ -82,9 +88,6 @@ require '../../controller/view.php';
       </div>
     </div>
   </div>
-
-
-
   <?php
   require 'library.php';
   ?>
@@ -360,6 +363,30 @@ require '../../controller/view.php';
     toggleRacikan();
 
   });
+</script>
+<script>
+  $(document).ready(function() {
+    const params = new URLSearchParams(window.location.search);
+    const nomor_visit = params.get('no');
+    $.ajax({
+      url: 'controller/master/getAlergiObat.php',
+      type: 'POST',
+      data: {
+        visit_id: nomor_visit
+      },
+      dataType: 'json',
+      success: function(response) {
+        const desAlObat = response.data?.desAlObat;
+        if (response.status === 'success' && desAlObat) {
+          $('.peringatanAlergi').removeClass('d-none');
+          $('#desAplergi').text(desAlObat);
+        } else {
+          $('.peringatanAlergi').addClass('d-none');
+          $('#desAplergi').text('');
+        }
+      },
+    });
+  })
 </script>
 
 </html>
