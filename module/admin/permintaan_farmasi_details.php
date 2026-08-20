@@ -55,21 +55,11 @@ ORDER BY p.pharmacy_name_generic ASC
 </head>
 
 <body>
-  <!--  Body Wrapper -->
   <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
     data-sidebar-position="fixed" data-header-position="fixed">
-    <!-- Sidebar Start -->
-    <?php
-    require 'sidebar.php';
-    ?>
-    <!--  Sidebar End -->
-    <!--  Main wrapper -->
+    <?php require 'sidebar.php';?>
     <div class="body-wrapper">
-      <!--  Header Start -->
-      <?php
-      require 'navbar.php';
-      ?>
-      <!--  Header End -->
+      <?php require 'navbar.php'; ?>
       <div class="body-wrapper-inner">
         <div class="container-fluid">
           <?php
@@ -83,6 +73,7 @@ ORDER BY p.pharmacy_name_generic ASC
           }
           ?>
           <div class="col-12">
+            <?php require 'card-pasien.php';?>
             <div class="card shadow-sm border-0 mb-4" style="border-radius:16px;">
               <div class="card-body">
 
