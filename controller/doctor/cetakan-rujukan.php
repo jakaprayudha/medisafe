@@ -263,7 +263,9 @@ $tgl_cetak = date('d-m-Y');
                     </table>
                     <div style="margin-top: 10px;">
                         Surat rujukan berlaku 1[satu] kali kunjungan, berlaku sampai dengan :
-                        <span style="white-space: nowrap; font-weight: bold;"><?= date('d-m-Y', strtotime($tgl_kunjung_db . ' +3 months')) ?></span>
+                        <span style="white-space: nowrap; font-weight: bold;">
+                            <?= date('d-m-Y', strtotime($tgl_kunjung_db . ' +89 days')) ?>
+                        </span>
                     </div>
                 </td>
                 <td width="32%" align="center" valign="bottom" style="padding-top: 40px;">
@@ -358,7 +360,7 @@ $tgl_cetak = date('d-m-Y');
                 </td>
             </tr>
         </table>
-        
+
         <div style="margin-top: 20px;">
             <hr style="border: 0; border-top: 1px solid black; margin-bottom: 10px;">
             <div class="footer">
