@@ -1,0 +1,255 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
+:root {
+  --c-primary: #5D87FF;
+  --c-primary-dark: #4066e0;
+  --c-teal: #13DEB9;
+  --c-warning: #FFAE1F;
+  --c-danger: #FA896B;
+  --c-dark: #2A3547;
+  --c-muted: #5A6A85;
+  --c-light: #F6F9FC;
+  --c-border: #EAEFF4;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(160deg, var(--c-light) 0%, #eef2ff 60%, #eafaf6 100%);
+  color: var(--c-dark);
+}
+
+.error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+/* CARD (split layout, mirrors the app's auth-card pattern) */
+.error-card {
+  display: flex;
+  width: 920px;
+  max-width: 100%;
+  background: #ffffff;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(42, 53, 71, 0.12), 0 4px 12px rgba(42, 53, 71, 0.06);
+}
+
+/* LEFT: content */
+.error-content {
+  flex: 1.1;
+  min-width: 0;
+  padding: 56px 48px;
+  display: flex;
+  flex-direction: column;
+}
+
+.error-logo {
+  width: 108px;
+  margin-bottom: 28px;
+}
+
+.error-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 20px rgba(42, 53, 71, 0.18);
+}
+
+.error-badge svg {
+  width: 26px;
+  height: 26px;
+}
+
+.accent-primary {
+  background: linear-gradient(135deg, var(--c-primary), var(--c-primary-dark));
+}
+
+.accent-warning {
+  background: linear-gradient(135deg, var(--c-warning), #f59e0b);
+}
+
+.accent-danger {
+  background: linear-gradient(135deg, var(--c-danger), #ef4444);
+}
+
+.accent-fill-primary {
+  fill: var(--c-primary);
+}
+
+.accent-fill-warning {
+  fill: var(--c-warning);
+}
+
+.accent-fill-danger {
+  fill: var(--c-danger);
+}
+
+.error-code {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+  margin-bottom: 10px;
+}
+
+.error-content h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--c-dark);
+  margin-bottom: 14px;
+  line-height: 1.25;
+}
+
+.error-content p {
+  font-size: 15px;
+  color: var(--c-muted);
+  line-height: 1.6;
+  margin-bottom: 32px;
+  max-width: 420px;
+}
+
+/* ACTIONS */
+.error-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+.btn-error {
+  padding: 13px 26px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-error-primary {
+  background: linear-gradient(135deg, var(--c-primary), var(--c-primary-dark));
+  color: white;
+  border: none;
+  box-shadow: 0 10px 24px rgba(93, 135, 255, 0.35);
+}
+
+.btn-error-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(93, 135, 255, 0.42);
+}
+
+.btn-error-secondary {
+  background: var(--c-light);
+  color: var(--c-dark);
+  border: 1px solid var(--c-border);
+}
+
+.btn-error-secondary:hover {
+  border-color: var(--c-primary);
+  color: var(--c-primary);
+}
+
+/* RIGHT: illustration */
+.error-visual {
+  flex: 1;
+  min-width: 0;
+  background: linear-gradient(150deg, #eef2ff, #eafaf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+
+.error-illustration {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+}
+
+/* Floating decoration animation — transform/opacity only */
+.float-slow {
+  animation: float 5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.float-fast {
+  animation: float 3.4s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .float-slow,
+  .float-fast {
+    animation: none;
+  }
+}
+
+/* RESPONSIVE */
+@media (max-width: 860px) {
+  .error-card {
+    flex-direction: column-reverse;
+  }
+
+  .error-content {
+    padding: 40px 28px 36px;
+  }
+
+  .error-visual {
+    padding: 32px 32px 0;
+  }
+
+  .error-illustration {
+    max-width: 240px;
+  }
+
+  .error-content p {
+    max-width: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .error-content h1 {
+    font-size: 23px;
+  }
+
+  .btn-error {
+    flex: 1;
+    justify-content: center;
+  }
+}
