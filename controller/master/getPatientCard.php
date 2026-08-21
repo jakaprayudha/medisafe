@@ -14,6 +14,7 @@ if (!$id_customer || !$no) {
 }
 
 $stmt = $koneksi->prepare("SELECT 
+	 v.id_visit,
       v.visit_ID,
       v.visit_status,
       v.patient_name_pcare,
@@ -23,6 +24,9 @@ $stmt = $koneksi->prepare("SELECT
       p.patient_datebirth,
       p.Sprolanis,
       p.SPRB,
+      v.tinggi_badan,
+      v.berat_badan,
+      v.suhu,
 v.noKartu AS patient_bpjs,
 p.patient_nik,
 p.idsh,

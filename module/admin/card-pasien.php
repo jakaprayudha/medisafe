@@ -277,6 +277,7 @@
    // ===============================
    function setText(id, value) {
       const el = document.getElementById(id);
+      if (!el) return;
       if (el) {
          el.innerText = value || "-";
       }
@@ -340,6 +341,9 @@
       setText("pc_provider", safeVal(data.provider_name));
       setText("patient_prb", safeVal(data.SPRB));
       setText("patient_prolanis", safeVal(data.Sprolanis));
+      setText("tinggi_badanFarmasi", safeVal(data.tinggi_badan) ?? '');
+      setText("berat_badanFarmasi", safeVal(data.berat_badan) ?? '');
+      setText("suhuFarmasi", safeVal(data.suhu) ?? '');
       // BPJS
       if (data.patient_bpjs && data.patient_bpjs !== "null") {
          setText("patient_bpjs", data.patient_bpjs);
