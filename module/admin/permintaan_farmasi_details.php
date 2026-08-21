@@ -57,7 +57,7 @@ ORDER BY p.pharmacy_name_generic ASC
 <body>
   <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
     data-sidebar-position="fixed" data-header-position="fixed">
-    <?php require 'sidebar.php';?>
+    <?php require 'sidebar.php'; ?>
     <div class="body-wrapper">
       <?php require 'navbar.php'; ?>
       <div class="body-wrapper-inner">
@@ -73,25 +73,72 @@ ORDER BY p.pharmacy_name_generic ASC
           }
           ?>
           <div class="col-12">
-            <?php require 'card-pasien.php';?>
+            <?php require 'card-pasien.php'; ?>
             <div class="card shadow-sm border-0 mb-4" style="border-radius:16px;">
-              <div class="card-body">
+              <style>
+                .info-item {
+                  display: flex;
+                  align-items: center;
+                  padding: 12px 16px;
+                  background-color: #f8f9fa;
+                  border: 1px solid #e9ecef;
+                  border-radius: 10px;
+                  height: 100%;
+                  transition: all 0.2s ease;
+                }
 
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h5 class="fw-bold mb-0">
-                    <i class="ti ti-ticket me-2 text-primary"></i>
+                .info-item:hover {
+                  background-color: #ffffff;
+                  border-color: #dee2e6;
+                  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+                }
+
+                .info-item .icon-wrapper {
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  width: 42px;
+                  height: 42px;
+                  border-radius: 50%;
+                  background-color: #e7f1ff;
+                  color: #0d6efd;
+                  font-size: 1.25rem;
+                  margin-right: 16px;
+                  flex-shrink: 0;
+                }
+
+                .info-item .label {
+                  font-size: 0.85rem;
+                  color: #6c757d;
+                  font-weight: 500;
+                  margin-bottom: 2px;
+                }
+
+                .info-item .value {
+                  font-weight: 600;
+                  color: #2b2b2b;
+                  font-size: 0.95rem;
+                }
+              </style>
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                  <h5 class="fw-bold mb-0 d-flex align-items-center">
+                    <span class="bg-primary bg-opacity-10 p-2 rounded-3 me-2 d-flex align-items-center justify-content-center">
+                      <i class="ti ti-ticket text-primary"></i>
+                    </span>
                     Tiket Order Farmasi
                   </h5>
-                  <button id="btnKirim" class="btn btn-primary d-none">
-                    <i class="ti ti-send"></i> Kirim Obat
+                  <button id="btnKirim" class="btn btn-primary d-none rounded-pill px-4 shadow-sm">
+                    <i class="ti ti-send me-1"></i> Kirim Obat
                   </button>
                 </div>
 
+                <!-- Menggunakan col-md-3 agar 8 item pas menjadi 2 baris (4 kolom per baris) -->
                 <div class="row g-3">
-
-                  <div class="col-md-4">
+                  <!-- Baris 1: Info Order -->
+                  <div class="col-sm-6 col-md-3">
                     <div class="info-item">
-                      <i class="ti ti-calendar"></i>
+                      <div class="icon-wrapper"><i class="ti ti-calendar"></i></div>
                       <div>
                         <div class="label">Tanggal</div>
                         <div class="value" id="created_at">-</div>
@@ -99,9 +146,9 @@ ORDER BY p.pharmacy_name_generic ASC
                     </div>
                   </div>
 
-                  <div class="col-md-4">
+                  <div class="col-sm-6 col-md-3">
                     <div class="info-item">
-                      <i class="ti ti-pill"></i>
+                      <div class="icon-wrapper"><i class="ti ti-pill"></i></div>
                       <div>
                         <div class="label">Tipe Obat</div>
                         <div class="value" id="tipe_obat">-</div>
@@ -109,9 +156,9 @@ ORDER BY p.pharmacy_name_generic ASC
                     </div>
                   </div>
 
-                  <div class="col-md-4">
+                  <div class="col-sm-6 col-md-3">
                     <div class="info-item">
-                      <i class="ti ti-flask"></i>
+                      <div class="icon-wrapper"><i class="ti ti-flask"></i></div>
                       <div>
                         <div class="label">Racikan</div>
                         <div class="value" id="racikan">-</div>
@@ -119,19 +166,9 @@ ORDER BY p.pharmacy_name_generic ASC
                     </div>
                   </div>
 
-                  <div class="col-md-4">
+                  <div class="col-sm-6 col-md-3">
                     <div class="info-item">
-                      <i class="ti ti-notes"></i>
-                      <div>
-                        <div class="label">Catatan</div>
-                        <div class="value" id="catatan">-</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="col-md-4">
-                    <div class="info-item">
-                      <i class="ti ti-check"></i>
+                      <div class="icon-wrapper bg-success bg-opacity-10 text-success"><i class="ti ti-check"></i></div>
                       <div>
                         <div class="label">Status Proses</div>
                         <div class="value" id="status_obat">-</div>
@@ -139,8 +176,48 @@ ORDER BY p.pharmacy_name_generic ASC
                     </div>
                   </div>
 
-                </div>
+                  <!-- Baris 2: Data Vital & Catatan -->
+                  <div class="col-sm-6 col-md-3">
+                    <div class="info-item">
+                      <div class="icon-wrapper bg-info bg-opacity-10 text-info"><i class="ti ti-ruler-measure"></i></div>
+                      <div>
+                        <div class="label">Tinggi Badan</div>
+                        <div class="value"><span id="tinggi_badanFarmasi">-</span> cm</div>
+                      </div>
+                    </div>
+                  </div>
 
+                  <div class="col-sm-6 col-md-3">
+                    <div class="info-item">
+                      <div class="icon-wrapper bg-warning bg-opacity-10 text-warning"><i class="ti ti-scale"></i></div>
+                      <div>
+                        <div class="label">Berat Badan</div>
+                        <div class="value"><span id="berat_badanFarmasi">-</span> kg</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-sm-6 col-md-3">
+                    <div class="info-item">
+                      <div class="icon-wrapper bg-danger bg-opacity-10 text-danger"><i class="ti ti-thermometer"></i></div>
+                      <div>
+                        <div class="label">Suhu Tubuh</div>
+                        <div class="value"><span id="suhuFarmasi">-</span> &deg;C</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-sm-6 col-md-3">
+                    <div class="info-item">
+                      <div class="icon-wrapper bg-secondary bg-opacity-10 text-secondary"><i class="ti ti-notes"></i></div>
+                      <div>
+                        <div class="label">Catatan</div>
+                        <div class="value text-truncate" style="max-width: 120px;" id="catatan">-</div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
               </div>
             </div>
           </div>

@@ -9,8 +9,7 @@ if (!$id) {
 }
 
 $stmt = $koneksi->prepare("
-  SELECT * FROM permintaan_pharmacy 
-  WHERE id_permintaan_farmasi = ?
+  SELECT * FROM permintaan_pharmacy WHERE id_permintaan_farmasi = ?
 ");
 
 $stmt->bind_param("i", $id);
