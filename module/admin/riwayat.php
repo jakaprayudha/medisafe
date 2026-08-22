@@ -299,6 +299,13 @@ require '../../controller/view.php';
                                               </div>
                                             </div>
 
+                                            <div class="col-6 col-md-3">
+                                              <div class="vital-box">
+                                                <div class="vital-value"><?= $row['bmi'] ?? '-' ?></div>
+                                                <div class="vital-label">BMI<?= !empty($row['bmi_keterangan']) ? ' (' . $row['bmi_keterangan'] . ')' : '' ?></div>
+                                              </div>
+                                            </div>
+
                                           </div>
                                         </div>
 
