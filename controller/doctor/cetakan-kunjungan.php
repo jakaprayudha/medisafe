@@ -15,8 +15,8 @@ if (!$data) {
 $nama_pasien   = $data['patient_name'];
 $no_bpjs       = $data['patient_bpjs'];
 $jenis_kelamin = ($data['patient_gender'] ?? 'P') == 'L' ? 'L' : 'P';
-$tgl_lahir     = $data['patient_birthdate'];
-$umur          = $tgl_lahir ? date_diff(date_create($tgl_lahir), date_create('today'))->y : '50';
+$tgl_lahir     = $data['patient_datebirth'];
+$umur          = $tgl_lahir ? date_diff(date_create($tgl_lahir), date_create('today'))->y : '';
 
 // ================= DATA KUNJUNGAN =================
 $diagnosa         = ($data['kdDiag1']) . " - " . ($data['nmDiag1']);
@@ -203,7 +203,7 @@ $tgl_cetak = date('d F Y');
                         <td width="15">:</td>
                         <td width="40"><?= $umur ?></td>
                         <td width="50">Tahun</td>
-                        <td class="nowrap"><?= date('d-M-Y', strtotime($tgl_lahir)) ?></td>
+                        <td class="nowrap"><?= $tgl_lahir ? date('d-M-Y', strtotime($tgl_lahir)) : '' ?></td>
                     </tr>
                     <tr>
                         <td>No. Kartu BPJS</td>
