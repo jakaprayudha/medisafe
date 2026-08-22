@@ -20,8 +20,11 @@ $page = $pages[$code] ?? ['title' => 'Terjadi Kesalahan', 'message' => 'Terjadi 
 http_response_code($code);
 
 $isLoggedIn = isset($_SESSION['username']);
-$homeUrl = $isLoggedIn ? '/module/admin' : '/';
 $homeLabel = $isLoggedIn ? 'Kembali ke Dashboard' : 'Kembali ke Login';
+
+$scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/errors/error.php'));
+$base = rtrim(dirname($scriptDir), '/');
+$homeUrl = $base . ($isLoggedIn ? '/module/admin' : '/');
 
 function iconPaths(string $type): string
 {
@@ -49,8 +52,8 @@ function renderBadgeIcon(string $type): string
    <meta charset="utf-8">
    <meta name="viewport" content="width=device-width, initial-scale=1">
    <title>Medisafe | <?= htmlspecialchars($page['title']) ?></title>
-   <link rel="shortcut icon" type="image/png" href="/assets/images/logos/icon_medisafe.png" />
-   <link rel="stylesheet" href="/assets/css/error.css">
+   <link rel="shortcut icon" type="image/png" href="<?= htmlspecialchars($base) ?>/assets/images/logos/icon_medisafe.png" />
+   <link rel="stylesheet" href="<?= htmlspecialchars($base) ?>/assets/css/error.css">
 </head>
 
 <body>
@@ -58,7 +61,7 @@ function renderBadgeIcon(string $type): string
       <div class="error-card">
 
          <div class="error-content">
-            <img src="/assets/images/logos/medisafe_logo.png" class="error-logo" alt="Medisafe">
+            <img src="<?= htmlspecialchars($base) ?>/assets/images/logos/medisafe_logo.png" class="error-logo" alt="Medisafe">
 
             <span class="error-badge accent-<?= $page['accent'] ?>">
                <?= renderBadgeIcon($page['icon']) ?>
