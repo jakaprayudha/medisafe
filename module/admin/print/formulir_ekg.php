@@ -1,3 +1,35 @@
+<?php
+
+require_once '../../../database/connect.php';
+
+$no = $_GET['no'] ?? null;
+$rm = $_GET['rm'] ?? null;
+
+$ekg = null;
+if ($no && $rm) {
+   $stmtEkg = mysqli_prepare(
+      $koneksi,
+      "SELECT er.*, mp.patient_name, mp.patient_datebirth
+       FROM ekg_results er
+       INNER JOIN ms_patient mp ON er.nomor_rm = mp.nomor_rm
+       WHERE er.visit_ID = ? AND mp.nomor_rm = ?
+       LIMIT 1"
+   );
+   if ($stmtEkg) {
+      mysqli_stmt_bind_param($stmtEkg, 'ss', $no, $rm);
+      mysqli_stmt_execute($stmtEkg);
+      $resEkg = mysqli_stmt_get_result($stmtEkg);
+      $ekg    = $resEkg ? mysqli_fetch_assoc($resEkg) : null;
+      if ($stmtEkg) mysqli_stmt_close($stmtEkg);
+   }
+}
+
+$ekgUsia = '';
+if ($ekg && !empty($ekg['patient_datebirth'])) {
+   $diffEkg = (new DateTime($ekg['patient_datebirth']))->diff(new DateTime());
+   $ekgUsia = $diffEkg->y . ' tahun ' . $diffEkg->m . ' bulan ' . $diffEkg->d . ' hari';
+}
+?>
 <div class="ekgprint-wrapper">
    <style>
       @page {
@@ -158,10 +190,12 @@
       }
    </style>
 
-   <!-- QR Code (Auto Hide) -->
-   <div id="ekgprint_qr_wrap" class="ekgprint-qr-wrap ekgprint-q-hide">
-      <img id="ekgprint_qr" class="ekgprint-qr-img">
-   </div>
+   <!-- QR Code (tampil hanya jika ada) -->
+   <?php if (!empty($ekg['qr_code'])): ?>
+      <div class="ekgprint-qr-wrap" style="display: block;">
+         <img class="ekgprint-qr-img" style="display: block;" src="../../../<?= htmlspecialchars($ekg['qr_code']) ?>" alt="QR Code">
+      </div>
+   <?php endif; ?>
 
    <!-- KOP -->
    <?php require 'kopsurat.php'; ?>
@@ -174,116 +208,47 @@
    <table class="ekgprint-identitas">
       <tr>
          <td width="28%">Nama Pasien</td>
-         <td>: <span id="ekgprint_nama" class="ekgprint-line"></span></td>
+         <td>: <span class="ekgprint-line"><?= htmlspecialchars($ekg['patient_name'] ?? '') ?></span></td>
       </tr>
       <tr>
          <td>No. Rekam Medis</td>
-         <td>: <span id="ekgprint_rm" class="ekgprint-line"></span></td>
+         <td>: <span class="ekgprint-line"><?= htmlspecialchars($ekg['nomor_rm'] ?? '') ?></span></td>
       </tr>
       <tr>
          <td>Usia</td>
-         <td>: <span id="ekgprint_usia" class="ekgprint-line"></span></td>
+         <td>: <span class="ekgprint-line"><?= htmlspecialchars($ekgUsia) ?></span></td>
       </tr>
       <tr>
          <td>Tanggal Pemeriksaan</td>
-         <td>: <span id="ekgprint_tanggal" class="ekgprint-line"></span></td>
+         <td>: <span class="ekgprint-line"><?= htmlspecialchars($ekg['tanggal_pemeriksaan'] ?? '') ?></span></td>
       </tr>
    </table>
 
    <!-- GAMBAR EKG -->
-   <div class="ekgprint-box">
-      <img id="ekgprint_img1" class="ekgprint-img">
-   </div>
+   <?php if (!empty($ekg['ekg1'])): ?>
+      <div class="ekgprint-box">
+         <img class="ekgprint-img" src="../../../<?= htmlspecialchars($ekg['ekg1']) ?>" alt="EKG 1">
+      </div>
+   <?php endif; ?>
 
-   <div class="ekgprint-box">
-      <img id="ekgprint_img2" class="ekgprint-img">
-   </div>
+   <?php if (!empty($ekg['ekg2'])): ?>
+      <div class="ekgprint-box">
+         <img class="ekgprint-img" src="../../../<?= htmlspecialchars($ekg['ekg2']) ?>" alt="EKG 2">
+      </div>
+   <?php endif; ?>
 
    <!-- CATATAN -->
    <div class="ekgprint-note-title">Interpretasi / Catatan Dokter:</div>
-   <div id="ekgprint_catatan" class="ekgprint-note"></div>
+   <div class="ekgprint-note"><?= nl2br(htmlspecialchars($ekg['interpretasi'] ?? '')) ?></div>
 
    <!-- FOOTER -->
    <div class="ekgprint-footer">
       Dokter Pemeriksa:<br><br>
-      <img id="ekgprint_ttd" class="ekgprint-ttd">
+      <?php if (!empty($ekg['ttd_dokter'])): ?>
+         <img class="ekgprint-ttd" src="../../../<?= htmlspecialchars($ekg['ttd_dokter']) ?>" alt="TTD Dokter">
+      <?php endif; ?>
       <br>
-      <b id="ekgprint_dokter"></b>
+      <b><?= htmlspecialchars($ekg['dokter'] ?? '') ?></b>
    </div>
 </div>
 
-<script>
-   document.addEventListener("DOMContentLoaded", () => {
-
-      const url = new URLSearchParams(window.location.search);
-      const no = url.get("no");
-      const rm = url.get("rm");
-
-      if (!no || !rm) return;
-
-      const base = window.location.origin + "/medisafe/";
-
-      fetch("get_ekg.php?no=" + no + "&rm=" + rm)
-         .then(r => r.json())
-         .then(res => {
-
-            if (res.status !== "success") return;
-
-            const d = res.data;
-
-            const set = (id, val) => {
-               const el = document.getElementById(id);
-               if (el) el.textContent = val ?? "";
-            };
-
-            // IDENTITAS
-            set("ekgprint_nama", d.patient_name);
-            set("ekgprint_rm", d.nomor_rm);
-            set("ekgprint_usia", d.usia);
-            set("ekgprint_tanggal", d.tanggal_pemeriksaan);
-
-            // GAMBAR EKG 1
-            if (d.ekg1) {
-               document.getElementById("ekgprint_img1").src = base + d.ekg1;
-            } else {
-               document.getElementById("ekgprint_img1").closest(".ekgprint-box").style.display = "none";
-            }
-
-            // GAMBAR EKG 2 — Auto Hide Jika Tidak Ada
-            if (d.ekg2) {
-               document.getElementById("ekgprint_img2").src = base + d.ekg2;
-            } else {
-               document.getElementById("ekgprint_img2").closest(".ekgprint-box").style.display = "none";
-            }
-            // CATATAN
-            document.getElementById("ekgprint_catatan").textContent = d.interpretasi ?? "";
-
-            // TTD
-            if (d.ttd_dokter) document.getElementById("ekgprint_ttd").src = base + d.ttd_dokter;
-
-            set("ekgprint_dokter", d.dokter);
-
-            // QR CODE FIX
-            const qrWrap = document.getElementById("ekgprint_qr_wrap");
-            const qrImg = document.getElementById("ekgprint_qr");
-
-            if (d.qr_code) {
-
-               qrImg.onload = () => {
-                  qrWrap.classList.remove("ekgprint-q-hide");
-                  qrImg.style.display = "block";
-               };
-
-               qrImg.onerror = () => {
-                  qrWrap.classList.add("ekgprint-q-hide");
-               };
-
-               qrImg.src = base + d.qr_code;
-
-            } else {
-               qrWrap.classList.add("ekgprint-q-hide");
-            }
-
-         });
-   });
-</script>

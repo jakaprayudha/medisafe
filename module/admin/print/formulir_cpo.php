@@ -2,6 +2,7 @@
 $title    = "Formulir Catatan Pemberian Obat (CPO)";
 $subtitle = "";
 require_once '../../../database/connect.php';
+require_once __DIR__ . '/qr_local.php';
 
 $no          = $_GET['no'] ?? null;
 $rm          = $_GET['rm'] ?? null;
@@ -103,7 +104,7 @@ foreach ($cpoRows as $row) {
 $protocol  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
 $domain    = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $verifyUrl = $protocol . $domain . "/module/verify/cpo.php?no=" . urlencode((string)$no) . "&rm=" . urlencode((string)$rm);
-$qrApiUrl  = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . urlencode($verifyUrl);
+$qrApiUrl  = qrDataUri($verifyUrl, 120);
 ?>
 <!DOCTYPE html>
 <html lang="id">

@@ -7,7 +7,7 @@ $checkpasien = mysqli_query(
    LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient
    WHERE pasien_visit.visit_ID='$visit' AND  pasien_visit.id_customer='$id_customer' LIMIT 1"
 );
-require '../../admin/getdataclinic.php';
+require_once '../../admin/getdataclinic.php';
 $datapasien = mysqli_fetch_array($checkpasien);
 $checktriase = mysqli_query($koneksi, "SELECT * FROM pasien_triase WHERE visit_ID='$visit' LIMIT 1");
 $datatriase = mysqli_fetch_array($checktriase);

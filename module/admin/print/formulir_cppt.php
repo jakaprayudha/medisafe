@@ -1,7 +1,7 @@
 <?php
 $title    = "Catatan Perkembangan Pasien Terintegrasi (CPPT)";
 $subtitle = "";
-require '../../../database/connect.php';
+require_once '../../../database/connect.php';
 
 $id_customer = $_SESSION['id_customer'] ?? null;
 $no          = $_GET['no'] ?? null;
