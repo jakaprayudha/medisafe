@@ -1,10 +1,10 @@
 <?php
-require '../../../database/connect.php';
+require_once '../../../database/connect.php';
 
 $id_patient = $_GET['id_patient'] ?? null;
 
 if (!$id_patient) {
-    die("ID patient tidak ditemukan");
+    throw new InvalidArgumentException("Parameter 'id_patient' tidak ditemukan.");
 }
 
 /*

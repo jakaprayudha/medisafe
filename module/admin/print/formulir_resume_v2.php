@@ -193,6 +193,7 @@ $datadiagnosamasuk = mysqli_fetch_array($diagnosamasuk);
             $listKode = array_filter(array_map('trim', $listKode));
 
             $hasilArray = [];
+            $stmtIcd = mysqli_prepare($koneksi, "SELECT code, icd10 as nama FROM icd_10 WHERE code = ?");
 
             foreach ($listKode as $kode) {
 
@@ -214,18 +215,24 @@ $datadiagnosamasuk = mysqli_fetch_array($diagnosamasuk);
                }
 
                // Cari ke database ICD
-               $stmt = mysqli_prepare($koneksi, "SELECT code, icd10 as nama FROM icd_10 WHERE code = ?");
-               mysqli_stmt_bind_param($stmt, "s", $kode);
-               mysqli_stmt_execute($stmt);
+               $dataIcd = null;
+               if ($stmtIcd) {
+                  mysqli_stmt_bind_param($stmtIcd, "s", $kode);
+                  mysqli_stmt_execute($stmtIcd);
 
-               $result = mysqli_stmt_get_result($stmt);
-               $dataIcd = mysqli_fetch_assoc($result);
+                  $result = mysqli_stmt_get_result($stmtIcd);
+                  $dataIcd = $result ? mysqli_fetch_assoc($result) : null;
+               }
 
                if ($dataIcd) {
                   $hasilArray[] = $dataIcd['code'] . ' - ' . $dataIcd['nama'];
                } else {
                   $hasilArray[] = $kode;
                }
+            }
+
+            if ($stmtIcd) {
+               mysqli_stmt_close($stmtIcd);
             }
 
             // Hindari duplicate
@@ -244,13 +251,13 @@ $datadiagnosamasuk = mysqli_fetch_array($diagnosamasuk);
 
          <?php
          $terapi = '';
-         $gettiket = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy WHERE id_visit='$visit' AND status_obat_pulang=0");
-         while ($tiket = mysqli_fetch_assoc($gettiket)) {
-            $idvisit = $tiket['id_permintaan_farmasi'];
-            $getobat = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy_details INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy_details.id_pharmacy WHERE id_permintaan_farmasi='$idvisit'");
-            while ($obat = mysqli_fetch_assoc($getobat)) {
-               $terapi .= "- {$obat['pharmacy_name_generic']} {$obat['qty']} {$obat['signa']}\n";
-            }
+         $getobat = mysqli_query($koneksi, "SELECT ms_pharmacy.pharmacy_name_generic, permintaan_pharmacy_details.qty, permintaan_pharmacy_details.signa
+            FROM permintaan_pharmacy
+            INNER JOIN permintaan_pharmacy_details ON permintaan_pharmacy_details.id_permintaan_farmasi = permintaan_pharmacy.id_permintaan_farmasi
+            INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy_details.id_pharmacy
+            WHERE permintaan_pharmacy.id_visit='$visit' AND permintaan_pharmacy.status_obat_pulang=0");
+         while ($obat = mysqli_fetch_assoc($getobat)) {
+            $terapi .= "- {$obat['pharmacy_name_generic']} {$obat['qty']} {$obat['signa']}\n";
          }
          ?>
          <tr>
@@ -265,13 +272,13 @@ $datadiagnosamasuk = mysqli_fetch_array($diagnosamasuk);
 
          <?php
          $terapipulang = '';
-         $gettiketpulang = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy WHERE id_visit='$visit' AND status_obat_pulang=1");
-         while ($tiket = mysqli_fetch_assoc($gettiketpulang)) {
-            $idvisit = $tiket['id_permintaan_farmasi'];
-            $getobat = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy_details INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy_details.id_pharmacy WHERE id_permintaan_farmasi='$idvisit'");
-            while ($obat = mysqli_fetch_assoc($getobat)) {
-               $terapipulang .= "- {$obat['pharmacy_name_generic']} {$obat['qty']} {$obat['signa']}\n";
-            }
+         $getobatpulang = mysqli_query($koneksi, "SELECT ms_pharmacy.pharmacy_name_generic, permintaan_pharmacy_details.qty, permintaan_pharmacy_details.signa
+            FROM permintaan_pharmacy
+            INNER JOIN permintaan_pharmacy_details ON permintaan_pharmacy_details.id_permintaan_farmasi = permintaan_pharmacy.id_permintaan_farmasi
+            INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy_details.id_pharmacy
+            WHERE permintaan_pharmacy.id_visit='$visit' AND permintaan_pharmacy.status_obat_pulang=1");
+         while ($obat = mysqli_fetch_assoc($getobatpulang)) {
+            $terapipulang .= "- {$obat['pharmacy_name_generic']} {$obat['qty']} {$obat['signa']}\n";
          }
          ?>
          <tr>

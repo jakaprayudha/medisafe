@@ -11,6 +11,16 @@ require '../../../vendor/autoload.php';
 require_once '../../../database/connect.php';
 require_once '../../admin/getdataclinic.php';
 
+set_time_limit(300);
+$memLimit = trim((string)ini_get('memory_limit'));
+if ($memLimit !== '' && $memLimit !== '-1') {
+    $memBytes = (int)$memLimit
+        * (['g' => 1073741824, 'm' => 1048576, 'k' => 1024][strtolower(substr($memLimit, -1))] ?? 1);
+    if ($memBytes < 512 * 1048576) {
+        ini_set('memory_limit', '512M');
+    }
+}
+
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use setasign\Fpdi\Fpdi;
@@ -216,6 +226,7 @@ $pdfOnlyCss
 
         $tempPath = $tempDir . 'form_' . pathinfo($file, PATHINFO_FILENAME) . '_' . uniqid() . '.pdf';
         file_put_contents($tempPath, $dom->output());
+        unset($dom);
 
         return $tempPath;
     } catch (Exception $e) {

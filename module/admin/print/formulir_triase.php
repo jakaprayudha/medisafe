@@ -2,6 +2,7 @@
 $title    = "FORMULIR TRIASE KEGAWATDARURATAN";
 $subtitle = "Assesmen Medis Awal Pasien IGD";
 require_once '../../../database/connect.php';
+require_once __DIR__ . '/qr_local.php';
 
 $id_customer = $_SESSION['id_customer'] ?? null;
 $no          = $_GET['no'] ?? null;
@@ -349,7 +350,8 @@ $MAP = [
             <tr>
                 <td style="width: 180px; vertical-align: middle;">
                     <?php if (!empty($triase['visit_ID'])): ?>
-                        <img src="https://barcode.tec-it.com/barcode.ashx?data=<?= urlencode($triase['visit_ID']) ?>&code=Code128" height="40" alt="Barcode Visit ID" style="display: block;">
+                        <img src="<?= qrDataUri((string)$triase["visit_ID"], 80) ?>" width="60" height="60" alt="QR Visit ID" style="display: block;">
+                        <span style="font-size: 8pt;"><?= htmlspecialchars((string)$triase["visit_ID"]) ?></span>
                     <?php endif; ?>
                 </td>
                 <td style="vertical-align: middle; padding-left: 25px;">

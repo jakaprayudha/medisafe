@@ -1,6 +1,6 @@
 <?php
-require '../../../database/connect.php';
-require '../../admin/getdataclinic.php';
+require_once '../../../database/connect.php';
+require_once '../../admin/getdataclinic.php';
 
 $id_customer = $_SESSION['id_customer'] ?? null;
 $no          = $_GET['no']  ?? null;

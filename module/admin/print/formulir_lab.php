@@ -1,6 +1,7 @@
 <?php
-require '../../../database/connect.php';
-require '../../admin/getdataclinic.php';
+require_once '../../../database/connect.php';
+require_once __DIR__ . '/qr_local.php';
+require_once '../../admin/getdataclinic.php';
 
 $id_customer = $_SESSION['id_customer'] ?? null;
 $no          = $_GET['no'] ?? null;
@@ -58,53 +59,39 @@ if ($no && $id_customer) {
 $grupHasil = [];
 
 if ($no && $id_customer) {
-    $qIns = "
-        SELECT * FROM visit_inspection
-        WHERE id_visit = ? AND id_customer = ?
-        ORDER BY id_inspection DESC
+    $qLab = "
+        SELECT
+            vi.inspection_date,
+            ld.assemen AS group_name,
+            li.assemen AS nama,
+            li.satuan,
+            li.minimum,
+            li.maksimum,
+            lr.hasil
+        FROM visit_inspection vi
+        JOIN laboratorium_detail ld ON ld.assemen = vi.inspection_name
+        JOIN laboratorium_item li ON li.kode = ld.kode
+        LEFT JOIN laboratorium_result lr
+            ON lr.id_item = li.id AND lr.id_inspection = vi.id_inspection
+        WHERE vi.id_visit = ? AND vi.id_customer = ?
+        ORDER BY vi.id_inspection DESC, li.urutan ASC
     ";
-    $stmtIns = mysqli_prepare($koneksi, $qIns);
-    mysqli_stmt_bind_param($stmtIns, "si", $no, $id_customer);
-    mysqli_stmt_execute($stmtIns);
-    $resIns = mysqli_stmt_get_result($stmtIns);
+    $stmtLab = mysqli_prepare($koneksi, $qLab);
+    mysqli_stmt_bind_param($stmtLab, "si", $no, $id_customer);
+    mysqli_stmt_execute($stmtLab);
+    $resLab = mysqli_stmt_get_result($stmtLab);
 
-    while ($ins = mysqli_fetch_assoc($resIns)) {
-        $id_inspection = $ins['id_inspection'];
-        $assemen       = $ins['inspection_name'];
+    while ($row = mysqli_fetch_assoc($resLab)) {
+        $tanggal = date('Y-m-d', strtotime($row['inspection_date']));
+        $grupHasil[$tanggal][$row['group_name']][] = [
 
-        $qLab = "
-            SELECT
-                ld.assemen AS group_name,
-                li.assemen AS nama,
-                li.satuan,
-                li.minimum,
-                li.maksimum,
-                lr.hasil
-            FROM laboratorium_detail ld
-            JOIN laboratorium_item li ON li.kode = ld.kode
-            LEFT JOIN laboratorium_result lr
-                ON lr.id_item = li.id AND lr.id_inspection = ?
-            WHERE ld.assemen = ?
-            ORDER BY li.urutan ASC
-        ";
-        $stmtLab = mysqli_prepare($koneksi, $qLab);
-        mysqli_stmt_bind_param($stmtLab, "ss", $id_inspection, $assemen);
-        mysqli_stmt_execute($stmtLab);
-        $resLab = mysqli_stmt_get_result($stmtLab);
-
-        while ($row = mysqli_fetch_assoc($resLab)) {
-            $tanggal = date('Y-m-d', strtotime($ins['inspection_date']));
-            $grupHasil[$tanggal][$row['group_name']][] = [
-
-                'nama'   => $row['nama'],
-                'hasil'  => $row['hasil'],
-                'satuan' => $row['satuan'],
-                'normal' => ($row['minimum'] ?? '-') . ' - ' . ($row['maksimum'] ?? '-'),
-            ];
-        }
-        mysqli_stmt_close($stmtLab);
+            'nama'   => $row['nama'],
+            'hasil'  => $row['hasil'],
+            'satuan' => $row['satuan'],
+            'normal' => ($row['minimum'] ?? '-') . ' - ' . ($row['maksimum'] ?? '-'),
+        ];
     }
-    mysqli_stmt_close($stmtIns);
+    mysqli_stmt_close($stmtLab);
     // 🔥 SORT TANGGAL ASC (AWAL → AKHIR)
     if (!empty($grupHasil)) {
         ksort($grupHasil);
@@ -128,7 +115,7 @@ $tglPeriksa = !empty($pasien['visit_date'])
 $protocol  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
 $domain    = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $verifyUrl = $protocol . $domain . "/module/verify/lab.php?no=" . urlencode((string)$no) . "&rm=" . urlencode((string)$rm);
-$qrApiUrl  = "https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=" . urlencode($verifyUrl);
+$qrApiUrl  = qrDataUri($verifyUrl, 120);
 ?>
 <!DOCTYPE html>
 <html lang="id">
