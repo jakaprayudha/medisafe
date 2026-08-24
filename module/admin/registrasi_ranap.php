@@ -863,7 +863,7 @@ require '../../controller/view.php';
       fetch(`controller/visit/getDetailPemeriksaan?id=${id}`)
         .then(res => res.json())
         .then(resp => {
-          if (resp.status === 'success') {
+          if (resp.status === 'success' || resp.status === true) {
             fillDetail(resp.data);
           } else {
             alert('Gagal load data');
