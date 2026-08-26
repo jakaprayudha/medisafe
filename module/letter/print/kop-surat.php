@@ -14,9 +14,9 @@
 
    <div class="kop-content">
 
-     <div class="nama-instansi">
+     <!-- <div class="nama-instansi">
        PEMERINTAH KABUPATEN DELI SERDANG
-     </div>
+     </div> -->
 
 
      <div class="nama-klinik">
