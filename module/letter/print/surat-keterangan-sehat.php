@@ -294,7 +294,7 @@
           <td><?= $dataSurat['patient_address'] ?></td>
         </tr>
 
-        <tr>
+        <!-- <tr>
           <td class="label">Diagnosa</td>
           <td class="separator">:</td>
           <td>
@@ -308,7 +308,7 @@
             }
             ?>
           </td>
-        </tr>
+        </tr> -->
       </table>
 
       <div class="pernyataan">
