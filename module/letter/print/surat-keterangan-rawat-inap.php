@@ -112,7 +112,11 @@
         pv.id_doctor,
         pv.visit_date,
         dc.sip_number,
-        dc.doctor_name
+        dc.doctor_name,
+        pv.nmDiag1,
+        pv.kdDiag1,
+        pv.diagnosa,
+        cd.icd10
      FROM surat_rawat_inap ss
      INNER JOIN pasien_visit pv 
         ON pv.id_visit = ss.id_visit
@@ -120,6 +124,7 @@
         ON mp.id_patient = pv.id_patient
     LEFT JOIN ms_doctor dc 
         ON dc.doctor_name = ss.id_doctor
+   LEFT JOIN icd_10 cd ON cd.code = pv.diagnosa
      WHERE ss.id = '$id'
      LIMIT 1"
       );
@@ -416,11 +421,19 @@
                   </td>
 
                   <td class="value">
-
-                     <?= htmlspecialchars(
-                        $dataSurat['diagnosa'] ?? '-'
-                     ) ?>
-
+                     <?php
+                     if (!empty($dataSurat['kdDiag1'])) {
+                        echo htmlspecialchars($dataSurat['kdDiag1'])
+                           . ' - '
+                           . htmlspecialchars($dataSurat['nmDiag1'] ?? '-');
+                     } elseif (!empty($dataSurat['diagnosa'])) {
+                        echo htmlspecialchars($dataSurat['diagnosa'])
+                           . ' - '
+                           . htmlspecialchars($dataSurat['icd10'] ?? '-');
+                     } else {
+                        echo '-';
+                     }
+                     ?>
                   </td>
 
                </tr>

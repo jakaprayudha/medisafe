@@ -118,7 +118,11 @@
         mp.patient_address,
         pv.id_doctor,
         pv.visit_date,
-        dc.sip_number
+        dc.sip_number,
+        pv.nmDiag1,
+        pv.kdDiag1,
+        pv.diagnosa,
+        cd.icd10
      FROM surat_pemeriksaan_mata ss
      INNER JOIN pasien_visit pv 
         ON pv.id_visit = ss.id_visit
@@ -126,6 +130,7 @@
         ON mp.id_patient = pv.id_patient
     LEFT JOIN ms_doctor dc 
         ON dc.doctor_name = pv.id_doctor
+    LEFT JOIN icd_10 cd ON cd.code = pv.diagnosa
      WHERE ss.id = '$id'
      LIMIT 1"
     );
@@ -603,6 +608,22 @@
           <td class="label">Alamat</td>
           <td class="separator">:</td>
           <td><?= $dataSurat['patient_address'] ?></td>
+        </tr>
+
+        <tr>
+          <td class="label">Diagnosa</td>
+          <td class="separator">:</td>
+          <td>
+            <?php
+            if (!empty($dataSurat['kdDiag1'])) {
+              echo $dataSurat['kdDiag1'] . ' - ' . ($dataSurat['nmDiag1'] ?? '-');
+            } elseif (!empty($dataSurat['diagnosa'])) {
+              echo $dataSurat['diagnosa'] . ' - ' . ($dataSurat['icd10'] ?? '-');
+            } else {
+              echo '-';
+            }
+            ?>
+          </td>
         </tr>
       </table>
 
