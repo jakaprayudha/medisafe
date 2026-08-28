@@ -147,6 +147,7 @@ $(function () {
                   APP.cetak("#keluhan_penyerta", d.keluhan || "");
                   APP.cetak("#keluhan_utama", d.anamnesa || "");
                   APP.cetak("#tindakan", d.tindakan || "");
+                  APP.cetak("#terapiObat", d.terapiObat || "");
                   //   APP.cetakhtml("#idUmur", d.umur);
                   //   APP.cetakhtml("#nomor_bpjs", d.noKartu);
                   //   APP.cetakhtml("#nomor_nik", d.patient_nik);

@@ -564,3 +564,6 @@ if ($status_pasien == "UMUM") {
     }
 }
 echo json_encode($response);
+function getObat(){
+    
+}

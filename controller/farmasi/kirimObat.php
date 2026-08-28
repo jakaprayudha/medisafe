@@ -107,9 +107,10 @@ if ($id_provider != 1 || $status_RI == '1') {
    $stmt1->bind_param('ss', $nomor_visit, $id_customer);
    $stmt1->execute();
    $data = $stmt1->get_result()->fetch_assoc();
+   $noKunjungan = $data['noKunjungan'];
 
    $payload = [
-      "noKunjungan" => $data['noKunjungan'] ?? null,
+      "noKunjungan" => $noKunjungan,
       "noKartu" => $data['noKartu'] ?? null,
       "tglDaftar" => !empty($data['tglDaftar']) ? date("d-m-Y", strtotime($data['tglDaftar'])) : null,
       "kdPoli" => $data['kdPoli'] ?? null,
@@ -158,8 +159,10 @@ if ($id_provider != 1 || $status_RI == '1') {
    } else {
       $stmt3 = $koneksi->prepare("UPDATE permintaan_pharmacy SET status_permintaan = 1 WHERE id_permintaan_farmasi = ? AND id_customer = ?");
       $stmt3->bind_param("ss", $id, $id_customer);
-      
-      if ($stmt3->execute()) {
+
+      $stmt4 = $koneksi->prepare("UPDATE pcare_kunjungan SET terapiObat = ? WHERE noKunjungan = ?");
+      $stmt4->bind_param('ss', $terapiObat, $noKunjungan);
+      if ($stmt3->execute() AND $stmt4->execute()) {
          echo json_encode([
             'status' => 'success',
             'message' => 'Berhasil kirim ke farmasi'
