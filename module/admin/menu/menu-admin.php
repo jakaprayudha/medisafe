@@ -100,15 +100,6 @@
             <span class="hide-menu">Data Pasien</span>
          </a>
       </li>
-      <li class="sidebar-item"><a class="sidebar-link <?php if ($title == 'Jadwal Dokter') {
-                                                         echo 'active';
-                                                      } ?>"
-            href="module/admisi/schedule"
-            aria-expanded="false">
-            <iconify-icon icon="solar:calendar-outline"></iconify-icon>
-            <span class="hide-menu">Jadwal Dokter</span>
-         </a>
-      </li>
       <li class="sidebar-item">
          <a class="sidebar-link <?php if ($title == 'Registrasi Polilklinik' or $title == 'Pendaftaran Pasien' or $title == 'List Pasien' and $_GET['type'] == 'Poliklinik') {
                                     echo 'active';
