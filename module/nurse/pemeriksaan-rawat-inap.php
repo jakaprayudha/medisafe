@@ -234,7 +234,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                   </ul>
                 </div>
               `,
-              "tanggal": row.visit_date + ' ' + row.visit_time,
+              "tanggal": row.tanggal_masuk + (row.ranap_time ? ' ' + row.ranap_time : ''),
               "nomor_rm": row.nomor_rm,
               "nama_pasien": row.patient_name,
               "gender": row.patient_gender,

@@ -49,16 +49,18 @@ function getData()
    // =========================
    // BASE QUERY
    // =========================
-   $query = "SELECT 
-    pasien_visit.*, 
-    ms_patient.*, 
+   $query = "SELECT
+    pasien_visit.*,
+    ms_patient.*,
     ms_poli.*,
     ms_provider.provider_name,
+    pr.ranap_time,
+    COALESCE(pr.ranap_date, pasien_visit.visit_date) AS tanggal_masuk,
 
     -- 🔥 CEK CPPT
-    CASE 
+    CASE
         WHEN EXISTS (
-            SELECT 1 FROM visit_cppt vc 
+            SELECT 1 FROM visit_cppt vc
             WHERE vc.visit_ID = pasien_visit.visit_ID
             LIMIT 1
         )
@@ -66,12 +68,19 @@ function getData()
     END as status_cppt
 
 FROM pasien_visit
-INNER JOIN ms_patient 
+INNER JOIN ms_patient
     ON ms_patient.id_patient = pasien_visit.id_patient
-LEFT JOIN ms_poli 
+LEFT JOIN ms_poli
     ON ms_poli.id_poli = pasien_visit.id_poli
 LEFT JOIN ms_provider
     ON ms_provider.id_provider = pasien_visit.id_provider
+LEFT JOIN permintaan_ranap pr
+    ON pr.id_ranap = (
+        SELECT id_ranap FROM permintaan_ranap
+        WHERE visit_ID_inpatient = pasien_visit.visit_ID
+        ORDER BY (status = 'aktif') DESC, id_ranap DESC
+        LIMIT 1
+    )
 
 WHERE pasien_visit.status_rawatinap = 1 AND pasien_visit.id_customer = ?";
 
@@ -80,16 +89,24 @@ WHERE pasien_visit.status_rawatinap = 1 AND pasien_visit.id_customer = ?";
    // =========================
    $params = [$id_customer];
    $types  = "i";
-   // Filter tanggal
+   // Filter tanggal (berdasarkan tanggal masuk rawat inap, bukan tanggal registrasi)
    if ($fromDate && $toDate) {
-      $query   .= " AND DATE(pasien_visit.visit_date) BETWEEN ? AND ?";
+      $query   .= " AND DATE(COALESCE(pr.ranap_date, pasien_visit.visit_date)) BETWEEN ? AND ?";
       $params[] = $fromDate;
       $params[] = $toDate;
       $types   .= "ss";
+   } elseif ($fromDate) {
+      $query   .= " AND DATE(COALESCE(pr.ranap_date, pasien_visit.visit_date)) >= ?";
+      $params[] = $fromDate;
+      $types   .= "s";
+   } elseif ($toDate) {
+      $query   .= " AND DATE(COALESCE(pr.ranap_date, pasien_visit.visit_date)) <= ?";
+      $params[] = $toDate;
+      $types   .= "s";
    }
 
    // Order
-   $query .= " ORDER BY pasien_visit.visit_date ASC";
+   $query .= " ORDER BY tanggal_masuk ASC";
 
    // =========================
    // PREPARE & EXECUTE
