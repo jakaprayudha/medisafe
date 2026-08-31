@@ -169,9 +169,9 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
 
   let firstDayStr = firstDay.toISOString().split("T")[0];
 
-  $('#fromDate').val(today);
   $('#fromDate').attr('max', today);
-  $('#toDate').val();
+  $('#fromDate').val('');
+  $('#toDate').val('');
   const rmeType = '<?php echo $rme_type ?>'; // ambil dari PHP
   $(document).ready(function() {
     // Initialize DataTable
@@ -234,7 +234,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                   </ul>
                 </div>
               `,
-              "tanggal": row.visit_date + ' ' + row.visit_time,
+              "tanggal": row.tanggal_masuk + (row.ranap_time ? ' ' + row.ranap_time : ''),
               "bpjs": row.patient_bpjs,
               "nama_pasien": row.patient_name,
               "gender": row.patient_gender,
@@ -281,10 +281,10 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
       table.ajax.reload();
     });
 
-    // reset filter ke today
+    // reset filter (kosongkan, tampilkan semua data)
     $('#btnReset').on('click', function() {
-      $('#fromDate').val(today);
-      $('#toDate').val();
+      $('#fromDate').val('');
+      $('#toDate').val('');
       table.ajax.reload();
     });
 
