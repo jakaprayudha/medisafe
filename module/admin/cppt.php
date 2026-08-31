@@ -4,7 +4,7 @@ require '../../database/connect.php';
 require '../../controller/view.php';
 $no = $_GET['no'];
 $rm = $_GET['rm'];
-$patient = mysqli_query($koneksi, "SELECT pv.id_patient, mp.nomor_rm FROM pasien_visit pv LEFT JOIN ms_patient mp ON mp.id_patient = pv.id_patient WHERE pv.visit_ID='$no'");
+$patient = mysqli_query($koneksi, "SELECT pv.id_patient, mp.* FROM pasien_visit pv LEFT JOIN ms_patient mp ON mp.id_patient = pv.id_patient WHERE pv.visit_ID='$no'");
 $datapatient = mysqli_fetch_array($patient);
 ?>
 <!doctype html>

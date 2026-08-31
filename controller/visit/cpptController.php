@@ -136,11 +136,11 @@ function getData($id_customer)
 
    $stmt = $koneksi->prepare("SELECT * FROM visit_cppt 
       LEFT JOIN ms_users ON visit_cppt.users_entry = ms_users.id_user
-      WHERE visit_cppt.visit_ID=? AND visit_cppt.id_patient=? AND visit_cppt.id_customer=?
+      WHERE visit_cppt.visit_ID=? AND visit_cppt.id_customer=?
       ORDER BY visit_cppt.cppt_date ASC
    ");
 
-   $stmt->bind_param("ssi", $no, $id_patient, $id_customer);
+   $stmt->bind_param("si", $no,  $id_customer);
    $stmt->execute();
 
    $data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
