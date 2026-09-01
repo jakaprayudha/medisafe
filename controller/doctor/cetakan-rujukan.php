@@ -2,7 +2,7 @@
 include '../../database/connect.php';
 $id_customer = $_SESSION['id_customer'];
 $noKunjung = $_GET['id'];
-$stmt = $koneksi->prepare("SELECT  pk.jdwpraktek, sc.clinic_name, pc.KodePPK, pv.*, pk.tglEstRujuk, pk.kdDiag1, pk.nmDiag1,pk.nmSubSpesialis1, pk.nmKategori, pk.nmfaskes, p.patient_name, p.patient_gender, p.patient_datebirth, p.patient_bpjs FROM pasien_visit pv INNER JOIN ms_patient p ON pv.id_patient = p.id_patient INNER JOIN pcare_kunjungan AS pk ON pv.noKunjung = pk.noKunjungan INNER JOIN setting_clinic AS sc ON sc.id_customer = pv.id_customer INNER JOIN setting_pcare AS pc ON pc.id_customer = pv.id_customer WHERE pv.noKunjung = ? AND pv.id_customer = ?");
+$stmt = $koneksi->prepare("SELECT  pk.tglDaftar, pk.jdwpraktek, sc.clinic_name, pc.KodePPK, pv.*, pk.tglEstRujuk, pk.kdDiag1, pk.nmDiag1,pk.nmSubSpesialis1, pk.nmKategori, pk.nmfaskes, p.patient_name, p.patient_gender, p.patient_datebirth, p.patient_bpjs FROM pasien_visit pv INNER JOIN ms_patient p ON pv.id_patient = p.id_patient INNER JOIN pcare_kunjungan AS pk ON pv.noKunjung = pk.noKunjungan INNER JOIN setting_clinic AS sc ON sc.id_customer = pv.id_customer INNER JOIN setting_pcare AS pc ON pc.id_customer = pv.id_customer WHERE pv.noKunjung = ? AND pv.id_customer = ?");
 $stmt->bind_param('ss', $noKunjung, $id_customer);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -27,6 +27,7 @@ $tgl_kunjung_db = $data['tglEstRujuk'] ?? '';
 $tgl_kunjung = !empty($tgl_kunjung_db) ? date('d-m-Y', strtotime($tgl_kunjung_db)) : '';
 $no_rujukan       = $data['no_rujukan'] ?? '';
 $no_kunjungan     = $data['noKunjungan'] ?? '';
+$tglDaftar        = $data['tglDaftar'];
 
 // ================= DATA TAMBAHAN =================
 $fktp         = $data['clinic_name'] . '(' . $data['kodePPK'] . ')';
@@ -264,7 +265,7 @@ $tgl_cetak = date('d-m-Y');
                     <div style="margin-top: 10px;">
                         Surat rujukan berlaku 1[satu] kali kunjungan, berlaku sampai dengan :
                         <span style="white-space: nowrap; font-weight: bold;">
-                            <?= date('d-m-Y', strtotime($tgl_kunjung_db . ' +89 days')) ?>
+                            <?= date('d-m-Y', strtotime($tglDaftar . ' +89 days')) ?>
                         </span>
                     </div>
                 </td>
