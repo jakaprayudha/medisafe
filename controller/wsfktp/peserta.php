@@ -38,8 +38,8 @@ $namaKel        = $data['namakel'] ?? null;
 $rw             = $data['rw'] ?? null;
 $rt             = $data['rt'] ?? null;
 
-$stmt1 = $koneksi->prepare("SELECT * FROM ms_patient WHERE patient_bpjs = ? OR patient_nik = ? LIMIT 1");
-$stmt1->bind_param('ss', $noKartu, $nik);
+$stmt1 = $koneksi->prepare("SELECT * FROM ms_patient WHERE id_customer = ? AND (patient_bpjs = ? OR patient_nik = ?) LIMIT 1");
+$stmt1->bind_param('sss', $id_customer,$noKartu, $nik);
 $stmt1->execute();
 $result = $stmt1->get_result();
 if ($result->num_rows > 0) {
