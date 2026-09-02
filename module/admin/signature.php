@@ -215,8 +215,9 @@ require '../../controller/view.php';
   function draw(e) {
     if (!drawing) return;
 
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 4;
     ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
     ctx.lineTo(e.offsetX, e.offsetY);
     ctx.stroke();
@@ -234,8 +235,9 @@ require '../../controller/view.php';
     const x = touch.clientX - rect.left;
     const y = touch.clientY - rect.top;
 
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 4;
     ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
     ctx.lineTo(x, y);
     ctx.stroke();
