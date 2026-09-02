@@ -215,7 +215,7 @@ require '../../controller/view.php';
   function draw(e) {
     if (!drawing) return;
 
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 6;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
@@ -235,7 +235,7 @@ require '../../controller/view.php';
     const x = touch.clientX - rect.left;
     const y = touch.clientY - rect.top;
 
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 6;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
