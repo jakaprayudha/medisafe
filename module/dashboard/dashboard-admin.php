@@ -433,9 +433,390 @@
     }
 
   }
+
+  /* =========================================================
+   FILTER PERIODE
+========================================================= */
+
+  .admin-dashboard .dash-filter-wrapper {
+
+    background: #fff;
+
+    border: 1px solid var(--ad-border);
+
+    border-radius: 18px;
+
+    padding: 17px 20px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+  }
+
+
+  .admin-dashboard .dash-filter-title {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    flex-shrink: 0;
+
+  }
+
+
+  .admin-dashboard .dash-filter-icon {
+
+    width: 42px;
+
+    height: 42px;
+
+    border-radius: 12px;
+
+    background: #eeecff;
+
+    color: #635bff;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 21px;
+
+  }
+
+
+  .admin-dashboard .dash-filter-heading {
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    color: var(--ad-text);
+
+  }
+
+
+  .admin-dashboard .dash-filter-description {
+
+    font-size: 11px;
+
+    color: var(--ad-muted);
+
+    margin-top: 2px;
+
+  }
+
+
+  .admin-dashboard .dash-filter-form {
+
+    display: flex;
+
+    align-items: flex-end;
+
+    gap: 10px;
+
+  }
+
+
+  .admin-dashboard .dash-filter-group {
+
+    min-width: 145px;
+
+  }
+
+
+  .admin-dashboard .dash-filter-group label {
+
+    display: block;
+
+    font-size: 10px;
+
+    font-weight: 600;
+
+    color: var(--ad-muted);
+
+    margin-bottom: 5px;
+
+  }
+
+
+  .admin-dashboard .dash-filter-group .form-select,
+  .admin-dashboard .dash-filter-group .form-control {
+
+    height: 38px;
+
+    border-radius: 10px;
+
+    border-color: var(--ad-border);
+
+    font-size: 12px;
+
+    color: var(--ad-text);
+
+    box-shadow: none;
+
+  }
+
+
+  .admin-dashboard .dash-filter-group .form-select:focus,
+  .admin-dashboard .dash-filter-group .form-control:focus {
+
+    border-color: #635bff;
+
+    box-shadow:
+      0 0 0 3px rgba(99, 91, 255, .08);
+
+  }
+
+
+  .admin-dashboard .dash-filter-button {
+
+    height: 38px;
+
+    border-radius: 10px;
+
+    font-size: 12px;
+
+    padding-left: 16px;
+
+    padding-right: 16px;
+
+    white-space: nowrap;
+
+  }
+
+
+  /* CUSTOM DATE */
+
+  .admin-dashboard .custom-date-field {
+
+    display: block;
+
+  }
+
+
+  /* MOBILE */
+
+  @media (max-width: 1100px) {
+
+    .admin-dashboard .dash-filter-wrapper {
+
+      align-items: flex-start;
+
+      flex-direction: column;
+
+    }
+
+    .admin-dashboard .dash-filter-form {
+
+      width: 100%;
+
+      flex-wrap: wrap;
+
+    }
+
+  }
+
+
+  @media (max-width: 767px) {
+
+    .admin-dashboard .dash-filter-form {
+
+      display: grid;
+
+      grid-template-columns: 1fr 1fr;
+
+      width: 100%;
+
+    }
+
+    .admin-dashboard .dash-filter-group {
+
+      min-width: 0;
+
+    }
+
+    .admin-dashboard .dash-filter-group:first-child {
+
+      grid-column: span 2;
+
+    }
+
+    .admin-dashboard .dash-filter-button {
+
+      width: 100%;
+
+    }
+
+  }
+
+
+  @media (max-width: 480px) {
+
+    .admin-dashboard .dash-filter-form {
+
+      grid-template-columns: 1fr;
+
+    }
+
+    .admin-dashboard .dash-filter-group:first-child {
+
+      grid-column: auto;
+
+    }
+
+  }
 </style>
 
+<!-- =====================================================
+     FILTER PERIODE DASHBOARD
+====================================================== -->
 
+<div class="admin-dashboard mb-3">
+
+  <div class="dash-filter-wrapper">
+
+    <div class="dash-filter-title">
+
+      <div class="dash-filter-icon">
+
+        <iconify-icon
+          icon="solar:calendar-search-bold">
+        </iconify-icon>
+
+      </div>
+
+      <div>
+
+        <div class="dash-filter-heading">
+          Periode Dashboard
+        </div>
+
+        <div class="dash-filter-description">
+          Pilih periode data yang ingin ditampilkan
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="dash-filter-form">
+
+      <!-- PERIODE -->
+
+      <div class="dash-filter-group">
+
+        <label>
+          Periode
+        </label>
+
+        <select
+          id="dashboardPeriod"
+          class="form-select">
+
+          <option value="today">
+            Hari Ini
+          </option>
+
+          <option value="yesterday">
+            Kemarin
+          </option>
+
+          <option value="7days">
+            7 Hari Terakhir
+          </option>
+
+          <option value="30days">
+            30 Hari Terakhir
+          </option>
+
+          <option value="thismonth" selected>
+            Bulan Ini
+          </option>
+
+          <option value="lastmonth">
+            Bulan Lalu
+          </option>
+
+          <option value="custom">
+            Custom Periode
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <!-- TANGGAL MULAI -->
+
+      <div
+        class="dash-filter-group custom-date-field"
+        id="startDateGroup">
+
+        <label>
+          Dari
+        </label>
+
+        <input
+          type="date"
+          id="dashboardStartDate"
+          class="form-control"
+          value="<?= date('Y-m-01') ?>">
+
+      </div>
+
+
+      <!-- TANGGAL AKHIR -->
+
+      <div
+        class="dash-filter-group custom-date-field"
+        id="endDateGroup">
+
+        <label>
+          Sampai
+        </label>
+
+        <input
+          type="date"
+          id="dashboardEndDate"
+          class="form-control"
+          value="<?= date('Y-m-d') ?>">
+
+      </div>
+
+
+      <!-- BUTTON -->
+
+      <button
+        type="button"
+        class="btn btn-primary dash-filter-button"
+        id="applyDashboardFilter">
+
+        <iconify-icon
+          icon="solar:filter-bold"
+          class="me-1">
+        </iconify-icon>
+
+        Terapkan
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
 <div class="admin-dashboard">
 
   <!-- =====================================================
