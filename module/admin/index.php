@@ -83,6 +83,8 @@ $amount = $data['total'] ?? 0;
             require '../dashboard/dashboard-farmasi.php';
           } else if ($role == 'kasir') {
             require '../dashboard/dashboard-kasir.php';
+          } else if ($role == 'perawat') {
+            require '../dashboard/dashboard-perawat.php';
           } else if ($role == 'superadmin') {
             require '../dashboard/dashboard-administrator.php';
           } else if ($role == 'analislab') {
