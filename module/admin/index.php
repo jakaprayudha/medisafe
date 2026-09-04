@@ -73,8 +73,8 @@ $amount = $data['total'] ?? 0;
           <!--  Row 1 -->
           <?php
           if ($role == 'admin') {
-            // require '../dashboard/dashboard-admin.php';
-            require '../dashboard/welcome-page.php';
+            require '../dashboard/dashboard-admin.php';
+            // require '../dashboard/welcome-page.php';
           } else if ($role == 'receptionis') {
             require '../dashboard/dashboard-admisi.php';
           } else if ($role == 'dokter') {
