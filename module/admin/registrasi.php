@@ -326,11 +326,19 @@ date_default_timezone_set('Asia/Jakarta');
             </div>
           </div>
 
-          <!-- 💊 TINDAKAN -->
+          <!--  TINDAKAN -->
           <div class="card border-0 shadow-sm">
             <div class="card-body">
-              <h6 class="fw-bold mb-2">💊 Tindakan</h6>
+              <h6 class="fw-bold mb-2">📝 Tindakan</h6>
               <div id="d_tindakan" class="text-muted">-</div>
+            </div>
+          </div>
+
+          <!-- 💊 Obat -->
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <h6 class="fw-bold mb-2">💊 Obat</h6>
+              <div id="d_obat" class="text-muted">-</div>
             </div>
           </div>
         </div>
@@ -1231,14 +1239,107 @@ date_default_timezone_set('Asia/Jakarta');
           $('#d_bmi_keterangan').text(d.bmi_keterangan ?? '-');
           $('#d_anamnesa').text(d.anamnesa ?? '-');
           $('#d_catatan_screening').text(d.catatan_screening ?? '-');
+
+          // ==========================================
+          // DIAGNOSA
+          // ==========================================
+
           let diagnosa = '-';
+
+          // --------------------------------------------------
+          // PRIORITAS 1
+          // Kalau kdDiag1 / nmDiag1 sudah tersedia,
+          // langsung gunakan data tersebut.
+          // --------------------------------------------------
+
           if (d.kdDiag1 || d.nmDiag1) {
-            diagnosa = (d.kdDiag1 ?? '') + ' - ' + (d.nmDiag1 ?? '');
-          } else if (d.diagnosa) {
-            diagnosa = d.diagnosa_utama;
+
+            let kode = (d.kdDiag1 ?? '').toString().trim();
+            let nama = (d.nmDiag1 ?? '').toString().trim();
+
+            if (kode && nama) {
+
+              diagnosa = kode + ' - ' + nama;
+
+            } else if (kode) {
+
+              diagnosa = kode;
+
+            } else if (nama) {
+
+              diagnosa = nama;
+            }
           }
+
+
+          // --------------------------------------------------
+          // PRIORITAS 2
+          // Kalau kdDiag1 dan nmDiag1 kosong,
+          // gunakan pv.diagnosa + hasil LEFT JOIN ICD-10.
+          // --------------------------------------------------
+          else if (d.diagnosa) {
+
+            let kode = d.diagnosa.toString().trim();
+
+            let nama =
+              (d.diagnosa_keterangan_ind ?? '').toString().trim();
+
+            // Kalau keterangan Indonesia tersedia
+            if (nama && nama !== 'ICD10_2010') {
+
+              diagnosa = kode + ' - ' + nama;
+
+            }
+
+            // Kalau tidak ada keterangan Indonesia,
+            // gunakan keterangan ICD-10 umum
+            else if (d.diagnosa_keterangan) {
+
+              diagnosa =
+                kode + ' - ' +
+                d.diagnosa_keterangan.toString().trim();
+
+            }
+
+            // Kalau hanya kode yang tersedia
+            else {
+
+              diagnosa = kode;
+            }
+          }
+
+
+          // --------------------------------------------------
+          // TAMPILKAN
+          // --------------------------------------------------
+
           $('#d_diagnosa').text(diagnosa);
-          $('#d_tindakan').text(d.tindakan_text ?? '-');
+
+
+          // ==========================================
+          // TINDAKAN
+          // ==========================================
+
+          $('#d_tindakan').text(
+            d.tindakan_text &&
+            d.tindakan_text !== '' ?
+            d.tindakan_text :
+            '-'
+          );
+
+
+          // ==========================================
+          // OBAT / TERAPI
+          // ==========================================
+
+          $('#d_obat').text(
+            d.obat_text &&
+            d.obat_text !== '' ?
+            d.obat_text :
+            '-'
+          );
+
+
           $('#detailLoading').hide();
           $('#detailContent').fadeIn(200);
         },
