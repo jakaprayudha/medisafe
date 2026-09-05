@@ -96,6 +96,16 @@
             <span class="hide-menu">Monitoring RME</span>
          </a>
       </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Data Log' or $title == 'Master Log') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/administrator/master-log"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:folder-outline"></iconify-icon>
+            <span class="hide-menu">Data Log System</span>
+         </a>
+      </li>
    </ul>
 </nav>
 
