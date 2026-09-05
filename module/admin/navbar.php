@@ -249,6 +249,23 @@ $dataCust = mysqli_fetch_array($cust);
                </a>
             </li>
 
+            <li class="nav-item">
+               <a href="javascript:;"
+                  id="btnLogUpdate"
+                  class="btn btn-outline-primary btn-sm log-update-btn position-relative">
+
+                  <i class="ti ti-sparkles me-1"></i>
+                  Log Update
+
+                  <span id="logUpdateBadge"
+                     class="log-update-badge"
+                     style="display:none;">
+                     0
+                  </span>
+
+               </a>
+            </li>
+
             <!-- HELP -->
             <li class="nav-item">
                <a href="javascript:;" class="btn btn-outline-primary btn-sm">Bantuan</a>
@@ -272,6 +289,118 @@ $dataCust = mysqli_fetch_array($cust);
       </div>
    </nav>
 </header>
+
+<!-- ==========================================
+     MODAL LOG UPDATE
+========================================== -->
+<div class="modal fade"
+   id="logUpdateModal"
+   tabindex="-1"
+   aria-hidden="true">
+
+   <div class="modal-dialog modal-lg modal-dialog-scrollable">
+
+      <div class="modal-content border-0 shadow-lg">
+
+         <!-- HEADER -->
+         <div class="modal-header">
+
+            <div>
+               <h5 class="modal-title fw-bold mb-1">
+                  <i class="ti ti-sparkles text-primary me-2"></i>
+                  Log Update
+               </h5>
+
+               <small class="text-muted">
+                  Informasi pembaruan sistem
+               </small>
+            </div>
+
+            <button type="button"
+               class="btn-close"
+               data-bs-dismiss="modal">
+            </button>
+
+         </div>
+
+
+         <!-- BODY -->
+         <div class="modal-body">
+
+            <!-- LOADING -->
+            <div id="logUpdateLoading"
+               class="text-center py-5">
+
+               <div class="spinner-border text-primary mb-3">
+               </div>
+
+               <div class="text-muted">
+                  Memuat update...
+               </div>
+
+            </div>
+
+
+            <!-- LIST -->
+            <div id="logUpdateList">
+            </div>
+
+
+            <!-- EMPTY -->
+            <div id="logUpdateEmpty"
+               class="text-center py-5"
+               style="display:none;">
+
+               <div class="empty-icon">
+                  <i class="ti ti-circle-check"></i>
+               </div>
+
+               <h6 class="fw-bold">
+                  Tidak ada update baru
+               </h6>
+
+               <small class="text-muted">
+                  Kamu sudah menggunakan versi terbaru.
+               </small>
+
+            </div>
+
+         </div>
+
+
+         <!-- FOOTER -->
+         <div class="modal-footer bg-white border-top">
+
+            <small class="text-muted me-auto">
+               <i class="ti ti-info-circle me-1"></i>
+               Log pembaruan sistem Medisafe
+            </small>
+
+
+            <a href="module/log/log_update">
+               <button type="button"
+                  class="btn btn-primary btn-sm">
+
+                  Lihat Riwayat Log
+
+               </button>
+            </a>
+
+            <button type="button"
+               class="btn btn-light btn-sm"
+               data-bs-dismiss="modal">
+
+               Tutup
+
+            </button>
+
+         </div>
+
+      </div>
+
+   </div>
+
+</div>
 <script>
    let debounceTimer;
 
@@ -420,4 +549,643 @@ $dataCust = mysqli_fetch_array($cust);
          });
       });
    <?php } ?>
+</script>
+<script>
+   $(document).ready(function() {
+
+      /* =========================================================
+         ESCAPE HTML
+      ========================================================= */
+
+      function escapeHtml(text) {
+
+         return $('<div>')
+            .text(text ?? '')
+            .html();
+
+      }
+
+
+      /* =========================================================
+         FORMAT TANGGAL
+      ========================================================= */
+
+      function formatDate(dateString) {
+
+         if (!dateString) {
+            return '-';
+         }
+
+         const date = new Date(
+            dateString.replace(' ', 'T')
+         );
+
+         if (isNaN(date.getTime())) {
+            return dateString;
+         }
+
+         return date.toLocaleDateString('id-ID', {
+               day: '2-digit',
+               month: 'short',
+               year: 'numeric'
+            }) + ' • ' +
+            date.toLocaleTimeString('id-ID', {
+               hour: '2-digit',
+               minute: '2-digit'
+            });
+
+      }
+
+
+      /* =========================================================
+         ICON BERDASARKAN TYPE
+      ========================================================= */
+
+      function getUpdateIcon(type) {
+
+         type = (type || 'update')
+            .toLowerCase()
+            .trim();
+
+         switch (type) {
+
+            case 'feature':
+               return 'ti ti-sparkles';
+
+            case 'improvement':
+               return 'ti ti-trending-up';
+
+            case 'bug':
+            case 'fix':
+               return 'ti ti-bug';
+
+            case 'security':
+               return 'ti ti-shield-check';
+
+            case 'maintenance':
+               return 'ti ti-tool';
+
+            case 'update':
+            default:
+               return 'ti ti-refresh';
+
+         }
+
+      }
+
+
+      /* =========================================================
+         CEK LOG UPDATE
+      ========================================================= */
+
+      function checkLogUpdate() {
+
+         $.ajax({
+
+            url: 'controller/system/getLogUpdate.php',
+
+            type: 'GET',
+
+            dataType: 'json',
+
+            cache: false,
+
+            success: function(res) {
+
+               if (
+                  !res ||
+                  res.status !== 'success'
+               ) {
+                  return;
+               }
+
+
+               /*
+               |--------------------------------------------------------------------------
+               | Gunakan unread_count dari API
+               |--------------------------------------------------------------------------
+               */
+
+               const unread = parseInt(
+                  res.unread_count || 0
+               );
+
+
+               const $badge =
+                  $('#logUpdateBadge');
+
+               const $button =
+                  $('#btnLogUpdate');
+
+
+               /*
+               |--------------------------------------------------------------------------
+               | ADA UPDATE BARU
+               |--------------------------------------------------------------------------
+               */
+
+               if (unread > 0) {
+
+                  $badge
+                     .text(
+                        unread > 99 ?
+                        '99+' :
+                        unread
+                     )
+                     .show();
+
+                  $button
+                     .addClass('has-update');
+
+               }
+
+
+               /*
+               |--------------------------------------------------------------------------
+               | TIDAK ADA UPDATE BARU
+               |--------------------------------------------------------------------------
+               */
+               else {
+
+                  $badge.hide();
+
+                  $button
+                     .removeClass('has-update');
+
+               }
+
+            },
+
+            error: function(xhr) {
+
+               console.error(
+                  'Gagal mengambil log update:',
+                  xhr.responseText
+               );
+
+            }
+
+         });
+
+      }
+
+
+      /* =========================================================
+         LOAD LOG UPDATE
+      ========================================================= */
+
+      function loadLogUpdate() {
+
+         /*
+         |--------------------------------------------------------------------------
+         | Loading
+         |--------------------------------------------------------------------------
+         */
+
+         $('#logUpdateLoading').show();
+
+         $('#logUpdateList').html('');
+
+         $('#logUpdateEmpty').hide();
+
+
+         $.ajax({
+
+            url: 'controller/system/getLogUpdate.php',
+
+            type: 'GET',
+
+            dataType: 'json',
+
+            cache: false,
+
+            success: function(res) {
+
+               $('#logUpdateLoading').hide();
+
+
+               /*
+               |--------------------------------------------------------------------------
+               | RESPONSE ERROR
+               |--------------------------------------------------------------------------
+               */
+
+               if (
+                  !res ||
+                  res.status !== 'success'
+               ) {
+
+                  $('#logUpdateList').html(`
+                        <div class="alert alert-danger border-0 shadow-sm">
+                            <i class="ti ti-alert-circle me-2"></i>
+                            Gagal memuat log update.
+                        </div>
+                    `);
+
+                  return;
+
+               }
+
+
+               const updates =
+                  res.data || [];
+
+
+               /*
+               |--------------------------------------------------------------------------
+               | TIDAK ADA DATA
+               |--------------------------------------------------------------------------
+               */
+
+               if (updates.length === 0) {
+
+                  $('#logUpdateEmpty').show();
+
+                  return;
+
+               }
+
+
+               /*
+               |--------------------------------------------------------------------------
+               | RENDER UPDATE
+               |--------------------------------------------------------------------------
+               */
+
+               let html = '';
+
+
+               updates.forEach(function(item) {
+
+                  const isNew =
+                     parseInt(item.is_read || 0) === 0;
+
+
+                  const type =
+                     (item.type || 'update')
+                     .toLowerCase()
+                     .trim();
+
+
+                  const icon =
+                     getUpdateIcon(type);
+
+
+                  const title =
+                     escapeHtml(
+                        item.title ||
+                        'Update Sistem'
+                     );
+
+
+                  const description =
+                     escapeHtml(
+                        item.description ||
+                        'Tidak ada deskripsi update.'
+                     );
+
+
+                  const version =
+                     escapeHtml(
+                        item.version || ''
+                     );
+
+
+                  const date =
+                     formatDate(
+                        item.created_at
+                     );
+
+
+                  /*
+                  |--------------------------------------------------------------------------
+                  | VERSION
+                  |--------------------------------------------------------------------------
+                  */
+
+                  let versionHtml = '';
+
+                  if (version) {
+
+                     versionHtml = `
+                            <span class="log-update-version">
+                                <i class="ti ti-tag me-1"></i>
+                                v${version}
+                            </span>
+                        `;
+
+                  }
+
+
+                  /*
+                  |--------------------------------------------------------------------------
+                  | BADGE BARU
+                  |--------------------------------------------------------------------------
+                  */
+
+                  let newHtml = '';
+
+                  if (isNew) {
+
+                     newHtml = `
+                            <span class="log-update-new">
+                                BARU
+                            </span>
+                        `;
+
+                  }
+
+
+                  /*
+                  |--------------------------------------------------------------------------
+                  | HTML CARD
+                  |--------------------------------------------------------------------------
+                  */
+
+                  html += `
+
+                        <div
+                            class="log-update-item ${isNew ? 'is-new' : ''}"
+                            data-update-id="${item.id_update}"
+                        >
+
+                            <!-- ICON -->
+
+                            <div class="log-update-icon">
+
+                                <i class="${icon}"></i>
+
+                            </div>
+
+
+                            <!-- CONTENT -->
+
+                            <div class="log-update-content">
+
+
+                                <!-- TITLE + DATE -->
+
+                                <div class="log-update-top">
+
+                                    <div>
+
+                                        <h6 class="log-update-title">
+
+                                            ${title}
+
+                                        </h6>
+
+                                    </div>
+
+
+                                    <div class="log-update-date">
+
+                                        <i class="ti ti-calendar-event me-1"></i>
+
+                                        ${date}
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- META -->
+
+                                <div class="log-update-meta">
+
+
+                                    <!-- TYPE -->
+
+                                    <span class="log-update-type ${escapeHtml(type)}">
+
+                                        ${escapeHtml(
+                                            item.type ||
+                                            'Update'
+                                        )}
+
+                                    </span>
+
+
+                                    <!-- VERSION -->
+
+                                    ${versionHtml}
+
+
+                                    <!-- BARU -->
+
+                                    ${newHtml}
+
+                                </div>
+
+
+                                <!-- DESCRIPTION -->
+
+                                <div class="log-update-description">
+
+                                    ${description}
+
+                                </div>
+
+
+                            </div>
+
+                        </div>
+
+                    `;
+
+               });
+
+
+               /*
+               |--------------------------------------------------------------------------
+               | TAMPILKAN DATA
+               |--------------------------------------------------------------------------
+               */
+
+               $('#logUpdateList')
+                  .html(html);
+
+
+               /*
+               |--------------------------------------------------------------------------
+               | UPDATE STATUS BADGE
+               |--------------------------------------------------------------------------
+               */
+
+               const unread =
+                  parseInt(
+                     res.unread_count || 0
+                  );
+
+
+               if (unread > 0) {
+
+                  $('#logUpdateBadge')
+                     .text(
+                        unread > 99 ?
+                        '99+' :
+                        unread
+                     )
+                     .show();
+
+                  $('#btnLogUpdate')
+                     .addClass('has-update');
+
+               }
+
+
+               /*
+               |--------------------------------------------------------------------------
+               | MARK SEMUA SUDAH DIBACA
+               |--------------------------------------------------------------------------
+               |
+               | Delay sedikit supaya user sempat melihat
+               | status BARU sebelum berubah menjadi sudah dibaca.
+               |
+               */
+
+               if (unread > 0) {
+
+                  setTimeout(function() {
+
+                     markLogUpdateAsRead();
+
+                  }, 800);
+
+               }
+
+            },
+
+            error: function(xhr) {
+
+               $('#logUpdateLoading').hide();
+
+               $('#logUpdateList').html(`
+
+                    <div class="alert alert-danger border-0 shadow-sm">
+
+                        <i class="ti ti-alert-circle me-2"></i>
+
+                        Tidak dapat mengambil log update.
+
+                    </div>
+
+                `);
+
+
+               console.error(
+                  'Gagal mengambil log update:',
+                  xhr.responseText
+               );
+
+            }
+
+         });
+
+      }
+
+
+      /* =========================================================
+         MARK SEMUA UPDATE SEBAGAI SUDAH DIBACA
+      ========================================================= */
+
+      function markLogUpdateAsRead() {
+
+         $.ajax({
+
+            url: 'controller/system/readLogUpdate.php',
+
+            type: 'POST',
+
+            dataType: 'json',
+
+            success: function(res) {
+
+               if (
+                  res &&
+                  res.status === 'success'
+               ) {
+
+                  /*
+                  |--------------------------------------------------------------------------
+                  | Hilangkan badge
+                  |--------------------------------------------------------------------------
+                  */
+
+                  $('#logUpdateBadge')
+                     .hide();
+
+
+                  /*
+                  |--------------------------------------------------------------------------
+                  | Hilangkan efek attention
+                  |--------------------------------------------------------------------------
+                  */
+
+                  $('#btnLogUpdate')
+                     .removeClass('has-update');
+
+               }
+
+            },
+
+            error: function(xhr) {
+
+               console.error(
+                  'Gagal menandai log update:',
+                  xhr.responseText
+               );
+
+            }
+
+         });
+
+      }
+
+
+      /* =========================================================
+         KLIK LOG UPDATE
+      ========================================================= */
+
+      $('#btnLogUpdate').on('click', function() {
+
+         /*
+         |--------------------------------------------------------------------------
+         | Buka modal
+         |--------------------------------------------------------------------------
+         */
+
+         $('#logUpdateModal')
+            .modal('show');
+
+
+         /*
+         |--------------------------------------------------------------------------
+         | Load data
+         |--------------------------------------------------------------------------
+         */
+
+         loadLogUpdate();
+
+      });
+
+
+      /* =========================================================
+         CEK PERTAMA SAAT HALAMAN LOAD
+      ========================================================= */
+
+      checkLogUpdate();
+
+
+      /* =========================================================
+         CEK BERKALA
+      ========================================================= */
+
+      setInterval(
+         checkLogUpdate,
+         5 * 60 * 1000
+      );
+
+
+   });
 </script>

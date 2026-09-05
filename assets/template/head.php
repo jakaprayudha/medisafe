@@ -640,4 +640,507 @@
       color: #7b8494;
       font-size: 14px;
    }
+
+   /* =========================================================
+   LOG UPDATE
+========================================================= */
+
+   .log-update-btn {
+      position: relative;
+      transition: all .25s ease;
+   }
+
+   .log-update-btn.has-update {
+      border-color: #6366f1;
+      color: #4f46e5;
+      background: rgba(99, 102, 241, .06);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, .12);
+   }
+
+   .log-update-btn.has-update:hover {
+      background: #6366f1;
+      color: #fff;
+      transform: translateY(-1px);
+   }
+
+   /* Badge navbar */
+   .log-update-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+
+      min-width: 20px;
+      height: 20px;
+
+      padding: 0 5px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: #ef4444;
+      color: #fff;
+
+      border-radius: 50%;
+      border: 2px solid #fff;
+
+      font-size: 10px;
+      font-weight: 700;
+
+      box-shadow: 0 3px 10px rgba(239, 68, 68, .35);
+
+      animation: logBadgePulse 1.8s infinite;
+   }
+
+   @keyframes logBadgePulse {
+      0% {
+         transform: scale(1);
+      }
+
+      50% {
+         transform: scale(1.12);
+      }
+
+      100% {
+         transform: scale(1);
+      }
+   }
+
+
+   /* =========================================================
+   MODAL
+========================================================= */
+
+   #logUpdateModal .modal-dialog {
+      max-width: 850px;
+   }
+
+   #logUpdateModal .modal-content {
+      border: 0;
+      border-radius: 22px;
+      overflow: hidden;
+      background: #f8fafc;
+      box-shadow: 0 25px 70px rgba(15, 23, 42, .22);
+   }
+
+   #logUpdateModal .modal-header {
+      padding: 28px 32px 24px;
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+   }
+
+   #logUpdateModal .modal-title {
+      color: #111827 !important;
+      font-size: 24px;
+      font-weight: 700;
+   }
+
+   #logUpdateModal .modal-header small {
+      color: #64748b !important;
+      font-size: 14px;
+   }
+
+   #logUpdateModal .modal-body {
+      padding: 28px 32px 32px;
+   }
+
+
+   /* =========================================================
+   UPDATE ITEM
+========================================================= */
+
+   .log-update-item {
+      position: relative;
+
+      display: flex;
+      gap: 18px;
+
+      padding: 22px;
+
+      margin-bottom: 16px;
+
+      background: #ffffff;
+
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+
+      box-shadow: 0 4px 14px rgba(15, 23, 42, .05);
+
+      transition:
+         transform .2s ease,
+         box-shadow .2s ease,
+         border-color .2s ease;
+   }
+
+   .log-update-item:hover {
+      transform: translateY(-2px);
+
+      border-color: #c7d2fe;
+
+      box-shadow: 0 10px 28px rgba(15, 23, 42, .10);
+   }
+
+
+   /* Update baru */
+   .log-update-item.is-new {
+      border-left: 4px solid #6366f1;
+
+      background:
+         linear-gradient(90deg,
+            rgba(99, 102, 241, .035),
+            #ffffff 35%);
+   }
+
+
+   /* Icon */
+   .log-update-icon {
+      flex: 0 0 46px;
+
+      width: 46px;
+      height: 46px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 13px;
+
+      background: #eef2ff;
+      color: #4f46e5;
+
+      font-size: 21px;
+   }
+
+
+   /* Content */
+   .log-update-content {
+      flex: 1;
+      min-width: 0;
+   }
+
+
+   /* Top row */
+   .log-update-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 15px;
+
+      margin-bottom: 9px;
+   }
+
+
+   /* Title */
+   .log-update-title {
+      margin: 0;
+
+      color: #111827 !important;
+
+      font-size: 17px;
+      line-height: 1.4;
+
+      font-weight: 700;
+   }
+
+
+   /* Date */
+   .log-update-date {
+      flex-shrink: 0;
+
+      color: #64748b !important;
+
+      font-size: 12px;
+      font-weight: 500;
+
+      white-space: nowrap;
+   }
+
+
+   /* Description */
+   .log-update-description {
+      margin: 10px 0 14px;
+
+      color: #475569 !important;
+
+      font-size: 14px;
+      line-height: 1.65;
+
+      font-weight: 400;
+   }
+
+
+   /* =========================================================
+   META
+========================================================= */
+
+   .log-update-meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+   }
+
+
+   /* Type */
+   .log-update-type {
+      display: inline-flex;
+      align-items: center;
+
+      padding: 5px 10px;
+
+      border-radius: 7px;
+
+      font-size: 11px;
+      font-weight: 700;
+
+      text-transform: uppercase;
+      letter-spacing: .3px;
+   }
+
+
+   /* Feature */
+   .log-update-type.feature {
+      background: #dcfce7;
+      color: #166534;
+   }
+
+
+   /* Improvement */
+   .log-update-type.improvement {
+      background: #fef3c7;
+      color: #92400e;
+   }
+
+
+   /* Fix */
+   .log-update-type.fix {
+      background: #fee2e2;
+      color: #991b1b;
+   }
+
+
+   /* Update */
+   .log-update-type.update {
+      background: #e0e7ff;
+      color: #3730a3;
+   }
+
+
+   /* Version */
+   .log-update-version {
+      display: inline-flex;
+      align-items: center;
+
+      padding: 5px 9px;
+
+      border-radius: 7px;
+
+      background: #f1f5f9;
+      color: #475569;
+
+      font-size: 11px;
+      font-weight: 600;
+   }
+
+
+   /* NEW badge */
+   .log-update-new {
+      display: inline-flex;
+      align-items: center;
+
+      padding: 5px 10px;
+
+      border-radius: 7px;
+
+      background: #f43f5e;
+      color: #fff;
+
+      font-size: 10px;
+      font-weight: 800;
+
+      letter-spacing: .3px;
+
+      box-shadow: 0 3px 8px rgba(244, 63, 94, .20);
+   }
+
+
+   /* =========================================================
+   EMPTY
+========================================================= */
+
+   #logUpdateEmpty {
+      padding: 60px 20px !important;
+   }
+
+   #logUpdateEmpty .empty-icon {
+      width: 70px;
+      height: 70px;
+
+      margin: 0 auto 18px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 20px;
+
+      background: #ecfdf5;
+      color: #10b981;
+
+      font-size: 30px;
+   }
+
+   #logUpdateEmpty h6 {
+      color: #1e293b !important;
+   }
+
+   #logUpdateEmpty small {
+      color: #64748b !important;
+   }
+
+
+   /* =========================================================
+   MOBILE
+========================================================= */
+
+   @media (max-width: 576px) {
+
+      #logUpdateModal .modal-header {
+         padding: 22px 20px;
+      }
+
+      #logUpdateModal .modal-body {
+         padding: 20px;
+      }
+
+      .log-update-item {
+         padding: 18px;
+         gap: 13px;
+      }
+
+      .log-update-icon {
+         flex-basis: 40px;
+         width: 40px;
+         height: 40px;
+
+         font-size: 18px;
+      }
+
+      .log-update-top {
+         display: block;
+      }
+
+      .log-update-date {
+         display: block;
+         margin-top: 5px;
+      }
+
+      .log-update-title {
+         font-size: 15px;
+      }
+
+      .log-update-description {
+         font-size: 13px;
+      }
+   }
+
+   /* =========================================================
+   DETAIL UPDATE
+========================================================= */
+
+   .log-update-detail {
+      display: none;
+
+      margin-top: 14px;
+      padding: 15px 16px;
+
+      background: #f8fafc;
+
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+
+      color: #334155 !important;
+
+      font-size: 13px;
+      line-height: 1.7;
+   }
+
+   .log-update-detail.show {
+      display: block;
+   }
+
+
+   .log-update-detail-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+
+      margin-top: 2px;
+
+      padding: 6px 11px;
+
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+
+      background: #ffffff;
+      color: #475569;
+
+      font-size: 12px;
+      font-weight: 600;
+
+      transition: all .2s ease;
+   }
+
+   .log-update-detail-btn:hover {
+      border-color: #6366f1;
+      background: #eef2ff;
+      color: #4f46e5;
+   }
+
+
+   .log-update-detail-btn i {
+      font-size: 15px;
+   }
+
+
+   /* Saat detail terbuka */
+   .log-update-item.detail-open {
+      border-color: #c7d2fe;
+   }
+
+
+   .log-update-item.detail-open .log-update-detail-btn {
+      border-color: #c7d2fe;
+      background: #eef2ff;
+      color: #4f46e5;
+   }
+
+
+   /* =========================================================
+   MODAL SCROLL
+========================================================= */
+
+   #logUpdateModal .modal-body {
+      max-height: calc(100vh - 190px);
+      overflow-y: auto;
+   }
+
+
+   /* Scrollbar */
+   #logUpdateModal .modal-body::-webkit-scrollbar {
+      width: 6px;
+   }
+
+   #logUpdateModal .modal-body::-webkit-scrollbar-track {
+      background: transparent;
+   }
+
+   #logUpdateModal .modal-body::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+   }
+
+   #logUpdateModal .modal-body::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+   }
 </style>
