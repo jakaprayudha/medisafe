@@ -73,8 +73,8 @@ $amount = $data['total'] ?? 0;
           <!--  Row 1 -->
           <?php
           if ($role == 'admin') {
-            // require '../dashboard/dashboard-admin.php';
-            require '../dashboard/welcome-page.php';
+            require '../dashboard/dashboard-admin.php';
+            // require '../dashboard/welcome-page.php';
           } else if ($role == 'receptionis') {
             require '../dashboard/dashboard-admisi.php';
           } else if ($role == 'dokter') {
@@ -83,6 +83,8 @@ $amount = $data['total'] ?? 0;
             require '../dashboard/dashboard-farmasi.php';
           } else if ($role == 'kasir') {
             require '../dashboard/dashboard-kasir.php';
+          } else if ($role == 'perawat') {
+            require '../dashboard/dashboard-perawat.php';
           } else if ($role == 'superadmin') {
             require '../dashboard/dashboard-administrator.php';
           } else if ($role == 'analislab') {

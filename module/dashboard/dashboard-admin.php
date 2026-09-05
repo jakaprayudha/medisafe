@@ -1,277 +1,2001 @@
 <style>
-  /* CARD */
-  .card-ui {
-    border-radius: 16px;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
-    border: none;
+  /* =========================================================
+       DASHBOARD ADMIN
+    ========================================================= */
+
+  .admin-dashboard {
+    --ad-primary: #635bff;
+    --ad-primary-soft: #eeecff;
+    --ad-text: #273444;
+    --ad-muted: #7b8494;
+    --ad-border: #edf0f5;
   }
 
-  /* KPI */
-  .kpi {
+  .admin-dashboard .dash-card {
+    background: #fff;
+    border: 1px solid var(--ad-border);
+    border-radius: 18px;
+    padding: 20px;
+    height: 100%;
+  }
+
+  .admin-dashboard .dash-card:hover {
+    box-shadow: 0 10px 30px rgba(30, 40, 60, .05);
+  }
+
+  /* =========================================================
+       KPI
+    ========================================================= */
+
+  .admin-dashboard .kpi-card {
+    background: #fff;
+    border: 1px solid var(--ad-border);
+    border-radius: 18px;
+    padding: 20px;
+    height: 100%;
+    transition: .2s ease;
+  }
+
+  .admin-dashboard .kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(30, 40, 60, .06);
+  }
+
+  .admin-dashboard .kpi-top {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
   }
 
-  .kpi .icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
+  .admin-dashboard .kpi-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+
     display: flex;
     align-items: center;
     justify-content: center;
+
+    font-size: 23px;
   }
 
-  .kpi-title {
+  .admin-dashboard .kpi-purple {
+    background: #eeecff;
+    color: #635bff;
+  }
+
+  .admin-dashboard .kpi-blue {
+    background: #e8f4ff;
+    color: #2185d0;
+  }
+
+  .admin-dashboard .kpi-green {
+    background: #e8f8ef;
+    color: #1a9b5f;
+  }
+
+  .admin-dashboard .kpi-orange {
+    background: #fff2e3;
+    color: #ed8b22;
+  }
+
+  .admin-dashboard .kpi-title {
     font-size: 13px;
-    color: #6b7280;
+    color: var(--ad-muted);
+    margin-bottom: 5px;
   }
 
-  .kpi-value {
-    font-size: 20px;
+  .admin-dashboard .kpi-value {
+    color: var(--ad-text);
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .admin-dashboard .kpi-info {
+    font-size: 11px;
+    margin-top: 7px;
+  }
+
+  .admin-dashboard .kpi-up {
+    color: #16a34a;
+  }
+
+  .admin-dashboard .kpi-down {
+    color: #dc2626;
+  }
+
+  /* =========================================================
+       CARD HEADER
+    ========================================================= */
+
+  .admin-dashboard .dash-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+
+    margin-bottom: 18px;
+  }
+
+  .admin-dashboard .dash-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ad-text);
+    margin: 0;
+  }
+
+  .admin-dashboard .dash-subtitle {
+    color: var(--ad-muted);
+    font-size: 12px;
+    margin-top: 3px;
+  }
+
+  .admin-dashboard .dash-filter {
+    width: auto;
+    min-width: 110px;
+
+    border-radius: 10px;
+    border-color: var(--ad-border);
+
+    font-size: 12px;
+  }
+
+  /* =========================================================
+       QUEUE
+    ========================================================= */
+
+  .admin-dashboard .queue-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 12px 0;
+
+    border-bottom: 1px solid #f0f1f4;
+  }
+
+  .admin-dashboard .queue-item:last-child {
+    border-bottom: 0;
+  }
+
+  .admin-dashboard .queue-number {
+    width: 38px;
+    height: 38px;
+
+    border-radius: 11px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #f0efff;
+    color: var(--ad-primary);
+
+    font-size: 12px;
+    font-weight: 700;
+
+    flex-shrink: 0;
+  }
+
+  .admin-dashboard .queue-name {
+    color: var(--ad-text);
+    font-size: 13px;
     font-weight: 600;
   }
 
-  .badge-up {
-    background: #dcfce7;
-    color: #16a34a;
+  .admin-dashboard .queue-detail {
+    color: var(--ad-muted);
     font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 6px;
+    margin-top: 2px;
   }
 
-  .badge-down {
-    background: #fee2e2;
-    color: #dc2626;
-    font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 6px;
+  .admin-dashboard .queue-status {
+    margin-left: auto;
+
+    padding: 5px 9px;
+
+    border-radius: 8px;
+
+    font-size: 10px;
+    white-space: nowrap;
   }
 
-  .chart-header {
+  .admin-dashboard .status-waiting {
+    background: #fff3d9;
+    color: #c47a00;
+  }
+
+  .admin-dashboard .status-process {
+    background: #e8f2ff;
+    color: #2377c7;
+  }
+
+  .admin-dashboard .status-done {
+    background: #e7f8ee;
+    color: #168a4e;
+  }
+
+  /* =========================================================
+       ROOM
+    ========================================================= */
+
+  .admin-dashboard .room-item {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 12px 0;
+
+    border-bottom: 1px solid #f0f1f4;
+  }
+
+  .admin-dashboard .room-item:last-child {
+    border-bottom: 0;
+  }
+
+  .admin-dashboard .room-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ad-text);
+  }
+
+  .admin-dashboard .room-total {
+    font-size: 11px;
+    color: var(--ad-muted);
+    margin-top: 2px;
+  }
+
+  .admin-dashboard .room-progress {
+    width: 120px;
+    height: 6px;
+
+    background: #edf0f4;
+
+    border-radius: 20px;
+
+    overflow: hidden;
+
+    margin-top: 7px;
+  }
+
+  .admin-dashboard .room-progress span {
+    display: block;
+
+    height: 100%;
+
+    background: var(--ad-primary);
+
+    border-radius: inherit;
+  }
+
+  .admin-dashboard .room-value {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ad-text);
+  }
+
+  /* =========================================================
+       STOCK
+    ========================================================= */
+
+  .admin-dashboard .stock-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 12px 0;
+
+    border-bottom: 1px solid #f0f1f4;
+  }
+
+  .admin-dashboard .stock-item:last-child {
+    border-bottom: 0;
+  }
+
+  .admin-dashboard .stock-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ad-text);
+  }
+
+  .admin-dashboard .stock-code {
+    font-size: 10px;
+    color: var(--ad-muted);
+    margin-top: 2px;
+  }
+
+  .admin-dashboard .stock-value {
+    color: #dc2626;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* =========================================================
+       ACTIVITY
+    ========================================================= */
+
+  .admin-dashboard .activity-item {
+    display: flex;
+    gap: 12px;
+
+    padding: 12px 0;
+
+    border-bottom: 1px solid #f0f1f4;
+  }
+
+  .admin-dashboard .activity-item:last-child {
+    border-bottom: 0;
+  }
+
+  .admin-dashboard .activity-icon {
+    width: 35px;
+    height: 35px;
+
+    border-radius: 10px;
+
+    background: var(--ad-primary-soft);
+    color: var(--ad-primary);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+  }
+
+  .admin-dashboard .activity-text {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--ad-text);
+  }
+
+  .admin-dashboard .activity-time {
+    font-size: 10px;
+    color: var(--ad-muted);
+    margin-top: 2px;
+  }
+
+  /* =========================================================
+       QUICK ACCESS
+    ========================================================= */
+
+  .admin-dashboard .quick-item {
+    display: block;
+
+    background: #f9fafc;
+
+    border: 1px solid #f0f1f4;
+
+    border-radius: 14px;
+
+    padding: 15px;
+
+    text-decoration: none;
+
+    transition: .2s ease;
+  }
+
+  .admin-dashboard .quick-item:hover {
+    background: #f5f4ff;
+    border-color: #e2dfff;
+  }
+
+  .admin-dashboard .quick-icon {
+    width: 36px;
+    height: 36px;
+
+    border-radius: 10px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #eeecff;
+    color: var(--ad-primary);
+
+    font-size: 19px;
+  }
+
+  .admin-dashboard .quick-title {
+    color: var(--ad-text);
+
+    font-size: 12px;
+    font-weight: 600;
+
+    margin-top: 9px;
+  }
+
+  .admin-dashboard .quick-desc {
+    color: var(--ad-muted);
+
+    font-size: 10px;
+
+    margin-top: 2px;
+  }
+
+  /* =========================================================
+       RESPONSIVE
+    ========================================================= */
+
+  @media (max-width: 767px) {
+
+    .admin-dashboard .dash-header {
+      align-items: flex-start;
+    }
+
+    .admin-dashboard .dash-filter {
+      min-width: 95px;
+    }
+
+    .admin-dashboard .room-progress {
+      width: 90px;
+    }
+
+  }
+
+  /* =========================================================
+   FILTER PERIODE
+========================================================= */
+
+  .admin-dashboard .dash-filter-wrapper {
+
+    background: #fff;
+
+    border: 1px solid var(--ad-border);
+
+    border-radius: 18px;
+
+    padding: 17px 20px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+  }
+
+
+  .admin-dashboard .dash-filter-title {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    flex-shrink: 0;
+
+  }
+
+
+  .admin-dashboard .dash-filter-icon {
+
+    width: 42px;
+
+    height: 42px;
+
+    border-radius: 12px;
+
+    background: #eeecff;
+
+    color: #635bff;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 21px;
+
+  }
+
+
+  .admin-dashboard .dash-filter-heading {
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    color: var(--ad-text);
+
+  }
+
+
+  .admin-dashboard .dash-filter-description {
+
+    font-size: 11px;
+
+    color: var(--ad-muted);
+
+    margin-top: 2px;
+
+  }
+
+
+  .admin-dashboard .dash-filter-form {
+
+    display: flex;
+
+    align-items: flex-end;
+
     gap: 10px;
-    margin-bottom: 10px;
+
+  }
+
+
+  .admin-dashboard .dash-filter-group {
+
+    min-width: 145px;
+
+  }
+
+
+  .admin-dashboard .dash-filter-group label {
+
+    display: block;
+
+    font-size: 10px;
+
+    font-weight: 600;
+
+    color: var(--ad-muted);
+
+    margin-bottom: 5px;
+
+  }
+
+
+  .admin-dashboard .dash-filter-group .form-select,
+  .admin-dashboard .dash-filter-group .form-control {
+
+    height: 38px;
+
+    border-radius: 10px;
+
+    border-color: var(--ad-border);
+
+    font-size: 12px;
+
+    color: var(--ad-text);
+
+    box-shadow: none;
+
+  }
+
+
+  .admin-dashboard .dash-filter-group .form-select:focus,
+  .admin-dashboard .dash-filter-group .form-control:focus {
+
+    border-color: #635bff;
+
+    box-shadow:
+      0 0 0 3px rgba(99, 91, 255, .08);
+
+  }
+
+
+  .admin-dashboard .dash-filter-button {
+
+    height: 38px;
+
+    border-radius: 10px;
+
+    font-size: 12px;
+
+    padding-left: 16px;
+
+    padding-right: 16px;
+
+    white-space: nowrap;
+
+  }
+
+
+  /* CUSTOM DATE */
+
+  .admin-dashboard .custom-date-field {
+
+    display: block;
+
+  }
+
+
+  /* MOBILE */
+
+  @media (max-width: 1100px) {
+
+    .admin-dashboard .dash-filter-wrapper {
+
+      align-items: flex-start;
+
+      flex-direction: column;
+
+    }
+
+    .admin-dashboard .dash-filter-form {
+
+      width: 100%;
+
+      flex-wrap: wrap;
+
+    }
+
+  }
+
+
+  @media (max-width: 767px) {
+
+    .admin-dashboard .dash-filter-form {
+
+      display: grid;
+
+      grid-template-columns: 1fr 1fr;
+
+      width: 100%;
+
+    }
+
+    .admin-dashboard .dash-filter-group {
+
+      min-width: 0;
+
+    }
+
+    .admin-dashboard .dash-filter-group:first-child {
+
+      grid-column: span 2;
+
+    }
+
+    .admin-dashboard .dash-filter-button {
+
+      width: 100%;
+
+    }
+
+  }
+
+
+  @media (max-width: 480px) {
+
+    .admin-dashboard .dash-filter-form {
+
+      grid-template-columns: 1fr;
+
+    }
+
+    .admin-dashboard .dash-filter-group:first-child {
+
+      grid-column: auto;
+
+    }
+
   }
 </style>
 
-<body>
+<!-- =====================================================
+     FILTER PERIODE DASHBOARD
+====================================================== -->
 
-  <div class="container-fluid p-3">
+<div class="admin-dashboard mb-3">
 
-    <div class="row">
+  <div class="dash-filter-wrapper">
 
-      <!-- LEFT -->
-      <div class="col-lg-6">
+    <div class="dash-filter-title">
 
-        <div class="card card-ui p-3">
+      <div class="dash-filter-icon">
 
-          <div class="chart-header">
-            <select class="form-select">
-              <option>Kunjungan Sakit</option>
-            </select>
-            <select class="form-select">
-              <option>POLI UMUM</option>
-            </select>
-            <select class="form-select">
-              <option>Bulan</option>
-            </select>
-          </div>
-
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <h3 class="mb-0">18,845</h3>
-            <span class="badge-down">↓ 47.19%</span>
-          </div>
-
-          <canvas id="chartUtama" height="120"></canvas>
-
-        </div>
-
-        <!-- BOTTOM -->
-        <div class="row mt-3">
-
-          <div class="col-md-6">
-            <div class="card card-ui p-3">
-              <div class="d-flex justify-content-between">
-                <h6>Total Kunjungan</h6>
-                <span class="badge bg-primary">BPJS</span>
-              </div>
-
-              <div class="d-flex align-items-center mt-2">
-                <canvas id="donutChart" width="120"></canvas>
-                <div class="ms-3" style="font-size:13px">
-
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-6">
-
-            <div class="card card-ui p-3 mb-3">
-              <h6>Pendapatan Bulan Ini</h6>
-              <h4>Rp0</h4>
-              <span class="badge-up">+0%</span>
-            </div>
-
-            <div class="card card-ui p-3">
-              <h6>Pengeluaran Bulan Ini</h6>
-              <h4>Rp0</h4>
-              <span class="badge-up">+0%</span>
-            </div>
-
-          </div>
-
-        </div>
+        <iconify-icon
+          icon="solar:calendar-search-bold">
+        </iconify-icon>
 
       </div>
 
-      <!-- RIGHT -->
-      <div class="col-lg-6">
+      <div>
 
-        <div class="row" id="kpiContainer"></div>
+        <div class="dash-filter-heading">
+          Periode Dashboard
+        </div>
 
-        <div class="card card-ui p-3 mt-2">
-          <h6>Pasien AntriCepat</h6>
-          <table class="table table-sm">
-            <tr>
-              <th>Nama</th>
-              <th>Dokter</th>
-              <th>Status</th>
-            </tr>
-            <tr>
-              <td>Budi</td>
-              <td>Dr. Andi</td>
-              <td><span class="badge bg-warning">Menunggu</span></td>
-            </tr>
-          </table>
+        <div class="dash-filter-description">
+          Pilih periode data yang ingin ditampilkan
         </div>
 
       </div>
 
     </div>
+
+
+    <div class="dash-filter-form">
+
+      <!-- PERIODE -->
+
+      <div class="dash-filter-group">
+
+        <label>
+          Periode
+        </label>
+
+        <select
+          id="dashboardPeriod"
+          class="form-select">
+
+          <option value="today">
+            Hari Ini
+          </option>
+
+          <option value="yesterday">
+            Kemarin
+          </option>
+
+          <option value="7days">
+            7 Hari Terakhir
+          </option>
+
+          <option value="30days">
+            30 Hari Terakhir
+          </option>
+
+          <option value="thismonth" selected>
+            Bulan Ini
+          </option>
+
+          <option value="lastmonth">
+            Bulan Lalu
+          </option>
+
+          <option value="custom">
+            Custom Periode
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <!-- TANGGAL MULAI -->
+
+      <div
+        class="dash-filter-group custom-date-field"
+        id="startDateGroup">
+
+        <label>
+          Dari
+        </label>
+
+        <input
+          type="date"
+          id="dashboardStartDate"
+          class="form-control"
+          value="<?= date('Y-m-01') ?>">
+
+      </div>
+
+
+      <!-- TANGGAL AKHIR -->
+
+      <div
+        class="dash-filter-group custom-date-field"
+        id="endDateGroup">
+
+        <label>
+          Sampai
+        </label>
+
+        <input
+          type="date"
+          id="dashboardEndDate"
+          class="form-control"
+          value="<?= date('Y-m-d') ?>">
+
+      </div>
+
+
+      <!-- BUTTON -->
+
+      <button
+        type="button"
+        class="btn btn-primary dash-filter-button"
+        id="applyDashboardFilter">
+
+        <iconify-icon
+          icon="solar:filter-bold"
+          class="me-1">
+        </iconify-icon>
+
+        Terapkan
+
+      </button>
+
+    </div>
+
   </div>
 
-  <script>
-    // KPI DATA (NO PHP 🔥)
-    const kpis = [{
-        title: "Waktu Tunggu Dokter",
-        value: "13 m 13 s",
-        change: "+8.4%",
-        type: "up",
-        icon: "solar:clock-circle-bold",
-        bg: "bg-primary-subtle"
-      },
-      {
-        title: "Pasien Baru",
-        value: "535",
-        change: "-65%",
-        type: "down",
-        icon: "solar:user-plus-bold",
-        bg: "bg-info-subtle"
-      },
-      {
-        title: "Pasien Terdaftar",
-        value: "45837",
-        change: "+1.17%",
-        type: "up",
-        icon: "solar:users-group-rounded-bold",
-        bg: "bg-danger-subtle"
-      },
-      {
-        title: "Waktu Konsultasi",
-        value: "13 m 48 s",
-        change: "-68.9%",
-        type: "down",
-        icon: "solar:stethoscope-bold",
-        bg: "bg-warning-subtle"
-      },
-      {
-        title: "Stok Menipis",
-        value: "5",
-        change: "12 Items",
-        type: "",
-        icon: "solar:box-bold",
-        bg: "bg-info-subtle"
-      },
-      {
-        title: "Waktu Apotek",
-        value: "0 m 41 s",
-        change: "-21%",
-        type: "down",
-        icon: "solar:pill-bold",
-        bg: "bg-success-subtle"
-      }
-    ];
+</div>
+<div class="admin-dashboard">
 
-    const container = document.getElementById("kpiContainer");
+  <!-- =====================================================
+         KPI
+    ====================================================== -->
 
-    kpis.forEach(k => {
-      container.innerHTML += `
-  <div class="col-md-6 mb-3">
-    <div class="card card-ui p-3">
-      <div class="kpi">
-        <div>
-          <div class="kpi-title">${k.title}</div>
-          <div class="kpi-value">${k.value}</div>
-          ${k.change ? `<span class="${k.type=='up'?'badge-up':'badge-down'}">${k.change}</span>` : ''}
+  <div class="row g-3 mb-3">
+
+    <!-- TOTAL PASIEN -->
+
+    <div class="col-xl-3 col-md-6">
+
+      <div class="kpi-card">
+
+        <div class="kpi-top">
+
+          <div>
+
+            <div class="kpi-title">
+              Total Pasien Hari Ini
+            </div>
+
+            <div class="kpi-value">
+              248
+            </div>
+
+            <div class="kpi-info kpi-up">
+              ↑ 12,4% dari kemarin
+            </div>
+
+          </div>
+
+          <div class="kpi-icon kpi-purple">
+
+            <iconify-icon
+              icon="solar:users-group-rounded-bold">
+            </iconify-icon>
+
+          </div>
+
         </div>
-        <div class="icon ${k.bg}">
-          <iconify-icon icon="${k.icon}" width="20"></iconify-icon>
-        </div>
+
       </div>
-    </div>
-  </div>`;
-    });
 
-    // CHART
-    new Chart(document.getElementById('chartUtama'), {
-      type: 'bar',
-      data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr'],
-        datasets: [{
-          data: [7800, 7200, 3800, 2000],
-          backgroundColor: '#3b82f6',
-          borderRadius: 6
-        }]
-      },
-      options: {
-        plugins: {
-          legend: {
-            display: false
-          }
+    </div>
+
+
+    <!-- PASIEN BARU -->
+
+    <div class="col-xl-3 col-md-6">
+
+      <div class="kpi-card">
+
+        <div class="kpi-top">
+
+          <div>
+
+            <div class="kpi-title">
+              Pasien Baru
+            </div>
+
+            <div class="kpi-value">
+              37
+            </div>
+
+            <div class="kpi-info kpi-up">
+              ↑ 8,2% bulan ini
+            </div>
+
+          </div>
+
+          <div class="kpi-icon kpi-blue">
+
+            <iconify-icon
+              icon="solar:user-plus-bold">
+            </iconify-icon>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- KUNJUNGAN -->
+
+    <div class="col-xl-3 col-md-6">
+
+      <div class="kpi-card">
+
+        <div class="kpi-top">
+
+          <div>
+
+            <div class="kpi-title">
+              Kunjungan Rawat Jalan
+            </div>
+
+            <div class="kpi-value">
+              184
+            </div>
+
+            <div class="kpi-info kpi-up">
+              ↑ 5,7% minggu ini
+            </div>
+
+          </div>
+
+          <div class="kpi-icon kpi-green">
+
+            <iconify-icon
+              icon="solar:stethoscope-bold">
+            </iconify-icon>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- PENDAPATAN -->
+
+    <div class="col-xl-3 col-md-6">
+
+      <div class="kpi-card">
+
+        <div class="kpi-top">
+
+          <div>
+
+            <div class="kpi-title">
+              Pendapatan Hari Ini
+            </div>
+
+            <div class="kpi-value"
+              style="font-size:22px">
+
+              Rp 18,4 Jt
+
+            </div>
+
+            <div class="kpi-info kpi-up">
+              ↑ 10,1% dari kemarin
+            </div>
+
+          </div>
+
+          <div class="kpi-icon kpi-orange">
+
+            <iconify-icon
+              icon="solar:wallet-money-bold">
+            </iconify-icon>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+         CHART
+    ====================================================== -->
+
+  <div class="row g-3 mb-3">
+
+    <!-- KUNJUNGAN -->
+
+    <div class="col-xl-8">
+
+      <div class="dash-card">
+
+        <div class="dash-header">
+
+          <div>
+
+            <h6 class="dash-title">
+              Statistik Kunjungan
+            </h6>
+
+            <div class="dash-subtitle">
+              Jumlah kunjungan pasien
+            </div>
+
+          </div>
+
+          <select
+            class="form-select dash-filter">
+
+            <option>7 Hari</option>
+            <option>30 Hari</option>
+            <option>3 Bulan</option>
+
+          </select>
+
+        </div>
+
+        <div style="height:280px">
+
+          <canvas id="adminVisitChart"></canvas>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- JENIS PEMBAYARAN -->
+
+    <div class="col-xl-4">
+
+      <div class="dash-card">
+
+        <div class="dash-header">
+
+          <div>
+
+            <h6 class="dash-title">
+              Jenis Pembayaran
+            </h6>
+
+            <div class="dash-subtitle">
+              Distribusi pasien hari ini
+            </div>
+
+          </div>
+
+        </div>
+
+        <div style="height:210px">
+
+          <canvas id="adminPaymentChart"></canvas>
+
+        </div>
+
+        <div class="row text-center mt-3">
+
+          <div class="col-4">
+
+            <div class="fw-bold">
+              56%
+            </div>
+
+            <small class="text-muted">
+              BPJS
+            </small>
+
+          </div>
+
+          <div class="col-4">
+
+            <div class="fw-bold">
+              31%
+            </div>
+
+            <small class="text-muted">
+              Umum
+            </small>
+
+          </div>
+
+          <div class="col-4">
+
+            <div class="fw-bold">
+              13%
+            </div>
+
+            <small class="text-muted">
+              Asuransi
+            </small>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+         OPERASIONAL
+    ====================================================== -->
+
+  <div class="row g-3 mb-3">
+
+    <!-- ANTRIAN -->
+
+    <div class="col-xl-5">
+
+      <div class="dash-card">
+
+        <div class="dash-header">
+
+          <div>
+
+            <h6 class="dash-title">
+              Antrian Pasien
+            </h6>
+
+            <div class="dash-subtitle">
+              Pelayanan hari ini
+            </div>
+
+          </div>
+
+          <span class="badge bg-primary">
+            18 Menunggu
+          </span>
+
+        </div>
+
+
+        <div class="queue-item">
+
+          <div class="queue-number">
+            A-021
+          </div>
+
+          <div>
+
+            <div class="queue-name">
+              Budi Santoso
+            </div>
+
+            <div class="queue-detail">
+              Poli Umum · Dr. Andi
+            </div>
+
+          </div>
+
+          <span class="queue-status status-waiting">
+            Menunggu
+          </span>
+
+        </div>
+
+
+        <div class="queue-item">
+
+          <div class="queue-number">
+            A-022
+          </div>
+
+          <div>
+
+            <div class="queue-name">
+              Siti Rahma
+            </div>
+
+            <div class="queue-detail">
+              Poli Anak · Dr. Rina
+            </div>
+
+          </div>
+
+          <span class="queue-status status-process">
+            Dipanggil
+          </span>
+
+        </div>
+
+
+        <div class="queue-item">
+
+          <div class="queue-number">
+            A-023
+          </div>
+
+          <div>
+
+            <div class="queue-name">
+              Ahmad Fauzi
+            </div>
+
+            <div class="queue-detail">
+              Poli Umum · Dr. Andi
+            </div>
+
+          </div>
+
+          <span class="queue-status status-process">
+            Pemeriksaan
+          </span>
+
+        </div>
+
+
+        <div class="queue-item">
+
+          <div class="queue-number">
+            A-024
+          </div>
+
+          <div>
+
+            <div class="queue-name">
+              Dewi Lestari
+            </div>
+
+            <div class="queue-detail">
+              Poli Gigi · Dr. Maya
+            </div>
+
+          </div>
+
+          <span class="queue-status status-waiting">
+            Menunggu
+          </span>
+
+        </div>
+
+
+        <div class="queue-item">
+
+          <div class="queue-number">
+            A-025
+          </div>
+
+          <div>
+
+            <div class="queue-name">
+              Rudi Hartono
+            </div>
+
+            <div class="queue-detail">
+              Poli Umum · Dr. Andi
+            </div>
+
+          </div>
+
+          <span class="queue-status status-done">
+            Selesai
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- KAMAR -->
+
+    <div class="col-xl-4">
+
+      <div class="dash-card">
+
+        <div class="dash-header">
+
+          <div>
+
+            <h6 class="dash-title">
+              Ketersediaan Kamar
+            </h6>
+
+            <div class="dash-subtitle">
+              Status rawat inap
+            </div>
+
+          </div>
+
+          <iconify-icon
+            icon="solar:bed-bold"
+            width="23">
+          </iconify-icon>
+
+        </div>
+
+
+        <div class="room-item">
+
+          <div>
+
+            <div class="room-name">
+              VIP
+            </div>
+
+            <div class="room-total">
+              8 kamar
+            </div>
+
+            <div class="room-progress">
+              <span style="width:75%"></span>
+            </div>
+
+          </div>
+
+          <div class="room-value">
+            2 kosong
+          </div>
+
+        </div>
+
+
+        <div class="room-item">
+
+          <div>
+
+            <div class="room-name">
+              Kelas I
+            </div>
+
+            <div class="room-total">
+              12 kamar
+            </div>
+
+            <div class="room-progress">
+              <span style="width:58%"></span>
+            </div>
+
+          </div>
+
+          <div class="room-value">
+            5 kosong
+          </div>
+
+        </div>
+
+
+        <div class="room-item">
+
+          <div>
+
+            <div class="room-name">
+              Kelas II
+            </div>
+
+            <div class="room-total">
+              16 kamar
+            </div>
+
+            <div class="room-progress">
+              <span style="width:81%"></span>
+            </div>
+
+          </div>
+
+          <div class="room-value">
+            3 kosong
+          </div>
+
+        </div>
+
+
+        <div class="room-item">
+
+          <div>
+
+            <div class="room-name">
+              Kelas III
+            </div>
+
+            <div class="room-total">
+              24 kamar
+            </div>
+
+            <div class="room-progress">
+              <span style="width:67%"></span>
+            </div>
+
+          </div>
+
+          <div class="room-value">
+            8 kosong
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- STOK OBAT -->
+
+    <div class="col-xl-3">
+
+      <div class="dash-card">
+
+        <div class="dash-header">
+
+          <div>
+
+            <h6 class="dash-title">
+              Stok Menipis
+            </h6>
+
+            <div class="dash-subtitle">
+              Perlu diperhatikan
+            </div>
+
+          </div>
+
+          <span class="badge bg-danger">
+            5 Item
+          </span>
+
+        </div>
+
+
+        <div class="stock-item">
+
+          <div>
+
+            <div class="stock-name">
+              Paracetamol 500mg
+            </div>
+
+            <div class="stock-code">
+              OB-001
+            </div>
+
+          </div>
+
+          <div class="stock-value">
+            8
+          </div>
+
+        </div>
+
+
+        <div class="stock-item">
+
+          <div>
+
+            <div class="stock-name">
+              Amoxicillin 500mg
+            </div>
+
+            <div class="stock-code">
+              OB-014
+            </div>
+
+          </div>
+
+          <div class="stock-value">
+            6
+          </div>
+
+        </div>
+
+
+        <div class="stock-item">
+
+          <div>
+
+            <div class="stock-name">
+              Omeprazole
+            </div>
+
+            <div class="stock-code">
+              OB-031
+            </div>
+
+          </div>
+
+          <div class="stock-value">
+            4
+          </div>
+
+        </div>
+
+
+        <div class="stock-item">
+
+          <div>
+
+            <div class="stock-name">
+              Cetirizine
+            </div>
+
+            <div class="stock-code">
+              OB-044
+            </div>
+
+          </div>
+
+          <div class="stock-value">
+            3
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+         ACTIVITY + QUICK ACCESS
+    ====================================================== -->
+
+  <div class="row g-3">
+
+    <!-- ACTIVITY -->
+
+    <div class="col-xl-7">
+
+      <div class="dash-card">
+
+        <div class="dash-header">
+
+          <div>
+
+            <h6 class="dash-title">
+              Aktivitas Terbaru
+            </h6>
+
+            <div class="dash-subtitle">
+              Aktivitas sistem hari ini
+            </div>
+
+          </div>
+
+          <a href="#"
+            class="small text-decoration-none">
+
+            Lihat Semua
+
+          </a>
+
+        </div>
+
+
+        <div class="activity-item">
+
+          <div class="activity-icon">
+
+            <iconify-icon
+              icon="solar:user-plus-bold">
+            </iconify-icon>
+
+          </div>
+
+          <div>
+
+            <div class="activity-text">
+
+              <strong>Pasien baru</strong>
+              berhasil didaftarkan ke sistem.
+
+            </div>
+
+            <div class="activity-time">
+              5 menit yang lalu
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="activity-item">
+
+          <div class="activity-icon">
+
+            <iconify-icon
+              icon="solar:document-text-bold">
+            </iconify-icon>
+
+          </div>
+
+          <div>
+
+            <div class="activity-text">
+
+              RME pasien
+              <strong>Budi Santoso</strong>
+              telah dilengkapi.
+
+            </div>
+
+            <div class="activity-time">
+              12 menit yang lalu
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="activity-item">
+
+          <div class="activity-icon">
+
+            <iconify-icon
+              icon="solar:pills-3-bold">
+            </iconify-icon>
+
+          </div>
+
+          <div>
+
+            <div class="activity-text">
+
+              Resep pasien
+              <strong>Siti Rahma</strong>
+              telah diproses farmasi.
+
+            </div>
+
+            <div class="activity-time">
+              18 menit yang lalu
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="activity-item">
+
+          <div class="activity-icon">
+
+            <iconify-icon
+              icon="solar:wallet-money-bold">
+            </iconify-icon>
+
+          </div>
+
+          <div>
+
+            <div class="activity-text">
+
+              Pembayaran transaksi
+              <strong>#TRX-09231</strong>
+              berhasil.
+
+            </div>
+
+            <div class="activity-time">
+              25 menit yang lalu
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- QUICK ACCESS -->
+
+    <div class="col-xl-5">
+
+      <div class="dash-card">
+
+        <div class="dash-header">
+
+          <div>
+
+            <h6 class="dash-title">
+              Akses Cepat
+            </h6>
+
+            <div class="dash-subtitle">
+              Modul yang sering digunakan
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="row g-2">
+
+          <div class="col-6">
+
+            <a href="#"
+              class="quick-item">
+
+              <div class="quick-icon">
+
+                <iconify-icon
+                  icon="solar:user-plus-bold">
+                </iconify-icon>
+
+              </div>
+
+              <div class="quick-title">
+                Pasien Baru
+              </div>
+
+              <div class="quick-desc">
+                Registrasi pasien
+              </div>
+
+            </a>
+
+          </div>
+
+
+          <div class="col-6">
+
+            <a href="#"
+              class="quick-item">
+
+              <div class="quick-icon">
+
+                <iconify-icon
+                  icon="solar:stethoscope-bold">
+                </iconify-icon>
+
+              </div>
+
+              <div class="quick-title">
+                Poliklinik
+              </div>
+
+              <div class="quick-desc">
+                Pelayanan pasien
+              </div>
+
+            </a>
+
+          </div>
+
+
+          <div class="col-6">
+
+            <a href="#"
+              class="quick-item">
+
+              <div class="quick-icon">
+
+                <iconify-icon
+                  icon="solar:pills-3-bold">
+                </iconify-icon>
+
+              </div>
+
+              <div class="quick-title">
+                Farmasi
+              </div>
+
+              <div class="quick-desc">
+                Resep & obat
+              </div>
+
+            </a>
+
+          </div>
+
+
+          <div class="col-6">
+
+            <a href="#"
+              class="quick-item">
+
+              <div class="quick-icon">
+
+                <iconify-icon
+                  icon="solar:document-text-bold">
+                </iconify-icon>
+
+              </div>
+
+              <div class="quick-title">
+                Monitoring RME
+              </div>
+
+              <div class="quick-desc">
+                Rekam medis elektronik
+              </div>
+
+            </a>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+  /* =========================================================
+       CHART KUNJUNGAN
+    ========================================================= */
+
+  document.addEventListener("DOMContentLoaded", function() {
+
+    const visitCanvas =
+      document.getElementById("adminVisitChart");
+
+    if (visitCanvas && typeof Chart !== "undefined") {
+
+      new Chart(visitCanvas, {
+
+        type: "line",
+
+        data: {
+
+          labels: [
+            "Sen",
+            "Sel",
+            "Rab",
+            "Kam",
+            "Jum",
+            "Sab",
+            "Min"
+          ],
+
+          datasets: [
+
+            {
+              label: "Kunjungan",
+
+              data: [
+                185,
+                210,
+                178,
+                235,
+                248,
+                162,
+                91
+              ],
+
+              borderColor: "#635bff",
+
+              backgroundColor: "rgba(99,91,255,.08)",
+
+              fill: true,
+
+              tension: .4,
+
+              borderWidth: 3,
+
+              pointRadius: 3,
+
+              pointHoverRadius: 5
+
+            }
+
+          ]
+
         },
-        scales: {
-          x: {
-            grid: {
+
+        options: {
+
+          responsive: true,
+
+          maintainAspectRatio: false,
+
+          plugins: {
+
+            legend: {
               display: false
             }
+
           },
-          y: {
-            grid: {
-              color: '#eee'
+
+          scales: {
+
+            x: {
+
+              grid: {
+                display: false
+              },
+
+              border: {
+                display: false
+              }
+
+            },
+
+            y: {
+
+              beginAtZero: true,
+
+              grid: {
+                color: "#f0f1f5"
+              },
+
+              border: {
+                display: false
+              }
+
             }
-          }
-        }
-      }
-    });
 
-    new Chart(document.getElementById('donutChart'), {
-      type: 'doughnut',
-      data: {
-        datasets: [{
-          data: [184884, 158305],
-          backgroundColor: ['#1e3a8a', '#93c5fd']
-        }]
-      },
-      options: {
-        plugins: {
-          legend: {
-            display: false
           }
-        }
-      }
-    });
-  </script>
 
-</body>
+        }
+
+      });
+
+    }
+
+
+    /* =====================================================
+       CHART PEMBAYARAN
+    ===================================================== */
+
+    const paymentCanvas =
+      document.getElementById("adminPaymentChart");
+
+    if (paymentCanvas && typeof Chart !== "undefined") {
+
+      new Chart(paymentCanvas, {
+
+        type: "doughnut",
+
+        data: {
+
+          labels: [
+            "BPJS",
+            "Umum",
+            "Asuransi"
+          ],
+
+          datasets: [
+
+            {
+
+              data: [
+                56,
+                31,
+                13
+              ],
+
+              backgroundColor: [
+                "#635bff",
+                "#8fd3ff",
+                "#9fe2bd"
+              ],
+
+              borderWidth: 0,
+
+              spacing: 4
+
+            }
+
+          ]
+
+        },
+
+        options: {
+
+          responsive: true,
+
+          maintainAspectRatio: false,
+
+          cutout: "72%",
+
+          plugins: {
+
+            legend: {
+              display: false
+            }
+
+          }
+
+        }
+
+      });
+
+    }
+
+  });
+</script>

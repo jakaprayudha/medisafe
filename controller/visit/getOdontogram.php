@@ -1,10 +1,30 @@
 <?php
+
 include '../../database/connect.php';
 
-$visit_ID = $_GET['visit_ID'];
+header('Content-Type: application/json; charset=utf-8');
 
-$query = $koneksi->prepare("SELECT * FROM odontogram WHERE visit_ID = ?");
+$visit_ID = $_GET['visit_ID'] ?? '';
+
+if ($visit_ID === '') {
+
+   echo json_encode([
+      "status" => "error",
+      "message" => "visit_ID tidak ditemukan",
+      "data" => []
+   ]);
+
+   exit;
+}
+
+$query = $koneksi->prepare(
+   "SELECT *
+     FROM odontogram
+     WHERE visit_ID = ?"
+);
+
 $query->bind_param("s", $visit_ID);
+
 $query->execute();
 
 $result = $query->get_result();
