@@ -1,0 +1,533 @@
+ <div class="card w-100">
+   <div class="card-body p-4">
+     <div class="d-flex justify-content-between align-items-center mb-4">
+       <h5 class="card-title fw-semibold">Data Penunjang</h5>
+       <!-- Grup tombol di sisi kanan -->
+       <div class="d-flex ms-auto gap-2">
+         <a href="module/admin/print/formulir_lab?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+           <button class="btn btn-light"><i class="fas fa-print"></i> Cetak</button>
+         </a>
+         <button class="btn btn-primary" id="btnTambahPenunjang"><i class="fas fa-plus"></i> Tambah</button>
+       </div>
+     </div>
+     <div class="table-responsive" data-simplebar>
+       <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTablePenunjang">
+         <thead>
+           <tr>
+             <th>Nama Pemeriksaan</th>
+             <th>Tanggal</th>
+             <th>Sumber</th>
+             <th>Keterangan</th>
+             <th>Hasil</th>
+             <th class="text-center">Actions</th>
+           </tr>
+         </thead>
+         <tbody></tbody>
+       </table>
+     </div>
+   </div>
+ </div>
+ <div class="modal fade" id="periodeTablePenunjang" tabindex="-1">
+   <div class="modal-dialog">
+     <form id="programForm" class="modal-content">
+       <div class="modal-header">
+         <h5 class="modal-title"></h5>
+         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+       </div>
+       <div class="modal-body">
+         <input type="hidden" name="id_inspection" id="id_inspection">
+         <input type="hidden" name="id_visit" id="id_visit" value="<?= $_GET['no'] ?>">
+         <div class="row">
+           <div class="mb-3">
+             <label for="inspection_name" class="form-label required">Nama Pemeriksaan</label>
+             <select name="inspection_name" id="inspection_name" class="form-select js-example-basic-item" required>
+               <option value="">Select Option</option>
+               <?php
+                $getbarang = tampildata("SELECT * FROM laboratorium_detail WHERE status='1'");
+                ?>
+               <?php foreach ($getbarang as $barang): ?>
+                 <option value="<?= $barang['assemen']; ?>" data-harga="<?= $barang['tarif']; ?>"><?= $barang['assemen']; ?></option>
+               <?php endforeach ?>
+             </select>
+           </div>
+           <div class="mb-3">
+             <label for="inspection_date" class="form-label required">Tanggal Pemeriksaan</label>
+             <input type="date" value="<?= date('Y-m-d') ?>" class="form-control" id="inspection_date" name="inspection_date" required>
+           </div>
+           <div class="mb-3">
+             <label for="inspection_date" class="form-label required">Sumber Hasil</label>
+             <input type="text" value="Lab Klinik" class="form-control" id="inspection_source" name="inspection_source" required>
+           </div>
+
+           <div class="mb-3">
+             <label for="inspection_note" class="form-label">Catatan</label>
+             <textarea class="form-control" id="inspection_note" name="inspection_note" rows="5"></textarea>
+           </div>
+         </div>
+       </div>
+       <div class="modal-footer">
+         <button type="submit" class="btn btn-primary">Simpan</button>
+       </div>
+     </form>
+   </div>
+ </div>
+
+ <div class="modal fade" id="hasilModal" tabindex="-1">
+   <div class="modal-dialog modal-lg">
+     <div class="modal-content">
+
+       <div class="modal-header">
+         <h5 class="modal-title" id="hasilModalTitle">Input Hasil Lab</h5>
+         <button class="btn-close" data-bs-dismiss="modal"></button>
+       </div>
+
+       <div class="modal-body">
+         <div id="previewContainer" style="display:none;">
+           <iframe
+             id="previewFrame"
+             style="width:100%; height:75vh; border:none;">
+           </iframe>
+         </div>
+         <table class="table table-bordered">
+           <thead>
+             <tr>
+               <th>Pemeriksaan</th>
+               <th>Hasil</th>
+               <th>Satuan</th>
+               <th>Normal</th>
+               <th>Keterangan</th>
+             </tr>
+           </thead>
+           <tbody id="hasilBody"></tbody>
+         </table>
+       </div>
+
+       <div class="modal-footer">
+         <div class="modal-footer" id="hasilFooter">
+           <button class="btn btn-primary" id="saveHasil">Simpan</button>
+         </div>
+       </div>
+
+     </div>
+   </div>
+ </div>
+ <script>
+   const apiUrlPenunjang = 'controller/visit/penunjang?no=<?= $_GET['no'] ?>&id_patient=<?= $id_patient ?>';
+
+   $(document).ready(function() {
+
+     var table = $('#periodeTablePenunjang').DataTable({
+       processing: true,
+       serverSide: false,
+       order: [
+         [1, "desc"]
+       ], // Urutkan berdasarkan kolom tanggal
+       ajax: {
+         url: apiUrlPenunjang,
+         type: "GET",
+         dataSrc: function(json) {
+           return json.data.map(function(row) {
+             return {
+               "actions": (() => {
+                 let name = (row.inspection_name || '').toLowerCase();
+
+                 let isLabKhusus =
+                   name.includes('ureum / kreatinin') ||
+                   name.includes('darah lengkap') ||
+                   name.includes('widal');
+
+                 let btnClass = row.is_current == 1 ?
+                   'btn-success' :
+                   (isLabKhusus ? 'btn-light' : 'btn-info');
+
+                 let icon = isLabKhusus ? 'fas fa-eye' : 'fas fa-flask';
+                 let title = isLabKhusus ? 'Lihat Hasil' : 'Input Hasil';
+                 return `
+                  <div class="text-center">
+                    <div class="btn-group btn-group-sm" role="group">
+                      <a class="btn ${btnClass} hasil-btn"
+                        title="${title}"
+                        data-id="${row.id_inspection}"
+                        data-kode="${row.inspection_name}">
+                        <i class="${icon}"></i>
+                      </a>
+
+                      <a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_inspection}">
+                        <i class="fas fa-edit"></i>
+                      </a>
+
+                      <a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_inspection}">
+                        <i class="fas fa-trash"></i>
+                      </a>
+                    </div>
+                  </div>
+                `;
+               })(),
+               "name": (() => {
+
+                 let badge = '';
+
+                 if (row.is_current == 1) {
+                   badge = `
+            <span class="badge bg-success ms-1">
+                Visit Saat Ini
+            </span>
+            `;
+                 }
+
+                 return `
+              ${row.inspection_name ?? '-'}
+              ${badge}
+          `;
+               })(),
+               "tanggal": row.inspection_date ?? "-",
+               "sumber": row.inspection_source ?? "-",
+               "keterangan": row.inspection_note ?? "-",
+               "hasil": row.hasil ?
+                 `${row.hasil}${row.keterangan ? ' (' + row.keterangan + ')' : ''}` : "-"
+             };
+           });
+         }
+       },
+       columns: [{
+           data: "name",
+           className: "text-wrap"
+         },
+         {
+           data: "tanggal",
+           className: "text-wrap"
+         },
+         {
+           data: "sumber",
+           className: "text-wrap"
+         },
+         {
+           data: "keterangan",
+           className: "text-wrap"
+         },
+         {
+           data: "hasil",
+           className: "text-wrap"
+         },
+         {
+           data: "actions",
+           orderable: false,
+           searchable: false
+         }
+       ],
+       // ← Letakkan di sini
+       createdRow: function(row, data) {
+
+         if (data.is_current == 1) {
+
+           $(row)
+             .addClass('table-success')
+             .css('font-weight', '600');
+
+         }
+
+       }
+
+     });
+
+     $('#customSearch').on('keyup', function() {
+       table.search(this.value).draw();
+     });
+
+     // 🔹 Tambah
+     $('#btnTambahPenunjang').on('click', function() {
+       $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
+       $('#id_inspection').val('');
+       $('#periodeTablePenunjang .modal-title').text('Tambah Data');
+       $('#periodeTablePenunjang').modal('show');
+     });
+
+
+     // 🔹 Submit (Tambah / Update)
+     $('#programForm').on('submit', function(e) {
+       e.preventDefault();
+
+       let formData = new FormData(this); // ✅ ambil langsung FormData
+       let id = $('#id_inspection').val();
+
+       fetch(apiUrlPenunjang + (id ? `?id=${id}` : ''), {
+           method: id ? 'POST' : 'POST', // biar gampang semua via POST
+           body: formData
+         })
+         .then(res => res.json())
+         .then(data => {
+           if (data.status === 'success') {
+             Swal.fire('Berhasil!', data.message, 'success');
+             $('#periodeTablePenunjang').modal('hide');
+             table.ajax.reload(null, false);
+           } else {
+             Swal.fire('Gagal!', data.message, 'error');
+           }
+         });
+     });
+
+     // 🔹 Edit
+     $(document).on('click', '.edit-btn', function() {
+       let id = $(this).data('id');
+       fetch(apiUrlPenunjang + `&id=${id}`)
+         .then(res => res.json())
+         .then(resp => {
+           if (resp.status === 'success') {
+             let d = resp.data;
+
+             // isi otomatis berdasarkan name field (kecuali file)
+             for (let key in d) {
+               if (key !== "inspection_results") {
+                 $(`[name="${key}"]`).val(d[key]);
+               }
+             }
+
+             // kalau ada file lama → kasih link preview
+             if (d.inspection_results) {
+               $("#inspection_results").after(`
+            <div id="oldFile" class="mt-2">
+              <a href="${d.inspection_results}" target="_blank">Lihat File Lama</a>
+            </div>
+          `);
+             } else {
+               $("#oldFile").remove();
+             }
+
+             $('#id_inspection').val(d.id_inspection);
+             $('#periodeTablePenunjang .modal-title').text('Edit Data');
+             $('#periodeTablePenunjang').modal('show');
+           }
+         });
+     });
+     // 🔹 Delete
+     $(document).on('click', '.delete-btn', function() {
+       let id = $(this).data('id');
+       Swal.fire({
+         title: 'Hapus Data?',
+         icon: 'warning',
+         showCancelButton: true,
+         confirmButtonText: 'Hapus',
+         cancelButtonText: 'Batal'
+       }).then((result) => {
+         if (result.isConfirmed) {
+           fetch(apiUrlPenunjang + `&id=${id}`, {
+               method: 'DELETE'
+             })
+             .then(res => res.json())
+             .then(data => {
+               if (data.status === 'success') {
+                 Swal.fire('Berhasil!', 'Data dihapus.', 'success');
+                 table.ajax.reload(null, false);
+               }
+             });
+         }
+       });
+     });
+   });
+ </script>
+
+ <script>
+   $('#periodeTablePenunjang').on('shown.bs.modal', function() {
+     $('#inspection_name').select2({
+       dropdownParent: $('#periodeTablePenunjang'),
+       width: '100%'
+     });
+   });
+   $(document).ready(function() {
+
+     $('#inspection_name').select2({
+       dropdownParent: $('#periodeTablePenunjang'),
+       width: '100%',
+       tags: true, // bisa input manual
+       placeholder: "Ketik atau pilih obat",
+
+       createTag: function(params) {
+         return {
+           id: params.term,
+           text: params.term,
+           newOption: true
+         }
+       },
+
+       templateResult: function(data) {
+         let $result = $("<span></span>");
+         $result.text(data.text);
+
+         if (data.newOption) {
+           $result.append(" <em>(baru)</em>");
+         }
+
+         return $result;
+       }
+
+     });
+
+     // auto isi harga
+     $('#inspection_name').on('change', function() {
+       currentInspectionId = $(this).data('id');
+       let harga = $(this).find(':selected').data('harga') || '';
+       $('#harga').val(harga);
+     });
+
+   });
+ </script>
+ <script>
+   let currentInspectionId = null;
+
+   $(document).on('click', '.hasil-btn', function() {
+
+     let kode = ($(this).data('kode') || '').toLowerCase();
+     let id = $(this).data('id');
+
+     let isPreview =
+       kode.includes('darah lengkap') ||
+       kode.includes('widal') ||
+       kode.includes('ureum / kreatinin');
+
+     let no = new URLSearchParams(window.location.search).get('no');
+     let rm = new URLSearchParams(window.location.search).get('rm');
+
+     // =========================
+     // 🔥 MODE PREVIEW (IFRAME)
+     // =========================
+     if (isPreview) {
+
+       $('#hasilModalTitle').text('Preview Hasil Laboratorium');
+
+       // hide input table
+       $('#hasilBody').closest('table').hide();
+
+       // hide tombol simpan
+       $('#hasilFooter').hide();
+
+       // tampilkan iframe
+       $('#previewContainer').show();
+
+       // set source iframe
+       $('#previewFrame').attr(
+         'src',
+         `module/admin/print/formulir_lab_id?no=${no}&rm=${rm}&id_inspection=${id}`
+       );
+
+       $('#hasilModal').modal('show');
+       return;
+     }
+
+     // =========================
+     // 🧪 MODE INPUT
+     // =========================
+
+     $('#previewContainer').hide();
+     $('#hasilBody').closest('table').show();
+     $('#hasilFooter').show();
+
+     let title = 'Input Hasil Lab';
+
+     if (kode.includes('darah lengkap')) {
+       title = 'Hasil Pemeriksaan Darah Lengkap';
+     } else if (kode.includes('widal')) {
+       title = 'Hasil Pemeriksaan Widal Test';
+     } else if (kode.includes('ureum / kreatinin')) {
+       title = 'Hasil Pemeriksaan Ureum / Kreatinin';
+     }
+
+     $('#hasilModalTitle').text(title);
+     currentInspectionId = id;
+
+     $('#hasilBody').html('<tr><td colspan="5">Loading...</td></tr>');
+
+     fetch(`controller/lab/getLabItem?kode=${encodeURIComponent(kode)}&id_inspection=${id}`)
+       .then(res => res.json())
+       .then(res => {
+
+         let html = '';
+
+         res.data.forEach(item => {
+           html += `
+        <tr>
+          <td>${item.assemen}</td>
+          <td>
+            <input 
+              type="text" 
+              class="form-control hasil-input" 
+              data-id="${item.id}" 
+              value="${item.hasil ?? ''}"
+            >
+          </td>
+          <td>${item.satuan ?? '-'}</td>
+          <td>${item.minimum ?? '-'} - ${item.maksimum ?? '-'}</td>
+          <td>${item.catatan ?? '-'}</td>
+        </tr>
+        `;
+         });
+
+         $('#hasilBody').html(html);
+         $('#hasilModal').modal('show');
+
+       });
+
+   });
+   $('#hasilModal').on('hidden.bs.modal', function() {
+     $('#previewFrame').attr('src', '');
+   });
+   $('#saveHasil').on('click', function() {
+
+     let btn = $(this);
+     btn.prop('disabled', true).html('⏳ Menyimpan...');
+
+     Swal.fire({
+       title: 'Menyimpan hasil...',
+       text: 'Mohon tunggu',
+       allowOutsideClick: false,
+       didOpen: () => {
+         Swal.showLoading();
+       }
+     });
+
+     let results = [];
+
+     $('#hasilBody tr').each(function() {
+       let id_item = $(this).find('.hasil-input').data('id');
+       let hasil = $(this).find('.hasil-input').val();
+
+       if (id_item) {
+         results.push({
+           id_item: id_item,
+           hasil: hasil
+         });
+       }
+     });
+
+     fetch('controller/lab/saveResult.php', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json'
+         },
+         body: JSON.stringify({
+           id_inspection: currentInspectionId,
+           data: results
+         })
+       })
+       .then(res => res.json())
+       .then(res => {
+
+         Swal.close();
+
+         if (res.status === 'success') {
+           Swal.fire('Berhasil', 'Hasil lab disimpan', 'success');
+           $('#hasilModal').modal('hide');
+         } else {
+           Swal.fire('Gagal', res.message, 'error');
+         }
+
+       })
+       .catch(() => {
+         Swal.close();
+         Swal.fire('Error', 'Terjadi kesalahan', 'error');
+       })
+       .finally(() => {
+         btn.prop('disabled', false).html('Simpan');
+       });
+
+   });
+ </script>

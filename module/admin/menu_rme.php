@@ -39,5 +39,8 @@
             require 'trigger_pulang.php';
          }
          ?>
+        <a href="module/admin/rme_new?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=a">
+           <button class="nav-link text-primary <?= ($current == 'rme_new.php') ? 'active' : '' ?>">View RME (Baru)</button>
+        </a>
      </div>
   </nav>

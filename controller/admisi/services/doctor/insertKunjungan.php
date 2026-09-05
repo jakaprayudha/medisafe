@@ -238,8 +238,11 @@ if ($status_pasien == "UMUM") {
     $result = bpjsPost("/kunjungan/v1", $payload, $method);
     // $result = testingBPJS_POST("https://app.medisafe.id/controller/admisi/api/getpeserta.php", $payload);
     if ($result['code'] != "200") {
-        $msg = $result['message'];
-        if ($msg == null) {
+        $msg = $result['message'] ?? null;
+        if (empty($msg)) {
+            $msg = $result['metadata'] ?? null;
+        }
+        if (empty($msg)) {
             $msg = "Layanan BPJS sedang tidak dapat diakses. Mohon dicoba beberapa saat lagi.";
         }
         $response = [
@@ -564,6 +567,4 @@ if ($status_pasien == "UMUM") {
     }
 }
 echo json_encode($response);
-function getObat(){
-    
-}
+function getObat() {}
