@@ -235,4 +235,409 @@
    input:checked+.slider:before {
       transform: translateX(18px);
    }
+
+   /* =========================================================
+   PEMERIKSAAN ACCORDION
+========================================================= */
+
+   .pemeriksaan-accordion {
+      border-radius: 16px;
+      overflow: hidden;
+   }
+
+   .pemeriksaan-accordion .accordion-item {
+      border: 1px solid #edf0f5;
+      margin-bottom: 10px;
+      border-radius: 14px !important;
+      overflow: hidden;
+      background: #fff;
+   }
+
+   .pemeriksaan-accordion .accordion-button {
+      min-height: 68px;
+      padding: 12px 18px;
+      background: #fff;
+      color: #273444;
+      box-shadow: none !important;
+      gap: 12px;
+   }
+
+   .pemeriksaan-accordion .accordion-button:not(.collapsed) {
+      background: #faf9ff;
+      color: #273444;
+   }
+
+   .pemeriksaan-accordion .accordion-button::after {
+      width: 14px;
+      height: 14px;
+      background-size: 14px;
+   }
+
+   .pemeriksaan-accordion .accordion-button>span:last-of-type {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+   }
+
+   .pemeriksaan-accordion .accordion-button strong {
+      font-size: 13px;
+      font-weight: 800;
+   }
+
+   .pemeriksaan-accordion .accordion-button small {
+      font-size: 10px;
+      color: #8a94a6;
+      font-weight: 400;
+   }
+
+   .accordion-icon {
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      border-radius: 11px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: #eeecff;
+      color: #635bff;
+
+      font-size: 18px;
+   }
+
+   .accordion-icon.screening {
+      background: #eef7ff;
+      color: #1687d9;
+   }
+
+   .accordion-icon.perawat {
+      background: #eaf8ef;
+      color: #16a34a;
+   }
+
+   .accordion-icon.dokter {
+      background: #fff5e7;
+      color: #d97706;
+   }
+
+   .accordion-icon.diagnosa {
+      background: #f3efff;
+      color: #7c3aed;
+   }
+
+   .accordion-icon.farmasi {
+      background: #fff0f0;
+      color: #dc2626;
+   }
+
+   .accordion-icon.pulang {
+      background: #eef7ff;
+      color: #2563eb;
+   }
+
+   .pemeriksaan-accordion .accordion-body {
+      padding: 20px;
+      border-top: 1px solid #edf0f5;
+   }
+
+   .section-description {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      padding: 10px 12px;
+      margin-bottom: 18px;
+
+      border-radius: 10px;
+      background: #f8f9fc;
+
+      color: #6f7887;
+      font-size: 10px;
+   }
+
+   .section-description i {
+      color: #635bff;
+      font-size: 14px;
+   }
+
+   .medical-subtitle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      margin-bottom: 12px;
+
+      font-size: 12px;
+      font-weight: 800;
+      color: #273444;
+   }
+
+   .medical-subtitle i {
+      color: #635bff;
+   }
+
+   .pemeriksaan-accordion .form-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #4b5563;
+      margin-bottom: 5px;
+   }
+
+   .pemeriksaan-accordion .form-control,
+   .pemeriksaan-accordion .form-select {
+      border-radius: 10px;
+      border-color: #e5e7eb;
+      font-size: 12px;
+      min-height: 39px;
+      box-shadow: none;
+   }
+
+   .pemeriksaan-accordion textarea.form-control {
+      min-height: auto;
+   }
+
+   .pemeriksaan-accordion .form-control:focus,
+   .pemeriksaan-accordion .form-select:focus {
+      border-color: #635bff;
+      box-shadow: 0 0 0 3px rgba(99, 91, 255, .08);
+   }
+
+   .pemeriksaan-accordion .input-group-text {
+      border-color: #e5e7eb;
+      background: #f8f9fc;
+      color: #7b8494;
+      font-size: 10px;
+      border-radius: 0 10px 10px 0;
+   }
+
+   .farmasi-placeholder {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+
+      padding: 18px;
+
+      border: 1px dashed #dcd9ff;
+      border-radius: 13px;
+
+      background: #faf9ff;
+   }
+
+   .farmasi-placeholder-icon {
+      width: 45px;
+      height: 45px;
+      min-width: 45px;
+
+      border-radius: 12px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: #eeecff;
+      color: #635bff;
+
+      font-size: 20px;
+   }
+
+   .farmasi-placeholder strong {
+      font-size: 12px;
+      font-weight: 800;
+   }
+
+   .farmasi-placeholder p {
+      margin: 3px 0 0;
+      color: #7b8494;
+      font-size: 10px;
+   }
+
+   #simpan_pemeriksaan {
+      min-height: 44px;
+      border-radius: 11px;
+      font-size: 12px;
+      font-weight: 700;
+   }
+
+   @media (max-width: 767px) {
+
+      .pemeriksaan-accordion .accordion-button {
+         padding: 11px 13px;
+      }
+
+      .pemeriksaan-accordion .accordion-body {
+         padding: 15px;
+      }
+
+      .accordion-icon {
+         width: 36px;
+         height: 36px;
+         min-width: 36px;
+         font-size: 16px;
+      }
+
+   }
+
+   /* =====================================================
+   ACCORDION SECTION COLORS
+===================================================== */
+
+   /* 🦷 ODONTOGRAM */
+   .accordion-icon.odontogram {
+      background: #f0e7ff;
+      color: #7c3aed;
+   }
+
+   /* 💊 FARMASI */
+   .accordion-icon.farmasi {
+      background: #e7f8ef;
+      color: #198754;
+   }
+
+   /* 💊 RESEP LUAR */
+   .accordion-icon.resep-luar {
+      background: #e5f7f7;
+      color: #0f8b8d;
+   }
+
+   /* 🧪 LABORATORIUM */
+   .accordion-icon.lab {
+      background: #e7f1ff;
+      color: #2563eb;
+   }
+
+   /* 💉 VAKSIN */
+   .accordion-icon.vaksin {
+      background: #fff1df;
+      color: #ea7a00;
+   }
+
+   /* 🩺 TINDAKAN */
+   .accordion-icon.tindakan {
+      background: #ffe8e8;
+      color: #dc3545;
+   }
+
+   /* 📋 RIWAYAT */
+   .accordion-icon.riwayat {
+      background: #ebe9ff;
+      color: #5b5bd6;
+   }
+
+   /* 🏥 RAWAT INAP */
+   .accordion-icon.rawat-inap {
+      background: #e5f6fb;
+      color: #0891b2;
+   }
+
+   .accordion-item:has(#collapseOdontogram.show) {
+      border-color: #c4b5fd !important;
+   }
+
+   .accordion-item:has(#collapseFarmasi.show) {
+      border-color: #86efac !important;
+   }
+
+   .accordion-item:has(#collapseResepLuar.show) {
+      border-color: #67e8f9 !important;
+   }
+
+   .accordion-item:has(#collapseLab.show) {
+      border-color: #93c5fd !important;
+   }
+
+   .accordion-item:has(#collapseVaksin.show) {
+      border-color: #fdba74 !important;
+   }
+
+   .accordion-item:has(#collapseTindakan.show) {
+      border-color: #fca5a5 !important;
+   }
+
+   .accordion-item:has(#collapseRiwayatPengobatan.show) {
+      border-color: #a5b4fc !important;
+   }
+
+   .accordion-item:has(#collapseRawatInap.show) {
+      border-color: #67e8f9 !important;
+   }
+
+   /* =====================================================
+   SECTION PLACEHOLDER
+===================================================== */
+
+   .section-placeholder {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px;
+      border: 1px dashed #dfe3eb;
+      border-radius: 14px;
+      background: #fafbfc;
+   }
+
+   .section-placeholder-icon {
+      width: 48px;
+      height: 48px;
+      min-width: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      background: #f0efff;
+      color: #635bff;
+      font-size: 22px;
+   }
+
+   .section-placeholder strong {
+      display: block;
+      color: #273444;
+      margin-bottom: 4px;
+   }
+
+   .section-placeholder p {
+      color: #7b8494;
+      font-size: 14px;
+   }
+
+
+   /* =====================================================
+   FARMASI
+===================================================== */
+
+   .farmasi-placeholder {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px;
+      margin-bottom: 18px;
+      border: 1px dashed #dfe3eb;
+      border-radius: 14px;
+      background: #fafbfc;
+   }
+
+   .farmasi-placeholder-icon {
+      width: 48px;
+      height: 48px;
+      min-width: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      background: #eefbf3;
+      color: #198754;
+      font-size: 22px;
+   }
+
+   .farmasi-placeholder strong {
+      display: block;
+      color: #273444;
+      margin-bottom: 4px;
+   }
+
+   .farmasi-placeholder p {
+      margin: 0;
+      color: #7b8494;
+      font-size: 14px;
+   }
 </style>
