@@ -325,6 +325,7 @@ $data = mysqli_fetch_array($check);
                       data-antrian="<?= $data['visit_antrian'] ?? '-' ?>"
                       data-nama="<?= $data['patient_name'] ?>"
                       data-poli="Farmasi"
+                      data-poliasal="<?= $data['id_poli'] ?>"
                       data-visit="<?= $data['visit_ID'] ?>"
                       data-dokter="<?= $data['id_doctor'] ?>"
                       data-obat="<?= $data['tipe_obat'] ?? 'Obat siap diambil' ?>">
@@ -633,6 +634,7 @@ $data = mysqli_fetch_array($check);
     const noAntrian = $(this).data('antrian');
     const nama = $(this).data('nama');
     const poli = $(this).data('poli');
+    const poliasal = $(this).data('poliasal');
     const visit = $(this).data('visit');
     const dokter = $(this).data('dokter');
     const obat = $(this).data('obat');
@@ -644,7 +646,10 @@ $data = mysqli_fetch_array($check);
       type: 'POST',
       data: {
         text: text,
-        requestIdFarmasi: requestId
+        requestIdFarmasi: requestId,
+        nama_pasien: nama,
+        asalpoli: poliasal,
+        visit_id: visit
       },
       dataType: 'json',
       success: function(response) {

@@ -1,6 +1,6 @@
 <?php
 require '../../database/connect.php';
-
+require_once __DIR__ . '/../socket/sendSocket.php';
 header('Content-Type: application/json');
 
 $data = json_decode(file_get_contents("php://input"), true);
@@ -37,6 +37,13 @@ try {
       'message' => 'Tiket selain status selesai berhasil diupdate'
    ]);
 
+   $result = farmasiupdate([
+      "rs_id" => $kdRumahSakit,
+      "target_role" => "display-farmasi_DISPLAY",
+      "status" => $status,
+      "visit_id" => $visit,
+      "is_panggilan" => false
+   ]);
 } catch (Exception $e) {
 
    echo json_encode([
