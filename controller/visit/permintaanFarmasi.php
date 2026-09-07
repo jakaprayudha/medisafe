@@ -1,9 +1,11 @@
 <?php
 include '../../database/connect.php';
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 header('Content-Type: application/json');
-
+require_once __DIR__ . '/../socket/sendSocket.php';
 $id_customer = $_SESSION['id_customer'] ?? null;
 
 if (!$id_customer) {
@@ -82,6 +84,8 @@ function createData($id_customer)
    $stmt->bind_param($types, ...$values);
 
    if ($stmt->execute()) {
+      $visit_id = isset($_POST['id_visit']) ? $_POST['id_visit'] : null;
+      sendSocketAntrianBaru($id_customer, $visit_id);
       echo json_encode([
          'status' => 'success',
          'id' => $stmt->insert_id // 🔥 penting kalau mau dipakai lanjut
@@ -208,4 +212,30 @@ function approveData($data, $id_customer)
    if ($stmt->execute()) {
       echo json_encode(['status' => 'success']);
    }
+}
+
+function sendSocketAntrianBaru($id_customer, $visit_id){
+   global $koneksi;
+   $query = "SELECT pv.id_visit, pv.patient_name_pcare, pv.id_poli, pp.status_permintaan FROM pasien_visit AS pv INNER JOIN permintaan_pharmacy AS pp ON pv.visit_ID = pp.id_visit WHERE pv.id_customer = ? AND pv.visit_ID = ?";
+   $stmt = $koneksi->prepare($query);
+   $stmt->bind_param("ss", $id_customer, $visit_id);
+   $stmt->execute();
+   $result_query = $stmt->get_result();
+   $data = $result_query->fetch_assoc();
+
+   if (!$data) {
+      return false;
+   }
+
+   $result = farmasiupdate([
+      "rs_id" => $id_customer,
+      "target_role" => "display-farmasi_DISPLAY",
+      "status" => $data['status_permintaan'],
+      "visit_id" => $visit_id,
+      "nama_pasien" => $data['patient_name_pcare'],
+      "poli" => $data['id_poli'],
+      "is_panggilan" => false
+   ]);
+
+   return $result;
 }

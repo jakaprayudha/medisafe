@@ -25,7 +25,7 @@ function startApp() {
     let moduleName = moduleIndex !== -1 ? parts[moduleIndex + 1].toUpperCase() : null;
     let pageName = moduleIndex !== -1 ? parts[moduleIndex + 2] : null;
     let target = moduleName;
-    let pages = ["pemeriksaan", "farmasi_order_detail", "display-admisi"];
+    let pages = ["pemeriksaan", "farmasi_order_detail", "display-admisi", "display-farmasi"];
     // let pages = ["counter-call", "display-admisi"];
     if (pages.includes(pageName)) {
         enableSocket = true;
@@ -36,16 +36,16 @@ function startApp() {
         });
         socket.on("connect", () => {
             // pages.forEach((pageName) => {
-                if (pageName == "display-admisi") {
-                    socket.emit("join", data.id_customer + "_" + pageName + "_" + target);
-                    console.log(data.id_customer + "_" + pageName + "_" + target);
-                } else if (pageName == 'pemeriksaan' && target == 'DOCTOR') {
-                    socket.emit("join", data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
-                    console.log(data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
-                } else if (pageName == "farmasi_order_detail" && target == "ADMIN") {
-                    socket.emit("join", data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
-                    console.log(data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
-                }
+            if (pageName == "display-admisi" || pageName == 'display-farmasi') {
+                socket.emit("join", data.id_customer + "_" + pageName + "_" + target);
+                console.log(data.id_customer + "_" + pageName + "_" + target);
+            } else if (pageName == 'pemeriksaan' && target == 'DOCTOR') {
+                socket.emit("join", data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
+                console.log(data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
+            } else if (pageName == "farmasi_order_detail" && target == "ADMIN") {
+                socket.emit("join", data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
+                console.log(data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
+            }
             // })
 
             // console.log(data.id_customer + "_" + pageName + "_" + target + "_" + data.id_user);
@@ -77,6 +77,11 @@ function startApp() {
         socket.on("display_antian_poli", data => {
             console.log(data);
             APP.showAntrianPoli(data.nama, data.dokter);
+        });
+
+        socket.on('farmasi_update', function (payload) {
+            console.log(payload);
+            APP.updateDataLokal(payload);
         });
 
         socket.on("putar_suara_panggilan", (data) => {
