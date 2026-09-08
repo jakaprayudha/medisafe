@@ -315,7 +315,7 @@ $rm = $_GET['rm'];
                       <label for="edukasi" class="form-label">Edukasi</label>
                       <textarea id="edukasi" name="edukasi" rows="2" class="form-control"><?= @$data['edukasi'] ?></textarea>
                     </div> -->
-                    <div class="col-12">
+                    <div class="col-12" id="ToogleStPulang">
                       <div class="row mb-3">
                         <div class="col-2">
                           <label for="" class="col-form-label col-form-label-sm">Status Pulang<span class="text-danger">*</span></label>
