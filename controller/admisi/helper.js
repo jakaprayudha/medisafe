@@ -230,11 +230,25 @@ APP.initDiagnosa = function (selector, hiddenNameSelector, idkdspesialis) {
         $(hiddenNameSelector).val(data.nmDiag);
         $(idkdspesialis).val(data.idspesialis);
         console.log($('#kdStatusPulang').val() + data.idspesialis);
-        if (data.idspesialis == true && $('#kdStatusPulang').val() == '4') {
-            $('#formTacc').removeClass('d-none');
-            // console.log('tacc');
+        // if (data.idspesialis == true && $('#kdStatusPulang').val() == '4') {
+        if (data.idspesialis == true) {
+            // $('#formTacc').removeClass('d-none');
+            $("#kdStatusPulang option[value='4']").remove();
+            $("#kdStatusPulang option[value='6']").remove();
+            console.log('tacc');
         } else {
             $('#formTacc').addClass('d-none');
+            if ($("#kdStatusPulang option[value='4']").length === 0) {
+                $("#kdStatusPulang").append(
+                    new Option("Rujuk Vertikal", "4", false, false)
+                );
+            }
+            if ($("#kdStatusPulang option[value='6']").length === 0) {
+                $("#kdStatusPulang").append(
+                    new Option("Rujuk Horizontal", "6", false, false)
+                );
+            }
+            $("#kdStatusPulang").trigger("change");
             // console.log('non tacc');
         }
     });
