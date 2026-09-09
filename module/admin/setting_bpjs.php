@@ -59,7 +59,7 @@ $antrol = mysqli_fetch_assoc(mysqli_query(
                   <div class="tab-content" id="nav-tabContent">
                     <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
                       <div class="alert mt-4 alert-warning" role="alert">
-                        Untuk usernam dan password pcare apabila anda telah melakukan perubahan di aplikasi pcare, silakan update juga di halaman ini agar aplikasi dapat terhubung dengan pcare dengan baik karena apabila tidak diperbarui maka aplikasi tidak dapat terhubung dengan pcare dan fitur yang terhubung dengan pcare tidak dapat digunakan dengan baik. Terima kasih.
+                        Untuk username dan password pcare apabila anda telah melakukan perubahan di aplikasi pcare, silakan update juga di halaman ini agar aplikasi dapat terhubung dengan pcare dengan baik karena apabila tidak diperbarui maka aplikasi tidak dapat terhubung dengan pcare dan fitur yang terhubung dengan pcare tidak dapat digunakan dengan baik. Terima kasih.
                       </div>
                       <div class="row mt-4">
                         <div class="col-12">
@@ -111,7 +111,7 @@ $antrol = mysqli_fetch_assoc(mysqli_query(
                           </div>
                         </div>
                       </div>
-                      <button class="btn btn-primary col-12">Simpan</button>
+                      <button class="btn btn-primary col-12" id="btnsimpanPcare">Simpan</button>
                     </div>
                     <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" tabindex="0">
                       <?php if ($antrol) { ?>
@@ -611,252 +611,298 @@ $antrol = mysqli_fetch_assoc(mysqli_query(
         }
       });
     </script>
-</body>
-<script src="controller/admisi/helper.js"></script>
-<script>
-  $('#btnTambah').on('click', async function() {
+    <script src="controller/admisi/helper.js"></script>
+    <script>
+      $('#btnTambah').on('click', async function() {
 
-    let btn = $(this);
-    let text = btn.html();
+        let btn = $(this);
+        let text = btn.html();
 
-    btn.prop('disabled', true);
-    btn.html(`
+        btn.prop('disabled', true);
+        btn.html(`
         <span class="spinner-border spinner-border-sm me-2"></span>
         Sinkron Data...
     `);
-    try {
-      let response = await $.ajax({
-        url: 'controller/admisi/services/getApi.php',
-        type: 'POST',
-        data: {
-          url: 'dokter/0/100'
-        },
-        dataType: 'json'
-      });
-      if (!response.list || response.list.length == 0) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Data Kosong',
-          text: 'Data dokter tidak ditemukan.'
-        });
-        return;
-      }
-      let simpan = await $.ajax({
+        try {
+          let response = await $.ajax({
+            url: 'controller/admisi/services/getApi.php',
+            type: 'POST',
+            data: {
+              url: 'dokter/0/100'
+            },
+            dataType: 'json'
+          });
+          if (!response.list || response.list.length == 0) {
+            Swal.fire({
+              icon: 'warning',
+              title: 'Data Kosong',
+              text: 'Data dokter tidak ditemukan.'
+            });
+            return;
+          }
+          let simpan = await $.ajax({
 
-        url: 'module/admin/sinkron_dokter.php',
-        type: 'POST',
-        dataType: 'json',
+            url: 'module/admin/sinkron_dokter.php',
+            type: 'POST',
+            dataType: 'json',
 
-        data: {
-          dokter: JSON.stringify(response.list)
+            data: {
+              dokter: JSON.stringify(response.list)
+            }
+
+          });
+
+
+          if (simpan.success) {
+
+            Swal.fire({
+              icon: 'success',
+              title: 'Berhasil',
+              text: simpan.message,
+              timer: 1500,
+              showConfirmButton: false
+            }).then(() => {
+              location.reload();
+            });
+
+
+          } else {
+
+            Swal.fire({
+              icon: 'error',
+              title: 'Gagal',
+              text: simpan.message
+            });
+
+          }
+
+
+        } catch (error) {
+
+          console.error(error);
+
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Gagal mengambil data dokter.'
+          });
+
+
+        } finally {
+
+          btn.prop('disabled', false);
+          btn.html(text);
+
         }
 
       });
-
-
-      if (simpan.success) {
-
-        Swal.fire({
-          icon: 'success',
-          title: 'Berhasil',
-          text: simpan.message,
-          timer: 1500,
-          showConfirmButton: false
-        }).then(() => {
-          location.reload();
-        });
-
-
-      } else {
-
-        Swal.fire({
-          icon: 'error',
-          title: 'Gagal',
-          text: simpan.message
-        });
-
-      }
-
-
-    } catch (error) {
-
-      console.error(error);
-
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Gagal mengambil data dokter.'
+      $("#btnTambahDokterInternal").on("click", function() {
+        $("#formDokterInternal")[0].reset();
+        $("#modalDokterInternal").modal("show");
+        APP.loadDokterBPJSInternal();
       });
+    </script>
 
+    <script>
+      $(document).ready(function() {
+        const $btn = $('#btnsimpanPcare');
+        const originalText = $btn.html(); // Teks asli "Simpan"
 
-    } finally {
+        // ==========================================
+        // 1. PROSES LOAD DATA SAAT HALAMAN DIBUKA
+        // ==========================================
+        $.ajax({
+          url: 'controller/master/pcareSetting.php',
+          type: 'GET',
+          dataType: 'json',
+          beforeSend: function() {
+            // Disable tombol simpan dan beri status Memuat...
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Memuat Data...');
+          },
+          success: function(res) {
+            if (res.status === 'success') {
+              const data = res.data;
 
-      btn.prop('disabled', false);
-      btn.html(text);
+              $('#username_pcare').val(data.username ?? '');
+              $('#password_pcare').val(data.password ?? '');
+              $('#consumer_id').val(data.KodePPK ?? '');
+              $('#kodePPK').val(data.KodePPK ?? '');
+              $('#secret_key').val(data.secret_key ?? '');
+              $('#user_key').val(data.user_key ?? '');
+              $('#kode_provider').val(data.KodePPK ?? '');
+              $('#apps_code').val(data.service_name ?? '');
+            }
+          },
+          error: function(xhr, status, error) {
+            console.error('Error fetching data:', error);
+          },
+          complete: function() {
+            $btn.prop('disabled', false).html(originalText);
+          }
+        });
+        $btn.on('click', function() {
+          const dataToSend = {
+            username_pcare: $('#username_pcare').val(),
+            password_pcare: $('#password_pcare').val()
+          };
+          if (!dataToSend.username_pcare || !dataToSend.password_pcare) {
+            Swal.fire({
+              icon: 'warning',
+              title: 'Perhatian!',
+              text: 'Username dan Password PCare tidak boleh kosong.'
+            });
+            return; 
+          }
 
-    }
+          $.ajax({
+            url: 'controller/master/pcareUpdate.php',
+            type: 'POST',
+            data: dataToSend,
+            dataType: 'json',
+            beforeSend: function() {
+              $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menyimpan...');
+            },
+            success: function(res) {
+              if (res.status === 'success') {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Berhasil!',
+                  text: 'Data PCare berhasil disimpan.',
+                  showConfirmButton: false,
+                  timer: 1500
+                });
+              } else {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Gagal!',
+                  text: res.message || 'Gagal menyimpan data.'
+                });
+              }
+            },
+            error: function(xhr, status, error) {
+              console.error('Error saving data:', error);
+              Swal.fire({
+                icon: 'error',
+                title: 'Terjadi Kesalahan!',
+                text: 'Gagal terhubung ke server saat menyimpan data.'
+              });
+            },
+            complete: function() {
+              $btn.prop('disabled', false).html(originalText);
+            }
+          });
+        });
 
-  });
-  $("#btnTambahDokterInternal").on("click", function() {
-    $("#formDokterInternal")[0].reset();
-    $("#modalDokterInternal").modal("show");
-    APP.loadDokterBPJSInternal();
-  });
-</script>
+      });
+    </script>
 
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    fetch('controller/master/pcareSetting.php')
-      .then(res => res.json())
-      .then(res => {
-        if (res.status === 'success') {
-          const data = res.data;
-
-          document.getElementById('username_pcare').value = data.username ?? '';
-          document.getElementById('password_pcare').value = data.password ?? '';
-          document.getElementById('consumer_id').value = data.KodePPK ?? '';
-          document.getElementById('kodePPK').value = data.KodePPK ?? '';
-          document.getElementById('secret_key').value = data.secret_key ?? '';
-          document.getElementById('user_key').value = data.user_key ?? '';
-          document.getElementById('kode_provider').value = data.KodePPK ?? '';
-
-          // tambahan kalau mau
-          document.getElementById('apps_code').value = data.service_name ?? '';
-        }
-      })
-      .catch(err => console.error(err));
-  });
-</script>
-
-<script>
-  document.querySelector('.btn-primary').addEventListener('click', function(e) {
-    e.preventDefault();
-
-    const username = document.getElementById('username_pcare').value;
-    const password = document.getElementById('password_pcare').value;
-
-    fetch('controller/master/pcareUpdate.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
-      })
-      .then(res => res.json())
-      .then(res => {
-        alert(res.message);
-      })
-      .catch(err => console.error(err));
-  });
-</script>
-
-<script>
-  APP.loadDokterBPJSInternal = function() {
-    $("#doctor_bpjs_internal")
-      .html('<option>Loading...</option>');
-    $.ajax({
-      url: "module/admin/get_dokter_bpjs.php",
-      type: "POST",
-      dataType: "json",
-      success: function(res) {
-        $("#doctor_bpjs_internal").empty();
+    <script>
+      APP.loadDokterBPJSInternal = function() {
         $("#doctor_bpjs_internal")
-          .append('<option value="">- Pilih Dokter BPJS -</option>');
-        if (res.success) {
-          $.each(res.data, function(i, item) {
+          .html('<option>Loading...</option>');
+        $.ajax({
+          url: "module/admin/get_dokter_bpjs.php",
+          type: "POST",
+          dataType: "json",
+          success: function(res) {
+            $("#doctor_bpjs_internal").empty();
             $("#doctor_bpjs_internal")
-              .append(`
+              .append('<option value="">- Pilih Dokter BPJS -</option>');
+            if (res.success) {
+              $.each(res.data, function(i, item) {
+                $("#doctor_bpjs_internal")
+                  .append(`
                         <option value="${item.kdDokter}">
                             ${item.nmDokter}
                         </option>
                     `);
-          });
+              });
+            }
+          },
+          error: function() {
+            $("#doctor_bpjs_internal")
+              .html('<option>Gagal mengambil data</option>');
+
+          }
+        });
+      };
+
+      $("#btnSimpanDokterInternal").on("click", function() {
+        let btn = $(this);
+        let text = btn.html();
+        let doctor_name = $("#doctor_name_internal").val();
+        let doctor_bpjs = $("#doctor_bpjs_internal").val();
+        let id_doctor = $('#id_doctor_internal').val();
+        if (doctor_name == "") {
+          Swal.fire(
+            "Perhatian",
+            "Nama dokter harus diisi.",
+            "warning"
+          );
+          return;
         }
-      },
-      error: function() {
-        $("#doctor_bpjs_internal")
-          .html('<option>Gagal mengambil data</option>');
-
-      }
-    });
-  };
-
-  $("#btnSimpanDokterInternal").on("click", function() {
-    let btn = $(this);
-    let text = btn.html();
-    let doctor_name = $("#doctor_name_internal").val();
-    let doctor_bpjs = $("#doctor_bpjs_internal").val();
-    let id_doctor = $('#id_doctor_internal').val();
-    if (doctor_name == "") {
-      Swal.fire(
-        "Perhatian",
-        "Nama dokter harus diisi.",
-        "warning"
-      );
-      return;
-    }
-    if (doctor_bpjs == "") {
-      Swal.fire(
-        "Perhatian",
-        "Dokter BPJS harus dipilih.",
-        "warning"
-      );
-      return;
-    }
-    btn.prop("disabled", true);
-    btn.html(`
+        if (doctor_bpjs == "") {
+          Swal.fire(
+            "Perhatian",
+            "Dokter BPJS harus dipilih.",
+            "warning"
+          );
+          return;
+        }
+        btn.prop("disabled", true);
+        btn.html(`
         <span class="spinner-border spinner-border-sm me-2"></span>
         Menyimpan...
     `);
-    $.ajax({
-      url: "module/admin/simpan_dokter_internal.php",
-      type: "POST",
-      dataType: "json",
-      data: {
-        doctor_name: doctor_name,
-        doctor_code: doctor_bpjs,
-        id_doctor_internal: id_doctor
-      },
-      success: function(res) {
-        if (res.success) {
-          $("#modalDokterInternal").modal("hide");
-          Swal.fire({
-            icon: "success",
-            title: "Berhasil",
-            text: res.message,
-            timer: 1500,
-            showConfirmButton: false
-          }).then(() => {
-            APP.loadDokterInternal();
-          });
-        } else {
-          Swal.fire(
-            "Gagal",
-            res.message,
-            "error"
-          );
-        }
-      },
-      error: function() {
-        Swal.fire(
-          "Error",
-          "Terjadi kesalahan server.",
-          "error"
-        );
-      },
-      complete: function() {
-        btn.prop("disabled", false);
-        btn.html(text);
-      }
-    });
-  });
+        $.ajax({
+          url: "module/admin/simpan_dokter_internal.php",
+          type: "POST",
+          dataType: "json",
+          data: {
+            doctor_name: doctor_name,
+            doctor_code: doctor_bpjs,
+            id_doctor_internal: id_doctor
+          },
+          success: function(res) {
+            if (res.success) {
+              $("#modalDokterInternal").modal("hide");
+              Swal.fire({
+                icon: "success",
+                title: "Berhasil",
+                text: res.message,
+                timer: 1500,
+                showConfirmButton: false
+              }).then(() => {
+                APP.loadDokterInternal();
+              });
+            } else {
+              Swal.fire(
+                "Gagal",
+                res.message,
+                "error"
+              );
+            }
+          },
+          error: function() {
+            Swal.fire(
+              "Error",
+              "Terjadi kesalahan server.",
+              "error"
+            );
+          },
+          complete: function() {
+            btn.prop("disabled", false);
+            btn.html(text);
+          }
+        });
+      });
 
-  $('button[data-bs-target="#nav-dokterinternal"]').on('click', function() {
-    APP.loadDokterInternal();
-  });
+      $('button[data-bs-target="#nav-dokterinternal"]').on('click', function() {
+        APP.loadDokterInternal();
+      });
 
-  APP.loadDokterInternal = function() {
-    $("#listDokterInternal").html(`
+      APP.loadDokterInternal = function() {
+        $("#listDokterInternal").html(`
         <tr>
             <td colspan="5" class="text-center py-5 text-muted">
                 <i class="fas fa-spinner fa-spin fa-2x mb-2 d-block"></i>
@@ -864,15 +910,15 @@ $antrol = mysqli_fetch_assoc(mysqli_query(
             </td>
         </tr>
     `);
-    $.ajax({
-      url: "module/admin/get_dokter_internal.php",
-      type: "POST",
-      dataType: "json",
-      success: function(res) {
-        let html = "";
-        if (res.success && res.data.length > 0) {
-          $.each(res.data, function(i, row) {
-            html += `
+        $.ajax({
+          url: "module/admin/get_dokter_internal.php",
+          type: "POST",
+          dataType: "json",
+          success: function(res) {
+            let html = "";
+            if (res.success && res.data.length > 0) {
+              $.each(res.data, function(i, row) {
+                html += `
                     <tr>
                         <td>
                             ${row.doctor_name}
@@ -895,9 +941,9 @@ $antrol = mysqli_fetch_assoc(mysqli_query(
                         </td>
                     </tr>
                     `;
-          });
-        } else {
-          html = `
+              });
+            } else {
+              html = `
                 <tr>
                     <td colspan="5" class="text-center py-5 text-muted">
                         <i class="fas fa-folder-open fa-2x mb-2 d-block"></i>
@@ -905,164 +951,164 @@ $antrol = mysqli_fetch_assoc(mysqli_query(
                     </td>
                 </tr>
                 `;
-        }
-        $("#listDokterInternal").html(html);
-      },
-      error: function() {
-        $("#listDokterInternal").html(`
+            }
+            $("#listDokterInternal").html(html);
+          },
+          error: function() {
+            $("#listDokterInternal").html(`
                 <tr>
                     <td colspan="5" class="text-center text-danger">
                         Gagal mengambil data.
                     </td>
                 </tr>
             `);
-      }
-    });
-  };
-
-  $(document).on("click", ".edit-dokter-internal", function() {
-    let id = $(this).data("id");
-    Swal.fire({
-      title: "Memuat...",
-      text: "Mohon tunggu",
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
-    });
-    $.ajax({
-      url: "module/admin/getDokterInternal.php",
-      type: "POST",
-      dataType: "json",
-      data: {
-        id: id
-      },
-      success: function(res) {
-        Swal.close();
-        if (res.success) {
-          $("#formDokterInternal")[0].reset();
-          $("#modalDokterInternal .modal-title").text("Edit Dokter Internal");
-          $("#id_doctor_internal").val(res.data.id_doctor);
-          $("#doctor_name_internal").val(res.data.doctor_name);
-          APP.loadDokterBPJS("#doctor_bpjs_internal", res.data.doctor_bpjs);
-          $("#modalDokterInternal").modal("show");
-        } else {
-          Swal.fire(
-            "Gagal",
-            res.message,
-            "error"
-          );
-        }
-      },
-      error: function() {
-        Swal.fire(
-          "Error",
-          "Terjadi kesalahan server.",
-          "error"
-        );
-      }
-    });
-  });
-
-  APP.loadDokterBPJS = function(target, selected = "") {
-    $.ajax({
-      url: "module/admin/get_dokter_bpjs.php",
-      type: "POST",
-      dataType: "json",
-      success: function(res) {
-        let html = '<option value="">- Pilih Dokter -</option>';
-        $.each(res.data, function(i, row) {
-          html += `<option value="${row.kdDokter}">${row.nmDokter}</option>`;
+          }
         });
-        $(target).html(html);
-        if (selected !== "") {
-          $(target).val(selected).trigger("change");
-        }
-      },
-      error: function() {
-        $(target).html('<option value="">Gagal memuat data</option>');
-      }
-    });
-  };
+      };
 
-  $("#btnTambahDokterInternal").click(function() {
-    $("#formDokterInternal")[0].reset();
-    $("#id_doctor_internal").val("");
-    $("#modalDokterInternal .modal-title").text("Tambah Dokter Internal");
-    APP.loadDokterBPJS("#doctor_bpjs_internal");
-    $("#modalDokterInternal").modal("show");
-  });
-
-  $(document).on("click", ".hapus-dokter-internal", function() {
-    let id = $(this).data("id");
-    Swal.fire({
-      title: "Hapus Dokter?",
-      text: "Data dokter internal beserta jadwalnya akan dihapus.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Ya, Hapus",
-      cancelButtonText: "Batal"
-    }).then((result) => {
-      if (!result.isConfirmed) return;
-      Swal.fire({
-        title: "Menghapus...",
-        text: "Mohon tunggu",
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
-        }
-      });
-      $.ajax({
-        url: "module/admin/hapus_dokter_internal.php",
-        type: "POST",
-        dataType: "json",
-        data: {
-          id_doctor: id
-        },
-        success: function(res) {
-          if (res.success) {
-            Swal.fire({
-              icon: "success",
-              title: "Berhasil",
-              text: res.message,
-              timer: 1500,
-              showConfirmButton: false
-            }).then(() => {
-              APP.loadDokterInternal();
-            });
-          } else {
+      $(document).on("click", ".edit-dokter-internal", function() {
+        let id = $(this).data("id");
+        Swal.fire({
+          title: "Memuat...",
+          text: "Mohon tunggu",
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+        $.ajax({
+          url: "module/admin/getDokterInternal.php",
+          type: "POST",
+          dataType: "json",
+          data: {
+            id: id
+          },
+          success: function(res) {
+            Swal.close();
+            if (res.success) {
+              $("#formDokterInternal")[0].reset();
+              $("#modalDokterInternal .modal-title").text("Edit Dokter Internal");
+              $("#id_doctor_internal").val(res.data.id_doctor);
+              $("#doctor_name_internal").val(res.data.doctor_name);
+              APP.loadDokterBPJS("#doctor_bpjs_internal", res.data.doctor_bpjs);
+              $("#modalDokterInternal").modal("show");
+            } else {
+              Swal.fire(
+                "Gagal",
+                res.message,
+                "error"
+              );
+            }
+          },
+          error: function() {
             Swal.fire(
-              "Gagal",
-              res.message,
+              "Error",
+              "Terjadi kesalahan server.",
               "error"
             );
           }
-        },
-        error: function() {
-          Swal.fire(
-            "Error",
-            "Terjadi kesalahan server.",
-            "error"
-          );
-        }
+        });
       });
-    });
-  });
-</script>
 
-<script>
-  $(document).on("click", ".btn-jadwal", function() {
-    let kode = $(this).data("kode");
-    let nama = $(this).data("nama");
-    $("#namaDokterJadwal").text(nama);
-    $("#btnSinkronJadwal").data("kode", kode);
-    $("#modalJadwalDokter").modal("show");
-    $("#doctorCodeJadwal").val(kode);
-    APP.loadJadwalDokter(kode);
-  });
+      APP.loadDokterBPJS = function(target, selected = "") {
+        $.ajax({
+          url: "module/admin/get_dokter_bpjs.php",
+          type: "POST",
+          dataType: "json",
+          success: function(res) {
+            let html = '<option value="">- Pilih Dokter -</option>';
+            $.each(res.data, function(i, row) {
+              html += `<option value="${row.kdDokter}">${row.nmDokter}</option>`;
+            });
+            $(target).html(html);
+            if (selected !== "") {
+              $(target).val(selected).trigger("change");
+            }
+          },
+          error: function() {
+            $(target).html('<option value="">Gagal memuat data</option>');
+          }
+        });
+      };
 
-  APP.loadJadwalDokter = function(kodeDokter) {
-    $("#listJadwalDokter").html(`
+      $("#btnTambahDokterInternal").click(function() {
+        $("#formDokterInternal")[0].reset();
+        $("#id_doctor_internal").val("");
+        $("#modalDokterInternal .modal-title").text("Tambah Dokter Internal");
+        APP.loadDokterBPJS("#doctor_bpjs_internal");
+        $("#modalDokterInternal").modal("show");
+      });
+
+      $(document).on("click", ".hapus-dokter-internal", function() {
+        let id = $(this).data("id");
+        Swal.fire({
+          title: "Hapus Dokter?",
+          text: "Data dokter internal beserta jadwalnya akan dihapus.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Ya, Hapus",
+          cancelButtonText: "Batal"
+        }).then((result) => {
+          if (!result.isConfirmed) return;
+          Swal.fire({
+            title: "Menghapus...",
+            text: "Mohon tunggu",
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+          $.ajax({
+            url: "module/admin/hapus_dokter_internal.php",
+            type: "POST",
+            dataType: "json",
+            data: {
+              id_doctor: id
+            },
+            success: function(res) {
+              if (res.success) {
+                Swal.fire({
+                  icon: "success",
+                  title: "Berhasil",
+                  text: res.message,
+                  timer: 1500,
+                  showConfirmButton: false
+                }).then(() => {
+                  APP.loadDokterInternal();
+                });
+              } else {
+                Swal.fire(
+                  "Gagal",
+                  res.message,
+                  "error"
+                );
+              }
+            },
+            error: function() {
+              Swal.fire(
+                "Error",
+                "Terjadi kesalahan server.",
+                "error"
+              );
+            }
+          });
+        });
+      });
+    </script>
+
+    <script>
+      $(document).on("click", ".btn-jadwal", function() {
+        let kode = $(this).data("kode");
+        let nama = $(this).data("nama");
+        $("#namaDokterJadwal").text(nama);
+        $("#btnSinkronJadwal").data("kode", kode);
+        $("#modalJadwalDokter").modal("show");
+        $("#doctorCodeJadwal").val(kode);
+        APP.loadJadwalDokter(kode);
+      });
+
+      APP.loadJadwalDokter = function(kodeDokter) {
+        $("#listJadwalDokter").html(`
         <tr>
             <td colspan="7" class="text-center py-5 text-muted">
                 <i class="fas fa-spinner fa-spin fa-2x mb-2 d-block"></i>
@@ -1070,19 +1116,19 @@ $antrol = mysqli_fetch_assoc(mysqli_query(
             </td>
         </tr>
     `);
-    $.ajax({
-      url: "module/admin/get_jadwal_dokter.php",
-      type: "POST",
-      dataType: "json",
-      data: {
-        doctor_code: kodeDokter
-      },
-      success: function(res) {
-        let html = "";
-        $("#totalJadwal").text(res.data ? res.data.length : 0);
-        if (res.success && res.data.length > 0) {
-          $.each(res.data, function(i, row) {
-            html += `
+        $.ajax({
+          url: "module/admin/get_jadwal_dokter.php",
+          type: "POST",
+          dataType: "json",
+          data: {
+            doctor_code: kodeDokter
+          },
+          success: function(res) {
+            let html = "";
+            $("#totalJadwal").text(res.data ? res.data.length : 0);
+            if (res.success && res.data.length > 0) {
+              $.each(res.data, function(i, row) {
+                html += `
                     <tr>
                         <td>
                             ${row.nmHari}
@@ -1125,9 +1171,9 @@ $antrol = mysqli_fetch_assoc(mysqli_query(
                         </td>
                     </tr>
                     `;
-          });
-        } else {
-          html = `
+              });
+            } else {
+              html = `
                 <tr>
                     <td colspan="7" class="text-center py-5 text-muted">
                         <i class="fas fa-calendar-times fa-3x mb-3 d-block"></i>
@@ -1141,11 +1187,11 @@ $antrol = mysqli_fetch_assoc(mysqli_query(
                     </td>
                 </tr>
                 `;
-        }
-        $("#listJadwalDokter").html(html);
-      },
-      error: function() {
-        $("#listJadwalDokter").html(`
+            }
+            $("#listJadwalDokter").html(html);
+          },
+          error: function() {
+            $("#listJadwalDokter").html(`
                 <tr>
                     <td colspan="7" class="text-center text-danger py-5">
                         <i class="fas fa-exclamation-circle fa-2x mb-2 d-block"></i>
@@ -1153,224 +1199,78 @@ $antrol = mysqli_fetch_assoc(mysqli_query(
                     </td>
                 </tr>
             `);
+          }
+        });
       }
-    });
-  }
 
-  $(document).on("click", "#btnTambahJadwal", function() {
-    $("#formJadwal")[0].reset();
-    $("#schedule_id").val("");
-    $("#doctor_code_schedule").val($("#doctorCodeJadwal").val());
-    $("#kuota").val(30);
-    APP.loadMasterPoli("#id_poli");
-    $("#modalTambahJadwal").modal("show");
-  });
-  APP.loadMasterPoli = function(target) {
-    $(target).html('<option>Memuat...</option>');
-    $.ajax({
-      url: "module/admin/get_master_poli.php",
-      type: "POST",
-      dataType: "json",
-      success: function(res) {
-        let html = '<option value="">- Pilih Poliklinik -</option>';
-        if (res.success) {
-          $.each(res.data, function(i, row) {
-            if (row.poliSakit == '1') {
-              html += `<option value="${row.kdPoli}">${row.nmPoli}</option>`;
-            }
-          });
-        }
-        $(target).html(html);
-      },
-      error: function() {
-        $(target).html('<option value="">Gagal memuat data</option>');
-      }
-    });
-  }
-
-  $(document).on("click", "#btnSimpanJadwal", function() {
-    let btn = $(this);
-    let data = {
-      schedule_id: $("#schedule_id").val(),
-      doctor_code: $("#doctor_code_schedule").val(),
-      day_of_week: $("#day_of_week").val(),
-      id_poli: $("#id_poli").val(),
-      start_time: $("#start_time").val(),
-      end_time: $("#end_time").val(),
-      kuota: $("#kuota").val()
-    };
-    if (data.day_of_week == "") {
-      Swal.fire("Perhatian", "Pilih hari.", "warning");
-      return;
-    }
-    if (data.id_poli == "") {
-      Swal.fire("Perhatian", "Pilih poliklinik.", "warning");
-      return;
-    }
-    if (data.start_time == "") {
-      Swal.fire("Perhatian", "Jam mulai belum diisi.", "warning");
-      return;
-    }
-    if (data.end_time == "") {
-      Swal.fire("Perhatian", "Jam selesai belum diisi.", "warning");
-      return;
-    }
-    btn.prop("disabled", true);
-    btn.html('<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...');
-    $.ajax({
-      url: "module/admin/simpan_jadwal.php",
-      type: "POST",
-      data: data,
-      dataType: "json",
-      success: function(res) {
-        if (res.success) {
-          $("#modalTambahJadwal").modal("hide");
-          Swal.fire({
-            icon: "success",
-            title: "Berhasil",
-            text: res.message,
-            timer: 1500,
-            showConfirmButton: false
-          });
-          APP.loadJadwalDokter(data.doctor_code);
-        } else {
-          Swal.fire("Gagal", res.message, "error");
-        }
-      },
-      error: function() {
-        Swal.fire("Error", "Terjadi kesalahan server.", "error");
-      },
-      complete: function() {
-        btn.prop("disabled", false);
-        btn.html('<i class="fas fa-save me-1"></i>Simpan');
-      }
-    });
-  });
-
-  $(document).on("blur", ".kuota-input", function() {
-    let input = $(this);
-    let id = input.data("id");
-    let kuota = input.val();
-    let old = input.data("old");
-    if (kuota == "" || kuota < 0) {
-      input.val(old);
-      Swal.fire("Perhatian", "Kuota tidak valid", "warning");
-      return;
-    }
-    if (kuota == old) {
-      return;
-    }
-    input.prop("disabled", true);
-    input.css("background", "#fff3cd");
-    $.ajax({
-      url: "module/admin/updateKuotaJKN.php",
-      type: "POST",
-      dataType: "json",
-      data: {
-        id: id,
-        kuota: kuota
-      },
-      success: function(res) {
-        if (res.success) {
-          input.data("old", kuota);
-          input.css("background", "#d4edda");
-        } else {
-          input.val(old);
-          Swal.fire("Gagal", res.message, "error");
-        }
-      },
-      error: function() {
-        input.val(old);
-        Swal.fire("Error", "Gagal mengupdate kuota", "error");
-      },
-      complete: function() {
-        input.prop("disabled", false);
-        setTimeout(function() {
-          input.css("background", "");
-        }, 800);
-      }
-    });
-  });
-
-  function toggleStatus(id, el) {
-    let status = el.checked ? 1 : 0;
-    let text = status == 1 ? "mengaktifkan" : "menonaktifkan";
-    let oldStatus = !el.checked;
-
-    Swal.fire({
-      title: "Konfirmasi",
-      text: "Yakin ingin " + text + " jadwal ini?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Ya",
-      cancelButtonText: "Batal"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        el.disabled = true;
+      $(document).on("click", "#btnTambahJadwal", function() {
+        $("#formJadwal")[0].reset();
+        $("#schedule_id").val("");
+        $("#doctor_code_schedule").val($("#doctorCodeJadwal").val());
+        $("#kuota").val(30);
+        APP.loadMasterPoli("#id_poli");
+        $("#modalTambahJadwal").modal("show");
+      });
+      APP.loadMasterPoli = function(target) {
+        $(target).html('<option>Memuat...</option>');
         $.ajax({
-          url: "module/admin/updateStatusJadwal.php",
+          url: "module/admin/get_master_poli.php",
           type: "POST",
           dataType: "json",
-          data: {
-            id: id,
-            status: status
-          },
           success: function(res) {
+            let html = '<option value="">- Pilih Poliklinik -</option>';
             if (res.success) {
-              Swal.fire({
-                icon: "success",
-                title: "Berhasil",
-                text: res.message,
-                timer: 1200,
-                showConfirmButton: false
+              $.each(res.data, function(i, row) {
+                if (row.poliSakit == '1') {
+                  html += `<option value="${row.kdPoli}">${row.nmPoli}</option>`;
+                }
               });
-            } else {
-              el.checked = oldStatus;
-              Swal.fire("Gagal", res.message, "error");
             }
+            $(target).html(html);
           },
           error: function() {
-            el.checked = oldStatus;
-            Swal.fire("Error", "Terjadi kesalahan server", "error");
-          },
-          complete: function() {
-            el.disabled = false;
+            $(target).html('<option value="">Gagal memuat data</option>');
           }
         });
-      } else {
-        el.checked = oldStatus;
       }
-    });
-  }
 
-  $(document).on("click", ".hapus-jadwal", function() {
-    let id = $(this).data("id");
-    Swal.fire({
-      title: "Hapus Jadwal?",
-      text: "Data jadwal yang dihapus tidak dapat dikembalikan.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Ya, Hapus",
-      cancelButtonText: "Batal"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire({
-          title: "Menghapus...",
-          text: "Mohon tunggu",
-          allowOutsideClick: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
-        });
+      $(document).on("click", "#btnSimpanJadwal", function() {
+        let btn = $(this);
+        let data = {
+          schedule_id: $("#schedule_id").val(),
+          doctor_code: $("#doctor_code_schedule").val(),
+          day_of_week: $("#day_of_week").val(),
+          id_poli: $("#id_poli").val(),
+          start_time: $("#start_time").val(),
+          end_time: $("#end_time").val(),
+          kuota: $("#kuota").val()
+        };
+        if (data.day_of_week == "") {
+          Swal.fire("Perhatian", "Pilih hari.", "warning");
+          return;
+        }
+        if (data.id_poli == "") {
+          Swal.fire("Perhatian", "Pilih poliklinik.", "warning");
+          return;
+        }
+        if (data.start_time == "") {
+          Swal.fire("Perhatian", "Jam mulai belum diisi.", "warning");
+          return;
+        }
+        if (data.end_time == "") {
+          Swal.fire("Perhatian", "Jam selesai belum diisi.", "warning");
+          return;
+        }
+        btn.prop("disabled", true);
+        btn.html('<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...');
         $.ajax({
-          url: "module/admin/hapusJadwal.php",
+          url: "module/admin/simpan_jadwal.php",
           type: "POST",
+          data: data,
           dataType: "json",
-          data: {
-            id: id
-          },
           success: function(res) {
             if (res.success) {
+              $("#modalTambahJadwal").modal("hide");
               Swal.fire({
                 icon: "success",
                 title: "Berhasil",
@@ -1378,48 +1278,195 @@ $antrol = mysqli_fetch_assoc(mysqli_query(
                 timer: 1500,
                 showConfirmButton: false
               });
-              APP.loadJadwalDokter($("#doctorCodeJadwal").val());
+              APP.loadJadwalDokter(data.doctor_code);
             } else {
-              Swal.fire(
-                "Gagal",
-                res.message,
-                "error"
-              );
+              Swal.fire("Gagal", res.message, "error");
             }
           },
           error: function() {
-            Swal.fire(
-              "Error",
-              "Terjadi kesalahan pada server.",
-              "error"
-            );
+            Swal.fire("Error", "Terjadi kesalahan server.", "error");
+          },
+          complete: function() {
+            btn.prop("disabled", false);
+            btn.html('<i class="fas fa-save me-1"></i>Simpan');
+          }
+        });
+      });
+
+      $(document).on("blur", ".kuota-input", function() {
+        let input = $(this);
+        let id = input.data("id");
+        let kuota = input.val();
+        let old = input.data("old");
+        if (kuota == "" || kuota < 0) {
+          input.val(old);
+          Swal.fire("Perhatian", "Kuota tidak valid", "warning");
+          return;
+        }
+        if (kuota == old) {
+          return;
+        }
+        input.prop("disabled", true);
+        input.css("background", "#fff3cd");
+        $.ajax({
+          url: "module/admin/updateKuotaJKN.php",
+          type: "POST",
+          dataType: "json",
+          data: {
+            id: id,
+            kuota: kuota
+          },
+          success: function(res) {
+            if (res.success) {
+              input.data("old", kuota);
+              input.css("background", "#d4edda");
+            } else {
+              input.val(old);
+              Swal.fire("Gagal", res.message, "error");
+            }
+          },
+          error: function() {
+            input.val(old);
+            Swal.fire("Error", "Gagal mengupdate kuota", "error");
+          },
+          complete: function() {
+            input.prop("disabled", false);
+            setTimeout(function() {
+              input.css("background", "");
+            }, 800);
+          }
+        });
+      });
+
+      function toggleStatus(id, el) {
+        let status = el.checked ? 1 : 0;
+        let text = status == 1 ? "mengaktifkan" : "menonaktifkan";
+        let oldStatus = !el.checked;
+
+        Swal.fire({
+          title: "Konfirmasi",
+          text: "Yakin ingin " + text + " jadwal ini?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Ya",
+          cancelButtonText: "Batal"
+        }).then((result) => {
+          if (result.isConfirmed) {
+            el.disabled = true;
+            $.ajax({
+              url: "module/admin/updateStatusJadwal.php",
+              type: "POST",
+              dataType: "json",
+              data: {
+                id: id,
+                status: status
+              },
+              success: function(res) {
+                if (res.success) {
+                  Swal.fire({
+                    icon: "success",
+                    title: "Berhasil",
+                    text: res.message,
+                    timer: 1200,
+                    showConfirmButton: false
+                  });
+                } else {
+                  el.checked = oldStatus;
+                  Swal.fire("Gagal", res.message, "error");
+                }
+              },
+              error: function() {
+                el.checked = oldStatus;
+                Swal.fire("Error", "Terjadi kesalahan server", "error");
+              },
+              complete: function() {
+                el.disabled = false;
+              }
+            });
+          } else {
+            el.checked = oldStatus;
           }
         });
       }
-    });
-  });
-</script>
 
-<script>
-  $(document).ready(function() {
-    const apiUrl = 'module/admin/getDataIcare';
-    const $tableBody = $('#dokterTableBody');
-    const $btnSync = $('#btnTambah');
-    function loadDataDokter() {
-      $tableBody.html('<tr><td colspan="4" class="text-center">Memuat data dari server... <i class="fas fa-spinner fa-spin"></i></td></tr>');
-      $.ajax({
-        url: apiUrl,
-        type: 'GET',
-        dataType: 'json',
-        success: function(response) {
-          $tableBody.empty();
-          if (response.success && response.data && response.data.length > 0) {
-            let rows = '';
-            $.each(response.data, function(index, dokter) {
-              const statusBadge = (dokter.status === "1" || dokter.status === 1) ?
-                '<span class="badge bg-success">Aktif</span>' :
-                '<span class="badge bg-danger">Nonaktif</span>';
-              rows += `
+      $(document).on("click", ".hapus-jadwal", function() {
+        let id = $(this).data("id");
+        Swal.fire({
+          title: "Hapus Jadwal?",
+          text: "Data jadwal yang dihapus tidak dapat dikembalikan.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Ya, Hapus",
+          cancelButtonText: "Batal"
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              title: "Menghapus...",
+              text: "Mohon tunggu",
+              allowOutsideClick: false,
+              didOpen: () => {
+                Swal.showLoading();
+              }
+            });
+            $.ajax({
+              url: "module/admin/hapusJadwal.php",
+              type: "POST",
+              dataType: "json",
+              data: {
+                id: id
+              },
+              success: function(res) {
+                if (res.success) {
+                  Swal.fire({
+                    icon: "success",
+                    title: "Berhasil",
+                    text: res.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                  });
+                  APP.loadJadwalDokter($("#doctorCodeJadwal").val());
+                } else {
+                  Swal.fire(
+                    "Gagal",
+                    res.message,
+                    "error"
+                  );
+                }
+              },
+              error: function() {
+                Swal.fire(
+                  "Error",
+                  "Terjadi kesalahan pada server.",
+                  "error"
+                );
+              }
+            });
+          }
+        });
+      });
+    </script>
+
+    <script>
+      $(document).ready(function() {
+        const apiUrl = 'module/admin/getDataIcare';
+        const $tableBody = $('#dokterTableBody');
+        const $btnSync = $('#btnTambah');
+
+        function loadDataDokter() {
+          $tableBody.html('<tr><td colspan="4" class="text-center">Memuat data dari server... <i class="fas fa-spinner fa-spin"></i></td></tr>');
+          $.ajax({
+            url: apiUrl,
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+              $tableBody.empty();
+              if (response.success && response.data && response.data.length > 0) {
+                let rows = '';
+                $.each(response.data, function(index, dokter) {
+                  const statusBadge = (dokter.status === "1" || dokter.status === 1) ?
+                    '<span class="badge bg-success">Aktif</span>' :
+                    '<span class="badge bg-danger">Nonaktif</span>';
+                  rows += `
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center">
@@ -1441,90 +1488,91 @@ $antrol = mysqli_fetch_assoc(mysqli_query(
                             </td>
                             </tr>
                         `;
-            });
-            $tableBody.append(rows);
-          } else {
-            $tableBody.html('<tr><td colspan="4" class="text-center text-muted">Data dokter belum tersedia.</td></tr>');
-          }
-        },
-        error: function(xhr, status, error) {
-          console.error('Terjadi kesalahan Ajax:', error);
-          $tableBody.html('<tr><td colspan="4" class="text-center text-danger"><i class="fas fa-exclamation-triangle"></i> Gagal mengambil data dari server.</td></tr>');
-        }
-      });
-    }
-    loadDataDokter();
-    $btnSync.on('click', function(e) {
-      e.preventDefault();
-      loadDataDokter();
-    });
-
-    $(document).on('click', '.btn-edit-dokter', function() {
-      const id = $(this).data('id');
-      const username = $(this).data('username');
-      const password = $(this).data('password');
-      $('#editId').val(id);
-      $('#editUsername').val(username);
-      $('#editPassword').val(password);
-      $('#modalEditDokter').modal('show');
-    });
-
-    $('#formEditDokter').on('submit', function(e) {
-      e.preventDefault();
-      const id = $('#editId').val();
-      const username = $('#editUsername').val();
-      const password = $('#editPassword').val();
-      $.ajax({
-        url: 'module/admin/updateDataIcare',
-        type: 'POST',
-        dataType: 'json',
-        data: {
-          id: id,
-          username: username,
-          password: password
-        },
-        beforeSend: function() {
-          $('#formEditDokter button[type="submit"]')
-            .prop('disabled', true)
-            .html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
-        },
-        success: function(response) {
-          if (response.success) {
-            $('#modalEditDokter').modal('hide');
-            Swal.fire({
-              icon: 'success',
-              title: 'Berhasil!',
-              text: response.message || 'Data iCare berhasil disimpan.',
-              timer: 1500,
-              showConfirmButton: false
-            });
-            loadDataDokter();
-          } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Gagal!',
-              text: response.message || 'Data gagal disimpan.'
-            });
-          }
-        },
-        error: function(xhr, status, error) {
-          console.error('Error AJAX:', error);
-          console.error('Response:', xhr.responseText);
-          Swal.fire({
-            icon: 'error',
-            title: 'Terjadi Kesalahan!',
-            text: 'Tidak dapat menyimpan data ke server.'
+                });
+                $tableBody.append(rows);
+              } else {
+                $tableBody.html('<tr><td colspan="4" class="text-center text-muted">Data dokter belum tersedia.</td></tr>');
+              }
+            },
+            error: function(xhr, status, error) {
+              console.error('Terjadi kesalahan Ajax:', error);
+              $tableBody.html('<tr><td colspan="4" class="text-center text-danger"><i class="fas fa-exclamation-triangle"></i> Gagal mengambil data dari server.</td></tr>');
+            }
           });
-        },
-        complete: function() {
-          $('#formEditDokter button[type="submit"]')
-            .prop('disabled', false)
-            .html('<i class="fas fa-save me-1"></i> Simpan');
-
         }
+        loadDataDokter();
+        $btnSync.on('click', function(e) {
+          e.preventDefault();
+          loadDataDokter();
+        });
+
+        $(document).on('click', '.btn-edit-dokter', function() {
+          const id = $(this).data('id');
+          const username = $(this).data('username');
+          const password = $(this).data('password');
+          $('#editId').val(id);
+          $('#editUsername').val(username);
+          $('#editPassword').val(password);
+          $('#modalEditDokter').modal('show');
+        });
+
+        $('#formEditDokter').on('submit', function(e) {
+          e.preventDefault();
+          const id = $('#editId').val();
+          const username = $('#editUsername').val();
+          const password = $('#editPassword').val();
+          $.ajax({
+            url: 'module/admin/updateDataIcare',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+              id: id,
+              username: username,
+              password: password
+            },
+            beforeSend: function() {
+              $('#formEditDokter button[type="submit"]')
+                .prop('disabled', true)
+                .html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
+            },
+            success: function(response) {
+              if (response.success) {
+                $('#modalEditDokter').modal('hide');
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Berhasil!',
+                  text: response.message || 'Data iCare berhasil disimpan.',
+                  timer: 1500,
+                  showConfirmButton: false
+                });
+                loadDataDokter();
+              } else {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Gagal!',
+                  text: response.message || 'Data gagal disimpan.'
+                });
+              }
+            },
+            error: function(xhr, status, error) {
+              console.error('Error AJAX:', error);
+              console.error('Response:', xhr.responseText);
+              Swal.fire({
+                icon: 'error',
+                title: 'Terjadi Kesalahan!',
+                text: 'Tidak dapat menyimpan data ke server.'
+              });
+            },
+            complete: function() {
+              $('#formEditDokter button[type="submit"]')
+                .prop('disabled', false)
+                .html('<i class="fas fa-save me-1"></i> Simpan');
+
+            }
+          });
+        });
       });
-    });
-  });
-</script>
+    </script>
+</body>
 
 </html>
