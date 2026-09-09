@@ -28,6 +28,23 @@
            </a>
         </li>
         <li class="sidebar-item">
+           <a class="sidebar-link <?php
+                                    if ($title == 'Laporan Farmasi') {
+                                       echo 'active';
+                                    }
+                                    ?>"
+              href="module/admin/rpt_farmasi"
+              aria-expanded="false">
+
+              <iconify-icon icon="mdi:clipboard-text-outline"></iconify-icon>
+
+              <span class="hide-menu">
+                 Laporan Stock Farmasi
+              </span>
+
+           </a>
+        </li>
+        <li class="sidebar-item">
            <a class="sidebar-link <?php if ($title == 'Farmasi Order') {
                                        echo 'active';
                                     } ?>"
