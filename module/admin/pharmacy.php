@@ -198,6 +198,13 @@ require '../../controller/view.php';
               "actions": `
                       <div class="text-center">
 								<div class="btn-group btn-group-sm" role="group">
+                <a 
+                    class="btn btn-warning" 
+                    href="module/admin/pharmacy_stock?no=${row.id_pharmacy}"
+                    title="Stock"
+                >
+                    <i class="fas fa-boxes-stacked"></i>
+                </a>
                 	<a class="btn btn-info" href="module/admin/pharmacy_details?no=${row.id_pharmacy}">
 											<i class="fas fa-info-circle"></i>
 									</a>

@@ -448,7 +448,7 @@ require '../../controller/view.php';
         // =============================
 
         {
-          data: "stok_awal",
+          data: "pharmacy_stock",
 
           className: "text-end",
 
