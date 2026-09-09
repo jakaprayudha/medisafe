@@ -117,6 +117,8 @@ SELECT
 
     p.pharmacy_unit,
 
+    p.pharmacy_stock,
+
     p.pharmacy_kemasan,
 
     p.pharmacy_supplier,
