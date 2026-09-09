@@ -6,8 +6,8 @@ header('Content-Type: application/json');
 
 $id_customer = $_SESSION['id_customer'] ?? null;
 
-$username = $_POST['username'] ?? '';
-$password = $_POST['password'] ?? '';
+$username = $_POST['username_pcare'] ?? '';
+$password = $_POST['password_pcare'] ?? '';
 
 if (!$id_customer) {
    echo json_encode([
