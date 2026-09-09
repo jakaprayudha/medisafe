@@ -1159,21 +1159,17 @@
 
 <div class="dokter-dashboard">
 
-
   <!-- =====================================================
-         FILTER PERIODE
-    ====================================================== -->
-
+     FILTER PERIODE
+====================================================== -->
   <div class="dok-filter-wrapper">
 
     <div class="dok-filter-title">
 
       <div class="dok-filter-icon">
-
         <iconify-icon
           icon="solar:calendar-search-bold">
         </iconify-icon>
-
       </div>
 
       <div>
@@ -1286,30 +1282,39 @@
 
 
   <!-- =====================================================
-         STATUS DOKTER
-    ====================================================== -->
-
+     STATUS DOKTER
+====================================================== -->
   <div class="doctor-status-bar">
 
     <div class="doctor-status-left">
 
-      <div class="doctor-avatar-large">
-        DA
+      <div
+        class="doctor-avatar-large"
+        id="doctorAvatar">
+        DR
       </div>
+
 
       <div>
 
-        <div class="doctor-status-name">
-          dr. Andi Saputra
+        <div
+          class="doctor-status-name"
+          id="doctorName">
+          Memuat...
         </div>
 
-        <div class="doctor-status-poli">
-          Poli Umum · Praktik 08:00 - 14:00
+        <div
+          class="doctor-status-poli"
+          id="doctorPoli">
+          Memuat informasi pelayanan...
         </div>
 
       </div>
 
-      <div class="doctor-online">
+
+      <div
+        class="doctor-online"
+        id="doctorOnline">
 
         <span class="doctor-online-dot"></span>
 
@@ -1325,9 +1330,7 @@
       <div
         class="doctor-clock"
         id="dokterCurrentTime">
-
         <?= date('H:i:s') ?>
-
       </div>
 
       <div class="doctor-clock-label">
@@ -1340,14 +1343,12 @@
 
 
   <!-- =====================================================
-         KPI
-    ====================================================== -->
-
+     KPI
+====================================================== -->
   <div class="row g-3 mb-3">
 
 
     <!-- TOTAL PASIEN -->
-
     <div class="col-xl-3 col-md-6">
 
       <div class="kpi-card">
@@ -1360,12 +1361,16 @@
               Total Pasien
             </div>
 
-            <div class="kpi-value">
-              32
+            <div
+              class="kpi-value"
+              id="kpiTotalPasien">
+              0
             </div>
 
-            <div class="kpi-info up">
-              ↑ 8,4% dari periode sebelumnya
+            <div
+              class="kpi-info up"
+              id="kpiTotalPasienInfo">
+              Berdasarkan periode
             </div>
 
           </div>
@@ -1386,7 +1391,6 @@
 
 
     <!-- MENUNGGU -->
-
     <div class="col-xl-3 col-md-6">
 
       <div class="kpi-card">
@@ -1399,11 +1403,15 @@
               Pasien Menunggu
             </div>
 
-            <div class="kpi-value">
-              6
+            <div
+              class="kpi-value"
+              id="kpiMenunggu">
+              0
             </div>
 
-            <div class="kpi-info warning">
+            <div
+              class="kpi-info warning"
+              id="kpiMenungguInfo">
               Pasien berikutnya siap dipanggil
             </div>
 
@@ -1425,7 +1433,6 @@
 
 
     <!-- DIPERIKSA -->
-
     <div class="col-xl-3 col-md-6">
 
       <div class="kpi-card">
@@ -1438,12 +1445,16 @@
               Sedang Diperiksa
             </div>
 
-            <div class="kpi-value">
-              1
+            <div
+              class="kpi-value"
+              id="kpiDiperiksa">
+              0
             </div>
 
-            <div class="kpi-info">
-              Ruang Pemeriksaan 01
+            <div
+              class="kpi-info"
+              id="kpiDiperiksaInfo">
+              Pelayanan aktif
             </div>
 
           </div>
@@ -1464,7 +1475,6 @@
 
 
     <!-- SELESAI -->
-
     <div class="col-xl-3 col-md-6">
 
       <div class="kpi-card">
@@ -1477,12 +1487,16 @@
               Selesai
             </div>
 
-            <div class="kpi-value">
-              25
+            <div
+              class="kpi-value"
+              id="kpiSelesai">
+              0
             </div>
 
-            <div class="kpi-info up">
-              78% dari total pasien
+            <div
+              class="kpi-info up"
+              id="kpiSelesaiInfo">
+              0% dari total pasien
             </div>
 
           </div>
@@ -1505,14 +1519,12 @@
 
 
   <!-- =====================================================
-         PASIEN BERIKUTNYA + JADWAL
-    ====================================================== -->
-
+     PASIEN BERIKUTNYA + JADWAL
+====================================================== -->
   <div class="row g-3 mb-3">
 
 
     <!-- PASIEN BERIKUTNYA -->
-
     <div class="col-xl-5">
 
       <div class="dash-card">
@@ -1531,163 +1543,29 @@
 
           </div>
 
-          <span class="badge bg-warning text-dark">
-            Antrian 021
+          <span
+            class="badge bg-warning text-dark"
+            id="nextQueueBadge">
+            Tidak Ada
           </span>
 
         </div>
 
 
-        <div class="next-patient">
+        <div id="nextPatientContainer">
 
-          <div class="next-patient-label">
-
-            Pasien Berikutnya
-
+          <div class="text-center py-4 text-muted">
+            Memuat data...
           </div>
-
-
-          <div class="next-patient-content">
-
-            <div class="patient-avatar">
-              BS
-            </div>
-
-            <div>
-
-              <div class="patient-name">
-                Budi Santoso
-              </div>
-
-              <div class="patient-meta">
-                RM-000182 · Laki-laki · 42 Tahun
-              </div>
-
-              <div class="patient-meta">
-                BPJS · Kunjungan Baru
-              </div>
-
-            </div>
-
-            <div class="next-patient-number">
-              A-021
-            </div>
-
-          </div>
-
-
-          <button
-            type="button"
-            class="btn btn-primary start-examination">
-
-            <iconify-icon
-              icon="solar:stethoscope-bold"
-              class="me-1">
-            </iconify-icon>
-
-            Mulai Pemeriksaan
-
-          </button>
 
         </div>
 
 
-        <div class="queue-item">
+        <div id="queueListContainer">
 
-          <div class="queue-number">
-            A-022
+          <div class="text-center py-4 text-muted">
+            Memuat antrian...
           </div>
-
-          <div>
-
-            <div class="queue-name">
-              Siti Rahma
-            </div>
-
-            <div class="queue-detail">
-              RM-000183 · 35 Tahun
-            </div>
-
-          </div>
-
-          <span class="queue-status waiting">
-            Menunggu
-          </span>
-
-        </div>
-
-
-        <div class="queue-item">
-
-          <div class="queue-number">
-            A-023
-          </div>
-
-          <div>
-
-            <div class="queue-name">
-              Ahmad Fauzi
-            </div>
-
-            <div class="queue-detail">
-              RM-000184 · 51 Tahun
-            </div>
-
-          </div>
-
-          <span class="queue-status waiting">
-            Menunggu
-          </span>
-
-        </div>
-
-
-        <div class="queue-item">
-
-          <div class="queue-number">
-            A-024
-          </div>
-
-          <div>
-
-            <div class="queue-name">
-              Dewi Lestari
-            </div>
-
-            <div class="queue-detail">
-              RM-000185 · 29 Tahun
-            </div>
-
-          </div>
-
-          <span class="queue-status waiting">
-            Menunggu
-          </span>
-
-        </div>
-
-
-        <div class="queue-item">
-
-          <div class="queue-number">
-            A-025
-          </div>
-
-          <div>
-
-            <div class="queue-name">
-              Rudi Hartono
-            </div>
-
-            <div class="queue-detail">
-              RM-000186 · 46 Tahun
-            </div>
-
-          </div>
-
-          <span class="queue-status called">
-            Dipanggil
-          </span>
 
         </div>
 
@@ -1697,7 +1575,6 @@
 
 
     <!-- JADWAL -->
-
     <div class="col-xl-7">
 
       <div class="dash-card">
@@ -1716,144 +1593,20 @@
 
           </div>
 
-          <span class="badge bg-primary">
-            08:00 - 14:00
+          <span
+            class="badge bg-primary"
+            id="practiceTimeBadge">
+            -
           </span>
 
         </div>
 
 
-        <div class="schedule-item">
+        <div id="scheduleContainer">
 
-          <div class="schedule-time">
-            08:00
+          <div class="text-center py-4 text-muted">
+            Memuat jadwal...
           </div>
-
-          <div class="schedule-line"></div>
-
-          <div class="schedule-info">
-
-            <div class="schedule-title">
-              Poli Umum
-            </div>
-
-            <div class="schedule-detail">
-              Pasien Umum & BPJS · 15 pasien
-            </div>
-
-          </div>
-
-          <span class="schedule-status schedule-done">
-            Selesai
-          </span>
-
-        </div>
-
-
-        <div class="schedule-item">
-
-          <div class="schedule-time">
-            10:00
-          </div>
-
-          <div class="schedule-line"></div>
-
-          <div class="schedule-info">
-
-            <div class="schedule-title">
-              Poli Umum
-            </div>
-
-            <div class="schedule-detail">
-              Kunjungan lanjutan · 8 pasien
-            </div>
-
-          </div>
-
-          <span class="schedule-status schedule-active">
-            Berlangsung
-          </span>
-
-        </div>
-
-
-        <div class="schedule-item">
-
-          <div class="schedule-time">
-            12:00
-          </div>
-
-          <div class="schedule-line"></div>
-
-          <div class="schedule-info">
-
-            <div class="schedule-title">
-              Konsultasi
-            </div>
-
-            <div class="schedule-detail">
-              Konsultasi pasien terjadwal · 5 pasien
-            </div>
-
-          </div>
-
-          <span class="schedule-status schedule-next">
-            Berikutnya
-          </span>
-
-        </div>
-
-
-        <div class="schedule-item">
-
-          <div class="schedule-time">
-            13:00
-          </div>
-
-          <div class="schedule-line"></div>
-
-          <div class="schedule-info">
-
-            <div class="schedule-title">
-              Medical Check Up
-            </div>
-
-            <div class="schedule-detail">
-              Pemeriksaan kesehatan · 4 pasien
-            </div>
-
-          </div>
-
-          <span class="schedule-status schedule-next">
-            Terjadwal
-          </span>
-
-        </div>
-
-
-        <div class="schedule-item">
-
-          <div class="schedule-time">
-            14:00
-          </div>
-
-          <div class="schedule-line"></div>
-
-          <div class="schedule-info">
-
-            <div class="schedule-title">
-              Selesai Praktik
-            </div>
-
-            <div class="schedule-detail">
-              Penutupan pelayanan poli
-            </div>
-
-          </div>
-
-          <span class="schedule-status schedule-next">
-            Jadwal
-          </span>
 
         </div>
 
@@ -1865,14 +1618,12 @@
 
 
   <!-- =====================================================
-         GRAFIK + RME
-    ====================================================== -->
-
+     GRAFIK + RME
+====================================================== -->
   <div class="row g-3 mb-3">
 
 
     <!-- GRAFIK -->
-
     <div class="col-xl-7">
 
       <div class="dash-card">
@@ -1885,7 +1636,9 @@
               Statistik Pasien
             </h6>
 
-            <div class="dash-subtitle">
+            <div
+              class="dash-subtitle"
+              id="patientChartSubtitle">
               Jumlah pasien yang dilayani
             </div>
 
@@ -1893,23 +1646,24 @@
 
           <select
             class="form-select"
+            id="patientChartPeriod"
             style="
-                            width:auto;
-                            min-width:110px;
-                            font-size:11px;
-                            border-radius:10px;
-                        ">
+                        width:auto;
+                        min-width:110px;
+                        font-size:11px;
+                        border-radius:10px;
+                    ">
 
-            <option>
+            <option value="7days">
               7 Hari
             </option>
 
-            <option>
+            <option value="30days">
               30 Hari
             </option>
 
-            <option>
-              3 Bulan
+            <option value="thismonth">
+              Bulan Ini
             </option>
 
           </select>
@@ -1930,8 +1684,7 @@
     </div>
 
 
-    <!-- RME BELUM LENGKAP -->
-
+    <!-- RME -->
     <div class="col-xl-5">
 
       <div class="dash-card">
@@ -1950,141 +1703,20 @@
 
           </div>
 
-          <span class="badge bg-warning text-dark">
-            4
+          <span
+            class="badge bg-warning text-dark"
+            id="rmeBadge">
+            0
           </span>
 
         </div>
 
 
-        <div class="rme-alert">
+        <div id="rmeContainer">
 
-          <div class="rme-alert-icon">
-
-            <iconify-icon
-              icon="solar:document-text-bold">
-            </iconify-icon>
-
+          <div class="text-center py-4 text-muted">
+            Memuat data...
           </div>
-
-          <div>
-
-            <div class="rme-alert-name">
-              Ahmad Fauzi
-            </div>
-
-            <div class="rme-alert-desc">
-              SOAP belum lengkap
-            </div>
-
-          </div>
-
-          <a
-            href="#"
-            class="rme-alert-action">
-
-            Lengkapi
-
-          </a>
-
-        </div>
-
-
-        <div class="rme-alert">
-
-          <div class="rme-alert-icon">
-
-            <iconify-icon
-              icon="solar:clipboard-text-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div>
-
-            <div class="rme-alert-name">
-              Dewi Lestari
-            </div>
-
-            <div class="rme-alert-desc">
-              Diagnosis belum disimpan
-            </div>
-
-          </div>
-
-          <a
-            href="#"
-            class="rme-alert-action">
-
-            Lengkapi
-
-          </a>
-
-        </div>
-
-
-        <div class="rme-alert">
-
-          <div class="rme-alert-icon">
-
-            <iconify-icon
-              icon="solar:pills-3-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div>
-
-            <div class="rme-alert-name">
-              Rudi Hartono
-            </div>
-
-            <div class="rme-alert-desc">
-              Resep belum dikirim
-            </div>
-
-          </div>
-
-          <a
-            href="#"
-            class="rme-alert-action">
-
-            Proses
-
-          </a>
-
-        </div>
-
-
-        <div class="rme-alert">
-
-          <div class="rme-alert-icon">
-
-            <iconify-icon
-              icon="solar:test-tube-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div>
-
-            <div class="rme-alert-name">
-              Siti Rahma
-            </div>
-
-            <div class="rme-alert-desc">
-              Hasil lab menunggu
-            </div>
-
-          </div>
-
-          <a
-            href="#"
-            class="rme-alert-action">
-
-            Lihat
-
-          </a>
 
         </div>
 
@@ -2096,14 +1728,12 @@
 
 
   <!-- =====================================================
-         DIAGNOSIS + AKSES CEPAT
-    ====================================================== -->
-
+     DIAGNOSIS + AKSES CEPAT
+====================================================== -->
   <div class="row g-3">
 
 
     <!-- DIAGNOSIS -->
-
     <div class="col-xl-5">
 
       <div class="dash-card">
@@ -2125,124 +1755,16 @@
           <a
             href="#"
             class="view-all">
-
             Detail
-
           </a>
 
         </div>
 
 
-        <div class="diagnosis-item">
+        <div id="diagnosisContainer">
 
-          <div class="diagnosis-rank">
-            01
-          </div>
-
-          <div class="diagnosis-name">
-
-            ISPA
-
-            <span class="diagnosis-code">
-              J06.9
-            </span>
-
-          </div>
-
-          <div class="diagnosis-count">
-            12
-          </div>
-
-        </div>
-
-
-        <div class="diagnosis-item">
-
-          <div class="diagnosis-rank">
-            02
-          </div>
-
-          <div class="diagnosis-name">
-
-            Hipertensi Esensial
-
-            <span class="diagnosis-code">
-              I10
-            </span>
-
-          </div>
-
-          <div class="diagnosis-count">
-            8
-          </div>
-
-        </div>
-
-
-        <div class="diagnosis-item">
-
-          <div class="diagnosis-rank">
-            03
-          </div>
-
-          <div class="diagnosis-name">
-
-            Gastritis
-
-            <span class="diagnosis-code">
-              K29.7
-            </span>
-
-          </div>
-
-          <div class="diagnosis-count">
-            6
-          </div>
-
-        </div>
-
-
-        <div class="diagnosis-item">
-
-          <div class="diagnosis-rank">
-            04
-          </div>
-
-          <div class="diagnosis-name">
-
-            Diabetes Mellitus
-
-            <span class="diagnosis-code">
-              E11.9
-            </span>
-
-          </div>
-
-          <div class="diagnosis-count">
-            4
-          </div>
-
-        </div>
-
-
-        <div class="diagnosis-item">
-
-          <div class="diagnosis-rank">
-            05
-          </div>
-
-          <div class="diagnosis-name">
-
-            Myalgia
-
-            <span class="diagnosis-code">
-              M79.1
-            </span>
-
-          </div>
-
-          <div class="diagnosis-count">
-            2
+          <div class="text-center py-4 text-muted">
+            Memuat diagnosis...
           </div>
 
         </div>
@@ -2253,7 +1775,6 @@
 
 
     <!-- AKSES CEPAT -->
-
     <div class="col-xl-7">
 
       <div class="dash-card">
@@ -2279,7 +1800,6 @@
 
 
           <!-- RME -->
-
           <div class="col-6 col-md-4">
 
             <a
@@ -2308,7 +1828,6 @@
 
 
           <!-- SOAP -->
-
           <div class="col-6 col-md-4">
 
             <a
@@ -2337,7 +1856,6 @@
 
 
           <!-- RESEP -->
-
           <div class="col-6 col-md-4">
 
             <a
@@ -2366,7 +1884,6 @@
 
 
           <!-- LAB -->
-
           <div class="col-6 col-md-4">
 
             <a
@@ -2395,7 +1912,6 @@
 
 
           <!-- RADIOLOGI -->
-
           <div class="col-6 col-md-4">
 
             <a
@@ -2424,7 +1940,6 @@
 
 
           <!-- RIWAYAT -->
-
           <div class="col-6 col-md-4">
 
             <a
@@ -2464,17 +1979,30 @@
 
 <script>
   /* =========================================================
-       DASHBOARD DOKTER
-    ========================================================= */
+   DASHBOARD DOKTER
+========================================================= */
 
   document.addEventListener(
     "DOMContentLoaded",
     function() {
 
+      "use strict";
 
-      /* =================================================
-         FILTER PERIODE
-      ================================================= */
+
+      /* =====================================================
+         CONFIG
+      ====================================================== */
+
+      const API_URL =
+        "controller/dashboard/dokterDashboardController.php?action=dashboard";
+
+
+      let patientChart = null;
+
+
+      /* =====================================================
+         ELEMENT
+      ====================================================== */
 
       const period =
         document.getElementById(
@@ -2496,6 +2024,116 @@
           "applyDokterFilter"
         );
 
+
+      /* =====================================================
+         HELPER
+      ====================================================== */
+
+      function escapeHtml(value) {
+
+        if (
+          value === null ||
+          value === undefined
+        ) {
+          return "";
+        }
+
+        return String(value)
+          .replace(
+            /&/g,
+            "&amp;"
+          )
+          .replace(
+            /</g,
+            "&lt;"
+          )
+          .replace(
+            />/g,
+            "&gt;"
+          )
+          .replace(
+            /"/g,
+            "&quot;"
+          )
+          .replace(
+            /'/g,
+            "&#039;"
+          );
+
+      }
+
+
+      function numberFormat(value) {
+
+        return new Intl.NumberFormat(
+          "id-ID"
+        ).format(
+          Number(value || 0)
+        );
+
+      }
+
+
+      function formatDate(dateString) {
+
+        if (!dateString) {
+          return "-";
+        }
+
+        const date =
+          new Date(
+            dateString +
+            "T00:00:00"
+          );
+
+        if (
+          isNaN(
+            date.getTime()
+          )
+        ) {
+          return dateString;
+        }
+
+        return date.toLocaleDateString(
+          "id-ID", {
+            day: "2-digit",
+            month: "short"
+          }
+        );
+
+      }
+
+
+      function initials(name) {
+
+        if (!name) {
+          return "DR";
+        }
+
+        const parts =
+          String(name)
+          .trim()
+          .split(/\s+/);
+
+        if (parts.length === 1) {
+
+          return parts[0]
+            .substring(0, 2)
+            .toUpperCase();
+
+        }
+
+        return (
+          parts[0][0] +
+          parts[1][0]
+        ).toUpperCase();
+
+      }
+
+
+      /* =====================================================
+         PERIOD
+      ====================================================== */
 
       function localDate(date) {
 
@@ -2573,6 +2211,9 @@
             today.getDate() - 6
           );
 
+          end =
+            new Date(today);
+
         } else if (
           value === "30days"
         ) {
@@ -2584,6 +2225,9 @@
             today.getDate() - 29
           );
 
+          end =
+            new Date(today);
+
         } else if (
           value === "thismonth"
         ) {
@@ -2594,6 +2238,9 @@
               today.getMonth(),
               1
             );
+
+          end =
+            new Date(today);
 
         } else if (
           value === "lastmonth"
@@ -2637,72 +2284,1213 @@
       );
 
 
-      applyButton.addEventListener(
-        "click",
-        function() {
+      /* =====================================================
+         LOAD DASHBOARD
+      ====================================================== */
 
-          const dari =
-            startDate.value;
+      async function loadDashboard() {
 
-          const sampai =
-            endDate.value;
+        const selectedPeriod =
+          period.value;
+
+
+        let url =
+          API_URL +
+          "&period=" +
+          encodeURIComponent(
+            selectedPeriod
+          );
+
+
+        if (
+          selectedPeriod ===
+          "custom"
+        ) {
+
+          if (
+            !startDate.value ||
+            !endDate.value
+          ) {
+
+            showError(
+              "Tanggal custom belum lengkap."
+            );
+
+            return;
+
+          }
+
+
+          if (
+            startDate.value >
+            endDate.value
+          ) {
+
+            showError(
+              "Tanggal mulai tidak boleh lebih besar dari tanggal akhir."
+            );
+
+            return;
+
+          }
+
+
+          url +=
+            "&start_date=" +
+            encodeURIComponent(
+              startDate.value
+            ) +
+            "&end_date=" +
+            encodeURIComponent(
+              endDate.value
+            );
+
+        }
+
+
+        setLoading(true);
+
+
+        try {
+
+          const response =
+            await fetch(
+              url, {
+                method: "GET",
+                headers: {
+                  "Accept": "application/json",
+                  "X-Requested-With": "XMLHttpRequest"
+                },
+                cache: "no-store"
+              }
+            );
+
+
+          if (!response.ok) {
+
+            throw new Error(
+              "HTTP Error " +
+              response.status
+            );
+
+          }
+
+
+          const data =
+            await response.json();
 
 
           console.log(
-            "Filter Dokter:", {
-              dari: dari,
-              sampai: sampai
+            "Dashboard Dokter:",
+            data
+          );
+
+
+          if (
+            !data.status
+          ) {
+
+            throw new Error(
+              data.message ||
+              "Gagal mengambil data dashboard."
+            );
+
+          }
+
+
+          renderDoctor(
+            data.doctor
+          );
+
+          renderKPI(
+            data.kpi
+          );
+
+          renderNextPatient(
+            data.next_patient
+          );
+
+          renderQueue(
+            data.queue
+          );
+
+          renderSchedule(
+            data.schedule
+          );
+
+          renderPatientChart(
+            data.patient_chart
+          );
+
+          renderRME(
+            data.rme
+          );
+
+          renderDiagnosis(
+            data.diagnosis
+          );
+
+
+        } catch (error) {
+
+          console.error(
+            "Dashboard Dokter Error:",
+            error
+          );
+
+          showError(
+            error.message
+          );
+
+        } finally {
+
+          setLoading(false);
+
+        }
+
+      }
+
+
+      /* =====================================================
+         DOCTOR
+      ====================================================== */
+
+      function renderDoctor(
+        doctor
+      ) {
+
+        doctor =
+          doctor || {};
+
+
+        const name =
+          doctor.name &&
+          doctor.name !== "Dokter" ?
+          doctor.name :
+          doctor.id ||
+          doctor.code ||
+          "Dokter";
+
+
+        document.getElementById(
+            "doctorName"
+          ).textContent =
+          name;
+
+
+        document.getElementById(
+            "doctorAvatar"
+          ).textContent =
+          initials(name);
+
+
+        /*
+         * Controller saat ini belum mengirim
+         * poli dan jadwal sebagai field doctor.
+         */
+
+        const poliElement =
+          document.getElementById(
+            "doctorPoli"
+          );
+
+
+        if (
+          doctor.poli
+        ) {
+
+          poliElement.textContent =
+            doctor.poli;
+
+        } else {
+
+          poliElement.textContent =
+            "Dokter · Informasi jadwal pelayanan";
+
+        }
+
+      }
+
+
+      /* =====================================================
+         KPI
+      ====================================================== */
+
+      function renderKPI(
+        kpi
+      ) {
+
+        kpi =
+          kpi || {};
+
+
+        const total =
+          Number(
+            kpi.total_pasien || 0
+          );
+
+        const waiting =
+          Number(
+            kpi.pasien_menunggu || 0
+          );
+
+        const checking =
+          Number(
+            kpi.sedang_diperiksa || 0
+          );
+
+        const done =
+          Number(
+            kpi.selesai || 0
+          );
+
+        const percentage =
+          Number(
+            kpi.persentase_selesai || 0
+          );
+
+
+        document.getElementById(
+            "kpiTotalPasien"
+          ).textContent =
+          numberFormat(total);
+
+
+        document.getElementById(
+            "kpiMenunggu"
+          ).textContent =
+          numberFormat(waiting);
+
+
+        document.getElementById(
+            "kpiDiperiksa"
+          ).textContent =
+          numberFormat(checking);
+
+
+        document.getElementById(
+            "kpiSelesai"
+          ).textContent =
+          numberFormat(done);
+
+
+        document.getElementById(
+            "kpiTotalPasienInfo"
+          ).textContent =
+          "Pasien unik pada periode terpilih";
+
+
+        document.getElementById(
+            "kpiMenungguInfo"
+          ).textContent =
+          waiting > 0 ?
+          "Pasien berikutnya siap dipanggil" :
+          "Tidak ada pasien menunggu";
+
+
+        document.getElementById(
+            "kpiDiperiksaInfo"
+          ).textContent =
+          checking > 0 ?
+          "Pasien sedang dalam pelayanan" :
+          "Tidak ada pemeriksaan aktif";
+
+
+        document.getElementById(
+            "kpiSelesaiInfo"
+          ).textContent =
+          percentage +
+          "% dari total pasien";
+
+      }
+
+
+      /* =====================================================
+         NEXT PATIENT
+      ====================================================== */
+
+      function renderNextPatient(
+        patient
+      ) {
+
+        const container =
+          document.getElementById(
+            "nextPatientContainer"
+          );
+
+        const badge =
+          document.getElementById(
+            "nextQueueBadge"
+          );
+
+
+        if (!patient) {
+
+          badge.textContent =
+            "Tidak Ada";
+
+
+          container.innerHTML = `
+
+                    <div class="text-center py-5 text-muted">
+
+                        <iconify-icon
+                            icon="solar:user-cross-bold"
+                            style="font-size:35px;">
+                        </iconify-icon>
+
+                        <div class="mt-2">
+                            Tidak ada pasien berikutnya
+                        </div>
+
+                    </div>
+
+                `;
+
+          return;
+
+        }
+
+
+        badge.textContent =
+          "Antrian " +
+          escapeHtml(
+            patient.nomor || "-"
+          );
+
+
+        const patientName =
+          patient.nama ||
+          "Pasien";
+
+
+        container.innerHTML = `
+
+                <div class="next-patient">
+
+                    <div class="next-patient-label">
+                        Pasien Berikutnya
+                    </div>
+
+                    <div class="next-patient-content">
+
+                        <div class="patient-avatar">
+
+                            ${escapeHtml(
+                                initials(
+                                    patientName
+                                )
+                            )}
+
+                        </div>
+
+                        <div>
+
+                            <div class="patient-name">
+
+                                ${escapeHtml(
+                                    patientName
+                                )}
+
+                            </div>
+
+                            <div class="patient-meta">
+
+                                ${escapeHtml(
+                                    patient.nomor_rm ||
+                                    "-"
+                                )}
+
+                            </div>
+
+                            <div class="patient-meta">
+
+                                ${escapeHtml(
+                                    patient.metode_bayar ||
+                                    (
+                                        patient.noKartu
+                                            ? "BPJS"
+                                            : "-"
+                                    )
+                                )}
+
+                            </div>
+
+                        </div>
+
+                        <div class="next-patient-number">
+
+                            ${escapeHtml(
+                                patient.nomor ||
+                                "-"
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        class="btn btn-primary start-examination"
+                        data-id-visit="${escapeHtml(
+                            patient.nomor_visit || ""
+                        )}"
+                        data-id-patient="${escapeHtml(
+                            patient.id_patient || ""
+                        )}">
+
+                        <iconify-icon
+                            icon="solar:stethoscope-bold"
+                            class="me-1">
+                        </iconify-icon>
+
+                        Mulai Pemeriksaan
+
+                    </button>
+
+                </div>
+
+            `;
+
+      }
+
+
+      /* =====================================================
+         QUEUE
+      ====================================================== */
+
+      function renderQueue(
+        queue
+      ) {
+
+        const container =
+          document.getElementById(
+            "queueListContainer"
+          );
+
+
+        queue =
+          queue || {};
+
+
+        const items =
+          queue.items || [];
+
+
+        if (
+          items.length === 0
+        ) {
+
+          container.innerHTML = `
+                    <div class="text-center py-4 text-muted">
+                        Tidak ada antrian lainnya.
+                    </div>
+                `;
+
+          return;
+
+        }
+
+
+        let html = "";
+
+
+        items.forEach(
+          function(item) {
+
+            html += `
+
+                        <div class="queue-item">
+
+                            <div class="queue-number">
+
+                                ${escapeHtml(
+                                    item.nomor || "-"
+                                )}
+
+                            </div>
+
+
+                            <div>
+
+                                <div class="queue-name">
+
+                                    ${escapeHtml(
+                                        item.nama ||
+                                        "Pasien"
+                                    )}
+
+                                </div>
+
+
+                                <div class="queue-detail">
+
+                                    ${escapeHtml(
+                                        item.nomor_rm ||
+                                        "-"
+                                    )}
+
+                                    ${item.poli
+                                        ? " · " +
+                                          escapeHtml(
+                                              item.poli
+                                          )
+                                        : ""
+                                    }
+
+                                </div>
+
+                            </div>
+
+
+                            <span
+                                class="queue-status ${escapeHtml(
+                                    item.status_class ||
+                                    "waiting"
+                                )}">
+
+                                ${escapeHtml(
+                                    item.status ||
+                                    "Menunggu"
+                                )}
+
+                            </span>
+
+                        </div>
+
+                    `;
+
+          }
+        );
+
+
+        container.innerHTML =
+          html;
+
+      }
+
+
+      /* =====================================================
+         SCHEDULE
+      ====================================================== */
+
+      function renderSchedule(
+        schedule
+      ) {
+
+        const container =
+          document.getElementById(
+            "scheduleContainer"
+          );
+
+        const badge =
+          document.getElementById(
+            "practiceTimeBadge"
+          );
+
+
+        schedule =
+          schedule || {};
+
+
+        const items =
+          schedule.today || [];
+
+
+        if (
+          items.length === 0
+        ) {
+
+          badge.textContent =
+            "-";
+
+
+          container.innerHTML = `
+
+                    <div class="text-center py-5 text-muted">
+
+                        <iconify-icon
+                            icon="solar:calendar-minimalistic-bold"
+                            style="font-size:35px;">
+                        </iconify-icon>
+
+                        <div class="mt-2">
+                            Belum ada data jadwal pelayanan hari ini.
+                        </div>
+
+                    </div>
+
+                `;
+
+          return;
+
+        }
+
+
+        let html = "";
+
+        let firstTime = "";
+        let lastTime = "";
+
+
+        items.forEach(
+          function(item, index) {
+
+            const time =
+              item.jampraktek ||
+              "-";
+
+
+            if (
+              index === 0
+            ) {
+
+              firstTime =
+                time;
+
+            }
+
+
+            lastTime =
+              time;
+
+
+            const statusClass =
+              index === 0 ?
+              "schedule-active" :
+              "schedule-next";
+
+
+            const statusText =
+              index === 0 ?
+              "Berlangsung" :
+              "Terjadwal";
+
+
+            html += `
+
+                        <div class="schedule-item">
+
+                            <div class="schedule-time">
+
+                                ${escapeHtml(
+                                    time
+                                )}
+
+                            </div>
+
+
+                            <div class="schedule-line"></div>
+
+
+                            <div class="schedule-info">
+
+                                <div class="schedule-title">
+
+                                    ${escapeHtml(
+                                        item.poli ||
+                                        "Pelayanan Poli"
+                                    )}
+
+                                </div>
+
+
+                                <div class="schedule-detail">
+
+                                    ${numberFormat(
+                                        item.jumlah_pasien ||
+                                        0
+                                    )}
+
+                                    pasien
+
+                                </div>
+
+                            </div>
+
+
+                            <span
+                                class="schedule-status ${statusClass}">
+
+                                ${statusText}
+
+                            </span>
+
+                        </div>
+
+                    `;
+
+          }
+        );
+
+
+        badge.textContent =
+          firstTime +
+          (
+            firstTime !== lastTime ?
+            " - " + lastTime :
+            ""
+          );
+
+
+        container.innerHTML =
+          html;
+
+      }
+
+
+      /* =====================================================
+         PATIENT CHART
+      ====================================================== */
+
+      function renderPatientChart(
+        chartData
+      ) {
+
+        const canvas =
+          document.getElementById(
+            "dokterPatientChart"
+          );
+
+
+        if (
+          !canvas ||
+          typeof Chart === "undefined"
+        ) {
+
+          return;
+
+        }
+
+
+        if (
+          patientChart
+        ) {
+
+          patientChart.destroy();
+
+          patientChart = null;
+
+        }
+
+
+        chartData =
+          chartData || [];
+
+
+        const labels =
+          chartData.map(
+            function(item) {
+
+              return formatDate(
+                item.date
+              );
+
             }
           );
 
 
-          /*
-           * NANTI BISA DIGANTI
-           * DENGAN AJAX DATABASE.
-           *
-           * Contoh:
-           *
-           * loadDashboardDokter(
-           *     dari,
-           *     sampai
-           * );
-           */
+        const values =
+          chartData.map(
+            function(item) {
+
+              return Number(
+                item.total || 0
+              );
+
+            }
+          );
 
 
-          if (
-            typeof Swal !==
-            "undefined"
-          ) {
+        patientChart =
+          new Chart(
+            canvas, {
 
-            Swal.fire({
+              type: "line",
 
-              icon: "success",
+              data: {
 
-              title: "Periode diterapkan",
+                labels: labels,
 
-              text: "Data pelayanan " +
-                dari +
-                " sampai " +
-                sampai,
+                datasets: [
 
-              timer: 1200,
+                  {
 
-              showConfirmButton: false
+                    label: "Pasien",
 
-            });
+                    data: values,
 
-          }
+                    borderColor: "#635bff",
+
+                    backgroundColor: "rgba(99,91,255,.08)",
+
+                    fill: true,
+
+                    tension: .4,
+
+                    borderWidth: 3,
+
+                    pointRadius: 3,
+
+                    pointHoverRadius: 5
+
+                  }
+
+                ]
+
+              },
+
+
+              options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                interaction: {
+
+                  intersect: false,
+
+                  mode: "index"
+
+                },
+
+
+                plugins: {
+
+                  legend: {
+
+                    display: false
+
+                  },
+
+
+                  tooltip: {
+
+                    callbacks: {
+
+                      label: function(
+                        context
+                      ) {
+
+                        return (
+                          " " +
+                          numberFormat(
+                            context.raw
+                          ) +
+                          " pasien"
+                        );
+
+                      }
+
+                    }
+
+                  }
+
+                },
+
+
+                scales: {
+
+                  x: {
+
+                    grid: {
+
+                      display: false
+
+                    },
+
+                    border: {
+
+                      display: false
+
+                    }
+
+                  },
+
+
+                  y: {
+
+                    beginAtZero: true,
+
+                    ticks: {
+
+                      precision: 0
+
+                    },
+
+                    grid: {
+
+                      color: "#f0f1f5"
+
+                    },
+
+                    border: {
+
+                      display: false
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+          );
+
+      }
+
+
+      /* =====================================================
+         RME
+      ====================================================== */
+
+      function renderRME(
+        rme
+      ) {
+
+        const container =
+          document.getElementById(
+            "rmeContainer"
+          );
+
+        const badge =
+          document.getElementById(
+            "rmeBadge"
+          );
+
+
+        rme =
+          rme || {};
+
+
+        const items =
+          rme.items || [];
+
+
+        badge.textContent =
+          numberFormat(
+            rme.total || 0
+          );
+
+
+        if (
+          items.length === 0
+        ) {
+
+          container.innerHTML = `
+
+                    <div class="text-center py-5 text-success">
+
+                        <iconify-icon
+                            icon="solar:check-circle-bold"
+                            style="font-size:35px;">
+                        </iconify-icon>
+
+                        <div class="mt-2">
+                            RME sudah lengkap.
+                        </div>
+
+                    </div>
+
+                `;
+
+          return;
 
         }
-      );
 
 
-      updatePeriod();
+        let html = "";
 
 
-      /* =================================================
-         JAM DOKTER
-      ================================================= */
+        items.forEach(
+          function(item) {
+
+            html += `
+
+                        <div class="rme-alert">
+
+                            <div class="rme-alert-icon">
+
+                                <iconify-icon
+                                    icon="${escapeHtml(
+                                        item.icon ||
+                                        "solar:document-text-bold"
+                                    )}">
+                                </iconify-icon>
+
+                            </div>
+
+
+                            <div>
+
+                                <div class="rme-alert-name">
+
+                                    ${escapeHtml(
+                                        item.nama ||
+                                        "Pasien"
+                                    )}
+
+                                </div>
+
+
+                                <div class="rme-alert-desc">
+
+                                    ${escapeHtml(
+                                        item.description ||
+                                        "Dokumentasi belum lengkap"
+                                    )}
+
+                                </div>
+
+                            </div>
+
+
+                            <a
+                                href="#"
+                                class="rme-alert-action"
+                                data-id-visit="${escapeHtml(
+                                    item.visit_ID ||
+                                    ""
+                                )}"
+                                data-id-patient="${escapeHtml(
+                                    item.id_patient ||
+                                    ""
+                                )}">
+
+                                ${escapeHtml(
+                                    item.action ||
+                                    "Lengkapi"
+                                )}
+
+                            </a>
+
+                        </div>
+
+                    `;
+
+          }
+        );
+
+
+        container.innerHTML =
+          html;
+
+      }
+
+
+      /* =====================================================
+         DIAGNOSIS
+      ====================================================== */
+
+      function renderDiagnosis(
+        diagnosis
+      ) {
+
+        const container =
+          document.getElementById(
+            "diagnosisContainer"
+          );
+
+
+        diagnosis =
+          diagnosis || [];
+
+
+        if (
+          diagnosis.length === 0
+        ) {
+
+          container.innerHTML = `
+
+                    <div class="text-center py-5 text-muted">
+
+                        <iconify-icon
+                            icon="solar:clipboard-remove-bold"
+                            style="font-size:35px;">
+                        </iconify-icon>
+
+                        <div class="mt-2">
+                            Belum ada diagnosis pada periode ini.
+                        </div>
+
+                    </div>
+
+                `;
+
+          return;
+
+        }
+
+
+        let html = "";
+
+
+        diagnosis.forEach(
+          function(item) {
+
+            html += `
+
+                        <div class="diagnosis-item">
+
+                            <div class="diagnosis-rank">
+
+                                ${escapeHtml(
+                                    item.rank ||
+                                    "-"
+                                )}
+
+                            </div>
+
+
+                            <div class="diagnosis-name">
+
+                                ${escapeHtml(
+                                    item.nama ||
+                                    "Tidak diketahui"
+                                )}
+
+                                <span class="diagnosis-code">
+
+                                    ${escapeHtml(
+                                        item.kode ||
+                                        "-"
+                                    )}
+
+                                </span>
+
+                            </div>
+
+
+                            <div class="diagnosis-count">
+
+                                ${numberFormat(
+                                    item.total ||
+                                    0
+                                )}
+
+                            </div>
+
+                        </div>
+
+                    `;
+
+          }
+        );
+
+
+        container.innerHTML =
+          html;
+
+      }
+
+
+      /* =====================================================
+         CLOCK
+      ====================================================== */
 
       function updateDoctorClock() {
 
@@ -2710,6 +3498,7 @@
           document.getElementById(
             "dokterCurrentTime"
           );
+
 
         if (!clock) {
           return;
@@ -2724,11 +3513,15 @@
           String(
             now.getHours()
           ).padStart(2, "0") +
+
           ":" +
+
           String(
             now.getMinutes()
           ).padStart(2, "0") +
+
           ":" +
+
           String(
             now.getSeconds()
           ).padStart(2, "0");
@@ -2745,135 +3538,143 @@
       );
 
 
-      /* =================================================
-         CHART PASIEN
-      ================================================= */
+      /* =====================================================
+         LOADING
+      ====================================================== */
 
-      const chartElement =
+      function setLoading(
+        loading
+      ) {
+
+        if (!applyButton) {
+          return;
+        }
+
+
+        if (loading) {
+
+          applyButton.disabled =
+            true;
+
+          applyButton.innerHTML = `
+
+                    <span
+                        class="spinner-border spinner-border-sm me-1">
+                    </span>
+
+                    Memuat...
+
+                `;
+
+        } else {
+
+          applyButton.disabled =
+            false;
+
+          applyButton.innerHTML = `
+
+                    <iconify-icon
+                        icon="solar:filter-bold"
+                        class="me-1">
+                    </iconify-icon>
+
+                    Terapkan
+
+                `;
+
+        }
+
+      }
+
+
+      /* =====================================================
+         ERROR
+      ====================================================== */
+
+      function showError(
+        message
+      ) {
+
+        if (
+          typeof Swal !==
+          "undefined"
+        ) {
+
+          Swal.fire({
+
+            icon: "error",
+
+            title: "Gagal memuat dashboard",
+
+            text: message ||
+              "Terjadi kesalahan."
+
+          });
+
+        } else {
+
+          alert(
+            message ||
+            "Terjadi kesalahan."
+          );
+
+        }
+
+      }
+
+
+      /* =====================================================
+         FILTER BUTTON
+      ====================================================== */
+
+      applyButton.addEventListener(
+        "click",
+        function() {
+
+          loadDashboard();
+
+        }
+      );
+
+
+      /* =====================================================
+         CHART PERIOD
+      ====================================================== */
+
+      const chartPeriod =
         document.getElementById(
-          "dokterPatientChart"
+          "patientChartPeriod"
         );
 
 
-      if (
-        chartElement &&
-        typeof Chart !== "undefined"
-      ) {
+      if (chartPeriod) {
 
-        new Chart(
-          chartElement, {
+        chartPeriod.addEventListener(
+          "change",
+          function() {
 
-            type: "line",
+            period.value =
+              this.value;
 
-            data: {
+            updatePeriod();
 
-              labels: [
-                "Sen",
-                "Sel",
-                "Rab",
-                "Kam",
-                "Jum",
-                "Sab",
-                "Min"
-              ],
-
-              datasets: [
-
-                {
-
-                  label: "Pasien",
-
-                  data: [
-                    28,
-                    34,
-                    29,
-                    37,
-                    32,
-                    19,
-                    8
-                  ],
-
-                  borderColor: "#635bff",
-
-                  backgroundColor: "rgba(99,91,255,.08)",
-
-                  fill: true,
-
-                  tension: .4,
-
-                  borderWidth: 3,
-
-                  pointRadius: 3,
-
-                  pointHoverRadius: 5
-
-                }
-
-              ]
-
-            },
-
-            options: {
-
-              responsive: true,
-
-              maintainAspectRatio: false,
-
-              plugins: {
-
-                legend: {
-
-                  display: false
-
-                }
-
-              },
-
-              scales: {
-
-                x: {
-
-                  grid: {
-
-                    display: false
-
-                  },
-
-                  border: {
-
-                    display: false
-
-                  }
-
-                },
-
-                y: {
-
-                  beginAtZero: true,
-
-                  grid: {
-
-                    color: "#f0f1f5"
-
-                  },
-
-                  border: {
-
-                    display: false
-
-                  }
-
-                }
-
-              }
-
-            }
+            loadDashboard();
 
           }
         );
 
       }
 
+
+      /* =====================================================
+         INITIAL
+      ====================================================== */
+
+      updatePeriod();
+
+      loadDashboard();
+
     }
+
   );
 </script>
