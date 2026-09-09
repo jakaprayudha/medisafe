@@ -4,10 +4,9 @@ include '../../database/connect.php';
 
 header("Content-Type: application/json; charset=UTF-8");
 
-
-// ============================================================
-// SESSION
-// ============================================================
+/* ============================================================
+   SESSION
+============================================================ */
 
 if (session_status() === PHP_SESSION_NONE) {
    session_start();
@@ -18,7 +17,7 @@ $id_customer = $_SESSION['id_customer'] ?? null;
 if (!$id_customer) {
 
    echo json_encode([
-      "status" => "error",
+      "status"  => "error",
       "message" => "Session tidak ditemukan"
    ]);
 
@@ -26,15 +25,18 @@ if (!$id_customer) {
 }
 
 
-// ============================================================
-// FILTER TANGGAL
-// ============================================================
+/* ============================================================
+   FILTER TANGGAL
+============================================================ */
 
 $fromDate = $_GET['fromDate'] ?? date('Y-m-d');
 $toDate   = $_GET['toDate'] ?? date('Y-m-d');
 
 
-// Validasi format tanggal
+/* ============================================================
+   VALIDASI FORMAT TANGGAL
+============================================================ */
+
 $fromDateValid = DateTime::createFromFormat('Y-m-d', $fromDate);
 $toDateValid   = DateTime::createFromFormat('Y-m-d', $toDate);
 
@@ -46,7 +48,7 @@ if (
 ) {
 
    echo json_encode([
-      "status" => "error",
+      "status"  => "error",
       "message" => "Format tanggal tidak valid"
    ]);
 
@@ -54,11 +56,14 @@ if (
 }
 
 
-// Validasi periode
+/* ============================================================
+   VALIDASI PERIODE
+============================================================ */
+
 if ($fromDate > $toDate) {
 
    echo json_encode([
-      "status" => "error",
+      "status"  => "error",
       "message" => "Tanggal mulai tidak boleh lebih besar dari tanggal akhir"
    ]);
 
@@ -66,26 +71,31 @@ if ($fromDate > $toDate) {
 }
 
 
-// ============================================================
-// BASE QUERY
-// ============================================================
-//
-// Semua obat aktif dari ms_pharmacy ditampilkan.
-//
-// TRANSAKSI MASUK
-// pharmacy_buy_detail
-//
-// TRANSAKSI KELUAR
-// permintaan_pharmacy_details
-//
-// CATATAN:
-// pharmacy_buy_detail tidak memiliki id_pharmacy.
-// Oleh karena itu matching barang masuk sementara berdasarkan:
-// - pharmacy_code
-// - pharmacy_name_generic
-// - pharmacy_name_trade
-//
-// ============================================================
+/* ============================================================
+   QUERY
+============================================================ */
+
+/*
+    SUMBER DATA:
+
+    MASTER OBAT
+    ms_pharmacy
+        pharmacy_stock = STOCK AWAL
+
+    STOCK MASUK
+    pharmacy_stock_penerimaan
+        jumlah
+
+    STOCK KELUAR
+    permintaan_pharmacy_details
+        qty
+
+    STOCK AKHIR
+    pharmacy_stock
+    + stok masuk
+    - stok keluar
+*/
+
 
 $sql = "
 
@@ -93,7 +103,7 @@ SELECT
 
     /* ========================================================
        MASTER FARMASI
-       ======================================================== */
+    ======================================================== */
 
     p.id_pharmacy,
 
@@ -117,8 +127,6 @@ SELECT
 
     p.pharmacy_unit,
 
-    p.pharmacy_stock,
-
     p.pharmacy_kemasan,
 
     p.pharmacy_supplier,
@@ -128,60 +136,72 @@ SELECT
 
     /* ========================================================
        HARGA
-       ======================================================== */
+    ======================================================== */
 
-    COALESCE(p.pharmacy_price_buy, 0) AS pharmacy_price_buy,
+    COALESCE(
+        p.pharmacy_price_buy,
+        0
+    ) AS pharmacy_price_buy,
 
-    COALESCE(p.pharmacy_buy, 0) AS pharmacy_buy,
+    COALESCE(
+        p.pharmacy_buy,
+        0
+    ) AS pharmacy_buy,
 
-    COALESCE(p.pharmacy_sale, 0) AS pharmacy_sale,
+    COALESCE(
+        p.pharmacy_sale,
+        0
+    ) AS pharmacy_sale,
+
+
+    /* ========================================================
+       STOCK AWAL
+    ======================================================== */
+
+    COALESCE(
+        p.pharmacy_stock,
+        0
+    ) AS pharmacy_stock,
 
 
     /* ========================================================
        STOCK MIN / MAX
-       ======================================================== */
+    ======================================================== */
 
-    COALESCE(p.stok_min, 0) AS stok_min,
+    COALESCE(
+        p.stok_min,
+        0
+    ) AS stok_min,
 
-    COALESCE(p.stok_max, 0) AS stok_max,
+    COALESCE(
+        p.stok_max,
+        0
+    ) AS stok_max,
 
 
     /* ========================================================
-       STOCK SAAT INI
-       ======================================================== */
-
-    COALESCE(p.pharmacy_stock, 0) AS stok_saat_ini,
-
-
-    /* ========================================================
-       BARANG MASUK
-       ======================================================== */
+       STOCK MASUK
+       TABLE:
+       pharmacy_stock_penerimaan
+    ======================================================== */
 
     COALESCE(
 
         (
 
-            SELECT SUM(pb.buy_qty)
+            SELECT
+                SUM(psp.jumlah)
 
-            FROM pharmacy_buy_detail pb
+            FROM pharmacy_stock_penerimaan psp
 
             WHERE
+                psp.id_pharmacy = CAST(p.id_pharmacy AS CHAR)
 
-                (
+                AND psp.id_customer = CAST(p.id_customer AS CHAR)
 
-                    pb.buy_item = p.pharmacy_code
+                AND psp.tanggal >= ?
 
-                    OR pb.buy_item = p.pharmacy_name_generic
-
-                    OR pb.buy_item = p.pharmacy_name_trade
-
-                )
-
-                AND pb.buy_status = 1
-
-                AND pb.created_at >= CONCAT(?, ' 00:00:00')
-
-                AND pb.created_at <= CONCAT(?, ' 23:59:59')
+                AND psp.tanggal <= ?
 
         ),
 
@@ -191,24 +211,32 @@ SELECT
 
 
     /* ========================================================
-       BARANG KELUAR
-       ======================================================== */
+       STOCK KELUAR
+       TABLE:
+       permintaan_pharmacy_details
+    ======================================================== */
 
     COALESCE(
 
         (
 
-            SELECT SUM(pd.qty)
+            SELECT
+                SUM(ppd.qty)
 
-            FROM permintaan_pharmacy_details pd
+            FROM permintaan_pharmacy_details ppd
 
             WHERE
+                ppd.id_pharmacy = p.id_pharmacy
 
-                pd.id_pharmacy = p.id_pharmacy
+                AND ppd.created_at >= CONCAT(
+                    ?,
+                    ' 00:00:00'
+                )
 
-                AND pd.created_at >= CONCAT(?, ' 00:00:00')
-
-                AND pd.created_at <= CONCAT(?, ' 23:59:59')
+                AND ppd.created_at <= CONCAT(
+                    ?,
+                    ' 23:59:59'
+                )
 
         ),
 
@@ -222,7 +250,7 @@ FROM ms_pharmacy p
 
 /* ============================================================
    FILTER MASTER
-   ============================================================ */
+============================================================ */
 
 WHERE
 
@@ -233,7 +261,7 @@ WHERE
 
 /* ============================================================
    ORDER
-   ============================================================ */
+============================================================ */
 
 ORDER BY
 
@@ -242,37 +270,37 @@ ORDER BY
 ";
 
 
-// ============================================================
-// PREPARE
-// ============================================================
+/* ============================================================
+   PREPARE
+============================================================ */
 
 $stmt = $koneksi->prepare($sql);
 
 if (!$stmt) {
 
    echo json_encode([
-      "status" => "error",
+      "status"  => "error",
       "message" => "Prepare query gagal",
-      "error" => $koneksi->error
+      "error"   => $koneksi->error
    ]);
 
    exit;
 }
 
 
-// ============================================================
-// BIND PARAMETER
-// ============================================================
-//
-// Ada 5 parameter:
-//
-// 1. fromDate barang masuk
-// 2. toDate barang masuk
-// 3. fromDate barang keluar
-// 4. toDate barang keluar
-// 5. id_customer
-//
-// ============================================================
+/* ============================================================
+   BIND PARAMETER
+============================================================ */
+
+/*
+    1. fromDate STOCK MASUK
+    2. toDate   STOCK MASUK
+
+    3. fromDate STOCK KELUAR
+    4. toDate   STOCK KELUAR
+
+    5. id_customer
+*/
 
 $stmt->bind_param(
    "sssss",
@@ -284,16 +312,16 @@ $stmt->bind_param(
 );
 
 
-// ============================================================
-// EXECUTE
-// ============================================================
+/* ============================================================
+   EXECUTE
+============================================================ */
 
 if (!$stmt->execute()) {
 
    echo json_encode([
-      "status" => "error",
+      "status"  => "error",
       "message" => "Execute query gagal",
-      "error" => $stmt->error
+      "error"   => $stmt->error
    ]);
 
    $stmt->close();
@@ -307,58 +335,113 @@ $result = $stmt->get_result();
 $data = [];
 
 
-// ============================================================
-// DATA PROCESSING
-// ============================================================
+/* ============================================================
+   DATA PROCESSING
+============================================================ */
 
 while ($row = $result->fetch_assoc()) {
 
 
-   // --------------------------------------------------------
-   // STOCK
-   // --------------------------------------------------------
+   /* ========================================================
+       STOCK AWAL
+    ======================================================== */
 
-   $stokSaatIni = (float) ($row['stok_saat_ini'] ?? 0);
-
-   $stokMasuk = (float) ($row['stok_masuk'] ?? 0);
-
-   $stokKeluar = (float) ($row['stok_keluar'] ?? 0);
-
-   $stokMin = (float) ($row['stok_min'] ?? 0);
-
-   $stokMax = (float) ($row['stok_max'] ?? 0);
+   $stokAwal = (float) (
+      $row['pharmacy_stock'] ?? 0
+   );
 
 
-   // --------------------------------------------------------
-   // HARGA BELI
-   // --------------------------------------------------------
+   /* ========================================================
+       STOCK MASUK
+    ======================================================== */
 
-   $hargaBeli = (float) ($row['pharmacy_price_buy'] ?? 0);
-
-
-   // --------------------------------------------------------
-   // NILAI STOCK
-   // --------------------------------------------------------
-
-   $nilaiStok = $stokSaatIni * $hargaBeli;
+   $stokMasuk = (float) (
+      $row['stok_masuk'] ?? 0
+   );
 
 
-   // --------------------------------------------------------
-   // STATUS STOCK
-   // --------------------------------------------------------
+   /* ========================================================
+       STOCK KELUAR
+    ======================================================== */
 
-   if ($stokSaatIni <= 0) {
+   $stokKeluar = (float) (
+      $row['stok_keluar'] ?? 0
+   );
+
+
+   /* ========================================================
+       STOCK MIN / MAX
+    ======================================================== */
+
+   $stokMin = (float) (
+      $row['stok_min'] ?? 0
+   );
+
+   $stokMax = (float) (
+      $row['stok_max'] ?? 0
+   );
+
+
+   /* ========================================================
+       STOCK AKHIR
+    ======================================================== */
+
+   $stokAkhir =
+      $stokAwal
+      + $stokMasuk
+      - $stokKeluar;
+
+
+   /* ========================================================
+       HARGA BELI
+    ======================================================== */
+
+   $hargaBeli = (float) (
+      $row['pharmacy_price_buy'] ?? 0
+   );
+
+
+   /*
+       Kalau pharmacy_price_buy kosong,
+       fallback ke pharmacy_buy
+    */
+
+   if ($hargaBeli <= 0) {
+
+      $hargaBeli = (float) (
+         $row['pharmacy_buy'] ?? 0
+      );
+   }
+
+
+   /* ========================================================
+       NILAI STOCK
+    ======================================================== */
+
+   $nilaiStok =
+      $stokAkhir * $hargaBeli;
+
+
+   /* ========================================================
+       STATUS STOCK
+    ======================================================== */
+
+   if ($stokAkhir <= 0) {
 
       $statusStock = 'Habis';
    } elseif (
+
       $stokMin > 0 &&
-      $stokSaatIni < $stokMin
+      $stokAkhir < $stokMin
+
    ) {
 
       $statusStock = 'Di Bawah Minimum';
    } elseif (
+
       $stokMax > 0 &&
-      $stokSaatIni > $stokMax
+      $stokAkhir > $stokMax
+
    ) {
 
       $statusStock = 'Di Atas Maksimum';
@@ -368,22 +451,26 @@ while ($row = $result->fetch_assoc()) {
    }
 
 
-   // --------------------------------------------------------
-   // STATUS CODE
-   // --------------------------------------------------------
+   /* ========================================================
+       STATUS CODE
+    ======================================================== */
 
-   if ($stokSaatIni <= 0) {
+   if ($stokAkhir <= 0) {
 
       $statusCode = 'habis';
    } elseif (
+
       $stokMin > 0 &&
-      $stokSaatIni < $stokMin
+      $stokAkhir < $stokMin
+
    ) {
 
       $statusCode = 'minimum';
    } elseif (
+
       $stokMax > 0 &&
-      $stokSaatIni > $stokMax
+      $stokAkhir > $stokMax
+
    ) {
 
       $statusCode = 'maximum';
@@ -393,63 +480,84 @@ while ($row = $result->fetch_assoc()) {
    }
 
 
-   // --------------------------------------------------------
-   // FORMAT DATA
-   // --------------------------------------------------------
+   /* ========================================================
+       FORMAT DATA
+    ======================================================== */
 
-   $row['stok_saat_ini'] = $stokSaatIni;
+   $row['pharmacy_stock'] =
+      $stokAwal;
 
-   $row['stok_masuk'] = $stokMasuk;
+   $row['stok_awal'] =
+      $stokAwal;
 
-   $row['stok_keluar'] = $stokKeluar;
+   $row['stok_masuk'] =
+      $stokMasuk;
 
-   $row['stok_min'] = $stokMin;
+   $row['stok_keluar'] =
+      $stokKeluar;
 
-   $row['stok_max'] = $stokMax;
+   $row['stok_akhir'] =
+      $stokAkhir;
 
-   $row['pharmacy_price_buy'] = $hargaBeli;
+   $row['stok_min'] =
+      $stokMin;
 
-   $row['nilai_stok'] = $nilaiStok;
+   $row['stok_max'] =
+      $stokMax;
 
-   $row['status_stock'] = $statusStock;
+   $row['pharmacy_price_buy'] =
+      $hargaBeli;
 
-   $row['status_code'] = $statusCode;
+   $row['nilai_stok'] =
+      $nilaiStok;
+
+   $row['status_stock'] =
+      $statusStock;
+
+   $row['status_code'] =
+      $statusCode;
 
 
-   // --------------------------------------------------------
-   // PERIODE
-   // --------------------------------------------------------
+   /* ========================================================
+       PERIODE
+    ======================================================== */
 
-   $row['from_date'] = $fromDate;
+   $row['from_date'] =
+      $fromDate;
 
-   $row['to_date'] = $toDate;
+   $row['to_date'] =
+      $toDate;
 
 
-   // --------------------------------------------------------
-   // PUSH
-   // --------------------------------------------------------
+   /* ========================================================
+       PUSH DATA
+    ======================================================== */
 
    $data[] = $row;
 }
 
 
-// ============================================================
-// CLOSE
-// ============================================================
+/* ============================================================
+   CLOSE
+============================================================ */
 
 $stmt->close();
 
 
-// ============================================================
-// RESPONSE
-// ============================================================
+/* ============================================================
+   RESPONSE
+============================================================ */
 
 echo json_encode([
+
    "status" => "success",
 
    "filter" => [
+
       "fromDate" => $fromDate,
+
       "toDate" => $toDate
+
    ],
 
    "total" => count($data),
