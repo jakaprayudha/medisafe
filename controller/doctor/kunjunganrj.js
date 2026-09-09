@@ -648,8 +648,11 @@ $(function () {
           new Option("Rujuk Horizontal", "6", false, false)
         );
       }
-      $("#kdStatusPulang").trigger("change");
+      
+      // HAPUS ATAU COMMENT BARIS DI BAWAH INI
+      // $("#kdStatusPulang").trigger("change"); 
     }
+    
     if (statusEdit) {
       $("#formTacc").removeClass("d-none");
       $("#kdTacc").val(kdTacc).trigger("change");
