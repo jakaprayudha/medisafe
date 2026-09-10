@@ -28,6 +28,30 @@ $data = mysqli_fetch_array($check);
   <?php
   require '../../assets/template/head.php';
   ?>
+  <link
+    href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+    rel="stylesheet" />
+
+  <style>
+    .select2-container {
+      width: 100% !important;
+    }
+
+    .select2-container--default .select2-selection--single {
+      height: 38px !important;
+      border: 1px solid #dee2e6 !important;
+      border-radius: 6px !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      line-height: 36px !important;
+      padding-left: 12px !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 36px !important;
+    }
+  </style>
   <style>
     .info-item {
       display: flex;
@@ -357,6 +381,40 @@ $data = mysqli_fetch_array($check);
   <?php
   require 'library.php';
   ?>
+  <script>
+    $(document).ready(function() {
+
+      $('#id_pharmacy').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Cari nama obat...',
+        allowClear: true,
+        dropdownParent: $('#programModal')
+      });
+
+    });
+  </script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js">
+  </script>
+
+  <script>
+    $(document).ready(function() {
+
+      $('#id_pharmacy').select2({
+
+        width: '100%',
+
+        placeholder: 'Cari nama obat...',
+
+        allowClear: true,
+
+        dropdownParent: $('#programModal')
+
+      });
+
+    });
+  </script>
 </body>
 <div class="modal fade" id="programModal" tabindex="-1">
   <div class="modal-dialog">
@@ -375,7 +433,8 @@ $data = mysqli_fetch_array($check);
               <select name="id_pharmacy" id="id_pharmacy" class="form-select js-example-basic-item" required>
                 <option value="">Select Option</option>
                 <?php
-                $getbarang = tampildata("SELECT * FROM ms_pharmacy WHERE pharmacy_status='1'");
+                $id_customer = $_SESSION['id_customer'];
+                $getbarang = tampildata("SELECT * FROM ms_pharmacy WHERE pharmacy_status='1' AND id_customer='$id_customer'");
                 ?>
                 <?php foreach ($getbarang as $barang): ?>
                   <option value="<?= $barang['id_pharmacy']; ?>" data-harga="<?= $barang['pharmacy_sale']; ?>"><?= $barang['pharmacy_name_generic']; ?>/<?= $barang['pharmacy_name_trade']; ?></option>
@@ -621,11 +680,42 @@ $data = mysqli_fetch_array($check);
     let id = $(this).data('id');
 
     $('#programForm')[0].reset();
-    $('#id_pharmacy_details').val('');
-    $('#id_visit').val(id); // 🔥 penting
 
-    $('#programModal .modal-title').text('Tambah Data');
+    $('#id_pharmacy_details').val('');
+
+    $('#id_visit').val(id);
+
+    // Reset Select2
+    $('#id_pharmacy')
+      .val(null)
+      .trigger('change');
+
+    $('#harga').val(0);
+    $('#qty').val('');
+    $('#signa').val('');
+    $('#catatan').val('');
+
+    $('#programModal .modal-title')
+      .text('Tambah Data');
+
     $('#programModal').modal('show');
+
+  });
+  $('#id_pharmacy').on('change', function() {
+
+    const selected = $(this).find('option:selected');
+
+    const harga = selected.data('harga');
+
+    if (harga !== undefined && harga !== '') {
+
+      $('#harga').val(harga);
+
+    } else {
+
+      $('#harga').val(0);
+
+    }
 
   });
 </script>
