@@ -1209,8 +1209,8 @@ function dashboard($id_customer, $period)
 
 $action = strtolower(trim($_GET['action'] ?? 'dashboard'));
 
-// $id_customer = $_SESSION['id_customer'] ?? null;
-$id_customer = 1;
+$id_customer = $_SESSION['id_customer'] ?? null;
+// $id_customer = 1;
 
 if ($id_customer === null || $id_customer === '') {
    responseJson(false, 'Session id_customer tidak ditemukan.');
