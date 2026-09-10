@@ -1013,148 +1013,84 @@
 
 
 <div class="farmasi-dashboard">
-
-
   <!-- =====================================================
          FILTER PERIODE
     ====================================================== -->
-
   <div class="far-filter-wrapper">
-
     <div class="far-filter-title">
-
       <div class="far-filter-icon">
-
-        <iconify-icon
-          icon="solar:calendar-search-bold">
+        <iconify-icon icon="solar:calendar-search-bold">
         </iconify-icon>
-
       </div>
-
       <div>
-
         <div class="far-filter-heading">
           Periode Farmasi
         </div>
-
         <div class="far-filter-description">
           Monitoring resep, dispensing dan stok obat
         </div>
-
       </div>
-
     </div>
-
-
     <div class="far-filter-form">
-
       <div class="far-filter-group">
-
         <label>
           Periode
         </label>
-
-        <select
-          id="farmasiPeriod"
-          class="form-select">
-
-          <option value="today" selected>
+        <select class="form-select" id="farmasiPeriod">
+          <option selected="" value="today">
             Hari Ini
           </option>
-
           <option value="yesterday">
             Kemarin
           </option>
-
           <option value="7days">
             7 Hari Terakhir
           </option>
-
           <option value="30days">
             30 Hari Terakhir
           </option>
-
           <option value="thismonth">
             Bulan Ini
           </option>
-
           <option value="lastmonth">
             Bulan Lalu
           </option>
-
           <option value="custom">
             Custom Periode
           </option>
-
         </select>
-
       </div>
-
-
       <div class="far-filter-group">
-
         <label>
           Dari
         </label>
-
-        <input
-          type="date"
-          id="farmasiStartDate"
-          class="form-control"
-          value="<?= date('Y-m-d') ?>">
-
+        <input class="form-control" id="farmasiStartDate" type="date" value="&lt;?= date('Y-m-d') ?&gt;" />
       </div>
-
-
       <div class="far-filter-group">
-
         <label>
           Sampai
         </label>
-
-        <input
-          type="date"
-          id="farmasiEndDate"
-          class="form-control"
-          value="<?= date('Y-m-d') ?>">
-
+        <input class="form-control" id="farmasiEndDate" type="date" value="&lt;?= date('Y-m-d') ?&gt;" />
       </div>
-
-
-      <button
-        type="button"
-        class="btn btn-primary far-filter-button"
-        id="applyFarmasiFilter">
-
-        <iconify-icon
-          icon="solar:filter-bold"
-          class="me-1">
+      <button class="btn btn-primary far-filter-button" id="applyFarmasiFilter" type="button">
+        <iconify-icon class="me-1" icon="solar:filter-bold">
         </iconify-icon>
 
         Terapkan
 
       </button>
-
     </div>
-
   </div>
-
-
   <!-- =====================================================
          STATUS FARMASI
     ====================================================== -->
-
   <div class="far-status-bar">
-
     <div class="far-status-left">
-
       <span class="far-online-dot"></span>
 
       Pelayanan Farmasi Aktif
 
     </div>
-
-
     <div class="far-status-right">
 
       Update terakhir:
@@ -1166,1728 +1102,923 @@
       WIB
 
     </div>
-
   </div>
-
-
   <!-- =====================================================
          KPI
     ====================================================== -->
-
   <div class="row g-3 mb-3">
-
-
     <!-- RESEP MASUK -->
-
     <div class="col-xl-3 col-md-6">
-
       <div class="kpi-card">
-
         <div class="kpi-top">
-
           <div>
-
             <div class="kpi-title">
               Resep Masuk
             </div>
-
             <div class="kpi-value">
-              86
+              <span id="farKpiResepMasuk">0</span>
             </div>
-
             <div class="kpi-info up">
-              ↑ 14,2% dari kemarin
+              <span id="farKpiResepInfo">Data periode terpilih</span>
             </div>
-
           </div>
-
           <div class="kpi-icon icon-purple">
-
-            <iconify-icon
-              icon="solar:document-text-bold">
+            <iconify-icon icon="solar:document-text-bold">
             </iconify-icon>
-
           </div>
-
         </div>
-
       </div>
-
     </div>
-
-
     <!-- MENUNGGU -->
-
     <div class="col-xl-3 col-md-6">
-
       <div class="kpi-card">
-
         <div class="kpi-top">
-
           <div>
-
             <div class="kpi-title">
               Menunggu Diproses
             </div>
-
             <div class="kpi-value">
-              12
+              <span id="farKpiMenunggu">0</span>
             </div>
-
             <div class="kpi-info warning">
               Perlu segera diproses
             </div>
-
           </div>
-
           <div class="kpi-icon icon-orange">
-
-            <iconify-icon
-              icon="solar:clock-circle-bold">
+            <iconify-icon icon="solar:clock-circle-bold">
             </iconify-icon>
-
           </div>
-
         </div>
-
       </div>
-
     </div>
-
-
     <!-- DIPROSES -->
-
     <div class="col-xl-3 col-md-6">
-
       <div class="kpi-card">
-
         <div class="kpi-top">
-
           <div>
-
             <div class="kpi-title">
               Sedang Diproses
             </div>
-
             <div class="kpi-value">
-              7
+              <span id="farKpiDiproses">0</span>
             </div>
-
             <div class="kpi-info">
               Dalam tahap dispensing
             </div>
-
           </div>
-
           <div class="kpi-icon icon-blue">
-
-            <iconify-icon
-              icon="solar:pill-bold">
+            <iconify-icon icon="solar:pill-bold">
             </iconify-icon>
-
           </div>
-
         </div>
-
       </div>
-
     </div>
-
-
     <!-- SELESAI -->
-
     <div class="col-xl-3 col-md-6">
-
       <div class="kpi-card">
-
         <div class="kpi-top">
-
           <div>
-
             <div class="kpi-title">
               Resep Selesai
             </div>
-
             <div class="kpi-value">
-              67
+              <span id="farKpiSelesai">0</span>
             </div>
-
             <div class="kpi-info up">
-              77,9% dari total resep
+              <span id="farKpiPersentase">0%</span> dari total resep
             </div>
-
           </div>
-
           <div class="kpi-icon icon-green">
-
-            <iconify-icon
-              icon="solar:check-circle-bold">
+            <iconify-icon icon="solar:check-circle-bold">
             </iconify-icon>
-
           </div>
-
         </div>
-
       </div>
-
     </div>
-
   </div>
-
-
   <!-- =====================================================
          RESEP + PROSES
     ====================================================== -->
-
   <div class="row g-3 mb-3">
-
-
     <!-- RESEP TERBARU -->
-
     <div class="col-xl-7">
-
       <div class="dash-card">
-
         <div class="dash-header">
-
           <div>
-
             <h6 class="dash-title">
               Antrian Resep
             </h6>
-
             <div class="dash-subtitle">
               Resep pasien yang masuk ke farmasi
             </div>
-
           </div>
-
-          <span class="badge bg-warning text-dark">
-            12 Menunggu
-          </span>
-
+          <span class="badge bg-warning text-dark"><span id="farWaitingBadge">0</span> Menunggu</span>
+        </div>
+        <div id="farmasiPrescriptionList">
+          <div class="text-center text-muted py-4">Memuat data resep...</div>
         </div>
 
 
-        <div class="prescription-item">
-
-          <div class="prescription-number">
-            R-086
-          </div>
-
-          <div>
-
-            <div class="prescription-name">
-              Budi Santoso
-            </div>
-
-            <div class="prescription-detail">
-              RM-000182 · dr. Andi · Poli Umum
-            </div>
-
-          </div>
-
-          <span class="prescription-status status-waiting">
-            Menunggu
-
-          </span>
-
-        </div>
 
 
-        <div class="prescription-item">
-
-          <div class="prescription-number">
-            R-085
-          </div>
-
-          <div>
-
-            <div class="prescription-name">
-              Siti Rahma
-            </div>
-
-            <div class="prescription-detail">
-              RM-000183 · dr. Rina · Poli Anak
-            </div>
-
-          </div>
-
-          <span class="prescription-status status-process">
-            Diproses
-          </span>
-
-        </div>
-
-
-        <div class="prescription-item">
-
-          <div class="prescription-number">
-            R-084
-          </div>
-
-          <div>
-
-            <div class="prescription-name">
-              Ahmad Fauzi
-            </div>
-
-            <div class="prescription-detail">
-              RM-000184 · dr. Andi · Poli Umum
-            </div>
-
-          </div>
-
-          <span class="prescription-status status-ready">
-            Siap Diambil
-          </span>
-
-        </div>
-
-
-        <div class="prescription-item">
-
-          <div class="prescription-number">
-            R-083
-          </div>
-
-          <div>
-
-            <div class="prescription-name">
-              Dewi Lestari
-            </div>
-
-            <div class="prescription-detail">
-              RM-000185 · dr. Maya · Poli Gigi
-            </div>
-
-          </div>
-
-          <span class="prescription-status status-waiting">
-            Menunggu
-          </span>
-
-        </div>
-
-
-        <div class="prescription-item">
-
-          <div class="prescription-number">
-            R-082
-          </div>
-
-          <div>
-
-            <div class="prescription-name">
-              Rudi Hartono
-            </div>
-
-            <div class="prescription-detail">
-              RM-000186 · dr. Fajar · Penyakit Dalam
-            </div>
-
-          </div>
-
-          <span class="prescription-status status-done">
-            Diserahkan
-          </span>
-
-        </div>
-
-
-        <div class="prescription-item">
-
-          <div class="prescription-number">
-            R-081
-          </div>
-
-          <div>
-
-            <div class="prescription-name">
-              Nur Aisyah
-            </div>
-
-            <div class="prescription-detail">
-              RM-000187 · dr. Sinta · Kandungan
-            </div>
-
-          </div>
-
-          <span class="prescription-status status-ready">
-            Siap Diambil
-          </span>
-
-        </div>
 
       </div>
-
     </div>
-
-
     <!-- PROSES RESEP -->
-
     <div class="col-xl-5">
-
       <div class="dash-card">
-
         <div class="dash-header">
-
           <div>
-
             <h6 class="dash-title">
               Status Pelayanan
             </h6>
-
             <div class="dash-subtitle">
               Progress resep hari ini
             </div>
-
           </div>
-
+        </div>
+        <div id="farmasiProcessList">
+          <div class="text-center text-muted py-4">Memuat status pelayanan...</div>
         </div>
 
 
-        <div class="process-box">
-
-          <div class="process-top">
-
-            <div class="process-title">
-              Verifikasi Resep
-            </div>
-
-            <div class="process-value">
-              74 / 86
-            </div>
-
-          </div>
-
-          <div class="process-bar">
-
-            <span style="width:86%"></span>
-
-          </div>
-
-        </div>
-
-
-        <div class="process-box">
-
-          <div class="process-top">
-
-            <div class="process-title">
-              Dispensing
-            </div>
-
-            <div class="process-value">
-              67 / 86
-            </div>
-
-          </div>
-
-          <div class="process-bar">
-
-            <span style="width:78%"></span>
-
-          </div>
-
-        </div>
-
-
-        <div class="process-box">
-
-          <div class="process-top">
-
-            <div class="process-title">
-              Siap Diserahkan
-            </div>
-
-            <div class="process-value">
-              67 / 86
-            </div>
-
-          </div>
-
-          <div class="process-bar">
-
-            <span style="width:78%"></span>
-
-          </div>
-
-        </div>
-
-
-        <div class="process-box">
-
-          <div class="process-top">
-
-            <div class="process-title">
-              Sudah Diserahkan
-            </div>
-
-            <div class="process-value">
-              61 / 86
-            </div>
-
-          </div>
-
-          <div class="process-bar">
-
-            <span style="width:71%"></span>
-
-          </div>
-
-        </div>
 
       </div>
-
     </div>
-
   </div>
-
-
   <!-- =====================================================
          STOK + OBAT MENIPIS + KATEGORI
     ====================================================== -->
-
   <div class="row g-3 mb-3">
-
-
     <!-- OBAT MENIPIS -->
-
     <div class="col-xl-5">
-
       <div class="dash-card">
-
         <div class="dash-header">
-
           <div>
-
             <h6 class="dash-title">
               Stok Obat Menipis
             </h6>
-
             <div class="dash-subtitle">
               Obat yang perlu segera diperhatikan
             </div>
-
           </div>
-
-          <span class="badge bg-danger">
-            5 Item
-          </span>
-
+          <span class="badge bg-danger"><span id="farmasiLowStockBadge"></span></span>
+        </div>
+        <div id="farmasiLowStockList">
+          <div class="text-center text-muted py-4">Memuat stok obat...</div>
         </div>
 
 
-        <div class="stock-item">
 
-          <div class="stock-icon">
-
-            <iconify-icon
-              icon="solar:pills-3-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div>
-
-            <div class="stock-name">
-              Paracetamol 500 mg
-            </div>
-
-            <div class="stock-code">
-              PAR-500 · Tablet
-            </div>
-
-          </div>
-
-          <div class="stock-value">
-
-            <div class="stock-number">
-              18
-            </div>
-
-            <div class="stock-warning">
-              Stok menipis
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div class="stock-item">
-
-          <div class="stock-icon">
-
-            <iconify-icon
-              icon="solar:pills-3-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div>
-
-            <div class="stock-name">
-              Amoxicillin 500 mg
-            </div>
-
-            <div class="stock-code">
-              AMX-500 · Kapsul
-            </div>
-
-          </div>
-
-          <div class="stock-value">
-
-            <div class="stock-number">
-              12
-            </div>
-
-            <div class="stock-warning">
-              Stok menipis
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div class="stock-item">
-
-          <div class="stock-icon">
-
-            <iconify-icon
-              icon="solar:pills-3-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div>
-
-            <div class="stock-name">
-              Omeprazole 20 mg
-            </div>
-
-            <div class="stock-code">
-              OME-20 · Kapsul
-            </div>
-
-          </div>
-
-          <div class="stock-value">
-
-            <div class="stock-number">
-              9
-            </div>
-
-            <div class="stock-warning">
-              Kritis
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div class="stock-item">
-
-          <div class="stock-icon">
-
-            <iconify-icon
-              icon="solar:pills-3-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div>
-
-            <div class="stock-name">
-              Cetirizine 10 mg
-            </div>
-
-            <div class="stock-code">
-              CET-10 · Tablet
-            </div>
-
-          </div>
-
-          <div class="stock-value">
-
-            <div class="stock-number">
-              21
-            </div>
-
-            <div class="stock-warning">
-              Stok menipis
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div class="stock-item">
-
-          <div class="stock-icon">
-
-            <iconify-icon
-              icon="solar:pills-3-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div>
-
-            <div class="stock-name">
-              Metformin 500 mg
-            </div>
-
-            <div class="stock-code">
-              MET-500 · Tablet
-            </div>
-
-          </div>
-
-          <div class="stock-value">
-
-            <div class="stock-number">
-              16
-            </div>
-
-            <div class="stock-warning">
-              Stok menipis
-            </div>
-
-          </div>
-
-        </div>
 
       </div>
-
     </div>
-
-
     <!-- KATEGORI OBAT -->
-
     <div class="col-xl-4">
-
       <div class="dash-card">
-
         <div class="dash-header">
-
           <div>
-
             <h6 class="dash-title">
               Distribusi Obat
             </h6>
-
             <div class="dash-subtitle">
               Pengeluaran berdasarkan kategori
             </div>
-
           </div>
-
+        </div>
+        <div id="farmasiCategoryList">
+          <div class="text-center text-muted py-4">Memuat distribusi obat...</div>
         </div>
 
 
-        <div class="category-item">
 
-          <div
-            class="category-icon"
-            style="
-                            background:#eeecff;
-                            color:#635bff;
-                        ">
-
-            <iconify-icon
-              icon="solar:pills-3-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div class="category-name">
-            Tablet
-          </div>
-
-          <div class="category-count">
-            382
-          </div>
-
-        </div>
-
-
-        <div class="category-item">
-
-          <div
-            class="category-icon"
-            style="
-                            background:#e8f4ff;
-                            color:#1687d9;
-                        ">
-
-            <iconify-icon
-              icon="solar:pills-3-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div class="category-name">
-            Kapsul
-          </div>
-
-          <div class="category-count">
-            214
-          </div>
-
-        </div>
-
-
-        <div class="category-item">
-
-          <div
-            class="category-icon"
-            style="
-                            background:#e8f8ef;
-                            color:#16965a;
-                        ">
-
-            <iconify-icon
-              icon="solar:waterdrops-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div class="category-name">
-            Sirup
-          </div>
-
-          <div class="category-count">
-            87
-          </div>
-
-        </div>
-
-
-        <div class="category-item">
-
-          <div
-            class="category-icon"
-            style="
-                            background:#fff3e3;
-                            color:#d97706;
-                        ">
-
-            <iconify-icon
-              icon="solar:syringe-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div class="category-name">
-            Injeksi
-          </div>
-
-          <div class="category-count">
-            46
-          </div>
-
-        </div>
-
-
-        <div class="category-item">
-
-          <div
-            class="category-icon"
-            style="
-                            background:#feecec;
-                            color:#dc2626;
-                        ">
-
-            <iconify-icon
-              icon="solar:medical-kit-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div class="category-name">
-            Salep / Cream
-          </div>
-
-          <div class="category-count">
-            31
-          </div>
-
-        </div>
 
       </div>
-
     </div>
-
-
     <!-- ALERT OBAT -->
-
     <div class="col-xl-3">
-
       <div class="dash-card">
-
         <div class="dash-header">
-
           <div>
-
             <h6 class="dash-title">
               Perhatian
             </h6>
-
             <div class="dash-subtitle">
               Item yang perlu ditindaklanjuti
             </div>
-
           </div>
-
+        </div>
+        <div id="farmasiAlertList">
+          <div class="text-center text-muted py-4">Memuat alert...</div>
         </div>
 
 
-        <div class="drug-alert">
-
-          <div class="drug-alert-icon">
-
-            <iconify-icon
-              icon="solar:danger-triangle-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div>
-
-            <div class="drug-alert-name">
-              Stok Kritis
-            </div>
-
-            <div class="drug-alert-desc">
-              2 item
-            </div>
-
-          </div>
-
-          <a
-            href="#"
-            class="drug-alert-action">
-
-            Lihat
-
-          </a>
-
-        </div>
-
-
-        <div class="drug-alert">
-
-          <div class="drug-alert-icon">
-
-            <iconify-icon
-              icon="solar:calendar-mark-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div>
-
-            <div class="drug-alert-name">
-              Expired Dekat
-            </div>
-
-            <div class="drug-alert-desc">
-              4 item
-            </div>
-
-          </div>
-
-          <a
-            href="#"
-            class="drug-alert-action">
-
-            Lihat
-
-          </a>
-
-        </div>
-
-
-        <div class="drug-alert">
-
-          <div class="drug-alert-icon">
-
-            <iconify-icon
-              icon="solar:box-minimalistic-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div>
-
-            <div class="drug-alert-name">
-              Stok Kosong
-            </div>
-
-            <div class="drug-alert-desc">
-              1 item
-            </div>
-
-          </div>
-
-          <a
-            href="#"
-            class="drug-alert-action">
-
-            Lihat
-
-          </a>
-
-        </div>
-
-
-        <div class="drug-alert">
-
-          <div class="drug-alert-icon">
-
-            <iconify-icon
-              icon="solar:clipboard-remove-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div>
-
-            <div class="drug-alert-name">
-              Retur Obat
-            </div>
-
-            <div class="drug-alert-desc">
-              3 transaksi
-            </div>
-
-          </div>
-
-          <a
-            href="#"
-            class="drug-alert-action">
-
-            Proses
-
-          </a>
-
-        </div>
 
       </div>
-
     </div>
-
   </div>
-
-
   <!-- =====================================================
          GRAFIK + QUICK ACCESS
     ====================================================== -->
-
   <div class="row g-3">
-
-
     <!-- GRAFIK -->
-
     <div class="col-xl-7">
-
       <div class="dash-card">
-
         <div class="dash-header">
-
           <div>
-
             <h6 class="dash-title">
               Tren Resep
             </h6>
-
             <div class="dash-subtitle">
               Jumlah resep yang diterima dan diselesaikan
             </div>
-
           </div>
-
-          <select
-            class="form-select"
-            style="
+          <select class="form-select" style="
                             width:auto;
                             min-width:110px;
                             font-size:11px;
                             border-radius:10px;
                         ">
-
             <option>
               7 Hari
             </option>
-
             <option>
               30 Hari
             </option>
-
             <option>
               3 Bulan
             </option>
-
           </select>
-
         </div>
-
-
         <div style="height:260px">
-
-          <canvas
-            id="farmasiPrescriptionChart">
+          <canvas id="farmasiPrescriptionChart">
           </canvas>
-
         </div>
-
       </div>
-
     </div>
-
-
     <!-- QUICK ACCESS -->
-
     <div class="col-xl-5">
-
       <div class="dash-card">
-
         <div class="dash-header">
-
           <div>
-
             <h6 class="dash-title">
               Akses Cepat
             </h6>
-
             <div class="dash-subtitle">
               Modul yang sering digunakan
             </div>
-
           </div>
-
         </div>
-
-
         <div class="row g-2">
-
-
           <!-- RESEP -->
-
           <div class="col-6">
-
-            <a
-              href="#"
-              class="quick-item">
-
+            <a class="quick-item" href="#">
               <div class="quick-icon">
-
-                <iconify-icon
-                  icon="solar:document-text-bold">
+                <iconify-icon icon="solar:document-text-bold">
                 </iconify-icon>
-
               </div>
-
               <div class="quick-title">
                 Resep Masuk
               </div>
-
               <div class="quick-description">
                 Verifikasi resep
               </div>
-
             </a>
-
           </div>
-
-
           <!-- DISPENSING -->
-
           <div class="col-6">
-
-            <a
-              href="#"
-              class="quick-item">
-
+            <a class="quick-item" href="#">
               <div class="quick-icon">
-
-                <iconify-icon
-                  icon="solar:pills-3-bold">
+                <iconify-icon icon="solar:pills-3-bold">
                 </iconify-icon>
-
               </div>
-
               <div class="quick-title">
                 Dispensing
               </div>
-
               <div class="quick-description">
                 Siapkan obat
               </div>
-
             </a>
-
           </div>
-
-
           <!-- STOK -->
-
           <div class="col-6">
-
-            <a
-              href="#"
-              class="quick-item">
-
+            <a class="quick-item" href="#">
               <div class="quick-icon">
-
-                <iconify-icon
-                  icon="solar:box-bold">
+                <iconify-icon icon="solar:box-bold">
                 </iconify-icon>
-
               </div>
-
               <div class="quick-title">
                 Stok Obat
               </div>
-
               <div class="quick-description">
                 Kelola persediaan
               </div>
-
             </a>
-
           </div>
-
-
           <!-- PENERIMAAN -->
-
           <div class="col-6">
-
-            <a
-              href="#"
-              class="quick-item">
-
+            <a class="quick-item" href="#">
               <div class="quick-icon">
-
-                <iconify-icon
-                  icon="solar:inbox-in-bold">
+                <iconify-icon icon="solar:inbox-in-bold">
                 </iconify-icon>
-
               </div>
-
               <div class="quick-title">
                 Penerimaan
               </div>
-
               <div class="quick-description">
                 Penerimaan obat
               </div>
-
             </a>
-
           </div>
-
-
           <!-- RETUR -->
-
           <div class="col-6">
-
-            <a
-              href="#"
-              class="quick-item">
-
+            <a class="quick-item" href="#">
               <div class="quick-icon">
-
-                <iconify-icon
-                  icon="solar:undo-left-round-bold">
+                <iconify-icon icon="solar:undo-left-round-bold">
                 </iconify-icon>
-
               </div>
-
               <div class="quick-title">
                 Retur Obat
               </div>
-
               <div class="quick-description">
                 Kelola retur
               </div>
-
             </a>
-
           </div>
-
-
           <!-- LAPORAN -->
-
           <div class="col-6">
-
-            <a
-              href="#"
-              class="quick-item">
-
+            <a class="quick-item" href="#">
               <div class="quick-icon">
-
-                <iconify-icon
-                  icon="solar:chart-2-bold">
+                <iconify-icon icon="solar:chart-2-bold">
                 </iconify-icon>
-
               </div>
-
               <div class="quick-title">
                 Laporan
               </div>
-
               <div class="quick-description">
                 Laporan farmasi
               </div>
-
             </a>
-
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
 
+    const endpoint = "controller/dashboard/farmasiDashboardController.php";
+
+    const period = document.getElementById("farmasiPeriod");
+    const startDate = document.getElementById("farmasiStartDate");
+    const endDate = document.getElementById("farmasiEndDate");
+    const applyBtn = document.getElementById("applyFarmasiFilter");
+    const lastUpdate = document.getElementById("farmasiLastUpdate");
+
+    let prescriptionChart = null;
+
+    function escapeHtml(value) {
+      return String(value ?? "-")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function numberFormat(value) {
+      return new Intl.NumberFormat("id-ID").format(Number(value || 0));
+    }
+
+    function localDate(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatDate(value) {
+      if (!value) return "-";
+
+      const d = new Date(String(value).replace(" ", "T"));
+
+      if (Number.isNaN(d.getTime())) {
+        return escapeHtml(value);
+      }
+
+      return d.toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      });
+    }
+
+    function formatDateTime(value) {
+      if (!value) return "-";
+
+      const d = new Date(String(value).replace(" ", "T"));
+
+      if (Number.isNaN(d.getTime())) {
+        return escapeHtml(value);
+      }
+
+      return d.toLocaleString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function updatePeriod() {
+      const value = period.value;
+      const today = new Date();
+
+      let start = new Date(today);
+      let end = new Date(today);
+
+      if (value === "yesterday") {
+        start.setDate(today.getDate() - 1);
+        end = new Date(start);
+
+      } else if (value === "7days") {
+        start.setDate(today.getDate() - 6);
+
+      } else if (value === "30days") {
+        start.setDate(today.getDate() - 29);
+
+      } else if (value === "thismonth") {
+        start = new Date(today.getFullYear(), today.getMonth(), 1);
+
+      } else if (value === "lastmonth") {
+        start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        end = new Date(today.getFullYear(), today.getMonth(), 0);
+
+      } else if (value === "custom") {
+        return;
+      }
+
+      startDate.value = localDate(start);
+      endDate.value = localDate(end);
+    }
+
+    function setLoading() {
+      document.getElementById("farKpiResepMasuk").textContent = "...";
+      document.getElementById("farKpiMenunggu").textContent = "...";
+      document.getElementById("farKpiDiproses").textContent = "...";
+      document.getElementById("farKpiSelesai").textContent = "...";
+      document.getElementById("farKpiPersentase").textContent = "...%";
+      document.getElementById("farWaitingBadge").textContent = "...";
+
+      document.getElementById("farmasiPrescriptionList").innerHTML =
+        '<div class="text-center text-muted py-4">Memuat data resep...</div>';
+
+      document.getElementById("farmasiProcessList").innerHTML =
+        '<div class="text-center text-muted py-4">Memuat status pelayanan...</div>';
+
+      document.getElementById("farmasiLowStockList").innerHTML =
+        '<div class="text-center text-muted py-4">Memuat stok obat...</div>';
+
+      document.getElementById("farmasiCategoryList").innerHTML =
+        '<div class="text-center text-muted py-4">Memuat distribusi obat...</div>';
+
+      document.getElementById("farmasiAlertList").innerHTML =
+        '<div class="text-center text-muted py-4">Memuat alert...</div>';
+    }
+
+    function renderKPI(data) {
+      const kpi = data.kpi || {};
+
+      document.getElementById("farKpiResepMasuk").textContent =
+        numberFormat(kpi.resep_masuk);
+
+      document.getElementById("farKpiMenunggu").textContent =
+        numberFormat(kpi.menunggu_diproses);
+
+      document.getElementById("farKpiDiproses").textContent =
+        numberFormat(kpi.sedang_diproses);
+
+      document.getElementById("farKpiSelesai").textContent =
+        numberFormat(kpi.resep_selesai);
+
+      document.getElementById("farKpiPersentase").textContent =
+        numberFormat(kpi.persentase_selesai) + "%";
+
+      document.getElementById("farWaitingBadge").textContent =
+        numberFormat(kpi.menunggu_diproses);
+
+      document.getElementById("farKpiResepInfo").textContent =
+        "Periode " +
+        formatDate(data.period?.start) +
+        " s/d " +
+        formatDate(data.period?.end);
+    }
+
+    function renderPrescriptions(data) {
+      const box = document.getElementById("farmasiPrescriptionList");
+      const items = data.prescriptions?.items || [];
+
+      if (!items.length) {
+        box.innerHTML = `
+        <div class="text-center text-muted py-4">
+          <iconify-icon icon="solar:document-text-bold"
+            style="font-size:30px;opacity:.35;">
+          </iconify-icon>
+          <div class="mt-2">Tidak ada resep pada periode ini.</div>
+        </div>
+      `;
+        return;
+      }
+
+      box.innerHTML = items.map(item => `
+      <div class="prescription-item">
+        <div class="prescription-number">
+          ${escapeHtml(item.nomor_resep || "-")}
         </div>
 
+        <div style="min-width:0;">
+          <div class="prescription-name">
+            ${escapeHtml(item.nama_pasien || "-")}
+          </div>
+
+          <div class="prescription-detail">
+            ${escapeHtml(item.nomor_rm || "-")}
+            · ${escapeHtml(item.dokter || "-")}
+            · ${escapeHtml(item.poli || "-")}
+            · ${formatDateTime(item.tanggal)}
+          </div>
+        </div>
+
+        <span class="prescription-status ${escapeHtml(item.status_class || "status-waiting")}">
+          ${escapeHtml(item.status || "Menunggu")}
+        </span>
       </div>
-
-    </div>
-
-  </div>
-
-</div>
-
-
-<script>
-  /* =========================================================
-       DASHBOARD FARMASI
-    ========================================================= */
-
-  document.addEventListener(
-    "DOMContentLoaded",
-    function() {
-
-
-      /* =================================================
-         FILTER PERIODE
-      ================================================= */
-
-      const period =
-        document.getElementById(
-          "farmasiPeriod"
-        );
-
-      const startDate =
-        document.getElementById(
-          "farmasiStartDate"
-        );
-
-      const endDate =
-        document.getElementById(
-          "farmasiEndDate"
-        );
-
-      const applyButton =
-        document.getElementById(
-          "applyFarmasiFilter"
-        );
-
-
-      function localDate(date) {
-
-        const year =
-          date.getFullYear();
-
-        const month =
-          String(
-            date.getMonth() + 1
-          ).padStart(2, "0");
-
-        const day =
-          String(
-            date.getDate()
-          ).padStart(2, "0");
-
-        return (
-          year +
-          "-" +
-          month +
-          "-" +
-          day
-        );
-
-      }
-
-
-      function updatePeriod() {
-
-        const value =
-          period.value;
-
-        const today =
-          new Date();
-
-        let start =
-          new Date(today);
-
-        let end =
-          new Date(today);
-
-
-        if (
-          value === "today"
-        ) {
-
-          start =
-            new Date(today);
-
-          end =
-            new Date(today);
-
-        } else if (
-          value === "yesterday"
-        ) {
-
-          start =
-            new Date(today);
-
-          start.setDate(
-            today.getDate() - 1
-          );
-
-          end =
-            new Date(start);
-
-        } else if (
-          value === "7days"
-        ) {
-
-          start =
-            new Date(today);
-
-          start.setDate(
-            today.getDate() - 6
-          );
-
-        } else if (
-          value === "30days"
-        ) {
-
-          start =
-            new Date(today);
-
-          start.setDate(
-            today.getDate() - 29
-          );
-
-        } else if (
-          value === "thismonth"
-        ) {
-
-          start =
-            new Date(
-              today.getFullYear(),
-              today.getMonth(),
-              1
-            );
-
-        } else if (
-          value === "lastmonth"
-        ) {
-
-          start =
-            new Date(
-              today.getFullYear(),
-              today.getMonth() - 1,
-              1
-            );
-
-          end =
-            new Date(
-              today.getFullYear(),
-              today.getMonth(),
-              0
-            );
-
-        } else if (
-          value === "custom"
-        ) {
-
-          return;
-
-        }
-
-
-        startDate.value =
-          localDate(start);
-
-        endDate.value =
-          localDate(end);
-
-      }
-
-
-      period.addEventListener(
-        "change",
-        updatePeriod
-      );
-
-
-      applyButton.addEventListener(
-        "click",
-        function() {
-
-          const dari =
-            startDate.value;
-
-          const sampai =
-            endDate.value;
-
-
-          console.log(
-            "Filter Farmasi:", {
-              dari: dari,
-              sampai: sampai
-            }
-          );
-
-
-          /*
-           * NANTI DIGANTI AJAX
-           *
-           * Contoh:
-           *
-           * loadDashboardFarmasi(
-           *     dari,
-           *     sampai
-           * );
-           */
-
-
-          if (
-            typeof Swal !==
-            "undefined"
-          ) {
-
-            Swal.fire({
-
-              icon: "success",
-
-              title: "Periode diterapkan",
-
-              text: "Data farmasi " +
-                dari +
-                " sampai " +
-                sampai,
-
-              timer: 1200,
-
-              showConfirmButton: false
-
-            });
-
-          }
-
-        }
-      );
-
-
-      updatePeriod();
-
-
-      /* =================================================
-         CHART RESEP
-      ================================================= */
-
-      const chartElement =
-        document.getElementById(
-          "farmasiPrescriptionChart"
-        );
-
-
-      if (
-        chartElement &&
-        typeof Chart !== "undefined"
-      ) {
-
-        new Chart(
-          chartElement, {
-
-            type: "bar",
-
-            data: {
-
-              labels: [
-                "Sen",
-                "Sel",
-                "Rab",
-                "Kam",
-                "Jum",
-                "Sab",
-                "Min"
-              ],
-
-              datasets: [
-
-                {
-
-                  label: "Resep Masuk",
-
-                  data: [
-                    72,
-                    81,
-                    76,
-                    93,
-                    86,
-                    64,
-                    31
-                  ],
-
-                  backgroundColor: "#635bff",
-
-                  borderRadius: 7
-
-                },
-
-                {
-
-                  label: "Resep Selesai",
-
-                  data: [
-                    65,
-                    74,
-                    70,
-                    84,
-                    67,
-                    58,
-                    29
-                  ],
-
-                  backgroundColor: "#93c5fd",
-
-                  borderRadius: 7
-
-                }
-
-              ]
-
-            },
-
-            options: {
-
-              responsive: true,
-
-              maintainAspectRatio: false,
-
-              plugins: {
-
-                legend: {
-
-                  position: "bottom",
-
-                  labels: {
-
-                    boxWidth: 10,
-
-                    font: {
-
-                      size: 10
-
-                    }
-
-                  }
-
-                }
-
-              },
-
-              scales: {
-
-                x: {
-
-                  grid: {
-
-                    display: false
-
-                  },
-
-                  border: {
-
-                    display: false
-
-                  }
-
-                },
-
-                y: {
-
-                  beginAtZero: true,
-
-                  grid: {
-
-                    color: "#f0f1f5"
-
-                  },
-
-                  border: {
-
-                    display: false
-
-                  }
-
-                }
-
-              }
-
-            }
-
-          }
-        );
-
-      }
-
-
-      /* =================================================
-         UPDATE TIME
-      ================================================= */
-
-      function updateTime() {
-
-        const element =
-          document.getElementById(
-            "farmasiLastUpdate"
-          );
-
-        if (!element) {
-          return;
-        }
-
-
-        const now =
-          new Date();
-
-
-        element.textContent =
-          String(
-            now.getHours()
-          ).padStart(2, "0") +
-          ":" +
-          String(
-            now.getMinutes()
-          ).padStart(2, "0");
-
-      }
-
-
-      setInterval(
-        updateTime,
-        60000
-      );
-
+    `).join("");
     }
-  );
+
+    function renderProcess(data) {
+      const box = document.getElementById("farmasiProcessList");
+      const items = data.process?.items || [];
+
+      if (!items.length) {
+        box.innerHTML =
+          '<div class="text-center text-muted py-4">Belum ada data proses.</div>';
+        return;
+      }
+
+      box.innerHTML = items.map(item => {
+        const value = Number(item.value || 0);
+        const total = Number(item.total || 0);
+        const percentage = Math.max(
+          0,
+          Math.min(100, Number(item.percentage || 0))
+        );
+
+        return `
+        <div class="process-box">
+          <div class="process-top">
+            <div class="process-title">
+              ${escapeHtml(item.name || "-")}
+            </div>
+
+            <div class="process-value">
+              ${numberFormat(value)} / ${numberFormat(total)}
+            </div>
+          </div>
+
+          <div class="process-bar">
+            <span style="width:${percentage}%"></span>
+          </div>
+        </div>
+      `;
+      }).join("");
+    }
+
+    function renderLowStock(data) {
+      const box = document.getElementById("farmasiLowStockList");
+      const items = data.stock?.items || [];
+
+      const badge = document.getElementById("farmasiLowStockBadge");
+
+      if (badge) {
+        badge.textContent =
+          numberFormat(data.stock?.low_total || 0) + " Item";
+      }
+
+      if (!items.length) {
+        box.innerHTML = `
+        <div class="text-center text-success py-4">
+          <iconify-icon icon="solar:check-circle-bold"
+            style="font-size:30px;">
+          </iconify-icon>
+          <div class="mt-2">Tidak ada stok di bawah minimum.</div>
+        </div>
+      `;
+        return;
+      }
+
+      box.innerHTML = items.slice(0, 10).map(item => {
+        const stock = Number(item.stock || 0);
+
+        return `
+        <div class="stock-item">
+          <div class="stock-icon">
+            <iconify-icon icon="solar:pills-3-bold"></iconify-icon>
+          </div>
+
+          <div style="min-width:0;">
+            <div class="stock-name">
+              ${escapeHtml(item.nama || "-")}
+            </div>
+
+            <div class="stock-code">
+              ${escapeHtml(item.kode || "-")}
+              · ${escapeHtml(item.unit || "-")}
+            </div>
+          </div>
+
+          <div class="stock-value">
+            <div class="stock-number">
+              ${numberFormat(stock)}
+            </div>
+
+            <div class="stock-warning">
+              ${escapeHtml(item.warning || "Stok Menipis")}
+            </div>
+          </div>
+        </div>
+      `;
+      }).join("");
+    }
+
+    function renderCategory(data) {
+      const box = document.getElementById("farmasiCategoryList");
+      const items = data.category || [];
+
+      if (!items.length) {
+        box.innerHTML =
+          '<div class="text-center text-muted py-4">Belum ada data distribusi obat.</div>';
+        return;
+      }
+
+      const icons = [
+        "solar:pills-3-bold",
+        "solar:pills-3-bold",
+        "solar:waterdrops-bold",
+        "solar:syringe-bold",
+        "solar:medical-kit-bold"
+      ];
+
+      box.innerHTML = items.map((item, index) => `
+      <div class="category-item">
+        <div class="category-icon">
+          <iconify-icon icon="${icons[index % icons.length]}"></iconify-icon>
+        </div>
+
+        <div class="category-name">
+          ${escapeHtml(item.kategori || "Tidak Diketahui")}
+        </div>
+
+        <div class="category-count">
+          ${numberFormat(item.total)}
+        </div>
+      </div>
+    `).join("");
+    }
+
+    function renderAlerts(data) {
+      const box = document.getElementById("farmasiAlertList");
+      const items = data.alerts?.items || [];
+
+      if (!items.length) {
+        box.innerHTML = `
+        <div class="text-center text-success py-4">
+          <iconify-icon icon="solar:check-circle-bold"
+            style="font-size:30px;">
+          </iconify-icon>
+          <div class="mt-2">Tidak ada perhatian khusus.</div>
+        </div>
+      `;
+        return;
+      }
+
+      box.innerHTML = items.map(item => `
+      <div class="drug-alert">
+        <div class="drug-alert-icon">
+          <iconify-icon
+            icon="${escapeHtml(item.icon || "solar:danger-triangle-bold")}">
+          </iconify-icon>
+        </div>
+
+        <div style="min-width:0;">
+          <div class="drug-alert-name">
+            ${escapeHtml(item.title || "-")}
+          </div>
+
+          <div class="drug-alert-desc">
+            ${escapeHtml(item.text || "-")}
+          </div>
+        </div>
+
+        <a href="#" class="drug-alert-action"
+           onclick="return false;">
+          Lihat
+        </a>
+      </div>
+    `).join("");
+    }
+
+    function renderChart(data) {
+      const canvas = document.getElementById("farmasiPrescriptionChart");
+
+      if (!canvas || typeof Chart === "undefined") return;
+
+      const trend = data.trend || [];
+
+      const labels = trend.map(item => formatDate(item.date));
+      const masuk = trend.map(item => Number(item.masuk || 0));
+      const selesai = trend.map(item => Number(item.selesai || 0));
+
+      if (prescriptionChart) {
+        prescriptionChart.destroy();
+      }
+
+      prescriptionChart = new Chart(canvas, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [{
+              label: "Resep Masuk",
+              data: masuk,
+              backgroundColor: "#635bff",
+              borderRadius: 7
+            },
+            {
+              label: "Resep Selesai",
+              data: selesai,
+              backgroundColor: "#93c5fd",
+              borderRadius: 7
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                boxWidth: 10,
+                font: {
+                  size: 10
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: {
+                display: false
+              },
+              border: {
+                display: false
+              }
+            },
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: "#f0f1f5"
+              },
+              border: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function updateTime() {
+      if (!lastUpdate) return;
+
+      const now = new Date();
+
+      lastUpdate.textContent =
+        String(now.getHours()).padStart(2, "0") +
+        ":" +
+        String(now.getMinutes()).padStart(2, "0");
+    }
+
+    async function loadDashboardFarmasi() {
+      setLoading();
+
+      const params = new URLSearchParams({
+        action: "dashboard",
+        periode: period.value,
+        tanggal_mulai: startDate.value,
+        tanggal_selesai: endDate.value
+      });
+
+      try {
+        const response = await fetch(
+          endpoint + "?" + params.toString(), {
+            method: "GET",
+            headers: {
+              "Accept": "application/json"
+            },
+            cache: "no-store"
+          }
+        );
+
+        const text = await response.text();
+
+        let data;
+
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.error("Response bukan JSON:", text);
+          throw new Error(
+            "Controller farmasi mengembalikan response yang bukan JSON."
+          );
+        }
+
+        if (!response.ok || !data.status) {
+          throw new Error(
+            data.message || "Gagal mengambil data dashboard farmasi."
+          );
+        }
+
+        renderKPI(data);
+        renderPrescriptions(data);
+        renderProcess(data);
+        renderLowStock(data);
+        renderCategory(data);
+        renderAlerts(data);
+        renderChart(data);
+        updateTime();
+
+      } catch (error) {
+        console.error("Dashboard Farmasi:", error);
+
+        const message = escapeHtml(error.message);
+
+        document.getElementById("farmasiPrescriptionList").innerHTML =
+          `<div class="alert alert-danger mb-0">${message}</div>`;
+
+        document.getElementById("farmasiProcessList").innerHTML =
+          `<div class="alert alert-danger mb-0">${message}</div>`;
+
+        document.getElementById("farmasiLowStockList").innerHTML =
+          `<div class="alert alert-danger mb-0">${message}</div>`;
+
+        document.getElementById("farmasiCategoryList").innerHTML =
+          `<div class="alert alert-danger mb-0">${message}</div>`;
+
+        document.getElementById("farmasiAlertList").innerHTML =
+          `<div class="alert alert-danger mb-0">${message}</div>`;
+
+        document.getElementById("farKpiResepMasuk").textContent = "0";
+        document.getElementById("farKpiMenunggu").textContent = "0";
+        document.getElementById("farKpiDiproses").textContent = "0";
+        document.getElementById("farKpiSelesai").textContent = "0";
+        document.getElementById("farKpiPersentase").textContent = "0%";
+        document.getElementById("farWaitingBadge").textContent = "0";
+
+        if (typeof Swal !== "undefined") {
+          Swal.fire({
+            icon: "error",
+            title: "Dashboard Farmasi",
+            text: error.message,
+            confirmButtonText: "OK"
+          });
+        }
+      }
+    }
+
+    period.addEventListener("change", updatePeriod);
+
+    applyBtn.addEventListener("click", function() {
+      if (!startDate.value || !endDate.value) {
+        if (typeof Swal !== "undefined") {
+          Swal.fire({
+            icon: "warning",
+            title: "Periode belum lengkap",
+            text: "Silakan tentukan tanggal mulai dan tanggal selesai."
+          });
+        }
+        return;
+      }
+
+      loadDashboardFarmasi();
+    });
+
+    updatePeriod();
+    loadDashboardFarmasi();
+
+    // Jam tampilan saja.
+    setInterval(updateTime, 60000);
+
+  });
 </script>

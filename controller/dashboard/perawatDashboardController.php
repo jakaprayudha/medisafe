@@ -221,8 +221,8 @@ function getPatientName($idPatient)
    SESSION
 ============================================================ */
 
-// $idCustomer = $_SESSION['id_customer'] ?? null;
-$idCustomer = 1;
+$idCustomer = $_SESSION['id_customer'] ?? null;
+// $idCustomer = 1;
 
 /*
  * Tidak ada filter id_perawat.
