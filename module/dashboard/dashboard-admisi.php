@@ -1064,6 +1064,36 @@
     }
 
   }
+
+  .admisi-dashboard #admisiQueueList {
+    scrollbar-width: thin;
+  }
+
+  .admisi-dashboard #admisiQueueList::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .admisi-dashboard #admisiQueueList::-webkit-scrollbar-thumb {
+    background: #dfe2e8;
+    border-radius: 10px;
+  }
+
+  /* Status Poliklinik: tampil 5 item, sisanya scroll */
+  .admisi-dashboard #admisiPoliList {
+    max-height: 390px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    padding-right: 4px;
+  }
+
+  .admisi-dashboard #admisiPoliList::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .admisi-dashboard #admisiPoliList::-webkit-scrollbar-thumb {
+    background: #dfe2e8;
+    border-radius: 10px;
+  }
 </style>
 
 
@@ -1244,11 +1274,11 @@
             </div>
 
             <div class="kpi-value">
-              248
+              <span id="admisiTotalPasien">0</span>
             </div>
 
             <div class="kpi-info up">
-              ↑ 12,4% dari kemarin
+              <span id="admisiPertumbuhan">— dari periode sebelumnya</span>
             </div>
 
           </div>
@@ -1283,11 +1313,11 @@
             </div>
 
             <div class="kpi-value">
-              18
+              <span id="admisiPasienMenunggu">0</span>
             </div>
 
             <div class="kpi-info warning">
-              Perlu segera dilayani
+              <span id="admisiMenungguInfo">Perlu segera dilayani</span>
             </div>
 
           </div>
@@ -1322,11 +1352,11 @@
             </div>
 
             <div class="kpi-value">
-              12
+              <span id="admisiSedangDiperiksa">0</span>
             </div>
 
             <div class="kpi-info">
-              6 poli aktif
+              <span id="admisiPoliAktif">0 poli aktif</span>
             </div>
 
           </div>
@@ -1361,11 +1391,11 @@
             </div>
 
             <div class="kpi-value">
-              218
+              <span id="admisiPelayananSelesai">0</span>
             </div>
 
             <div class="kpi-info up">
-              88% dari total pasien
+              <span id="admisiPersentaseSelesai">0% dari total pasien</span>
             </div>
 
           </div>
@@ -1414,216 +1444,13 @@
 
           </div>
 
-          <span class="badge bg-success">
-            6 Hadir
-          </span>
+          <span class="badge bg-success" id="admisiDoctorHadir">0 Hadir</span>
 
         </div>
 
 
-        <!-- DOKTER 1 -->
-
-        <div class="doctor-item">
-
-          <div class="doctor-avatar">
-            DA
-          </div>
-
-          <div>
-
-            <div class="doctor-name">
-              dr. Andi Saputra
-            </div>
-
-            <div class="doctor-poli">
-              Poli Umum
-            </div>
-
-          </div>
-
-          <div class="doctor-status">
-
-            <span class="doctor-status-dot"></span>
-
-            Hadir
-
-            <span class="doctor-time">
-              07:42
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <!-- DOKTER 2 -->
-
-        <div class="doctor-item">
-
-          <div class="doctor-avatar">
-            DR
-          </div>
-
-          <div>
-
-            <div class="doctor-name">
-              dr. Rina Amelia
-            </div>
-
-            <div class="doctor-poli">
-              Poli Anak
-            </div>
-
-          </div>
-
-          <div class="doctor-status">
-
-            <span class="doctor-status-dot"></span>
-
-            Hadir
-
-            <span class="doctor-time">
-              07:51
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <!-- DOKTER 3 -->
-
-        <div class="doctor-item">
-
-          <div class="doctor-avatar">
-            DM
-          </div>
-
-          <div>
-
-            <div class="doctor-name">
-              dr. Maya Sari
-            </div>
-
-            <div class="doctor-poli">
-              Poli Gigi
-            </div>
-
-          </div>
-
-          <div class="doctor-status">
-
-            <span class="doctor-status-dot"></span>
-
-            Hadir
-
-            <span class="doctor-time">
-              08:02
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <!-- DOKTER 4 -->
-
-        <div class="doctor-item">
-
-          <div class="doctor-avatar">
-            DF
-          </div>
-
-          <div>
-
-            <div class="doctor-name">
-              dr. Fajar Hidayat
-            </div>
-
-            <div class="doctor-poli">
-              Poli Penyakit Dalam
-            </div>
-
-          </div>
-
-          <div class="doctor-status">
-
-            <span class="doctor-status-dot"></span>
-
-            Hadir
-
-            <span class="doctor-time">
-              08:05
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <!-- DOKTER 5 -->
-
-        <div class="doctor-item">
-
-          <div class="doctor-avatar">
-            DS
-          </div>
-
-          <div>
-
-            <div class="doctor-name">
-              dr. Sinta Dewi
-            </div>
-
-            <div class="doctor-poli">
-              Poli Kandungan
-            </div>
-
-          </div>
-
-          <div class="doctor-status">
-
-            <span class="doctor-status-dot"></span>
-
-            Hadir
-
-            <span class="doctor-time">
-              08:11
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <!-- DOKTER BELUM HADIR -->
-
-        <div class="doctor-item">
-
-          <div class="doctor-avatar">
-            DB
-          </div>
-
-          <div>
-
-            <div class="doctor-name">
-              dr. Budi Pratama
-            </div>
-
-            <div class="doctor-poli">
-              Poli Saraf
-            </div>
-
-          </div>
-
-          <div class="doctor-status absent">
-
-            <span class="doctor-status-dot"></span>
-
-            Belum Hadir
-
-          </div>
-
+        <div id="admisiDoctorList">
+          <div class="text-muted small py-3 text-center">Memuat data dokter...</div>
         </div>
 
       </div>
@@ -1653,168 +1480,16 @@
 
           <div>
 
-            <span class="badge bg-warning text-dark me-1">
-              18 Menunggu
-            </span>
-
-            <span class="badge bg-primary">
-              12 Diproses
-            </span>
+            <span class="badge bg-warning text-dark me-1" id="admisiQueueWaiting">0 Menunggu</span>
+            <span class="badge bg-primary" id="admisiQueueProcessing">0 Diproses</span>
 
           </div>
 
         </div>
 
 
-        <!-- QUEUE -->
-
-        <div class="queue-item">
-
-          <div class="queue-number">
-            A-021
-          </div>
-
-          <div>
-
-            <div class="queue-name">
-              Budi Santoso
-            </div>
-
-            <div class="queue-detail">
-              Poli Umum · dr. Andi
-            </div>
-
-          </div>
-
-          <span class="queue-status waiting">
-            Menunggu
-          </span>
-
-        </div>
-
-
-        <div class="queue-item">
-
-          <div class="queue-number">
-            A-022
-          </div>
-
-          <div>
-
-            <div class="queue-name">
-              Siti Rahma
-            </div>
-
-            <div class="queue-detail">
-              Poli Anak · dr. Rina
-            </div>
-
-          </div>
-
-          <span class="queue-status called">
-            Dipanggil
-          </span>
-
-        </div>
-
-
-        <div class="queue-item">
-
-          <div class="queue-number">
-            A-023
-          </div>
-
-          <div>
-
-            <div class="queue-name">
-              Ahmad Fauzi
-            </div>
-
-            <div class="queue-detail">
-              Poli Umum · dr. Andi
-            </div>
-
-          </div>
-
-          <span class="queue-status examination">
-            Diperiksa
-          </span>
-
-        </div>
-
-
-        <div class="queue-item">
-
-          <div class="queue-number">
-            A-024
-          </div>
-
-          <div>
-
-            <div class="queue-name">
-              Dewi Lestari
-            </div>
-
-            <div class="queue-detail">
-              Poli Gigi · dr. Maya
-            </div>
-
-          </div>
-
-          <span class="queue-status waiting">
-            Menunggu
-          </span>
-
-        </div>
-
-
-        <div class="queue-item">
-
-          <div class="queue-number">
-            A-025
-          </div>
-
-          <div>
-
-            <div class="queue-name">
-              Rudi Hartono
-            </div>
-
-            <div class="queue-detail">
-              Poli Umum · dr. Andi
-            </div>
-
-          </div>
-
-          <span class="queue-status completed">
-            Selesai
-          </span>
-
-        </div>
-
-
-        <div class="queue-item">
-
-          <div class="queue-number">
-            A-026
-          </div>
-
-          <div>
-
-            <div class="queue-name">
-              Nur Aisyah
-            </div>
-
-            <div class="queue-detail">
-              Poli Penyakit Dalam · dr. Fajar
-            </div>
-
-          </div>
-
-          <span class="queue-status waiting">
-            Menunggu
-          </span>
-
+        <div id="admisiQueueList">
+          <div class="text-muted small py-3 text-center">Memuat antrean...</div>
         </div>
 
       </div>
@@ -1859,210 +1534,8 @@
         </div>
 
 
-        <!-- DOKTER -->
-
-        <div class="doctor-summary">
-
-          <div class="doctor-summary-left">
-
-            <div class="summary-icon">
-
-              <iconify-icon
-                icon="solar:stethoscope-bold">
-              </iconify-icon>
-
-            </div>
-
-            <div>
-
-              <div class="summary-doctor">
-                dr. Andi Saputra
-              </div>
-
-              <div class="summary-poli">
-                Poli Umum
-              </div>
-
-            </div>
-
-          </div>
-
-          <div class="summary-count">
-
-            <strong>
-              68
-            </strong>
-
-            <span>
-              pasien
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <div class="doctor-summary">
-
-          <div class="doctor-summary-left">
-
-            <div class="summary-icon">
-
-              <iconify-icon
-                icon="solar:stethoscope-bold">
-              </iconify-icon>
-
-            </div>
-
-            <div>
-
-              <div class="summary-doctor">
-                dr. Rina Amelia
-              </div>
-
-              <div class="summary-poli">
-                Poli Anak
-              </div>
-
-            </div>
-
-          </div>
-
-          <div class="summary-count">
-
-            <strong>
-              45
-            </strong>
-
-            <span>
-              pasien
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <div class="doctor-summary">
-
-          <div class="doctor-summary-left">
-
-            <div class="summary-icon">
-
-              <iconify-icon
-                icon="solar:stethoscope-bold">
-              </iconify-icon>
-
-            </div>
-
-            <div>
-
-              <div class="summary-doctor">
-                dr. Maya Sari
-              </div>
-
-              <div class="summary-poli">
-                Poli Gigi
-              </div>
-
-            </div>
-
-          </div>
-
-          <div class="summary-count">
-
-            <strong>
-              31
-            </strong>
-
-            <span>
-              pasien
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <div class="doctor-summary">
-
-          <div class="doctor-summary-left">
-
-            <div class="summary-icon">
-
-              <iconify-icon
-                icon="solar:stethoscope-bold">
-              </iconify-icon>
-
-            </div>
-
-            <div>
-
-              <div class="summary-doctor">
-                dr. Fajar Hidayat
-              </div>
-
-              <div class="summary-poli">
-                Penyakit Dalam
-              </div>
-
-            </div>
-
-          </div>
-
-          <div class="summary-count">
-
-            <strong>
-              27
-            </strong>
-
-            <span>
-              pasien
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <div class="doctor-summary">
-
-          <div class="doctor-summary-left">
-
-            <div class="summary-icon">
-
-              <iconify-icon
-                icon="solar:stethoscope-bold">
-              </iconify-icon>
-
-            </div>
-
-            <div>
-
-              <div class="summary-doctor">
-                dr. Sinta Dewi
-              </div>
-
-              <div class="summary-poli">
-                Poli Kandungan
-              </div>
-
-            </div>
-
-          </div>
-
-          <div class="summary-count">
-
-            <strong>
-              22
-            </strong>
-
-            <span>
-              pasien
-            </span>
-
-          </div>
-
+        <div id="admisiDoctorSummaryList">
+          <div class="text-muted small py-3 text-center">Memuat data pasien per dokter...</div>
         </div>
 
       </div>
@@ -2093,198 +1566,8 @@
         </div>
 
 
-        <div class="poli-item">
-
-          <div class="poli-top">
-
-            <div>
-
-              <div class="poli-name">
-                Poli Umum
-              </div>
-
-              <div class="poli-doctor">
-                dr. Andi Saputra
-              </div>
-
-            </div>
-
-            <span class="badge bg-success">
-              Aktif
-            </span>
-
-          </div>
-
-          <div class="poli-bottom">
-
-            <div class="poli-progress">
-
-              <span style="width:78%"></span>
-
-            </div>
-
-            <div class="poli-total">
-              68 pasien
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div class="poli-item">
-
-          <div class="poli-top">
-
-            <div>
-
-              <div class="poli-name">
-                Poli Anak
-              </div>
-
-              <div class="poli-doctor">
-                dr. Rina Amelia
-              </div>
-
-            </div>
-
-            <span class="badge bg-success">
-              Aktif
-            </span>
-
-          </div>
-
-          <div class="poli-bottom">
-
-            <div class="poli-progress">
-
-              <span style="width:61%"></span>
-
-            </div>
-
-            <div class="poli-total">
-              45 pasien
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div class="poli-item">
-
-          <div class="poli-top">
-
-            <div>
-
-              <div class="poli-name">
-                Poli Gigi
-              </div>
-
-              <div class="poli-doctor">
-                dr. Maya Sari
-              </div>
-
-            </div>
-
-            <span class="badge bg-success">
-              Aktif
-            </span>
-
-          </div>
-
-          <div class="poli-bottom">
-
-            <div class="poli-progress">
-
-              <span style="width:48%"></span>
-
-            </div>
-
-            <div class="poli-total">
-              31 pasien
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div class="poli-item">
-
-          <div class="poli-top">
-
-            <div>
-
-              <div class="poli-name">
-                Penyakit Dalam
-              </div>
-
-              <div class="poli-doctor">
-                dr. Fajar Hidayat
-              </div>
-
-            </div>
-
-            <span class="badge bg-success">
-              Aktif
-            </span>
-
-          </div>
-
-          <div class="poli-bottom">
-
-            <div class="poli-progress">
-
-              <span style="width:38%"></span>
-
-            </div>
-
-            <div class="poli-total">
-              27 pasien
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div class="poli-item">
-
-          <div class="poli-top">
-
-            <div>
-
-              <div class="poli-name">
-                Poli Saraf
-              </div>
-
-              <div class="poli-doctor">
-                dr. Budi Pratama
-              </div>
-
-            </div>
-
-            <span class="badge bg-secondary">
-              Belum Mulai
-            </span>
-
-          </div>
-
-          <div class="poli-bottom">
-
-            <div class="poli-progress">
-
-              <span style="width:0%"></span>
-
-            </div>
-
-            <div class="poli-total">
-              0 pasien
-            </div>
-
-          </div>
-
+        <div id="admisiPoliList">
+          <div class="text-muted small py-3 text-center">Memuat status poli...</div>
         </div>
 
       </div>
@@ -2315,111 +1598,8 @@
         </div>
 
 
-        <!-- BPJS -->
-
-        <div class="patient-type-box">
-
-          <div
-            class="patient-type-icon"
-            style="
-                            background:#eeecff;
-                            color:#635bff;
-                        ">
-
-            <iconify-icon
-              icon="solar:card-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div class="patient-type-info">
-
-            <div class="patient-type-name">
-              BPJS
-            </div>
-
-            <div class="patient-type-percent">
-              56% dari total
-            </div>
-
-          </div>
-
-          <div class="patient-type-count">
-            139
-          </div>
-
-        </div>
-
-
-        <!-- UMUM -->
-
-        <div class="patient-type-box">
-
-          <div
-            class="patient-type-icon"
-            style="
-                            background:#e8f4ff;
-                            color:#1687d9;
-                        ">
-
-            <iconify-icon
-              icon="solar:wallet-money-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div class="patient-type-info">
-
-            <div class="patient-type-name">
-              Umum
-            </div>
-
-            <div class="patient-type-percent">
-              31% dari total
-            </div>
-
-          </div>
-
-          <div class="patient-type-count">
-            77
-          </div>
-
-        </div>
-
-
-        <!-- ASURANSI -->
-
-        <div class="patient-type-box">
-
-          <div
-            class="patient-type-icon"
-            style="
-                            background:#e8f8ef;
-                            color:#16965a;
-                        ">
-
-            <iconify-icon
-              icon="solar:shield-check-bold">
-            </iconify-icon>
-
-          </div>
-
-          <div class="patient-type-info">
-
-            <div class="patient-type-name">
-              Asuransi
-            </div>
-
-            <div class="patient-type-percent">
-              13% dari total
-            </div>
-
-          </div>
-
-          <div class="patient-type-count">
-            32
-          </div>
-
+        <div id="admisiPatientTypeList">
+          <div class="text-muted small py-3 text-center">Memuat jenis pasien...</div>
         </div>
 
       </div>
@@ -2691,392 +1871,292 @@
 
 
 <script>
-  /* =========================================================
-       FILTER PERIODE ADMISI
-    ========================================================= */
-
-  document.addEventListener(
-    "DOMContentLoaded",
-    function() {
-
-      const period =
-        document.getElementById(
-          "admisiPeriod"
-        );
-
-      const startDate =
-        document.getElementById(
-          "admisiStartDate"
-        );
-
-      const endDate =
-        document.getElementById(
-          "admisiEndDate"
-        );
-
-      const applyButton =
-        document.getElementById(
-          "applyAdmisiFilter"
-        );
-
-
-      function localDate(date) {
-
-        const year =
-          date.getFullYear();
-
-        const month =
-          String(
-            date.getMonth() + 1
-          ).padStart(2, "0");
-
-        const day =
-          String(
-            date.getDate()
-          ).padStart(2, "0");
-
-        return (
-          year +
-          "-" +
-          month +
-          "-" +
-          day
-        );
-
-      }
-
+  (function() {
+    function initAdmisiDashboard() {
+      const period = document.getElementById('admisiPeriod');
+      const startDate = document.getElementById('admisiStartDate');
+      const endDate = document.getElementById('admisiEndDate');
+      const applyButton = document.getElementById('applyAdmisiFilter');
+      if (!period || !startDate || !endDate || !applyButton) return;
+      const endpoint = 'controller/dashboard/admisiDashboardController.php?action=dashboard';
+      let chart = null;
+      const esc = v => {
+        const d = document.createElement('div');
+        d.textContent = v == null ? '' : String(v);
+        return d.innerHTML;
+      };
+      const num = v => Number(v || 0).toLocaleString('id-ID');
+      const localDate = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      const setText = (id, v) => {
+        const e = document.getElementById(id);
+        if (e) e.textContent = v;
+      };
 
       function updatePeriod() {
-
-        const value =
-          period.value;
-
-        const today =
-          new Date();
-
-        let start =
-          new Date(today);
-
-        let end =
-          new Date(today);
-
-
-        if (value === "today") {
-
-          start =
-            new Date(today);
-
-          end =
-            new Date(today);
-
-        } else if (
-          value === "yesterday"
-        ) {
-
-          start =
-            new Date(today);
-
-          start.setDate(
-            today.getDate() - 1
-          );
-
-          end =
-            new Date(start);
-
-        } else if (
-          value === "7days"
-        ) {
-
-          start =
-            new Date(today);
-
-          start.setDate(
-            today.getDate() - 6
-          );
-
-        } else if (
-          value === "30days"
-        ) {
-
-          start =
-            new Date(today);
-
-          start.setDate(
-            today.getDate() - 29
-          );
-
-        } else if (
-          value === "thismonth"
-        ) {
-
-          start =
-            new Date(
-              today.getFullYear(),
-              today.getMonth(),
-              1
-            );
-
-        } else if (
-          value === "lastmonth"
-        ) {
-
-          start =
-            new Date(
-              today.getFullYear(),
-              today.getMonth() - 1,
-              1
-            );
-
-          end =
-            new Date(
-              today.getFullYear(),
-              today.getMonth(),
-              0
-            );
-
-        } else if (
-          value === "custom"
-        ) {
-
-          return;
-
-        }
-
-
-        startDate.value =
-          localDate(start);
-
-        endDate.value =
-          localDate(end);
-
+        const v = period.value,
+          t = new Date();
+        let s = new Date(t),
+          e = new Date(t);
+        if (v === 'yesterday') {
+          s.setDate(t.getDate() - 1);
+          e = new Date(s);
+        } else if (v === '7days') s.setDate(t.getDate() - 6);
+        else if (v === '30days') s.setDate(t.getDate() - 29);
+        else if (v === 'thismonth') s = new Date(t.getFullYear(), t.getMonth(), 1);
+        else if (v === 'lastmonth') {
+          s = new Date(t.getFullYear(), t.getMonth() - 1, 1);
+          e = new Date(t.getFullYear(), t.getMonth(), 0);
+        } else if (v === 'custom') return;
+        startDate.value = localDate(s);
+        endDate.value = localDate(e);
       }
 
+      function initials(name) {
+        const p = String(name || 'DR').trim().split(/\s+/).filter(Boolean);
+        return p.length < 2 ? (p[0] || 'DR').slice(0, 2).toUpperCase() : (p[0][0] + p[1][0]).toUpperCase();
+      }
 
-      period.addEventListener(
-        "change",
-        updatePeriod
-      );
+      function renderDoctors(d) {
+        const el = document.getElementById('admisiDoctorList');
+        if (!el) return;
+        const a = d.items || [];
+        if (!a.length) {
+          el.innerHTML = '<div class="text-muted small py-3 text-center">Tidak ada data dokter.</div>';
+          return;
+        }
+        el.innerHTML = a.map(x => `<div class="doctor-item"><div class="doctor-avatar">${esc(x.initial||initials(x.doctor_name))}</div><div><div class="doctor-name">${esc(x.doctor_name||'Dokter')}</div><div class="doctor-poli">${esc(x.poli_name||'-')}</div></div><div class="doctor-status ${x.status==='absent'?'absent':''}"><span class="doctor-status-dot"></span>${esc(x.status_label||'Hadir')}${x.jam_masuk?`<span class="doctor-time">${esc(x.jam_masuk)}</span>`:''}</div></div>`).join('');
+      }
 
+      function renderQueue(d) {
+        const el = document.getElementById('admisiQueueList');
+        if (!el) return;
+        const a = d.items || [];
+        if (!a.length) {
+          el.innerHTML = '<div class="text-muted small py-4 text-center">Tidak ada antrean pasien.</div>';
+          return;
+        }
+        const v = a.slice(0, 10);
+        el.style.maxHeight = a.length > 10 ? '520px' : 'none';
+        el.style.overflowY = a.length > 10 ? 'auto' : 'visible';
+        el.innerHTML = v.map(x => `<div class="queue-item"><div class="queue-number">${esc(x.number||'-')}</div><div><div class="queue-name">${esc(x.patient_name||'Pasien')}</div><div class="queue-detail">${esc(x.poli_name||'-')} · ${esc(x.doctor_name||'-')}</div></div><span class="queue-status ${esc(x.status_class||'waiting')}">${esc(x.status_label||'Menunggu')}</span></div>`).join('') + (a.length > 10 ? `<div class="text-muted text-center small py-2">Menampilkan 10 antrean pertama dari ${num(a.length)}. Scroll untuk melihat lainnya.</div>` : '');
+      }
 
-      applyButton.addEventListener(
-        "click",
-        function() {
+      function renderDoctorSummary(d) {
+        const el = document.getElementById('admisiDoctorSummaryList');
+        if (!el) return;
+        const a = d.items || [];
+        if (!a.length) {
+          el.innerHTML = '<div class="text-muted small py-3 text-center">Belum ada data pasien per dokter.</div>';
+          return;
+        }
+        el.innerHTML = a.map(x => `<div class="doctor-summary"><div class="doctor-summary-left"><div class="summary-icon"><iconify-icon icon="solar:stethoscope-bold"></iconify-icon></div><div><div class="summary-doctor">${esc(x.doctor_name||'Dokter')}</div><div class="summary-poli">${esc(x.poli_name||'-')}</div></div></div><div class="summary-count"><strong>${num(x.total_pasien)}</strong><span>pasien</span></div></div>`).join('');
+      }
 
-          const dari =
-            startDate.value;
+      function renderPoli(d) {
+        const el = document.getElementById('admisiPoliList');
+        if (!el) return;
 
-          const sampai =
-            endDate.value;
+        const a = d.items || [];
 
+        if (!a.length) {
+          el.innerHTML = '<div class="text-muted small py-3 text-center">Belum ada data poli.</div>';
+          el.style.maxHeight = 'none';
+          el.style.overflowY = 'visible';
+          return;
+        }
 
-          console.log(
-            "Filter Admisi:", {
-              dari: dari,
-              sampai: sampai
-            }
+        /*
+         * Tampilkan 5 poli pertama.
+         * Jika lebih dari 5, container tetap dapat di-scroll
+         * untuk melihat poli berikutnya.
+         */
+        const visible = a.slice(0, 5);
+
+        el.style.maxHeight = a.length > 5 ? '390px' : 'none';
+        el.style.overflowY = a.length > 5 ? 'auto' : 'visible';
+
+        el.innerHTML = visible.map(x => {
+          const active = x.status === 'active';
+          const p = Math.max(
+            0,
+            Math.min(
+              100,
+              Number(x.persentase || 0)
+            )
           );
 
+          return `
+            <div class="poli-item">
+              <div class="poli-top">
+                <div>
+                  <div class="poli-name">
+                    ${esc(x.poli_name || '-')}
+                  </div>
+                  <div class="poli-doctor">
+                    ${esc(x.doctor_name || '-')}
+                  </div>
+                </div>
 
-          /*
-           * NANTI DATA DATABASE
-           * BISA DI-LOAD DI SINI
-           *
-           * Contoh:
-           *
-           * loadDashboardAdmisi(
-           *     dari,
-           *     sampai
-           * );
-           */
+                <span class="badge ${active ? 'bg-success' : 'bg-secondary'}">
+                  ${esc(x.status_label || '-')}
+                </span>
+              </div>
 
+              <div class="poli-bottom">
+                <div class="poli-progress">
+                  <span style="width:${p}%"></span>
+                </div>
 
-          if (
-            typeof Swal !==
-            "undefined"
-          ) {
+                <div class="poli-total">
+                  ${num(x.total_pasien)} pasien
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
 
-            Swal.fire({
-
-              icon: "success",
-
-              title: "Periode diterapkan",
-
-              text: "Data pelayanan " +
-                dari +
-                " sampai " +
-                sampai,
-
-              timer: 1200,
-
-              showConfirmButton: false
-
-            });
-
-          }
-
+        if (a.length > 5) {
+          el.innerHTML += `
+            <div class="text-muted text-center small py-2">
+              Menampilkan 5 poli pertama dari ${num(a.length)} poli.
+              Scroll untuk melihat lainnya.
+            </div>
+          `;
         }
-      );
+      }
 
+      function renderTypes(d) {
+        const el = document.getElementById('admisiPatientTypeList');
+        if (!el) return;
+        const a = d.items || [],
+          icons = {
+            bpjs: ['solar:card-bold', 'background:#eeecff;color:#635bff;'],
+            umum: ['solar:wallet-money-bold', 'background:#e8f4ff;color:#1687d9;'],
+            asuransi: ['solar:shield-check-bold', 'background:#e8f8ef;color:#16965a;']
+          };
+        if (!a.length) {
+          el.innerHTML = '<div class="text-muted small py-3 text-center">Belum ada data jenis pasien.</div>';
+          return;
+        }
+        el.innerHTML = a.map(x => {
+          const c = icons[x.key] || icons.umum;
+          return `<div class="patient-type-box"><div class="patient-type-icon" style="${c[1]}"><iconify-icon icon="${c[0]}"></iconify-icon></div><div class="patient-type-info"><div class="patient-type-name">${esc(x.label||'-')}</div><div class="patient-type-percent">${num(x.persentase)}% dari total</div></div><div class="patient-type-count">${num(x.total)}</div></div>`;
+        }).join('');
+      }
 
-      updatePeriod();
-
-
-      /* =================================================
-         CHART KUNJUNGAN
-      ================================================= */
-
-      const chartElement =
-        document.getElementById(
-          "admisiVisitChart"
-        );
-
-
-      if (
-        chartElement &&
-        typeof Chart !== "undefined"
-      ) {
-
-        new Chart(
-          chartElement, {
-
-            type: "line",
-
-            data: {
-
-              labels: [
-                "Sen",
-                "Sel",
-                "Rab",
-                "Kam",
-                "Jum",
-                "Sab",
-                "Min"
-              ],
-
-              datasets: [
-
-                {
-
-                  label: "Pasien",
-
-                  data: [
-                    185,
-                    210,
-                    178,
-                    235,
-                    248,
-                    162,
-                    91
-                  ],
-
-                  borderColor: "#635bff",
-
-                  backgroundColor: "rgba(99,91,255,.08)",
-
-                  fill: true,
-
-                  tension: .4,
-
-                  borderWidth: 3,
-
-                  pointRadius: 3,
-
-                  pointHoverRadius: 5
-
-                }
-
-              ]
-
+      function renderChart(a) {
+        const c = document.getElementById('admisiVisitChart');
+        if (!c || typeof Chart === 'undefined') return;
+        if (chart) chart.destroy();
+        chart = new Chart(c, {
+          type: 'line',
+          data: {
+            labels: (a || []).map(x => x.label || x.date || ''),
+            datasets: [{
+              label: 'Pasien',
+              data: (a || []).map(x => Number(x.total || 0)),
+              borderColor: '#635bff',
+              backgroundColor: 'rgba(99,91,255,.08)',
+              fill: true,
+              tension: .4,
+              borderWidth: 3,
+              pointRadius: 3,
+              pointHoverRadius: 5
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              }
             },
-
-            options: {
-
-              responsive: true,
-
-              maintainAspectRatio: false,
-
-              plugins: {
-
-                legend: {
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  precision: 0
+                }
+              },
+              x: {
+                grid: {
                   display: false
                 }
-
-              },
-
-              scales: {
-
-                x: {
-
-                  grid: {
-                    display: false
-                  },
-
-                  border: {
-                    display: false
-                  }
-
-                },
-
-                y: {
-
-                  beginAtZero: true,
-
-                  grid: {
-
-                    color: "#f0f1f5"
-
-                  },
-
-                  border: {
-                    display: false
-                  }
-
-                }
-
               }
-
             }
-
           }
-        );
-
+        });
       }
-
-
-      /* =================================================
-         UPDATE CLOCK
-      ================================================= */
-
-      setInterval(
-        function() {
-
-          const element =
-            document.getElementById(
-              "admisiLastUpdate"
-            );
-
-          if (!element) {
-            return;
+      async function loadDashboard(toast) {
+        const s = startDate.value,
+          e = endDate.value;
+        if (!s || !e) return;
+        try {
+          const r = await fetch(endpoint + '&period=' + encodeURIComponent(period.value) + '&start=' + encodeURIComponent(s) + '&end=' + encodeURIComponent(e) + '&_=' + Date.now(), {
+            credentials: 'same-origin',
+            cache: 'no-store'
+          });
+          const text = await r.text();
+          let j;
+          try {
+            j = JSON.parse(text);
+          } catch (err) {
+            throw new Error(text || 'Response controller bukan JSON');
           }
-
-
-          const now =
-            new Date();
-
-
-          element.textContent =
-            String(
-              now.getHours()
-            ).padStart(2, "0") +
-            ":" +
-            String(
-              now.getMinutes()
-            ).padStart(2, "0");
-
-        },
-        60000
-      );
-
+          if (!j.status) throw new Error(j.message || 'Gagal mengambil data dashboard.');
+          const k = j.kpi || {},
+            d = j.doctors || {},
+            q = j.queue || {},
+            p = j.poli || {};
+          setText('admisiTotalPasien', num(k.total_pasien));
+          setText('admisiPasienMenunggu', num(k.pasien_menunggu));
+          setText('admisiSedangDiperiksa', num(k.sedang_diperiksa));
+          setText('admisiPelayananSelesai', num(k.pelayanan_selesai));
+          setText('admisiPersentaseSelesai', num(k.persentase_selesai) + '% dari total pasien');
+          setText('admisiPoliAktif', num((p.items || []).filter(x => x.status === 'active').length) + ' poli aktif');
+          setText('admisiMenungguInfo', Number(k.pasien_menunggu || 0) > 0 ? 'Perlu segera dilayani' : 'Tidak ada antrean menunggu');
+          const g = k.pertumbuhan;
+          setText('admisiPertumbuhan', g === null || g === undefined ? '— dari periode sebelumnya' : (Number(g) >= 0 ? '↑ ' : '↓ ') + Math.abs(Number(g)).toLocaleString('id-ID') + '% dari periode sebelumnya');
+          const ge = document.getElementById('admisiPertumbuhan');
+          if (ge) ge.className = 'kpi-info ' + (g === null || g >= 0 ? 'up' : 'danger');
+          setText('admisiDoctorHadir', num(d.hadir) + ' Hadir');
+          setText('admisiQueueWaiting', num(q.waiting) + ' Menunggu');
+          setText('admisiQueueProcessing', num(q.processing) + ' Diproses');
+          renderDoctors(d);
+          renderQueue(q);
+          renderDoctorSummary(j.doctor_summary || {});
+          renderPoli(p);
+          renderTypes(j.patient_types || {});
+          renderChart(j.visit_chart || []);
+          const u = document.getElementById('admisiLastUpdate');
+          if (u) {
+            const now = new Date();
+            u.textContent = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+          }
+          if (toast && typeof Swal !== 'undefined') Swal.fire({
+            icon: 'success',
+            title: 'Periode diterapkan',
+            text: 'Data pelayanan ' + s + ' sampai ' + e,
+            timer: 1000,
+            showConfirmButton: false
+          });
+        } catch (err) {
+          console.error('Dashboard Admisi:', err);
+          if (typeof Swal !== 'undefined') Swal.fire({
+            icon: 'error',
+            title: 'Gagal Memuat Dashboard',
+            text: err.message || 'Terjadi kesalahan saat mengambil data.'
+          });
+        }
+      }
+      period.addEventListener('change', updatePeriod);
+      applyButton.addEventListener('click', () => loadDashboard(true));
+      updatePeriod();
+      loadDashboard(false);
+      setInterval(() => loadDashboard(false), 60000);
     }
-  );
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initAdmisiDashboard);
+    else initAdmisiDashboard();
+  })();
 </script>
