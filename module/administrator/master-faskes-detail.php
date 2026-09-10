@@ -580,7 +580,7 @@ require '../../controller/view.php';
 </script>
 
 <script>
-  const userApi = 'controller/master/userController';
+  const userApi = 'controller/master/userControllerAdmin';
   const urlParamsUser = new URLSearchParams(window.location.search);
   const noUser = urlParamsUser.get('no');
   let tableUser;
