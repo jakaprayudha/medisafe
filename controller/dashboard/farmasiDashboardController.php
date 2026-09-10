@@ -209,9 +209,9 @@ function cleanString($value)
    return trim((string)($value ?? ''));
 }
 
-// $idCustomer = $_SESSION['id_customer'] ?? null;
+$idCustomer = $_SESSION['id_customer'] ?? null;
 
-$idCustomer = 1;
+// $idCustomer = 1;
 
 if ($idCustomer === null || $idCustomer === '') {
    responseJson(false, 'Session id_customer tidak ditemukan.');
