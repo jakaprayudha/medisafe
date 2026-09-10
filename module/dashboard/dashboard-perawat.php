@@ -565,35 +565,19 @@
       <div class="row g-2 align-items-end">
 
          <div class="col-xl-3 col-md-6">
-
             <div class="perawat-filter-label">
                Periode
             </div>
 
             <select class="form-select" id="perawatPeriode">
-
-               <option value="today">
-                  Hari Ini
-               </option>
-
-               <option value="week">
-                  Minggu Ini
-               </option>
-
-               <option value="month">
-                  Bulan Ini
-               </option>
-
-               <option value="custom">
-                  Custom
-               </option>
-
+               <option value="today">Hari Ini</option>
+               <option value="week">Minggu Ini</option>
+               <option value="month">Bulan Ini</option>
+               <option value="custom">Custom</option>
             </select>
-
          </div>
 
          <div class="col-xl-3 col-md-6">
-
             <div class="perawat-filter-label">
                Tanggal Mulai
             </div>
@@ -603,11 +587,9 @@
                class="form-control"
                id="perawatTanggalMulai"
                value="<?= date('Y-m-d') ?>">
-
          </div>
 
          <div class="col-xl-3 col-md-6">
-
             <div class="perawat-filter-label">
                Tanggal Selesai
             </div>
@@ -617,11 +599,9 @@
                class="form-control"
                id="perawatTanggalSelesai"
                value="<?= date('Y-m-d') ?>">
-
          </div>
 
          <div class="col-xl-3 col-md-6">
-
             <button
                type="button"
                class="perawat-filter-btn w-100"
@@ -635,7 +615,6 @@
                Terapkan Filter
 
             </button>
-
          </div>
 
       </div>
@@ -665,11 +644,8 @@
       </div>
 
       <div class="perawat-status">
-
          <span class="perawat-status-dot"></span>
-
          Shift Aktif
-
       </div>
 
    </div>
@@ -688,12 +664,10 @@
             <div class="perawat-kpi-top">
 
                <div class="perawat-kpi-icon">
-
                   <iconify-icon
                      icon="solar:bed-bold"
                      width="24">
                   </iconify-icon>
-
                </div>
 
             </div>
@@ -702,12 +676,16 @@
                Total Pasien Dirawat
             </div>
 
-            <div class="perawat-kpi-value">
-               42
+            <div
+               class="perawat-kpi-value"
+               id="kpiTotalPasien">
+               0
             </div>
 
-            <div class="perawat-kpi-sub">
-               38 pasien stabil
+            <div
+               class="perawat-kpi-sub"
+               id="kpiTotalPasienSub">
+               0 pasien stabil
             </div>
 
          </div>
@@ -715,7 +693,7 @@
       </div>
 
 
-      <!-- PASIEN BARU -->
+      <!-- PASIEN MASUK -->
       <div class="col-xl-3 col-md-6">
 
          <div class="perawat-kpi">
@@ -723,12 +701,10 @@
             <div class="perawat-kpi-top">
 
                <div class="perawat-kpi-icon blue">
-
                   <iconify-icon
                      icon="solar:user-plus-bold"
                      width="24">
                   </iconify-icon>
-
                </div>
 
             </div>
@@ -737,11 +713,15 @@
                Pasien Masuk
             </div>
 
-            <div class="perawat-kpi-value">
-               8
+            <div
+               class="perawat-kpi-value"
+               id="kpiPasienMasuk">
+               0
             </div>
 
-            <div class="perawat-kpi-sub">
+            <div
+               class="perawat-kpi-sub"
+               id="kpiPasienMasukSub">
                Hari ini
             </div>
 
@@ -758,12 +738,10 @@
             <div class="perawat-kpi-top">
 
                <div class="perawat-kpi-icon orange">
-
                   <iconify-icon
                      icon="solar:stethoscope-bold"
                      width="24">
                   </iconify-icon>
-
                </div>
 
             </div>
@@ -772,8 +750,10 @@
                Tindakan Menunggu
             </div>
 
-            <div class="perawat-kpi-value">
-               11
+            <div
+               class="perawat-kpi-value"
+               id="kpiTindakanMenunggu">
+               0
             </div>
 
             <div class="perawat-kpi-sub">
@@ -793,12 +773,10 @@
             <div class="perawat-kpi-top">
 
                <div class="perawat-kpi-icon green">
-
                   <iconify-icon
                      icon="solar:pills-3-bold"
                      width="24">
                   </iconify-icon>
-
                </div>
 
             </div>
@@ -807,12 +785,16 @@
                Pemberian Obat
             </div>
 
-            <div class="perawat-kpi-value">
-               36
+            <div
+               class="perawat-kpi-value"
+               id="kpiPemberianObat">
+               0
             </div>
 
-            <div class="perawat-kpi-sub">
-               32 sudah diberikan
+            <div
+               class="perawat-kpi-sub"
+               id="kpiPemberianObatSub">
+               0 sudah diberikan
             </div>
 
          </div>
@@ -846,139 +828,19 @@
 
                </div>
 
-               <a href="#" class="perawat-link">
+               <a href="#"
+                  class="perawat-link">
                   Lihat Semua
                </a>
 
             </div>
 
+            <div id="perawatPatientList">
 
-            <!-- PASIEN 1 -->
-            <div class="perawat-patient">
-
-               <div class="perawat-avatar">
-                  AF
+               <div class="text-center py-4"
+                  style="font-size:11px;color:var(--nurse-muted);">
+                  Memuat data pasien...
                </div>
-
-               <div class="perawat-patient-info">
-
-                  <div class="perawat-patient-name">
-                     Ahmad Fauzan
-                  </div>
-
-                  <div class="perawat-patient-meta">
-                     RM-000128 • Kamar 201 • Bed A
-                  </div>
-
-               </div>
-
-               <span class="perawat-patient-status patient-stable">
-                  Stabil
-               </span>
-
-            </div>
-
-
-            <!-- PASIEN 2 -->
-            <div class="perawat-patient">
-
-               <div class="perawat-avatar">
-                  SR
-               </div>
-
-               <div class="perawat-patient-info">
-
-                  <div class="perawat-patient-name">
-                     Siti Rahma
-                  </div>
-
-                  <div class="perawat-patient-meta">
-                     RM-000127 • Kamar 203 • Bed B
-                  </div>
-
-               </div>
-
-               <span class="perawat-patient-status patient-monitor">
-                  Monitor
-               </span>
-
-            </div>
-
-
-            <!-- PASIEN 3 -->
-            <div class="perawat-patient">
-
-               <div class="perawat-avatar">
-                  BS
-               </div>
-
-               <div class="perawat-patient-info">
-
-                  <div class="perawat-patient-name">
-                     Budi Santoso
-                  </div>
-
-                  <div class="perawat-patient-meta">
-                     RM-000126 • Kamar 205 • Bed A
-                  </div>
-
-               </div>
-
-               <span class="perawat-patient-status patient-stable">
-                  Stabil
-               </span>
-
-            </div>
-
-
-            <!-- PASIEN 4 -->
-            <div class="perawat-patient">
-
-               <div class="perawat-avatar">
-                  NA
-               </div>
-
-               <div class="perawat-patient-info">
-
-                  <div class="perawat-patient-name">
-                     Nur Aisyah
-                  </div>
-
-                  <div class="perawat-patient-meta">
-                     RM-000125 • Kamar 206 • Bed B
-                  </div>
-
-               </div>
-
-               <span class="perawat-patient-status patient-critical">
-                  Perhatian
-               </span>
-
-            </div>
-
-
-            <!-- PASIEN 5 -->
-            <div class="perawat-patient">
-
-               <div class="perawat-avatar">
-                  DI
-               </div>
-
-               <div class="perawat-patient-info">
-
-                  <div class="perawat-patient-name">
-                     Dedi Irawan
-                  </div>
-
-                  <div class="perawat-patient-meta">
-                     RM-000124 • Kamar 208 • Bed A
-                  </div>
-
-               </div>
-
-               <span class="perawat-patient-status patient-stable">
-                  Stabil
-               </span>
 
             </div>
 
@@ -1008,122 +870,11 @@
 
             </div>
 
+            <div id="perawatTaskList">
 
-            <div class="perawat-task">
-
-               <div class="perawat-task-icon orange">
-
-                  <iconify-icon
-                     icon="solar:temperature-bold"
-                     width="19">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="perawat-task-info">
-
-                  <div class="perawat-task-title">
-                     Monitoring Tanda Vital
-                  </div>
-
-                  <div class="perawat-task-meta">
-                     5 pasien
-                  </div>
-
-               </div>
-
-               <div class="perawat-task-time">
-                  09:00
-               </div>
-
-            </div>
-
-
-            <div class="perawat-task">
-
-               <div class="perawat-task-icon">
-
-                  <iconify-icon
-                     icon="solar:pills-3-bold"
-                     width="19">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="perawat-task-info">
-
-                  <div class="perawat-task-title">
-                     Pemberian Obat
-                  </div>
-
-                  <div class="perawat-task-meta">
-                     8 pasien
-                  </div>
-
-               </div>
-
-               <div class="perawat-task-time">
-                  10:00
-               </div>
-
-            </div>
-
-
-            <div class="perawat-task">
-
-               <div class="perawat-task-icon green">
-
-                  <iconify-icon
-                     icon="solar:medical-kit-bold"
-                     width="19">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="perawat-task-info">
-
-                  <div class="perawat-task-title">
-                     Perawatan Luka
-                  </div>
-
-                  <div class="perawat-task-meta">
-                     3 pasien
-                  </div>
-
-               </div>
-
-               <div class="perawat-task-time">
-                  11:00
-               </div>
-
-            </div>
-
-
-            <div class="perawat-task">
-
-               <div class="perawat-task-icon red">
-
-                  <iconify-icon
-                     icon="solar:document-text-bold"
-                     width="19">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="perawat-task-info">
-
-                  <div class="perawat-task-title">
-                     Catatan Keperawatan
-                  </div>
-
-                  <div class="perawat-task-meta">
-                     4 catatan belum lengkap
-                  </div>
-
-               </div>
-
-               <div class="perawat-task-time">
-                  Prioritas
+               <div class="text-center py-4"
+                  style="font-size:11px;color:var(--nurse-muted);">
+                  Memuat tugas...
                </div>
 
             </div>
@@ -1159,10 +910,12 @@
 
                </div>
 
-               <span style="
-                        font-size:10px;
-                        color:var(--nurse-muted);">
-                  Update terakhir 08:45
+               <span
+                  id="vitalUpdatedAt"
+                  style="
+                            font-size:10px;
+                            color:var(--nurse-muted);">
+                  Belum ada data
                </span>
 
             </div>
@@ -1178,8 +931,10 @@
                         Tekanan Darah
                      </div>
 
-                     <div class="perawat-vital-value">
-                        120/80
+                     <div
+                        class="perawat-vital-value"
+                        id="vitalTekananDarah">
+                        -
                      </div>
 
                      <div class="perawat-vital-unit">
@@ -1199,8 +954,10 @@
                         Nadi
                      </div>
 
-                     <div class="perawat-vital-value">
-                        78
+                     <div
+                        class="perawat-vital-value"
+                        id="vitalNadi">
+                        -
                      </div>
 
                      <div class="perawat-vital-unit">
@@ -1220,8 +977,10 @@
                         Suhu
                      </div>
 
-                     <div class="perawat-vital-value">
-                        36.7
+                     <div
+                        class="perawat-vital-value"
+                        id="vitalSuhu">
+                        -
                      </div>
 
                      <div class="perawat-vital-unit">
@@ -1241,8 +1000,10 @@
                         SpO₂
                      </div>
 
-                     <div class="perawat-vital-value">
-                        98
+                     <div
+                        class="perawat-vital-value"
+                        id="vitalSpo2">
+                        -
                      </div>
 
                      <div class="perawat-vital-unit">
@@ -1281,106 +1042,11 @@
 
             </div>
 
+            <div id="perawatProgressList">
 
-            <div class="perawat-progress-item">
-
-               <div class="perawat-progress-top">
-
-                  <span class="perawat-progress-name">
-                     Tanda Vital
-                  </span>
-
-                  <span class="perawat-progress-value">
-                     85%
-                  </span>
-
-               </div>
-
-               <div class="perawat-progress">
-
-                  <div
-                     class="perawat-progress-bar"
-                     style="width:85%;">
-                  </div>
-
-               </div>
-
-            </div>
-
-
-            <div class="perawat-progress-item">
-
-               <div class="perawat-progress-top">
-
-                  <span class="perawat-progress-name">
-                     Pemberian Obat
-                  </span>
-
-                  <span class="perawat-progress-value">
-                     89%
-                  </span>
-
-               </div>
-
-               <div class="perawat-progress">
-
-                  <div
-                     class="perawat-progress-bar green"
-                     style="width:89%;">
-                  </div>
-
-               </div>
-
-            </div>
-
-
-            <div class="perawat-progress-item">
-
-               <div class="perawat-progress-top">
-
-                  <span class="perawat-progress-name">
-                     Tindakan Keperawatan
-                  </span>
-
-                  <span class="perawat-progress-value">
-                     72%
-                  </span>
-
-               </div>
-
-               <div class="perawat-progress">
-
-                  <div
-                     class="perawat-progress-bar orange"
-                     style="width:72%;">
-                  </div>
-
-               </div>
-
-            </div>
-
-
-            <div class="perawat-progress-item">
-
-               <div class="perawat-progress-top">
-
-                  <span class="perawat-progress-name">
-                     Dokumentasi RME
-                  </span>
-
-                  <span class="perawat-progress-value">
-                     64%
-                  </span>
-
-               </div>
-
-               <div class="perawat-progress">
-
-                  <div
-                     class="perawat-progress-bar blue"
-                     style="width:64%;">
-                  </div>
-
+               <div class="text-center py-4"
+                  style="font-size:11px;color:var(--nurse-muted);">
+                  Memuat progress...
                </div>
 
             </div>
@@ -1417,80 +1083,11 @@
 
             </div>
 
+            <div id="perawatAlertList">
 
-            <div class="perawat-alert danger">
-
-               <div class="perawat-alert-icon">
-
-                  <iconify-icon
-                     icon="solar:danger-triangle-bold"
-                     width="18">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="perawat-alert-content">
-
-                  <div class="perawat-alert-title">
-                     Pasien Memerlukan Monitoring Ketat
-                  </div>
-
-                  <div class="perawat-alert-text">
-                     1 pasien memiliki status vital yang membutuhkan pemantauan lebih lanjut.
-                  </div>
-
-               </div>
-
-            </div>
-
-
-            <div class="perawat-alert warning">
-
-               <div class="perawat-alert-icon">
-
-                  <iconify-icon
-                     icon="solar:clock-circle-bold"
-                     width="18">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="perawat-alert-content">
-
-                  <div class="perawat-alert-title">
-                     4 Tindakan Belum Didokumentasikan
-                  </div>
-
-                  <div class="perawat-alert-text">
-                     Pastikan seluruh tindakan keperawatan dicatat pada RME pasien.
-                  </div>
-
-               </div>
-
-            </div>
-
-
-            <div class="perawat-alert info">
-
-               <div class="perawat-alert-icon">
-
-                  <iconify-icon
-                     icon="solar:document-text-bold"
-                     width="18">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="perawat-alert-content">
-
-                  <div class="perawat-alert-title">
-                     Dokumentasi Asuhan Belum Lengkap
-                  </div>
-
-                  <div class="perawat-alert-text">
-                     Terdapat beberapa catatan keperawatan yang masih membutuhkan kelengkapan data.
-                  </div>
-
+               <div class="text-center py-4"
+                  style="font-size:11px;color:var(--nurse-muted);">
+                  Memuat alert...
                </div>
 
             </div>
@@ -1539,14 +1136,14 @@
                         font-weight:800;
                         color:var(--nurse-primary);
                         margin-top:3px;">
-                  Pagi
+                  <span id="shiftName">-</span>
                </div>
 
                <div style="
                         font-size:10px;
                         color:var(--nurse-muted);
                         margin-top:2px;">
-                  07:00 - 14:00
+                  <span id="shiftTime">-</span>
                </div>
 
             </div>
@@ -1565,7 +1162,7 @@
                </span>
 
                <strong style="font-size:11px;">
-                  6 Orang
+                  <span id="shiftNurseCount">0</span> Orang
                </strong>
 
             </div>
@@ -1584,7 +1181,7 @@
                </span>
 
                <strong style="font-size:11px;">
-                  42 Pasien
+                  <span id="shiftPatientCount">0</span> Pasien
                </strong>
 
             </div>
@@ -1602,7 +1199,7 @@
                </span>
 
                <strong style="font-size:11px;">
-                  1 : 7
+                  <span id="shiftRatio">-</span>
                </strong>
 
             </div>
@@ -1640,15 +1237,14 @@
 
          <div class="col-xl-2 col-md-4 col-6">
 
-            <a href="#" class="perawat-quick">
+            <a href="#"
+               class="perawat-quick">
 
                <div class="perawat-quick-icon">
-
                   <iconify-icon
                      icon="solar:users-group-rounded-bold"
                      width="20">
                   </iconify-icon>
-
                </div>
 
                <div>
@@ -1670,15 +1266,14 @@
 
          <div class="col-xl-2 col-md-4 col-6">
 
-            <a href="#" class="perawat-quick">
+            <a href="#"
+               class="perawat-quick">
 
                <div class="perawat-quick-icon">
-
                   <iconify-icon
                      icon="solar:heart-pulse-bold"
                      width="20">
                   </iconify-icon>
-
                </div>
 
                <div>
@@ -1700,15 +1295,14 @@
 
          <div class="col-xl-2 col-md-4 col-6">
 
-            <a href="#" class="perawat-quick">
+            <a href="#"
+               class="perawat-quick">
 
                <div class="perawat-quick-icon">
-
                   <iconify-icon
                      icon="solar:pills-3-bold"
                      width="20">
                   </iconify-icon>
-
                </div>
 
                <div>
@@ -1730,15 +1324,14 @@
 
          <div class="col-xl-2 col-md-4 col-6">
 
-            <a href="#" class="perawat-quick">
+            <a href="#"
+               class="perawat-quick">
 
                <div class="perawat-quick-icon">
-
                   <iconify-icon
                      icon="solar:medical-kit-bold"
                      width="20">
                   </iconify-icon>
-
                </div>
 
                <div>
@@ -1760,15 +1353,14 @@
 
          <div class="col-xl-2 col-md-4 col-6">
 
-            <a href="#" class="perawat-quick">
+            <a href="#"
+               class="perawat-quick">
 
                <div class="perawat-quick-icon">
-
                   <iconify-icon
                      icon="solar:document-text-bold"
                      width="20">
                   </iconify-icon>
-
                </div>
 
                <div>
@@ -1790,15 +1382,14 @@
 
          <div class="col-xl-2 col-md-4 col-6">
 
-            <a href="#" class="perawat-quick">
+            <a href="#"
+               class="perawat-quick">
 
                <div class="perawat-quick-icon">
-
                   <iconify-icon
                      icon="solar:chart-2-bold"
                      width="20">
                   </iconify-icon>
-
                </div>
 
                <div>
@@ -1827,6 +1418,9 @@
 <script>
    document.addEventListener("DOMContentLoaded", function() {
 
+      const API_URL =
+         "controller/dashboard/perawatDashboardController.php?action=dashboard";
+
       const periode =
          document.getElementById("perawatPeriode");
 
@@ -1838,6 +1432,32 @@
 
       const btnFilter =
          document.getElementById("btnFilterPerawat");
+
+
+      /* =========================================================
+         HELPER
+      ========================================================= */
+
+      function escapeHtml(value) {
+
+         if (value === null || value === undefined) {
+            return "";
+         }
+
+         return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+      }
+
+
+      function numberFormat(value) {
+
+         return Number(value || 0)
+            .toLocaleString("id-ID");
+      }
 
 
       function formatDate(date) {
@@ -1857,9 +1477,90 @@
       }
 
 
+      function initials(name) {
+
+         if (!name) {
+            return "NA";
+         }
+
+         const words =
+            String(name)
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean);
+
+         if (!words.length) {
+            return "NA";
+         }
+
+         if (words.length === 1) {
+            return words[0]
+               .substring(0, 2)
+               .toUpperCase();
+         }
+
+         return (
+            words[0].charAt(0) +
+            words[words.length - 1].charAt(0)
+         ).toUpperCase();
+      }
+
+
+      function showError(message) {
+
+         if (typeof Swal !== "undefined") {
+
+            Swal.fire({
+               icon: "error",
+               title: "Dashboard Gagal Dimuat",
+               text: message
+            });
+
+         } else {
+
+            alert(message);
+         }
+      }
+
+
+      function setLoading(state) {
+
+         if (!btnFilter) {
+            return;
+         }
+
+         btnFilter.disabled = state;
+
+         if (state) {
+
+            btnFilter.innerHTML = `
+                <span
+                    class="spinner-border spinner-border-sm me-1">
+                </span>
+                Memuat...
+            `;
+
+         } else {
+
+            btnFilter.innerHTML = `
+                <iconify-icon
+                    icon="solar:filter-bold"
+                    width="16">
+                </iconify-icon>
+                Terapkan Filter
+            `;
+         }
+      }
+
+
+      /* =========================================================
+         PERIODE
+      ========================================================= */
+
       periode.addEventListener("change", function() {
 
-         const today = new Date();
+         const today =
+            new Date();
 
          if (this.value === "today") {
 
@@ -1874,10 +1575,14 @@
             const start =
                new Date(today);
 
+            const day =
+               start.getDay();
+
+            const diff =
+               day === 0 ? 6 : day - 1;
+
             start.setDate(
-               today.getDate() -
-               today.getDay() +
-               1
+               start.getDate() - diff
             );
 
             tanggalMulai.value =
@@ -1901,11 +1606,14 @@
             tanggalSelesai.value =
                formatDate(today);
          }
-
       });
 
 
-      btnFilter.addEventListener("click", function() {
+      /* =========================================================
+         LOAD DATA
+      ========================================================= */
+
+      async function loadDashboard() {
 
          const mulai =
             tanggalMulai.value;
@@ -1916,21 +1624,9 @@
 
          if (!mulai || !selesai) {
 
-            if (typeof Swal !== "undefined") {
-
-               Swal.fire({
-                  icon: "warning",
-                  title: "Periode Belum Lengkap",
-                  text: "Silakan pilih tanggal mulai dan tanggal selesai."
-               });
-
-            } else {
-
-               alert(
-                  "Silakan pilih tanggal terlebih dahulu."
-               );
-
-            }
+            showError(
+               "Silakan pilih tanggal mulai dan tanggal selesai."
+            );
 
             return;
          }
@@ -1938,34 +1634,628 @@
 
          if (mulai > selesai) {
 
-            if (typeof Swal !== "undefined") {
-
-               Swal.fire({
-                  icon: "warning",
-                  title: "Periode Tidak Valid",
-                  text: "Tanggal mulai tidak boleh lebih besar dari tanggal selesai."
-               });
-
-            } else {
-
-               alert(
-                  "Tanggal mulai tidak boleh lebih besar dari tanggal selesai."
-               );
-
-            }
+            showError(
+               "Tanggal mulai tidak boleh lebih besar dari tanggal selesai."
+            );
 
             return;
          }
 
 
-         console.log(
-            "Filter dashboard perawat:",
-            mulai,
-            "sampai",
-            selesai
+         const url =
+            API_URL +
+            "&periode=" +
+            encodeURIComponent(periode.value) +
+            "&tanggal_mulai=" +
+            encodeURIComponent(mulai) +
+            "&tanggal_selesai=" +
+            encodeURIComponent(selesai);
+
+
+         setLoading(true);
+
+
+         try {
+
+            const response =
+               await fetch(
+                  url, {
+                     method: "GET",
+                     headers: {
+                        "Accept": "application/json"
+                     },
+                     cache: "no-store"
+                  }
+               );
+
+
+            const text =
+               await response.text();
+
+
+            let data;
+
+            try {
+
+               data =
+                  JSON.parse(text);
+
+            } catch (error) {
+
+               console.error(
+                  "Response controller:",
+                  text
+               );
+
+               throw new Error(
+                  "Controller mengembalikan response bukan JSON."
+               );
+            }
+
+
+            if (!data.status) {
+
+               throw new Error(
+                  data.message ||
+                  "Data dashboard gagal diambil."
+               );
+            }
+
+
+            renderDashboard(data);
+
+
+         } catch (error) {
+
+            console.error(
+               "Dashboard Perawat Error:",
+               error
+            );
+
+            showError(
+               error.message ||
+               "Terjadi kesalahan saat mengambil data dashboard."
+            );
+
+
+         } finally {
+
+            setLoading(false);
+         }
+      }
+
+
+      /* =========================================================
+         RENDER DASHBOARD
+      ========================================================= */
+
+      function renderDashboard(data) {
+
+         renderKPI(
+            data.kpi || {}
          );
 
-      });
+         renderPatients(
+            data.patients || {}
+         );
+
+         renderTasks(
+            data.tasks || {}
+         );
+
+         renderVital(
+            data.vital || {}
+         );
+
+         renderProgress(
+            data.progress || []
+         );
+
+         renderAlerts(
+            data.alerts || {}
+         );
+
+         renderShift(
+            data.shift || {}
+         );
+      }
+
+
+      /* =========================================================
+         KPI
+      ========================================================= */
+
+      function renderKPI(kpi) {
+
+         const total =
+            Number(
+               kpi.total_pasien_dirawat || 0
+            );
+
+         const stabil =
+            Number(
+               kpi.pasien_stabil || 0
+            );
+
+         const masuk =
+            Number(
+               kpi.pasien_masuk || 0
+            );
+
+         const tindakan =
+            Number(
+               kpi.tindakan_menunggu || 0
+            );
+
+         const obat =
+            Number(
+               kpi.pemberian_obat || 0
+            );
+
+         const obatDiberikan =
+            Number(
+               kpi.obat_sudah_diberikan || 0
+            );
+
+
+         document.getElementById(
+               "kpiTotalPasien"
+            ).textContent =
+            numberFormat(total);
+
+
+         document.getElementById(
+               "kpiTotalPasienSub"
+            ).textContent =
+            `${numberFormat(stabil)} pasien stabil`;
+
+
+         document.getElementById(
+               "kpiPasienMasuk"
+            ).textContent =
+            numberFormat(masuk);
+
+
+         document.getElementById(
+               "kpiPasienMasukSub"
+            ).textContent =
+            periode.value === "today" ?
+            "Hari ini" :
+            "Dalam periode";
+
+
+         document.getElementById(
+               "kpiTindakanMenunggu"
+            ).textContent =
+            numberFormat(tindakan);
+
+
+         document.getElementById(
+               "kpiPemberianObat"
+            ).textContent =
+            numberFormat(obat);
+
+
+         document.getElementById(
+               "kpiPemberianObatSub"
+            ).textContent =
+            `${numberFormat(obatDiberikan)} sudah diberikan`;
+      }
+
+
+      /* =========================================================
+         PASIEN
+      ========================================================= */
+
+      function renderPatients(data) {
+
+         const container =
+            document.getElementById(
+               "perawatPatientList"
+            );
+
+         const items =
+            Array.isArray(data.items) ?
+            data.items :
+            [];
+
+
+         if (!items.length) {
+
+            container.innerHTML = `
+                <div class="text-center py-4"
+                     style="font-size:11px;color:var(--nurse-muted);">
+                    Tidak ada pasien dalam perawatan
+                    pada periode ini.
+                </div>
+            `;
+
+            return;
+         }
+
+
+         container.innerHTML =
+            items.map(function(patient) {
+
+               const statusClass =
+                  patient.status_class ||
+                  "stable";
+
+
+               return `
+                    <div class="perawat-patient">
+
+                        <div class="perawat-avatar">
+                            ${escapeHtml(
+                                initials(patient.nama)
+                            )}
+                        </div>
+
+                        <div class="perawat-patient-info">
+
+                            <div class="perawat-patient-name">
+                                ${escapeHtml(
+                                    patient.nama || "-"
+                                )}
+                            </div>
+
+                            <div class="perawat-patient-meta">
+                                ${escapeHtml(
+                                    patient.nomor_rm || "-"
+                                )}
+                                •
+                                ${escapeHtml(
+                                    patient.kamar || "-"
+                                )}
+                                •
+                                ${escapeHtml(
+                                    patient.bed || "-"
+                                )}
+                            </div>
+
+                        </div>
+
+                        <span
+                            class="perawat-patient-status patient-${escapeHtml(
+                                statusClass
+                            )}">
+                            ${escapeHtml(
+                                patient.status || "Stabil"
+                            )}
+                        </span>
+
+                    </div>
+                `;
+
+            }).join("");
+      }
+
+
+      /* =========================================================
+         TUGAS
+      ========================================================= */
+
+      function renderTasks(data) {
+
+         const container =
+            document.getElementById(
+               "perawatTaskList"
+            );
+
+         const items =
+            Array.isArray(data.items) ?
+            data.items :
+            [];
+
+
+         if (!items.length) {
+
+            container.innerHTML = `
+                <div class="text-center py-4"
+                     style="font-size:11px;color:var(--nurse-muted);">
+                    Tidak ada tugas keperawatan.
+                </div>
+            `;
+
+            return;
+         }
+
+
+         container.innerHTML =
+            items.map(function(task) {
+
+               return `
+                    <div class="perawat-task">
+
+                        <div class="perawat-task-icon ${escapeHtml(
+                            task.class || ""
+                        )}">
+
+                            <iconify-icon
+                                icon="${escapeHtml(
+                                    task.icon ||
+                                    "solar:clipboard-text-bold"
+                                )}"
+                                width="19">
+                            </iconify-icon>
+
+                        </div>
+
+                        <div class="perawat-task-info">
+
+                            <div class="perawat-task-title">
+                                ${escapeHtml(
+                                    task.title || "-"
+                                )}
+                            </div>
+
+                            <div class="perawat-task-meta">
+                                ${numberFormat(
+                                    task.total || 0
+                                )} pasien
+                            </div>
+
+                        </div>
+
+                        <div class="perawat-task-time">
+                            ${escapeHtml(
+                                task.time || "-"
+                            )}
+                        </div>
+
+                    </div>
+                `;
+
+            }).join("");
+      }
+
+
+      /* =========================================================
+         VITAL
+      ========================================================= */
+
+      function renderVital(vital) {
+
+         document.getElementById(
+               "vitalTekananDarah"
+            ).textContent =
+            vital.tekanan_darah || "-";
+
+
+         document.getElementById(
+               "vitalNadi"
+            ).textContent =
+            vital.nadi || "-";
+
+
+         document.getElementById(
+               "vitalSuhu"
+            ).textContent =
+            vital.suhu || "-";
+
+
+         document.getElementById(
+               "vitalSpo2"
+            ).textContent =
+            vital.spo2 || "-";
+
+
+         document.getElementById(
+               "vitalUpdatedAt"
+            ).textContent =
+            vital.updated_at ?
+            `Update terakhir ${vital.updated_at}` :
+            "Belum ada data";
+      }
+
+
+      /* =========================================================
+         PROGRESS
+      ========================================================= */
+
+      function renderProgress(items) {
+
+         const container =
+            document.getElementById(
+               "perawatProgressList"
+            );
+
+
+         if (
+            !Array.isArray(items) ||
+            !items.length
+         ) {
+
+            container.innerHTML = `
+                <div class="text-center py-4"
+                     style="font-size:11px;color:var(--nurse-muted);">
+                    Belum ada data progress.
+                </div>
+            `;
+
+            return;
+         }
+
+
+         container.innerHTML =
+            items.map(function(item) {
+
+               let value =
+                  Number(item.value || 0);
+
+               value =
+                  Math.max(
+                     0,
+                     Math.min(100, value)
+                  );
+
+
+               return `
+                    <div class="perawat-progress-item">
+
+                        <div class="perawat-progress-top">
+
+                            <span class="perawat-progress-name">
+                                ${escapeHtml(
+                                    item.name || "-"
+                                )}
+                            </span>
+
+                            <span class="perawat-progress-value">
+                                ${value}%
+                            </span>
+
+                        </div>
+
+                        <div class="perawat-progress">
+
+                            <div
+                                class="perawat-progress-bar ${escapeHtml(
+                                    item.class || ""
+                                )}"
+                                style="width:${value}%;">
+                            </div>
+
+                        </div>
+
+                    </div>
+                `;
+
+            }).join("");
+      }
+
+
+      /* =========================================================
+         ALERT
+      ========================================================= */
+
+      function renderAlerts(data) {
+
+         const container =
+            document.getElementById(
+               "perawatAlertList"
+            );
+
+         const items =
+            Array.isArray(data.items) ?
+            data.items :
+            [];
+
+
+         if (!items.length) {
+
+            container.innerHTML = `
+                <div class="text-center py-4"
+                     style="font-size:11px;color:var(--nurse-muted);">
+                    Tidak ada perhatian khusus.
+                </div>
+            `;
+
+            return;
+         }
+
+
+         container.innerHTML =
+            items.map(function(alert) {
+
+               return `
+                    <div class="perawat-alert ${escapeHtml(
+                        alert.type || "info"
+                    )}">
+
+                        <div class="perawat-alert-icon">
+
+                            <iconify-icon
+                                icon="${escapeHtml(
+                                    alert.icon ||
+                                    "solar:info-circle-bold"
+                                )}"
+                                width="18">
+                            </iconify-icon>
+
+                        </div>
+
+                        <div class="perawat-alert-content">
+
+                            <div class="perawat-alert-title">
+                                ${escapeHtml(
+                                    alert.title || "-"
+                                )}
+                            </div>
+
+                            <div class="perawat-alert-text">
+                                ${escapeHtml(
+                                    alert.text || "-"
+                                )}
+                            </div>
+
+                        </div>
+
+                    </div>
+                `;
+
+            }).join("");
+      }
+
+
+      /* =========================================================
+         SHIFT
+      ========================================================= */
+
+      function renderShift(shift) {
+
+         document.getElementById(
+               "shiftName"
+            ).textContent =
+            shift.name || "-";
+
+
+         document.getElementById(
+               "shiftTime"
+            ).textContent =
+            `${shift.start || "-"} - ${shift.end || "-"}`;
+
+
+         document.getElementById(
+               "shiftNurseCount"
+            ).textContent =
+            numberFormat(
+               shift.perawat_bertugas || 0
+            );
+
+
+         document.getElementById(
+               "shiftPatientCount"
+            ).textContent =
+            numberFormat(
+               shift.pasien || 0
+            );
+
+
+         document.getElementById(
+               "shiftRatio"
+            ).textContent =
+            shift.rasio || "-";
+      }
+
+
+      /* =========================================================
+         FILTER
+      ========================================================= */
+
+      btnFilter.addEventListener(
+         "click",
+         function() {
+            loadDashboard();
+         }
+      );
+
+
+      /* =========================================================
+         INITIAL LOAD
+      ========================================================= */
+
+      loadDashboard();
 
    });
 </script>
