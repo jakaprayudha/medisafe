@@ -676,6 +676,189 @@
     }
 
   }
+
+  /* =========================================================
+     REMINDER MASA KONTRAK
+  ========================================================== */
+
+  .admin-dashboard .contract-reminder-wrapper {
+    background: #fff;
+    border: 1px solid var(--ad-border);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+
+  .admin-dashboard .contract-reminder-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 17px 20px;
+    border-bottom: 1px solid var(--ad-border);
+  }
+
+  .admin-dashboard .contract-reminder-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .admin-dashboard .contract-reminder-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: #eeecff;
+    color: #635bff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 21px;
+    flex-shrink: 0;
+  }
+
+  .admin-dashboard .contract-reminder-heading {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ad-text);
+  }
+
+  .admin-dashboard .contract-reminder-description {
+    font-size: 11px;
+    color: var(--ad-muted);
+    margin-top: 2px;
+  }
+
+  .admin-dashboard .contract-reminder-body {
+    padding: 17px 20px;
+  }
+
+  .admin-dashboard .contract-info-card,
+  .admin-dashboard .contract-countdown-card {
+    height: 100%;
+    border: 1px solid var(--ad-border);
+    border-radius: 14px;
+    padding: 15px;
+    background: #fafbfc;
+  }
+
+  .admin-dashboard .contract-info-label {
+    font-size: 10px;
+    color: var(--ad-muted);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .admin-dashboard .contract-info-value {
+    font-size: 15px;
+    line-height: 1.35;
+    font-weight: 700;
+    color: var(--ad-text);
+  }
+
+  .admin-dashboard .contract-info-sub {
+    margin-top: 5px;
+    font-size: 11px;
+    color: var(--ad-muted);
+  }
+
+  .admin-dashboard .contract-countdown-card {
+    background: linear-gradient(135deg, #f8f7ff, #ffffff);
+    border-color: #e5e2ff;
+  }
+
+  .admin-dashboard .contract-countdown-title {
+    font-size: 11px;
+    color: var(--ad-muted);
+    font-weight: 600;
+    margin-bottom: 9px;
+  }
+
+  .admin-dashboard .contract-countdown {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .admin-dashboard .countdown-item {
+    min-width: 54px;
+    text-align: center;
+  }
+
+  .admin-dashboard .countdown-value {
+    font-size: 24px;
+    line-height: 1;
+    font-weight: 800;
+    color: var(--ad-primary);
+  }
+
+  .admin-dashboard .countdown-label {
+    margin-top: 5px;
+    font-size: 9px;
+    color: var(--ad-muted);
+    text-transform: uppercase;
+    letter-spacing: .35px;
+  }
+
+  .admin-dashboard .countdown-separator {
+    font-size: 18px;
+    font-weight: 700;
+    color: #adb5bd;
+    margin-top: -12px;
+  }
+
+  .admin-dashboard .contract-summary {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .admin-dashboard .contract-summary-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: #f8f9fa;
+    font-size: 11px;
+    color: var(--ad-muted);
+  }
+
+  .admin-dashboard .contract-summary-item strong {
+    color: var(--ad-text);
+    font-weight: 700;
+  }
+
+  .admin-dashboard .contract-summary-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 767px) {
+    .admin-dashboard .contract-reminder-header {
+      align-items: flex-start;
+    }
+
+    .admin-dashboard .contract-countdown {
+      gap: 4px;
+    }
+
+    .admin-dashboard .countdown-item {
+      min-width: 46px;
+    }
+
+    .admin-dashboard .countdown-value {
+      font-size: 20px;
+    }
+
+    .admin-dashboard .countdown-separator {
+      font-size: 15px;
+    }
+  }
 </style>
 <?php
 /**
@@ -686,6 +869,127 @@
  * ============================================================
  */
 ?>
+
+<!-- =========================================================
+     REMINDER MASA KONTRAK FASKES
+========================================================== -->
+<div class="admin-dashboard mb-3">
+
+  <div class="contract-reminder-wrapper">
+
+    <div class="contract-reminder-header">
+
+      <div class="contract-reminder-title">
+
+        <div class="contract-reminder-icon">
+          <iconify-icon icon="solar:document-text-bold"></iconify-icon>
+        </div>
+
+        <div>
+          <div class="contract-reminder-heading">
+            Masa Kontrak Faskes
+          </div>
+
+          <div class="contract-reminder-description">
+            Monitoring masa berlaku kontrak dan pengingat perpanjangan
+          </div>
+        </div>
+
+      </div>
+
+      <div id="contractReminderStatus">
+        <span class="badge bg-secondary-subtle text-secondary">
+          Memuat...
+        </span>
+      </div>
+
+    </div>
+
+    <div class="contract-reminder-body">
+
+      <div class="row g-3">
+
+        <div class="col-lg-4">
+          <div class="contract-info-card">
+            <div class="contract-info-label">Faskes</div>
+
+            <div class="contract-info-value" id="contractFaskes">
+              Memuat...
+            </div>
+
+            <div class="contract-info-sub" id="contractNumber">
+              -
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-3">
+          <div class="contract-info-card">
+            <div class="contract-info-label">Periode Kontrak</div>
+
+            <div class="contract-info-value" id="contractPeriod">
+              -
+            </div>
+
+            <div class="contract-info-sub" id="contractEndDate">
+              -
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="contract-countdown-card">
+
+            <div class="contract-countdown-title">
+              <iconify-icon
+                icon="solar:alarm-bold"
+                class="me-1">
+              </iconify-icon>
+              Sisa Masa Kontrak
+            </div>
+
+            <div class="contract-countdown" id="contractCountdown">
+
+              <div class="countdown-item">
+                <div class="countdown-value" id="contractYears">00</div>
+                <div class="countdown-label">Tahun</div>
+              </div>
+
+              <div class="countdown-separator">:</div>
+
+              <div class="countdown-item">
+                <div class="countdown-value" id="contractMonths">00</div>
+                <div class="countdown-label">Bulan</div>
+              </div>
+
+              <div class="countdown-separator">:</div>
+
+              <div class="countdown-item">
+                <div class="countdown-value" id="contractDays">00</div>
+                <div class="countdown-label">Hari</div>
+              </div>
+
+              <div class="countdown-separator">:</div>
+
+              <div class="countdown-item">
+                <div class="countdown-value" id="contractHours">00</div>
+                <div class="countdown-label">Jam</div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+
+
+    </div>
+
+  </div>
+
+</div>
 
 <!-- =========================================================
      FILTER PERIODE DASHBOARD
@@ -1454,6 +1758,422 @@
 
 </div>
 
+
+
+<!-- =========================================================
+     CONTRACT REMINDER JAVASCRIPT
+========================================================== -->
+<script>
+  (function() {
+
+    "use strict";
+
+    const CONTRACT_URL =
+      "controller/dashboard/contractReminderController.php?action=dashboard";
+
+    let contractCountdownTimer = null;
+
+
+    function escapeContractHtml(value) {
+
+      if (value === null || value === undefined) {
+        return "";
+      }
+
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+
+    function formatContractDate(value) {
+
+      if (!value) {
+        return "-";
+      }
+
+      const date = new Date(value + "T00:00:00");
+
+      if (isNaN(date.getTime())) {
+        return value;
+      }
+
+      return date.toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      });
+    }
+
+
+    function setContractZero() {
+
+      const ids = [
+        "contractYears",
+        "contractMonths",
+        "contractDays",
+        "contractHours"
+      ];
+
+      ids.forEach(function(id) {
+
+        const element = document.getElementById(id);
+
+        if (element) {
+          element.textContent = "00";
+        }
+
+      });
+    }
+
+
+    function updateContractCountdown(timestamp) {
+
+      const now = new Date();
+      const end = new Date(Number(timestamp));
+
+      if (isNaN(end.getTime()) || end <= now) {
+
+        setContractZero();
+
+        return false;
+      }
+
+
+      /*
+       * Hitung kalender secara presisi:
+       * Tahun -> Bulan -> Hari -> Jam
+       */
+      let cursor = new Date(now);
+
+
+      let years =
+        end.getFullYear() -
+        cursor.getFullYear();
+
+
+      let yearTest = new Date(cursor);
+
+      yearTest.setFullYear(
+        cursor.getFullYear() + years
+      );
+
+
+      if (yearTest > end) {
+        years--;
+      }
+
+
+      cursor.setFullYear(
+        cursor.getFullYear() + years
+      );
+
+
+      let months =
+        (end.getFullYear() - cursor.getFullYear()) * 12 +
+        (end.getMonth() - cursor.getMonth());
+
+
+      let monthTest = new Date(cursor);
+
+      monthTest.setMonth(
+        cursor.getMonth() + months
+      );
+
+
+      if (monthTest > end) {
+        months--;
+      }
+
+
+      cursor.setMonth(
+        cursor.getMonth() + months
+      );
+
+
+      let remainingMs = end.getTime() - cursor.getTime();
+
+      let days = Math.floor(
+        remainingMs / (1000 * 60 * 60 * 24)
+      );
+
+      cursor.setDate(
+        cursor.getDate() + days
+      );
+
+
+      remainingMs = end.getTime() - cursor.getTime();
+
+      let hours = Math.floor(
+        remainingMs / (1000 * 60 * 60)
+      );
+
+
+      document.getElementById("contractYears").textContent =
+        String(Math.max(0, years)).padStart(2, "0");
+
+      document.getElementById("contractMonths").textContent =
+        String(Math.max(0, months)).padStart(2, "0");
+
+      document.getElementById("contractDays").textContent =
+        String(Math.max(0, days)).padStart(2, "0");
+
+      document.getElementById("contractHours").textContent =
+        String(Math.max(0, hours)).padStart(2, "0");
+
+
+      return true;
+    }
+
+
+    function startContractCountdown(timestamp) {
+
+      if (contractCountdownTimer) {
+
+        clearInterval(contractCountdownTimer);
+
+        contractCountdownTimer = null;
+      }
+
+
+      const run = function() {
+
+        const stillActive =
+          updateContractCountdown(timestamp);
+
+        if (!stillActive && contractCountdownTimer) {
+
+          clearInterval(contractCountdownTimer);
+
+          contractCountdownTimer = null;
+        }
+
+      };
+
+
+      run();
+
+      /*
+       * Update setiap menit karena tampilan hanya
+       * sampai satuan jam.
+       */
+      contractCountdownTimer =
+        setInterval(run, 60 * 1000);
+    }
+
+
+    function renderContractReminder(response) {
+
+      /*
+       * Data kontrak bersifat PER KONTRAK.
+       *
+       * Backend lama bisa mengirim:
+       * nearest: null
+       * items: [ ...kontrak... ]
+       *
+       * Jadi frontend tidak boleh bergantung pada nearest.
+       * Gunakan nearest jika tersedia, jika tidak gunakan
+       * kontrak pertama dari items.
+       */
+      const items = Array.isArray(response.items) ?
+        response.items :
+        [];
+
+      const nearest =
+        response.nearest ||
+        (items.length > 0 ? items[0] : null);
+
+      const statusElement =
+        document.getElementById("contractReminderStatus");
+
+      if (!nearest) {
+
+        document.getElementById("contractFaskes").textContent =
+          "Tidak ada data kontrak";
+
+        document.getElementById("contractNumber").textContent =
+          "-";
+
+        document.getElementById("contractPeriod").textContent =
+          "-";
+
+        document.getElementById("contractEndDate").textContent =
+          "-";
+
+        statusElement.innerHTML =
+          '<span class="badge bg-secondary-subtle text-secondary">' +
+          'Tidak Ada Data' +
+          '</span>';
+
+        setContractZero();
+
+        return;
+      }
+
+      /*
+       * IDENTITAS FASKES
+       */
+      document.getElementById("contractFaskes").textContent =
+        nearest.faskes_code || "-";
+
+      /*
+       * NOMOR KONTRAK
+       */
+      document.getElementById("contractNumber").textContent =
+        nearest.contract_number &&
+        nearest.contract_number !== "-" ?
+        "No. Kontrak: " + nearest.contract_number :
+        "Nomor kontrak tidak tersedia";
+
+      /*
+       * PERIODE KONTRAK
+       */
+      document.getElementById("contractPeriod").textContent =
+        formatContractDate(nearest.contract_start) +
+        " - " +
+        formatContractDate(nearest.contract_end);
+
+      /*
+       * TANGGAL BERAKHIR
+       */
+      document.getElementById("contractEndDate").textContent =
+        "Berakhir pada " +
+        formatContractDate(nearest.contract_end);
+
+      /*
+       * STATUS KONTRAK
+       */
+      let statusHtml = "";
+
+      if (nearest.status === "active") {
+
+        statusHtml =
+          '<span class="badge bg-success-subtle text-success">' +
+          'Kontrak Aktif' +
+          '</span>';
+
+      } else if (nearest.status === "warning") {
+
+        statusHtml =
+          '<span class="badge bg-warning-subtle text-warning">' +
+          'Perlu Perhatian' +
+          '</span>';
+
+      } else if (nearest.status === "critical") {
+
+        statusHtml =
+          '<span class="badge bg-danger-subtle text-danger">' +
+          'Segera Berakhir' +
+          '</span>';
+
+      } else {
+
+        statusHtml =
+          '<span class="badge bg-dark-subtle text-dark">' +
+          'Kontrak Berakhir' +
+          '</span>';
+      }
+
+      statusElement.innerHTML = statusHtml;
+
+      /*
+       * COUNTDOWN
+       *
+       * Untuk kontrak aktif:
+       * Tahun : Bulan : Hari : Jam
+       *
+       * Untuk kontrak expired:
+       * 00 : 00 : 00 : 00
+       */
+      startContractCountdown(
+        nearest.contract_end_timestamp
+      );
+    }
+
+
+    async function loadContractReminder() {
+
+      try {
+
+        const response =
+          await fetch(CONTRACT_URL, {
+            method: "GET",
+            headers: {
+              "Accept": "application/json",
+              "X-Requested-With": "XMLHttpRequest"
+            },
+            cache: "no-store"
+          });
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            "HTTP Error " + response.status
+          );
+        }
+
+
+        const result =
+          await response.json();
+
+
+        console.log(
+          "Contract Reminder Response:",
+          result
+        );
+
+
+        if (!result.status) {
+
+          throw new Error(
+            result.message ||
+            "Gagal mengambil data kontrak."
+          );
+        }
+
+
+        renderContractReminder(result);
+
+
+      } catch (error) {
+
+        console.error(
+          "Contract Reminder Error:",
+          error
+        );
+
+
+        document.getElementById("contractFaskes").textContent =
+          "Gagal memuat data";
+
+        document.getElementById("contractNumber").textContent =
+          error.message || "Terjadi kesalahan";
+
+        document.getElementById("contractPeriod").textContent =
+          "-";
+
+        document.getElementById("contractEndDate").textContent =
+          "-";
+
+        document.getElementById("contractReminderStatus").innerHTML =
+          '<span class="badge bg-danger-subtle text-danger">' +
+          'Error' +
+          '</span>';
+
+        setContractZero();
+      }
+
+    }
+
+
+    loadContractReminder();
+
+  })();
+</script>
 
 <!-- =========================================================
      DASHBOARD JAVASCRIPT
