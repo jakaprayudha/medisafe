@@ -42,6 +42,21 @@ require '../../controller/view.php';
                 <li class="nav-item" role="presentation">
                   <button class="nav-link" id="user-tab" data-bs-toggle="tab" data-bs-target="#user-tab-pane" type="button" role="tab" aria-controls="user-tab-pane" aria-selected="false">User</button>
                 </li>
+                <!-- PREVIEW KONTRAK -->
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link"
+                    id="kontrak-tab"
+                    data-bs-toggle="tab"
+                    data-bs-target="#kontrak-tab-pane"
+                    type="button"
+                    role="tab"
+                    aria-controls="kontrak-tab-pane"
+                    aria-selected="false">
+                    <i class="fas fa-file-contract me-1"></i>
+                    Preview Kontrak
+                  </button>
+                </li>
+
               </ul>
             </div>
             <div class="col-lg-12 d-flex align-items-stretch">
@@ -242,6 +257,77 @@ require '../../controller/view.php';
                         </table>
                       </div>
                     </div>
+                  </div>
+                  <!-- PREVIEW KONTRAK -->
+                  <div class="tab-pane fade"
+                    id="kontrak-tab-pane"
+                    role="tabpanel"
+                    aria-labelledby="kontrak-tab"
+                    tabindex="0">
+
+                    <div class="card-body p-4">
+
+                      <div class="d-flex justify-content-between align-items-center mb-4">
+
+                        <div>
+                          <h5 class="card-title fw-semibold mb-1">
+                            <i class="fas fa-file-contract me-2"></i>
+                            Preview Kontrak
+                          </h5>
+
+                          <small class="text-muted">
+                            Preview dokumen kontrak kerja sama faskes
+                          </small>
+                        </div>
+
+                        <div class="d-flex gap-2">
+
+                          <button type="button"
+                            class="btn btn-outline-secondary btn-sm"
+                            id="btnRefreshKontrak">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Refresh
+                          </button>
+
+                          <button type="button"
+                            class="btn btn-primary btn-sm"
+                            id="btnPrintKontrak">
+                            <i class="fas fa-print me-1"></i>
+                            Cetak Kontrak
+                          </button>
+
+                        </div>
+
+                      </div>
+
+                      <div class="border rounded bg-light p-2">
+
+                        <div id="kontrakPreview"
+                          style="
+      min-height: 700px;
+      background: #fff;
+      border-radius: 4px;
+      overflow: hidden;
+  ">
+
+                          <iframe
+                            id="kontrakFrame"
+                            title="Preview Kontrak"
+                            src="about:blank"
+                            style="
+      width: 100%;
+      height: 1100px;
+      border: 0;
+      display: block;
+      background: #fff;
+  "></iframe>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
                   </div>
                 </div>
 
@@ -580,7 +666,7 @@ require '../../controller/view.php';
 </script>
 
 <script>
-  const userApi = 'controller/master/userController';
+  const userApi = 'controller/master/userControllerAdmin';
   const urlParamsUser = new URLSearchParams(window.location.search);
   const noUser = urlParamsUser.get('no');
   let tableUser;
@@ -740,6 +826,97 @@ require '../../controller/view.php';
       .catch(() => {
         Swal.fire('Error!', 'Gagal update status', 'error');
       });
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const no = urlParams.get('no');
+
+    const frame = document.getElementById('kontrakFrame');
+    const btnRefresh = document.getElementById('btnRefreshKontrak');
+    const btnPrint = document.getElementById('btnPrintKontrak');
+
+    function loadKontrak() {
+
+      if (!frame) {
+        console.error('Element #kontrakFrame tidak ditemukan');
+        return;
+      }
+
+      if (!no) {
+        console.error('Parameter ?no= tidak ditemukan');
+        return;
+      }
+
+      frame.src = 'module/administrator/kontrak.php?no=' +
+        encodeURIComponent(no) +
+        '&t=' +
+        Date.now();
+
+      console.log(
+        'Preview kontrak:',
+        frame.src
+      );
+    }
+
+    // Load otomatis
+    loadKontrak();
+
+
+    // ==============================
+    // REFRESH
+    // ==============================
+
+    if (btnRefresh) {
+
+      btnRefresh.addEventListener('click', function() {
+
+        if (!no) {
+
+          Swal.fire(
+            'Warning!',
+            'ID Faskes tidak ditemukan.',
+            'warning'
+          );
+
+          return;
+        }
+
+        loadKontrak();
+
+      });
+
+    }
+
+
+    // ==============================
+    // PRINT
+    // ==============================
+
+    if (btnPrint) {
+
+      btnPrint.addEventListener('click', function() {
+
+        if (!frame || !frame.contentWindow) {
+
+          Swal.fire(
+            'Warning!',
+            'Preview kontrak belum dimuat.',
+            'warning'
+          );
+
+          return;
+        }
+
+        frame.contentWindow.focus();
+        frame.contentWindow.print();
+
+      });
+
+    }
+
   });
 </script>
 

@@ -647,1543 +647,1342 @@
 
    <!-- =====================================================
          FILTER PERIODE
-    ====================================================== -->
-
+   ====================================================== -->
    <div class="adm-filter-card">
-
       <div class="row g-2 align-items-end">
 
          <div class="col-xl-3 col-md-6">
-
-            <div class="adm-filter-label">
-               Periode Monitoring
-            </div>
-
-            <select
-               class="form-select"
-               id="admPeriode">
-
-               <option value="today">
-                  Hari Ini
-               </option>
-
-               <option value="week">
-                  Minggu Ini
-               </option>
-
-               <option value="month">
-                  Bulan Ini
-               </option>
-
-               <option value="custom">
-                  Custom
-               </option>
-
+            <div class="adm-filter-label">Periode Monitoring</div>
+            <select class="form-select" id="admPeriode">
+               <option value="today">Hari Ini</option>
+               <option value="week">Minggu Ini</option>
+               <option value="month">Bulan Ini</option>
+               <option value="custom">Custom</option>
             </select>
-
          </div>
 
-
          <div class="col-xl-3 col-md-6">
-
-            <div class="adm-filter-label">
-               Tanggal Mulai
-            </div>
-
-            <input
-               type="date"
-               class="form-control"
-               id="admTanggalMulai"
-               value="<?= date('Y-m-d') ?>">
-
+            <div class="adm-filter-label">Tanggal Mulai</div>
+            <input type="date" class="form-control" id="admTanggalMulai" value="<?= date('Y-m-d') ?>">
          </div>
 
-
          <div class="col-xl-3 col-md-6">
-
-            <div class="adm-filter-label">
-               Tanggal Selesai
-            </div>
-
-            <input
-               type="date"
-               class="form-control"
-               id="admTanggalSelesai"
-               value="<?= date('Y-m-d') ?>">
-
+            <div class="adm-filter-label">Tanggal Selesai</div>
+            <input type="date" class="form-control" id="admTanggalSelesai" value="<?= date('Y-m-d') ?>">
          </div>
 
-
          <div class="col-xl-3 col-md-6">
-
-            <button
-               type="button"
-               class="adm-filter-btn"
-               id="btnFilterAdministrator">
-
-               <iconify-icon
-                  icon="solar:filter-bold"
-                  width="16">
-               </iconify-icon>
-
+            <button type="button" class="adm-filter-btn" id="btnFilterAdministrator">
+               <iconify-icon icon="solar:filter-bold" width="16"></iconify-icon>
                Terapkan Filter
-
             </button>
-
          </div>
 
       </div>
-
    </div>
 
-
-   <!-- =====================================================
-         HEADER
-    ====================================================== -->
-
+   <!-- HEADER -->
    <div class="adm-header">
-
       <div>
-
-         <div class="adm-title">
-            Dashboard Administrator
-         </div>
-
+         <div class="adm-title">Dashboard Administrator</div>
          <div class="adm-subtitle">
             Monitoring platform, fasilitas kesehatan, integrasi dan kualitas data
          </div>
-
       </div>
 
-
-      <div class="adm-system-status">
-
+      <div class="adm-system-status" id="admSystemStatus">
          <span class="adm-system-dot"></span>
-
-         System Operational
-
+         <span id="admSystemStatusText">System Operational</span>
       </div>
-
    </div>
 
-
-   <!-- =====================================================
-         KPI
-    ====================================================== -->
-
+   <!-- KPI -->
    <div class="row g-3 mb-3">
 
-
-      <!-- FASKES -->
-
       <div class="col-xl-3 col-md-6">
-
          <div class="adm-kpi">
-
             <div class="adm-kpi-top">
-
                <div class="adm-kpi-icon">
-
-                  <iconify-icon
-                     icon="solar:hospital-bold"
-                     width="24">
-                  </iconify-icon>
-
+                  <iconify-icon icon="solar:hospital-bold" width="24"></iconify-icon>
                </div>
-
-               <iconify-icon
-                  icon="solar:arrow-right-up-linear"
-                  width="17"
-                  style="color:var(--adm-green);">
-               </iconify-icon>
-
+               <iconify-icon icon="solar:arrow-right-up-linear" width="17" style="color:var(--adm-green);"></iconify-icon>
             </div>
-
-
-            <div class="adm-kpi-label">
-               Total Faskes
-            </div>
-
-            <div class="adm-kpi-value">
-               128
-            </div>
-
-            <div class="adm-kpi-sub">
-               121 aktif • 7 pending
-            </div>
-
+            <div class="adm-kpi-label">Total Faskes</div>
+            <div class="adm-kpi-value" id="admTotalFaskes">0</div>
+            <div class="adm-kpi-sub" id="admFaskesSub">0 aktif • 0 pending</div>
          </div>
-
       </div>
 
-
-      <!-- DATA PASIEN -->
-
       <div class="col-xl-3 col-md-6">
-
          <div class="adm-kpi">
-
             <div class="adm-kpi-top">
-
                <div class="adm-kpi-icon blue">
-
-                  <iconify-icon
-                     icon="solar:users-group-rounded-bold"
-                     width="24">
-                  </iconify-icon>
-
+                  <iconify-icon icon="solar:users-group-rounded-bold" width="24"></iconify-icon>
                </div>
-
             </div>
-
-
-            <div class="adm-kpi-label">
-               Data Pasien
-            </div>
-
-            <div class="adm-kpi-value">
-               1,28 Jt
-            </div>
-
-            <div class="adm-kpi-sub">
-               Terdata pada platform
-            </div>
-
+            <div class="adm-kpi-label">Data Pasien</div>
+            <div class="adm-kpi-value" id="admTotalPasien">0</div>
+            <div class="adm-kpi-sub">Terdata pada platform</div>
          </div>
-
       </div>
 
-
-      <!-- DOKTER -->
-
       <div class="col-xl-3 col-md-6">
-
          <div class="adm-kpi">
-
             <div class="adm-kpi-top">
-
                <div class="adm-kpi-icon green">
-
-                  <iconify-icon
-                     icon="solar:user-id-bold"
-                     width="24">
-                  </iconify-icon>
-
+                  <iconify-icon icon="solar:user-id-bold" width="24"></iconify-icon>
                </div>
-
             </div>
-
-
-            <div class="adm-kpi-label">
-               IDSH Dokter
-            </div>
-
-            <div class="adm-kpi-value">
-               8.462
-            </div>
-
-            <div class="adm-kpi-sub">
-               8.210 terverifikasi
-            </div>
-
+            <div class="adm-kpi-label">IDSH Dokter</div>
+            <div class="adm-kpi-value" id="admTotalDokter">0</div>
+            <div class="adm-kpi-sub" id="admDokterSub">0 terverifikasi</div>
          </div>
-
       </div>
 
-
-      <!-- IMPORT -->
-
       <div class="col-xl-3 col-md-6">
-
          <div class="adm-kpi">
-
             <div class="adm-kpi-top">
-
                <div class="adm-kpi-icon orange">
-
-                  <iconify-icon
-                     icon="solar:database-bold"
-                     width="24">
-                  </iconify-icon>
-
+                  <iconify-icon icon="solar:database-bold" width="24"></iconify-icon>
                </div>
-
             </div>
-
-
-            <div class="adm-kpi-label">
-               Data Import
-            </div>
-
-            <div class="adm-kpi-value">
-               96,4%
-            </div>
-
-            <div class="adm-kpi-sub">
-               Tingkat keberhasilan import
-            </div>
-
+            <div class="adm-kpi-label">Data Import</div>
+            <div class="adm-kpi-value" id="admImportKpi">-</div>
+            <div class="adm-kpi-sub" id="admImportKpiSub">Sumber data import belum tersedia</div>
          </div>
-
       </div>
 
    </div>
 
-
-   <!-- =====================================================
-         ROW 1
-    ====================================================== -->
-
+   <!-- ROW 1 -->
    <div class="row g-3 mb-3">
-
 
       <!-- MONITORING SISTEM -->
-
       <div class="col-xl-7">
-
          <div class="adm-card">
 
             <div class="adm-card-header">
-
                <div>
-
-                  <div class="adm-card-title">
-                     Monitoring Sistem
-                  </div>
-
-                  <div class="adm-card-subtitle">
-                     Status layanan utama platform
-                  </div>
-
+                  <div class="adm-card-title">Monitoring Sistem</div>
+                  <div class="adm-card-subtitle">Status layanan utama platform</div>
                </div>
-
-               <span style="
-                        font-size:9px;
-                        color:var(--adm-muted);">
-                  Updated 08:55
+               <span id="admSystemUpdated" style="font-size:9px;color:var(--adm-muted);">
+                  Updated -
                </span>
-
             </div>
 
-
-            <!-- SATUSEHAT -->
-
-            <div class="adm-system-item">
-
-               <div class="adm-system-icon green">
-
-                  <iconify-icon
-                     icon="solar:link-bold"
-                     width="20">
-                  </iconify-icon>
-
-               </div>
-
-
-               <div class="adm-system-info">
-
-                  <div class="adm-system-name">
-                     Integrasi SATUSEHAT
+            <div id="admSystemContainer">
+               <div class="adm-system-item">
+                  <div class="adm-system-info">
+                     <div class="adm-system-name">Memuat monitoring sistem...</div>
                   </div>
-
-                  <div class="adm-system-desc">
-                     API connectivity dan pertukaran data
-                  </div>
-
                </div>
-
-
-               <span class="adm-system-badge adm-online">
-                  ONLINE
-               </span>
-
-            </div>
-
-
-            <!-- DATABASE -->
-
-            <div class="adm-system-item">
-
-               <div class="adm-system-icon green">
-
-                  <iconify-icon
-                     icon="solar:database-bold"
-                     width="20">
-                  </iconify-icon>
-
-               </div>
-
-
-               <div class="adm-system-info">
-
-                  <div class="adm-system-name">
-                     Database Platform
-                  </div>
-
-                  <div class="adm-system-desc">
-                     Database server dan koneksi aplikasi
-                  </div>
-
-               </div>
-
-
-               <span class="adm-system-badge adm-online">
-                  NORMAL
-               </span>
-
-            </div>
-
-
-            <!-- LAB -->
-
-            <div class="adm-system-item">
-
-               <div class="adm-system-icon green">
-
-                  <iconify-icon
-                     icon="solar:test-tube-bold"
-                     width="20">
-                  </iconify-icon>
-
-               </div>
-
-
-               <div class="adm-system-info">
-
-                  <div class="adm-system-name">
-                     Laboratory Service
-                  </div>
-
-                  <div class="adm-system-desc">
-                     Integrasi dan sinkronisasi data laboratorium
-                  </div>
-
-               </div>
-
-
-               <span class="adm-system-badge adm-online">
-                  ONLINE
-               </span>
-
-            </div>
-
-
-            <!-- IMPORT -->
-
-            <div class="adm-system-item">
-
-               <div class="adm-system-icon orange">
-
-                  <iconify-icon
-                     icon="solar:cloud-upload-bold"
-                     width="20">
-                  </iconify-icon>
-
-               </div>
-
-
-               <div class="adm-system-info">
-
-                  <div class="adm-system-name">
-                     Data Import Service
-                  </div>
-
-                  <div class="adm-system-desc">
-                     Terdapat proses import yang sedang berjalan
-                  </div>
-
-               </div>
-
-
-               <span class="adm-system-badge adm-warning">
-                  PROCESS
-               </span>
-
-            </div>
-
-
-            <!-- MONITOR RME -->
-
-            <div class="adm-system-item">
-
-               <div class="adm-system-icon green">
-
-                  <iconify-icon
-                     icon="solar:monitor-bold"
-                     width="20">
-                  </iconify-icon>
-
-               </div>
-
-
-               <div class="adm-system-info">
-
-                  <div class="adm-system-name">
-                     Monitoring RME
-                  </div>
-
-                  <div class="adm-system-desc">
-                     Monitoring kelengkapan data rekam medis elektronik
-                  </div>
-
-               </div>
-
-
-               <span class="adm-system-badge adm-online">
-                  NORMAL
-               </span>
-
             </div>
 
          </div>
-
       </div>
-
 
       <!-- FASKES -->
-
       <div class="col-xl-5">
-
          <div class="adm-card">
 
             <div class="adm-card-header">
-
                <div>
-
-                  <div class="adm-card-title">
-                     Faskes Terbaru
-                  </div>
-
-                  <div class="adm-card-subtitle">
-                     Aktivitas fasilitas kesehatan
-                  </div>
-
+                  <div class="adm-card-title">Faskes Terbaru</div>
+                  <div class="adm-card-subtitle">Aktivitas fasilitas kesehatan</div>
                </div>
-
-               <a href="#" class="adm-link">
-                  Lihat Semua
-               </a>
-
+               <a href="#" class="adm-link">Lihat Semua</a>
             </div>
 
-
-            <div class="adm-faskes">
-
-               <div class="adm-faskes-avatar">
-
-                  <iconify-icon
-                     icon="solar:hospital-bold"
-                     width="19">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="adm-faskes-info">
-
-                  <div class="adm-faskes-name">
-                     RS Harapan Sehat
+            <div id="admFaskesContainer">
+               <div class="adm-faskes">
+                  <div class="adm-faskes-info">
+                     <div class="adm-faskes-name">Memuat data...</div>
+                     <div class="adm-faskes-meta">Mohon tunggu</div>
                   </div>
-
-                  <div class="adm-faskes-meta">
-                     Rumah Sakit • Jakarta
-                  </div>
-
                </div>
-
-               <span
-                  class="adm-faskes-status adm-online">
-                  AKTIF
-               </span>
-
-            </div>
-
-
-            <div class="adm-faskes">
-
-               <div class="adm-faskes-avatar">
-
-                  <iconify-icon
-                     icon="solar:hospital-bold"
-                     width="19">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="adm-faskes-info">
-
-                  <div class="adm-faskes-name">
-                     Klinik Sehat Sentosa
-                  </div>
-
-                  <div class="adm-faskes-meta">
-                     Klinik • Bandung
-                  </div>
-
-               </div>
-
-               <span
-                  class="adm-faskes-status adm-online">
-                  AKTIF
-               </span>
-
-            </div>
-
-
-            <div class="adm-faskes">
-
-               <div class="adm-faskes-avatar">
-
-                  <iconify-icon
-                     icon="solar:hospital-bold"
-                     width="19">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="adm-faskes-info">
-
-                  <div class="adm-faskes-name">
-                     Puskesmas Sukamaju
-                  </div>
-
-                  <div class="adm-faskes-meta">
-                     Puskesmas • Depok
-                  </div>
-
-               </div>
-
-               <span
-                  class="adm-faskes-status adm-warning">
-                  PENDING
-               </span>
-
-            </div>
-
-
-            <div class="adm-faskes">
-
-               <div class="adm-faskes-avatar">
-
-                  <iconify-icon
-                     icon="solar:hospital-bold"
-                     width="19">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="adm-faskes-info">
-
-                  <div class="adm-faskes-name">
-                     Klinik Medika Prima
-                  </div>
-
-                  <div class="adm-faskes-meta">
-                     Klinik • Bekasi
-                  </div>
-
-               </div>
-
-               <span
-                  class="adm-faskes-status adm-online">
-                  AKTIF
-               </span>
-
             </div>
 
          </div>
-
       </div>
 
    </div>
 
-
-   <!-- =====================================================
-         ROW 2
-    ====================================================== -->
-
+   <!-- ROW 2 -->
    <div class="row g-3 mb-3">
-
 
       <!-- DATA IMPORT -->
-
       <div class="col-xl-6">
-
          <div class="adm-card">
 
             <div class="adm-card-header">
-
                <div>
-
-                  <div class="adm-card-title">
-                     Data Import
-                  </div>
-
-                  <div class="adm-card-subtitle">
-                     Status proses import data
-                  </div>
-
+                  <div class="adm-card-title">Data Import</div>
+                  <div class="adm-card-subtitle">Status proses import data</div>
                </div>
-
-               <a href="#" class="adm-link">
-                  Kelola Import
-               </a>
-
+               <a href="#" class="adm-link">Kelola Import</a>
             </div>
 
-
-            <!-- PASIEN -->
-
-            <div class="adm-import-box">
-
-               <div class="adm-import-top">
-
-                  <div class="adm-import-title">
-                     Data Pasien
+            <div id="admImportContainer">
+               <div class="adm-import-box">
+                  <div class="adm-import-title">Data import belum tersedia</div>
+                  <div class="adm-import-desc">
+                     Controller belum menerima sumber tabel/log import.
                   </div>
-
-                  <div class="adm-import-value">
-                     98%
-                  </div>
-
                </div>
-
-               <div class="adm-import-desc">
-                  12.480 data berhasil diproses
-               </div>
-
-               <div class="adm-progress">
-
-                  <div
-                     class="adm-progress-bar green"
-                     style="width:98%;">
-                  </div>
-
-               </div>
-
-            </div>
-
-
-            <!-- DOKTER -->
-
-            <div class="adm-import-box">
-
-               <div class="adm-import-top">
-
-                  <div class="adm-import-title">
-                     Data Dokter
-                  </div>
-
-                  <div class="adm-import-value">
-                     94%
-                  </div>
-
-               </div>
-
-               <div class="adm-import-desc">
-                  3.240 data berhasil diproses
-               </div>
-
-               <div class="adm-progress">
-
-                  <div
-                     class="adm-progress-bar"
-                     style="width:94%;">
-                  </div>
-
-               </div>
-
-            </div>
-
-
-            <!-- RME -->
-
-            <div class="adm-import-box">
-
-               <div class="adm-import-top">
-
-                  <div class="adm-import-title">
-                     Data RME
-                  </div>
-
-                  <div class="adm-import-value">
-                     87%
-                  </div>
-
-               </div>
-
-               <div class="adm-import-desc">
-                  28.650 data berhasil diproses
-               </div>
-
-               <div class="adm-progress">
-
-                  <div
-                     class="adm-progress-bar orange"
-                     style="width:87%;">
-                  </div>
-
-               </div>
-
             </div>
 
          </div>
-
       </div>
 
-
       <!-- INTEGRASI -->
-
       <div class="col-xl-6">
-
          <div class="adm-card">
 
             <div class="adm-card-header">
-
                <div>
-
-                  <div class="adm-card-title">
-                     Integrasi & Layanan
-                  </div>
-
-                  <div class="adm-card-subtitle">
-                     Status koneksi layanan eksternal
-                  </div>
-
+                  <div class="adm-card-title">Integrasi & Layanan</div>
+                  <div class="adm-card-subtitle">Status koneksi layanan eksternal</div>
                </div>
-
             </div>
 
-
-            <!-- SATUSEHAT -->
-
-            <div class="adm-integration">
-
-               <div class="adm-integration-left">
-
-                  <div class="adm-integration-icon">
-
-                     <iconify-icon
-                        icon="solar:link-bold"
-                        width="19">
-                     </iconify-icon>
-
-                  </div>
-
-                  <div>
-
-                     <div class="adm-integration-name">
-                        SATUSEHAT
+            <div id="admIntegrationContainer">
+               <div class="adm-integration">
+                  <div class="adm-integration-left">
+                     <div class="adm-integration-icon">
+                        <iconify-icon icon="solar:server-square-bold" width="19"></iconify-icon>
                      </div>
-
-                     <div class="adm-integration-desc">
-                        Healthcare interoperability
+                     <div>
+                        <div class="adm-integration-name">Memuat layanan...</div>
+                        <div class="adm-integration-desc">Memuat status integrasi</div>
                      </div>
-
                   </div>
-
                </div>
-
-               <span class="adm-integration-status adm-online">
-                  CONNECTED
-               </span>
-
-            </div>
-
-
-            <!-- LAB -->
-
-            <div class="adm-integration">
-
-               <div class="adm-integration-left">
-
-                  <div class="adm-integration-icon">
-
-                     <iconify-icon
-                        icon="solar:test-tube-bold"
-                        width="19">
-                     </iconify-icon>
-
-                  </div>
-
-                  <div>
-
-                     <div class="adm-integration-name">
-                        Laboratory
-                     </div>
-
-                     <div class="adm-integration-desc">
-                        Laboratory data integration
-                     </div>
-
-                  </div>
-
-               </div>
-
-               <span class="adm-integration-status adm-online">
-                  CONNECTED
-               </span>
-
-            </div>
-
-
-            <!-- IDSH -->
-
-            <div class="adm-integration">
-
-               <div class="adm-integration-left">
-
-                  <div class="adm-integration-icon">
-
-                     <iconify-icon
-                        icon="solar:user-id-bold"
-                        width="19">
-                     </iconify-icon>
-
-                  </div>
-
-                  <div>
-
-                     <div class="adm-integration-name">
-                        IDSH
-                     </div>
-
-                     <div class="adm-integration-desc">
-                        Identitas dokter & pasien
-                     </div>
-
-                  </div>
-
-               </div>
-
-               <span class="adm-integration-status adm-online">
-                  ACTIVE
-               </span>
-
-            </div>
-
-
-            <!-- API -->
-
-            <div class="adm-integration">
-
-               <div class="adm-integration-left">
-
-                  <div class="adm-integration-icon">
-
-                     <iconify-icon
-                        icon="solar:server-square-bold"
-                        width="19">
-                     </iconify-icon>
-
-                  </div>
-
-                  <div>
-
-                     <div class="adm-integration-name">
-                        API Gateway
-                     </div>
-
-                     <div class="adm-integration-desc">
-                        Platform API service
-                     </div>
-
-                  </div>
-
-               </div>
-
-               <span class="adm-integration-status adm-online">
-                  HEALTHY
-               </span>
-
             </div>
 
          </div>
-
       </div>
 
    </div>
 
-
-   <!-- =====================================================
-         ROW 3
-    ====================================================== -->
-
+   <!-- ROW 3 -->
    <div class="row g-3 mb-3">
 
-
       <!-- ALERT -->
-
       <div class="col-xl-7">
-
          <div class="adm-card">
 
             <div class="adm-card-header">
-
                <div>
-
-                  <div class="adm-card-title">
-                     Perlu Perhatian
-                  </div>
-
+                  <div class="adm-card-title">Perlu Perhatian</div>
                   <div class="adm-card-subtitle">
                      Aktivitas administrator yang membutuhkan tindak lanjut
                   </div>
-
                </div>
-
             </div>
 
-
-            <div class="adm-alert warning">
-
-               <div class="adm-alert-icon">
-
-                  <iconify-icon
-                     icon="solar:cloud-upload-bold"
-                     width="18">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="adm-alert-content">
-
-                  <div class="adm-alert-title">
-                     3 Proses Import Berjalan
+            <div id="admAlertContainer">
+               <div class="adm-alert info">
+                  <div class="adm-alert-icon">
+                     <iconify-icon icon="solar:refresh-bold" width="18"></iconify-icon>
                   </div>
-
-                  <div class="adm-alert-text">
-                     Beberapa fasilitas kesehatan masih melakukan sinkronisasi data.
+                  <div class="adm-alert-content">
+                     <div class="adm-alert-title">Memuat data...</div>
+                     <div class="adm-alert-text">Mohon tunggu.</div>
                   </div>
-
                </div>
-
-            </div>
-
-
-            <div class="adm-alert danger">
-
-               <div class="adm-alert-icon">
-
-                  <iconify-icon
-                     icon="solar:danger-triangle-bold"
-                     width="18">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="adm-alert-content">
-
-                  <div class="adm-alert-title">
-                     7 Faskes Belum Terverifikasi
-                  </div>
-
-                  <div class="adm-alert-text">
-                     Data fasilitas kesehatan membutuhkan proses verifikasi administrator.
-                  </div>
-
-               </div>
-
-            </div>
-
-
-            <div class="adm-alert info">
-
-               <div class="adm-alert-icon">
-
-                  <iconify-icon
-                     icon="solar:document-text-bold"
-                     width="18">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="adm-alert-content">
-
-                  <div class="adm-alert-title">
-                     Monitoring RME Menemukan Data Tidak Lengkap
-                  </div>
-
-                  <div class="adm-alert-text">
-                     Terdapat beberapa data RME yang belum memenuhi kelengkapan yang ditentukan.
-                  </div>
-
-               </div>
-
             </div>
 
          </div>
-
       </div>
 
-
-      <!-- DATA IDSH -->
-
+      <!-- IDSH -->
       <div class="col-xl-5">
-
          <div class="adm-card">
 
             <div class="adm-card-header">
-
                <div>
-
-                  <div class="adm-card-title">
-                     IDSH
-                  </div>
-
+                  <div class="adm-card-title">IDSH</div>
                   <div class="adm-card-subtitle">
                      Status identitas tenaga medis dan pasien
                   </div>
-
                </div>
-
             </div>
 
-
             <div class="adm-import-box">
-
                <div class="adm-import-top">
-
-                  <div class="adm-import-title">
-                     IDSH Dokter
-                  </div>
-
-                  <div
-                     class="adm-import-value"
-                     style="color:var(--adm-green);">
-                     97%
-                  </div>
-
+                  <div class="adm-import-title">IDSH Dokter</div>
+                  <div class="adm-import-value" id="admIDSHDokterPercent" style="color:var(--adm-green);">0%</div>
                </div>
 
-               <div class="adm-import-desc">
-                  8.210 dari 8.462 terverifikasi
+               <div class="adm-import-desc" id="admIDSHDokterDesc">
+                  0 dari 0 terverifikasi
                </div>
 
                <div class="adm-progress">
-
-                  <div
-                     class="adm-progress-bar green"
-                     style="width:97%;">
-                  </div>
-
+                  <div class="adm-progress-bar green" id="admIDSHDokterBar" style="width:0%;"></div>
                </div>
-
             </div>
 
-
             <div class="adm-import-box">
-
                <div class="adm-import-top">
-
-                  <div class="adm-import-title">
-                     IDSH Pasien
-                  </div>
-
-                  <div
-                     class="adm-import-value"
-                     style="color:var(--adm-blue);">
-                     91%
-                  </div>
-
+                  <div class="adm-import-title">IDSH Pasien</div>
+                  <div class="adm-import-value" id="admIDSHPasienPercent" style="color:var(--adm-blue);">0%</div>
                </div>
 
-               <div class="adm-import-desc">
-                  1,16 juta dari 1,28 juta terverifikasi
+               <div class="adm-import-desc" id="admIDSHPasienDesc">
+                  0 dari 0 terverifikasi
                </div>
 
                <div class="adm-progress">
-
-                  <div
-                     class="adm-progress-bar"
-                     style="width:91%;">
-                  </div>
-
+                  <div class="adm-progress-bar" id="admIDSHPasienBar" style="width:0%;"></div>
                </div>
-
             </div>
 
          </div>
-
       </div>
 
    </div>
 
-
-   <!-- =====================================================
-         QUICK ACCESS
-    ====================================================== -->
-
+   <!-- QUICK ACCESS -->
    <div class="adm-card mb-3">
 
       <div class="adm-card-header">
-
          <div>
-
-            <div class="adm-card-title">
-               Akses Cepat Administrator
-            </div>
-
+            <div class="adm-card-title">Akses Cepat Administrator</div>
             <div class="adm-card-subtitle">
                Menu utama untuk pengelolaan platform
             </div>
-
          </div>
-
       </div>
-
 
       <div class="row g-2">
 
-
-         <!-- DATA FASKES -->
-
          <div class="col-xl-2 col-md-4 col-6">
-
             <a href="#" class="adm-quick">
-
                <div class="adm-quick-icon">
-
-                  <iconify-icon
-                     icon="solar:hospital-bold"
-                     width="20">
-                  </iconify-icon>
-
+                  <iconify-icon icon="solar:hospital-bold" width="20"></iconify-icon>
                </div>
-
                <div>
-
-                  <div class="adm-quick-title">
-                     Data Faskes
-                  </div>
-
-                  <div class="adm-quick-desc">
-                     Kelola faskes
-                  </div>
-
+                  <div class="adm-quick-title">Data Faskes</div>
+                  <div class="adm-quick-desc">Kelola faskes</div>
                </div>
-
             </a>
-
          </div>
 
-
-         <!-- IMPORT -->
-
          <div class="col-xl-2 col-md-4 col-6">
-
             <a href="#" class="adm-quick">
-
                <div class="adm-quick-icon">
-
-                  <iconify-icon
-                     icon="solar:cloud-upload-bold"
-                     width="20">
-                  </iconify-icon>
-
+                  <iconify-icon icon="solar:cloud-upload-bold" width="20"></iconify-icon>
                </div>
-
                <div>
-
-                  <div class="adm-quick-title">
-                     Data Import
-                  </div>
-
-                  <div class="adm-quick-desc">
-                     Import data
-                  </div>
-
+                  <div class="adm-quick-title">Data Import</div>
+                  <div class="adm-quick-desc">Import data</div>
                </div>
-
             </a>
-
          </div>
 
-
-         <!-- MASTER -->
-
          <div class="col-xl-2 col-md-4 col-6">
-
             <a href="#" class="adm-quick">
-
                <div class="adm-quick-icon">
-
-                  <iconify-icon
-                     icon="solar:database-bold"
-                     width="20">
-                  </iconify-icon>
-
+                  <iconify-icon icon="solar:database-bold" width="20"></iconify-icon>
                </div>
-
                <div>
-
-                  <div class="adm-quick-title">
-                     Master Data
-                  </div>
-
-                  <div class="adm-quick-desc">
-                     Data referensi
-                  </div>
-
+                  <div class="adm-quick-title">Master Data</div>
+                  <div class="adm-quick-desc">Data referensi</div>
                </div>
-
             </a>
-
          </div>
 
-
-         <!-- SATUSEHAT -->
-
          <div class="col-xl-2 col-md-4 col-6">
-
             <a href="#" class="adm-quick">
-
                <div class="adm-quick-icon">
-
-                  <iconify-icon
-                     icon="solar:link-bold"
-                     width="20">
-                  </iconify-icon>
-
+                  <iconify-icon icon="solar:link-bold" width="20"></iconify-icon>
                </div>
-
                <div>
-
-                  <div class="adm-quick-title">
-                     Satu Sehat
-                  </div>
-
-                  <div class="adm-quick-desc">
-                     Integrasi API
-                  </div>
-
+                  <div class="adm-quick-title">Satu Sehat</div>
+                  <div class="adm-quick-desc">Integrasi API</div>
                </div>
-
             </a>
-
          </div>
 
-
-         <!-- LAB -->
-
          <div class="col-xl-2 col-md-4 col-6">
-
             <a href="#" class="adm-quick">
-
                <div class="adm-quick-icon">
-
-                  <iconify-icon
-                     icon="solar:test-tube-bold"
-                     width="20">
-                  </iconify-icon>
-
+                  <iconify-icon icon="solar:test-tube-bold" width="20"></iconify-icon>
                </div>
-
                <div>
-
-                  <div class="adm-quick-title">
-                     Laboratorium
-                  </div>
-
-                  <div class="adm-quick-desc">
-                     Data laboratorium
-                  </div>
-
+                  <div class="adm-quick-title">Laboratorium</div>
+                  <div class="adm-quick-desc">Data laboratorium</div>
                </div>
-
             </a>
-
          </div>
 
-
-         <!-- MONITOR RME -->
-
          <div class="col-xl-2 col-md-4 col-6">
-
             <a href="#" class="adm-quick">
-
                <div class="adm-quick-icon">
-
-                  <iconify-icon
-                     icon="solar:monitor-bold"
-                     width="20">
-                  </iconify-icon>
-
+                  <iconify-icon icon="solar:monitor-bold" width="20"></iconify-icon>
                </div>
-
                <div>
-
-                  <div class="adm-quick-title">
-                     Monitoring RME
-                  </div>
-
-                  <div class="adm-quick-desc">
-                     Kualitas data
-                  </div>
-
+                  <div class="adm-quick-title">Monitoring RME</div>
+                  <div class="adm-quick-desc">Kualitas data</div>
                </div>
-
             </a>
-
          </div>
 
       </div>
-
    </div>
-
 
 </div>
 
 
 <script>
-   document.addEventListener("DOMContentLoaded", function() {
+   (function() {
 
-      const periode =
-         document.getElementById("admPeriode");
+      /*
+       * =========================================================
+       * ADMINISTRATOR DASHBOARD
+       * GLOBAL / SELURUH FASKES
+       * =========================================================
+       */
 
-      const tanggalMulai =
-         document.getElementById("admTanggalMulai");
+      function initAdministratorDashboard() {
 
-      const tanggalSelesai =
-         document.getElementById("admTanggalSelesai");
+         const periode =
+            document.getElementById("admPeriode");
 
-      const btnFilter =
-         document.getElementById(
-            "btnFilterAdministrator"
-         );
+         const tanggalMulai =
+            document.getElementById("admTanggalMulai");
 
+         const tanggalSelesai =
+            document.getElementById("admTanggalSelesai");
 
-      function formatDate(date) {
+         const btnFilter =
+            document.getElementById("btnFilterAdministrator");
 
-         const year =
-            date.getFullYear();
-
-         const month =
-            String(date.getMonth() + 1)
-            .padStart(2, "0");
-
-         const day =
-            String(date.getDate())
-            .padStart(2, "0");
-
-         return `${year}-${month}-${day}`;
-      }
-
-
-      periode.addEventListener("change", function() {
-
-         const today = new Date();
-
-
-         if (this.value === "today") {
-
-            const date =
-               formatDate(today);
-
-            tanggalMulai.value = date;
-            tanggalSelesai.value = date;
-
-         } else if (this.value === "week") {
-
-            const start =
-               new Date(today);
-
-            start.setDate(
-               today.getDate() -
-               today.getDay() +
-               1
-            );
-
-            tanggalMulai.value =
-               formatDate(start);
-
-            tanggalSelesai.value =
-               formatDate(today);
-
-         } else if (this.value === "month") {
-
-            const start =
-               new Date(
-                  today.getFullYear(),
-                  today.getMonth(),
-                  1
-               );
-
-            tanggalMulai.value =
-               formatDate(start);
-
-            tanggalSelesai.value =
-               formatDate(today);
-
-         }
-
-      });
-
-
-      btnFilter.addEventListener("click", function() {
-
-         const mulai =
-            tanggalMulai.value;
-
-         const selesai =
-            tanggalSelesai.value;
-
-
-         if (!mulai || !selesai) {
-
-            if (
-               typeof Swal !== "undefined"
-            ) {
-
-               Swal.fire({
-                  icon: "warning",
-                  title: "Periode Belum Lengkap",
-                  text: "Silakan pilih tanggal mulai dan tanggal selesai."
-               });
-
-            } else {
-
-               alert(
-                  "Silakan pilih tanggal terlebih dahulu."
-               );
-
-            }
-
+         if (!periode || !tanggalMulai || !tanggalSelesai || !btnFilter) {
             return;
          }
 
 
-         if (mulai > selesai) {
+         function formatDate(date) {
 
-            if (
-               typeof Swal !== "undefined"
-            ) {
+            const year =
+               date.getFullYear();
+
+            const month =
+               String(date.getMonth() + 1)
+               .padStart(2, "0");
+
+            const day =
+               String(date.getDate())
+               .padStart(2, "0");
+
+            return `${year}-${month}-${day}`;
+         }
+
+
+         function formatNumber(value) {
+
+            const number =
+               Number(value || 0);
+
+            return new Intl.NumberFormat("id-ID")
+               .format(number);
+         }
+
+
+         function escapeHtml(value) {
+
+            return String(value ?? "")
+               .replace(/&/g, "&amp;")
+               .replace(/</g, "&lt;")
+               .replace(/>/g, "&gt;")
+               .replace(/"/g, "&quot;")
+               .replace(/'/g, "&#039;");
+         }
+
+
+         function showError(message) {
+
+            if (typeof Swal !== "undefined") {
 
                Swal.fire({
-                  icon: "warning",
-                  title: "Periode Tidak Valid",
-                  text: "Tanggal mulai tidak boleh lebih besar dari tanggal selesai."
+                  icon: "error",
+                  title: "Dashboard Gagal Dimuat",
+                  text: message
                });
 
             } else {
 
-               alert(
+               console.error(message);
+            }
+         }
+
+
+         function renderKPI(data) {
+
+            const faskes =
+               data.kpi?.faskes || {};
+
+            const pasien =
+               data.kpi?.pasien || {};
+
+            const dokter =
+               data.kpi?.dokter || {};
+
+            const importData =
+               data.kpi?.import || {};
+
+
+            document.getElementById("admTotalFaskes").textContent =
+               formatNumber(faskes.total);
+
+            document.getElementById("admFaskesSub").textContent =
+               `${formatNumber(faskes.aktif)} aktif • ${formatNumber(faskes.pending)} pending`;
+
+
+            document.getElementById("admTotalPasien").textContent =
+               formatNumber(pasien.total);
+
+
+            document.getElementById("admTotalDokter").textContent =
+               formatNumber(dokter.total);
+
+            document.getElementById("admDokterSub").textContent =
+               `${formatNumber(dokter.terverifikasi)} terverifikasi`;
+
+
+            if (
+               importData.available === true &&
+               importData.persentase !== null
+            ) {
+
+               document.getElementById("admImportKpi").textContent =
+                  `${Number(importData.persentase).toLocaleString("id-ID")}%`;
+
+               document.getElementById("admImportKpiSub").textContent =
+                  "Tingkat keberhasilan import";
+
+            } else {
+
+               document.getElementById("admImportKpi").textContent =
+                  "-";
+
+               document.getElementById("admImportKpiSub").textContent =
+                  "Sumber data import belum tersedia";
+            }
+         }
+
+
+         function renderFaskes(items) {
+
+            const container =
+               document.getElementById("admFaskesContainer");
+
+            if (!container) {
+               return;
+            }
+
+
+            if (!Array.isArray(items) || items.length === 0) {
+
+               container.innerHTML = `
+               <div class="adm-faskes">
+                  <div class="adm-faskes-info">
+                     <div class="adm-faskes-name">
+                        Belum ada data faskes
+                     </div>
+                     <div class="adm-faskes-meta">
+                        Tidak ada fasilitas kesehatan
+                     </div>
+                  </div>
+               </div>
+            `;
+
+               return;
+            }
+
+
+            container.innerHTML =
+               items.slice(0, 5).map(function(item) {
+
+                  const statusClass =
+                     item.status_class ||
+                     (
+                        Number(item.status) === 1 ?
+                        "adm-online" :
+                        "adm-warning"
+                     );
+
+                  const statusLabel =
+                     item.status_label ||
+                     (
+                        Number(item.status) === 1 ?
+                        "AKTIF" :
+                        "PENDING"
+                     );
+
+                  const code =
+                     item.faskes_code ||
+                     `ID Faskes #${item.faskes_code}`;
+
+                  const city =
+                     item.faskes_city ||
+                     "-";
+
+                  const district =
+                     item.faskes_district ||
+                     "";
+
+                  const location =
+                     district ?
+                     `${city} • ${district}` :
+                     city;
+
+
+                  return `
+                  <div class="adm-faskes">
+
+                     <div class="adm-faskes-avatar">
+                        <iconify-icon
+                           icon="solar:hospital-bold"
+                           width="19">
+                        </iconify-icon>
+                     </div>
+
+                     <div class="adm-faskes-info">
+
+                        <div class="adm-faskes-name">
+                           ${escapeHtml(code)}
+                        </div>
+
+                        <div class="adm-faskes-meta">
+                           ${escapeHtml(location)}
+                        </div>
+
+                     </div>
+
+                     <span class="adm-faskes-status ${escapeHtml(statusClass)}">
+                        ${escapeHtml(statusLabel)}
+                     </span>
+
+                  </div>
+               `;
+
+               }).join("");
+         }
+
+
+         function renderSystem(items, serverTime) {
+
+            const container =
+               document.getElementById("admSystemContainer");
+
+            if (!container) {
+               return;
+            }
+
+
+            if (!Array.isArray(items) || items.length === 0) {
+
+               container.innerHTML = `
+               <div class="adm-system-item">
+                  <div class="adm-system-info">
+                     <div class="adm-system-name">
+                        Monitoring sistem belum tersedia
+                     </div>
+                     <div class="adm-system-desc">
+                        Belum ada data monitoring service.
+                     </div>
+                  </div>
+               </div>
+            `;
+
+            } else {
+
+               container.innerHTML =
+                  items.map(function(item) {
+
+                     let iconClass = "";
+
+                     if (item.status_class === "adm-online") {
+                        iconClass = "green";
+                     } else if (item.status_class === "adm-error") {
+                        iconClass = "red";
+                     } else if (item.status_class === "adm-warning") {
+                        iconClass = "orange";
+                     }
+
+
+                     return `
+                     <div class="adm-system-item">
+
+                        <div class="adm-system-icon ${iconClass}">
+                           <iconify-icon
+                              icon="${escapeHtml(item.icon || "solar:server-bold")}"
+                              width="20">
+                           </iconify-icon>
+                        </div>
+
+                        <div class="adm-system-info">
+
+                           <div class="adm-system-name">
+                              ${escapeHtml(item.name)}
+                           </div>
+
+                           <div class="adm-system-desc">
+                              ${escapeHtml(item.description)}
+                           </div>
+
+                        </div>
+
+                        <span class="adm-system-badge ${escapeHtml(item.status_class || "adm-warning")}">
+                           ${escapeHtml(item.status_label || "UNKNOWN")}
+                        </span>
+
+                     </div>
+                  `;
+
+                  }).join("");
+            }
+
+
+            document.getElementById("admSystemUpdated").textContent =
+               serverTime ?
+               `Updated ${serverTime}` :
+               "Updated -";
+         }
+
+
+         function renderImport(data) {
+
+            const container =
+               document.getElementById("admImportContainer");
+
+            if (!container) {
+               return;
+            }
+
+
+            if (
+               !data ||
+               data.available !== true ||
+               !Array.isArray(data.items) ||
+               data.items.length === 0
+            ) {
+
+               container.innerHTML = `
+               <div class="adm-import-box">
+
+                  <div class="adm-import-top">
+
+                     <div class="adm-import-title">
+                        Data Import
+                     </div>
+
+                     <div class="adm-import-value">
+                        -
+                     </div>
+
+                  </div>
+
+                  <div class="adm-import-desc">
+                     ${escapeHtml(
+                        data?.message ||
+                        "Sumber data import belum tersedia."
+                     )}
+                  </div>
+
+               </div>
+            `;
+
+               return;
+            }
+
+
+            container.innerHTML =
+               data.items.map(function(item) {
+
+                  const percent =
+                     Math.max(
+                        0,
+                        Math.min(
+                           100,
+                           Number(item.persentase || 0)
+                        )
+                     );
+
+
+                  const barClass =
+                     percent >= 95 ?
+                     "green" :
+                     percent >= 90 ?
+                     "" :
+                     "orange";
+
+
+                  return `
+                  <div class="adm-import-box">
+
+                     <div class="adm-import-top">
+
+                        <div class="adm-import-title">
+                           ${escapeHtml(item.name)}
+                        </div>
+
+                        <div class="adm-import-value">
+                           ${percent.toLocaleString("id-ID")}%
+                        </div>
+
+                     </div>
+
+                     <div class="adm-import-desc">
+                        ${escapeHtml(item.description || "-")}
+                     </div>
+
+                     <div class="adm-progress">
+
+                        <div
+                           class="adm-progress-bar ${barClass}"
+                           style="width:${percent}%;">
+                        </div>
+
+                     </div>
+
+                  </div>
+               `;
+
+               }).join("");
+         }
+
+
+         function renderIntegration(items) {
+
+            const container =
+               document.getElementById("admIntegrationContainer");
+
+            if (!container) {
+               return;
+            }
+
+
+            if (!Array.isArray(items) || items.length === 0) {
+
+               container.innerHTML = `
+               <div class="adm-integration">
+                  <div class="adm-integration-left">
+                     <div class="adm-integration-icon">
+                        <iconify-icon
+                           icon="solar:server-square-bold"
+                           width="19">
+                        </iconify-icon>
+                     </div>
+                     <div>
+                        <div class="adm-integration-name">
+                           Tidak ada data layanan
+                        </div>
+                        <div class="adm-integration-desc">
+                           Monitoring integrasi belum tersedia.
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            `;
+
+               return;
+            }
+
+
+            container.innerHTML =
+               items.map(function(item) {
+
+                  return `
+                  <div class="adm-integration">
+
+                     <div class="adm-integration-left">
+
+                        <div class="adm-integration-icon">
+
+                           <iconify-icon
+                              icon="${escapeHtml(
+                                 item.icon ||
+                                 "solar:server-square-bold"
+                              )}"
+                              width="19">
+                           </iconify-icon>
+
+                        </div>
+
+                        <div>
+
+                           <div class="adm-integration-name">
+                              ${escapeHtml(item.name)}
+                           </div>
+
+                           <div class="adm-integration-desc">
+                              ${escapeHtml(item.description)}
+                           </div>
+
+                        </div>
+
+                     </div>
+
+                     <span class="adm-integration-status ${escapeHtml(item.status_class || "adm-warning")}">
+                        ${escapeHtml(item.status_label || "UNKNOWN")}
+                     </span>
+
+                  </div>
+               `;
+
+               }).join("");
+         }
+
+
+         function renderAlerts(items) {
+
+            const container =
+               document.getElementById("admAlertContainer");
+
+            if (!container) {
+               return;
+            }
+
+
+            if (!Array.isArray(items) || items.length === 0) {
+
+               container.innerHTML = `
+               <div class="adm-alert info">
+
+                  <div class="adm-alert-icon">
+                     <iconify-icon
+                        icon="solar:check-circle-bold"
+                        width="18">
+                     </iconify-icon>
+                  </div>
+
+                  <div class="adm-alert-content">
+
+                     <div class="adm-alert-title">
+                        Tidak Ada Alert Kritis
+                     </div>
+
+                     <div class="adm-alert-text">
+                        Tidak ditemukan aktivitas yang membutuhkan tindak lanjut segera.
+                     </div>
+
+                  </div>
+
+               </div>
+            `;
+
+               return;
+            }
+
+
+            container.innerHTML =
+               items.map(function(item) {
+
+                  return `
+                  <div class="adm-alert ${escapeHtml(item.type || "info")}">
+
+                     <div class="adm-alert-icon">
+
+                        <iconify-icon
+                           icon="${escapeHtml(
+                              item.icon ||
+                              "solar:info-circle-bold"
+                           )}"
+                           width="18">
+                        </iconify-icon>
+
+                     </div>
+
+                     <div class="adm-alert-content">
+
+                        <div class="adm-alert-title">
+                           ${escapeHtml(item.title)}
+                        </div>
+
+                        <div class="adm-alert-text">
+                           ${escapeHtml(item.text)}
+                        </div>
+
+                     </div>
+
+                  </div>
+               `;
+
+               }).join("");
+         }
+
+
+         function renderIDSH(idsh) {
+
+            const dokter =
+               idsh?.dokter || {};
+
+            const pasien =
+               idsh?.pasien || {};
+
+
+            const dokterPercent =
+               Number(dokter.persentase || 0);
+
+            const pasienPercent =
+               Number(pasien.persentase || 0);
+
+
+            document.getElementById(
+                  "admIDSHDokterPercent"
+               ).textContent =
+               `${dokterPercent.toLocaleString("id-ID")}%`;
+
+
+            document.getElementById(
+                  "admIDSHDokterDesc"
+               ).textContent =
+               `${formatNumber(dokter.terverifikasi)} dari ${formatNumber(dokter.total)} terverifikasi`;
+
+
+            document.getElementById(
+                  "admIDSHDokterBar"
+               ).style.width =
+               `${Math.min(100, Math.max(0, dokterPercent))}%`;
+
+
+            document.getElementById(
+                  "admIDSHPasienPercent"
+               ).textContent =
+               `${pasienPercent.toLocaleString("id-ID")}%`;
+
+
+            document.getElementById(
+                  "admIDSHPasienDesc"
+               ).textContent =
+               `${formatNumber(pasien.terverifikasi)} dari ${formatNumber(pasien.total)} terverifikasi`;
+
+
+            document.getElementById(
+                  "admIDSHPasienBar"
+               ).style.width =
+               `${Math.min(100, Math.max(0, pasienPercent))}%`;
+         }
+
+
+         function renderSystemStatus(items) {
+
+            const status =
+               document.getElementById("admSystemStatus");
+
+            const label =
+               document.getElementById("admSystemStatusText");
+
+
+            const hasError =
+               Array.isArray(items) &&
+               items.some(function(item) {
+                  return item.status_class === "adm-error";
+               });
+
+
+            const hasWarning =
+               Array.isArray(items) &&
+               items.some(function(item) {
+                  return item.status_class === "adm-warning";
+               });
+
+
+            if (hasError) {
+
+               status.style.background =
+                  "var(--adm-red-soft)";
+
+               status.style.color =
+                  "var(--adm-red)";
+
+               label.textContent =
+                  "System Attention";
+
+            } else if (hasWarning) {
+
+               status.style.background =
+                  "var(--adm-orange-soft)";
+
+               status.style.color =
+                  "var(--adm-orange)";
+
+               label.textContent =
+                  "System Monitoring";
+
+            } else {
+
+               status.style.background =
+                  "var(--adm-green-soft)";
+
+               status.style.color =
+                  "var(--adm-green)";
+
+               label.textContent =
+                  "System Operational";
+            }
+         }
+
+
+         async function loadDashboard() {
+
+            const mulai =
+               tanggalMulai.value;
+
+            const selesai =
+               tanggalSelesai.value;
+
+
+            if (!mulai || !selesai) {
+
+               showError(
+                  "Tanggal mulai dan tanggal selesai wajib diisi."
+               );
+
+               return;
+            }
+
+
+            if (mulai > selesai) {
+
+               showError(
                   "Tanggal mulai tidak boleh lebih besar dari tanggal selesai."
                );
 
+               return;
             }
 
-            return;
+
+            btnFilter.disabled = true;
+
+            const originalText =
+               btnFilter.innerHTML;
+
+            btnFilter.innerHTML = `
+            <span class="spinner-border spinner-border-sm me-1"></span>
+            Memuat...
+         `;
+
+
+            try {
+
+               const params =
+                  new URLSearchParams({
+
+                     action: "dashboard",
+
+                     periode: periode.value,
+
+                     tanggal_mulai: mulai,
+
+                     tanggal_selesai: selesai
+
+                  });
+
+
+               const response =
+                  await fetch(
+                     "controller/dashboard/administratorDashboardController.php?" +
+                     params.toString(), {
+                        method: "GET",
+                        cache: "no-store",
+                        headers: {
+                           "Accept": "application/json"
+                        }
+                     }
+                  );
+
+
+               const text =
+                  await response.text();
+
+
+               let data;
+
+               try {
+
+                  data =
+                     JSON.parse(text);
+
+               } catch (error) {
+
+                  console.error(
+                     "Response controller bukan JSON:",
+                     text
+                  );
+
+                  throw new Error(
+                     "Response controller bukan JSON."
+                  );
+               }
+
+
+               if (!data.status) {
+
+                  throw new Error(
+                     data.message ||
+                     "Gagal mengambil dashboard."
+                  );
+               }
+
+
+               renderKPI(data);
+
+               renderFaskes(
+                  data.faskes || []
+               );
+
+               renderSystem(
+                  data.system || [],
+                  data.server_time || null
+               );
+
+               renderImport(
+                  data.import || {}
+               );
+
+               renderIntegration(
+                  data.integration || []
+               );
+
+               renderAlerts(
+                  data.alerts || []
+               );
+
+               renderIDSH(
+                  data.idsh || {}
+               );
+
+               renderSystemStatus(
+                  data.system || []
+               );
+
+
+            } catch (error) {
+
+               console.error(
+                  "Administrator Dashboard:",
+                  error
+               );
+
+               showError(
+                  error.message ||
+                  "Terjadi kesalahan saat memuat dashboard."
+               );
+
+
+            } finally {
+
+               btnFilter.disabled = false;
+
+               btnFilter.innerHTML =
+                  originalText;
+            }
          }
 
 
-         console.log(
-            "Filter Administrator:",
-            mulai,
-            "sampai",
-            selesai
+         periode.addEventListener(
+            "change",
+            function() {
+
+               const today =
+                  new Date();
+
+
+               if (this.value === "today") {
+
+                  const date =
+                     formatDate(today);
+
+                  tanggalMulai.value =
+                     date;
+
+                  tanggalSelesai.value =
+                     date;
+
+
+               } else if (this.value === "week") {
+
+                  const start =
+                     new Date(today);
+
+                  const day =
+                     start.getDay();
+
+                  const diff =
+                     day === 0 ?
+                     6 :
+                     day - 1;
+
+                  start.setDate(
+                     start.getDate() - diff
+                  );
+
+
+                  tanggalMulai.value =
+                     formatDate(start);
+
+                  tanggalSelesai.value =
+                     formatDate(today);
+
+
+               } else if (this.value === "month") {
+
+                  const start =
+                     new Date(
+                        today.getFullYear(),
+                        today.getMonth(),
+                        1
+                     );
+
+
+                  tanggalMulai.value =
+                     formatDate(start);
+
+                  tanggalSelesai.value =
+                     formatDate(today);
+               }
+            }
          );
 
-      });
 
-   });
+         btnFilter.addEventListener(
+            "click",
+            loadDashboard
+         );
+
+
+         /*
+          * Load pertama kali.
+          */
+
+         loadDashboard();
+      }
+
+
+      /*
+       * Aman untuk halaman normal maupun
+       * content yang dimuat melalui AJAX.
+       */
+
+      if (
+         document.readyState === "loading"
+      ) {
+
+         document.addEventListener(
+            "DOMContentLoaded",
+            initAdministratorDashboard
+         );
+
+      } else {
+
+         initAdministratorDashboard();
+      }
+
+   })();
 </script>
