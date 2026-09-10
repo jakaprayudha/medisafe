@@ -586,6 +586,7 @@
   }
 </style>
 
+
 <div class="kasir-dashboard">
 
   <!-- =========================
@@ -672,13 +673,8 @@
           Total Transaksi
         </div>
 
-        <div class="kasir-kpi-value">
-          128
-        </div>
-
-        <div class="kasir-kpi-sub">
-          <strong>+12,5%</strong> dibanding periode sebelumnya
-        </div>
+        <div class="kasir-kpi-value" id="kasirTotalTransaksi">0</div>
+        <div class="kasir-kpi-sub" id="kasirTotalTransaksiSub">Transaksi pada periode terpilih</div>
 
       </div>
     </div>
@@ -697,9 +693,7 @@
           Menunggu Pembayaran
         </div>
 
-        <div class="kasir-kpi-value">
-          14
-        </div>
+        <div class="kasir-kpi-value" id="kasirMenungguPembayaran">0</div>
 
         <div class="kasir-kpi-sub">
           Pasien dalam antrean kasir
@@ -722,13 +716,8 @@
           Transaksi Lunas
         </div>
 
-        <div class="kasir-kpi-value">
-          107
-        </div>
-
-        <div class="kasir-kpi-sub">
-          <strong>83,6%</strong> dari total transaksi
-        </div>
+        <div class="kasir-kpi-value" id="kasirTransaksiLunas">0</div>
+        <div class="kasir-kpi-sub" id="kasirLunasSub">0% dari total transaksi</div>
 
       </div>
     </div>
@@ -747,13 +736,8 @@
           Pendapatan Hari Ini
         </div>
 
-        <div class="kasir-kpi-value" style="font-size:21px;">
-          Rp 18,7 Jt
-        </div>
-
-        <div class="kasir-kpi-sub">
-          Target Rp 20 Jt
-        </div>
+        <div class="kasir-kpi-value" id="kasirPendapatan" style="font-size:21px;">Rp 0</div>
+        <div class="kasir-kpi-sub" id="kasirPendapatanSub">Pendapatan transaksi lunas</div>
 
       </div>
     </div>
@@ -778,7 +762,7 @@
             </div>
 
             <div class="kasir-card-subtitle">
-              Aktivitas pembayaran pasien hari ini
+              Aktivitas pembayaran pasien pada periode terpilih
             </div>
           </div>
 
@@ -787,190 +771,8 @@
           </a>
 
         </div>
-
-        <!-- Transaction 1 -->
-        <div class="kasir-transaction-item">
-
-          <div class="kasir-transaction-left">
-
-            <div class="kasir-transaction-icon green">
-              <iconify-icon icon="solar:check-circle-bold" width="20"></iconify-icon>
-            </div>
-
-            <div class="kasir-transaction-info">
-
-              <div class="kasir-transaction-name">
-                INV-20260904-00128
-              </div>
-
-              <div class="kasir-transaction-meta">
-                Ahmad Fauzan • Rawat Jalan • 08:12
-              </div>
-
-            </div>
-
-          </div>
-
-          <div class="kasir-transaction-right">
-
-            <div class="kasir-transaction-price">
-              Rp 325.000
-            </div>
-
-            <div class="kasir-transaction-status status-paid">
-              LUNAS
-            </div>
-
-          </div>
-
-        </div>
-
-        <!-- Transaction 2 -->
-        <div class="kasir-transaction-item">
-
-          <div class="kasir-transaction-left">
-
-            <div class="kasir-transaction-icon">
-              <iconify-icon icon="solar:card-bold" width="20"></iconify-icon>
-            </div>
-
-            <div class="kasir-transaction-info">
-
-              <div class="kasir-transaction-name">
-                INV-20260904-00127
-              </div>
-
-              <div class="kasir-transaction-meta">
-                Siti Rahma • Laboratorium • 08:05
-              </div>
-
-            </div>
-
-          </div>
-
-          <div class="kasir-transaction-right">
-
-            <div class="kasir-transaction-price">
-              Rp 475.000
-            </div>
-
-            <div class="kasir-transaction-status status-paid">
-              LUNAS
-            </div>
-
-          </div>
-
-        </div>
-
-        <!-- Transaction 3 -->
-        <div class="kasir-transaction-item">
-
-          <div class="kasir-transaction-left">
-
-            <div class="kasir-transaction-icon orange">
-              <iconify-icon icon="solar:clock-circle-bold" width="20"></iconify-icon>
-            </div>
-
-            <div class="kasir-transaction-info">
-
-              <div class="kasir-transaction-name">
-                INV-20260904-00126
-              </div>
-
-              <div class="kasir-transaction-meta">
-                Budi Santoso • Farmasi • 07:58
-              </div>
-
-            </div>
-
-          </div>
-
-          <div class="kasir-transaction-right">
-
-            <div class="kasir-transaction-price">
-              Rp 186.500
-            </div>
-
-            <div class="kasir-transaction-status status-pending">
-              MENUNGGU
-            </div>
-
-          </div>
-
-        </div>
-
-        <!-- Transaction 4 -->
-        <div class="kasir-transaction-item">
-
-          <div class="kasir-transaction-left">
-
-            <div class="kasir-transaction-icon blue">
-              <iconify-icon icon="solar:wallet-money-bold" width="20"></iconify-icon>
-            </div>
-
-            <div class="kasir-transaction-info">
-
-              <div class="kasir-transaction-name">
-                INV-20260904-00125
-              </div>
-
-              <div class="kasir-transaction-meta">
-                Nur Aisyah • Rawat Jalan • 07:45
-              </div>
-
-            </div>
-
-          </div>
-
-          <div class="kasir-transaction-right">
-
-            <div class="kasir-transaction-price">
-              Rp 650.000
-            </div>
-
-            <div class="kasir-transaction-status status-paid">
-              LUNAS
-            </div>
-
-          </div>
-
-        </div>
-
-        <!-- Transaction 5 -->
-        <div class="kasir-transaction-item">
-
-          <div class="kasir-transaction-left">
-
-            <div class="kasir-transaction-icon green">
-              <iconify-icon icon="solar:banknote-2-bold" width="20"></iconify-icon>
-            </div>
-
-            <div class="kasir-transaction-info">
-
-              <div class="kasir-transaction-name">
-                INV-20260904-00124
-              </div>
-
-              <div class="kasir-transaction-meta">
-                Dedi Irawan • IGD • 07:31
-              </div>
-
-            </div>
-
-          </div>
-
-          <div class="kasir-transaction-right">
-
-            <div class="kasir-transaction-price">
-              Rp 1.250.000
-            </div>
-
-            <div class="kasir-transaction-status status-paid">
-              LUNAS
-            </div>
-
-          </div>
-
+        <div id="kasirTransactionList">
+          <div class="text-center py-4 text-muted">Memuat transaksi...</div>
         </div>
 
       </div>
@@ -993,105 +795,15 @@
               Pasien yang menunggu pembayaran
             </div>
           </div>
-
-          <span style="
-                        background:var(--kas-orange-soft);
-                        color:var(--kas-orange);
-                        padding:6px 9px;
-                        border-radius:9px;
-                        font-size:10px;
-                        font-weight:800;">
-            14 Pasien
-          </span>
+          <span id="kasirQueueBadge" style="background:var(--kas-orange-soft);color:var(--kas-orange);padding:6px 9px;border-radius:9px;font-size:10px;font-weight:800;">0 Pasien</span>
 
         </div>
 
-        <div class="kasir-queue">
-
-          <div class="kasir-queue-number">
-            A-021
-          </div>
-
-          <div class="kasir-queue-info">
-            <div class="kasir-queue-name">
-              Andi Saputra
-            </div>
-            <div class="kasir-queue-meta">
-              Rawat Jalan • Poli Umum
-            </div>
-          </div>
-
-          <div class="kasir-queue-action">
-            Proses
-          </div>
-
-        </div>
-
-        <div class="kasir-queue">
-
-          <div class="kasir-queue-number">
-            A-022
-          </div>
-
-          <div class="kasir-queue-info">
-            <div class="kasir-queue-name">
-              Maria Ulfa
-            </div>
-            <div class="kasir-queue-meta">
-              Farmasi • Resep
-            </div>
-          </div>
-
-          <div class="kasir-queue-action">
-            Proses
-          </div>
-
-        </div>
-
-        <div class="kasir-queue">
-
-          <div class="kasir-queue-number">
-            A-023
-          </div>
-
-          <div class="kasir-queue-info">
-            <div class="kasir-queue-name">
-              Rudi Hartono
-            </div>
-            <div class="kasir-queue-meta">
-              Laboratorium
-            </div>
-          </div>
-
-          <div class="kasir-queue-action">
-            Proses
-          </div>
-
-        </div>
-
-        <div class="kasir-queue">
-
-          <div class="kasir-queue-number">
-            A-024
-          </div>
-
-          <div class="kasir-queue-info">
-            <div class="kasir-queue-name">
-              Dewi Lestari
-            </div>
-            <div class="kasir-queue-meta">
-              Rawat Jalan • Poli Anak
-            </div>
-          </div>
-
-          <div class="kasir-queue-action">
-            Proses
-          </div>
-
+        <div id="kasirQueueList">
+          <div class="text-center py-4 text-muted">Memuat antrean...</div>
         </div>
 
       </div>
-
     </div>
 
   </div>
@@ -1118,12 +830,7 @@
             </div>
           </div>
 
-          <span style="
-                        font-size:12px;
-                        font-weight:800;
-                        color:var(--kas-primary);">
-            Rp 18,7 Jt
-          </span>
+          <span id="kasirRevenueTotal" style="font-size:12px;font-weight:800;color:var(--kas-primary);">Rp 0</span>
 
         </div>
 
@@ -1153,81 +860,11 @@
           </div>
 
         </div>
-
-        <div class="kasir-payment-row">
-
-          <div class="kasir-payment-top">
-            <span class="kasir-payment-name">
-              Tunai
-            </span>
-            <span class="kasir-payment-value">
-              42%
-            </span>
-          </div>
-
-          <div class="kasir-progress">
-            <div class="kasir-progress-bar"
-              style="width:42%;"></div>
-          </div>
-
-        </div>
-
-        <div class="kasir-payment-row">
-
-          <div class="kasir-payment-top">
-            <span class="kasir-payment-name">
-              Transfer / VA
-            </span>
-            <span class="kasir-payment-value">
-              28%
-            </span>
-          </div>
-
-          <div class="kasir-progress">
-            <div class="kasir-progress-bar blue"
-              style="width:28%;"></div>
-          </div>
-
-        </div>
-
-        <div class="kasir-payment-row">
-
-          <div class="kasir-payment-top">
-            <span class="kasir-payment-name">
-              Debit / EDC
-            </span>
-            <span class="kasir-payment-value">
-              18%
-            </span>
-          </div>
-
-          <div class="kasir-progress">
-            <div class="kasir-progress-bar green"
-              style="width:18%;"></div>
-          </div>
-
-        </div>
-
-        <div class="kasir-payment-row">
-
-          <div class="kasir-payment-top">
-            <span class="kasir-payment-name">
-              QRIS
-            </span>
-            <span class="kasir-payment-value">
-              12%
-            </span>
-          </div>
-
-          <div class="kasir-progress">
-            <div class="kasir-progress-bar orange"
-              style="width:12%;"></div>
-          </div>
-
+        <div id="kasirPaymentMethods">
+          <div class="text-center py-4 text-muted">Data metode pembayaran belum tersedia.</div>
         </div>
 
       </div>
-
     </div>
 
   </div>
@@ -1250,7 +887,7 @@
             </div>
 
             <div class="kasir-card-subtitle">
-              Rekap transaksi hari ini
+              Rekap transaksi pada periode terpilih
             </div>
           </div>
 
@@ -1262,9 +899,7 @@
             Total Tagihan
           </div>
 
-          <div class="kasir-summary-value">
-            Rp 21.450.000
-          </div>
+          <div class="kasir-summary-value" id="kasirTotalTagihan">Rp 0</div>
 
         </div>
 
@@ -1274,10 +909,7 @@
             Sudah Dibayar
           </div>
 
-          <div class="kasir-summary-value"
-            style="color:var(--kas-green);">
-            Rp 18.725.000
-          </div>
+          <div class="kasir-summary-value" id="kasirSudahDibayar" style="color:var(--kas-green);">Rp 0</div>
 
         </div>
 
@@ -1287,10 +919,7 @@
             Piutang / Belum Dibayar
           </div>
 
-          <div class="kasir-summary-value"
-            style="color:var(--kas-orange);">
-            Rp 2.725.000
-          </div>
+          <div class="kasir-summary-value" id="kasirPiutang" style="color:var(--kas-orange);">Rp 0</div>
 
         </div>
 
@@ -1316,78 +945,11 @@
           </div>
 
         </div>
-
-        <div class="kasir-alert warning">
-
-          <div class="kasir-alert-icon">
-            <iconify-icon
-              icon="solar:clock-circle-bold"
-              width="18">
-            </iconify-icon>
-          </div>
-
-          <div class="kasir-alert-content">
-
-            <div class="kasir-alert-title">
-              14 Transaksi Menunggu Pembayaran
-            </div>
-
-            <div class="kasir-alert-text">
-              Terdapat pasien yang masih berada dalam antrean kasir.
-            </div>
-
-          </div>
-
-        </div>
-
-        <div class="kasir-alert danger">
-
-          <div class="kasir-alert-icon">
-            <iconify-icon
-              icon="solar:danger-triangle-bold"
-              width="18">
-            </iconify-icon>
-          </div>
-
-          <div class="kasir-alert-content">
-
-            <div class="kasir-alert-title">
-              3 Transaksi Gagal
-            </div>
-
-            <div class="kasir-alert-text">
-              Periksa kembali transaksi pembayaran yang gagal atau belum terkonfirmasi.
-            </div>
-
-          </div>
-
-        </div>
-
-        <div class="kasir-alert info">
-
-          <div class="kasir-alert-icon">
-            <iconify-icon
-              icon="solar:document-text-bold"
-              width="18">
-            </iconify-icon>
-          </div>
-
-          <div class="kasir-alert-content">
-
-            <div class="kasir-alert-title">
-              Rekap Kas Harian Belum Ditutup
-            </div>
-
-            <div class="kasir-alert-text">
-              Silakan lakukan closing kas setelah seluruh transaksi selesai.
-            </div>
-
-          </div>
-
+        <div id="kasirAlertList">
+          <div class="text-center py-4 text-muted">Memuat informasi...</div>
         </div>
 
       </div>
-
     </div>
 
   </div>
@@ -1556,51 +1118,410 @@
   </div>
 
 </div>
-
 <script>
   document.addEventListener("DOMContentLoaded", function() {
 
-    /* =========================
-       FILTER PERIODE
-    ========================== */
+    const endpoint = "controller/dashboard/kasirDashboardController.php?action=dashboard";
 
     const periode = document.getElementById("kasirPeriode");
     const tanggalMulai = document.getElementById("kasirTanggalMulai");
     const tanggalSelesai = document.getElementById("kasirTanggalSelesai");
     const btnFilter = document.getElementById("btnFilterKasir");
 
+    let revenueChart = null;
+
     function formatDate(date) {
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, "0");
       const day = String(date.getDate()).padStart(2, "0");
-
       return `${year}-${month}-${day}`;
     }
 
-    periode.addEventListener("change", function() {
+    function formatRupiah(value) {
+      value = Number(value || 0);
+      return "Rp " + new Intl.NumberFormat("id-ID").format(value);
+    }
 
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function setLoading() {
+      document.getElementById("kasirTransactionList").innerHTML =
+        '<div class="text-center py-4 text-muted">Memuat transaksi...</div>';
+
+      document.getElementById("kasirQueueList").innerHTML =
+        '<div class="text-center py-4 text-muted">Memuat antrean...</div>';
+
+      document.getElementById("kasirAlertList").innerHTML =
+        '<div class="text-center py-4 text-muted">Memuat informasi...</div>';
+    }
+
+    function renderTransactions(data) {
+      const el = document.getElementById("kasirTransactionList");
+      const items = data?.transactions?.items || [];
+
+      if (!items.length) {
+        el.innerHTML = '<div class="text-center py-4 text-muted">Belum ada transaksi pada periode ini.</div>';
+        return;
+      }
+
+      el.innerHTML = items.map((item, index) => {
+        const paid = item.status === "paid";
+        const iconClass = paid ? "green" : "orange";
+        const icon = paid ? "solar:check-circle-bold" : "solar:clock-circle-bold";
+        const statusClass = paid ? "status-paid" : "status-pending";
+
+        return `
+        <div class="kasir-transaction-item">
+          <div class="kasir-transaction-left">
+            <div class="kasir-transaction-icon ${iconClass}">
+              <iconify-icon icon="${icon}" width="20"></iconify-icon>
+            </div>
+            <div class="kasir-transaction-info">
+              <div class="kasir-transaction-name">
+                ${escapeHtml(item.visit_ID || "-")}
+              </div>
+              <div class="kasir-transaction-meta">
+                ${escapeHtml(item.patient_name_pcare || "-")} •
+                ${escapeHtml(item.service || "Pelayanan")} •
+                ${escapeHtml(item.jam || "-")}
+              </div>
+            </div>
+          </div>
+          <div class="kasir-transaction-right">
+            <div class="kasir-transaction-price">
+              ${formatRupiah(item.total)}
+            </div>
+            <div class="kasir-transaction-status ${statusClass}">
+              ${escapeHtml(item.status_label || (paid ? "LUNAS" : "MENUNGGU"))}
+            </div>
+          </div>
+        </div>
+      `;
+      }).join("");
+    }
+
+    function renderQueue(data) {
+      const el = document.getElementById("kasirQueueList");
+      const items = data?.queue?.items || [];
+      const waiting = Number(data?.queue?.waiting || 0);
+
+      document.getElementById("kasirQueueBadge").textContent = waiting + " Pasien";
+
+      // Tampilkan maksimal 10 antrean sekaligus.
+      // Antrean berikutnya tetap tersedia di dalam container dan dapat discroll.
+      const visibleItems = items.slice(0, 10);
+
+      if (!items.length) {
+        el.innerHTML = '<div class="text-center py-4 text-muted">Tidak ada antrean pembayaran.</div>';
+        return;
+      }
+
+      // Tinggi container dibatasi agar dashboard tidak memanjang.
+      el.style.maxHeight = "520px";
+      el.style.overflowY = "auto";
+      el.style.overflowX = "hidden";
+      el.style.paddingRight = "4px";
+
+      el.innerHTML = visibleItems.map(item => `
+      <div class="kasir-queue">
+        <div class="kasir-queue-number">
+          ${escapeHtml(item.nomor_rm || "-")}
+        </div>
+        <div class="kasir-queue-info">
+          <div class="kasir-queue-name">
+            ${escapeHtml(item.nama || "-")}
+          </div>
+          <div class="kasir-queue-meta">
+            ${escapeHtml(item.service || "Pelayanan")}
+            ${item.poli && item.poli !== "-" ? " • " + escapeHtml(item.poli) : ""}
+          </div>
+        </div>
+        <div class="kasir-queue-action">
+          Proses
+        </div>
+      </div>
+    `).join("");
+
+      if (items.length > 10) {
+        el.insertAdjacentHTML(
+          "beforeend",
+          '<div class="text-center py-2 text-muted" style="font-size:11px;">' +
+          'Menampilkan 10 antrean pertama dari ' + items.length + '. Scroll untuk melihat antrean lainnya.' +
+          '</div>'
+        );
+      }
+    }
+
+    function renderPaymentMethods(data) {
+      const el = document.getElementById("kasirPaymentMethods");
+      const available = data?.payment_methods?.available;
+      const items = data?.payment_methods?.items || [];
+
+      if (!available || !items.length) {
+        el.innerHTML = `
+        <div class="text-center py-3 text-muted" style="font-size:11px;">
+          Metode pembayaran belum tersedia pada sumber data kasir.
+        </div>
+      `;
+        return;
+      }
+
+      el.innerHTML = items.map((item, index) => `
+      <div class="kasir-payment-row">
+        <div class="kasir-payment-top">
+          <span class="kasir-payment-name">${escapeHtml(item.label || "-")}</span>
+          <span class="kasir-payment-value">${Number(item.persentase || 0)}%</span>
+        </div>
+        <div class="kasir-progress">
+          <div class="kasir-progress-bar ${index === 1 ? "blue" : index === 2 ? "green" : index === 3 ? "orange" : ""}"
+               style="width:${Math.min(100, Number(item.persentase || 0))}%;"></div>
+        </div>
+      </div>
+    `).join("");
+    }
+
+    function renderAlerts(data) {
+      const el = document.getElementById("kasirAlertList");
+      const items = data?.alerts?.items || [];
+
+      if (!items.length) {
+        el.innerHTML = '<div class="text-center py-4 text-muted">Tidak ada informasi.</div>';
+        return;
+      }
+
+      el.innerHTML = items.map(item => `
+      <div class="kasir-alert ${escapeHtml(item.type || "info")}">
+        <div class="kasir-alert-icon">
+          <iconify-icon icon="${escapeHtml(item.icon || "solar:info-circle-bold")}" width="18"></iconify-icon>
+        </div>
+        <div class="kasir-alert-content">
+          <div class="kasir-alert-title">${escapeHtml(item.title || "-")}</div>
+          <div class="kasir-alert-text">${escapeHtml(item.text || "")}</div>
+        </div>
+      </div>
+    `).join("");
+    }
+
+    function renderChart(data) {
+      const canvas = document.getElementById("kasirRevenueChart");
+      if (!canvas || typeof Chart === "undefined") return;
+
+      const items = data?.revenue_chart || [];
+
+      const labels = items.map(item => item.label || item.date || "-");
+      const values = items.map(item => Number(item.total || 0));
+
+      if (revenueChart) {
+        revenueChart.destroy();
+      }
+
+      revenueChart = new Chart(canvas, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Pendapatan",
+            data: values,
+            borderColor: "#635bff",
+            backgroundColor: "rgba(99,91,255,.08)",
+            borderWidth: 2,
+            fill: true,
+            tension: .4,
+            pointRadius: 3,
+            pointHoverRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return formatRupiah(context.raw);
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: "#f1f2f5"
+              },
+              ticks: {
+                font: {
+                  size: 9
+                },
+                callback: function(value) {
+                  if (value >= 1000000) return (value / 1000000) + " Jt";
+                  if (value >= 1000) return (value / 1000) + " Rb";
+                  return value;
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                font: {
+                  size: 9
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderDashboard(data) {
+      if (!data || data.status !== true) {
+        throw new Error(data?.message || "Data dashboard tidak valid.");
+      }
+
+      const kpi = data.kpi || {};
+      const summary = data.financial_summary || {};
+
+      document.getElementById("kasirTotalTransaksi").textContent =
+        Number(kpi.total_transaksi || 0).toLocaleString("id-ID");
+
+      document.getElementById("kasirMenungguPembayaran").textContent =
+        Number(kpi.menunggu_pembayaran || 0).toLocaleString("id-ID");
+
+      document.getElementById("kasirTransaksiLunas").textContent =
+        Number(kpi.transaksi_lunas || 0).toLocaleString("id-ID");
+
+      document.getElementById("kasirLunasSub").innerHTML =
+        "<strong>" + Number(kpi.persentase_lunas || 0) + "%</strong> dari total transaksi";
+
+      document.getElementById("kasirPendapatan").textContent =
+        formatRupiah(kpi.pendapatan || 0);
+
+      document.getElementById("kasirPendapatanSub").textContent =
+        "Pendapatan transaksi lunas";
+
+      document.getElementById("kasirRevenueTotal").textContent =
+        formatRupiah(kpi.pendapatan || 0);
+
+      document.getElementById("kasirTotalTagihan").textContent =
+        formatRupiah(summary.total_tagihan || 0);
+
+      document.getElementById("kasirSudahDibayar").textContent =
+        formatRupiah(summary.sudah_dibayar || 0);
+
+      document.getElementById("kasirPiutang").textContent =
+        formatRupiah(summary.piutang || 0);
+
+      renderTransactions(data);
+      renderQueue(data);
+      renderPaymentMethods(data);
+      renderAlerts(data);
+      renderChart(data);
+    }
+
+    async function loadDashboard() {
+      const mulai = tanggalMulai.value;
+      const selesai = tanggalSelesai.value;
+
+      if (!mulai || !selesai) {
+        return;
+      }
+
+      if (mulai > selesai) {
+        if (typeof Swal !== "undefined") {
+          Swal.fire({
+            icon: "warning",
+            title: "Periode Tidak Valid",
+            text: "Tanggal mulai tidak boleh lebih besar dari tanggal selesai."
+          });
+        } else {
+          alert("Tanggal mulai tidak boleh lebih besar dari tanggal selesai.");
+        }
+        return;
+      }
+
+      setLoading();
+      btnFilter.disabled = true;
+
+      try {
+        const url =
+          endpoint +
+          "&periode=" + encodeURIComponent(periode.value) +
+          "&tanggal_mulai=" + encodeURIComponent(mulai) +
+          "&tanggal_selesai=" + encodeURIComponent(selesai);
+
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Accept": "application/json"
+          },
+          cache: "no-store"
+        });
+
+        const text = await response.text();
+
+        let data;
+
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.error("Response bukan JSON:", text);
+          throw new Error("Response controller bukan JSON yang valid.");
+        }
+
+        renderDashboard(data);
+
+      } catch (error) {
+        console.error("Dashboard kasir:", error);
+
+        document.getElementById("kasirTransactionList").innerHTML =
+          '<div class="text-center py-4 text-danger">Gagal mengambil data transaksi.</div>';
+
+        document.getElementById("kasirQueueList").innerHTML =
+          '<div class="text-center py-4 text-danger">Gagal mengambil data antrean.</div>';
+
+        if (typeof Swal !== "undefined") {
+          Swal.fire({
+            icon: "error",
+            title: "Gagal Memuat Dashboard",
+            text: error.message || "Terjadi kesalahan saat mengambil data."
+          });
+        }
+      } finally {
+        btnFilter.disabled = false;
+      }
+    }
+
+    periode.addEventListener("change", function() {
       const today = new Date();
 
       if (this.value === "today") {
-
         const date = formatDate(today);
-
         tanggalMulai.value = date;
         tanggalSelesai.value = date;
 
       } else if (this.value === "week") {
-
         const start = new Date(today);
+        const day = today.getDay();
+        const diff = day === 0 ? -6 : 1 - day;
 
-        start.setDate(
-          today.getDate() - today.getDay() + 1
-        );
+        start.setDate(today.getDate() + diff);
 
         tanggalMulai.value = formatDate(start);
         tanggalSelesai.value = formatDate(today);
 
       } else if (this.value === "month") {
-
         const start = new Date(
           today.getFullYear(),
           today.getMonth(),
@@ -1609,202 +1530,15 @@
 
         tanggalMulai.value = formatDate(start);
         tanggalSelesai.value = formatDate(today);
-
       }
-
     });
 
-    btnFilter.addEventListener("click", function() {
-
-      const mulai = tanggalMulai.value;
-      const selesai = tanggalSelesai.value;
-
-      if (!mulai || !selesai) {
-
-        if (typeof Swal !== "undefined") {
-
-          Swal.fire({
-            icon: "warning",
-            title: "Periode Belum Lengkap",
-            text: "Silakan pilih tanggal mulai dan tanggal selesai."
-          });
-
-        } else {
-
-          alert("Silakan pilih periode terlebih dahulu.");
-
-        }
-
-        return;
-      }
-
-      if (mulai > selesai) {
-
-        if (typeof Swal !== "undefined") {
-
-          Swal.fire({
-            icon: "warning",
-            title: "Periode Tidak Valid",
-            text: "Tanggal mulai tidak boleh lebih besar dari tanggal selesai."
-          });
-
-        } else {
-
-          alert("Tanggal mulai tidak boleh lebih besar dari tanggal selesai.");
-
-        }
-
-        return;
-      }
-
-      console.log(
-        "Filter kasir:",
-        mulai,
-        "sampai",
-        selesai
-      );
-
-    });
-
-
-    /* =========================
-       REVENUE CHART
-    ========================== */
-
-    const revenueCanvas =
-      document.getElementById("kasirRevenueChart");
-
-    if (revenueCanvas && typeof Chart !== "undefined") {
-
-      new Chart(revenueCanvas, {
-
-        type: "line",
-
-        data: {
-
-          labels: [
-            "Sen",
-            "Sel",
-            "Rab",
-            "Kam",
-            "Jum",
-            "Sab",
-            "Min"
-          ],
-
-          datasets: [{
-            label: "Pendapatan",
-
-            data: [
-              14200000,
-              16800000,
-              15400000,
-              19200000,
-              17700000,
-              18700000,
-              18725000
-            ],
-
-            borderColor: "#635bff",
-
-            backgroundColor: "rgba(99,91,255,.08)",
-
-            borderWidth: 2,
-
-            fill: true,
-
-            tension: .4,
-
-            pointRadius: 3,
-
-            pointHoverRadius: 5
-          }]
-
-        },
-
-        options: {
-
-          responsive: true,
-
-          maintainAspectRatio: false,
-
-          plugins: {
-
-            legend: {
-              display: false
-            },
-
-            tooltip: {
-
-              callbacks: {
-
-                label: function(context) {
-
-                  return "Rp " +
-                    new Intl.NumberFormat(
-                      "id-ID"
-                    ).format(context.raw);
-
-                }
-
-              }
-
-            }
-
-          },
-
-          scales: {
-
-            y: {
-
-              beginAtZero: true,
-
-              grid: {
-                color: "#f1f2f5"
-              },
-
-              ticks: {
-
-                font: {
-                  size: 9
-                },
-
-                callback: function(value) {
-
-                  if (value >= 1000000) {
-                    return (
-                      value / 1000000
-                    ) + " Jt";
-                  }
-
-                  return value;
-                }
-
-              }
-
-            },
-
-            x: {
-
-              grid: {
-                display: false
-              },
-
-              ticks: {
-                font: {
-                  size: 9
-                }
-              }
-
-            }
-
-          }
-
-        }
-
-      });
-
-    }
+    btnFilter.addEventListener("click", loadDashboard);
+
+    /*
+     * Load pertama kali menggunakan Hari Ini.
+     */
+    loadDashboard();
 
   });
 </script>

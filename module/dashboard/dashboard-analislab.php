@@ -566,6 +566,74 @@
    }
 </style>
 
+<style>
+   .lab-dashboard #labQueueList,
+   .lab-dashboard #labResultList {
+      max-height: 430px;
+      overflow-y: auto;
+      padding-right: 5px;
+   }
+
+   .lab-dashboard #labQueueList::-webkit-scrollbar,
+   .lab-dashboard #labResultList::-webkit-scrollbar {
+      width: 5px;
+   }
+
+   .lab-dashboard #labQueueList::-webkit-scrollbar-thumb,
+   .lab-dashboard #labResultList::-webkit-scrollbar-thumb {
+      background: #dfe3ea;
+      border-radius: 10px;
+   }
+
+   .lab-dashboard .lab-loading,
+   .lab-dashboard .lab-empty {
+      padding: 28px 10px;
+      text-align: center;
+      color: var(--lab-muted);
+      font-size: 11px;
+   }
+</style>
+
+<style>
+   .lab-dashboard #labQueueList,
+   .lab-dashboard #labResultList {
+      max-height: 430px;
+      overflow-y: auto;
+      padding-right: 5px;
+   }
+
+   .lab-dashboard #labQueueList::-webkit-scrollbar,
+   .lab-dashboard #labResultList::-webkit-scrollbar {
+      width: 5px;
+   }
+
+   .lab-dashboard #labQueueList::-webkit-scrollbar-thumb,
+   .lab-dashboard #labResultList::-webkit-scrollbar-thumb {
+      background: #dfe3ea;
+      border-radius: 10px;
+   }
+
+   .lab-dashboard .lab-empty {
+      padding: 30px 10px;
+      text-align: center;
+      color: var(--lab-muted);
+      font-size: 11px;
+   }
+
+   .lab-dashboard .lab-loading {
+      padding: 30px 10px;
+      text-align: center;
+      color: var(--lab-muted);
+      font-size: 11px;
+   }
+
+   .lab-dashboard .lab-trend-wrap {
+      position: relative;
+      height: 220px;
+   }
+</style>
+
+
 
 <div class="lab-dashboard">
 
@@ -722,12 +790,10 @@
                Permintaan Pemeriksaan
             </div>
 
-            <div class="lab-kpi-value">
-               86
-            </div>
+            <div class="lab-kpi-value" id="labPermintaan">0</div>
 
-            <div class="lab-kpi-sub">
-               Pemeriksaan hari ini
+            <div class="lab-kpi-sub" id="labPermintaanSub">
+               Pemeriksaan sesuai periode
             </div>
 
          </div>
@@ -759,9 +825,7 @@
                Menunggu Pemeriksaan
             </div>
 
-            <div class="lab-kpi-value">
-               18
-            </div>
+            <div class="lab-kpi-value" id="labMenunggu">0</div>
 
             <div class="lab-kpi-sub">
                Spesimen belum diproses
@@ -796,9 +860,7 @@
                Sedang Diproses
             </div>
 
-            <div class="lab-kpi-value">
-               24
-            </div>
+            <div class="lab-kpi-value" id="labProses">0</div>
 
             <div class="lab-kpi-sub">
                Pemeriksaan aktif
@@ -833,12 +895,10 @@
                Hasil Selesai
             </div>
 
-            <div class="lab-kpi-value">
-               44
-            </div>
+            <div class="lab-kpi-value" id="labSelesai">0</div>
 
-            <div class="lab-kpi-sub">
-               38 sudah divalidasi
+            <div class="lab-kpi-sub" id="labSelesaiSub">
+               Persentase selesai: 0%
             </div>
 
          </div>
@@ -882,138 +942,9 @@
             </div>
 
 
-            <!-- QUEUE 1 -->
-
-            <div class="lab-queue">
-
-               <div class="lab-queue-number">
-                  L-021
-               </div>
-
-               <div class="lab-queue-info">
-
-                  <div class="lab-queue-name">
-                     Ahmad Fauzan
-                  </div>
-
-                  <div class="lab-queue-meta">
-                     RM-000128 • Hematologi • Darah
-                  </div>
-
-               </div>
-
-               <span class="lab-queue-status lab-waiting">
-                  MENUNGGU
-               </span>
-
-            </div>
-
-
-            <!-- QUEUE 2 -->
-
-            <div class="lab-queue">
-
-               <div class="lab-queue-number">
-                  L-022
-               </div>
-
-               <div class="lab-queue-info">
-
-                  <div class="lab-queue-name">
-                     Siti Rahma
-                  </div>
-
-                  <div class="lab-queue-meta">
-                     RM-000127 • Kimia Klinik • Serum
-                  </div>
-
-               </div>
-
-               <span class="lab-queue-status lab-process">
-                  PROSES
-               </span>
-
-            </div>
-
-
-            <!-- QUEUE 3 -->
-
-            <div class="lab-queue">
-
-               <div class="lab-queue-number">
-                  L-023
-               </div>
-
-               <div class="lab-queue-info">
-
-                  <div class="lab-queue-name">
-                     Budi Santoso
-                  </div>
-
-                  <div class="lab-queue-meta">
-                     RM-000126 • Urinalisa • Urine
-                  </div>
-
-               </div>
-
-               <span class="lab-queue-status lab-process">
-                  PROSES
-               </span>
-
-            </div>
-
-
-            <!-- QUEUE 4 -->
-
-            <div class="lab-queue">
-
-               <div class="lab-queue-number">
-                  L-024
-               </div>
-
-               <div class="lab-queue-info">
-
-                  <div class="lab-queue-name">
-                     Nur Aisyah
-                  </div>
-
-                  <div class="lab-queue-meta">
-                     RM-000125 • Hematologi • Darah
-                  </div>
-
-               </div>
-
-               <span class="lab-queue-status lab-ready">
-                  SELESAI
-               </span>
-
-            </div>
-
-
-            <!-- QUEUE 5 -->
-
-            <div class="lab-queue">
-
-               <div class="lab-queue-number">
-                  L-025
-               </div>
-
-               <div class="lab-queue-info">
-
-                  <div class="lab-queue-name">
-                     Dedi Irawan
-                  </div>
-
-                  <div class="lab-queue-meta">
-                     RM-000124 • Imunologi • Serum
-                  </div>
-
-               </div>
-
-               <span class="lab-queue-status lab-critical">
-                  PRIORITAS
-               </span>
-
+            <!-- DATA ANTREAN DINAMIS -->
+            <div id="labQueueList">
+               <div class="lab-loading">Memuat data antrean...</div>
             </div>
 
          </div>
@@ -1044,107 +975,8 @@
             </div>
 
 
-            <div class="lab-process-item">
-
-               <div class="lab-process-top">
-
-                  <span class="lab-process-name">
-                     Penerimaan Spesimen
-                  </span>
-
-                  <span class="lab-process-value">
-                     94%
-                  </span>
-
-               </div>
-
-               <div class="lab-progress">
-
-                  <div
-                     class="lab-progress-bar green"
-                     style="width:94%;">
-                  </div>
-
-               </div>
-
-            </div>
-
-
-            <div class="lab-process-item">
-
-               <div class="lab-process-top">
-
-                  <span class="lab-process-name">
-                     Pemeriksaan
-                  </span>
-
-                  <span class="lab-process-value">
-                     78%
-                  </span>
-
-               </div>
-
-               <div class="lab-progress">
-
-                  <div
-                     class="lab-progress-bar"
-                     style="width:78%;">
-                  </div>
-
-               </div>
-
-            </div>
-
-
-            <div class="lab-process-item">
-
-               <div class="lab-process-top">
-
-                  <span class="lab-process-name">
-                     Validasi Hasil
-                  </span>
-
-                  <span class="lab-process-value">
-                     86%
-                  </span>
-
-               </div>
-
-               <div class="lab-progress">
-
-                  <div
-                     class="lab-progress-bar blue"
-                     style="width:86%;">
-                  </div>
-
-               </div>
-
-            </div>
-
-
-            <div class="lab-process-item">
-
-               <div class="lab-process-top">
-
-                  <span class="lab-process-name">
-                     Hasil Terkirim
-                  </span>
-
-                  <span class="lab-process-value">
-                     91%
-                  </span>
-
-               </div>
-
-               <div class="lab-progress">
-
-                  <div
-                     class="lab-progress-bar green"
-                     style="width:91%;">
-                  </div>
-
-               </div>
-
+            <div id="labProcessList">
+               <div class="lab-loading">Memuat progress...</div>
             </div>
 
          </div>
@@ -1188,127 +1020,8 @@
             </div>
 
 
-            <div class="lab-result">
-
-               <div class="lab-result-icon">
-
-                  <iconify-icon
-                     icon="solar:document-text-bold"
-                     width="19">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="lab-result-info">
-
-                  <div class="lab-result-name">
-                     Ahmad Fauzan
-                  </div>
-
-                  <div class="lab-result-meta">
-                     Hemoglobin • 13.8 g/dL • 08:42
-                  </div>
-
-               </div>
-
-               <span
-                  class="lab-result-status lab-ready">
-                  VALID
-               </span>
-
-            </div>
-
-
-            <div class="lab-result">
-
-               <div class="lab-result-icon">
-
-                  <iconify-icon
-                     icon="solar:document-text-bold"
-                     width="19">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="lab-result-info">
-
-                  <div class="lab-result-name">
-                     Siti Rahma
-                  </div>
-
-                  <div class="lab-result-meta">
-                     Glukosa Darah • 126 mg/dL • 08:37
-                  </div>
-
-               </div>
-
-               <span
-                  class="lab-result-status lab-ready">
-                  VALID
-               </span>
-
-            </div>
-
-
-            <div class="lab-result">
-
-               <div class="lab-result-icon">
-
-                  <iconify-icon
-                     icon="solar:document-text-bold"
-                     width="19">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="lab-result-info">
-
-                  <div class="lab-result-name">
-                     Budi Santoso
-                  </div>
-
-                  <div class="lab-result-meta">
-                     Leukosit • 12.500 /µL • 08:30
-                  </div>
-
-               </div>
-
-               <span
-                  class="lab-result-status lab-critical">
-                  ABNORMAL
-               </span>
-
-            </div>
-
-
-            <div class="lab-result">
-
-               <div class="lab-result-icon">
-
-                  <iconify-icon
-                     icon="solar:document-text-bold"
-                     width="19">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="lab-result-info">
-
-                  <div class="lab-result-name">
-                     Nur Aisyah
-                  </div>
-
-                  <div class="lab-result-meta">
-                     Kreatinin • 0.9 mg/dL • 08:24
-                  </div>
-
-               </div>
-
-               <span
-                  class="lab-result-status lab-ready">
-                  VALID
-               </span>
-
+            <div id="labResultList">
+               <div class="lab-loading">Memuat hasil laboratorium...</div>
             </div>
 
          </div>
@@ -1339,133 +1052,8 @@
             </div>
 
 
-            <div class="lab-process-item">
-
-               <div class="lab-process-top">
-
-                  <span class="lab-process-name">
-                     Hematologi
-                  </span>
-
-                  <span class="lab-process-value">
-                     32
-                  </span>
-
-               </div>
-
-               <div class="lab-progress">
-
-                  <div
-                     class="lab-progress-bar"
-                     style="width:72%;">
-                  </div>
-
-               </div>
-
-            </div>
-
-
-            <div class="lab-process-item">
-
-               <div class="lab-process-top">
-
-                  <span class="lab-process-name">
-                     Kimia Klinik
-                  </span>
-
-                  <span class="lab-process-value">
-                     24
-                  </span>
-
-               </div>
-
-               <div class="lab-progress">
-
-                  <div
-                     class="lab-progress-bar blue"
-                     style="width:58%;">
-                  </div>
-
-               </div>
-
-            </div>
-
-
-            <div class="lab-process-item">
-
-               <div class="lab-process-top">
-
-                  <span class="lab-process-name">
-                     Urinalisa
-                  </span>
-
-                  <span class="lab-process-value">
-                     14
-                  </span>
-
-               </div>
-
-               <div class="lab-progress">
-
-                  <div
-                     class="lab-progress-bar green"
-                     style="width:36%;">
-                  </div>
-
-               </div>
-
-            </div>
-
-
-            <div class="lab-process-item">
-
-               <div class="lab-process-top">
-
-                  <span class="lab-process-name">
-                     Imunologi
-                  </span>
-
-                  <span class="lab-process-value">
-                     9
-                  </span>
-
-               </div>
-
-               <div class="lab-progress">
-
-                  <div
-                     class="lab-progress-bar orange"
-                     style="width:23%;">
-                  </div>
-
-               </div>
-
-            </div>
-
-
-            <div class="lab-process-item">
-
-               <div class="lab-process-top">
-
-                  <span class="lab-process-name">
-                     Lainnya
-                  </span>
-
-                  <span class="lab-process-value">
-                     7
-                  </span>
-
-               </div>
-
-               <div class="lab-progress">
-
-                  <div
-                     class="lab-progress-bar"
-                     style="width:18%;">
-                  </div>
-
-               </div>
-
+            <div id="labTypeList">
+               <div class="lab-loading">Memuat jenis pemeriksaan...</div>
             </div>
 
          </div>
@@ -1505,81 +1093,8 @@
             </div>
 
 
-            <div class="lab-alert danger">
-
-               <div class="lab-alert-icon">
-
-                  <iconify-icon
-                     icon="solar:danger-triangle-bold"
-                     width="18">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="lab-alert-content">
-
-                  <div class="lab-alert-title">
-                     Hasil Abnormal
-                  </div>
-
-                  <div class="lab-alert-text">
-                     Terdapat 3 hasil pemeriksaan dengan nilai di luar reference range.
-                  </div>
-
-               </div>
-
-            </div>
-
-
-            <div class="lab-alert warning">
-
-               <div class="lab-alert-icon">
-
-                  <iconify-icon
-                     icon="solar:clock-circle-bold"
-                     width="18">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="lab-alert-content">
-
-                  <div class="lab-alert-title">
-                     Spesimen Menunggu
-                  </div>
-
-                  <div class="lab-alert-text">
-                     18 spesimen belum masuk ke proses pemeriksaan.
-                  </div>
-
-               </div>
-
-            </div>
-
-
-            <div class="lab-alert info">
-
-               <div class="lab-alert-icon">
-
-                  <iconify-icon
-                     icon="solar:document-text-bold"
-                     width="18">
-                  </iconify-icon>
-
-               </div>
-
-               <div class="lab-alert-content">
-
-                  <div class="lab-alert-title">
-                     Hasil Belum Divalidasi
-                  </div>
-
-                  <div class="lab-alert-text">
-                     Terdapat 6 hasil pemeriksaan yang masih menunggu validasi analis.
-                  </div>
-
-               </div>
-
+            <div id="labAlertList">
+               <div class="lab-loading">Memuat alert...</div>
             </div>
 
          </div>
@@ -1920,149 +1435,572 @@
 
 
 <script>
-   document.addEventListener("DOMContentLoaded", function() {
+   (function() {
 
-      const periode =
-         document.getElementById("labPeriode");
+      function initLabDashboard() {
 
-      const tanggalMulai =
-         document.getElementById("labTanggalMulai");
+         const periode = document.getElementById("labPeriode");
+         const tanggalMulai = document.getElementById("labTanggalMulai");
+         const tanggalSelesai = document.getElementById("labTanggalSelesai");
+         const btnFilter = document.getElementById("btnFilterLab");
 
-      const tanggalSelesai =
-         document.getElementById("labTanggalSelesai");
+         if (!periode || !tanggalMulai || !tanggalSelesai || !btnFilter) {
+            console.warn("Elemen filter dashboard laboratorium tidak ditemukan.");
+            return;
+         }
 
-      const btnFilter =
-         document.getElementById("btnFilterLab");
+         const endpoint = "controller/dashboard/labDashboardController.php?action=dashboard";
 
+         function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            return year + "-" + month + "-" + day;
+         }
 
-      function formatDate(date) {
+         function escapeHtml(value) {
+            return String(value === null || value === undefined ? "" : value)
+               .replace(/&/g, "&amp;")
+               .replace(/</g, "&lt;")
+               .replace(/>/g, "&gt;")
+               .replace(/"/g, "&quot;")
+               .replace(/'/g, "&#039;");
+         }
 
-         const year =
-            date.getFullYear();
+         function setText(id, value) {
+            const el = document.getElementById(id);
+            if (el) {
+               el.textContent = value;
+            }
+         }
 
-         const month =
-            String(date.getMonth() + 1)
-            .padStart(2, "0");
+         function setHtml(id, html) {
+            const el = document.getElementById(id);
+            if (el) {
+               el.innerHTML = html;
+            }
+         }
 
-         const day =
-            String(date.getDate())
-            .padStart(2, "0");
+         function showLoading() {
+            [
+               "labQueueList",
+               "labProcessList",
+               "labResultList",
+               "labTypeList",
+               "labAlertList"
+            ].forEach(function(id) {
+               setHtml(id, '<div class="lab-loading">Memuat data...</div>');
+            });
+         }
 
-         return `${year}-${month}-${day}`;
-      }
+         function showError(message) {
+            [
+               "labQueueList",
+               "labProcessList",
+               "labResultList",
+               "labTypeList",
+               "labAlertList"
+            ].forEach(function(id) {
+               setHtml(id, '<div class="lab-empty">Data tidak dapat dimuat.</div>');
+            });
 
+            console.error("Lab Dashboard Error:", message);
 
-      periode.addEventListener("change", function() {
+            if (typeof Swal !== "undefined") {
+               Swal.fire({
+                  icon: "error",
+                  title: "Gagal Memuat Dashboard",
+                  text: message || "Terjadi kesalahan saat mengambil data laboratorium."
+               });
+            } else {
+               alert(message || "Gagal memuat dashboard laboratorium.");
+            }
+         }
 
-         const today = new Date();
+         function renderKpi(data) {
+            const kpi = data.kpi || {};
 
+            const total = Number(kpi.permintaan_pemeriksaan || 0);
+            const waiting = Number(kpi.menunggu_pemeriksaan || 0);
+            const processing = Number(kpi.sedang_diproses || 0);
+            const completed = Number(kpi.hasil_selesai || 0);
+            const percent = Number(kpi.persentase_selesai || 0);
 
-         if (this.value === "today") {
+            setText("labPermintaan", total.toLocaleString("id-ID"));
+            setText("labMenunggu", waiting.toLocaleString("id-ID"));
+            setText("labProses", processing.toLocaleString("id-ID"));
+            setText("labSelesai", completed.toLocaleString("id-ID"));
 
-            const date =
-               formatDate(today);
-
-            tanggalMulai.value = date;
-            tanggalSelesai.value = date;
-
-         } else if (this.value === "week") {
-
-            const start =
-               new Date(today);
-
-            start.setDate(
-               today.getDate() -
-               today.getDay() +
-               1
+            setText(
+               "labPermintaanSub",
+               "Periode " + (data.period ? data.period.start : "") +
+               " s/d " + (data.period ? data.period.end : "")
             );
 
-            tanggalMulai.value =
-               formatDate(start);
+            setText(
+               "labSelesaiSub",
+               "Persentase selesai: " + percent + "%"
+            );
+         }
 
-            tanggalSelesai.value =
-               formatDate(today);
+         function renderQueue(data) {
+            const items = data.queue && Array.isArray(data.queue.items) ?
+               data.queue.items :
+               [];
 
-         } else if (this.value === "month") {
+            const total = Number(
+               data.queue && data.queue.total !== undefined ?
+               data.queue.total :
+               items.length
+            );
 
-            const start =
-               new Date(
+            setText("labQueueBadge", total.toLocaleString("id-ID"));
+
+            if (!items.length) {
+               setHtml(
+                  "labQueueList",
+                  '<div class="lab-empty">Tidak ada antrean pemeriksaan pada periode ini.</div>'
+               );
+               return;
+            }
+
+            setHtml("labQueueList", items.map(function(item) {
+
+               const statusClass = item.status_class ||
+                  (
+                     item.status === "completed" ?
+                     "lab-ready" :
+                     item.status === "processing" ?
+                     "lab-process" :
+                     "lab-waiting"
+                  );
+
+               return `
+               <div class="lab-queue">
+                  <div class="lab-queue-number">
+                     ${escapeHtml(item.queue_number || "-")}
+                  </div>
+
+                  <div class="lab-queue-info">
+                     <div class="lab-queue-name">
+                        ${escapeHtml(item.patient_name || "-")}
+                     </div>
+
+                     <div class="lab-queue-meta">
+                        RM-${escapeHtml(item.rm || "-")}
+                        • ${escapeHtml(item.inspection_name || "-")}
+                        • ${escapeHtml(item.inspection_source || "-")}
+                     </div>
+                  </div>
+
+                  <span class="lab-queue-status ${escapeHtml(statusClass)}">
+                     ${escapeHtml(item.status_label || "MENUNGGU")}
+                  </span>
+               </div>
+            `;
+            }).join(""));
+         }
+
+         function renderProcess(data) {
+            const kpi = data.kpi || {};
+            const process = data.process || {};
+
+            const total = Number(kpi.permintaan_pemeriksaan || 0);
+            const completed = Number(kpi.hasil_selesai || 0);
+            const processing = Number(kpi.sedang_diproses || 0);
+            const validation = Number(kpi.hasil_validasi || 0);
+
+            // Schema belum menyediakan status proses spesimen/pemeriksaan/validasi.
+            // Karena itu jangan membuat angka palsu.
+            const penerimaan = process.penerimaan_spesimen !== null ?
+               Number(process.penerimaan_spesimen || 0) :
+               (total > 0 ? 100 : 0);
+
+            const pemeriksaan = process.pemeriksaan !== null ?
+               Number(process.pemeriksaan || 0) :
+               (total > 0 ? Math.round(((processing + completed) / total) * 100) : 0);
+
+            const validasi = process.validasi_hasil !== null ?
+               Number(process.validasi_hasil || 0) :
+               (total > 0 ? Math.round((validation / total) * 100) : 0);
+
+            const terkirim = process.hasil_terkirim !== null ?
+               Number(process.hasil_terkirim || 0) :
+               Number(kpi.persentase_selesai || 0);
+
+            const rows = [
+               ["Penerimaan Spesimen", penerimaan, "green"],
+               ["Pemeriksaan", pemeriksaan, ""],
+               ["Validasi Hasil", validasi, "blue"],
+               ["Hasil Terkirim", terkirim, "green"]
+            ];
+
+            setHtml("labProcessList", rows.map(function(row) {
+               const value = Math.max(0, Math.min(100, Number(row[1] || 0)));
+
+               return `
+               <div class="lab-process-item">
+                  <div class="lab-process-top">
+                     <span class="lab-process-name">${row[0]}</span>
+                     <span class="lab-process-value">${value}%</span>
+                  </div>
+
+                  <div class="lab-progress">
+                     <div class="lab-progress-bar ${row[2]}"
+                          style="width:${value}%;">
+                     </div>
+                  </div>
+               </div>
+            `;
+            }).join(""));
+         }
+
+         function renderResults(data) {
+            const items = data.results && Array.isArray(data.results.items) ?
+               data.results.items :
+               [];
+
+            const total = Number(
+               data.results && data.results.total !== undefined ?
+               data.results.total :
+               items.length
+            );
+
+            setText("labResultBadge", total.toLocaleString("id-ID"));
+
+            if (!items.length) {
+               setHtml(
+                  "labResultList",
+                  '<div class="lab-empty">Belum ada hasil laboratorium pada periode ini.</div>'
+               );
+               return;
+            }
+
+            setHtml("labResultList", items.map(function(item) {
+
+               // Schema saat ini belum mempunyai reference range/flag abnormal.
+               // Jadi status tidak boleh dibuat ABNORMAL secara asumsi.
+               const statusClass = item.status === "completed" ?
+                  "lab-ready" :
+                  "lab-waiting";
+
+               return `
+               <div class="lab-result">
+
+                  <div class="lab-result-icon">
+                     <iconify-icon
+                        icon="solar:document-text-bold"
+                        width="19">
+                     </iconify-icon>
+                  </div>
+
+                  <div class="lab-result-info">
+                     <div class="lab-result-name">
+                        ${escapeHtml(item.patient_name || "-")}
+                     </div>
+
+                     <div class="lab-result-meta">
+                        ${escapeHtml(item.inspection_name || "-")}
+                        • ${escapeHtml(item.hasil || "-")}
+                        • ${escapeHtml(item.created_at || "-")}
+                     </div>
+                  </div>
+
+                  <span class="lab-result-status ${statusClass}">
+                     ${escapeHtml(item.status_label || "HASIL")}
+                  </span>
+
+               </div>
+            `;
+            }).join(""));
+         }
+
+         function renderTypes(data) {
+            const container = document.getElementById("labTypeList");
+
+            if (!container) {
+               console.warn("Element #labTypeList tidak ditemukan.");
+               return;
+            }
+
+            const source = data.types || {};
+            const items = Array.isArray(source.items) ? source.items : [];
+
+            if (!items.length) {
+               container.innerHTML =
+                  '<div class="lab-empty">Belum ada jenis pemeriksaan pada periode ini.</div>';
+               return;
+            }
+
+            const max = Math.max.apply(
+               null,
+               items.map(function(item) {
+                  return Number(item.total || 0);
+               })
+            ) || 1;
+
+            container.innerHTML = items.map(function(item, index) {
+               const total = Number(item.total || 0);
+               const width = Math.round((total / max) * 100);
+
+               const classes = ["", "blue", "green", "orange"];
+               const barClass = classes[index % classes.length];
+
+               return `
+               <div class="lab-process-item">
+
+                  <div class="lab-process-top">
+                     <span class="lab-process-name">
+                        ${escapeHtml(item.label || "-")}
+                     </span>
+
+                     <span class="lab-process-value">
+                        ${total.toLocaleString("id-ID")}
+                     </span>
+                  </div>
+
+                  <div class="lab-progress">
+                     <div class="lab-progress-bar ${barClass}"
+                          style="width:${width}%;">
+                     </div>
+                  </div>
+
+               </div>
+            `;
+            }).join("");
+         }
+
+         function renderAlerts(data) {
+            const container = document.getElementById("labAlertList");
+
+            if (!container) {
+               console.warn("Element #labAlertList tidak ditemukan.");
+               return;
+            }
+
+            const source = data.alerts || {};
+            const items = Array.isArray(source.items) ? source.items : [];
+
+            if (!items.length) {
+               container.innerHTML = `
+               <div class="lab-alert info">
+                  <div class="lab-alert-icon">
+                     <iconify-icon
+                        icon="solar:check-circle-bold"
+                        width="18">
+                     </iconify-icon>
+                  </div>
+
+                  <div class="lab-alert-content">
+                     <div class="lab-alert-title">
+                        Tidak Ada Alert
+                     </div>
+
+                     <div class="lab-alert-text">
+                        Tidak ada pemeriksaan yang membutuhkan perhatian pada periode ini.
+                     </div>
+                  </div>
+               </div>
+            `;
+               return;
+            }
+
+            container.innerHTML = items.map(function(item) {
+
+               const type = ["danger", "warning", "info"].indexOf(item.type) >= 0 ?
+                  item.type :
+                  "info";
+
+               const icon = item.icon ||
+                  (
+                     type === "danger" ?
+                     "solar:danger-triangle-bold" :
+                     type === "warning" ?
+                     "solar:clock-circle-bold" :
+                     "solar:document-text-bold"
+                  );
+
+               return `
+               <div class="lab-alert ${type}">
+
+                  <div class="lab-alert-icon">
+                     <iconify-icon
+                        icon="${escapeHtml(icon)}"
+                        width="18">
+                     </iconify-icon>
+                  </div>
+
+                  <div class="lab-alert-content">
+                     <div class="lab-alert-title">
+                        ${escapeHtml(item.title || "Informasi")}
+                     </div>
+
+                     <div class="lab-alert-text">
+                        ${escapeHtml(item.text || "")}
+                     </div>
+                  </div>
+
+               </div>
+            `;
+            }).join("");
+         }
+
+         function renderSummary(data) {
+            const summary = data.summary || {};
+
+            setText(
+               "labTAT",
+               summary.turn_around_time_menit !== null &&
+               summary.turn_around_time_menit !== undefined ?
+               summary.turn_around_time_menit + " Menit" :
+               "-"
+            );
+
+            setText(
+               "labValidasi",
+               summary.validasi_hasil !== null &&
+               summary.validasi_hasil !== undefined ?
+               summary.validasi_hasil + "%" :
+               "-"
+            );
+
+            setText(
+               "labAbnormal",
+               summary.hasil_abnormal !== null &&
+               summary.hasil_abnormal !== undefined ?
+               Number(summary.hasil_abnormal).toLocaleString("id-ID") :
+               "-"
+            );
+
+            setText(
+               "labSummarySelesai",
+               Number(summary.pemeriksaan_selesai || 0).toLocaleString("id-ID")
+            );
+         }
+
+         function loadDashboard() {
+
+            const mulai = tanggalMulai.value;
+            const selesai = tanggalSelesai.value;
+
+            if (!mulai || !selesai) {
+               return;
+            }
+
+            if (mulai > selesai) {
+               if (typeof Swal !== "undefined") {
+                  Swal.fire({
+                     icon: "warning",
+                     title: "Periode Tidak Valid",
+                     text: "Tanggal mulai tidak boleh lebih besar dari tanggal selesai."
+                  });
+               }
+               return;
+            }
+
+            showLoading();
+
+            const url =
+               endpoint +
+               "&start_date=" + encodeURIComponent(mulai) +
+               "&end_date=" + encodeURIComponent(selesai);
+
+            fetch(url, {
+                  method: "GET",
+                  headers: {
+                     "X-Requested-With": "XMLHttpRequest",
+                     "Accept": "application/json"
+                  },
+                  cache: "no-store"
+               })
+               .then(function(response) {
+
+                  if (!response.ok) {
+                     throw new Error("HTTP " + response.status);
+                  }
+
+                  return response.text();
+               })
+               .then(function(raw) {
+
+                  let data;
+
+                  try {
+                     data = JSON.parse(raw);
+                  } catch (e) {
+                     console.error("Response controller bukan JSON:", raw);
+                     throw new Error(
+                        "Controller tidak mengembalikan JSON yang valid."
+                     );
+                  }
+
+                  if (!data || data.status !== true) {
+                     throw new Error(
+                        data && data.message ?
+                        data.message :
+                        "Response dashboard tidak valid."
+                     );
+                  }
+
+                  console.log("Lab Dashboard Data:", data);
+
+                  renderKpi(data);
+                  renderQueue(data);
+                  renderProcess(data);
+                  renderResults(data);
+                  renderTypes(data);
+                  renderAlerts(data);
+                  renderSummary(data);
+               })
+               .catch(function(error) {
+                  showError(error.message);
+               });
+         }
+
+         periode.addEventListener("change", function() {
+
+            const today = new Date();
+
+            if (this.value === "today") {
+
+               const date = formatDate(today);
+
+               tanggalMulai.value = date;
+               tanggalSelesai.value = date;
+
+            } else if (this.value === "week") {
+
+               const start = new Date(today);
+               const day = today.getDay() || 7;
+
+               start.setDate(today.getDate() - day + 1);
+
+               tanggalMulai.value = formatDate(start);
+               tanggalSelesai.value = formatDate(today);
+
+            } else if (this.value === "month") {
+
+               const start = new Date(
                   today.getFullYear(),
                   today.getMonth(),
                   1
                );
 
-            tanggalMulai.value =
-               formatDate(start);
-
-            tanggalSelesai.value =
-               formatDate(today);
-
-         }
-
-      });
-
-
-      btnFilter.addEventListener("click", function() {
-
-         const mulai =
-            tanggalMulai.value;
-
-         const selesai =
-            tanggalSelesai.value;
-
-
-         if (!mulai || !selesai) {
-
-            if (typeof Swal !== "undefined") {
-
-               Swal.fire({
-                  icon: "warning",
-                  title: "Periode Belum Lengkap",
-                  text: "Silakan pilih tanggal mulai dan tanggal selesai."
-               });
-
-            } else {
-
-               alert(
-                  "Silakan pilih tanggal terlebih dahulu."
-               );
-
+               tanggalMulai.value = formatDate(start);
+               tanggalSelesai.value = formatDate(today);
             }
+         });
 
-            return;
-         }
+         btnFilter.addEventListener("click", loadDashboard);
 
+         // Penting:
+         // Jangan memakai DOMContentLoaded karena view dashboard kemungkinan
+         // dimuat melalui AJAX setelah DOMContentLoaded sudah selesai.
+         loadDashboard();
+      }
 
-         if (mulai > selesai) {
+      // Jalankan langsung jika script view di-inject melalui AJAX.
+      initLabDashboard();
 
-            if (typeof Swal !== "undefined") {
-
-               Swal.fire({
-                  icon: "warning",
-                  title: "Periode Tidak Valid",
-                  text: "Tanggal mulai tidak boleh lebih besar dari tanggal selesai."
-               });
-
-            } else {
-
-               alert(
-                  "Tanggal mulai tidak boleh lebih besar dari tanggal selesai."
-               );
-
-            }
-
-            return;
-         }
-
-
-         console.log(
-            "Filter Laboratorium:",
-            mulai,
-            "sampai",
-            selesai
-         );
-
-      });
-
-   });
+   })();
 </script>
