@@ -398,7 +398,7 @@ date_default_timezone_set('Asia/Jakarta');
     <div class="modal-content">
 
       <div class="modal-header text-dark">
-        <h5 class="modal-title">📝 Vital Sign</h5>
+        <h5 class="modal-title">Vital Sign</h5>
         <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
       </div>
 
@@ -424,16 +424,16 @@ date_default_timezone_set('Asia/Jakarta');
               <option value="Tidak Sadar">Tidak Sadar</option>
             </select>
           </div>
+
+          <!-- Input Sistole dan Diastole (Tekanan Darah) -->
           <div class="col-md-4">
-            <label class="form-label">Tekanan Darah (mmHg)</label>
-
+            <label class="form-label">Tekanan Darah (mmHg) <span class="text-danger">*</span></label>
             <div class="d-flex gap-2">
-              <input type="number" id="sistolik" class="form-control" placeholder="Sistolik" required>
+              <input type="number" id="sistole" name="sistole" class="form-control" placeholder="Sistole" required>
               <span class="align-self-center">/</span>
-              <input type="number" id="diastolik" class="form-control" placeholder="Diastolik" required>
+              <input type="number" id="diastole" name="diastole" class="form-control" placeholder="Diastole" required>
             </div>
-
-            <!-- hidden untuk backend -->
+            <!-- hidden untuk backend jika disatukan (opsional) -->
             <input type="hidden" id="tekanan_darah" name="tekanan_darah">
           </div>
 
@@ -441,7 +441,7 @@ date_default_timezone_set('Asia/Jakarta');
             <label for="suhu" class="form-label">Suhu (°C) <span class="text-danger">*</span></label>
             <input type="number" step="0.1" id="suhu" required name="suhu" class="form-control">
           </div>
-          <div class="col-md-4">
+          <div class="col-md-4 mt-2">
             <label for="nadi" class="form-label">Nadi (x/menit) <span class="text-danger">*</span></label>
             <input type="number" id="nadi" name="nadi" required class="form-control">
           </div>
@@ -466,12 +466,18 @@ date_default_timezone_set('Asia/Jakarta');
             <input type="number" readonly id="bmi" name="bmi" required class="form-control bg-light">
           </div>
           <div class="col-md-4 mt-2">
-            <label class="form-label">Keterangan</label>
+            <label class="form-label">Keterangan BMI</label>
             <input type="text" id="bmi_ket" name="bmi_ket" readonly class="form-control bg-light">
+          </div>
+
+          <!-- Tambahan Input Lingkar Perut -->
+          <div class="col-md-4 mt-2">
+            <label for="lingkar_perut" class="form-label">Lingkar Perut (cm)</label>
+            <input type="number" id="lingkar_perut" name="lingkar_perut" class="form-control">
           </div>
         </div>
 
-        <div class="mb-3">
+        <div class="mb-3 mt-3">
           <label class="form-label">Catatan Screening</label>
           <textarea id="sc_catatan" class="form-control"></textarea>
         </div>
@@ -480,7 +486,7 @@ date_default_timezone_set('Asia/Jakarta');
 
       <div class="modal-footer">
         <button class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-        <button class="btn btn-primary" id="btnSaveScreening">💾 Simpan</button>
+        <button class="btn btn-primary" id="btnSaveScreening">Simpan</button>
       </div>
 
     </div>
@@ -1356,19 +1362,16 @@ date_default_timezone_set('Asia/Jakarta');
 </script>
 <script>
   $(document).on('click', '.screening-btn', function() {
-
     let id = $(this).data('id');
-
     $('#screening_id_visit').val(id);
     fetch(`controller/visit/getDetailPemeriksaan?id=${id}`)
       .then(res => res.json())
       .then(resp => {
-        if (resp.status === 'success') {
+        if (resp.status === true) {
           let d = resp.data;
           $('#sc_keluhan').val(d.anamnesa ?? '');
           $('#sc_catatan').val(d.catatan_screening ?? '');
           $('#kondisi_masuk').val(d.kondisi_masuk ?? '');
-
           $('#suhu').val(d.suhu ?? '');
           $('#nadi').val(d.nadi ?? '');
           $('#respirasi').val(d.respirasi ?? '');
@@ -1377,43 +1380,63 @@ date_default_timezone_set('Asia/Jakarta');
           $('#berat').val(d.berat_badan ?? '');
           $('#bmi').val(d.bmi ?? '');
           $('#bmi_ket').val(d.bmi_keterangan ?? '');
-
-          // 🔥 SPLIT TEKANAN DARAH
+          $('#lingkar_perut').val(d.lingkar_perut ?? '');
           if (d.tekanan_darah && d.tekanan_darah.includes('/')) {
             const [s, di] = d.tekanan_darah.split('/');
-            $('#sistolik').val(s);
-            $('#diastolik').val(di);
+            $('#sistole').val(s);
+            $('#diastole').val(di);
           } else {
-            $('#sistolik').val('');
-            $('#diastolik').val('');
+            $('#sistole').val(d.sistole ?? '');
+            $('#diastole').val(d.diastole ?? '');
           }
-
         } else {
           console.log("Data kosong → mode input baru");
+          $('#sc_keluhan, #sc_catatan, #sistole, #diastole, #suhu, #nadi, #respirasi, #saturasi, #tinggi, #berat, #bmi, #bmi_ket, #lingkar_perut').val('');
         }
-
         $('#screeningModal').modal('show');
-
+      })
+      .catch(err => {
+        console.error("Terjadi kesalahan fetch:", err);
       });
+  });
 
+
+  // Variabel global untuk menahan agar modal tidak bisa diclose
+  let isSubmittingScreening = false;
+
+  // Mencegah modal ditutup (lewat klik di luar modal atau tombol ESC) saat sedang submit
+  $('#screeningModal').on('hide.bs.modal', function(e) {
+    if (isSubmittingScreening) {
+      e.preventDefault(); // Batalkan penutupan modal
+    }
   });
 
   $('#btnSaveScreening').on('click', function() {
-    const sistolik = $('#sistolik').val();
-    const diastolik = $('#diastolik').val();
+    const sistole = $('#sistole').val();
+    const diastole = $('#diastole').val();
+    const lingkarPerut = $('#lingkar_perut').val();
 
-    if (!sistolik || !diastolik) {
-      alert("Tekanan darah harus diisi!");
+    // Validasi dengan SweetAlert
+    if (!sistole || !diastole) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Perhatian!',
+        text: 'Tekanan darah (Sistole dan Diastole) harus diisi!',
+        confirmButtonText: 'Mengerti'
+      });
       return;
     }
 
-    const tekananDarah = `${sistolik}/${diastolik}`;
+    // Persiapan Data
+    const tekananDarah = `${sistole}/${diastole}`;
     const data = {
       id_visit: $('#screening_id_visit').val(),
       keluhan: $('#sc_keluhan').val(),
       catatan: $('#sc_catatan').val(),
       kondisi_masuk: $('#kondisi_masuk').val(),
       tekanan_darah: tekananDarah,
+      sistole: sistole,
+      diastole: diastole,
       suhu: $('#suhu').val(),
       nadi: $('#nadi').val(),
       respirasi: $('#respirasi').val(),
@@ -1421,24 +1444,73 @@ date_default_timezone_set('Asia/Jakarta');
       tinggi: $('#tinggi').val(),
       berat: $('#berat').val(),
       bmi: $('#bmi').val(),
-      bmi_ket: $('#bmi_ket').val()
+      bmi_ket: $('#bmi_ket').val(),
+      lingkar_perut: lingkarPerut
     };
 
-    fetch('controller/visit/saveScreening.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      })
-      .then(res => res.json())
-      .then(resp => {
+    const $btn = $(this);
+    const originalBtnText = $btn.html();
+
+    // --- MULAI PROSES LOADING ---
+    isSubmittingScreening = true;
+
+    // Ubah tombol jadi loading dan disable tombol Simpan
+    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menyimpan...');
+
+    // Disable juga tombol Batal (X) dan tombol "Batal" agar tidak bisa diklik
+    $('#screeningModal .btn-close, #screeningModal .btn-light').prop('disabled', true);
+
+    // Proses AJAX
+    $.ajax({
+      url: 'controller/visit/saveScreening.php',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify(data),
+      dataType: 'json',
+      success: function(resp) {
         if (resp.status === 'success') {
-          alert('Screening berhasil disimpan');
-          $('#screeningModal').modal('hide');
-          $('#periodeTable').DataTable().ajax.reload(null, false);
+          // Notifikasi Sukses
+          Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: 'Screening berhasil disimpan.',
+            showConfirmButton: false,
+            timer: 1500 // Otomatis tertutup setelah 1.5 detik
+          }).then(() => {
+            // Buka kembali izin close modal lalu tutup modal
+            isSubmittingScreening = false;
+            $('#screeningModal').modal('hide');
+
+            // Reload datatable
+            $('#periodeTable').DataTable().ajax.reload(null, false);
+          });
+        } else {
+          // Notifikasi Gagal dari Backend
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: resp.message || 'Terjadi kesalahan saat menyimpan data.'
+          });
         }
-      });
+      },
+      error: function(xhr, status, error) {
+        // Notifikasi Error Jaringan/Server
+        Swal.fire({
+          icon: 'error',
+          title: 'Kesalahan Sistem!',
+          text: 'Terjadi kesalahan koneksi atau server. Silakan coba lagi.'
+        });
+        console.error(error);
+      },
+      complete: function() {
+        // --- SELESAI PROSES ---
+        // Kembalikan UI ke kondisi semula (hanya jika bukan sukses otomatis)
+        // Jika sukses, state tombol akan keriset otomatis saat modal dibuka lagi nanti
+        isSubmittingScreening = false;
+        $btn.prop('disabled', false).html(originalBtnText);
+        $('#screeningModal .btn-close, #screeningModal .btn-light').prop('disabled', false);
+      }
+    });
   });
   $('.screening-btn').each(function() {
     if ($(this).data('filled')) {
