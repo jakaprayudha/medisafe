@@ -65,6 +65,8 @@ $query = "
         pv.bmi,
         pv.bmi_keterangan,
         pv.saturasi,
+        pv.lingkar_perut,
+        pv.kondisi_masuk,
 
         mp.patient_datebirth
 
