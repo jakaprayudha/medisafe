@@ -16,7 +16,7 @@ if ($status_antrol) {
         "alasan"      => $alasan
     ];
     // echo json_encode($payload, JSON_PRETTY_PRINT);die();
-    $result = bpjsPost("/antrean/batal", $payload);
+    $result = antrolPost("/antrean/batal", $payload);
     // if ($result['code'] != '200') {
     //     $msg = $result['message'];
     //     if ($msg == null) {
