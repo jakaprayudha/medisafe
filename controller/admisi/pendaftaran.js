@@ -542,10 +542,9 @@ $(function () {
     }
     APP.createpeserta = function () {
         var data = $('#isiform').serialize();
-
         $.ajax({
             type: "POST",
-            url: 'controller/admisi/services/prosesPendaftaranTunggal.php', // Arahkan ke file yang baru
+            url: 'controller/admisi/services/prosesPendaftaranTunggal.php',
             dataType: "json",
             data: data,
             success: function (res) {
@@ -553,7 +552,7 @@ $(function () {
                     Swal.fire({
                         icon: "error",
                         title: "Gagal",
-                        text: res.message, // Menampilkan error spesifik dari backend
+                        text: res.message,
                     });
                     APP.load_btn_non('#create', "Simpan Kunjungan");
                     return;
