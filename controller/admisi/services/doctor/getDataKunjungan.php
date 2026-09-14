@@ -29,7 +29,81 @@ if ($exist) {
         $stmt->execute();
         $hasil = $stmt->get_result();
     } else {
-        $stmt = $koneksi->prepare("SELECT pp.tanggal_daftar, pp.noKartu, pp.kdPoli, pv.id_visit, pp.kdTkp, pp.kunjSakit, pv.id_visit,pv.id_patient, pv.id_doctor, pv.code_doctor, pv.anamnesa AS keluhan, pv.catatan_screening, pv.tinggi_badan AS tinggiBadan, pv.berat_badan AS beratBadan, pv.lingkar_perut AS lingkarPerut,pv.sistole, pv.diastole, pv.suhu, pv.saturasi, pv.nadi AS heartRate, pv.respirasi AS respRate, p.patient_nik, CONCAT(TIMESTAMPDIFF(YEAR, p.patient_datebirth, CURDATE()), ' Tahun ',TIMESTAMPDIFF(MONTH, p.patient_datebirth, CURDATE()) % 12, ' Bulan ',DATEDIFF(CURDATE(),DATE_ADD(DATE_ADD(p.patient_datebirth,INTERVAL TIMESTAMPDIFF(YEAR, p.patient_datebirth, CURDATE()) YEAR),INTERVAL (TIMESTAMPDIFF(MONTH, p.patient_datebirth, CURDATE()) % 12) MONTH)), ' Hari') AS umur FROM pcare_pendaftaran AS pp INNER JOIN pasien_visit AS pv ON pp.nomor_visit = pv.visit_ID INNER JOIN ms_patient AS p ON p.patient_bpjs = pv.noKartu  WHERE nomor_visit = ? AND pv.id_customer = ?");
+        $stmt = $koneksi->prepare("SELECT 
+    pp.tanggal_daftar,
+    pp.noKartu,
+    pp.kdPoli,
+
+    pv.id_visit,
+    pp.kdTkp,
+    pp.kunjSakit,
+    pv.id_patient,
+    pv.id_doctor,
+    pv.code_doctor,
+
+    pv.anamnesa AS keluhan,
+    pv.catatan_screening,
+
+    COALESCE(NULLIF(pv.tinggi_badan, 0), pp.tinggiBadan) AS tinggiBadan,
+    COALESCE(NULLIF(pv.berat_badan, 0), pp.beratBadan) AS beratBadan,
+    COALESCE(NULLIF(pv.lingkar_perut, 0), pp.lingkarPerut) AS lingkarPerut,
+
+    COALESCE(NULLIF(pv.sistole, 0), pp.sistole) AS sistole,
+    COALESCE(NULLIF(pv.diastole, 0), pp.diastole) AS diastole,
+    COALESCE(NULLIF(pv.suhu, 0), pp.suhu) AS suhu,
+    COALESCE(NULLIF(pv.saturasi, 0), pp.saturasi) AS saturasi,
+
+    COALESCE(NULLIF(pv.nadi, 0), pp.heartRate) AS heartRate,
+    COALESCE(NULLIF(pv.respirasi, 0), pp.respRate) AS respRate,
+
+    p.patient_nik,
+
+    CONCAT(
+        TIMESTAMPDIFF(
+            YEAR,
+            p.patient_datebirth,
+            CURDATE()
+        ),
+        ' Tahun ',
+        TIMESTAMPDIFF(
+            MONTH,
+            p.patient_datebirth,
+            CURDATE()
+        ) % 12,
+        ' Bulan ',
+        DATEDIFF(
+            CURDATE(),
+            DATE_ADD(
+                DATE_ADD(
+                    p.patient_datebirth,
+                    INTERVAL TIMESTAMPDIFF(
+                        YEAR,
+                        p.patient_datebirth,
+                        CURDATE()
+                    ) YEAR
+                ),
+                INTERVAL (
+                    TIMESTAMPDIFF(
+                        MONTH,
+                        p.patient_datebirth,
+                        CURDATE()
+                    ) % 12
+                ) MONTH
+            )
+        ),
+        ' Hari'
+    ) AS umur
+
+FROM pcare_pendaftaran AS pp
+
+INNER JOIN pasien_visit AS pv 
+    ON pp.nomor_visit = pv.visit_ID
+
+INNER JOIN ms_patient AS p 
+    ON p.patient_bpjs = pv.noKartu
+
+WHERE pp.nomor_visit = ?
+  AND pv.id_customer = ?");
         $stmt->bind_param('ss', $nomor_visit, $idcustomer);
         $stmt->execute();
         $hasil = $stmt->get_result();
