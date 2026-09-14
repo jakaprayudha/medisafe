@@ -452,19 +452,14 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
     // console.log('DOKTER:', dokter);
     // callPatient(noAntrian, nama, poli, visit, dokter);
     let dokterRaw = (id_doctor || '').trim();
-    dokterRaw = dokterRaw.replace(/^dr\.?/i, 'dr. ');
     dokterRaw = dokterRaw.replace(/\s+/g, ' ').trim();
-    dokterRaw = dokterRaw.replace(/^dr\.\s+g\.\s+/i, 'dr. ');
-    let isPrefixDr = /^dr\./i.test(dokterRaw);
-    let isSuffixDr = /,\s*dr\.?$/i.test(dokterRaw);
-    let text;
-    if (isPrefixDr) {
-      text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan ${dokterRaw}`;
-    } else if (isSuffixDr) {
-      let cleanName = dokterRaw.replace(/,\s*dr\.?$/i, '').trim();
+    const isDoctor = /^(drg|dr)\.?\s+/i.test(dokterRaw);
+    let cleanName = dokterRaw;
+    if (isDoctor) {
+      cleanName = dokterRaw.replace(/^(drg|dr)\.?\s*/i, '').trim();
       text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan dokter ${cleanName}`;
-    } else {
-      text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan dokter ${dokterRaw}`;
+    } else { 
+      text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan ${cleanName}`;
     }
     // console.log(text);
     const requestId = crypto.randomUUID();
