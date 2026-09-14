@@ -22,7 +22,7 @@ if (str_contains($type, "BPJS")) {
         "waktu" => round(microtime(true) * 1000)
     ];
     // echo json_encode($payload, JSON_PRETTY_PRINT);
-    $result = bpjsPost('/antrean/panggil', $payload);
+    $result = antrolPost('/antrean/panggil', $payload);
     if ($stmt->execute()) {
         echo json_encode([
             'success' => true,
