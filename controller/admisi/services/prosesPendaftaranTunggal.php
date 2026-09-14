@@ -86,7 +86,7 @@ try {
     $angkaantrean = $resultAntrian['nomor'];
     $kodeAntri    = $resultAntrian['kode'];
     global $status_antrol;
-    if ($status_antrol) {
+    if ($status_antrol && $kunjSakit) {
         $payloadAntrean = [
             "nomorkartu" => $nomorkartu,
             "nik" => $nik,
