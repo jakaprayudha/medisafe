@@ -85,24 +85,27 @@ try {
     $nomorantrean = $resultAntrian['display'];
     $angkaantrean = $resultAntrian['nomor'];
     $kodeAntri    = $resultAntrian['kode'];
-    $payloadAntrean = [
-        "nomorkartu" => $nomorkartu,
-        "nik" => $nik,
-        "nohp" => $nohp,
-        "kodepoli" => $kodepoli,
-        "namapoli" => $namapoli,
-        "norm" => $norm,
-        "tanggalperiksa"  => $tanggalperiksa,
-        "kodedokter" => $kodedokter,
-        "namadokter" => $namadokterPcare,
-        "jampraktek" => $jampraktek,
-        "nomorantrean"    => $nomorantrean,
-        "angkaantrean" => $angkaantrean,
-        "keterangan" => ""
-    ];
-    $resAntrean = antrolPost("/antrean/add", $payloadAntrean);
-    if ($resAntrean['code'] != '200') {
-        throw new Exception($resAntrean['message'] ?? "Gagal mengambil antrean BPJS.");
+    global $status_antrol;
+    if ($status_antrol) {
+        $payloadAntrean = [
+            "nomorkartu" => $nomorkartu,
+            "nik" => $nik,
+            "nohp" => $nohp,
+            "kodepoli" => $kodepoli,
+            "namapoli" => $namapoli,
+            "norm" => $norm,
+            "tanggalperiksa"  => $tanggalperiksa,
+            "kodedokter" => $kodedokter,
+            "namadokter" => $namadokterPcare,
+            "jampraktek" => $jampraktek,
+            "nomorantrean"    => $nomorantrean,
+            "angkaantrean" => $angkaantrean,
+            "keterangan" => ""
+        ];
+        $resAntrean = antrolPost("/antrean/add", $payloadAntrean);
+        if ($resAntrean['code'] != '200') {
+            throw new Exception($resAntrean['message'] ?? "Gagal mengambil antrean BPJS.");
+        }
     }
     $payloadPendaftaran = [
         "kdProviderPeserta" => $kdProviderPeserta,
