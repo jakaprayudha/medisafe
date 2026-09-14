@@ -83,6 +83,7 @@
                                         <label class="form-label">Dokter <span class="text-danger">*</span></label>
                                         <select class="form-select" id="kodedokter" name="kdDokter"></select>
                                         <input type="hidden" name="nmDokter" id="namadokter">
+                                        <input type="hidden" name="nmDokterPcare" id="namadokterPcare">
                                         <input type="hidden" name="jampraktek" id="jampraktek">
                                     </div>
                                     <div class="col-md-6">
