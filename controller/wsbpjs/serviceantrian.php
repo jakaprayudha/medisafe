@@ -1,29 +1,49 @@
 <?php
 require_once __DIR__ . '/../../database/connect.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
-session_start();
-$idcustomer = $_SESSION['id_customer'];
-// $idcustomer = '25';
-$sql = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM `setting_antrol` WHERE id_customer = '$idcustomer'"));
-if ($sql) {
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// $idcustomer = $_SESSION['id_customer'];
+$idcustomer = '19';
+
+$sql_antrol = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM `setting_antrol` WHERE id_customer = '$idcustomer'"));
+if ($sql_antrol) {
     $status_antrol = true;
 } else {
     $status_antrol = false;
 }
-$base_url = $sql['base_url'];
-$service = $sql['service'];
-// date_default_timezone_set('Asia/Jakarta');
-$kodeppk = $sql['kodePPK'];
-$tanggal = date('Y-m-d');
-$tglbulan = date('d') . ' ' . getNamaBulan(date('n')) . ' ' . date('Y');
-$waktusekarang = date('Y-m-d H:i:s');
-$secretKey = $sql['secretkey'];
-$userkey = $sql['userkey'];
-$const_id = $sql['constid'];
-// $encodedSignature = base64_encode($signature);
 
-function generateSignature($const_id, $secretKey)
-{
+// UBAH VARIABEL GLOBAL MENGGUNAKAN PREFIX $antrol_
+$antrol_base_url = $sql_antrol['base_url'];
+$antrol_service = $sql_antrol['service'];
+// date_default_timezone_set('Asia/Jakarta');
+$antrol_kodeppk = $sql_antrol['kodePPK'];
+$antrol_tanggal = date('Y-m-d');
+
+// Pengecekan agar tidak bentrok dengan view.php
+if (!function_exists('getNamaBulan')) {
+    function getNamaBulan($bulan)
+    {
+        $daftarBulan = [
+            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        ];
+        return $daftarBulan[$bulan - 1];
+    }
+}
+
+$antrol_tglbulan = date('d') . ' ' . getNamaBulan(date('n')) . ' ' . date('Y');
+$antrol_waktusekarang = date('Y-m-d H:i:s');
+$antrol_secretKey = $sql_antrol['secretkey'];
+$antrol_userkey = $sql_antrol['userkey'];
+$antrol_const_id = $sql_antrol['constid'];
+
+
+// UBAH NAMA FUNGSI MENGGUNAKAN PREFIX antrol_
+function antrolGenerateSignature($const_id, $secretKey){
     date_default_timezone_set('UTC');
     $tStamp = strval(time());
     $signature = hash_hmac('sha256', $const_id . "&" . $tStamp, $secretKey, true);
@@ -33,27 +53,7 @@ function generateSignature($const_id, $secretKey)
     ];
 }
 
-function getNamaBulan($bulan)
-{
-    $daftarBulan = [
-        'Januari',
-        'Februari',
-        'Maret',
-        'April',
-        'Mei',
-        'Juni',
-        'Juli',
-        'Agustus',
-        'September',
-        'Oktober',
-        'November',
-        'Desember'
-    ];
-
-    return $daftarBulan[$bulan - 1];
-}
-
-function getHeaders($const_id, $tStamp, $signature, $userkey){
+function antrolGetHeaders($const_id, $tStamp, $signature, $userkey){
     return [
         "X-cons-id: $const_id",
         "X-timestamp: $tStamp",
@@ -63,22 +63,17 @@ function getHeaders($const_id, $tStamp, $signature, $userkey){
     ];
 }
 
-function bpjsGetService($endpoint)
-{
-    global $base_url, $service, $const_id, $secretKey, $userkey;
-    $url = rtrim($base_url, '/') . '/' . trim($service, '/') . '/' . ltrim($endpoint, '/');
-    $auth = generateSignature($const_id, $secretKey);
-    $headers = getHeaders(
-        $const_id,
+function antrolGetService($endpoint){
+    global $antrol_base_url, $antrol_service, $antrol_const_id, $antrol_secretKey, $antrol_userkey;
+    $url = rtrim($antrol_base_url, '/') . '/' . trim($antrol_service, '/') . '/' . ltrim($endpoint, '/');
+    $auth = antrolGenerateSignature($antrol_const_id, $antrol_secretKey);
+    $headers = antrolGetHeaders(
+        $antrol_const_id,
         $auth['timestamp'],
         $auth['signature'],
-        $userkey
+        $antrol_userkey
     );
-    // echo "<pre>";
-    // print_r($headers);
-    // echo "</pre>";die();
-    // echo $url;die();
-    // echo json_encode($payload, JSON_PRETTY_PRINT);die();
+    
     $ch = curl_init();
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,
@@ -90,28 +85,25 @@ function bpjsGetService($endpoint)
     ]);
     $response = curl_exec($ch);
     $err = curl_error($ch);
-    // echo $url;
-    // echo $response;die();
     curl_close($ch);
     if ($err) {
-        return bpjsError("cURL Error: " . $err);
+        return antrolError("cURL Error: " . $err);
     }
     if (!$response) {
-        return bpjsError("Tidak ada response dari server BPJS");
+        return antrolError("Tidak ada response dari server BPJS");
     }
-    return bpjsDecryptResponse(
+    return antrolDecryptResponse(
         $response,
-        $const_id,
-        $secretKey,
+        $antrol_const_id,
+        $antrol_secretKey,
         $auth['timestamp']
     );
 }
 
-function bpjsGet($endpoint, $config)
-{
+function antrolGet($endpoint, $config){
     $url = rtrim($config['base_url'], '/') . '/' . trim($config['service'], '/') . '/' . ltrim($endpoint, '/');
-    $auth = generateSignature($config['const_id'], $config['secretKey']);
-    $headers = getHeaders(
+    $auth = antrolGenerateSignature($config['const_id'], $config['secretKey']);
+    $headers = antrolGetHeaders(
         $config['const_id'],
         $auth['timestamp'],
         $auth['signature'],
@@ -129,18 +121,17 @@ function bpjsGet($endpoint, $config)
 
     $response = curl_exec($ch);
     $err = curl_error($ch);
-    // echo $response;die();
     curl_close($ch);
 
     if ($err) {
-        return bpjsError("cURL Error: " . $err);
+        return antrolError("cURL Error: " . $err);
     }
 
     if (!$response) {
-        return bpjsError("Tidak ada response dari server BPJS");
+        return antrolError("Tidak ada response dari server BPJS");
     }
 
-    return bpjsDecryptResponse(
+    return antrolDecryptResponse(
         $response,
         $config['const_id'],
         $config['secretKey'],
@@ -148,22 +139,17 @@ function bpjsGet($endpoint, $config)
     );
 }
 
-function bpjsPost($endpoint, array $payload, $method = "POST")
-{
-    global $base_url, $service, $const_id, $secretKey, $userkey;
-    $url = rtrim($base_url, '/') . '/' . trim($service, '/') . '/' . ltrim($endpoint, '/');
-    $auth = generateSignature($const_id, $secretKey);
-    $headers = getHeaders(
-        $const_id,
+function antrolPost($endpoint, array $payload, $method = "POST"){
+    global $antrol_base_url, $antrol_service, $antrol_const_id, $antrol_secretKey, $antrol_userkey;
+    $url = rtrim($antrol_base_url, '/') . '/' . trim($antrol_service, '/') . '/' . ltrim($endpoint, '/');
+    $auth = antrolGenerateSignature($antrol_const_id, $antrol_secretKey);
+    $headers = antrolGetHeaders(
+        $antrol_const_id,
         $auth['timestamp'],
         $auth['signature'],
-        $userkey
+        $antrol_userkey
     );
-    // echo "<pre>";
-    // print_r($headers);
-    // echo "</pre>";
-    // echo $url;die();
-    // echo json_encode($payload, JSON_PRETTY_PRINT);die();
+
     $ch = curl_init();
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,
@@ -176,28 +162,26 @@ function bpjsPost($endpoint, array $payload, $method = "POST")
     ]);
     $response = curl_exec($ch);
     $err = curl_error($ch);
-    // echo $response;die();
-    // echo $err;die();
     curl_close($ch);
+    
     if ($err) {
-        return bpjsError("cURL Error: " . $err);
+        return antrolError("cURL Error: " . $err);
     }
     if (!$response) {
-        return bpjsError("Tidak ada response dari server BPJS");
+        return antrolError("Tidak ada response dari server BPJS");
     }
-    return bpjsDecryptResponse(
+    return antrolDecryptResponse(
         $response,
-        $const_id,
-        $secretKey,
+        $antrol_const_id,
+        $antrol_secretKey,
         $auth['timestamp']
     );
 }
 
-function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp)
-{
+function antrolDecryptResponse($response, $consid, $secretKey, $tStamp){
     $json = json_decode($response, true);
     if (!$json || !isset($json['metadata'])) {
-        return bpjsError("Format response tidak valid");
+        return antrolError("Format response tidak valid");
     }
     $code = (string)($json['metadata']['code'] ?? '');
     if ($code !== '200') {
@@ -226,13 +210,13 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp)
             'data' => $rawResponse
         ];
     }
-    $decrypted = stringDecrypt($key, $rawResponse);
+    $decrypted = antrolStringDecrypt($key, $rawResponse);
     if (!$decrypted) {
-        return bpjsError("Decrypt gagal");
+        return antrolError("Decrypt gagal");
     }
     $decompressed = \LZCompressor\LZString::decompressFromEncodedURIComponent($decrypted);
     if (!$decompressed) {
-        return bpjsError("Decompress gagal");
+        return antrolError("Decompress gagal");
     }
     return [
         'success' => true,
@@ -242,8 +226,7 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp)
     ];
 }
 
-function stringDecrypt($key, $dtdecrypt)
-{
+function antrolStringDecrypt($key, $dtdecrypt){
     $encrypt_method = 'AES-256-CBC';
     $key_hash = hex2bin(hash('sha256', $key));
     $iv = substr($key_hash, 0, 16);
@@ -257,8 +240,7 @@ function stringDecrypt($key, $dtdecrypt)
     );
 }
 
-function bpjsError($message)
-{
+function antrolError($message){
     return [
         'success' => false,
         'code' => '500',
@@ -266,8 +248,8 @@ function bpjsError($message)
         'data' => null
     ];
 }
-function getConfigBPJS($idcustomer, $koneksi)
-{
+
+function antrolGetConfigBPJS($idcustomer, $koneksi){
     $sql = mysqli_fetch_assoc(mysqli_query(
         $koneksi,
         "SELECT * FROM setting_antrol WHERE id_customer = '$idcustomer'"
@@ -285,8 +267,8 @@ function getConfigBPJS($idcustomer, $koneksi)
         'userkey'   => $sql['userkey'],
     ];
 }
-function testingBPJS_POST($url, $payload)
-{
+
+function antrolTestingBPJS_POST($url, $payload){
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
@@ -320,4 +302,3 @@ function testingBPJS_POST($url, $payload)
         'data' => $sepData
     ];
 }
-// 

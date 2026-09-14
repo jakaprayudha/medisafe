@@ -429,6 +429,7 @@ $(function () {
                             '<option value="' + item.kodedokter + '" ' +
                             'data-nama="' + item.namadokter + '" ' +
                             'data-jam="' + item.jampraktek + '" ' +
+                            'data-dokterpcare="' + item.nmDokterBpjs + '" ' +
                             disabled +
                             '>' +
                             item.namadokter + ' (' + item.jampraktek + ')' + textExp +
@@ -446,6 +447,7 @@ $(function () {
         $('#kodedokter').on('change', function () {
             let selected = $(this).find('option:selected');
             $('#namadokter').val(selected.data('nama') || '');
+            $('#namadokterPcare').val(selected.data('dokterpcare') || '');
             $('#jampraktek').val(selected.data('jam') || '');
         });
         $("#kodepoli").on("change", function () {
@@ -540,77 +542,38 @@ $(function () {
     }
     APP.createpeserta = function () {
         var data = $('#isiform').serialize();
-        const typePasien = new URLSearchParams(data).get('typePatient');
-        const kunjungSakit = new URLSearchParams(data).get('kunjSakit');
-        const createPendaftaran = (antrian, nomor, kode, visit_id) => {
-            data += '&antrian=' + encodeURIComponent(antrian);
-            data += '&nomorantrean=' + encodeURIComponent(nomor);
-            data += '&kodeAntri=' + encodeURIComponent(kode);
-            data += '&visit_id=' + encodeURIComponent(visit_id);
-            $.ajax({
-                type: "POST",
-                data: data,
-                dataType: "json",
-                url: 'controller/admisi/services/insertPendaftaran.php',
-                success: function (response) {
-                    if (!response.success) {
-                        Swal.fire({
-                            icon: "error",
-                            title: "Oops...",
-                            text: response.message,
-                        });
-                        APP.load_btn_non('#create', "Simpan Kunjungan");
-                        return;
-                    } else {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil',
-                            text: response.message,
-                            confirmButtonText: 'Ok'
-                        }).then(() => {
-                            window.location.assign("module/admisi/registrasi-poliklinik");
-                        });
-                    }
-                },
-                error: function (xhr, status, error) {
-                    Swal.fire({
-                        icon: "error",
-                        title: "Error",
-                        text: error
-                    });
-                    APP.load_btn_non('#create', "Simpan Kunjungan");
-                },
-                complete: function () {
-                    APP.load_btn_non('#create', "Simpan Kunjungan");
-                }
-            });
-        }
-        if (typePasien == 'UMUM' || kunjungSakit == 'false') {
-            createPendaftaran();
-            return;
-        }
+
         $.ajax({
             type: "POST",
-            url: 'controller/wsbpjs/addAntrian.php',
+            url: 'controller/admisi/services/prosesPendaftaranTunggal.php', // Arahkan ke file yang baru
             dataType: "json",
             data: data,
             success: function (res) {
                 if (!res.success) {
                     Swal.fire({
                         icon: "error",
-                        title: "Oops...",
-                        text: res.message,
+                        title: "Gagal",
+                        text: res.message, // Menampilkan error spesifik dari backend
                     });
                     APP.load_btn_non('#create', "Simpan Kunjungan");
                     return;
                 }
-                createPendaftaran(res.antian, res.noAntrian, res.kdAntri, res.visitID);
+
+                // Jika sukses
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: res.message,
+                    confirmButtonText: 'Ok'
+                }).then(() => {
+                    window.location.assign("module/admisi/registrasi-poliklinik");
+                });
             },
             error: function (xhr) {
                 Swal.fire({
                     icon: "error",
-                    title: "BPJS Error",
-                    text: xhr.responseText || "Gagal menghubungi server BPJS"
+                    title: "Error Jaringan/Server",
+                    text: xhr.responseText || "Gagal menghubungi server"
                 });
                 APP.load_btn_non('#create', "Simpan Kunjungan");
             },
