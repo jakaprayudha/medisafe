@@ -435,489 +435,1842 @@ require '../../controller/view.php';
   </div>
 </div>
 
+html
 <script>
+  /* =========================================================
+   MASTER FASKES DETAIL
+   =========================================================
+   Fungsi:
+   1. Payment
+   2. Profile Faskes
+   3. User
+   4. Preview Kontrak
+
+   CATATAN:
+   Profile Faskes dikirim menggunakan POST.
+   Controller faskesController yang menentukan:
+   - INSERT jika ms_faskes belum ada
+   - UPDATE jika ms_faskes sudah ada
+   ========================================================= */
+
+
+  /* =========================================================
+     PAYMENT
+     ========================================================= */
+
   const paymentApi = 'controller/master/faskesPaymentController';
+
   const urlParams = new URLSearchParams(window.location.search);
   const no = urlParams.get('no');
 
   let table;
 
-  // 🔹 Load table pembayaran
+
+  /* ---------------------------------------------------------
+     LOAD TABLE PEMBAYARAN
+     --------------------------------------------------------- */
+
   function loadPaymentTable() {
-    if (!no) return;
+
+    if (!no) {
+      console.warn('Parameter ?no= tidak ditemukan untuk Payment');
+      return;
+    }
 
     table = $('#periodeTable').DataTable({
       destroy: true,
+
       ajax: {
-        url: paymentApi + '?no=' + no,
+        url: paymentApi + '?no=' + encodeURIComponent(no),
         dataSrc: 'data'
       },
-      columns: [{
+
+      columns: [
+
+        {
           data: 'invoice_number'
         },
+
         {
           data: 'payment_date'
         },
+
         {
           data: 'payment_method'
         },
+
         {
           data: 'payment_amount',
-          render: $.fn.dataTable.render.number('.', ',', 0, 'Rp ')
+
+          render: $.fn.dataTable.render.number(
+            '.',
+            ',',
+            0,
+            'Rp '
+          )
         },
+
         {
           data: 'payment_note'
         },
+
         {
           data: 'payment_file',
+
           render: function(data) {
-            return data ? `<a href="uploads/${data}" target="_blank">File</a>` : '-';
+
+            if (!data) {
+              return '-';
+            }
+
+            return `
+                        <a
+                            href="uploads/${encodeURIComponent(data)}"
+                            target="_blank"
+                            rel="noopener"
+                        >
+                            File
+                        </a>
+                    `;
           }
         },
+
         {
           data: 'payment_status',
-          render: function(d) {
-            return d == 1 ? 'Paid' : 'Pending';
+
+          render: function(data) {
+
+            return data == 1 ?
+              'Paid' :
+              'Pending';
           }
         },
+
         {
           data: null,
+
           render: function(row) {
+
             return `
-            <button class="btn btn-warning btn-sm edit-btn" data-id="${row.id_payment}">Edit</button>
-            <button class="btn btn-danger btn-sm delete-btn" data-id="${row.id_payment}">Hapus</button>
-          `;
+                        <button
+                            type="button"
+                            class="btn btn-warning btn-sm edit-btn"
+                            data-id="${row.id_payment}"
+                        >
+                            Edit
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn btn-danger btn-sm delete-btn"
+                            data-id="${row.id_payment}"
+                        >
+                            Hapus
+                        </button>
+                    `;
           }
         }
       ]
     });
   }
 
-  // 🔹 tambah
-  $('#btnTambah').on('click', function() {
-    $('#paymentForm')[0].reset();
+
+  /* ---------------------------------------------------------
+     TAMBAH PAYMENT
+     --------------------------------------------------------- */
+
+  $(document).on('click', '#btnTambah', function() {
+
+    const form = document.getElementById('paymentForm');
+
+    if (!form) {
+      console.error('Form #paymentForm tidak ditemukan');
+      return;
+    }
+
+    form.reset();
+
     $('#payment_id').val('');
-    $('#payment_order_number').val(no);
+
+    $('#payment_order_number').val(no || '');
+
     $('#paymentModal').modal('show');
   });
 
-  // 🔹 submit (insert / update)
-  $('#paymentForm').on('submit', function(e) {
+
+  /* ---------------------------------------------------------
+     SUBMIT PAYMENT
+     INSERT / UPDATE
+     --------------------------------------------------------- */
+
+  $(document).on('submit', '#paymentForm', function(e) {
+
     e.preventDefault();
 
-    let id = $('#payment_id').val();
-    let formData = new URLSearchParams(new FormData(this));
+    const form = this;
 
-    fetch(paymentApi + (id ? '?id=' + id : ''), {
-        method: id ? 'PUT' : 'POST',
+    const id = $('#payment_id').val();
+
+    const formData = new URLSearchParams(
+      new FormData(form)
+    );
+
+    /*
+     * Pastikan order number selalu berasal dari URL.
+     */
+    if (no) {
+      formData.set('order_number', no);
+    }
+
+    const url = paymentApi + (
+      id ?
+      '?id=' + encodeURIComponent(id) :
+      ''
+    );
+
+    const method = id ? 'PUT' : 'POST';
+
+    fetch(url, {
+        method: method,
+
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
+
         body: formData
       })
-      .then(res => res.json())
-      .then(res => {
+
+      .then(function(res) {
+
+        return res.json();
+      })
+
+      .then(function(res) {
+
+        console.log('PAYMENT RESPONSE:', res);
+
         if (res.status === 'success') {
-          Swal.fire('Berhasil!', res.message, 'success');
+
+          Swal.fire(
+            'Berhasil!',
+            res.message || 'Data pembayaran berhasil disimpan.',
+            'success'
+          );
+
           $('#paymentModal').modal('hide');
-          table.ajax.reload(null, false);
+
+          if (table) {
+            table.ajax.reload(null, false);
+          }
+
         } else {
-          Swal.fire('Gagal!', res.message, 'error');
+
+          Swal.fire(
+            'Gagal!',
+            res.message || 'Data pembayaran gagal disimpan.',
+            'error'
+          );
         }
+      })
+
+      .catch(function(err) {
+
+        console.error('PAYMENT ERROR:', err);
+
+        Swal.fire(
+          'Error!',
+          'Terjadi kesalahan saat menyimpan pembayaran.',
+          'error'
+        );
       });
   });
 
-  // 🔹 edit
+
+  /* ---------------------------------------------------------
+     EDIT PAYMENT
+     --------------------------------------------------------- */
+
   $(document).on('click', '.edit-btn', function() {
-    let id = $(this).data('id');
 
-    fetch(paymentApi + '?id=' + id)
-      .then(res => res.json())
-      .then(res => {
-        let d = res.data;
+    const id = $(this).data('id');
 
-        $('#payment_id').val(d.id_payment);
-        $('#payment_order_number').val(d.order_number);
-        $('[name="tanggal"]').val(d.payment_date);
-        $('[name="metode"]').val(d.payment_method);
-        $('[name="nominal"]').val(d.payment_amount);
-        $('[name="keterangan"]').val(d.payment_note);
+    if (!id) {
+      Swal.fire(
+        'Warning!',
+        'ID pembayaran tidak ditemukan.',
+        'warning'
+      );
+
+      return;
+    }
+
+    fetch(
+        paymentApi +
+        '?id=' +
+        encodeURIComponent(id)
+      )
+
+      .then(function(res) {
+
+        return res.json();
+      })
+
+      .then(function(res) {
+
+        console.log('PAYMENT DETAIL:', res);
+
+        if (res.status !== 'success') {
+
+          Swal.fire(
+            'Gagal!',
+            res.message || 'Data pembayaran tidak ditemukan.',
+            'error'
+          );
+
+          return;
+        }
+
+        const d = res.data || {};
+
+        $('#payment_id').val(
+          d.id_payment || ''
+        );
+
+        $('#payment_order_number').val(
+          d.order_number || no || ''
+        );
+
+        $('[name="tanggal"]').val(
+          d.payment_date || ''
+        );
+
+        $('[name="metode"]').val(
+          d.payment_method || ''
+        );
+
+        $('[name="nominal"]').val(
+          d.payment_amount || ''
+        );
+
+        $('[name="keterangan"]').val(
+          d.payment_note || ''
+        );
 
         $('#paymentModal').modal('show');
+      })
+
+      .catch(function(err) {
+
+        console.error('PAYMENT DETAIL ERROR:', err);
+
+        Swal.fire(
+          'Error!',
+          'Gagal mengambil data pembayaran.',
+          'error'
+        );
       });
   });
 
-  // 🔹 delete
+
+  /* ---------------------------------------------------------
+     DELETE PAYMENT
+     --------------------------------------------------------- */
+
   $(document).on('click', '.delete-btn', function() {
-    let id = $(this).data('id');
+
+    const id = $(this).data('id');
+
+    if (!id) {
+      Swal.fire(
+        'Warning!',
+        'ID pembayaran tidak ditemukan.',
+        'warning'
+      );
+
+      return;
+    }
 
     Swal.fire({
-      title: 'Hapus data?',
-      icon: 'warning',
-      showCancelButton: true
-    }).then(result => {
-      if (result.isConfirmed) {
-        fetch(paymentApi + '?id=' + id, {
-            method: 'DELETE'
-          })
-          .then(res => res.json())
-          .then(res => {
-            if (res.status === 'success') {
-              Swal.fire('Berhasil', 'Data dihapus', 'success');
-              table.ajax.reload(null, false);
-            }
-          });
-      }
-    });
-  });
 
-  $(document).ready(function() {
-    loadPaymentTable();
-  });
-</script>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const no = urlParams.get('no');
+        title: 'Hapus data?',
 
-    if (no) {
-      loadFaskesToForm(no);
-    }
-  });
+        text: 'Data pembayaran akan dihapus.',
 
-  const faskesViewApi = 'controller/master/faskesDetailController';
+        icon: 'warning',
 
-  function loadFaskesToForm(no) {
-    fetch(faskesViewApi + '?no=' + encodeURIComponent(no))
-      .then(res => res.json())
-      .then(res => {
-        console.log('API RESPONSE:', res); // 🔥 debug
+        showCancelButton: true,
 
-        if (res.status === 'success') {
-          const data = res.data;
+        confirmButtonText: 'Ya, hapus',
 
-          Object.keys(data).forEach(key => {
-            let el = document.querySelector(`[name="${key}"]`);
-            if (el) {
-              el.value = data[key] ?? '';
-            } else {
-              console.warn('Field tidak ditemukan:', key);
-            }
-          });
+        cancelButtonText: 'Batal'
 
-          let idField = document.getElementById('faskes_id');
-          if (idField) idField.value = no ?? '';
-
-        } else {
-          Swal.fire('Gagal!', res.message, 'error');
-        }
       })
-      .catch(err => {
-        console.error(err);
-        Swal.fire('Error!', 'Gagal load data', 'error');
+
+      .then(function(result) {
+
+        if (!result.isConfirmed) {
+          return;
+        }
+
+        fetch(
+            paymentApi +
+            '?id=' +
+            encodeURIComponent(id), {
+              method: 'DELETE'
+            }
+          )
+
+          .then(function(res) {
+
+            return res.json();
+          })
+
+          .then(function(res) {
+
+            console.log('DELETE PAYMENT RESPONSE:', res);
+
+            if (res.status === 'success') {
+
+              Swal.fire(
+                'Berhasil',
+                res.message || 'Data pembayaran dihapus.',
+                'success'
+              );
+
+              if (table) {
+                table.ajax.reload(null, false);
+              }
+
+            } else {
+
+              Swal.fire(
+                'Gagal!',
+                res.message || 'Data gagal dihapus.',
+                'error'
+              );
+            }
+          })
+
+          .catch(function(err) {
+
+            console.error('DELETE PAYMENT ERROR:', err);
+
+            Swal.fire(
+              'Error!',
+              'Gagal menghapus data pembayaran.',
+              'error'
+            );
+          });
       });
-  }
-</script>
-<script>
-  const faskesUpdateApi = 'controller/master/faskesController';
+  });
 
-  document.addEventListener('DOMContentLoaded', function() {
 
-    const form = document.getElementById('faskesForm') || document.getElementById('programForm');
+  /* =========================================================
+     PROFILE FASKES
+     ========================================================= */
 
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
+  const faskesViewApi =
+    'controller/master/faskesDetailController';
 
-      const id = document.getElementById('faskes_id').value;
+  const faskesSaveApi =
+    'controller/master/faskesController';
 
-      if (!id) {
-        Swal.fire('Warning!', 'ID tidak ditemukan', 'warning');
-        return;
-      }
 
-      let formData = new URLSearchParams(new FormData(form));
-      formData.append('id_faskes', id); // 🔥 WAJIB
+  /* ---------------------------------------------------------
+     LOAD PROFILE FASKES
+     --------------------------------------------------------- */
 
-      fetch(faskesUpdateApi, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: formData
-        })
-        .then(res => res.json())
-        .then(res => {
-          console.log('UPDATE RESPONSE:', res);
+  function loadFaskesToForm(noFaskes) {
 
-          if (res.status === 'success') {
-            Swal.fire('Berhasil!', res.message, 'success');
-          } else {
-            Swal.fire('Gagal!', res.message, 'error');
+    if (!noFaskes) {
+
+      console.warn(
+        'Parameter nomor/order Faskes tidak ditemukan.'
+      );
+
+      return;
+    }
+
+    fetch(
+        faskesViewApi +
+        '?no=' +
+        encodeURIComponent(noFaskes)
+      )
+
+      .then(function(res) {
+
+        return res.json();
+      })
+
+      .then(function(res) {
+
+        console.log('FASKES DETAIL RESPONSE:', res);
+
+        /*
+         * Jika controller berhasil menemukan
+         * setting_clinic tetapi ms_faskes belum ada,
+         * controller tetap seharusnya mengembalikan
+         * status success dengan data kosong/null.
+         */
+
+        if (res.status !== 'success') {
+
+          Swal.fire(
+            'Gagal!',
+            res.message || 'Gagal mengambil data Faskes.',
+            'error'
+          );
+
+          return;
+        }
+
+        const data = res.data || {};
+
+        /*
+         * Isi semua field berdasarkan NAME.
+         */
+        Object.keys(data).forEach(function(key) {
+
+          const elements =
+            document.querySelectorAll(
+              `[name="${key}"]`
+            );
+
+          if (!elements.length) {
+
+            console.warn(
+              'Field tidak ditemukan:',
+              key
+            );
+
+            return;
           }
-        })
-        .catch(err => {
-          console.error(err);
-          Swal.fire('Error!', 'Gagal update data', 'error');
+
+          elements.forEach(function(el) {
+
+            /*
+             * Jangan mengubah input file.
+             */
+            if (
+              el.type === 'file'
+            ) {
+              return;
+            }
+
+            /*
+             * Checkbox.
+             */
+            if (
+              el.type === 'checkbox'
+            ) {
+
+              el.checked =
+                data[key] == 1 ||
+                data[key] === true ||
+                data[key] === '1';
+
+              return;
+            }
+
+            /*
+             * Radio.
+             */
+            if (
+              el.type === 'radio'
+            ) {
+
+              el.checked =
+                String(el.value) ===
+                String(data[key] ?? '');
+
+              return;
+            }
+
+            el.value =
+              data[key] ?? '';
+          });
         });
 
-    });
 
-  });
-</script>
+        /*
+         * =====================================================
+         * ID FASKES
+         * =====================================================
+         *
+         * Jangan menjadikan ketiadaan id_faskes sebagai error.
+         *
+         * Jika ms_faskes belum ada:
+         * id_faskes boleh kosong.
+         *
+         * order_number / no tetap dipakai sebagai
+         * identitas clinic pada saat POST.
+         */
 
-<script>
-  const userApi = 'controller/master/userControllerAdmin';
-  const urlParamsUser = new URLSearchParams(window.location.search);
-  const noUser = urlParamsUser.get('no');
-  let tableUser;
+        const idField =
+          document.getElementById('faskes_id');
 
-  function loadUserTable() {
-    if (!noUser) return;
+        if (idField) {
 
-    tableUser = $('#periodeTableUser').DataTable({
-      destroy: true,
-      ajax: {
-        url: userApi + '?no=' + noUser,
-        dataSrc: 'data'
-      },
-      columns: [{
-          data: 'fullname'
-        },
-        {
-          data: 'username'
-        },
-        {
-          data: 'roles'
-        },
-        {
-          data: 'created_at'
-        },
-        {
-          data: 'status',
-          className: 'text-center',
-          render: function(data, type, row) {
-            let checked = data == 1 ? 'checked' : '';
-            return `
-                <div class="form-check form-switch d-flex justify-content-center">
-                  <input class="form-check-input toggleStatus" 
-                    type="checkbox" 
-                    data-id="${row.id_user}" 
-                    ${checked}>
-                </div>
-              `;
-          }
-        }, {
-          data: null,
-          className: 'text-center',
-          render: row => `
-          <button class="btn btn-warning btn-sm editUser" data-id="${row.id_user}">Edit</button>
-          <button class="btn btn-danger btn-sm deleteUser" data-id="${row.id_user}">Hapus</button>
-        `
+          idField.value =
+            data.id_faskes ||
+            '';
         }
-      ]
-    });
 
 
+        /*
+         * Pastikan order_number tetap menggunakan
+         * parameter URL.
+         */
+        const orderFields =
+          document.querySelectorAll(
+            '[name="order_number"]'
+          );
+
+        orderFields.forEach(function(el) {
+
+          /*
+           * order_number adalah readonly.
+           * Tetap isi dengan no URL.
+           */
+          el.value =
+            noFaskes;
+        });
+
+
+        /*
+         * Simpan id clinic apabila controller
+         * mengembalikannya.
+         */
+        const clinicIdField =
+          document.getElementById('id_clinic');
+
+        if (clinicIdField) {
+
+          clinicIdField.value =
+            data.id_clinic ||
+            noFaskes ||
+            '';
+        }
+
+      })
+
+      .catch(function(err) {
+
+        console.error(
+          'LOAD FASKES ERROR:',
+          err
+        );
+
+        Swal.fire(
+          'Error!',
+          'Gagal load data Profile Faskes.',
+          'error'
+        );
+      });
   }
 
-  $(document).ready(function() {
-    loadUserTable();
-  });
 
-  $('#btnTambahUser').on('click', function() {
-    $('#userForm')[0].reset();
-    $('#user_id').val('');
-    $('#userModal').modal('show');
-  });
+  /* ---------------------------------------------------------
+     SUBMIT PROFILE FASKES
+     =========================================================
+     PENTING:
+     Tidak lagi menggunakan PUT.
 
-  $('#userForm').on('submit', function(e) {
-    e.preventDefault();
+     Selalu POST.
 
-    let id = $('#user_id').val();
-    let formData = new URLSearchParams(new FormData(this));
+     Controller akan menentukan:
+     - INSERT jika ms_faskes belum ada
+     - UPDATE jika ms_faskes sudah ada
+     --------------------------------------------------------- */
 
-    fetch(userApi + '?no=' + noUser + (id ? '&id=' + id : ''), {
-        method: id ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: formData
-      })
-      .then(res => res.json())
-      .then(res => {
-        if (res.status === 'success') {
-          Swal.fire('Berhasil!', 'Data user tersimpan', 'success');
-          $('#userModal').modal('hide');
-          tableUser.ajax.reload(null, false);
-        } else {
-          Swal.fire('Error!', res.message, 'error');
-        }
-      });
-  });
+  function initFaskesForm() {
 
-  $(document).on('click', '.editUser', function() {
-    let id = $(this).data('id');
+    /*
+     * Pada halaman Anda form utamanya bernama
+     * #programForm.
+     *
+     * Tetap support #faskesForm jika suatu saat
+     * ID form tersebut digunakan.
+     */
+    const form =
+      document.getElementById('faskesForm') ||
+      document.getElementById('programForm');
 
-    fetch(userApi + '?no=' + noUser + '&id=' + id)
-      .then(res => res.json())
-      .then(res => {
-        let d = res.data;
+    if (!form) {
 
-        $('#user_id').val(d.id_user);
-        $('[name="fullname"]').val(d.fullname);
-        $('[name="username"]').val(d.username);
-        $('[name="roles"]').val(d.roles);
-
-        $('#userModal').modal('show');
-      });
-  });
-
-  $(document).on('click', '.deleteUser', function() {
-    let id = $(this).data('id');
-
-    Swal.fire({
-      title: 'Hapus user?',
-      icon: 'warning',
-      showCancelButton: true
-    }).then(result => {
-      if (result.isConfirmed) {
-        fetch(userApi + '?no=' + noUser + '&id=' + id, {
-            method: 'DELETE'
-          })
-          .then(res => res.json())
-          .then(res => {
-            if (res.status === 'success') {
-              Swal.fire('Deleted!', '', 'success');
-              tableUser.ajax.reload(null, false);
-            }
-          });
-      }
-    });
-  });
-
-  $(document).on('change', '.toggleStatus', function() {
-    let id = $(this).data('id');
-    let status = $(this).is(':checked') ? 1 : 0;
-
-    fetch(userApi + '?no=' + noUser + '&id=' + id + '&toggle_status=1', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: new URLSearchParams({
-          id_user: id,
-          status: status
-        })
-      })
-      .then(res => res.json())
-      .then(res => {
-        if (res.status === 'success') {
-          Swal.fire({
-            icon: 'success',
-            title: 'Updated',
-            text: 'Status user berhasil diubah',
-            timer: 1200,
-            showConfirmButton: false
-          });
-        } else {
-          Swal.fire('Error!', res.message, 'error');
-        }
-      })
-      .catch(() => {
-        Swal.fire('Error!', 'Gagal update status', 'error');
-      });
-  });
-</script>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const no = urlParams.get('no');
-
-    const frame = document.getElementById('kontrakFrame');
-    const btnRefresh = document.getElementById('btnRefreshKontrak');
-    const btnPrint = document.getElementById('btnPrintKontrak');
-
-    function loadKontrak() {
-
-      if (!frame) {
-        console.error('Element #kontrakFrame tidak ditemukan');
-        return;
-      }
-
-      if (!no) {
-        console.error('Parameter ?no= tidak ditemukan');
-        return;
-      }
-
-      frame.src = 'module/administrator/kontrak.php?no=' +
-        encodeURIComponent(no) +
-        '&t=' +
-        Date.now();
-
-      console.log(
-        'Preview kontrak:',
-        frame.src
+      console.error(
+        'Form Profile Faskes tidak ditemukan.'
       );
+
+      return;
     }
 
-    // Load otomatis
-    loadKontrak();
+
+    /*
+     * Hindari event submit terpasang dua kali.
+     */
+    if (
+      form.dataset.faskesSubmitInitialized === '1'
+    ) {
+      return;
+    }
+
+    form.dataset.faskesSubmitInitialized = '1';
 
 
-    // ==============================
-    // REFRESH
-    // ==============================
+    form.addEventListener(
+      'submit',
+      function(e) {
 
-    if (btnRefresh) {
+        e.preventDefault();
 
-      btnRefresh.addEventListener('click', function() {
 
-        if (!no) {
+        /*
+         * Ambil FormData.
+         */
+        const rawFormData =
+          new FormData(form);
+
+
+        /*
+         * Convert ke URLSearchParams.
+         */
+        const formData =
+          new URLSearchParams();
+
+
+        /*
+         * Masukkan semua field form.
+         */
+        rawFormData.forEach(
+          function(value, key) {
+
+            /*
+             * Jangan kirim file melalui endpoint
+             * profile ini jika bukan bagian dari
+             * controller faskes.
+             */
+            if (
+              value instanceof File
+            ) {
+              return;
+            }
+
+            formData.append(
+              key,
+              value
+            );
+          }
+        );
+
+
+        /*
+         * =================================================
+         * WAJIB:
+         * order_number berasal dari URL ?no=
+         * =================================================
+         */
+        if (no) {
+
+          formData.set(
+            'order_number',
+            no
+          );
+        }
+
+
+        /*
+         * =================================================
+         * id_faskes
+         * =================================================
+         *
+         * Jika sudah ada, kirim.
+         *
+         * Jika belum ada, JANGAN menggagalkan proses.
+         *
+         * Controller akan melakukan INSERT berdasarkan
+         * id_clinic/order_number.
+         */
+        const idField =
+          document.getElementById('faskes_id');
+
+        const idFaskes =
+          idField ?
+          String(
+            idField.value || ''
+          ).trim() :
+          '';
+
+
+        if (idFaskes) {
+
+          formData.set(
+            'id_faskes',
+            idFaskes
+          );
+        }
+
+
+        /*
+         * Jika ada hidden id_clinic, kirim juga.
+         */
+        const clinicField =
+          document.getElementById('id_clinic');
+
+        const idClinic =
+          clinicField ?
+          String(
+            clinicField.value || ''
+          ).trim() :
+          '';
+
+
+        if (idClinic) {
+
+          formData.set(
+            'id_clinic',
+            idClinic
+          );
+        }
+
+
+        /*
+         * Jika id_clinic belum ada tetapi ?no=
+         * tersedia, gunakan no sebagai fallback.
+         */
+        if (
+          !formData.get('id_clinic') &&
+          no
+        ) {
+
+          formData.set(
+            'id_clinic',
+            no
+          );
+        }
+
+
+        /*
+         * DEBUG
+         */
+        console.group(
+          'SAVE PROFILE FASKES'
+        );
+
+        for (
+          const [
+            key,
+            value
+          ] of formData.entries()
+        ) {
+
+          console.log(
+            key,
+            ':',
+            value
+          );
+        }
+
+        console.groupEnd();
+
+
+        /*
+         * =================================================
+         * VALIDASI MINIMAL
+         * =================================================
+         *
+         * Jangan validasi id_faskes.
+         *
+         * Karena record ms_faskes mungkin memang belum ada.
+         */
+
+        if (!no && !formData.get('id_clinic')) {
 
           Swal.fire(
             'Warning!',
-            'ID Faskes tidak ditemukan.',
+            'ID Faskes / Clinic tidak ditemukan.',
             'warning'
           );
 
           return;
         }
 
-        loadKontrak();
 
-      });
+        /*
+         * =================================================
+         * SUBMIT
+         * =================================================
+         *
+         * SELALU POST.
+         *
+         * Controller:
+         * POST + ms_faskes belum ada = INSERT
+         * POST + ms_faskes sudah ada    = UPDATE
+         */
+        fetch(
+            faskesSaveApi, {
+              method: 'POST',
 
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+
+              body: formData
+            }
+          )
+
+          .then(function(res) {
+
+            /*
+             * Ambil response text terlebih dahulu
+             * supaya jika PHP mengeluarkan warning/error,
+             * mudah dilihat di console.
+             */
+            return res.text();
+          })
+
+          .then(function(rawResponse) {
+
+            console.log(
+              'FASKES RAW RESPONSE:',
+              rawResponse
+            );
+
+
+            let res;
+
+            try {
+
+              res =
+                JSON.parse(
+                  rawResponse
+                );
+
+            } catch (error) {
+
+              console.error(
+                'INVALID JSON RESPONSE:',
+                error
+              );
+
+              Swal.fire(
+                'Error!',
+                'Response server bukan JSON. Cek error PHP di server.',
+                'error'
+              );
+
+              return;
+            }
+
+
+            console.log(
+              'FASKES SAVE RESPONSE:',
+              res
+            );
+
+
+            if (
+              res.status === 'success'
+            ) {
+
+              /*
+               * Jika INSERT, controller biasanya
+               * mengembalikan id_faskes.
+               *
+               * Simpan ke hidden field supaya
+               * setelah berhasil, data berikutnya
+               * mengetahui ID tersebut.
+               */
+              if (
+                res.id_faskes &&
+                idField
+              ) {
+
+                idField.value =
+                  res.id_faskes;
+              } else if (
+                res.data &&
+                res.data.id_faskes &&
+                idField
+              ) {
+
+                idField.value =
+                  res.data.id_faskes;
+              }
+
+
+              Swal.fire(
+                'Berhasil!',
+                res.message ||
+                'Profile Faskes berhasil disimpan.',
+                'success'
+              );
+
+            } else {
+
+              Swal.fire(
+                'Gagal!',
+                res.message ||
+                'Profile Faskes gagal disimpan.',
+                'error'
+              );
+            }
+          })
+
+          .catch(function(err) {
+
+            console.error(
+              'SAVE FASKES ERROR:',
+              err
+            );
+
+            Swal.fire(
+              'Error!',
+              'Gagal menyimpan Profile Faskes.',
+              'error'
+            );
+          });
+
+      }
+    );
+  }
+
+
+  /* ---------------------------------------------------------
+     INITIALIZE FASKES
+     --------------------------------------------------------- */
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    function() {
+
+      /*
+       * Ambil ?no=
+       */
+      const params =
+        new URLSearchParams(
+          window.location.search
+        );
+
+      const noFaskes =
+        params.get('no');
+
+
+      /*
+       * Load Profile.
+       */
+      if (noFaskes) {
+
+        loadFaskesToForm(
+          noFaskes
+        );
+      }
+
+
+      /*
+       * Init submit form.
+       */
+      initFaskesForm();
+
+    }
+  );
+
+
+  /* =========================================================
+     USER
+     ========================================================= */
+
+  const userApi =
+    'controller/master/userControllerAdmin';
+
+  const urlParamsUser =
+    new URLSearchParams(
+      window.location.search
+    );
+
+  const noUser =
+    urlParamsUser.get('no');
+
+  let tableUser;
+
+
+  /* ---------------------------------------------------------
+     LOAD USER TABLE
+     --------------------------------------------------------- */
+
+  function loadUserTable() {
+
+    if (!noUser) {
+
+      console.warn(
+        'Parameter ?no= tidak ditemukan untuk User'
+      );
+
+      return;
     }
 
 
-    // ==============================
-    // PRINT
-    // ==============================
+    tableUser =
+      $('#periodeTableUser').DataTable({
 
-    if (btnPrint) {
+        destroy: true,
 
-      btnPrint.addEventListener('click', function() {
+        ajax: {
 
-        if (!frame || !frame.contentWindow) {
+          url: userApi +
+            '?no=' +
+            encodeURIComponent(noUser),
 
-          Swal.fire(
-            'Warning!',
-            'Preview kontrak belum dimuat.',
-            'warning'
+          dataSrc: 'data'
+        },
+
+        columns: [
+
+          {
+            data: 'fullname'
+          },
+
+          {
+            data: 'username'
+          },
+
+          {
+            data: 'roles'
+          },
+
+          {
+            data: 'created_at'
+          },
+
+          {
+            data: 'status',
+
+            className: 'text-center',
+
+            render: function(
+              data,
+              type,
+              row
+            ) {
+
+              const checked =
+                data == 1 ?
+                'checked' :
+                '';
+
+              return `
+                                <div class="form-check form-switch d-flex justify-content-center">
+
+                                    <input
+                                        class="form-check-input toggleStatus"
+                                        type="checkbox"
+                                        data-id="${row.id_user}"
+                                        ${checked}
+                                    >
+
+                                </div>
+                            `;
+            }
+          },
+
+          {
+            data: null,
+
+            className: 'text-center',
+
+            render: function(row) {
+
+              return `
+                                <button
+                                    type="button"
+                                    class="btn btn-warning btn-sm editUser"
+                                    data-id="${row.id_user}"
+                                >
+                                    Edit
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="btn btn-danger btn-sm deleteUser"
+                                    data-id="${row.id_user}"
+                                >
+                                    Hapus
+                                </button>
+                            `;
+            }
+          }
+        ]
+      });
+  }
+
+
+  /* ---------------------------------------------------------
+     INIT USER TABLE
+     --------------------------------------------------------- */
+
+  $(document).ready(
+    function() {
+
+      loadPaymentTable();
+
+      loadUserTable();
+
+    }
+  );
+
+
+  /* ---------------------------------------------------------
+     TAMBAH USER
+     --------------------------------------------------------- */
+
+  $(document).on(
+    'click',
+    '#btnTambahUser',
+    function() {
+
+      const form =
+        document.getElementById(
+          'userForm'
+        );
+
+      if (!form) {
+
+        console.error(
+          'Form #userForm tidak ditemukan'
+        );
+
+        return;
+      }
+
+      form.reset();
+
+      $('#user_id').val('');
+
+      $('#userModal').modal('show');
+    }
+  );
+
+
+  /* ---------------------------------------------------------
+     SUBMIT USER
+     INSERT / UPDATE
+     --------------------------------------------------------- */
+
+  $(document).on(
+    'submit',
+    '#userForm',
+    function(e) {
+
+      e.preventDefault();
+
+      const form = this;
+
+      const id =
+        $('#user_id').val();
+
+      const formData =
+        new URLSearchParams(
+          new FormData(form)
+        );
+
+
+      const url =
+        userApi +
+        '?no=' +
+        encodeURIComponent(noUser) +
+        (
+          id ?
+          '&id=' +
+          encodeURIComponent(id) :
+          ''
+        );
+
+
+      fetch(
+          url, {
+            method: id ?
+              'PUT' : 'POST',
+
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+
+            body: formData
+          }
+        )
+
+        .then(
+          function(res) {
+
+            return res.json();
+          }
+        )
+
+        .then(
+          function(res) {
+
+            console.log(
+              'USER RESPONSE:',
+              res
+            );
+
+            if (
+              res.status ===
+              'success'
+            ) {
+
+              Swal.fire(
+                'Berhasil!',
+                res.message ||
+                'Data user tersimpan.',
+                'success'
+              );
+
+              $('#userModal')
+                .modal('hide');
+
+              if (tableUser) {
+
+                tableUser.ajax.reload(
+                  null,
+                  false
+                );
+              }
+
+            } else {
+
+              Swal.fire(
+                'Error!',
+                res.message ||
+                'Data user gagal disimpan.',
+                'error'
+              );
+            }
+          }
+        )
+
+        .catch(
+          function(err) {
+
+            console.error(
+              'USER ERROR:',
+              err
+            );
+
+            Swal.fire(
+              'Error!',
+              'Gagal menyimpan data user.',
+              'error'
+            );
+          }
+        );
+    }
+  );
+
+
+  /* ---------------------------------------------------------
+     EDIT USER
+     --------------------------------------------------------- */
+
+  $(document).on(
+    'click',
+    '.editUser',
+    function() {
+
+      const id =
+        $(this).data('id');
+
+      if (!id) {
+
+        Swal.fire(
+          'Warning!',
+          'ID user tidak ditemukan.',
+          'warning'
+        );
+
+        return;
+      }
+
+
+      fetch(
+          userApi +
+          '?no=' +
+          encodeURIComponent(noUser) +
+          '&id=' +
+          encodeURIComponent(id)
+        )
+
+        .then(
+          function(res) {
+
+            return res.json();
+          }
+        )
+
+        .then(
+          function(res) {
+
+            console.log(
+              'USER DETAIL:',
+              res
+            );
+
+
+            if (
+              res.status !==
+              'success'
+            ) {
+
+              Swal.fire(
+                'Gagal!',
+                res.message ||
+                'Data user tidak ditemukan.',
+                'error'
+              );
+
+              return;
+            }
+
+
+            const d =
+              res.data || {};
+
+
+            $('#user_id').val(
+              d.id_user || ''
+            );
+
+            $('[name="fullname"]').val(
+              d.fullname || ''
+            );
+
+            $('[name="username"]').val(
+              d.username || ''
+            );
+
+            $('[name="roles"]').val(
+              d.roles || ''
+            );
+
+
+            $('#userModal')
+              .modal('show');
+          }
+        )
+
+        .catch(
+          function(err) {
+
+            console.error(
+              'USER DETAIL ERROR:',
+              err
+            );
+
+            Swal.fire(
+              'Error!',
+              'Gagal mengambil data user.',
+              'error'
+            );
+          }
+        );
+    }
+  );
+
+
+  /* ---------------------------------------------------------
+     DELETE USER
+     --------------------------------------------------------- */
+
+  $(document).on(
+    'click',
+    '.deleteUser',
+    function() {
+
+      const id =
+        $(this).data('id');
+
+
+      if (!id) {
+
+        Swal.fire(
+          'Warning!',
+          'ID user tidak ditemukan.',
+          'warning'
+        );
+
+        return;
+      }
+
+
+      Swal.fire({
+
+          title: 'Hapus user?',
+
+          text: 'Data user akan dihapus.',
+
+          icon: 'warning',
+
+          showCancelButton: true,
+
+          confirmButtonText: 'Ya, hapus',
+
+          cancelButtonText: 'Batal'
+
+        })
+
+        .then(
+          function(result) {
+
+            if (
+              !result.isConfirmed
+            ) {
+              return;
+            }
+
+
+            fetch(
+                userApi +
+                '?no=' +
+                encodeURIComponent(noUser) +
+                '&id=' +
+                encodeURIComponent(id), {
+                  method: 'DELETE'
+                }
+              )
+
+              .then(
+                function(res) {
+
+                  return res.json();
+                }
+              )
+
+              .then(
+                function(res) {
+
+                  console.log(
+                    'DELETE USER RESPONSE:',
+                    res
+                  );
+
+
+                  if (
+                    res.status ===
+                    'success'
+                  ) {
+
+                    Swal.fire(
+                      'Deleted!',
+                      res.message ||
+                      'Data user dihapus.',
+                      'success'
+                    );
+
+
+                    if (
+                      tableUser
+                    ) {
+
+                      tableUser.ajax.reload(
+                        null,
+                        false
+                      );
+                    }
+
+                  } else {
+
+                    Swal.fire(
+                      'Gagal!',
+                      res.message ||
+                      'Data user gagal dihapus.',
+                      'error'
+                    );
+                  }
+                }
+              )
+
+              .catch(
+                function(err) {
+
+                  console.error(
+                    'DELETE USER ERROR:',
+                    err
+                  );
+
+                  Swal.fire(
+                    'Error!',
+                    'Gagal menghapus user.',
+                    'error'
+                  );
+                }
+              );
+          }
+        );
+    }
+  );
+
+
+  /* ---------------------------------------------------------
+     TOGGLE STATUS USER
+     --------------------------------------------------------- */
+
+  $(document).on(
+    'change',
+    '.toggleStatus',
+    function() {
+
+      const id =
+        $(this).data('id');
+
+      const status =
+        $(this).is(':checked') ?
+        1 :
+        0;
+
+
+      if (!id) {
+
+        Swal.fire(
+          'Warning!',
+          'ID user tidak ditemukan.',
+          'warning'
+        );
+
+        return;
+      }
+
+
+      fetch(
+          userApi +
+          '?no=' +
+          encodeURIComponent(noUser) +
+          '&id=' +
+          encodeURIComponent(id) +
+          '&toggle_status=1', {
+            method: 'PUT',
+
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+
+            body: new URLSearchParams({
+              id_user: id,
+
+              status: status
+            })
+          }
+        )
+
+        .then(
+          function(res) {
+
+            return res.json();
+          }
+        )
+
+        .then(
+          function(res) {
+
+            console.log(
+              'TOGGLE USER RESPONSE:',
+              res
+            );
+
+
+            if (
+              res.status ===
+              'success'
+            ) {
+
+              Swal.fire({
+
+                icon: 'success',
+
+                title: 'Updated',
+
+                text: 'Status user berhasil diubah.',
+
+                timer: 1200,
+
+                showConfirmButton: false
+              });
+
+            } else {
+
+              Swal.fire(
+                'Error!',
+                res.message ||
+                'Status user gagal diubah.',
+                'error'
+              );
+            }
+          }
+        )
+
+        .catch(
+          function(err) {
+
+            console.error(
+              'TOGGLE USER ERROR:',
+              err
+            );
+
+            Swal.fire(
+              'Error!',
+              'Gagal update status user.',
+              'error'
+            );
+          }
+        );
+    }
+  );
+
+
+  /* =========================================================
+     PREVIEW KONTRAK
+     ========================================================= */
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    function() {
+
+      const params =
+        new URLSearchParams(
+          window.location.search
+        );
+
+      const noKontrak =
+        params.get('no');
+
+
+      const frame =
+        document.getElementById(
+          'kontrakFrame'
+        );
+
+      const btnRefresh =
+        document.getElementById(
+          'btnRefreshKontrak'
+        );
+
+      const btnPrint =
+        document.getElementById(
+          'btnPrintKontrak'
+        );
+
+
+      /* -------------------------------------------------
+         LOAD KONTRAK
+         ------------------------------------------------- */
+
+      function loadKontrak() {
+
+        if (!frame) {
+
+          console.error(
+            'Element #kontrakFrame tidak ditemukan'
           );
 
           return;
         }
 
-        frame.contentWindow.focus();
-        frame.contentWindow.print();
 
-      });
+        if (!noKontrak) {
+
+          console.error(
+            'Parameter ?no= tidak ditemukan'
+          );
+
+          return;
+        }
+
+
+        frame.src =
+          'module/administrator/kontrak.php?no=' +
+          encodeURIComponent(noKontrak) +
+          '&t=' +
+          Date.now();
+
+
+        console.log(
+          'Preview kontrak:',
+          frame.src
+        );
+      }
+
+
+      /* -------------------------------------------------
+         LOAD OTOMATIS
+         ------------------------------------------------- */
+
+      loadKontrak();
+
+
+      /* -------------------------------------------------
+         REFRESH
+         ------------------------------------------------- */
+
+      if (btnRefresh) {
+
+        btnRefresh.addEventListener(
+          'click',
+          function() {
+
+            if (!noKontrak) {
+
+              Swal.fire(
+                'Warning!',
+                'ID Faskes tidak ditemukan.',
+                'warning'
+              );
+
+              return;
+            }
+
+
+            loadKontrak();
+          }
+        );
+      }
+
+
+      /* -------------------------------------------------
+         PRINT
+         ------------------------------------------------- */
+
+      if (btnPrint) {
+
+        btnPrint.addEventListener(
+          'click',
+          function() {
+
+            if (
+              !frame ||
+              !frame.contentWindow
+            ) {
+
+              Swal.fire(
+                'Warning!',
+                'Preview kontrak belum dimuat.',
+                'warning'
+              );
+
+              return;
+            }
+
+
+            frame.contentWindow
+              .focus();
+
+            frame.contentWindow
+              .print();
+          }
+        );
+      }
 
     }
-
-  });
+  );
 </script>
+
 
 </html>
