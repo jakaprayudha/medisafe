@@ -16,9 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 $headers = array_change_key_case(getallheaders(), CASE_LOWER);
 $token = $headers['x-token'] ?? null;
 $username = $headers['x-username'] ?? null;
-$id_customer = validateBpjsToken($username);
-$json = file_get_contents("php://input");
-$data = json_decode($json, true);
+$user = validateBpjsToken($username);
 
 $listPoli = [
     ["kdPoli" => "001"],
