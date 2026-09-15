@@ -23,7 +23,7 @@ $norm           = $_POST['norm'] ?? '';
 $tanggalperiksa = $_POST['tglDaftar'] ?? '';
 $kodedokter     = $_POST['kdDokter'] ?? null;
 $namadokter     = $_POST['nmDokter'] ?? null;
-$namadokterPcare     = $_POST['nmDokterPcare'] ?? null;
+$namadokterPcare = $_POST['nmDokterPcare'] ?? null;
 $jampraktek     = $_POST['jampraktek'] ?? '';
 $id_patient     = $_POST['id_patient'] ?? '';
 $nama           = $_POST['nama'] ?? '';
@@ -47,6 +47,9 @@ $bmi            = $_POST['bmi'] ?? '';
 $bmiKet         = $_POST['bmiKet'] ?? '';
 $rujukbalik     = 0;
 
+$dt_visit = new DateTime("now", new DateTimeZone('Asia/Jakarta'));
+$visit_time = $dt_visit->format('H:i:s');
+
 $tglDaftarFormat = date("d-m-Y", strtotime($tanggalperiksa));
 
 if (empty($nohp) && $typePatient == 'BPJS') {
@@ -67,7 +70,6 @@ try {
         $nomorantrean = $resultAntrian['display'];
         $created_user = "Onsite";
         $source_hub = "Poliklinik";
-        $visit_time = date('H:i:s');
         $status_antrian = 0;
         $td = $sistole . "/" . $diastole;
         $stmt = $koneksi->prepare("INSERT INTO pasien_visit (id_patient, visit_ID, visit_date, id_poli, source_hub, created_user, visit_antrian, status_antrian, id_customer, id_doctor, visit_time, keluhan_penyerta, tekanan_darah, nadi, respirasi, tinggi_badan, berat_badan, patient_name_pcare, suhu, saturasi, bmi, bmi_keterangan, code_doctor, id_provider) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -152,11 +154,10 @@ try {
     $created_user = $kunjSakit ? "JKNOnsite" : "JKNSehat";
     $antrianBPJS = $kunjSakit ? $nomorantrean : $noUrut;
     $stmtPCare = $koneksi->prepare("INSERT INTO `pcare_pendaftaran` (`tanggal_daftar`, `noKartu`, `kdPoli`, `nmPoli`, `keluhan`, `kunjSakit`, `sistole`, `diastole`, `beratBadan`, `tinggiBadan`, `respRate`, `lingkarPerut`, `heartRate`, `rujukBalik`, `kdTkp`, `noUrut`, `nomor_visit`, `saturasi`, `suhu`, `jampraktek`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-    $stmtPCare->bind_param("ssssssiiiiiiisssssss", $tanggalperiksa, $nomorkartu, $kodepoli, $namapoli, $keluhan, $kunjSakit, $sistole, $diastole, $beratBadan, $tinggiBadan, $respRate, $lingkarPerut, $heartRate, $rujukbalik, $kdTkp, $noUrut, $visit_ID, $saturasi, $suhu, $jampraktek);
+    $stmtPCare->bind_param("ssssssssssssssssssss", $tanggalperiksa, $nomorkartu, $kodepoli, $namapoli, $keluhan, $kunjSakit, $sistole, $diastole, $beratBadan, $tinggiBadan, $respRate, $lingkarPerut, $heartRate, $rujukbalik, $kdTkp, $noUrut, $visit_ID, $saturasi, $suhu, $jampraktek);
     if (!$stmtPCare->execute()) throw new Exception("Gagal simpan pcare_pendaftaran.");
     $stmtPCare->close();
     $source_hub = "Poliklinik";
-    $visit_time = date('H:i:s');
     $td = $sistole . "/" . $diastole;
     $status_antrian = 0;
     $stmtVisit = $koneksi->prepare("INSERT INTO pasien_visit (id_patient, visit_ID, visit_date, id_poli, source_hub, created_user, visit_antrian, status_antrian, id_customer, id_doctor, noKartu, visit_time, anamnesa, tekanan_darah, nadi, respirasi, tinggi_badan, berat_badan, patient_name_pcare, suhu, saturasi, bmi, bmi_keterangan, code_doctor, id_provider) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
