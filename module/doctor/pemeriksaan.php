@@ -453,14 +453,20 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
     // callPatient(noAntrian, nama, poli, visit, dokter);
     let dokterRaw = (id_doctor || '').trim();
     dokterRaw = dokterRaw.replace(/\s+/g, ' ').trim();
-    const isDoctor = /^(drg|dr)\.?\s+/i.test(dokterRaw);
     let cleanName = dokterRaw;
+    let text;
+    const isDoctor = /^(drg|dr)\.?\s+/i.test(dokterRaw);
+    const isBidan = /^bd\.?\s+/i.test(dokterRaw);
     if (isDoctor) {
       cleanName = dokterRaw.replace(/^(drg|dr)\.?\s*/i, '').trim();
       text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan dokter ${cleanName}`;
-    } else { 
+    } else if (isBidan) {
+      cleanName = dokterRaw.replace(/^bd\.?\s*/i, '').trim();
+      text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan bidan ${cleanName}`;
+    } else {
       text = `Pasien atas nama ${namaPasien}, dipersilakan masuk ke ruangan ${cleanName}`;
     }
+
     // console.log(text);
     const requestId = crypto.randomUUID();
     sessionStorage.setItem('requestId', requestId);
