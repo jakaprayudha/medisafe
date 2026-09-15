@@ -13,6 +13,9 @@ date_default_timezone_set('Asia/Jakarta');
 
 $typePatient    = $_POST['typePatient'] ?? '';
 $kunjSakit      = (isset($_POST['kunjSakit']) && $_POST['kunjSakit'] === 'true') ? true : false;
+if ($kunjSakit === false) {
+    $typePatient = 'BPJS';
+}
 
 $nomorkartu     = $_POST['noKartu'] ?? '';
 $nik            = $_POST['noNik'] ?? '';
