@@ -546,18 +546,29 @@ $datamargin = mysqli_fetch_array($checkmargin);
   const hargaBeli = document.getElementById('pharmacy_buy');
   const hargaJual = document.getElementById('pharmacy_sale');
 
-  // ambil margin dari hidden input
-  const marginObat = parseFloat(document.querySelector('[name="margin_obat"]').value || 0);
+  // Ambil margin dari hidden input
+  const marginObat = parseFloat(
+    document.querySelector('[name="margin_obat"]').value || 0
+  );
 
   function hitungHargaJual() {
+
     let beli = parseFloat(hargaBeli.value) || 0;
 
+    // Hitung harga jual berdasarkan margin
     let jual = beli * (1 + (marginObat / 100));
 
-    hargaJual.value = Math.round(jual); // pembulatan
+    // Pembulatan ke kelipatan 100
+    // Contoh:
+    // 7216 -> 7200
+    // 7250 -> 7300
+    // 7251 -> 7300
+    jual = Math.round(jual / 100) * 100;
+
+    hargaJual.value = jual;
   }
 
-  // trigger saat input berubah
+  // Trigger saat harga beli berubah
   hargaBeli.addEventListener('input', hitungHargaJual);
 </script>
 
