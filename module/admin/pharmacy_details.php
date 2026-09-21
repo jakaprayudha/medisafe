@@ -191,7 +191,7 @@ $datamargin = mysqli_fetch_array($checkmargin);
                           <div class="col-6">
                             <div class="mb-3">
                               <label class="form-label">Harga Jual</label>
-                              <input type="number" class="form-control bg-light" readonly name="pharmacy_sale" id="pharmacy_sale">
+                              <input type="number" class="form-control bg-light" required name="pharmacy_sale" id="pharmacy_sale">
                             </div>
                           </div>
                           <div class="col-6">
