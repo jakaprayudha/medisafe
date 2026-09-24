@@ -360,7 +360,7 @@ if ($status_pasien == "UMUM") {
                 $heartRate,
                 $respRate,
                 $tinggiBadan,
-                $berat,
+                $beratBadan,
                 $bmi,
                 $bmi_keterangan,
                 $anamnesa,
@@ -523,7 +523,7 @@ if ($status_pasien == "UMUM") {
                 $heartRate,
                 $respRate,
                 $tinggiBadan,
-                $berat,
+                $beratBadan,
                 $bmi,
                 $bmi_keterangan,
                 $anamnesa, // masuk ke anamnesa
