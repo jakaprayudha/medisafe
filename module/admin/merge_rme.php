@@ -1,8 +1,10 @@
 <?php
+
 $title = 'Gabung RME';
 
 require '../../controller/view.php';
 require '../../database/connect.php';
+
 ?>
 
 <!doctype html>
@@ -58,6 +60,7 @@ require '../../database/connect.php';
       font-size: 11px;
       padding: 4px 8px;
       border-radius: 20px;
+      display: inline-block;
     }
 
     .match-badge {
@@ -66,6 +69,7 @@ require '../../database/connect.php';
       font-size: 11px;
       padding: 4px 8px;
       border-radius: 20px;
+      display: inline-block;
     }
 
     .empty-state {
@@ -92,6 +96,14 @@ require '../../database/connect.php';
     .search-patient-meta {
       font-size: 12px;
       color: #64748b;
+    }
+
+    .btn-gabung-rme {
+      white-space: nowrap;
+    }
+
+    .merge-action-wrapper {
+      margin-top: 8px;
     }
   </style>
 
@@ -135,13 +147,18 @@ require '../../database/connect.php';
                 <div class="card-body">
 
                   <h4 class="fw-bold mb-1">
+
                     <i class="ti ti-file-symlink text-primary me-2"></i>
+
                     Gabung RME
+
                   </h4>
 
                   <p class="text-muted mb-0">
+
                     Cari pasien berdasarkan Nomor RM, Nama, NIK atau Nomor Kartu
                     untuk menentukan rekam medis sumber.
+
                   </p>
 
                 </div>
@@ -179,7 +196,9 @@ require '../../database/connect.php';
                     <div class="col-md-9">
 
                       <label class="form-label fw-semibold">
+
                         Nomor RM / Nama / NIK / Nomor Kartu
+
                       </label>
 
                       <input
@@ -221,13 +240,17 @@ require '../../database/connect.php';
                     <div class="d-flex justify-content-between align-items-center mb-2">
 
                       <h6 class="fw-semibold mb-0">
+
                         Hasil Pencarian
+
                       </h6>
 
                       <span
                         id="totalPatientResult"
                         class="badge bg-secondary">
+
                         0 Data
+
                       </span>
 
                     </div>
@@ -268,6 +291,7 @@ require '../../database/connect.php';
                           </tr>
 
                         </thead>
+
 
                         <tbody id="patientSearchBody">
 
@@ -318,13 +342,17 @@ require '../../database/connect.php';
                           </h6>
 
                           <small class="text-muted">
+
                             Pasien ini digunakan sebagai acuan penggabungan RME.
+
                           </small>
 
                         </div>
 
                         <span class="source-badge">
+
                           RM SUMBER
+
                         </span>
 
                       </div>
@@ -343,7 +371,9 @@ require '../../database/connect.php';
                             <span
                               class="value"
                               id="source_id_patient">
+
                               -
+
                             </span>
 
                           </div>
@@ -362,7 +392,9 @@ require '../../database/connect.php';
                             <span
                               class="value"
                               id="source_rm">
+
                               -
+
                             </span>
 
                           </div>
@@ -381,7 +413,9 @@ require '../../database/connect.php';
                             <span
                               class="value"
                               id="source_name">
+
                               -
+
                             </span>
 
                           </div>
@@ -400,7 +434,9 @@ require '../../database/connect.php';
                             <span
                               class="value"
                               id="source_nik">
+
                               -
+
                             </span>
 
                           </div>
@@ -419,7 +455,9 @@ require '../../database/connect.php';
                             <span
                               class="value"
                               id="source_kartu">
+
                               -
+
                             </span>
 
                           </div>
@@ -593,6 +631,7 @@ require '../../database/connect.php';
 
   <script>
     $(document).ready(function() {
+
 
       // ============================================================
       // ENTER = SEARCH
@@ -798,7 +837,7 @@ require '../../database/connect.php';
                     <button
                       type="button"
                       class="btn btn-sm btn-primary btnPilihPasien"
-                      data-id="${patient.id_patient}">
+                      data-id="${escapeHtml(patient.id_patient)}">
 
                       <i class="ti ti-check me-1"></i>
 
@@ -1053,24 +1092,58 @@ require '../../database/connect.php';
                 String(source.id_patient);
 
 
-              const statusHtml =
-                isSource
+              // ==================================================
+              // STATUS + ACTION
+              // ==================================================
 
-                ?
+              let statusHtml = '';
 
-                `
+
+              if (isSource) {
+
+                statusHtml = `
+
                   <span class="source-badge">
+
                     RM SUMBER
-                  </span>
-                `
 
-                :
-
-                `
-                  <span class="match-badge">
-                    MATCH
                   </span>
+
                 `;
+
+              } else {
+
+                statusHtml = `
+
+                  <div class="d-flex flex-column align-items-start gap-1">
+
+                    <span class="match-badge">
+
+                      MATCH
+
+                    </span>
+
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-danger btn-gabung-rme"
+                      data-source-id="${escapeHtml(source.id_patient)}"
+                      data-target-id="${escapeHtml(visit.id_patient)}"
+                      data-target-rm="${escapeHtml(visit.nomor_rm || '-')}"
+                      data-target-name="${escapeHtml(visit.patient_name || '-')}"
+                      data-target-nik="${escapeHtml(visit.patient_nik || '-')}"
+                      data-target-kartu="${escapeHtml(visit.patient_number || '-')}">
+
+                      <i class="ti ti-git-merge me-1"></i>
+
+                      Gabung
+
+                    </button>
+
+                  </div>
+
+                `;
+
+              }
 
 
               html += `
@@ -1088,59 +1161,77 @@ require '../../database/connect.php';
                   <td>
 
                     <strong>
+
                       ${escapeHtml(
                         visit.nomor_rm || '-'
                       )}
+
                     </strong>
 
                   </td>
 
                   <td>
+
                     ${escapeHtml(
                       visit.id_patient || '-'
                     )}
+
                   </td>
 
                   <td>
+
                     ${escapeHtml(
                       visit.patient_name || '-'
                     )}
+
                   </td>
 
                   <td>
+
                     ${escapeHtml(
                       visit.patient_nik || '-'
                     )}
+
                   </td>
 
                   <td>
+
                     ${escapeHtml(
                       visit.patient_number || '-'
                     )}
+
                   </td>
 
                   <td>
+
                     ${escapeHtml(
                       visit.visit_ID || '-'
                     )}
+
                   </td>
 
                   <td>
+
                     ${escapeHtml(
                       visit.visit_date || '-'
                     )}
+
                   </td>
 
                   <td>
+
                     ${escapeHtml(
                       visit.id_doctor || '-'
                     )}
+
                   </td>
 
                   <td>
+
                     ${escapeHtml(
                       visit.id_poli || '-'
                     )}
+
                   </td>
 
                 </tr>
@@ -1198,19 +1289,375 @@ require '../../database/connect.php';
 
 
       // ============================================================
+      // GABUNG RME
+      // ============================================================
+
+      $(document).on(
+        'click',
+        '.btn-gabung-rme',
+        function() {
+
+          const button =
+            $(this);
+
+
+          const sourceId =
+            button.data('source-id');
+
+
+          const targetId =
+            button.data('target-id');
+
+
+          const targetRm =
+            button.data('target-rm') || '-';
+
+
+          const targetName =
+            button.data('target-name') || '-';
+
+
+          const targetNik =
+            button.data('target-nik') || '-';
+
+
+          const targetKartu =
+            button.data('target-kartu') || '-';
+
+
+          if (!sourceId || !targetId) {
+
+            Swal.fire({
+              icon: 'error',
+              title: 'Data Tidak Lengkap',
+              text: 'ID pasien sumber atau pasien target tidak ditemukan.'
+            });
+
+            return;
+
+          }
+
+
+          if (
+            String(sourceId) ===
+            String(targetId)
+          ) {
+
+            Swal.fire({
+              icon: 'warning',
+              title: 'Tidak Valid',
+              text: 'Pasien sumber dan pasien target tidak boleh sama.'
+            });
+
+            return;
+
+          }
+
+
+          Swal.fire({
+
+              icon: 'warning',
+
+              title: 'Gabungkan RME?',
+
+              html: `
+
+              <div class="text-start">
+
+                <p class="mb-2">
+
+                  Pasien berikut akan digabungkan ke
+
+                  <strong>RM Sumber</strong>:
+
+                </p>
+
+
+                <div class="border rounded p-3 bg-light">
+
+                  <div class="mb-1">
+
+                    <strong>Nama:</strong>
+                    ${escapeHtml(targetName)}
+
+                  </div>
+
+                  <div class="mb-1">
+
+                    <strong>Nomor RM:</strong>
+                    ${escapeHtml(targetRm)}
+
+                  </div>
+
+                  <div class="mb-1">
+
+                    <strong>NIK:</strong>
+                    ${escapeHtml(targetNik)}
+
+                  </div>
+
+                  <div>
+
+                    <strong>No. Kartu:</strong>
+                    ${escapeHtml(targetKartu)}
+
+                  </div>
+
+                </div>
+
+
+                <div class="alert alert-danger mt-3 mb-0">
+
+                  <i class="ti ti-alert-triangle me-1"></i>
+
+                  Semua visit pasien ini akan dipindahkan
+                  ke pasien sumber dan data pasien target
+                  akan dihapus setelah proses berhasil.
+
+                </div>
+
+              </div>
+
+            `,
+
+              showCancelButton: true,
+
+              confirmButtonText: `
+              <i class="ti ti-git-merge me-1"></i>
+              Ya, Gabungkan
+            `,
+
+              cancelButtonText: 'Batal',
+
+              confirmButtonColor: '#dc3545',
+
+              reverseButtons: true,
+
+              focusCancel: true
+
+            })
+
+            .then(function(result) {
+
+              if (!result.isConfirmed) {
+
+                return;
+
+              }
+
+
+              doGabungRme(
+                sourceId,
+                targetId,
+                button
+              );
+
+            });
+
+        }
+      );
+
+
+      // ============================================================
+      // EXECUTE GABUNG RME
+      // ============================================================
+
+      function doGabungRme(
+        sourceId,
+        targetId,
+        button
+      ) {
+
+        const originalHtml =
+          button.html();
+
+
+        button
+          .prop('disabled', true)
+          .html(`
+
+            <span
+              class="spinner-border spinner-border-sm me-1">
+            </span>
+
+            Proses...
+
+          `);
+
+
+        fetch(
+            'controller/admin/gabungRme.php?action=gabung', {
+              method: 'POST',
+
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+              },
+
+              body: new URLSearchParams({
+
+                source_id_patient: sourceId,
+
+                target_id_patient: targetId
+
+              })
+
+            }
+          )
+
+          .then(function(response) {
+
+            if (!response.ok) {
+
+              throw new Error(
+                'HTTP Error ' + response.status
+              );
+
+            }
+
+            return response.json();
+
+          })
+
+
+          .then(function(response) {
+
+            console.log(
+              'Gabung RME Response:',
+              response
+            );
+
+
+            if (response.status !== 'success') {
+
+              throw new Error(
+                response.message ||
+                'Gagal menggabungkan RME.'
+              );
+
+            }
+
+
+            const moved =
+              response.total_visit_moved ??
+              response.total_visit_before ??
+              0;
+
+
+            Swal.fire({
+
+                icon: 'success',
+
+                title: 'RME Berhasil Digabung',
+
+                html: `
+
+              <div class="text-start">
+
+                <p class="mb-2">
+
+                  Data pasien berhasil digabungkan
+                  ke pasien sumber.
+
+                </p>
+
+                <div class="alert alert-success mb-0">
+
+                  <strong>
+                    ${escapeHtml(String(moved))}
+                  </strong>
+
+                  visit berhasil dipindahkan.
+
+                </div>
+
+              </div>
+
+            `,
+
+                confirmButtonText: 'OK'
+
+              })
+
+              .then(function() {
+
+                /*
+                 * Reload RME sumber supaya:
+                 * - target sudah hilang
+                 * - visit sudah pindah
+                 * - status menjadi RM SUMBER
+                 */
+
+                loadPatientRme(sourceId);
+
+              });
+
+          })
+
+
+          .catch(function(error) {
+
+            console.error(
+              'Error Gabung RME:',
+              error
+            );
+
+
+            Swal.fire({
+
+              icon: 'error',
+
+              title: 'Gagal Menggabungkan RME',
+
+              text: error.message ||
+                'Terjadi kesalahan saat menggabungkan RME.'
+
+            });
+
+
+            button
+              .prop('disabled', false)
+              .html(originalHtml);
+
+          });
+
+      }
+
+
+      // ============================================================
       // ESCAPE HTML
       // ============================================================
 
       function escapeHtml(value) {
 
         return String(value ?? '')
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#039;');
+
+          .replace(
+            /&/g,
+            '&amp;'
+          )
+
+          .replace(
+            /</g,
+            '&lt;'
+          )
+
+          .replace(
+            />/g,
+            '&gt;'
+          )
+
+          .replace(
+            /"/g,
+            '&quot;'
+          )
+
+          .replace(
+            /'/g,
+            '&#039;'
+          );
 
       }
+
 
     });
   </script>
