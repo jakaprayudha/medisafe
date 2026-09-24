@@ -13,15 +13,12 @@ if (session_status() === PHP_SESSION_NONE) {
    session_start();
 }
 
-
 $id_customer = $_SESSION['id_customer'] ?? '';
-
 
 if (
    $id_customer === '' ||
    !is_numeric($id_customer)
 ) {
-
    echo json_encode([
       'status'  => 'error',
       'message' => 'Session customer tidak ditemukan.'
@@ -29,7 +26,6 @@ if (
 
    exit;
 }
-
 
 $id_customer = (int) $id_customer;
 
@@ -80,6 +76,49 @@ exit;
 // ============================================================
 // FUNCTION : GET PATIENTS
 // ============================================================
+//
+// ALUR:
+//
+// 1. User mencari berdasarkan:
+//    - nomor RM
+//    - nama
+//    - NIK
+//    - nomor kartu
+//    - KTP
+//    - BPJS
+//
+// 2. Sistem mencari DATA AWAL berdasarkan customer aktif.
+//
+// 3. Dari data awal mendapatkan:
+//    - patient_nik
+//    - patient_number
+//
+// 4. Sistem mencari SELURUH ms_patient
+//    yang mempunyai NIK / nomor kartu yang sama.
+//
+// 5. Tidak dibatasi id_customer pada tahap kedua.
+//
+// Contoh:
+//
+// Cari:
+// DEDY ZAKARIA PULUNGAN
+//
+// Data awal:
+// 55003
+// customer 1
+//
+// Identitas:
+// NIK       = 1271091605990002
+// No Kartu  = 0001296157443
+//
+// Kemudian dicari seluruh ms_patient:
+//
+// 55003   customer 1
+// 200535  customer 3
+// 205560  customer 3
+// 206541  customer 36
+//
+// ============================================================
 
 function getPatients($id_customer)
 {
@@ -106,38 +145,30 @@ function getPatients($id_customer)
    }
 
 
+   $likeKeyword = '%' . $keyword . '%';
+
+
    // ========================================================
-   // SEARCH PATIENT
+   // STEP 1
+   // CARI DATA AWAL
    // ========================================================
    //
-   // Search berdasarkan:
+   // Tahap pertama tetap menggunakan id_customer aktif.
    //
-   // - Nomor RM
-   // - Nama
-   // - NIK
-   // - Nomor Kartu
-   // - KTP
-   // - BPJS
+   // Tujuannya supaya pencarian awal tetap berasal
+   // dari customer yang sedang login.
    //
-   // WAJIB berdasarkan id_customer
+   // Setelah NIK / nomor kartu ditemukan,
+   // tahap kedua akan mencari lintas customer.
    //
+   // ========================================================
 
+   $sqlSeed = "
 
-   $sql = "
+        SELECT DISTINCT
 
-        SELECT
-
-            id_patient,
-            nomor_rm,
-            patient_name,
             patient_nik,
-            patient_number,
-            patient_ktp,
-            patient_bpjs,
-            patient_datebirth,
-            patient_gender,
-            patient_address,
-            patient_phone
+            patient_number
 
         FROM ms_patient
 
@@ -163,27 +194,317 @@ function getPatients($id_customer)
 
             )
 
+        LIMIT 100
+
+    ";
+
+
+   $stmtSeed = mysqli_prepare(
+      $koneksi,
+      $sqlSeed
+   );
+
+
+   if (!$stmtSeed) {
+
+      echo json_encode([
+         'status'  => 'error',
+         'message' => 'Gagal menyiapkan pencarian pasien: ' . mysqli_error($koneksi)
+      ], JSON_UNESCAPED_UNICODE);
+
+      return;
+   }
+
+
+   mysqli_stmt_bind_param(
+      $stmtSeed,
+      'issssss',
+      $id_customer,
+      $likeKeyword,
+      $likeKeyword,
+      $likeKeyword,
+      $likeKeyword,
+      $likeKeyword,
+      $likeKeyword
+   );
+
+
+   if (!mysqli_stmt_execute($stmtSeed)) {
+
+      echo json_encode([
+         'status'  => 'error',
+         'message' => 'Gagal menjalankan pencarian pasien: ' . mysqli_stmt_error($stmtSeed)
+      ], JSON_UNESCAPED_UNICODE);
+
+      mysqli_stmt_close($stmtSeed);
+
+      return;
+   }
+
+
+   $resultSeed = mysqli_stmt_get_result($stmtSeed);
+
+
+   if (!$resultSeed) {
+
+      echo json_encode([
+         'status'  => 'error',
+         'message' => 'Gagal membaca hasil pencarian pasien.'
+      ], JSON_UNESCAPED_UNICODE);
+
+      mysqli_stmt_close($stmtSeed);
+
+      return;
+   }
+
+
+   // ========================================================
+   // AMBIL SEMUA IDENTITAS
+   // ========================================================
+
+   $nikList = [];
+
+   $noKartuList = [];
+
+
+   while (
+      $row = mysqli_fetch_assoc($resultSeed)
+   ) {
+
+      $nik = trim(
+         (string)($row['patient_nik'] ?? '')
+      );
+
+      $noKartu = trim(
+         (string)($row['patient_number'] ?? '')
+      );
+
+
+      // ====================================================
+      // NIK
+      // ====================================================
+
+      if (
+         $nik !== '' &&
+         !in_array($nik, $nikList, true)
+      ) {
+
+         $nikList[] = $nik;
+      }
+
+
+      // ====================================================
+      // NOMOR KARTU
+      // ====================================================
+
+      if (
+         $noKartu !== '' &&
+         !in_array($noKartu, $noKartuList, true)
+      ) {
+
+         $noKartuList[] = $noKartu;
+      }
+   }
+
+
+   mysqli_stmt_close($stmtSeed);
+
+
+   // ========================================================
+   // TIDAK ADA HASIL
+   // ========================================================
+
+   if (
+      empty($nikList) &&
+      empty($noKartuList)
+   ) {
+
+      echo json_encode([
+         'status' => 'success',
+         'data'   => [],
+         'total'  => 0
+      ], JSON_UNESCAPED_UNICODE);
+
+      return;
+   }
+
+
+   // ========================================================
+   // STEP 2
+   // CARI SEMUA DATA BERDASARKAN IDENTITAS
+   // ========================================================
+   //
+   // PENTING:
+   //
+   // DI SINI TIDAK ADA:
+   //
+   //     id_customer = ?
+   //
+   // Karena tujuan Gabung RME adalah mencari seluruh
+   // record pasien yang memiliki identitas sama.
+   //
+   // ========================================================
+
+   $conditions = [];
+
+   $params = [];
+
+   $types = '';
+
+
+   // ========================================================
+   // CONDITION NIK
+   // ========================================================
+
+   if (!empty($nikList)) {
+
+      $placeholders = implode(
+         ',',
+         array_fill(
+            0,
+            count($nikList),
+            '?'
+         )
+      );
+
+
+      $conditions[] = "
+
+            (
+
+                patient_nik IN ($placeholders)
+
+                AND patient_nik IS NOT NULL
+
+                AND TRIM(patient_nik) <> ''
+
+            )
+
+        ";
+
+
+      foreach ($nikList as $nik) {
+
+         $params[] = $nik;
+
+         $types .= 's';
+      }
+   }
+
+
+   // ========================================================
+   // CONDITION NOMOR KARTU
+   // ========================================================
+
+   if (!empty($noKartuList)) {
+
+      $placeholders = implode(
+         ',',
+         array_fill(
+            0,
+            count($noKartuList),
+            '?'
+         )
+      );
+
+
+      $conditions[] = "
+
+            (
+
+                patient_number IN ($placeholders)
+
+                AND patient_number IS NOT NULL
+
+                AND TRIM(patient_number) <> ''
+
+            )
+
+        ";
+
+
+      foreach ($noKartuList as $noKartu) {
+
+         $params[] = $noKartu;
+
+         $types .= 's';
+      }
+   }
+
+
+   // ========================================================
+   // SAFETY
+   // ========================================================
+
+   if (empty($conditions)) {
+
+      echo json_encode([
+         'status' => 'success',
+         'data'   => [],
+         'total'  => 0
+      ], JSON_UNESCAPED_UNICODE);
+
+      return;
+   }
+
+
+   $whereIdentity = implode(
+      ' OR ',
+      $conditions
+   );
+
+
+   // ========================================================
+   // FINAL QUERY
+   // ========================================================
+   //
+   // TIDAK menggunakan id_customer.
+   //
+   // Sehingga:
+   //
+   // 55003
+   // 200535
+   // 205560
+   // 206541
+   //
+   // semuanya dapat ditampilkan.
+   //
+   // ========================================================
+
+   $sql = "
+
+        SELECT
+
+            id_patient,
+            nomor_rm,
+            patient_name,
+            patient_nik,
+            patient_number,
+            patient_ktp,
+            patient_bpjs,
+            patient_datebirth,
+            patient_gender,
+            patient_address,
+            patient_phone,
+            id_customer
+
+        FROM ms_patient
+
+        WHERE
+
+            (
+
+                $whereIdentity
+
+            )
+
         ORDER BY
 
-            CASE
+            patient_name ASC,
 
-                WHEN nomor_rm = ? THEN 1
+            id_patient ASC
 
-                WHEN patient_nik = ? THEN 2
-
-                WHEN patient_number = ? THEN 3
-
-                WHEN patient_ktp = ? THEN 4
-
-                WHEN patient_bpjs = ? THEN 5
-
-                ELSE 6
-
-            END,
-
-            patient_name ASC
-
-        LIMIT 100
+        LIMIT 500
 
     ";
 
@@ -202,7 +523,7 @@ function getPatients($id_customer)
 
       echo json_encode([
          'status'  => 'error',
-         'message' => 'Gagal menyiapkan query: ' . mysqli_error($koneksi)
+         'message' => 'Gagal menyiapkan query identitas pasien: ' . mysqli_error($koneksi)
       ], JSON_UNESCAPED_UNICODE);
 
       return;
@@ -210,53 +531,13 @@ function getPatients($id_customer)
 
 
    // ========================================================
-   // PARAMETER
+   // BIND DINAMIS
    // ========================================================
 
-   $likeKeyword =
-      '%' . $keyword . '%';
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | Parameter:
-    |
-    | 1  id_customer
-    |
-    | 2-7  LIKE
-    |     nomor_rm
-    |     patient_name
-    |     patient_nik
-    |     patient_number
-    |     patient_ktp
-    |     patient_bpjs
-    |
-    | 8-12 exact match ORDER BY
-    |--------------------------------------------------------------------------
-    */
-
-
    mysqli_stmt_bind_param(
-
       $stmt,
-
-      'isssssssssss',
-
-      $id_customer,
-
-      $likeKeyword,
-      $likeKeyword,
-      $likeKeyword,
-      $likeKeyword,
-      $likeKeyword,
-      $likeKeyword,
-
-      $keyword,
-      $keyword,
-      $keyword,
-      $keyword,
-      $keyword
-
+      $types,
+      ...$params
    );
 
 
@@ -268,7 +549,7 @@ function getPatients($id_customer)
 
       echo json_encode([
          'status'  => 'error',
-         'message' => 'Gagal menjalankan pencarian: ' . mysqli_stmt_error($stmt)
+         'message' => 'Gagal mengambil seluruh data pasien: ' . mysqli_stmt_error($stmt)
       ], JSON_UNESCAPED_UNICODE);
 
       mysqli_stmt_close($stmt);
@@ -281,15 +562,14 @@ function getPatients($id_customer)
    // RESULT
    // ========================================================
 
-   $result =
-      mysqli_stmt_get_result($stmt);
+   $result = mysqli_stmt_get_result($stmt);
 
 
    if (!$result) {
 
       echo json_encode([
          'status'  => 'error',
-         'message' => 'Gagal mengambil hasil pencarian: ' . mysqli_stmt_error($stmt)
+         'message' => 'Gagal membaca hasil pasien.'
       ], JSON_UNESCAPED_UNICODE);
 
       mysqli_stmt_close($stmt);
@@ -313,6 +593,9 @@ function getPatients($id_customer)
 
          'id_patient' =>
          $row['id_patient'],
+
+         'id_customer' =>
+         $row['id_customer'],
 
          'nomor_rm' =>
          $row['nomor_rm'],
@@ -373,6 +656,40 @@ function getPatients($id_customer)
 // ============================================================
 // FUNCTION : SEARCH RME
 // ============================================================
+//
+// ALUR:
+//
+// User memilih salah satu patient:
+//
+//     id_patient = 55003
+//
+// Sistem mengambil identitas:
+//
+//     NIK       = 1271091605990002
+//     No Kartu  = 0001296157443
+//
+// Kemudian:
+//
+//     ms_patient
+//
+// dicari berdasarkan:
+//
+//     patient_nik
+//     ATAU
+//     patient_number
+//
+// TANPA membatasi id_customer.
+//
+// Setelah mendapatkan semua id_patient:
+//
+//     55003
+//     200535
+//     205560
+//     206541
+//
+// Semua visit dari pasien tersebut ditampilkan.
+//
+// ============================================================
 
 function searchRme($id_customer)
 {
@@ -409,10 +726,15 @@ function searchRme($id_customer)
    // SOURCE PATIENT
    // ========================================================
    //
-   // PENTING:
-   // id_patient HARUS milik id_customer session.
+   // Source tetap harus berasal dari customer aktif.
    //
-
+   // Ini hanya untuk memastikan pasien yang dipilih
+   // memang berasal dari hasil pencarian awal.
+   //
+   // Setelah identitas ditemukan, pencarian visit
+   // dilakukan lintas customer.
+   //
+   // ========================================================
 
    $stmt = mysqli_prepare(
       $koneksi,
@@ -460,14 +782,10 @@ function searchRme($id_customer)
 
 
    mysqli_stmt_bind_param(
-
       $stmt,
-
       'ii',
-
       $idPatient,
       $id_customer
-
    );
 
 
@@ -484,12 +802,10 @@ function searchRme($id_customer)
    }
 
 
-   $result =
-      mysqli_stmt_get_result($stmt);
+   $result = mysqli_stmt_get_result($stmt);
 
 
-   $source =
-      mysqli_fetch_assoc($result);
+   $source = mysqli_fetch_assoc($result);
 
 
    mysqli_stmt_close($stmt);
@@ -543,14 +859,14 @@ function searchRme($id_customer)
 
 
    // ========================================================
-   // BUILD MATCH CONDITION
+   // BUILD IDENTITY CONDITION
    // ========================================================
 
-   $conditions = [];
+   $identityConditions = [];
 
-   $params = [];
+   $identityParams = [];
 
-   $types = '';
+   $identityTypes = '';
 
 
    // ========================================================
@@ -559,23 +875,23 @@ function searchRme($id_customer)
 
    if ($nik !== '') {
 
-      $conditions[] = "
+      $identityConditions[] = "
 
             (
 
-                mp.patient_nik = ?
+                patient_nik = ?
 
-                AND mp.patient_nik IS NOT NULL
+                AND patient_nik IS NOT NULL
 
-                AND TRIM(mp.patient_nik) <> ''
+                AND TRIM(patient_nik) <> ''
 
             )
 
         ";
 
-      $params[] = $nik;
+      $identityParams[] = $nik;
 
-      $types .= 's';
+      $identityTypes .= 's';
    }
 
 
@@ -585,31 +901,27 @@ function searchRme($id_customer)
 
    if ($noKartu !== '') {
 
-      $conditions[] = "
+      $identityConditions[] = "
 
             (
 
-                mp.patient_number = ?
+                patient_number = ?
 
-                AND mp.patient_number IS NOT NULL
+                AND patient_number IS NOT NULL
 
-                AND TRIM(mp.patient_number) <> ''
+                AND TRIM(patient_number) <> ''
 
             )
 
         ";
 
-      $params[] = $noKartu;
+      $identityParams[] = $noKartu;
 
-      $types .= 's';
+      $identityTypes .= 's';
    }
 
 
-   // ========================================================
-   // JIKA TIDAK ADA CONDITION
-   // ========================================================
-
-   if (empty($conditions)) {
+   if (empty($identityConditions)) {
 
       echo json_encode([
          'status'  => 'error',
@@ -620,33 +932,227 @@ function searchRme($id_customer)
    }
 
 
-   $whereMatch =
-      implode(
-         ' OR ',
-         $conditions
-      );
+   $whereIdentity = implode(
+      ' OR ',
+      $identityConditions
+   );
+
+
+   // ========================================================
+   // GET ALL RELATED PATIENTS
+   // ========================================================
+   //
+   // Ini mengambil seluruh ms_patient yang mempunyai
+   // NIK / nomor kartu sama.
+   //
+   // TIDAK ADA FILTER id_customer.
+   //
+   // ========================================================
+
+   $sqlPatients = "
+
+        SELECT
+
+            id_patient,
+            id_customer,
+            nomor_rm,
+            patient_name,
+            patient_nik,
+            patient_number
+
+        FROM ms_patient
+
+        WHERE
+
+            (
+
+                $whereIdentity
+
+            )
+
+        ORDER BY
+
+            id_patient ASC
+
+    ";
+
+
+   $stmtPatients = mysqli_prepare(
+      $koneksi,
+      $sqlPatients
+   );
+
+
+   if (!$stmtPatients) {
+
+      echo json_encode([
+         'status'  => 'error',
+         'message' => 'Gagal menyiapkan query pasien terkait: ' . mysqli_error($koneksi)
+      ], JSON_UNESCAPED_UNICODE);
+
+      return;
+   }
+
+
+   mysqli_stmt_bind_param(
+      $stmtPatients,
+      $identityTypes,
+      ...$identityParams
+   );
+
+
+   if (!mysqli_stmt_execute($stmtPatients)) {
+
+      echo json_encode([
+         'status'  => 'error',
+         'message' => 'Gagal mengambil pasien terkait: ' . mysqli_stmt_error($stmtPatients)
+      ], JSON_UNESCAPED_UNICODE);
+
+      mysqli_stmt_close($stmtPatients);
+
+      return;
+   }
+
+
+   $resultPatients =
+      mysqli_stmt_get_result($stmtPatients);
+
+
+   if (!$resultPatients) {
+
+      echo json_encode([
+         'status'  => 'error',
+         'message' => 'Gagal membaca pasien terkait.'
+      ], JSON_UNESCAPED_UNICODE);
+
+      mysqli_stmt_close($stmtPatients);
+
+      return;
+   }
+
+
+   $relatedPatients = [];
+
+   $patientIds = [];
+
+
+   while (
+      $patient = mysqli_fetch_assoc($resultPatients)
+   ) {
+
+      $patientId =
+         (int)$patient['id_patient'];
+
+
+      $patientIds[] =
+         $patientId;
+
+
+      $relatedPatients[] = [
+
+         'id_patient' =>
+         $patientId,
+
+         'id_customer' =>
+         $patient['id_customer'],
+
+         'nomor_rm' =>
+         $patient['nomor_rm'],
+
+         'patient_name' =>
+         $patient['patient_name'],
+
+         'patient_nik' =>
+         $patient['patient_nik'],
+
+         'patient_number' =>
+         $patient['patient_number']
+
+      ];
+   }
+
+
+   mysqli_stmt_close($stmtPatients);
+
+
+   // ========================================================
+   // TIDAK ADA PASIEN TERKAIT
+   // ========================================================
+
+   if (empty($patientIds)) {
+
+      echo json_encode([
+
+         'status' =>
+         'success',
+
+         'source_patient' =>
+         $source,
+
+         'related_patients' =>
+         [],
+
+         'total_related_patient' =>
+         0,
+
+         'total_visit' =>
+         0,
+
+         'visits' =>
+         []
+
+      ], JSON_UNESCAPED_UNICODE);
+
+      return;
+   }
+
+
+   // ========================================================
+   // BUILD ID PATIENT CONDITION
+   // ========================================================
+
+   $visitPlaceholders = implode(
+      ',',
+      array_fill(
+         0,
+         count($patientIds),
+         '?'
+      )
+   );
+
+
+   $visitTypes = str_repeat(
+      'i',
+      count($patientIds)
+   );
+
+
+   $visitParams =
+      $patientIds;
 
 
    // ========================================================
    // GET VISIT
    // ========================================================
    //
-   // PENTING:
+   // Semua visit dari seluruh id_patient yang mempunyai
+   // identitas sama.
    //
-   // mp.id_customer = ?
+   // Tidak ada filter id_customer.
    //
-   // Jadi walaupun NIK / nomor kartu sama,
-   // data customer lain TIDAK ikut masuk.
+   // visit_status 99 = BATAL
    //
+   // ========================================================
 
-
-   $sql = "
+   $sqlVisits = "
 
         SELECT
 
             pv.visit_ID,
 
             pv.visit_date,
+
+            pv.visit_status,
 
             pv.id_patient,
 
@@ -672,17 +1178,9 @@ function searchRme($id_customer)
 
         WHERE
 
-            mp.id_customer = ?
+            pv.id_patient IN ($visitPlaceholders)
 
             AND pv.visit_status <> 99
-
-            AND
-
-            (
-
-                $whereMatch
-
-            )
 
         ORDER BY
 
@@ -693,17 +1191,13 @@ function searchRme($id_customer)
     ";
 
 
-   // ========================================================
-   // PREPARE
-   // ========================================================
-
-   $stmt = mysqli_prepare(
+   $stmtVisits = mysqli_prepare(
       $koneksi,
-      $sql
+      $sqlVisits
    );
 
 
-   if (!$stmt) {
+   if (!$stmtVisits) {
 
       echo json_encode([
          'status'  => 'error',
@@ -715,32 +1209,13 @@ function searchRme($id_customer)
 
 
    // ========================================================
-   // BIND DINAMIS
+   // BIND ID PATIENT
    // ========================================================
-   //
-   // Parameter pertama:
-   // id_customer
-   //
-   // Setelah itu:
-   // NIK dan/atau nomor kartu
-   //
-
-
-   $bindTypes =
-      'i' . $types;
-
-
-   $bindParams =
-      array_merge(
-         [$id_customer],
-         $params
-      );
-
 
    mysqli_stmt_bind_param(
-      $stmt,
-      $bindTypes,
-      ...$bindParams
+      $stmtVisits,
+      $visitTypes,
+      ...$visitParams
    );
 
 
@@ -748,14 +1223,14 @@ function searchRme($id_customer)
    // EXECUTE
    // ========================================================
 
-   if (!mysqli_stmt_execute($stmt)) {
+   if (!mysqli_stmt_execute($stmtVisits)) {
 
       echo json_encode([
          'status'  => 'error',
-         'message' => 'Gagal mengambil visit: ' . mysqli_stmt_error($stmt)
+         'message' => 'Gagal mengambil visit: ' . mysqli_stmt_error($stmtVisits)
       ], JSON_UNESCAPED_UNICODE);
 
-      mysqli_stmt_close($stmt);
+      mysqli_stmt_close($stmtVisits);
 
       return;
    }
@@ -765,18 +1240,18 @@ function searchRme($id_customer)
    // RESULT
    // ========================================================
 
-   $result =
-      mysqli_stmt_get_result($stmt);
+   $resultVisits =
+      mysqli_stmt_get_result($stmtVisits);
 
 
-   if (!$result) {
+   if (!$resultVisits) {
 
       echo json_encode([
          'status'  => 'error',
-         'message' => 'Gagal membaca hasil visit: ' . mysqli_stmt_error($stmt)
+         'message' => 'Gagal membaca hasil visit.'
       ], JSON_UNESCAPED_UNICODE);
 
-      mysqli_stmt_close($stmt);
+      mysqli_stmt_close($stmtVisits);
 
       return;
    }
@@ -790,7 +1265,7 @@ function searchRme($id_customer)
    // ========================================================
 
    while (
-      $row = mysqli_fetch_assoc($result)
+      $row = mysqli_fetch_assoc($resultVisits)
    ) {
 
       $visits[] = [
@@ -800,6 +1275,9 @@ function searchRme($id_customer)
 
          'visit_date' =>
          $row['visit_date'],
+
+         'visit_status' =>
+         $row['visit_status'],
 
          'id_patient' =>
          $row['id_patient'],
@@ -829,7 +1307,7 @@ function searchRme($id_customer)
    }
 
 
-   mysqli_stmt_close($stmt);
+   mysqli_stmt_close($stmtVisits);
 
 
    // ========================================================
@@ -843,6 +1321,22 @@ function searchRme($id_customer)
 
       'source_patient' =>
       $source,
+
+      'identity' => [
+
+         'patient_nik' =>
+         $nik,
+
+         'patient_number' =>
+         $noKartu
+
+      ],
+
+      'related_patients' =>
+      $relatedPatients,
+
+      'total_related_patient' =>
+      count($relatedPatients),
 
       'total_visit' =>
       count($visits),
