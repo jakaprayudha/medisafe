@@ -674,6 +674,8 @@ function searchRme($id_customer)
 
             mp.id_customer = ?
 
+            AND pv.visit_status <> 99
+
             AND
 
             (

@@ -1133,13 +1133,13 @@ require '../../database/connect.php';
 
                   <td>
                     ${escapeHtml(
-                      visit.nama_dokter || '-'
+                      visit.id_doctor || '-'
                     )}
                   </td>
 
                   <td>
                     ${escapeHtml(
-                      visit.nama_poli || '-'
+                      visit.id_poli || '-'
                     )}
                   </td>
 
