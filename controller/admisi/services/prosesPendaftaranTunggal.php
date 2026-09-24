@@ -134,7 +134,7 @@ try {
         "noKartu" => $nomorkartu,
         "kdPoli" => $kodepoli,
         "keluhan" => $keluhan,
-        "kunjSakit" => $kunjSakit, // payload API tetep boolean
+        "kunjSakit" => $kunjSakit,
         "sistole" => $sistole,
         "diastole" => $diastole,
         "beratBadan" => $beratBadan,
@@ -165,8 +165,7 @@ try {
         } catch (Exception $exBatal) {}
         throw new Exception($errorMsg . $statusBatalText);
     }
-    
-    // TANDAI BPJS SUDAH HIT SUCCESS (Untuk rollback kompensasi)
+
     $bpjs_berhasil = true;
 
     $noUrut = (string)$resPendaftaran['data']['message'];
@@ -174,7 +173,6 @@ try {
     $antrianBPJS = $kunjSakit ? $nomorantrean : $noUrut;
     
     $stmtPCare = $koneksi->prepare("INSERT INTO `pcare_pendaftaran` (`tanggal_daftar`, `noKartu`, `kdPoli`, `nmPoli`, `keluhan`, `kunjSakit`, `sistole`, `diastole`, `beratBadan`, `tinggiBadan`, `respRate`, `lingkarPerut`, `heartRate`, `rujukBalik`, `kdTkp`, `noUrut`, `nomor_visit`, `saturasi`, `suhu`, `jampraktek`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-    // $safe_kunjSakit dimasukkan agar tidak mengirim data boolean kosong
     $stmtPCare->bind_param("ssssssssssssssssssss", $tanggalperiksa, $nomorkartu, $kodepoli, $namapoli, $keluhan, $safe_kunjSakit, $sistole, $diastole, $beratBadan, $tinggiBadan, $respRate, $lingkarPerut, $heartRate, $rujukbalik, $kdTkp, $noUrut, $visit_ID, $saturasi, $suhu, $jampraktek);
     if (!$stmtPCare->execute()) throw new Exception("Gagal simpan pcare_pendaftaran: " . $stmtPCare->error);
     $stmtPCare->close();

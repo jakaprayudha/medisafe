@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 $idcustomer = $_SESSION['id_customer'];
-// $idcustomer = '10';
+// $idcustomer = '36';
 
 $sql_antrol = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM `setting_antrol` WHERE id_customer = '$idcustomer'"));
 if ($sql_antrol) {
