@@ -91,6 +91,12 @@
             <span class="hide-menu">Kontrak Kerjasama</span>
          </a>
       </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link" href="module/admin/merge_rme" aria-expanded="false">
+            <iconify-icon icon="mdi:file-account-outline"></iconify-icon>
+            <span class="hide-menu">Gabung RME</span>
+         </a>
+      </li>
 
       <li class="nav-small-cap">
          <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
