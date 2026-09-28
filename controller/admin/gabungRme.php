@@ -1395,7 +1395,15 @@ function gabungRme($id_customer)
    // START TRANSACTION
    // ========================================================
 
-   mysqli_begin_transaction($koneksi);
+   if (!mysqli_begin_transaction($koneksi)) {
+
+      echo json_encode([
+         'status'  => 'error',
+         'message' => 'Gagal memulai transaksi: ' . mysqli_error($koneksi)
+      ], JSON_UNESCAPED_UNICODE);
+
+      return;
+   }
 
 
    try {
@@ -1940,9 +1948,13 @@ function gabungRme($id_customer)
       // 9. COMMIT
       // ====================================================
 
-      mysqli_commit(
-         $koneksi
-      );
+      if (!mysqli_commit($koneksi)) {
+
+         throw new Exception(
+            'Gagal menyimpan perubahan (commit gagal): ' .
+               mysqli_error($koneksi)
+         );
+      }
 
 
       // ====================================================
