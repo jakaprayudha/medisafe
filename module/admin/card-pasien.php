@@ -4,6 +4,7 @@
          <div class="d-flex align-items-center gap-3">
             <div class="avatar-circle bg-primary text-white">
                <span id="pc_initial">-</span>
+               <img id="pc_photo" alt="Foto pasien" style="display: none;">
             </div>
             <div>
                <h5 class="mb-0 fw-semibold" id="pc_name">-</h5>
@@ -147,6 +148,13 @@
          background: linear-gradient(135deg, #4f46e5, #6366f1);
          box-shadow: 0 6px 18px rgba(99, 102, 241, .18);
          flex-shrink: 0;
+         overflow: hidden;
+      }
+
+      .avatar-circle img {
+         width: 100%;
+         height: 100%;
+         object-fit: cover;
       }
 
       /* =========================
@@ -335,6 +343,27 @@
 
       setText("pc_name", name);
       setText("pc_initial", name !== "-" ? name.charAt(0).toUpperCase() : "-");
+      const photo = document.getElementById("pc_photo");
+      const initial = document.getElementById("pc_initial");
+      const photoFile = data.patient_foto;
+
+      photo.style.display = "none";
+      initial.style.display = "";
+
+      if (photoFile && photoFile !== "null") {
+         photo.onload = () => {
+            photo.style.display = "block";
+            initial.style.display = "none";
+         };
+         photo.onerror = () => {
+            photo.style.display = "none";
+            initial.style.display = "";
+         };
+         photo.src = new URL(`uploads/patient/${encodeURIComponent(photoFile)}`, document.baseURI).href;
+      } else {
+         photo.removeAttribute("src");
+      }
+
       setText("pc_rm", "No RM: " + safeVal(data.nomor_rm));
       setText("pc_gender", safeVal(data.patient_gender));
       setText("pc_dokter", safeVal(data.id_doctor));
