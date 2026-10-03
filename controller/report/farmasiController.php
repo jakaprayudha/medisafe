@@ -197,7 +197,7 @@ SELECT
             WHERE
                 psp.id_pharmacy = CAST(p.id_pharmacy AS CHAR)
 
-                AND psp.id_customer = CAST(p.id_customer AS CHAR)
+                AND psp.id_customer = CAST(? AS CHAR)
 
                 AND psp.tanggal >= ?
 
@@ -247,6 +247,10 @@ SELECT
 
 FROM ms_pharmacy p
 
+LEFT JOIN ms_pharmacy_parrent log
+    ON log.parent_id = p.id_pharmacy
+    AND log.id_customer_real = ?
+
 
 /* ============================================================
    FILTER MASTER
@@ -254,7 +258,21 @@ FROM ms_pharmacy p
 
 WHERE
 
-    p.id_customer = ?
+    (
+        p.id_customer = ?
+        OR (
+            p.id_customer = 0
+            AND log.id IS NULL
+        )
+    )
+
+    AND (
+        log.status_log IS NULL
+        OR log.status_log != 'DELETE'
+    )
+
+    AND p.pharmacy_name_generic IS NOT NULL
+    AND TRIM(p.pharmacy_name_generic) != ''
 
     AND p.pharmacy_status = 1
 
@@ -303,11 +321,13 @@ if (!$stmt) {
 */
 
 $stmt->bind_param(
-   "sssss",
+   "sssssii",
+   $id_customer,
    $fromDate,
    $toDate,
    $fromDate,
    $toDate,
+   $id_customer,
    $id_customer
 );
 
