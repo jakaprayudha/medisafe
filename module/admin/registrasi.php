@@ -1160,7 +1160,8 @@ date_default_timezone_set('Asia/Jakarta');
             Pastikan wajah terlihat jelas, menghadap kamera dan tidak terpotong.
           </div>
 
-          <div id="faceStatus" class="face-status text-warning">
+          <div id="faceMatchInfo" class="text-center mb-1"></div>
+<div id="faceStatus" class="face-status text-warning">
             <i class="fas fa-exclamation-circle"></i>
             <span>Memuat deteksi wajah...</span>
           </div>
@@ -1443,7 +1444,7 @@ date_default_timezone_set('Asia/Jakarta');
                       </li>
 
                       <li>
-                        <a class="dropdown-item camera-btn" href="javascript:;" data-id="${row.id_visit}">
+                        <a class="dropdown-item camera-btn" href="javascript:;" data-id="${row.id_visit}" data-face="${row.patient_face_image ?? ''}">
                           <i class="fas fa-camera me-2 text-success"></i> Ambil Foto
                         </a>
                       </li>
@@ -2378,16 +2379,46 @@ date_default_timezone_set('Asia/Jakarta');
 <script src="assets/js/face-api.min.js"></script>
 <script>
   let currentPatientId = null;
+  let currentMasterFace = "";
   let stream = null;
   let faceTimer = null;
   let faceModelReady = null;
+  let masterDescriptor = null;
+  let faceMismatch = false;
+  let faceMatched = false;
+  let masterState = "loading";
+  const FACE_MATCH_THRESHOLD = 0.5;
   let faceTooClose = false;
 
   function loadFaceModel() {
     if (!faceModelReady) {
-      faceModelReady = faceapi.nets.tinyFaceDetector.loadFromUri('models');
+      faceModelReady = Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri('models'),
+        faceapi.nets.faceLandmark68Net.loadFromUri('models'),
+        faceapi.nets.faceRecognitionNet.loadFromUri('models')
+      ]);
     }
     return faceModelReady;
+  }
+
+  // Ambil descriptor wajah master pasien (foto rekam sebelumnya)
+  async function loadMasterDescriptor(path) {
+    masterDescriptor = null;
+    masterState = "none";
+    faceMatched = false;
+    if (!path) return;
+    masterState = "error";
+    try {
+      const img = await faceapi.fetchImage(path.replace(/^(\.\.\/)+/, ''));
+      const det = await faceapi
+        .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({inputSize: 416, scoreThreshold: 0.4}))
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+      masterDescriptor = det ? det.descriptor : null;
+      masterState = det ? "ok" : "error";
+    } catch (e) {
+      console.error("Gagal memuat wajah master", e);
+    }
   }
 
   function setFaceState(ok, message, tooClose = false) {
@@ -2395,10 +2426,19 @@ date_default_timezone_set('Asia/Jakarta');
     const circle = document.querySelector(".face-circle");
     const status = document.getElementById("faceStatus");
     const btn = document.getElementById("captureBtn");
-    circle.classList.toggle("face-frame-success", ok);
-    circle.classList.toggle("face-frame-warning", !ok);
-    status.className = "face-status " + (ok ? "text-success" : "text-warning");
-    status.innerHTML = `<i class="fas ${ok ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i><span>${message}</span>`;
+    circle.classList.toggle("face-frame-danger", faceMismatch);
+    circle.classList.toggle("face-frame-warning", !ok && !faceMismatch);
+    circle.classList.toggle("face-frame-success", ok && !faceMismatch);
+    status.className = "face-status " + (faceMismatch ? "text-danger" : ok ? "text-success" : "text-warning");
+    status.innerHTML = `<i class="fas ${faceMismatch ? 'fa-times-circle' : ok ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i><span>${message}</span>`;
+    const info = document.getElementById("faceMatchInfo");
+    if (info) {
+      if (masterState === "none") info.innerHTML = '<span class="badge bg-secondary">Wajah belum direkam di master data pasien</span>';
+      else if (masterState === "error") info.innerHTML = '<span class="badge bg-secondary">Foto master tidak terbaca / wajah tidak terdeteksi</span>';
+      else if (faceMismatch) info.innerHTML = '<span class="badge bg-danger">Wajah BUKAN pasien ini</span>';
+      else if (masterState === "ok" && faceMatched) info.innerHTML = '<span class="badge bg-success">Wajah SESUAI master pasien</span>';
+      else info.innerHTML = '<span class="badge bg-warning text-dark">Memverifikasi wajah...</span>';
+    }
   }
 
   // Cek apakah wajah (koordinat video asli) berada pas di dalam lingkaran
@@ -2442,18 +2482,38 @@ date_default_timezone_set('Asia/Jakarta');
       setFaceState(false, "Gagal memuat model deteksi wajah");
       return;
     }
+    faceMismatch = false;
+    setFaceState(false, "Memuat data wajah pasien...");
+    await loadMasterDescriptor(currentMasterFace);
     const opts = new faceapi.TinyFaceDetectorOptions({inputSize: 320, scoreThreshold: 0.5});
     let busy = false;
     faceTimer = setInterval(async () => {
       if (busy || !video.videoWidth || video.paused) return;
       busy = true;
       try {
-        const det = await faceapi.detectSingleFace(video, opts);
+        let q = faceapi.detectSingleFace(video, opts);
+        if (masterDescriptor) q = q.withFaceLandmarks().withFaceDescriptor();
+        const det = await q;
         if (!faceTimer) return;
-        if (!det) setFaceState(false, "Wajah tidak terdeteksi");
-        else {
-          const r = evaluateFace(det.box, video);
-          setFaceState(r.ok, r.msg, !!r.tooClose);
+        if (!det) {
+          faceMismatch = false;
+          faceMatched = false;
+          setFaceState(false, "Wajah tidak terdeteksi");
+        } else {
+          const box = det.detection ? det.detection.box : det.box;
+          const r = evaluateFace(box, video);
+          faceMismatch = false;
+          faceMatched = false;
+          if (masterDescriptor && det.descriptor) {
+            const dist = faceapi.euclideanDistance(masterDescriptor, det.descriptor);
+            if (dist > FACE_MATCH_THRESHOLD) {
+              faceMismatch = true;
+              setFaceState(false, "Wajah TIDAK sesuai dengan data master pasien", !!r.tooClose);
+              return;
+            }
+            faceMatched = true;
+          }
+          setFaceState(r.ok, r.ok && masterDescriptor ? "Wajah sesuai pasien, siap diambil" : r.msg, !!r.tooClose);
         }
       } catch (e) {
         console.error(e);
@@ -2473,6 +2533,7 @@ date_default_timezone_set('Asia/Jakarta');
   $(document).on("click", ".camera-btn", async function() {
     // WAJIB: ambil id dari tombol
     currentPatientId = $(this).data("id");
+    currentMasterFace = $(this).attr("data-face") || "";
     console.log("📌 ID PATIENT:", currentPatientId);
     const modalEl = document.getElementById("cameraModal");
     const modal = new bootstrap.Modal(modalEl);
@@ -2497,6 +2558,10 @@ date_default_timezone_set('Asia/Jakarta');
   });
   document.getElementById("captureBtn").addEventListener("click", function() {
     if (this.disabled) return;
+    if (faceMismatch) {
+      Swal.fire("Wajah tidak sesuai", "Wajah di kamera bukan wajah pasien pada data master.", "error");
+      return;
+    }
     if (faceTooClose) {
       Swal.fire("Terlalu dekat", "Mundurkan wajah sedikit dari kamera.", "warning");
       return;
@@ -2699,6 +2764,7 @@ date_default_timezone_set('Asia/Jakarta');
 
       console.log("🛑 Stop camera");
       stopFaceDetection();
+      faceMismatch = false;
 
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
