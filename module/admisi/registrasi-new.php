@@ -10,6 +10,512 @@ require '../../controller/view.php';
   <?php
   require '../../assets/template/head.php';
   ?>
+  <style>
+    /* =========================================================
+   FACE CAMERA
+   ========================================================= */
+
+    .face-camera-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+
+      background: #000;
+
+      overflow: hidden;
+      border-radius: 14px;
+
+      /* supaya kamera tidak terlalu tinggi */
+      aspect-ratio: 4 / 3;
+    }
+
+
+    /* =========================================================
+   VIDEO
+   ========================================================= */
+
+    #video {
+      width: 100%;
+      height: 100%;
+
+      display: block;
+
+      object-fit: cover;
+
+      /* Mirror seperti kamera depan */
+      transform: scaleX(-1);
+    }
+
+
+    /* =========================================================
+   OVERLAY
+   ========================================================= */
+
+    .face-overlay {
+
+      position: absolute;
+
+      inset: 0;
+
+      display: flex;
+
+      align-items: center;
+      justify-content: center;
+
+      pointer-events: none;
+
+      /*
+     * Background transparan.
+     * Gelapnya dibuat oleh box-shadow
+     * pada face-frame.
+     */
+
+    }
+
+
+    /* =========================================================
+   FACE FRAME
+   Bentuk menyerupai kepala / wajah
+   ========================================================= */
+
+    .face-circle {
+
+      position: relative;
+
+      width: 250px;
+      height: 320px;
+
+      /*
+     * Bentuk wajah:
+     * - bagian kepala membulat
+     * - sisi pipi rounded
+     * - bagian bawah mengecil seperti dagu
+     */
+
+      border-radius:
+        48% 48% 44% 44% / 38% 38% 62% 62%;
+
+      border: 4px solid #00ff88;
+
+      background: transparent;
+
+      /*
+     * Membuat area luar frame menjadi gelap
+     * tetapi bagian wajah tetap terlihat jelas.
+     */
+
+      box-shadow:
+
+        0 0 0 9999px rgba(0, 0, 0, 0.45),
+
+        0 0 18px rgba(0, 255, 136, 0.65),
+
+        inset 0 0 15px rgba(0, 255, 136, 0.05);
+
+      transition:
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
+
+    }
+
+
+    /* =========================================================
+   CORNER MARKER
+   ========================================================= */
+
+    .face-corner {
+
+      position: absolute;
+
+      width: 30px;
+      height: 30px;
+
+      border-color: #ffffff;
+
+      pointer-events: none;
+
+    }
+
+
+    /* TOP LEFT */
+
+    .corner-tl {
+
+      top: -4px;
+      left: -4px;
+
+      border-top: 5px solid;
+      border-left: 5px solid;
+
+      border-radius: 5px 0 0 0;
+
+    }
+
+
+    /* TOP RIGHT */
+
+    .corner-tr {
+
+      top: -4px;
+      right: -4px;
+
+      border-top: 5px solid;
+      border-right: 5px solid;
+
+      border-radius: 0 5px 0 0;
+
+    }
+
+
+    /* BOTTOM LEFT */
+
+    .corner-bl {
+
+      bottom: -4px;
+      left: -4px;
+
+      border-bottom: 5px solid;
+      border-left: 5px solid;
+
+      border-radius: 0 0 0 5px;
+
+    }
+
+
+    /* BOTTOM RIGHT */
+
+    .corner-br {
+
+      bottom: -4px;
+      right: -4px;
+
+      border-bottom: 5px solid;
+      border-right: 5px solid;
+
+      border-radius: 0 0 5px 0;
+
+    }
+
+
+    /* =========================================================
+   TEXT PANDUAN
+   ========================================================= */
+
+    .face-guide-text {
+
+      font-size: 16px;
+
+      font-weight: 600;
+
+      color: #333;
+
+      line-height: 1.5;
+
+    }
+
+
+    .face-guide-text i {
+
+      color: #198754;
+
+      margin-right: 5px;
+
+    }
+
+
+    .face-guide-small {
+
+      font-size: 13px;
+
+      color: #777;
+
+      margin-top: 4px;
+
+      line-height: 1.5;
+
+    }
+
+
+    /* =========================================================
+   BUTTON
+   ========================================================= */
+
+    #captureBtn {
+
+      min-width: 160px;
+
+      font-weight: 600;
+
+      border-radius: 8px;
+
+    }
+
+
+    /* =========================================================
+   MODAL CAMERA
+   ========================================================= */
+
+    #cameraModal .modal-body {
+
+      padding: 20px;
+
+    }
+
+
+    #cameraModal .modal-header {
+
+      border-bottom: 1px solid #eee;
+
+    }
+
+
+    #cameraModal .modal-title {
+
+      font-weight: 600;
+
+    }
+
+
+    /* =========================================================
+   CAMERA STATUS
+   ========================================================= */
+
+    .face-status {
+
+      display: inline-flex;
+
+      align-items: center;
+
+      gap: 6px;
+
+      margin-top: 8px;
+
+      font-size: 13px;
+
+      font-weight: 500;
+
+    }
+
+
+    /* =========================================================
+   STATUS WARNA
+   ========================================================= */
+
+    .face-frame-success {
+
+      border-color: #00ff88 !important;
+
+      box-shadow:
+
+        0 0 0 9999px rgba(0, 0, 0, 0.45),
+
+        0 0 25px rgba(0, 255, 136, 0.85),
+
+        inset 0 0 20px rgba(0, 255, 136, 0.08);
+
+    }
+
+
+    .face-frame-warning {
+
+      border-color: #ffc107 !important;
+
+      box-shadow:
+
+        0 0 0 9999px rgba(0, 0, 0, 0.45),
+
+        0 0 25px rgba(255, 193, 7, 0.75);
+
+    }
+
+
+    .face-frame-danger {
+
+      border-color: #dc3545 !important;
+
+      box-shadow:
+
+        0 0 0 9999px rgba(0, 0, 0, 0.45),
+
+        0 0 25px rgba(220, 53, 69, 0.75);
+
+    }
+
+
+    /* =========================================================
+   ANIMATION
+   ========================================================= */
+
+    @keyframes facePulse {
+
+      0% {
+
+        box-shadow:
+
+          0 0 0 9999px rgba(0, 0, 0, 0.45),
+
+          0 0 12px rgba(0, 255, 136, 0.5);
+
+      }
+
+      50% {
+
+        box-shadow:
+
+          0 0 0 9999px rgba(0, 0, 0, 0.45),
+
+          0 0 25px rgba(0, 255, 136, 0.85);
+
+      }
+
+      100% {
+
+        box-shadow:
+
+          0 0 0 9999px rgba(0, 0, 0, 0.45),
+
+          0 0 12px rgba(0, 255, 136, 0.5);
+
+      }
+
+    }
+
+
+    .face-circle {
+
+      animation: facePulse 2s infinite;
+
+    }
+
+
+    /* =========================================================
+   DESKTOP
+   ========================================================= */
+
+    @media (min-width: 768px) {
+
+      .face-camera-wrapper {
+
+        max-width: 640px;
+
+      }
+
+      .face-circle {
+
+        width: 250px;
+        height: 320px;
+
+      }
+
+    }
+
+
+    /* =========================================================
+   TABLET
+   ========================================================= */
+
+    @media (max-width: 767px) {
+
+      .face-camera-wrapper {
+
+        max-width: 100%;
+
+      }
+
+      .face-circle {
+
+        width: 220px;
+        height: 285px;
+
+      }
+
+    }
+
+
+    /* =========================================================
+   MOBILE
+   ========================================================= */
+
+    @media (max-width: 576px) {
+
+      .face-camera-wrapper {
+
+        aspect-ratio: 3 / 4;
+
+        border-radius: 12px;
+
+      }
+
+      .face-circle {
+
+        width: 205px;
+        height: 270px;
+
+        border-width: 3px;
+
+      }
+
+      .face-corner {
+
+        width: 25px;
+        height: 25px;
+
+      }
+
+      .face-guide-text {
+
+        font-size: 14px;
+
+      }
+
+      .face-guide-small {
+
+        font-size: 12px;
+
+      }
+
+      #captureBtn {
+
+        width: 100%;
+
+        max-width: 240px;
+
+      }
+
+    }
+
+
+    /* =========================================================
+   VERY SMALL MOBILE
+   ========================================================= */
+
+    @media (max-width: 380px) {
+
+      .face-circle {
+
+        width: 185px;
+        height: 245px;
+
+      }
+
+    }
+
+
+    /* =========================================================
+   REDUCE MOTION
+   ========================================================= */
+
+    @media (prefers-reduced-motion: reduce) {
+
+      .face-circle {
+
+        animation: none;
+
+      }
+
+    }
+  </style>
 </head>
 
 <body>
@@ -87,14 +593,44 @@ require '../../controller/view.php';
         </div>
 
         <div class="modal-body text-center">
-          <video id="video" width="100%" autoplay playsinline></video>
+
+          <div class="face-camera-wrapper">
+
+            <video id="video" autoplay playsinline></video>
+
+            <!-- Overlay kamera -->
+            <div class="face-overlay">
+
+              <!-- Lingkaran wajah -->
+              <div class="face-circle">
+                <div class="face-corner corner-tl"></div>
+                <div class="face-corner corner-tr"></div>
+                <div class="face-corner corner-bl"></div>
+                <div class="face-corner corner-br"></div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="face-guide-text mt-3">
+            <i class="fas fa-user-circle"></i>
+            Posisikan wajah tepat di dalam lingkaran
+          </div>
+
+          <div class="face-guide-small">
+            Pastikan wajah terlihat jelas, menghadap kamera dan tidak terpotong.
+          </div>
+
           <canvas id="canvas" style="display:none;"></canvas>
 
           <div class="mt-3">
-            <button id="captureBtn" class="btn btn-success">
-              Ambil Gambar
+            <button id="captureBtn" class="btn btn-success px-4">
+              <i class="fas fa-camera"></i>
+              Ambil Wajah
             </button>
           </div>
+
         </div>
 
       </div>
@@ -538,9 +1074,9 @@ require '../../controller/view.php';
 
         },
         success: function(response) {
-          if (type == 'nik'){
+          if (type == 'nik') {
             $('#patient_bpjs').val(response.noKartu);
-          }else{
+          } else {
             $('#patient_nik').val(response.nik);
           }
           $('#patient_name').val(response.nama);
@@ -548,7 +1084,7 @@ require '../../controller/view.php';
           $('#patient_phone').val(response.noHP);
           if (response.sex == 'L') {
             $('#patient_gender').val('Laki-laki').trigger('change');
-          }else{
+          } else {
             $('#patient_gender').val('Perempuan').trigger('change');
           }
         },
@@ -587,41 +1123,192 @@ require '../../controller/view.php';
     }
 
   });
-
   document.getElementById("captureBtn").addEventListener("click", function() {
 
     const video = document.getElementById("video");
     const canvas = document.getElementById("canvas");
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    if (!video.videoWidth || !video.videoHeight) {
+      Swal.fire(
+        "Kamera belum siap",
+        "Tunggu sampai kamera aktif.",
+        "warning"
+      );
+      return;
+    }
+
+    /*
+     * =====================================================
+     * UKURAN AREA WAJAH
+     * =====================================================
+     */
+
+    const circleElement = document.querySelector(".face-circle");
+
+    const circleSize = circleElement.offsetWidth;
+
+    const videoDisplayWidth = video.clientWidth;
+    const videoDisplayHeight = video.clientHeight;
+
+    /*
+     * Rasio antara ukuran video asli
+     * dengan ukuran video yang tampil di layar
+     */
+    const scaleX = video.videoWidth / videoDisplayWidth;
+    const scaleY = video.videoHeight / videoDisplayHeight;
+
+    /*
+     * Posisi tengah video
+     */
+    const centerX = video.videoWidth / 2;
+    const centerY = video.videoHeight / 2;
+
+    /*
+     * Ukuran crop mengikuti lingkaran
+     */
+    const cropWidth = circleSize * scaleX;
+    const cropHeight = circleSize * scaleY;
+
+    /*
+     * Posisi crop dari video asli
+     */
+    const cropX = centerX - (cropWidth / 2);
+    const cropY = centerY - (cropHeight / 2);
+
+    /*
+     * =====================================================
+     * CANVAS HASIL CAPTURE
+     * =====================================================
+     */
+
+    canvas.width = cropWidth;
+    canvas.height = cropHeight;
 
     const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0);
 
-    const imageData = canvas.toDataURL("image/png");
+    /*
+     * Karena preview kamera dibuat mirror,
+     * hasil capture juga dibuat mirror agar sesuai preview.
+     */
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+
+    ctx.drawImage(
+      video,
+
+      cropX,
+      cropY,
+      cropWidth,
+      cropHeight,
+
+      0,
+      0,
+      cropWidth,
+      cropHeight
+    );
+
+    /*
+     * Reset transform
+     */
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+    /*
+     * Convert ke base64
+     */
+    const imageData = canvas.toDataURL(
+      "image/jpeg",
+      0.90
+    );
+
+    /*
+     * =====================================================
+     * KIRIM KE SERVER
+     * =====================================================
+     */
+
+    const captureBtn = document.getElementById("captureBtn");
+
+    captureBtn.disabled = true;
+
+    captureBtn.innerHTML = `
+        <span class="spinner-border spinner-border-sm me-1"></span>
+        Menyimpan...
+    `;
 
     fetch("controller/admisi/recordFace.php", {
+
         method: "POST",
+
         headers: {
           "Content-Type": "application/json"
         },
+
         body: JSON.stringify({
           id: currentPatientId,
           image: imageData
         })
+
       })
       .then(res => res.json())
+
       .then(res => {
-        alert("Wajah berhasil disimpan");
 
-        $("#cameraModal").modal("hide");
+        if (res.status === "success") {
 
-        setTimeout(() => {
-          table.ajax.reload(null, false);
-        }, 500); // delay 0.5 detik
+          Swal.fire({
+            icon: "success",
+            title: "Berhasil!",
+            text: "Foto wajah berhasil direkam.",
+            timer: 1500,
+            showConfirmButton: false
+          });
+
+          const modalEl = document.getElementById("cameraModal");
+
+          const modal = bootstrap.Modal.getInstance(modalEl);
+
+          if (modal) {
+            modal.hide();
+          }
+
+          setTimeout(() => {
+            table.ajax.reload(null, false);
+          }, 500);
+
+        } else {
+
+          Swal.fire(
+            "Gagal!",
+            res.message || "Wajah gagal disimpan.",
+            "error"
+          );
+
+        }
+
+      })
+
+      .catch(error => {
+
+        console.error(error);
+
+        Swal.fire(
+          "Error!",
+          "Terjadi kesalahan saat menyimpan wajah.",
+          "error"
+        );
+
+      })
+
+      .finally(() => {
+
+        captureBtn.disabled = false;
+
+        captureBtn.innerHTML = `
+            <i class="fas fa-camera"></i>
+            Ambil Wajah
+        `;
+
       });
-
 
   });
 
