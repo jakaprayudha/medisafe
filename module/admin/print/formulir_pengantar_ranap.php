@@ -1,6 +1,7 @@
 <?php
 require_once '../../../database/connect.php';
 require_once '../../admin/getdataclinic.php';
+require_once __DIR__ . '/helper_ttd_dokter.php';
 
 $id_customer = $_SESSION['id_customer'] ?? null;
 $no          = $_GET['no']  ?? null;
@@ -68,6 +69,9 @@ if ($no && $id_customer) {
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
     $data   = mysqli_fetch_assoc($result);
+    if ($data) {
+        $data['signature_user'] = cariTtdDokter($koneksi, $data['id_doctor'] ?? '', $id_customer);
+    }
     mysqli_stmt_close($stmt);
 
     $diagnosa = $data['kdDiag1'] ?? $data['diagnosa'] ?? '';

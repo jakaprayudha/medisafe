@@ -2,6 +2,7 @@
 $title = "";
 $subtitle = "";
 require_once '../../../database/connect.php';
+require_once __DIR__ . '/helper_ttd_dokter.php';
 
 $visit = $_GET['no'] ?? '';
 $rm    = $_GET['rm'] ?? '';
@@ -21,6 +22,7 @@ $query = "SELECT * FROM pasien_visit
 
 $checkdata = mysqli_query($koneksi, $query);
 $dataresume = mysqli_fetch_array($checkdata) ?: [];
+$dataresume['signature_user'] = cariTtdDokter($koneksi, $dataresume['id_doctor'] ?? '', $_SESSION['id_customer'] ?? null) ?? '';
 $diagnosamasuk = mysqli_query($koneksi, "SELECT pasien_visit.diagnosa, icd_10.code, icd_10.icd10 FROM pasien_visit LEFT JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa  WHERE visit_ID='$visit'");
 $datadiagnosamasuk = mysqli_fetch_array($diagnosamasuk);
 

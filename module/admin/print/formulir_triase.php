@@ -3,6 +3,7 @@ $title    = "FORMULIR TRIASE KEGAWATDARURATAN";
 $subtitle = "Assesmen Medis Awal Pasien IGD";
 require_once '../../../database/connect.php';
 require_once __DIR__ . '/qr_local.php';
+require_once __DIR__ . '/helper_ttd_dokter.php';
 
 $id_customer = $_SESSION['id_customer'] ?? null;
 $no          = $_GET['no'] ?? null;
@@ -42,6 +43,9 @@ LIMIT 1;
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
         $triase = mysqli_fetch_assoc($result);
+        if ($triase) {
+            $triase['signature_user'] = cariTtdDokter($koneksi, $triase['id_doctor'] ?? '', $id_customer);
+        }
         mysqli_stmt_close($stmt);
     }
 
