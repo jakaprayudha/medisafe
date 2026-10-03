@@ -3,16 +3,24 @@ include '../../database/connect.php';
 
 $data = json_decode(file_get_contents("php://input"), true);
 
-$id = $data['id'];
-$image = $data['image'];
+$id = (int)($data['id'] ?? 0);
+$image = $data['image'] ?? '';
 
-// hapus prefix base64
-$image = str_replace('data:image/png;base64,', '', $image);
-$image = base64_decode($image);
+// hapus prefix base64 (png / jpeg)
+$image = preg_replace('#^data:image/\w+;base64,#i', '', $image);
+$image = base64_decode($image, true);
 
-$filename = '../../uploads/faces_visit/' . time() . '_' . $id . '.png';
+if (!$id || $image === false || $image === '') {
+   echo json_encode(["status" => "error", "message" => "Data gambar tidak valid"]);
+   exit;
+}
 
-file_put_contents($filename, $image);
+$filename = '../../uploads/faces_visit/' . time() . '_' . $id . '.jpg';
+
+if (file_put_contents($filename, $image) === false) {
+   echo json_encode(["status" => "error", "message" => "Gagal menyimpan file"]);
+   exit;
+}
 
 // simpan ke DB kalau perlu
 mysqli_query($koneksi, "UPDATE pasien_visit SET face_image_visit = '$filename' WHERE id_visit = '$id'");

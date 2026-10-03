@@ -83,6 +83,511 @@ date_default_timezone_set('Asia/Jakarta');
     #periodeTable thead th:first-child {
       z-index: 6;
     }
+
+    /* =========================================================
+   FACE CAMERA
+   ========================================================= */
+
+    .face-camera-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+
+      background: #000;
+
+      overflow: hidden;
+      border-radius: 14px;
+
+      /* supaya kamera tidak terlalu tinggi */
+      aspect-ratio: 4 / 3;
+    }
+
+
+    /* =========================================================
+   VIDEO
+   ========================================================= */
+
+    #video {
+      width: 100%;
+      height: 100%;
+
+      display: block;
+
+      object-fit: cover;
+
+      /* Mirror seperti kamera depan */
+      transform: scaleX(-1);
+    }
+
+
+    /* =========================================================
+   OVERLAY
+   ========================================================= */
+
+    .face-overlay {
+
+      position: absolute;
+
+      inset: 0;
+
+      display: flex;
+
+      align-items: center;
+      justify-content: center;
+
+      pointer-events: none;
+
+      /*
+     * Background transparan.
+     * Gelapnya dibuat oleh box-shadow
+     * pada face-frame.
+     */
+
+    }
+
+
+    /* =========================================================
+   FACE FRAME
+   Bentuk menyerupai kepala / wajah
+   ========================================================= */
+
+    .face-circle {
+
+      position: relative;
+
+      width: 250px;
+      height: 320px;
+
+      /*
+     * Bentuk wajah:
+     * - bagian kepala membulat
+     * - sisi pipi rounded
+     * - bagian bawah mengecil seperti dagu
+     */
+
+      border-radius:
+        48% 48% 44% 44% / 38% 38% 62% 62%;
+
+      border: 4px solid #00ff88;
+
+      background: transparent;
+
+      /*
+     * Membuat area luar frame menjadi gelap
+     * tetapi bagian wajah tetap terlihat jelas.
+     */
+
+      box-shadow:
+
+        0 0 0 9999px rgba(0, 0, 0, 0.45),
+
+        0 0 18px rgba(0, 255, 136, 0.65),
+
+        inset 0 0 15px rgba(0, 255, 136, 0.05);
+
+      transition:
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
+
+    }
+
+
+    /* =========================================================
+   CORNER MARKER
+   ========================================================= */
+
+    .face-corner {
+
+      position: absolute;
+
+      width: 30px;
+      height: 30px;
+
+      border-color: #ffffff;
+
+      pointer-events: none;
+
+    }
+
+
+    /* TOP LEFT */
+
+    .corner-tl {
+
+      top: -4px;
+      left: -4px;
+
+      border-top: 5px solid;
+      border-left: 5px solid;
+
+      border-radius: 5px 0 0 0;
+
+    }
+
+
+    /* TOP RIGHT */
+
+    .corner-tr {
+
+      top: -4px;
+      right: -4px;
+
+      border-top: 5px solid;
+      border-right: 5px solid;
+
+      border-radius: 0 5px 0 0;
+
+    }
+
+
+    /* BOTTOM LEFT */
+
+    .corner-bl {
+
+      bottom: -4px;
+      left: -4px;
+
+      border-bottom: 5px solid;
+      border-left: 5px solid;
+
+      border-radius: 0 0 0 5px;
+
+    }
+
+
+    /* BOTTOM RIGHT */
+
+    .corner-br {
+
+      bottom: -4px;
+      right: -4px;
+
+      border-bottom: 5px solid;
+      border-right: 5px solid;
+
+      border-radius: 0 0 5px 0;
+
+    }
+
+
+    /* =========================================================
+   TEXT PANDUAN
+   ========================================================= */
+
+    .face-guide-text {
+
+      font-size: 16px;
+
+      font-weight: 600;
+
+      color: #333;
+
+      line-height: 1.5;
+
+    }
+
+
+    .face-guide-text i {
+
+      color: #198754;
+
+      margin-right: 5px;
+
+    }
+
+
+    .face-guide-small {
+
+      font-size: 13px;
+
+      color: #777;
+
+      margin-top: 4px;
+
+      line-height: 1.5;
+
+    }
+
+
+    /* =========================================================
+   BUTTON
+   ========================================================= */
+
+    #captureBtn {
+
+      min-width: 160px;
+
+      font-weight: 600;
+
+      border-radius: 8px;
+
+    }
+
+
+    /* =========================================================
+   MODAL CAMERA
+   ========================================================= */
+
+    #cameraModal .modal-body {
+
+      padding: 20px;
+
+    }
+
+
+    #cameraModal .modal-header {
+
+      border-bottom: 1px solid #eee;
+
+    }
+
+
+    #cameraModal .modal-title {
+
+      font-weight: 600;
+
+    }
+
+
+    /* =========================================================
+   CAMERA STATUS
+   ========================================================= */
+
+    .face-status {
+
+      display: inline-flex;
+
+      align-items: center;
+
+      gap: 6px;
+
+      margin-top: 8px;
+
+      font-size: 13px;
+
+      font-weight: 500;
+
+    }
+
+
+    /* =========================================================
+   STATUS WARNA
+   ========================================================= */
+
+    .face-frame-success {
+
+      border-color: #00ff88 !important;
+
+      box-shadow:
+
+        0 0 0 9999px rgba(0, 0, 0, 0.45),
+
+        0 0 25px rgba(0, 255, 136, 0.85),
+
+        inset 0 0 20px rgba(0, 255, 136, 0.08);
+
+    }
+
+
+    .face-frame-warning {
+
+      border-color: #ffc107 !important;
+
+      box-shadow:
+
+        0 0 0 9999px rgba(0, 0, 0, 0.45),
+
+        0 0 25px rgba(255, 193, 7, 0.75);
+
+    }
+
+
+    .face-frame-danger {
+
+      border-color: #dc3545 !important;
+
+      box-shadow:
+
+        0 0 0 9999px rgba(0, 0, 0, 0.45),
+
+        0 0 25px rgba(220, 53, 69, 0.75);
+
+    }
+
+
+    /* =========================================================
+   ANIMATION
+   ========================================================= */
+
+    @keyframes facePulse {
+
+      0% {
+
+        box-shadow:
+
+          0 0 0 9999px rgba(0, 0, 0, 0.45),
+
+          0 0 12px rgba(0, 255, 136, 0.5);
+
+      }
+
+      50% {
+
+        box-shadow:
+
+          0 0 0 9999px rgba(0, 0, 0, 0.45),
+
+          0 0 25px rgba(0, 255, 136, 0.85);
+
+      }
+
+      100% {
+
+        box-shadow:
+
+          0 0 0 9999px rgba(0, 0, 0, 0.45),
+
+          0 0 12px rgba(0, 255, 136, 0.5);
+
+      }
+
+    }
+
+
+    .face-circle {
+
+      animation: facePulse 2s infinite;
+
+    }
+
+
+    /* =========================================================
+   DESKTOP
+   ========================================================= */
+
+    @media (min-width: 768px) {
+
+      .face-camera-wrapper {
+
+        max-width: 640px;
+
+      }
+
+      .face-circle {
+
+        width: 250px;
+        height: 320px;
+
+      }
+
+    }
+
+
+    /* =========================================================
+   TABLET
+   ========================================================= */
+
+    @media (max-width: 767px) {
+
+      .face-camera-wrapper {
+
+        max-width: 100%;
+
+      }
+
+      .face-circle {
+
+        width: 220px;
+        height: 285px;
+
+      }
+
+    }
+
+
+    /* =========================================================
+   MOBILE
+   ========================================================= */
+
+    @media (max-width: 576px) {
+
+      .face-camera-wrapper {
+
+        aspect-ratio: 3 / 4;
+
+        border-radius: 12px;
+
+      }
+
+      .face-circle {
+
+        width: 205px;
+        height: 270px;
+
+        border-width: 3px;
+
+      }
+
+      .face-corner {
+
+        width: 25px;
+        height: 25px;
+
+      }
+
+      .face-guide-text {
+
+        font-size: 14px;
+
+      }
+
+      .face-guide-small {
+
+        font-size: 12px;
+
+      }
+
+      #captureBtn {
+
+        width: 100%;
+
+        max-width: 240px;
+
+      }
+
+    }
+
+
+    /* =========================================================
+   VERY SMALL MOBILE
+   ========================================================= */
+
+    @media (max-width: 380px) {
+
+      .face-circle {
+
+        width: 185px;
+        height: 245px;
+
+      }
+
+    }
+
+
+    /* =========================================================
+   REDUCE MOTION
+   ========================================================= */
+
+    @media (prefers-reduced-motion: reduce) {
+
+      .face-circle {
+
+        animation: none;
+
+      }
+
+    }
   </style>
 </head>
 
@@ -617,28 +1122,63 @@ date_default_timezone_set('Asia/Jakarta');
   </div>
 </div>
 <div class="modal fade" id="cameraModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
 
-      <div class="modal-header">
-        <h5 class="modal-title">Ambil Wajah</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body text-center">
-        <video id="video" width="100%" autoplay playsinline></video>
-        <canvas id="canvas" style="display:none;"></canvas>
-
-        <div class="mt-3">
-          <button id="captureBtn" class="btn btn-success">
-            Ambil Gambar
-          </button>
+        <div class="modal-header">
+          <h5 class="modal-title">Ambil Wajah</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-      </div>
 
+        <div class="modal-body text-center">
+
+          <div class="face-camera-wrapper">
+
+            <video id="video" autoplay playsinline></video>
+
+            <!-- Overlay kamera -->
+            <div class="face-overlay">
+
+              <!-- Lingkaran wajah -->
+              <div class="face-circle">
+                <div class="face-corner corner-tl"></div>
+                <div class="face-corner corner-tr"></div>
+                <div class="face-corner corner-bl"></div>
+                <div class="face-corner corner-br"></div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="face-guide-text mt-3">
+            <i class="fas fa-user-circle"></i>
+            Posisikan wajah tepat di dalam lingkaran
+          </div>
+
+          <div class="face-guide-small">
+            Pastikan wajah terlihat jelas, menghadap kamera dan tidak terpotong.
+          </div>
+
+          <div id="faceMatchInfo" class="text-center mb-1"></div>
+<div id="faceStatus" class="face-status text-warning">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Memuat deteksi wajah...</span>
+          </div>
+
+          <canvas id="canvas" style="display:none;"></canvas>
+
+          <div class="mt-3">
+            <button id="captureBtn" class="btn btn-success px-4">
+              <i class="fas fa-camera"></i>
+              Ambil Wajah
+            </button>
+          </div>
+
+        </div>
+
+      </div>
     </div>
-  </div>
-</div>
 <div class="modal fade" id="modalRescheduleDoctor" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <form id="formRescheduleDoctor">
@@ -812,7 +1352,7 @@ date_default_timezone_set('Asia/Jakarta');
     $('#toDate').val(today);
     const tipePasien = "Poliklinik";
     const apiUrl = 'controller/visit/registrasiController';
-    var table = $('#periodeTable').DataTable({
+    window.table = $('#periodeTable').DataTable({
       processing: true,
       serverSide: false,
       scrollX: true,
@@ -904,7 +1444,7 @@ date_default_timezone_set('Asia/Jakarta');
                       </li>
 
                       <li>
-                        <a class="dropdown-item camera-btn" href="javascript:;" data-id="${row.id_visit}">
+                        <a class="dropdown-item camera-btn" href="javascript:;" data-id="${row.id_visit}" data-face="${row.patient_face_image ?? ''}">
                           <i class="fas fa-camera me-2 text-success"></i> Ambil Foto
                         </a>
                       </li>
@@ -1836,13 +2376,164 @@ date_default_timezone_set('Asia/Jakarta');
       });
   };
 </script>
+<script src="assets/js/face-api.min.js"></script>
 <script>
   let currentPatientId = null;
+  let currentMasterFace = "";
   let stream = null;
+  let faceTimer = null;
+  let faceModelReady = null;
+  let masterDescriptor = null;
+  let faceMismatch = false;
+  let faceMatched = false;
+  let masterState = "loading";
+  const FACE_MATCH_THRESHOLD = 0.5;
+  let faceTooClose = false;
+
+  function loadFaceModel() {
+    if (!faceModelReady) {
+      faceModelReady = Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri('models'),
+        faceapi.nets.faceLandmark68Net.loadFromUri('models'),
+        faceapi.nets.faceRecognitionNet.loadFromUri('models')
+      ]);
+    }
+    return faceModelReady;
+  }
+
+  // Ambil descriptor wajah master pasien (foto rekam sebelumnya)
+  async function loadMasterDescriptor(path) {
+    masterDescriptor = null;
+    masterState = "none";
+    faceMatched = false;
+    if (!path) return;
+    masterState = "error";
+    try {
+      const img = await faceapi.fetchImage(path.replace(/^(\.\.\/)+/, ''));
+      const det = await faceapi
+        .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({inputSize: 416, scoreThreshold: 0.4}))
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+      masterDescriptor = det ? det.descriptor : null;
+      masterState = det ? "ok" : "error";
+    } catch (e) {
+      console.error("Gagal memuat wajah master", e);
+    }
+  }
+
+  function setFaceState(ok, message, tooClose = false) {
+    faceTooClose = tooClose;
+    const circle = document.querySelector(".face-circle");
+    const status = document.getElementById("faceStatus");
+    const btn = document.getElementById("captureBtn");
+    circle.classList.toggle("face-frame-danger", faceMismatch);
+    circle.classList.toggle("face-frame-warning", !ok && !faceMismatch);
+    circle.classList.toggle("face-frame-success", ok && !faceMismatch);
+    status.className = "face-status " + (faceMismatch ? "text-danger" : ok ? "text-success" : "text-warning");
+    status.innerHTML = `<i class="fas ${faceMismatch ? 'fa-times-circle' : ok ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i><span>${message}</span>`;
+    const info = document.getElementById("faceMatchInfo");
+    if (info) {
+      if (masterState === "none") info.innerHTML = '<span class="badge bg-secondary">Wajah belum direkam di master data pasien</span>';
+      else if (masterState === "error") info.innerHTML = '<span class="badge bg-secondary">Foto master tidak terbaca / wajah tidak terdeteksi</span>';
+      else if (faceMismatch) info.innerHTML = '<span class="badge bg-danger">Wajah BUKAN pasien ini</span>';
+      else if (masterState === "ok" && faceMatched) info.innerHTML = '<span class="badge bg-success">Wajah SESUAI master pasien</span>';
+      else info.innerHTML = '<span class="badge bg-warning text-dark">Memverifikasi wajah...</span>';
+    }
+  }
+
+  // Cek apakah wajah (koordinat video asli) berada pas di dalam lingkaran
+  function evaluateFace(box, video) {
+    const vr = video.getBoundingClientRect();
+    const cr = document.querySelector(".face-circle").getBoundingClientRect();
+    const scale = Math.max(vr.width / video.videoWidth, vr.height / video.videoHeight);
+    const offX = (vr.width - video.videoWidth * scale) / 2;
+    const offY = (vr.height - video.videoHeight * scale) / 2;
+
+    // video di-mirror (scaleX(-1))
+    const fw = box.width * scale;
+    const fh = box.height * scale;
+    const fx = vr.width - (box.x * scale + offX + fw);
+    const fy = box.y * scale + offY;
+
+    const faceCx = fx + fw / 2;
+    const faceCy = fy + fh / 2;
+    const cCx = cr.left - vr.left + cr.width / 2;
+    const cCy = cr.top - vr.top + cr.height / 2;
+
+    const dx = Math.abs(faceCx - cCx) / (cr.width / 2);
+    const dy = Math.abs(faceCy - cCy) / (cr.height / 2);
+    const ratio = fw / cr.width;
+
+    if (ratio < 0.5) return {ok: false, msg: "Dekatkan wajah ke kamera"};
+    if (ratio > 0.95) return {ok: false, tooClose: true, msg: "Terlalu dekat, mundurkan sedikit"};
+    if (dx > 0.2 || dy > 0.2) return {ok: false, msg: "Posisikan wajah di tengah lingkaran"};
+    return {ok: true, msg: "Wajah pas, siap diambil"};
+  }
+
+  async function startFaceDetection() {
+    const video = document.getElementById("video");
+    stopFaceDetection();
+    faceTooClose = false;
+    setFaceState(false, "Memuat deteksi wajah...");
+    try {
+      await loadFaceModel();
+    } catch (e) {
+      console.error(e);
+      setFaceState(false, "Gagal memuat model deteksi wajah");
+      return;
+    }
+    faceMismatch = false;
+    setFaceState(false, "Memuat data wajah pasien...");
+    await loadMasterDescriptor(currentMasterFace);
+    const opts = new faceapi.TinyFaceDetectorOptions({inputSize: 320, scoreThreshold: 0.5});
+    let busy = false;
+    faceTimer = setInterval(async () => {
+      if (busy || !video.videoWidth || video.paused) return;
+      busy = true;
+      try {
+        let q = faceapi.detectSingleFace(video, opts);
+        if (masterDescriptor) q = q.withFaceLandmarks().withFaceDescriptor();
+        const det = await q;
+        if (!faceTimer) return;
+        if (!det) {
+          faceMismatch = false;
+          faceMatched = false;
+          setFaceState(false, "Wajah tidak terdeteksi");
+        } else {
+          const box = det.detection ? det.detection.box : det.box;
+          const r = evaluateFace(box, video);
+          faceMismatch = false;
+          faceMatched = false;
+          if (masterDescriptor && det.descriptor) {
+            const dist = faceapi.euclideanDistance(masterDescriptor, det.descriptor);
+            if (dist > FACE_MATCH_THRESHOLD) {
+              faceMismatch = true;
+              setFaceState(false, "Wajah TIDAK sesuai dengan data master pasien", !!r.tooClose);
+              return;
+            }
+            faceMatched = true;
+          }
+          setFaceState(r.ok, r.ok && masterDescriptor ? "Wajah sesuai pasien, siap diambil" : r.msg, !!r.tooClose);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        busy = false;
+      }
+    }, 250);
+  }
+
+  function stopFaceDetection() {
+    if (faceTimer) {
+      clearInterval(faceTimer);
+      faceTimer = null;
+    }
+  }
 
   $(document).on("click", ".camera-btn", async function() {
     // WAJIB: ambil id dari tombol
     currentPatientId = $(this).data("id");
+    currentMasterFace = $(this).attr("data-face") || "";
     console.log("📌 ID PATIENT:", currentPatientId);
     const modalEl = document.getElementById("cameraModal");
     const modal = new bootstrap.Modal(modalEl);
@@ -1857,6 +2548,7 @@ date_default_timezone_set('Asia/Jakarta');
       video.srcObject = stream;
 
       await video.play();
+      startFaceDetection();
 
     } catch (err) {
       alert("Kamera tidak bisa diakses");
@@ -1864,41 +2556,203 @@ date_default_timezone_set('Asia/Jakarta');
     }
 
   });
-
   document.getElementById("captureBtn").addEventListener("click", function() {
+    if (this.disabled) return;
+    if (faceMismatch) {
+      Swal.fire("Wajah tidak sesuai", "Wajah di kamera bukan wajah pasien pada data master.", "error");
+      return;
+    }
+    if (faceTooClose) {
+      Swal.fire("Terlalu dekat", "Mundurkan wajah sedikit dari kamera.", "warning");
+      return;
+    }
 
     const video = document.getElementById("video");
     const canvas = document.getElementById("canvas");
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    if (!video.videoWidth || !video.videoHeight) {
+      Swal.fire(
+        "Kamera belum siap",
+        "Tunggu sampai kamera aktif.",
+        "warning"
+      );
+      return;
+    }
+
+    /*
+     * =====================================================
+     * UKURAN AREA WAJAH
+     * =====================================================
+     */
+
+    const circleElement = document.querySelector(".face-circle");
+
+    const circleSize = circleElement.offsetWidth;
+
+    const videoDisplayWidth = video.clientWidth;
+    const videoDisplayHeight = video.clientHeight;
+
+    /*
+     * Rasio antara ukuran video asli
+     * dengan ukuran video yang tampil di layar
+     */
+    const scaleX = video.videoWidth / videoDisplayWidth;
+    const scaleY = video.videoHeight / videoDisplayHeight;
+
+    /*
+     * Posisi tengah video
+     */
+    const centerX = video.videoWidth / 2;
+    const centerY = video.videoHeight / 2;
+
+    /*
+     * Ukuran crop mengikuti lingkaran
+     */
+    const cropWidth = circleSize * scaleX;
+    const cropHeight = circleSize * scaleY;
+
+    /*
+     * Posisi crop dari video asli
+     */
+    const cropX = centerX - (cropWidth / 2);
+    const cropY = centerY - (cropHeight / 2);
+
+    /*
+     * =====================================================
+     * CANVAS HASIL CAPTURE
+     * =====================================================
+     */
+
+    canvas.width = cropWidth;
+    canvas.height = cropHeight;
 
     const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0);
 
-    const imageData = canvas.toDataURL("image/png");
+    /*
+     * Karena preview kamera dibuat mirror,
+     * hasil capture juga dibuat mirror agar sesuai preview.
+     */
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+
+    ctx.drawImage(
+      video,
+
+      cropX,
+      cropY,
+      cropWidth,
+      cropHeight,
+
+      0,
+      0,
+      cropWidth,
+      cropHeight
+    );
+
+    /*
+     * Reset transform
+     */
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+    /*
+     * Convert ke base64
+     */
+    const imageData = canvas.toDataURL(
+      "image/jpeg",
+      0.90
+    );
+
+    /*
+     * =====================================================
+     * KIRIM KE SERVER
+     * =====================================================
+     */
+
+    const captureBtn = document.getElementById("captureBtn");
+
+    captureBtn.disabled = true;
+    captureBtn.dataset.saving = "1";
+
+    captureBtn.innerHTML = `
+        <span class="spinner-border spinner-border-sm me-1"></span>
+        Menyimpan...
+    `;
 
     fetch("controller/admisi/recordFaceVisit.php", {
+
         method: "POST",
+
         headers: {
           "Content-Type": "application/json"
         },
+
         body: JSON.stringify({
           id: currentPatientId,
           image: imageData
         })
+
       })
       .then(res => res.json())
+
       .then(res => {
-        alert("Wajah berhasil disimpan");
 
-        $("#cameraModal").modal("hide");
+        if (res.status === "success") {
 
-        setTimeout(() => {
-          table.ajax.reload(null, false);
-        }, 500); // delay 0.5 detik
+          Swal.fire({
+            icon: "success",
+            title: "Berhasil!",
+            text: "Foto wajah berhasil direkam.",
+            timer: 1500,
+            showConfirmButton: false
+          });
+
+          const modalEl = document.getElementById("cameraModal");
+
+          const modal = bootstrap.Modal.getInstance(modalEl);
+
+          if (modal) {
+            modal.hide();
+          }
+
+          setTimeout(() => {
+            table.ajax.reload(null, false);
+          }, 500);
+
+        } else {
+
+          Swal.fire(
+            "Gagal!",
+            res.message || "Wajah gagal disimpan.",
+            "error"
+          );
+
+        }
+
+      })
+
+      .catch(error => {
+
+        console.error(error);
+
+        Swal.fire(
+          "Error!",
+          "Terjadi kesalahan saat menyimpan wajah.",
+          "error"
+        );
+
+      })
+
+      .finally(() => {
+
+        delete captureBtn.dataset.saving;
+        captureBtn.disabled = false;
+
+        captureBtn.innerHTML = `
+            <i class="fas fa-camera"></i>
+            Ambil Wajah
+        `;
+
       });
-
 
   });
 
@@ -1909,6 +2763,8 @@ date_default_timezone_set('Asia/Jakarta');
     .addEventListener("hidden.bs.modal", function() {
 
       console.log("🛑 Stop camera");
+      stopFaceDetection();
+      faceMismatch = false;
 
       if (stream) {
         stream.getTracks().forEach(track => track.stop());

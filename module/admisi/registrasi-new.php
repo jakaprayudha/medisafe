@@ -622,6 +622,11 @@ require '../../controller/view.php';
             Pastikan wajah terlihat jelas, menghadap kamera dan tidak terpotong.
           </div>
 
+          <div id="faceStatus" class="face-status text-warning">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Memuat deteksi wajah...</span>
+          </div>
+
           <canvas id="canvas" style="display:none;"></canvas>
 
           <div class="mt-3">
@@ -789,7 +794,7 @@ require '../../controller/view.php';
   const apiUrl = 'controller/master/patientContrroller';
   let table;
   $(document).ready(function() {
-    var table = $('#periodeTable').DataTable({
+    table = $('#periodeTable').DataTable({
       processing: true,
       serverSide: true,
       scrollX: true,
@@ -855,8 +860,8 @@ require '../../controller/view.php';
               "gender": row.patient_gender ?? "-",
               "phone": row.patient_phone ?? "-",
               "face_image": row.face_image ? `
-                <a href="${baseUrl}${row.face_image.replace('../../../','')}" target="_blank">
-                  <img src="${baseUrl}${row.face_image.replace('../../../','')}" 
+                <a href="${baseUrl}${row.face_image.replace(/^(\.\.\/)+/,'')}" target="_blank">
+                  <img src="${baseUrl}${row.face_image.replace(/^(\.\.\/)+/,'')}" 
                       style="width:50px;height:50px;object-fit:cover;border-radius:8px;">
                 </a>
               ` : '-',
@@ -1095,9 +1100,100 @@ require '../../controller/view.php';
     }
   });
 </script>
+<script src="assets/js/face-api.min.js"></script>
 <script>
   let currentPatientId = null;
   let stream = null;
+  let faceTimer = null;
+  let faceModelReady = null;
+  let faceTooClose = false;
+
+  function loadFaceModel() {
+    if (!faceModelReady) {
+      faceModelReady = faceapi.nets.tinyFaceDetector.loadFromUri('models');
+    }
+    return faceModelReady;
+  }
+
+  function setFaceState(ok, message, tooClose = false) {
+    faceTooClose = tooClose;
+    const circle = document.querySelector(".face-circle");
+    const status = document.getElementById("faceStatus");
+    const btn = document.getElementById("captureBtn");
+    circle.classList.toggle("face-frame-success", ok);
+    circle.classList.toggle("face-frame-warning", !ok);
+    status.className = "face-status " + (ok ? "text-success" : "text-warning");
+    status.innerHTML = `<i class="fas ${ok ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i><span>${message}</span>`;
+  }
+
+  // Cek apakah wajah (koordinat video asli) berada pas di dalam lingkaran
+  function evaluateFace(box, video) {
+    const vr = video.getBoundingClientRect();
+    const cr = document.querySelector(".face-circle").getBoundingClientRect();
+    const scale = Math.max(vr.width / video.videoWidth, vr.height / video.videoHeight);
+    const offX = (vr.width - video.videoWidth * scale) / 2;
+    const offY = (vr.height - video.videoHeight * scale) / 2;
+
+    // video di-mirror (scaleX(-1))
+    const fw = box.width * scale;
+    const fh = box.height * scale;
+    const fx = vr.width - (box.x * scale + offX + fw);
+    const fy = box.y * scale + offY;
+
+    const faceCx = fx + fw / 2;
+    const faceCy = fy + fh / 2;
+    const cCx = cr.left - vr.left + cr.width / 2;
+    const cCy = cr.top - vr.top + cr.height / 2;
+
+    const dx = Math.abs(faceCx - cCx) / (cr.width / 2);
+    const dy = Math.abs(faceCy - cCy) / (cr.height / 2);
+    const ratio = fw / cr.width;
+
+    if (ratio < 0.5) return {ok: false, msg: "Dekatkan wajah ke kamera"};
+    if (ratio > 0.95) return {ok: false, tooClose: true, msg: "Terlalu dekat, mundurkan sedikit"};
+    if (dx > 0.2 || dy > 0.2) return {ok: false, msg: "Posisikan wajah di tengah lingkaran"};
+    return {ok: true, msg: "Wajah pas, siap diambil"};
+  }
+
+  async function startFaceDetection() {
+    const video = document.getElementById("video");
+    stopFaceDetection();
+    faceTooClose = false;
+    setFaceState(false, "Memuat deteksi wajah...");
+    try {
+      await loadFaceModel();
+    } catch (e) {
+      console.error(e);
+      setFaceState(false, "Gagal memuat model deteksi wajah");
+      return;
+    }
+    const opts = new faceapi.TinyFaceDetectorOptions({inputSize: 320, scoreThreshold: 0.5});
+    let busy = false;
+    faceTimer = setInterval(async () => {
+      if (busy || !video.videoWidth || video.paused) return;
+      busy = true;
+      try {
+        const det = await faceapi.detectSingleFace(video, opts);
+        if (!faceTimer) return;
+        if (!det) setFaceState(false, "Wajah tidak terdeteksi");
+        else {
+          const r = evaluateFace(det.box, video);
+          setFaceState(r.ok, r.msg, !!r.tooClose);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        busy = false;
+      }
+    }, 250);
+  }
+
+  function stopFaceDetection() {
+    if (faceTimer) {
+      clearInterval(faceTimer);
+      faceTimer = null;
+    }
+  }
 
   $(document).on("click", ".camera-btn", async function() {
     // WAJIB: ambil id dari tombol
@@ -1116,6 +1212,7 @@ require '../../controller/view.php';
       video.srcObject = stream;
 
       await video.play();
+      startFaceDetection();
 
     } catch (err) {
       alert("Kamera tidak bisa diakses");
@@ -1124,6 +1221,11 @@ require '../../controller/view.php';
 
   });
   document.getElementById("captureBtn").addEventListener("click", function() {
+    if (this.disabled) return;
+    if (faceTooClose) {
+      Swal.fire("Terlalu dekat", "Mundurkan wajah sedikit dari kamera.", "warning");
+      return;
+    }
 
     const video = document.getElementById("video");
     const canvas = document.getElementById("canvas");
@@ -1229,6 +1331,7 @@ require '../../controller/view.php';
     const captureBtn = document.getElementById("captureBtn");
 
     captureBtn.disabled = true;
+    captureBtn.dataset.saving = "1";
 
     captureBtn.innerHTML = `
         <span class="spinner-border spinner-border-sm me-1"></span>
@@ -1301,6 +1404,7 @@ require '../../controller/view.php';
 
       .finally(() => {
 
+        delete captureBtn.dataset.saving;
         captureBtn.disabled = false;
 
         captureBtn.innerHTML = `
@@ -1319,6 +1423,7 @@ require '../../controller/view.php';
     .addEventListener("hidden.bs.modal", function() {
 
       console.log("🛑 Stop camera");
+      stopFaceDetection();
 
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
