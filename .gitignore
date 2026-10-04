@@ -1,5 +1,10 @@
-/database/
-/uploads/
+/database/*
+!/database/connect.example.php
+/uploads/**
+!/uploads/**/
+!/uploads/**/.gitkeep
+/uploads/.DS_Store
+.DS_Store
 /vendor/
 .htaccess
 /logs
