@@ -1,0 +1,17 @@
+<IfModule mod_rewrite.c>
+RewriteEngine on
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.*)$ $1.php
+Options -Indexes
+ErrorDocument 403 http://localhost/medisafe/
+
+php_value display_errors 0
+php_value memory_limit 512M
+php_value session.gc_maxlifetime 21600
+php_value session.cookie_lifetime 21600
+# Redirect to HTTP when accessing via IP address
+RewriteCond %{HTTP_HOST} ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$
+RewriteCond %{HTTPS} on
+RewriteRule ^ http://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>

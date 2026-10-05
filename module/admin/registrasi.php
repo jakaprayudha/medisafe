@@ -703,425 +703,425 @@ date_default_timezone_set('Asia/Jakarta');
   require 'library.php';
   ?>
   <script src="controller/admisi/helper.js"></script>
-</body>
 
 
-<div class="modal fade" id="detailModal">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <div class="modal-content shadow">
 
-      <!-- HEADER -->
-      <div class="modal-header  text-white">
-        <h5 class="modal-title">
-          🩺 Detail Pemeriksaan
-        </h5>
-        <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
-      </div>
+  <div class="modal fade" id="detailModal">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content shadow">
 
-      <div class="modal-body">
-        <!-- Loading -->
-        <div id="detailLoading" class="text-center py-5">
-          <div class="spinner-border text-primary mb-3" role="status"></div>
-          <div class="fw-semibold">Memuat data pemeriksaan...</div>
+        <!-- HEADER -->
+        <div class="modal-header  text-white">
+          <h5 class="modal-title">
+            🩺 Detail Pemeriksaan
+          </h5>
+          <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
         </div>
 
-        <div id="detailContent" style="display:none;">
-          <div class="card border-0 shadow-sm mb-3">
-            <div class="card-body">
-              <h6 class="fw-bold mb-3">👤 Informasi Pasien</h6>
+        <div class="modal-body">
+          <!-- Loading -->
+          <div id="detailLoading" class="text-center py-5">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <div class="fw-semibold">Memuat data pemeriksaan...</div>
+          </div>
 
-              <div class="row g-3">
-                <div class="col-md-6">
-                  <small class="text-muted">Nama Pasien</small>
-                  <div class="fw-semibold" id="d_patient_name">-</div>
+          <div id="detailContent" style="display:none;">
+            <div class="card border-0 shadow-sm mb-3">
+              <div class="card-body">
+                <h6 class="fw-bold mb-3">👤 Informasi Pasien</h6>
+
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <small class="text-muted">Nama Pasien</small>
+                    <div class="fw-semibold" id="d_patient_name">-</div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <small class="text-muted">Dokter</small>
+                    <div id="d_doctor_name">-</div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <small class="text-muted">Poliklinik</small>
+                    <div id="d_poli_name">-</div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <small class="text-muted">Tanggal</small>
+                    <span>
+                      <div id="d_visit_date">-</div>
+                    </span>
+
+                  </div>
+                  <div class="col-md-6">
+                    <small class="text-muted">Kondisi Masuk</small>
+                    <div id="d_kondisi_masuk">-</div>
+                  </div>
+                  <div class="col-md-6">
+                    <small class="text-muted">Umur</small>
+                    <div id="d_umur">-</div>
+                  </div>
                 </div>
+              </div>
+            </div>
 
-                <div class="col-md-6">
-                  <small class="text-muted">Dokter</small>
-                  <div id="d_doctor_name">-</div>
-                </div>
+            <!-- ❤️ VITAL SIGN -->
+            <div class="card border-0 shadow-sm mb-3">
+              <div class="card-body">
+                <h6 class="fw-bold mb-3">❤️ Vital Sign</h6>
 
-                <div class="col-md-6">
-                  <small class="text-muted">Poliklinik</small>
-                  <div id="d_poli_name">-</div>
-                </div>
+                <div class="d-flex flex-wrap gap-2">
 
-                <div class="col-md-6">
-                  <small class="text-muted">Tanggal</small>
-                  <span>
-                    <div id="d_visit_date">-</div>
+                  <span class="badge bg-light text-dark">
+                    🩸 TD: <span id="d_tekanan_darah">-</span>
+                  </span>
+
+                  <span class="badge bg-light text-dark">
+                    🌡️ Suhu: <span id="d_suhu">-</span>
+                  </span>
+
+                  <span class="badge bg-light text-dark">
+                    ❤️ Nadi: <span id="d_nadi">-</span>
+                  </span>
+
+                  <span class="badge bg-light text-dark">
+                    🫁 RR: <span id="d_respirasi">-</span>
+                  </span>
+
+                  <span class="badge bg-light text-dark">
+                    🩸 Saturasi: <span id="d_saturasi">-</span>
+                  </span>
+
+                  <span class="badge bg-light text-dark">
+                    📏 TB: <span id="d_tinggi">-</span>
+                  </span>
+
+                  <span class="badge bg-light text-dark">
+                    ⚖️ BB: <span id="d_berat">-</span>
+                  </span>
+
+                  <span class="badge bg-light text-dark">
+                    🏋 BMI: <span id="d_bmi">-</span> Keterangan : <span id="d_bmi_keterangan"></span>
                   </span>
 
                 </div>
-                <div class="col-md-6">
-                  <small class="text-muted">Kondisi Masuk</small>
-                  <div id="d_kondisi_masuk">-</div>
-                </div>
-                <div class="col-md-6">
-                  <small class="text-muted">Umur</small>
-                  <div id="d_umur">-</div>
-                </div>
               </div>
             </div>
-          </div>
 
-          <!-- ❤️ VITAL SIGN -->
-          <div class="card border-0 shadow-sm mb-3">
-            <div class="card-body">
-              <h6 class="fw-bold mb-3">❤️ Vital Sign</h6>
-
-              <div class="d-flex flex-wrap gap-2">
-
-                <span class="badge bg-light text-dark">
-                  🩸 TD: <span id="d_tekanan_darah">-</span>
-                </span>
-
-                <span class="badge bg-light text-dark">
-                  🌡️ Suhu: <span id="d_suhu">-</span>
-                </span>
-
-                <span class="badge bg-light text-dark">
-                  ❤️ Nadi: <span id="d_nadi">-</span>
-                </span>
-
-                <span class="badge bg-light text-dark">
-                  🫁 RR: <span id="d_respirasi">-</span>
-                </span>
-
-                <span class="badge bg-light text-dark">
-                  🩸 Saturasi: <span id="d_saturasi">-</span>
-                </span>
-
-                <span class="badge bg-light text-dark">
-                  📏 TB: <span id="d_tinggi">-</span>
-                </span>
-
-                <span class="badge bg-light text-dark">
-                  ⚖️ BB: <span id="d_berat">-</span>
-                </span>
-
-                <span class="badge bg-light text-dark">
-                  🏋 BMI: <span id="d_bmi">-</span> Keterangan : <span id="d_bmi_keterangan"></span>
-                </span>
-
+            <!-- 🧠 ANAMNESA -->
+            <div class="card border-0 shadow-sm mb-3">
+              <div class="card-body">
+                <h6 class="fw-bold mb-2">🧠 Keluhan / Anamnesa</h6>
+                <div id="d_anamnesa" class="text-muted">-</div>
               </div>
             </div>
-          </div>
 
-          <!-- 🧠 ANAMNESA -->
-          <div class="card border-0 shadow-sm mb-3">
-            <div class="card-body">
-              <h6 class="fw-bold mb-2">🧠 Keluhan / Anamnesa</h6>
-              <div id="d_anamnesa" class="text-muted">-</div>
-            </div>
-          </div>
-
-          <!-- <div class="card border-0 shadow-sm mb-3">
+            <!-- <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
               <h6 class="fw-bold mb-2">📝 Catatan Screening</h6>
               <div id="d_catatan_screening" class="text-muted">-</div>
             </div>
           </div> -->
 
-          <!-- 🔬 DIAGNOSA -->
-          <div class="card border-0 shadow-sm mb-3">
-            <div class="card-body">
-              <h6 class="fw-bold mb-2">🔬 Diagnosa</h6>
-              <div id="d_diagnosa" class="text-muted">-</div>
+            <!-- 🔬 DIAGNOSA -->
+            <div class="card border-0 shadow-sm mb-3">
+              <div class="card-body">
+                <h6 class="fw-bold mb-2">🔬 Diagnosa</h6>
+                <div id="d_diagnosa" class="text-muted">-</div>
+              </div>
             </div>
-          </div>
 
-          <!--  TINDAKAN -->
-          <div class="card border-0 shadow-sm">
-            <div class="card-body">
-              <h6 class="fw-bold mb-2">📝 Tindakan</h6>
-              <div id="d_tindakan" class="text-muted">-</div>
+            <!--  TINDAKAN -->
+            <div class="card border-0 shadow-sm">
+              <div class="card-body">
+                <h6 class="fw-bold mb-2">📝 Tindakan</h6>
+                <div id="d_tindakan" class="text-muted">-</div>
+              </div>
             </div>
-          </div>
 
-          <!-- 💊 Obat -->
-          <div class="card border-0 shadow-sm">
-            <div class="card-body">
-              <h6 class="fw-bold mb-2">💊 Obat</h6>
-              <div id="d_obat" class="text-muted">-</div>
+            <!-- 💊 Obat -->
+            <div class="card border-0 shadow-sm">
+              <div class="card-body">
+                <h6 class="fw-bold mb-2">💊 Obat</h6>
+                <div id="d_obat" class="text-muted">-</div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<div class="modal fade" id="filterModal">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Filter Data</h5>
-      </div>
-      <div class="modal-body">
-        <div class="row">
-          <div class="col-6 mb-3">
-            <label for="fromDate" class="form-label mb-0">Dari</label>
-            <input type="date" id="fromDate" name="fromDate" class="form-control">
-          </div>
-          <div class="col-6 mb-3">
-            <label for="toDate" class="form-label mb-0">Sampai</label>
-            <input type="date" id="toDate" name="toDate" class="form-control">
-          </div>
-          <div class="col-12 mb-3">
-            <label for="doctorSelect" class="form-label mb-0">Dokter</label>
-            <select name="doctorSelect" class="form-select" id="doctorSelect">
-              <option value="">Semua Dokter</option>
-            </select>
-          </div>
-          <div class="col-12 mb-3">
-            <label for="providerSelect" class="form-label mb-0">Provider</label>
-            <select name="providerSelect" class="form-select" id="providerSelect">
-              <option value="">Semua Metode Pembayaran</option>
-            </select>
-          </div>
-          <div class="col-12 mb-3">
-            <label for="poliSelect" class="form-label mb-0">Poliklinik</label>
-            <select name="poliSelect" class="form-select" id="poliSelect">
-              <option value="">Semua Poliklinik</option>
-            </select>
-          </div>
+  <div class="modal fade" id="filterModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Filter Data</h5>
         </div>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
-        <button class="btn btn-primary" id="btnApplyFilter">Terapkan Filter</button>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="screeningModal">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-
-      <div class="modal-header text-dark">
-        <h5 class="modal-title">Vital Sign</h5>
-        <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-
-        <input type="hidden" id="screening_id_visit">
-
-        <div class="mb-3">
-          <label class="form-label">Keluhan</label>
-          <textarea id="sc_keluhan" class="form-control"></textarea>
-        </div>
-
-        <h5>Pemeriksaan Vital Sign (Perawat)</h5>
-        <div class="row g-2">
-          <div class="col-md-4">
-            <label for="kondisi_masuk" class="form-label">Kondisi Masuk <span class="text-danger">*</span></label>
-            <select name="kondisi_masuk" id="kondisi_masuk" class="form-select" required>
-              <option value="Baik">Baik</option>
-              <option value="Lemah">Lemah</option>
-              <option value="Sedang">Sedang</option>
-              <option value="Buruk">Buruk</option>
-              <option value="Gawat Darurat">Gawat Darurat</option>
-              <option value="Tidak Sadar">Tidak Sadar</option>
-            </select>
-          </div>
-
-          <!-- Input Sistole dan Diastole (Tekanan Darah) -->
-          <div class="col-md-4">
-            <label class="form-label">Tekanan Darah (mmHg) <span class="text-danger">*</span></label>
-            <div class="d-flex gap-2">
-              <input type="number" id="sistole" name="sistole" class="form-control" placeholder="Sistole" required>
-              <span class="align-self-center">/</span>
-              <input type="number" id="diastole" name="diastole" class="form-control" placeholder="Diastole" required>
-            </div>
-            <!-- hidden untuk backend jika disatukan (opsional) -->
-            <input type="hidden" id="tekanan_darah" name="tekanan_darah">
-          </div>
-
-          <div class="col-md-4">
-            <label for="suhu" class="form-label">Suhu (°C) <span class="text-danger">*</span></label>
-            <input type="number" step="0.1" id="suhu" required name="suhu" class="form-control">
-          </div>
-          <div class="col-md-4 mt-2">
-            <label for="nadi" class="form-label">Nadi (x/menit) <span class="text-danger">*</span></label>
-            <input type="number" id="nadi" name="nadi" required class="form-control">
-          </div>
-          <div class="col-md-4 mt-2">
-            <label for="respirasi" class="form-label">Respirasi (x/menit) <span class="text-danger">*</span></label>
-            <input type="number" id="respirasi" name="respirasi" required class="form-control">
-          </div>
-          <div class="col-md-4 mt-2">
-            <label for="saturasi" class="form-label">Saturasi (Sp02%)</label>
-            <input type="number" id="saturasi" name="saturasi" class="form-control">
-          </div>
-          <div class="col-md-4 mt-2">
-            <label for="tinggi" class="form-label">Tinggi Badan (cm) <span class="text-danger">*</span></label>
-            <input type="number" id="tinggi" name="tinggi" required class="form-control">
-          </div>
-          <div class="col-md-4 mt-2">
-            <label for="berat" class="form-label">Berat Badan (kg) <span class="text-danger">*</span></label>
-            <input type="number" id="berat" name="berat" required class="form-control">
-          </div>
-          <div class="col-md-4 mt-2">
-            <label for="bmi" class="form-label">BMI <span class="text-danger">*</span></label>
-            <input type="number" readonly id="bmi" name="bmi" required class="form-control bg-light">
-          </div>
-          <div class="col-md-4 mt-2">
-            <label class="form-label">Keterangan BMI</label>
-            <input type="text" id="bmi_ket" name="bmi_ket" readonly class="form-control bg-light">
-          </div>
-
-          <!-- Tambahan Input Lingkar Perut -->
-          <div class="col-md-4 mt-2">
-            <label for="lingkar_perut" class="form-label">Lingkar Perut (cm)</label>
-            <input type="number" id="lingkar_perut" name="lingkar_perut" class="form-control">
-          </div>
-        </div>
-
-        <div class="mb-3 mt-3">
-          <label class="form-label">Catatan Screening</label>
-          <textarea id="sc_catatan" class="form-control"></textarea>
-        </div>
-
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-        <button class="btn btn-primary" id="btnSaveScreening">Simpan</button>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="poliModal">
-  <div class="modal-dialog">
-    <div class="modal-content">
-
-      <div class="modal-header">
-        <h5 class="modal-title">Registrasi Poliklinik</h5>
-        <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <form id="formPoli">
-          <!-- Pasien -->
-          <div class="mb-3">
-            <label class="form-label">Nama Pasien</label>
-            <select name="id_patient_select" id="id_patient_select"
-              class="form-select js-example-basic-item" required>
-            </select>
-          </div>
+        <div class="modal-body">
           <div class="row">
-            <div class="col">
-              <!-- Tanggal -->
-              <div class="mb-3">
-                <label class="form-label">Tanggal</label>
-                <input type="date" id="poli_date" class="form-control">
+            <div class="col-6 mb-3">
+              <label for="fromDate" class="form-label mb-0">Dari</label>
+              <input type="date" id="fromDate" name="fromDate" class="form-control">
+            </div>
+            <div class="col-6 mb-3">
+              <label for="toDate" class="form-label mb-0">Sampai</label>
+              <input type="date" id="toDate" name="toDate" class="form-control">
+            </div>
+            <div class="col-12 mb-3">
+              <label for="doctorSelect" class="form-label mb-0">Dokter</label>
+              <select name="doctorSelect" class="form-select" id="doctorSelect">
+                <option value="">Semua Dokter</option>
+              </select>
+            </div>
+            <div class="col-12 mb-3">
+              <label for="providerSelect" class="form-label mb-0">Provider</label>
+              <select name="providerSelect" class="form-select" id="providerSelect">
+                <option value="">Semua Metode Pembayaran</option>
+              </select>
+            </div>
+            <div class="col-12 mb-3">
+              <label for="poliSelect" class="form-label mb-0">Poliklinik</label>
+              <select name="poliSelect" class="form-select" id="poliSelect">
+                <option value="">Semua Poliklinik</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
+          <button class="btn btn-primary" id="btnApplyFilter">Terapkan Filter</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="screeningModal">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+
+        <div class="modal-header text-dark">
+          <h5 class="modal-title">Vital Sign</h5>
+          <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+
+          <input type="hidden" id="screening_id_visit">
+
+          <div class="mb-3">
+            <label class="form-label">Keluhan</label>
+            <textarea id="sc_keluhan" class="form-control"></textarea>
+          </div>
+
+          <h5>Pemeriksaan Vital Sign (Perawat)</h5>
+          <div class="row g-2">
+            <div class="col-md-4">
+              <label for="kondisi_masuk" class="form-label">Kondisi Masuk <span class="text-danger">*</span></label>
+              <select name="kondisi_masuk" id="kondisi_masuk" class="form-select" required>
+                <option value="Baik">Baik</option>
+                <option value="Lemah">Lemah</option>
+                <option value="Sedang">Sedang</option>
+                <option value="Buruk">Buruk</option>
+                <option value="Gawat Darurat">Gawat Darurat</option>
+                <option value="Tidak Sadar">Tidak Sadar</option>
+              </select>
+            </div>
+
+            <!-- Input Sistole dan Diastole (Tekanan Darah) -->
+            <div class="col-md-4">
+              <label class="form-label">Tekanan Darah (mmHg) <span class="text-danger">*</span></label>
+              <div class="d-flex gap-2">
+                <input type="number" id="sistole" name="sistole" class="form-control" placeholder="Sistole" required>
+                <span class="align-self-center">/</span>
+                <input type="number" id="diastole" name="diastole" class="form-control" placeholder="Diastole" required>
+              </div>
+              <!-- hidden untuk backend jika disatukan (opsional) -->
+              <input type="hidden" id="tekanan_darah" name="tekanan_darah">
+            </div>
+
+            <div class="col-md-4">
+              <label for="suhu" class="form-label">Suhu (°C) <span class="text-danger">*</span></label>
+              <input type="number" step="0.1" id="suhu" required name="suhu" class="form-control">
+            </div>
+            <div class="col-md-4 mt-2">
+              <label for="nadi" class="form-label">Nadi (x/menit) <span class="text-danger">*</span></label>
+              <input type="number" id="nadi" name="nadi" required class="form-control">
+            </div>
+            <div class="col-md-4 mt-2">
+              <label for="respirasi" class="form-label">Respirasi (x/menit) <span class="text-danger">*</span></label>
+              <input type="number" id="respirasi" name="respirasi" required class="form-control">
+            </div>
+            <div class="col-md-4 mt-2">
+              <label for="saturasi" class="form-label">Saturasi (Sp02%)</label>
+              <input type="number" id="saturasi" name="saturasi" class="form-control">
+            </div>
+            <div class="col-md-4 mt-2">
+              <label for="tinggi" class="form-label">Tinggi Badan (cm) <span class="text-danger">*</span></label>
+              <input type="number" id="tinggi" name="tinggi" required class="form-control">
+            </div>
+            <div class="col-md-4 mt-2">
+              <label for="berat" class="form-label">Berat Badan (kg) <span class="text-danger">*</span></label>
+              <input type="number" id="berat" name="berat" required class="form-control">
+            </div>
+            <div class="col-md-4 mt-2">
+              <label for="bmi" class="form-label">BMI <span class="text-danger">*</span></label>
+              <input type="number" readonly id="bmi" name="bmi" required class="form-control bg-light">
+            </div>
+            <div class="col-md-4 mt-2">
+              <label class="form-label">Keterangan BMI</label>
+              <input type="text" id="bmi_ket" name="bmi_ket" readonly class="form-control bg-light">
+            </div>
+
+            <!-- Tambahan Input Lingkar Perut -->
+            <div class="col-md-4 mt-2">
+              <label for="lingkar_perut" class="form-label">Lingkar Perut (cm)</label>
+              <input type="number" id="lingkar_perut" name="lingkar_perut" class="form-control">
+            </div>
+          </div>
+
+          <div class="mb-3 mt-3">
+            <label class="form-label">Catatan Screening</label>
+            <textarea id="sc_catatan" class="form-control"></textarea>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+          <button class="btn btn-primary" id="btnSaveScreening">Simpan</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="poliModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Registrasi Poliklinik</h5>
+          <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formPoli">
+            <!-- Pasien -->
+            <div class="mb-3">
+              <label class="form-label">Nama Pasien</label>
+              <select name="id_patient_select" id="id_patient_select"
+                class="form-select js-example-basic-item" required>
+              </select>
+            </div>
+            <div class="row">
+              <div class="col">
+                <!-- Tanggal -->
+                <div class="mb-3">
+                  <label class="form-label">Tanggal</label>
+                  <input type="date" id="poli_date" class="form-control">
+                </div>
+              </div>
+              <div class="col">
+                <!-- Jam -->
+                <div class="mb-3">
+                  <label class="form-label">Jam Kunjungan</label>
+                  <input type="time" id="poli_time" class="form-control">
+                </div>
               </div>
             </div>
-            <div class="col">
-              <!-- Jam -->
-              <div class="mb-3">
-                <label class="form-label">Jam Kunjungan</label>
-                <input type="time" id="poli_time" class="form-control">
-              </div>
+
+            <!-- Poli -->
+            <div class="mb-3">
+              <label class="form-label">Poliklinik</label>
+              <select id="poli_poli" class="form-select"></select>
+              <input type="hidden" id="kdPoli" name="kdPoli">
             </div>
-          </div>
 
-          <!-- Poli -->
-          <div class="mb-3">
-            <label class="form-label">Poliklinik</label>
-            <select id="poli_poli" class="form-select"></select>
-            <input type="hidden" id="kdPoli" name="kdPoli">
-          </div>
+            <!-- Dokter -->
+            <div class="mb-3">
+              <label class="form-label">Dokter</label>
+              <select id="poli_doctor" class="form-select"></select>
+            </div>
 
-          <!-- Dokter -->
-          <div class="mb-3">
-            <label class="form-label">Dokter</label>
-            <select id="poli_doctor" class="form-select"></select>
-          </div>
-
-          <!-- Provider -->
-          <div class="mb-3">
-            <label class="form-label">Provider</label>
-            <select id="poli_provider" class="form-select"></select>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-        <button class="btn btn-success" id="btnSavePoli">Simpan</button>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="ttdModal">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-
-      <div class="modal-header">
-        <h5 class="modal-title">✍️ Tanda Tangan Pasien</h5>
-        <button class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body text-center">
-
-        <input type="hidden" id="ttd_id_visit">
-
-        <canvas id="signaturePad"
-          style="border:1px solid #ccc; width:100%; height:400;">
-        </canvas>
-
-        <div class="mt-3 d-flex justify-content-between">
-          <button class="btn btn-warning" id="clearSignature">🧹 Clear</button>
-          <button class="btn btn-primary" id="saveSignature">💾 Simpan</button>
+            <!-- Provider -->
+            <div class="mb-3">
+              <label class="form-label">Provider</label>
+              <select id="poli_provider" class="form-select"></select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+          <button class="btn btn-success" id="btnSavePoli">Simpan</button>
         </div>
 
       </div>
-
     </div>
   </div>
-</div>
 
-<div class="modal fade" id="editVisitModal">
-  <div class="modal-dialog">
-    <div class="modal-content">
+  <div class="modal fade" id="ttdModal">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
 
-      <div class="modal-header">
-        <h5 class="modal-title">✏️ Edit Visit</h5>
-        <button class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-        <input type="hidden" id="edit_id_patient">
-        <input type="hidden" id="edit_visit_id">
-
-        <div class="mb-3">
-          <label>Tanggal</label>
-          <input type="date" id="edit_visit_date" class="form-control">
+        <div class="modal-header">
+          <h5 class="modal-title">✍️ Tanda Tangan Pasien</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
         </div>
 
-        <div class="mb-3">
-          <label>Jam</label>
-          <input type="time" id="edit_visit_time" class="form-control">
+        <div class="modal-body text-center">
+
+          <input type="hidden" id="ttd_id_visit">
+
+          <canvas id="signaturePad"
+            style="border:1px solid #ccc; width:100%; height:400;">
+          </canvas>
+
+          <div class="mt-3 d-flex justify-content-between">
+            <button class="btn btn-warning" id="clearSignature">🧹 Clear</button>
+            <button class="btn btn-primary" id="saveSignature">💾 Simpan</button>
+          </div>
+
         </div>
-      </div>
 
-      <div class="modal-footer">
-        <button class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-        <button class="btn btn-primary" id="btnUpdateVisit">💾 Simpan</button>
       </div>
-
     </div>
   </div>
-</div>
-<div class="modal fade" id="cameraModal" tabindex="-1">
+
+  <div class="modal fade" id="editVisitModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title">✏️ Edit Visit</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <input type="hidden" id="edit_id_patient">
+          <input type="hidden" id="edit_visit_id">
+
+          <div class="mb-3">
+            <label>Tanggal</label>
+            <input type="date" id="edit_visit_date" class="form-control">
+          </div>
+
+          <div class="mb-3">
+            <label>Jam</label>
+            <input type="time" id="edit_visit_time" class="form-control">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+          <button class="btn btn-primary" id="btnUpdateVisit">💾 Simpan</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="cameraModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
 
@@ -1161,7 +1161,7 @@ date_default_timezone_set('Asia/Jakarta');
           </div>
 
           <div id="faceMatchInfo" class="text-center mb-1"></div>
-<div id="faceStatus" class="face-status text-warning">
+          <div id="faceStatus" class="face-status text-warning">
             <i class="fas fa-exclamation-circle"></i>
             <span>Memuat deteksi wajah...</span>
           </div>
@@ -1179,59 +1179,45 @@ date_default_timezone_set('Asia/Jakarta');
 
       </div>
     </div>
-<div class="modal fade" id="modalRescheduleDoctor" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <form id="formRescheduleDoctor">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">
-            <i class="fas fa-user-md me-2"></i>Ganti Dokter
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" id="visit_id" name="visit_id">
-          <div class="mb-3">
-            <label class="form-label">
-              Dokter Saat Ini
-            </label>
-            <input
-              type="text"
-              class="form-control"
-              id="doctor_now"
-              readonly>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">
-              Ganti Ke Dokter
-            </label>
-            <select
-              class="form-select"
-              id="doctor_new"
-              name="doctor_new"
-              required>
-              <option value="">-- Pilih Dokter --</option>
-            </select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button
-            type="button"
-            class="btn btn-secondary"
-            data-bs-dismiss="modal">
-            Batal
-          </button>
-          <button
-            type="submit"
-            class="btn btn-primary">
-            <i class="fas fa-save me-1"></i>
-            Simpan
-          </button>
-        </div>
-      </div>
-    </form>
   </div>
-</div>
+  <div class="modal fade" id="modalRescheduleDoctor" tabindex="-1" aria-hidden="true" style="z-index: 10000000;">
+    <div class="modal-dialog">
+      <div class="modal-content"> <!-- PERHATIKAN: modal-content harus membungkus form, bukan sebaliknya -->
+        <form id="formRescheduleDoctor">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-user-md me-2"></i>Ganti Dokter
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="visit_id" name="visit_id">
+            <div class="mb-3">
+              <label class="form-label">
+                Dokter Saat Ini
+              </label>
+              <input type="text" class="form-control bg-light" id="doctor_now" readonly>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">
+                Ganti Ke Dokter
+              </label>
+              <select class="form-select" id="doctor_new" name="doctor_new" required>
+                <option value="">-- Pilih Dokter --</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-primary" id="btnSimpanReschedule">
+              <i class="fas fa-save me-1"></i> Simpan
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
 <script>
   let currentTab = 'belum';
   $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
@@ -2411,7 +2397,10 @@ date_default_timezone_set('Asia/Jakarta');
     try {
       const img = await faceapi.fetchImage(path.replace(/^(\.\.\/)+/, ''));
       const det = await faceapi
-        .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({inputSize: 416, scoreThreshold: 0.4}))
+        .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({
+          inputSize: 416,
+          scoreThreshold: 0.4
+        }))
         .withFaceLandmarks()
         .withFaceDescriptor();
       masterDescriptor = det ? det.descriptor : null;
@@ -2464,10 +2453,23 @@ date_default_timezone_set('Asia/Jakarta');
     const dy = Math.abs(faceCy - cCy) / (cr.height / 2);
     const ratio = fw / cr.width;
 
-    if (ratio < 0.5) return {ok: false, msg: "Dekatkan wajah ke kamera"};
-    if (ratio > 0.95) return {ok: false, tooClose: true, msg: "Terlalu dekat, mundurkan sedikit"};
-    if (dx > 0.2 || dy > 0.2) return {ok: false, msg: "Posisikan wajah di tengah lingkaran"};
-    return {ok: true, msg: "Wajah pas, siap diambil"};
+    if (ratio < 0.5) return {
+      ok: false,
+      msg: "Dekatkan wajah ke kamera"
+    };
+    if (ratio > 0.95) return {
+      ok: false,
+      tooClose: true,
+      msg: "Terlalu dekat, mundurkan sedikit"
+    };
+    if (dx > 0.2 || dy > 0.2) return {
+      ok: false,
+      msg: "Posisikan wajah di tengah lingkaran"
+    };
+    return {
+      ok: true,
+      msg: "Wajah pas, siap diambil"
+    };
   }
 
   async function startFaceDetection() {
@@ -2485,7 +2487,10 @@ date_default_timezone_set('Asia/Jakarta');
     faceMismatch = false;
     setFaceState(false, "Memuat data wajah pasien...");
     await loadMasterDescriptor(currentMasterFace);
-    const opts = new faceapi.TinyFaceDetectorOptions({inputSize: 320, scoreThreshold: 0.5});
+    const opts = new faceapi.TinyFaceDetectorOptions({
+      inputSize: 320,
+      scoreThreshold: 0.5
+    });
     let busy = false;
     faceTimer = setInterval(async () => {
       if (busy || !video.videoWidth || video.paused) return;
@@ -2858,34 +2863,55 @@ date_default_timezone_set('Asia/Jakarta');
   });
 </script>
 <script>
-  $(document).on("click", ".btn-reschedule", function() {
+  $(document).on("click", ".btn-reschedule", function(e) {
+    e.preventDefault();
+
+    // 1. Tutup paksa dropdown menu yang terbuka tanpa men-trigger klik body
+    $('.dropdown-menu').removeClass('show');
+
+    // 2. Ambil data dari tombol
     const idVisit = $(this).data("id");
     const doctorNow = $(this).data("doctor");
+
+    // 3. Masukkan ke dalam input form
     $("#visit_id").val(idVisit);
     $("#doctor_now").val(doctorNow);
-    $("#doctor_new").val("").trigger("change");
-    $("#modalRescheduleDoctor").modal("show");
+    $("#doctor_new").html('<option value="">Sedang memuat data...</option>');
+
+    // 4. CARA NATIVE BOOTSTRAP 5 MEMBUKA MODAL (Dijamin Tampil)
+    var myModalEl = document.getElementById('modalRescheduleDoctor');
+    var modalReschedule = bootstrap.Modal.getInstance(myModalEl);
+    if (!modalReschedule) {
+      modalReschedule = new bootstrap.Modal(myModalEl);
+    }
+    modalReschedule.show();
+
+    // 5. Panggil AJAXf
     $.ajax({
       url: "module/admin/get_dokter_bpjs.php",
       type: "POST",
       dataType: "json",
       success: function(res) {
         let html = '<option value="">- Pilih Dokter -</option>';
-        $.each(res.data, function(i, row) {
-          html += `<option value="${row.kdDokter}">${row.nmDokter}</option>`;
-        });
-        $('#doctor_new').html(html);
-        if (selected !== "") {
-          $('#doctor_new').val(selected).trigger("change");
+        if (res && res.data) {
+          $.each(res.data, function(i, row) {
+            html += `<option value="${row.kdDokter}">${row.nmDokter}</option>`;
+          });
         }
+        $('#doctor_new').html(html);
       },
       error: function() {
         $('#doctor_new').html('<option value="">Gagal memuat data</option>');
       }
     });
   });
+
   $("#formRescheduleDoctor").submit(function(e) {
     e.preventDefault();
+    let btnSubmit = $(this).find('button[type="submit"]');
+    let originalText = btnSubmit.html();
+    btnSubmit.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
+
     $.ajax({
       url: "module/admin/serviceRescheduleDoctor.php",
       type: "POST",
@@ -2916,6 +2942,9 @@ date_default_timezone_set('Asia/Jakarta');
           title: "Oops...",
           text: "Terjadi kesalahan pada server."
         });
+      },
+      complete: function() {
+        btnSubmit.prop('disabled', false).html(originalText);
       }
     });
   });
