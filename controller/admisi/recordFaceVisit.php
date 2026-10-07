@@ -15,7 +15,7 @@ if (!$id || $image === false || $image === '') {
    exit;
 }
 
-$filename = '../../uploads/faces_visit/' . time() . '_' . $id . '.jpg';
+$filename = '/../../../uploads/faces_visit/' . time() . '_' . $id . '.jpg';
 
 if (file_put_contents($filename, $image) === false) {
    echo json_encode(["status" => "error", "message" => "Gagal menyimpan file"]);
