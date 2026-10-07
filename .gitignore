@@ -1,4 +1,5 @@
 /database/*
+!/database/connect.php
 !/database/connect.example.php
 /uploads/**
 !/uploads/**/
@@ -7,7 +8,8 @@
 .DS_Store
 /vendor/
 .htaccess
-/logs
+/logs/*
+!/logs/.gitkeep
 .env
 models/uncompressed/
 models/proto/
