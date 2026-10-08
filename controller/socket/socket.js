@@ -1,4 +1,7 @@
+(function () {
+if (window.APP && window.APP.socketLoaded) return; // script included twice
 window.APP = window.APP || {};
+window.APP.socketLoaded = true;
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
 document.addEventListener('click', async () => {
@@ -101,3 +104,4 @@ function startApp() {
         });
     }
 }
+})();
