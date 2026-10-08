@@ -58,9 +58,10 @@ function getData()
       LEFT JOIN ms_provider 
          ON ms_provider.id_provider = pasien_visit.id_provider
       WHERE pasien_visit.id_customer = ? 
-        -- 🔥 FILTER TANGGAL
-      AND DATE(permintaan_pharmacy.created_at) BETWEEN ? AND ?
-      GROUP BY permintaan_pharmacy.id_visit
+      AND (
+         COALESCE(permintaan_pharmacy.status_permintaan, 0) <> 3
+         OR DATE(permintaan_pharmacy.created_at) BETWEEN ? AND ?
+      )
       ORDER BY permintaan_pharmacy.id_permintaan_farmasi ASC
    ");
 

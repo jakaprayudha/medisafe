@@ -36,6 +36,23 @@ $rm = $_GET['rm'];
             <?php
             require 'menu_rme.php';
             ?>
+            <form id="formPemeriksaan" class="w-100" method="POST">
+              <input type="hidden" name="nomor_rm" value="<?= htmlspecialchars($rm, ENT_QUOTES, 'UTF-8') ?>">
+              <input type="hidden" name="nomor_visit" value="<?= htmlspecialchars($no, ENT_QUOTES, 'UTF-8') ?>">
+              <input type="hidden" name="id_patient" id="id_patient">
+              <input type="hidden" id="terapiObat" name="terapiObat">
+              <input type="hidden" id="terapiNonObat" name="terapiNonObat">
+              <input type="hidden" id="bmhp" name="bmhp">
+              <input type="hidden" id="tglDaftar" name="tglDaftar">
+              <input type="hidden" name="typeRujukan" id="typeRujukan" value="normal">
+              <input type="hidden" name="noKartu" id="noKartu">
+              <input type="hidden" name="kdPoli" id="kode_poli">
+              <input type="hidden" name="nmPoli" id="nama_poli">
+              <input type="hidden" name="kdDokter" id="kdDokter">
+              <input type="hidden" name="nmDokter" id="nmDokter">
+              <input type="hidden" name="noKunjungan" id="noKunjungan">
+              <input type="hidden" name="kdTkp" value="10">
+              <input type="hidden" name="status_pasien" id="status_pasien">
             <!-- =========================================================
      ACCORDION PEMERIKSAAN
 ========================================================= -->
@@ -2151,6 +2168,7 @@ $rm = $_GET['rm'];
           </div>
         </div>
       </div>
+      </form>
     </div>
   </div>
 

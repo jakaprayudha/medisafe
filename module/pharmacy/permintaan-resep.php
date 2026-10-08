@@ -110,9 +110,15 @@ $apiUrl = getenv('API_URL');
 </body>
 
 <script>
+  function todayLocalDate() {
+    const now = new Date();
+    const localTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+    return localTime.toISOString().slice(0, 10);
+  }
+
   $(document).ready(function() {
 
-    let today = new Date().toISOString().split('T')[0];
+    let today = todayLocalDate();
 
     $('#fromDate').attr('max', today);
     $('#toDate').val(today);
@@ -129,7 +135,7 @@ $apiUrl = getenv('API_URL');
     let savedTo = localStorage.getItem('filter_toDate');
     let savedStatus = localStorage.getItem('filter_status');
 
-    let today = new Date().toISOString().split('T')[0];
+    let today = todayLocalDate();
 
     // default fallback
     $('#fromDate').val(savedFrom || today);
@@ -220,7 +226,7 @@ $apiUrl = getenv('API_URL');
   });
   $('#btnReset').on('click', function() {
     localStorage.clear(); // 🔥 hapus semua filter
-    let today = new Date().toISOString().split('T')[0];
+    let today = todayLocalDate();
 
     $('#fromDate').val(today);
     $('#toDate').val(today);
