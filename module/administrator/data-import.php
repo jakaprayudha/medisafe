@@ -416,7 +416,7 @@ require '../../controller/view.php';
           $('#progressBar').css('width', pct + '%').text(pct + '%');
           $('#progressStatus').text(processed + ' / ' + total + ' baris diproses');
 
-          if (response.job_status === 'done') {
+          if (response.job_status === 'completed') {
             clearInterval(pollingInterval);
             pollingInterval = null;
             $('#progressArea').hide();
@@ -638,7 +638,7 @@ require '../../controller/view.php';
   const statusBadge = {
     pending:    '<span class="badge bg-secondary">⏳ Pending</span>',
     processing: '<span class="badge bg-primary">🔄 Processing</span>',
-    done:  '<span class="badge bg-success">✅ Selesai</span>',
+    completed:  '<span class="badge bg-success">✅ Selesai</span>',
     error:      '<span class="badge bg-danger">❌ Gagal</span>',
   };
 
@@ -665,17 +665,17 @@ require '../../controller/view.php';
           const processed = (j.success || 0) + (j.duplicates || 0) + (j.errors || 0);
           const pct = j.status === 'processing' 
             ? Math.min(100, Math.round((processed / total) * 100))
-            : (j.status === 'done' ? 100 : 0);
+            : (j.status === 'completed' ? 100 : 0);
 
           const progBar = j.status === 'processing'
             ? `<div class="progress" style="height:16px;min-width:90px;">
                  <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:${pct}%">${pct}%</div>
                </div>`
-            : (j.status === 'done' ? `<div class="progress" style="height:16px;min-width:90px;">
+            : (j.status === 'completed' ? `<div class="progress" style="height:16px;min-width:90px;">
                  <div class="progress-bar bg-success" style="width:100%">100%</div>
                </div>` : '-');
 
-          const detailBtn = (j.status === 'done')
+          const detailBtn = (j.status === 'completed')
             ? `<button class="btn btn-xs btn-sm btn-outline-primary py-0 px-2 view-job-result" data-id="${j.id}">Lihat</button>`
             : '-';
 
@@ -713,9 +713,9 @@ require '../../controller/view.php';
       });
   });
 
-  // Load on page ready and refresh every 5 minutes
+  // Load on page ready and refresh every 60 seconds
   loadJobsTable();
-  setInterval(loadJobsTable, 300000); // 300000 ms = 5 menit
+  setInterval(loadJobsTable, 60000);
 </script>
 
 </html>

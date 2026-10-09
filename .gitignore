@@ -1,14 +1,14 @@
-/database/*
-!/database/connect.example.php
-/uploads/**
-!/uploads/**/
-!/uploads/**/.gitkeep
-/uploads/.DS_Store
-.DS_Store
+/database/
+/uploads/
 /vendor/
 .htaccess
 /logs
 .env
 models/uncompressed/
 models/proto/
+
+# macOS directory cache
+.DS_Store
+
+# Local IDE settings
 .vscode/
