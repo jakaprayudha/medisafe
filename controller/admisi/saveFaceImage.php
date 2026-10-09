@@ -33,7 +33,7 @@ function saveFaceImage($koneksi, $dir, $table, $col, $pk)
    $name = time() . "_$id.jpg";
    if (!imagejpeg($img, "$abs/$name", 75)) $fail("Gagal menyimpan file", 500);
 
-   $path = "uploads/$dir/$name";
+   $path = "/../../uploads/$dir/$name";
    $stmt = mysqli_prepare($koneksi, "UPDATE $table SET $col = ? WHERE $pk = ?");
    mysqli_stmt_bind_param($stmt, "si", $path, $id);
    if (!mysqli_stmt_execute($stmt)) {
