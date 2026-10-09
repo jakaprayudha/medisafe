@@ -29,7 +29,7 @@
  </div>
  <div class="modal fade" id="periodeTablePenunjang" tabindex="-1">
    <div class="modal-dialog">
-     <form id="programForm" class="modal-content">
+     <form id="programFormPenunjang" class="modal-content">
        <div class="modal-header">
          <h5 class="modal-title"></h5>
          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -236,7 +236,7 @@
 
      // 🔹 Tambah
      $('#btnTambahPenunjang').on('click', function() {
-       $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
+       $('#programFormPenunjang')[0].reset(); // ✅ pakai programFormPenunjang, bukan addForm
        $('#id_inspection').val('');
        $('#periodeTablePenunjang .modal-title').text('Tambah Data');
        $('#periodeTablePenunjang').modal('show');
@@ -244,7 +244,7 @@
 
 
      // 🔹 Submit (Tambah / Update)
-     $('#programForm').on('submit', function(e) {
+     $('#programFormPenunjang').on('submit', function(e) {
        e.preventDefault();
 
        let formData = new FormData(this); // ✅ ambil langsung FormData

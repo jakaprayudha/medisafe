@@ -28,7 +28,7 @@
   </div>
   <div class="modal fade" id="programModalResep" tabindex="-1">
     <div class="modal-dialog">
-      <form id="programForm" class="modal-content">
+      <form id="programFormResep" class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title"></h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -175,14 +175,14 @@
 
       // 🔹 Tambah
       $('#btnTambahResep').on('click', function() {
-        $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
+        $('#programFormResep')[0].reset(); // ✅ pakai programFormResep, bukan addForm
         $('#id_resep').val('');
         $('#programModalResep .modal-title').text('Tambah Data');
         $('#programModalResep').modal('show');
       });
 
       // 🔹 Submit (Tambah / Update)
-      $('#programForm').on('submit', function(e) {
+      $('#programFormResep').on('submit', function(e) {
         e.preventDefault();
         let formData = new URLSearchParams(new FormData(this));
         let id = $('#id_resep').val();

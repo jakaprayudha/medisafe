@@ -2,7 +2,7 @@
 
    <div class="modal-dialog modal-dialog-centered">
 
-      <form id="programForm" class="modal-content">
+      <form id="programFormFarmasi" class="modal-content">
 
          <div class="modal-header">
 
@@ -452,14 +452,14 @@
 
       // 🔹 Tambah
       $('#btnTambah').on('click', function() {
-         $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
+         $('#programFormFarmasi')[0].reset(); // ✅ pakai programFormFarmasi, bukan addForm
          $('#id_permintaan_farmasi').val('');
          $('#programModal .modal-title').text('Tambah Data');
          $('#programModal').modal('show');
       });
 
       // 🔹 Submit (Tambah / Update)
-      $('#programForm').on('submit', function(e) {
+      $('#programFormFarmasi').on('submit', function(e) {
          e.preventDefault();
          let formData = new URLSearchParams(new FormData(this));
          let id = $('#id_permintaan_farmasi').val();
