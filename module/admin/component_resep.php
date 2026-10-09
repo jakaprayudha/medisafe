@@ -5,9 +5,9 @@
         <!-- Grup tombol di sisi kanan -->
         <div class="d-flex ms-auto gap-2">
           <a href="module/admin/print_resep_luar?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
-            <button class="btn btn-info"><i class="fas fa-print"></i> Cetak</button>
+            <button type="button" class="btn btn-info"><i class="fas fa-print"></i> Cetak</button>
           </a>
-          <button class="btn btn-primary" id="btnTambahResep"><i class="fas fa-plus"></i> Tambah</button>
+          <button type="button" class="btn btn-primary" id="btnTambahResep"><i class="fas fa-plus"></i> Tambah</button>
         </div>
       </div>
       <div class="table-responsive" data-simplebar>

@@ -5,9 +5,9 @@
        <!-- Grup tombol di sisi kanan -->
        <div class="d-flex ms-auto gap-2">
          <a href="module/admin/print/formulir_lab?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
-           <button class="btn btn-light"><i class="fas fa-print"></i> Cetak</button>
+           <button type="button" class="btn btn-light"><i class="fas fa-print"></i> Cetak</button>
          </a>
-         <button class="btn btn-primary" id="btnTambahPenunjang"><i class="fas fa-plus"></i> Tambah</button>
+         <button type="button" class="btn btn-primary" id="btnTambahPenunjang"><i class="fas fa-plus"></i> Tambah</button>
        </div>
      </div>
      <div class="table-responsive" data-simplebar>
@@ -78,7 +78,7 @@
 
        <div class="modal-header">
          <h5 class="modal-title" id="hasilModalTitle">Input Hasil Lab</h5>
-         <button class="btn-close" data-bs-dismiss="modal"></button>
+         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
        </div>
 
        <div class="modal-body">
@@ -104,7 +104,7 @@
 
        <div class="modal-footer">
          <div class="modal-footer" id="hasilFooter">
-           <button class="btn btn-primary" id="saveHasil">Simpan</button>
+           <button type="button" class="btn btn-primary" id="saveHasil">Simpan</button>
          </div>
        </div>
 

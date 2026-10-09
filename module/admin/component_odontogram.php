@@ -50,7 +50,7 @@
           <!-- Grup tombol di sisi kanan -->
           <div class="d-flex ms-auto gap-2">
              <a href="module/admin/print/formulir_odontogram?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
-                <button class="btn btn-light"><i class="fas fa-print"></i> Print</button>
+                <button type="button" class="btn btn-light"><i class="fas fa-print"></i> Print</button>
              </a>
           </div>
        </div>
