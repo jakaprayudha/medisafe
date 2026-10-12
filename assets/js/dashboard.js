@@ -96,11 +96,11 @@ $(function () {
     },
   };
 
-  var chart = new ApexCharts(
-    document.querySelector("#revenue-forecast"),
-    chart
-  );
-  chart.render();
+  const revenueElement = document.querySelector("#revenue-forecast");
+  if (revenueElement) {
+    const revenueChart = new ApexCharts(revenueElement, chart);
+    revenueChart.render();
+  }
 
 
   // -----------------------------------------------------------------------
@@ -143,6 +143,9 @@ $(function () {
       },
     },
   };
-  new ApexCharts(document.querySelector("#total-income"), customers).render();
+  const incomeElement = document.querySelector("#total-income");
+  if (incomeElement) {
+    new ApexCharts(incomeElement, customers).render();
+  }
 
 })

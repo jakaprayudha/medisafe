@@ -11,6 +11,12 @@ Arahkan domain Herd ke root repository dan buka `https://medisafe.test/`.
 Driver ditemukan otomatis oleh Herd; tidak perlu mengubah konfigurasi global.
 Koneksi database dan session tetap menggunakan konfigurasi aplikasi yang ada.
 
+Dashboard lokal dapat diakses melalui `/module/admin` maupun `/module/admin/`;
+base `../../` pada keduanya mengarah ke root aplikasi. API dashboard menggunakan
+session yang sudah dimulai oleh koneksi database, tanpa `session_start()` ulang
+yang dapat mencampurkan notice PHP ke respons JSON. Grafik template hanya
+diinisialisasi ketika elemen grafiknya tersedia pada halaman.
+
 ## Pemeriksaan odontogram
 
 Di modul Odontogram atau bagian odontogram pada RME, pilih nomor gigi lalu
