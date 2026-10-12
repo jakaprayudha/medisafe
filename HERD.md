@@ -44,3 +44,10 @@ sama dengan tombol Ambil Wajah; foto master pasien tidak ditimpa.
 Tanpa rekaman master yang terbaca, gunakan pengambilan manual.
 Jika simpan otomatis gagal, error ditampilkan dan pengguna dapat mencoba
 lagi melalui tombol. Tidak ada pengiriman ulang otomatis berulang.
+
+## Riwayat pengobatan
+
+Riwayat Pengobatan pada RME (termasuk rawat inap) dan detail pasien tidak
+menampilkan kunjungan yang dibatalkan (`visit_status = 99`). Kunjungan
+dengan status lain atau status kosong tetap ditampilkan seperti sebelumnya.
+Filter hanya mengubah daftar riwayat; data kunjungan batal tidak dihapus.
