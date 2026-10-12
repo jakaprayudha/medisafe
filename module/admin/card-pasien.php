@@ -17,6 +17,7 @@
             <span id="pc_status" class="badge bg-secondary">-</span>
          </div>
       </div>
+      <div id="pc_error" class="alert alert-danger mt-3 mb-0 d-none" role="alert"></div>
       <hr class="my-3">
       <div class="patient-info-grid mt-3">
 
@@ -339,16 +340,22 @@
 
       window._patientRendered = true;
 
-      const name = safeVal(data.patient_name_pcare);
+      const name = safeVal(data.patient_name_pcare) !== "-"
+         ? data.patient_name_pcare
+         : safeVal(data.patient_name);
 
       setText("pc_name", name);
       setText("pc_initial", name !== "-" ? name.charAt(0).toUpperCase() : "-");
       const photo = document.getElementById("pc_photo");
       const initial = document.getElementById("pc_initial");
-      const photoFile = data.patient_foto;
+      const photoFile = typeof data.patient_foto === "string" ? data.patient_foto.trim() : "";
 
+      photo.onload = null;
+      photo.onerror = null;
+      photo.removeAttribute("src");
       photo.style.display = "none";
       initial.style.display = "";
+      photo.alt = name !== "-" ? "Foto pasien " + name : "Foto pasien";
 
       if (photoFile && photoFile !== "null") {
          photo.onload = () => {
@@ -356,12 +363,11 @@
             initial.style.display = "none";
          };
          photo.onerror = () => {
+            console.error("Foto pasien gagal dimuat:", photoFile);
             photo.style.display = "none";
             initial.style.display = "";
          };
          photo.src = new URL(`uploads/patient/${encodeURIComponent(photoFile)}`, document.baseURI).href;
-      } else {
-         photo.removeAttribute("src");
       }
 
       setText("pc_rm", "No RM: " + safeVal(data.nomor_rm));
@@ -492,8 +498,14 @@
 
       if (!no) return;
 
-      fetch(`controller/master/getPatientCard.php?no=${no}`)
-         .then(res => res.json())
+      fetch(`controller/master/getPatientCard.php?no=${encodeURIComponent(no)}`)
+         .then(async res => {
+            const result = await res.json();
+            if (!res.ok || result.status !== "success" || !result.data) {
+               throw new Error(result.message || "Data pasien tidak ditemukan");
+            }
+            return result;
+         })
          .then(res => {
 
             console.log("PATIENT DATA:", res); // 🔥 debug
@@ -507,7 +519,12 @@
 
             }
          })
-         .catch(err => console.error("PatientCard Error:", err));
+         .catch(err => {
+            console.error("PatientCard Error:", err);
+            const error = document.getElementById("pc_error");
+            error.textContent = "Gagal mengambil data kartu pasien. Silakan muat ulang halaman.";
+            error.classList.remove("d-none");
+         });
 
    });
 </script>

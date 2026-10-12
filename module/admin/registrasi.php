@@ -1158,6 +1158,7 @@ date_default_timezone_set('Asia/Jakarta');
 
           <div class="face-guide-small">
             Pastikan wajah terlihat jelas, menghadap kamera dan tidak terpotong.
+            Foto tersimpan otomatis setelah wajah sesuai dengan master pasien dan posisi sudah pas.
           </div>
 
           <div id="faceMatchInfo" class="text-center mb-1"></div>
@@ -2375,6 +2376,8 @@ date_default_timezone_set('Asia/Jakarta');
   let masterState = "loading";
   const FACE_MATCH_THRESHOLD = 0.5;
   let faceTooClose = false;
+  let faceDetectionSession = 0;
+  let autoCaptureAttempted = false;
 
   function loadFaceModel() {
     if (!faceModelReady) {
@@ -2388,7 +2391,7 @@ date_default_timezone_set('Asia/Jakarta');
   }
 
   // Ambil descriptor wajah master pasien (foto rekam sebelumnya)
-  async function loadMasterDescriptor(path) {
+  async function loadMasterDescriptor(path, session) {
     masterDescriptor = null;
     masterState = "none";
     faceMatched = false;
@@ -2403,9 +2406,11 @@ date_default_timezone_set('Asia/Jakarta');
         }))
         .withFaceLandmarks()
         .withFaceDescriptor();
+      if (session !== faceDetectionSession) return;
       masterDescriptor = det ? det.descriptor : null;
       masterState = det ? "ok" : "error";
     } catch (e) {
+      if (session !== faceDetectionSession) return;
       console.error("Gagal memuat wajah master", e);
     }
   }
@@ -2475,31 +2480,35 @@ date_default_timezone_set('Asia/Jakarta');
   async function startFaceDetection() {
     const video = document.getElementById("video");
     stopFaceDetection();
+    const session = faceDetectionSession;
     faceTooClose = false;
     setFaceState(false, "Memuat deteksi wajah...");
     try {
       await loadFaceModel();
+      if (session !== faceDetectionSession) return;
     } catch (e) {
+      if (session !== faceDetectionSession) return;
       console.error(e);
       setFaceState(false, "Gagal memuat model deteksi wajah");
       return;
     }
     faceMismatch = false;
     setFaceState(false, "Memuat data wajah pasien...");
-    await loadMasterDescriptor(currentMasterFace);
+    await loadMasterDescriptor(currentMasterFace, session);
+    if (session !== faceDetectionSession) return;
     const opts = new faceapi.TinyFaceDetectorOptions({
       inputSize: 320,
       scoreThreshold: 0.5
     });
     let busy = false;
     faceTimer = setInterval(async () => {
-      if (busy || !video.videoWidth || video.paused) return;
+      if (busy || document.getElementById("captureBtn").dataset.saving || !video.videoWidth || video.paused) return;
       busy = true;
       try {
         let q = faceapi.detectSingleFace(video, opts);
         if (masterDescriptor) q = q.withFaceLandmarks().withFaceDescriptor();
         const det = await q;
-        if (!faceTimer) return;
+        if (session !== faceDetectionSession || !faceTimer) return;
         if (!det) {
           faceMismatch = false;
           faceMatched = false;
@@ -2519,9 +2528,15 @@ date_default_timezone_set('Asia/Jakarta');
             faceMatched = true;
           }
           setFaceState(r.ok, r.ok && masterDescriptor ? "Wajah sesuai pasien, siap diambil" : r.msg, !!r.tooClose);
+          if (r.ok && faceMatched && masterState === "ok" && !autoCaptureAttempted) {
+            autoCaptureAttempted = true;
+            await captureVisitFace();
+          }
         }
       } catch (e) {
+        if (session !== faceDetectionSession) return;
         console.error(e);
+        setFaceState(false, "Gagal mendeteksi wajah. Silakan tutup dan buka kembali kamera.");
       } finally {
         busy = false;
       }
@@ -2529,6 +2544,7 @@ date_default_timezone_set('Asia/Jakarta');
   }
 
   function stopFaceDetection() {
+    faceDetectionSession++;
     if (faceTimer) {
       clearInterval(faceTimer);
       faceTimer = null;
@@ -2536,6 +2552,11 @@ date_default_timezone_set('Asia/Jakarta');
   }
 
   $(document).on("click", ".camera-btn", async function() {
+    if (document.getElementById("captureBtn").dataset.saving) return;
+    stopFaceDetection();
+    autoCaptureAttempted = false;
+    faceMatched = false;
+    faceMismatch = false;
     // WAJIB: ambil id dari tombol
     currentPatientId = $(this).data("id");
     currentMasterFace = $(this).attr("data-face") || "";
@@ -2543,16 +2564,24 @@ date_default_timezone_set('Asia/Jakarta');
     const modalEl = document.getElementById("cameraModal");
     const modal = new bootstrap.Modal(modalEl);
     modal.show();
+    const session = faceDetectionSession;
+    setFaceState(false, "Menyiapkan kamera...");
 
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
+      const cameraStream = await navigator.mediaDevices.getUserMedia({
         video: true
       });
+      if (session !== faceDetectionSession) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        return;
+      }
+      stream = cameraStream;
 
       const video = document.getElementById("video");
       video.srcObject = stream;
 
       await video.play();
+      if (session !== faceDetectionSession) return;
       startFaceDetection();
 
     } catch (err) {
@@ -2561,8 +2590,11 @@ date_default_timezone_set('Asia/Jakarta');
     }
 
   });
-  document.getElementById("captureBtn").addEventListener("click", function() {
-    if (this.disabled) return;
+  document.getElementById("captureBtn").addEventListener("click", captureVisitFace);
+
+  function captureVisitFace() {
+    const captureBtn = document.getElementById("captureBtn");
+    if (captureBtn.disabled || captureBtn.dataset.saving) return;
     if (faceMismatch) {
       Swal.fire("Wajah tidak sesuai", "Wajah di kamera bukan wajah pasien pada data master.", "error");
       return;
@@ -2673,8 +2705,6 @@ date_default_timezone_set('Asia/Jakarta');
      * =====================================================
      */
 
-    const captureBtn = document.getElementById("captureBtn");
-
     captureBtn.disabled = true;
     captureBtn.dataset.saving = "1";
 
@@ -2683,7 +2713,7 @@ date_default_timezone_set('Asia/Jakarta');
         Menyimpan...
     `;
 
-    fetch("controller/admisi/recordFaceVisit.php", {
+    return fetch("controller/admisi/recordFaceVisit.php", {
 
         method: "POST",
 
@@ -2697,11 +2727,18 @@ date_default_timezone_set('Asia/Jakarta');
         })
 
       })
-      .then(res => res.json())
+      .then(async res => {
+        const result = await res.json();
+        if (!res.ok || result.status !== "success") {
+          throw new Error(result.message || "Wajah gagal disimpan.");
+        }
+        return result;
+      })
 
       .then(res => {
 
         if (res.status === "success") {
+          stopFaceDetection();
 
           Swal.fire({
             icon: "success",
@@ -2723,14 +2760,6 @@ date_default_timezone_set('Asia/Jakarta');
             table.ajax.reload(null, false);
           }, 500);
 
-        } else {
-
-          Swal.fire(
-            "Gagal!",
-            res.message || "Wajah gagal disimpan.",
-            "error"
-          );
-
         }
 
       })
@@ -2741,7 +2770,7 @@ date_default_timezone_set('Asia/Jakarta');
 
         Swal.fire(
           "Error!",
-          "Terjadi kesalahan saat menyimpan wajah.",
+          error.message || "Terjadi kesalahan saat menyimpan wajah.",
           "error"
         );
 
@@ -2759,7 +2788,7 @@ date_default_timezone_set('Asia/Jakarta');
 
       });
 
-  });
+  }
 
   /* =========================
      CLEANUP (INI YANG PENTING)

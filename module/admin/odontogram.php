@@ -199,7 +199,9 @@ require '../../controller/view.php';
 
                           <div class="mb-3">
                             <label>Diagnosa</label>
-                            <input type="text" class="form-control" id="diagnosa">
+                            <select class="form-control" id="diagnosa">
+                              <option value=""></option>
+                            </select>
                           </div>
 
                           <div class="mb-3">
@@ -290,6 +292,7 @@ require '../../controller/view.php';
   require 'library.php';
   ?>
 </body>
+<script src="controller/admisi/helper.js?v=<?= filemtime(__DIR__ . '/../../controller/admisi/helper.js') ?>"></script>
 <script>
   function loadTable() {
 
@@ -307,12 +310,20 @@ require '../../controller/view.php';
 
       .then(res => {
 
+        if (res.status !== 'success') {
+          throw new Error(res.message || 'Gagal mengambil data odontogram');
+        }
+
         console.log("Data odontogram:", res);
 
         const tbody =
           document.querySelector('#tableOdontogram tbody');
 
         tbody.innerHTML = '';
+
+        document.querySelectorAll('.gigi').forEach(gigi => {
+          gigi.style.background = '#fff';
+        });
 
         if (!res.data || res.data.length === 0) {
 
@@ -332,84 +343,28 @@ require '../../controller/view.php';
 
         res.data.forEach(row => {
 
-          tbody.innerHTML += `
-
-                    <tr>
-
-                        <td>
-                            ${no++}
-                        </td>
-
-                        <td>
-                            <strong>
-                                ${row.no_gigi ?? '-'}
-                            </strong>
-                        </td>
-
-                        <td>
-                            ${row.elemen ?? '-'}
-                        </td>
-
-                        <td>
-                            ${row.elemen_gigi ?? '-'}
-                        </td>
-
-                        <td>
-                            ${row.diagnosa ?? '-'}
-                        </td>
-
-                        <td>
-                            ${row.prosedur ?? '-'}
-                        </td>
-
-                        <td>
-                            ${row.keterangan ?? '-'}
-                        </td>
-
-                        <td>
-
-                            <div class="d-flex gap-1">
-
-                                <button
-                                    type="button"
-                                    class="btn btn-sm btn-warning"
-                                    title="Ubah"
-                                    onclick='editOdontogram(${JSON.stringify(row)})'>
-
-                                    <i class="fas fa-edit"></i>
-
-                                </button>
-
-
-                                <button
-                                    type="button"
-                                    class="btn btn-sm btn-danger"
-                                    title="Hapus"
-                                    onclick="hapusOdontogram('${row.no_gigi}')">
-
-                                    <i class="fas fa-trash"></i>
-
-                                </button>
-
-                            </div>
-
-                        </td>
-
-                    </tr>
-
-                `;
+          const tr = tbody.insertRow();
+          tr.insertCell().textContent = no++;
+          const tooth = document.createElement('strong');
+          tooth.textContent = row.no_gigi ?? '-';
+          tr.insertCell().appendChild(tooth);
+          ['elemen', 'elemen_gigi', 'diagnosa', 'prosedur', 'keterangan'].forEach(field => {
+            tr.insertCell().textContent = row[field] ?? '-';
+          });
+          const actions = tr.insertCell();
+          actions.innerHTML = `
+            <div class="d-flex gap-1">
+              <button type="button" class="btn btn-sm btn-warning" title="Ubah"><i class="fas fa-edit"></i></button>
+              <button type="button" class="btn btn-sm btn-danger" title="Hapus"><i class="fas fa-trash"></i></button>
+            </div>
+          `;
+          actions.querySelector('[title="Ubah"]').addEventListener('click', () => editOdontogram(row));
+          actions.querySelector('[title="Hapus"]').addEventListener('click', () => hapusOdontogram(row.no_gigi));
 
         });
 
 
         // Tandai gigi yang sudah memiliki data
-
-        document.querySelectorAll('.gigi').forEach(gigi => {
-
-          gigi.style.background = '#fff';
-
-        });
-
 
         res.data.forEach(row => {
 
@@ -453,6 +408,7 @@ require '../../controller/view.php';
   // ======================================
 
   document.addEventListener("DOMContentLoaded", function() {
+    APP.initDiagnosaSearch('#diagnosa', false);
     loadTable();
   });
   let selectedGigi = null;
@@ -528,8 +484,7 @@ require '../../controller/view.php';
     document.getElementById('elemen_gigi').value =
       row.elemen_gigi ?? '';
 
-    document.getElementById('diagnosa').value =
-      row.diagnosa ?? '';
+    $('#diagnosa').empty().append(new Option(row.diagnosa ?? '', row.diagnosa ?? '', true, true)).trigger('change');
 
     document.getElementById('prosedur').value =
       row.prosedur ?? '';
@@ -596,9 +551,9 @@ require '../../controller/view.php';
       document.getElementById('elemen_gigi').value;
 
     const diagnosa =
-      document.getElementById('diagnosa')
-      .value
-      .trim();
+      document.getElementById('diagnosa').value
+        ? document.getElementById('diagnosa').selectedOptions[0].text.trim()
+        : '';
 
     const prosedur =
       document.getElementById('prosedur').value;
@@ -646,9 +601,7 @@ require '../../controller/view.php';
 
             keterangan,
 
-            visit_ID: "<?= $_GET['no'] ?>",
-
-            id_customer: "<?= $_GET['rm'] ?>"
+            visit_ID: "<?= $_GET['no'] ?>"
 
           })
         }
@@ -766,6 +719,10 @@ require '../../controller/view.php';
 
         }
 
+      })
+      .catch(err => {
+        console.error("Error load odontogram:", err);
+        alert("Gagal mengambil data odontogram");
       });
 
   }
@@ -910,7 +867,7 @@ require '../../controller/view.php';
   function resetForm() {
     document.getElementById('elemen').value = '';
     document.getElementById('elemen_gigi').value = '';
-    document.getElementById('diagnosa').value = '';
+    $('#diagnosa').val(null).trigger('change');
     document.getElementById('prosedur').value = '';
     document.getElementById('keterangan').value = '';
   }
