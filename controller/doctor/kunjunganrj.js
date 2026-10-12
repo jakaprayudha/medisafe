@@ -2,7 +2,7 @@ window.APP = window.APP || {};
 $(function () {
   statusEdit = false;
   let StatusPasien = "BPJS";
-  $("select").select2({
+  $("select").not("#diagnosa").select2({
     width: "100%",
   });
   flatpickr("#tglRujukan", {

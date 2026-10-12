@@ -2215,8 +2215,8 @@ $rm = $_GET['rm'];
   require 'modal_farmasi.php';
   ?>
   <?php require 'library.php'; ?>
-  <script src="controller/admisi/helper.js"></script>
-  <script src="controller/doctor/kunjunganrj.js"></script>
+  <script src="controller/admisi/helper.js?v=<?= filemtime(__DIR__ . '/../../controller/admisi/helper.js') ?>"></script>
+  <script src="controller/doctor/kunjunganrj.js?v=<?= filemtime(__DIR__ . '/../../controller/doctor/kunjunganrj.js') ?>"></script>
 </body>
 
 

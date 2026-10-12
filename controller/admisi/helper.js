@@ -183,7 +183,7 @@ APP.ambil_data_save = async function (id, url, nama, kode, status, targetNama) {
         throw err;
     }
 };
-APP.initDiagnosa = function (selector, hiddenNameSelector, idkdspesialis) {
+APP.initDiagnosaSearch = function (selector, showTacc = true) {
     $(selector).select2({
         placeholder: "Ketik Diagnosa...",
         width: "100%",
@@ -201,7 +201,7 @@ APP.initDiagnosa = function (selector, hiddenNameSelector, idkdspesialis) {
                 return {
                     results: items.map(item => ({
                         id: item.kdDiag,
-                        text: `${item.kdDiag} - ${item.nmDiag} ${item.nonSpesialis ? ": TACC" : ": NON TACC"}`,
+                        text: `${item.kdDiag} - ${item.nmDiag}${showTacc ? (item.nonSpesialis ? " : TACC" : " : NON TACC") : ""}`,
                         nmDiag: item.nmDiag,
                         idspesialis: item.nonSpesialis
                     })),
@@ -216,6 +216,7 @@ APP.initDiagnosa = function (selector, hiddenNameSelector, idkdspesialis) {
                 const remaining = args.minimum - args.input.length;
                 return `Ketik minimal ${remaining} karakter`;
             },
+            errorLoading: () => "Gagal mengambil diagnosa BPJS. Silakan coba kembali.",
         }
     });
 
@@ -225,6 +226,9 @@ APP.initDiagnosa = function (selector, hiddenNameSelector, idkdspesialis) {
             document.querySelector('.select2-container--open .select2-search__field').focus();
         }, 0);
     });
+}
+APP.initDiagnosa = function (selector, hiddenNameSelector, idkdspesialis) {
+    APP.initDiagnosaSearch(selector);
     $(selector).on('select2:select', function (e) {
         let data = e.params.data;
         $(hiddenNameSelector).val(data.nmDiag);
