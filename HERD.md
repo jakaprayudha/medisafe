@@ -51,3 +51,18 @@ Riwayat Pengobatan pada RME (termasuk rawat inap) dan detail pasien tidak
 menampilkan kunjungan yang dibatalkan (`visit_status = 99`). Kunjungan
 dengan status lain atau status kosong tetap ditampilkan seperti sebelumnya.
 Filter hanya mengubah daftar riwayat; data kunjungan batal tidak dihapus.
+
+## Log Update
+
+Modal Log Update, badge, daftar riwayat, pencarian, dan statistik hanya
+menampilkan entri yang belum berumur satu bulan kalender sejak `created_at`.
+Pada tepat satu bulan, entri tidak lagi ditampilkan. Tidak diperlukan cron;
+filter diterapkan saat halaman atau API dimuat, dan badge diperiksa berkala.
+Arsip lama tetap tersedia di master log administrator, tanpa dihapus.
+
+Ringkasan empat commit tanggal 12 Oktober 2026 tersedia dalam
+`controller/system/sql/seed-system-update-2026-10-12.sql`. Jalankan SQL ini pada database
+deployment untuk menerbitkan ringkasannya. Tanggal mengikuti commit dan
+`version` berisi hash singkat commit; eksekusi ulang tidak menambah duplikat.
+Ringkasan berikutnya tetap ditambahkan melalui master log, bukan sinkronisasi
+Git otomatis.

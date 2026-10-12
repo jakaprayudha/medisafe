@@ -51,7 +51,7 @@ $sql = "
         created_at,
         is_read
     FROM system_update_log
-    WHERE 1=1
+    WHERE DATE_ADD(created_at, INTERVAL 1 MONTH) > NOW()
 ";
 
 $params = [];
@@ -148,7 +148,7 @@ $stmt->close();
 
 $totalUpdateQuery = mysqli_query(
    $koneksi,
-   "SELECT COUNT(*) AS total FROM system_update_log"
+   "SELECT COUNT(*) AS total FROM system_update_log WHERE DATE_ADD(created_at, INTERVAL 1 MONTH) > NOW()"
 );
 
 $totalUpdateData = mysqli_fetch_assoc(
@@ -172,6 +172,7 @@ $featureQuery = mysqli_query(
     SELECT COUNT(*) AS total
     FROM system_update_log
     WHERE type = 'feature'
+      AND DATE_ADD(created_at, INTERVAL 1 MONTH) > NOW()
     "
 );
 
@@ -196,6 +197,7 @@ $improvementQuery = mysqli_query(
     SELECT COUNT(*) AS total
     FROM system_update_log
     WHERE type = 'improvement'
+      AND DATE_ADD(created_at, INTERVAL 1 MONTH) > NOW()
     "
 );
 
@@ -220,6 +222,7 @@ $fixQuery = mysqli_query(
     SELECT COUNT(*) AS total
     FROM system_update_log
     WHERE type IN ('bug', 'fix')
+      AND DATE_ADD(created_at, INTERVAL 1 MONTH) > NOW()
     "
 );
 
