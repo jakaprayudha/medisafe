@@ -11,6 +11,31 @@ Arahkan domain Herd ke root repository dan buka `https://medisafe.test/`.
 Driver ditemukan otomatis oleh Herd; tidak perlu mengubah konfigurasi global.
 Koneksi database dan session tetap menggunakan konfigurasi aplikasi yang ada.
 
+## RME satu siklus dan resep
+
+Halaman `module/admin/rme_new` memakai controller khusus
+`controller/doctor/saveRmeCycle.php`. Resep dan rincian obat dapat dibuat
+sebagai draft sebelum nomor kunjungan BPJS tersedia. Link rincian resep dari
+halaman ini membawa `cycle=1`; tombol Kirim Obat manual tidak ditampilkan.
+Rincian dibuka pada tab baru agar isian pemeriksaan di tab RME tidak hilang.
+Kembali ke tab RME, lengkapi pemeriksaan, lalu klik Simpan Pemeriksaan.
+
+Controller membaca resep dari database klinik/kunjungan (bukan terapi dari
+browser), memvalidasi rincian, dan menggabungkan seluruh daftar obat ke
+`terapiObat` saat membuat/memperbarui kunjungan. Setelah kunjungan berhasil,
+tiket draft berubah menjadi Sudah Kirim. Status Persiapan/Selesai tidak diubah.
+Jika kunjungan gagal atau rincian draft kosong/tidak lengkap, tiket tetap draft.
+Tanpa resep, simpan pemeriksaan tetap berjalan. Tidak diperlukan migrasi.
+Modul pemeriksaan dan kirim resep lama tetap memakai endpoint sebelumnya.
+
+Form pemeriksaan pada halaman satu siklus dipisahkan dari form modal komponen
+agar HTML tidak memiliki form bertumpuk dan semua field pemeriksaan ikut
+terkirim. Controller socket menggunakan session yang sudah aktif agar daftar
+resep tetap JSON valid pada Herd.
+Uji regresi: `php tests/rmeCycleTest.php`. Uji menggunakan tabel sementara
+pada koneksi tersendiri dan stub simpan kunjungan, bukan data pasien nyata
+atau request BPJS.
+
 ## Penanda Operasi
 
 Menu Penanda Operasi berada setelah Riwayat Pengobatan pada RME a, b,

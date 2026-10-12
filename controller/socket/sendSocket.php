@@ -1,6 +1,8 @@
 <?php
 include '../../database/connect.php';
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 $kdRumahSakit = $_SESSION['id_customer'];
 
 // $urlsocket = "http://localhost:3001";
