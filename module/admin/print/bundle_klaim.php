@@ -10,6 +10,7 @@
 require '../../../vendor/autoload.php';
 require_once '../../../database/connect.php';
 require_once '../../admin/getdataclinic.php';
+require_once __DIR__ . '/../../../controller/visit/operationMarkerStore.php';
 
 set_time_limit(300);
 $memLimit = trim((string)ini_get('memory_limit'));
@@ -263,6 +264,21 @@ if ($dataekg) {
     $phpForms[] = 'formulir_ekg.php';
 }
 
+$operationMarkerBundle = true;
+try {
+    $markerCountStmt = $koneksi->prepare("SELECT COUNT(*) AS total FROM operation_markers
+        WHERE visit_ID = ? AND id_customer = ?");
+    $markerCountStmt->bind_param('si', $visit, $_SESSION['id_customer']);
+    $markerCountStmt->execute();
+    if ((int) $markerCountStmt->get_result()->fetch_assoc()['total'] > 0) {
+        $phpForms[] = 'formulir_penanda_operasi.php';
+    }
+} catch (mysqli_sql_exception $error) {
+    error_log('[bundle_klaim] Operation marker: ' . $error->getMessage());
+    http_response_code(500);
+    exit('Gagal membaca dokumen penanda operasi. Jalankan migrasi database sebelum membuat Bundle Klaim.');
+}
+
 // =============================================================================
 // RENDER FORMULIR → PDF SEMENTARA
 // =============================================================================
@@ -272,6 +288,10 @@ $allPdfs = [];
 
 foreach ($phpForms as $file) {
     $path = renderFormulirToPdf($file, $tempDir, $fontDir, $siteRoot);
+    if (!$path && $file === 'formulir_penanda_operasi.php') {
+        http_response_code(500);
+        exit('Gagal membuat PDF penanda operasi. Bundle Klaim tidak dibuat agar dokumen tidak terlewat.');
+    }
     if ($path) {
         $allPdfs[]   = $path;
         $tempPaths[] = $path;

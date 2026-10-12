@@ -11,6 +11,33 @@ Arahkan domain Herd ke root repository dan buka `https://medisafe.test/`.
 Driver ditemukan otomatis oleh Herd; tidak perlu mengubah konfigurasi global.
 Koneksi database dan session tetap menggunakan konfigurasi aplikasi yang ada.
 
+## Penanda Operasi
+
+Menu Penanda Operasi berada setelah Riwayat Pengobatan pada RME a, b,
+dan rawat inap c (mengikuti akses menu Riwayat Pengobatan).
+Halaman mempertahankan parameter kunjungan, nomor RM, dan jenis RME.
+Tab Wanita, Pria, Gigi & Mulut, Ekstremitas, dan Mata menampilkan gambar `site-marker-*.png` dari
+`assets/images/`. Pilih alat Coretan atau Teks, warna, dan ukuran garis.
+Untuk teks, isi teks lalu klik lokasi pada gambar. Urungkan menghapus penanda
+terakhir; Bersihkan mengosongkan gambar aktif. Draft tiap gambar tetap ada
+saat berpindah tab. Isi catatan, lalu Simpan Versi Baru untuk gambar aktif.
+
+Sebelum mengaktifkan penyimpanan, jalankan migrasi
+`controller/visit/sql/create-operation-markers.sql` pada database aplikasi.
+Tabel `operation_markers` menyimpan PNG resolusi asli, koordinat yang dapat
+dilanjutkan, catatan, pengguna pencatat, klinik, kunjungan, dan waktu.
+Gambar disimpan dalam database, bukan URL upload publik. Akses baca, simpan,
+dan PDF dibatasi ke klinik pada session; simpan memerlukan token formulir.
+Setiap simpan membuat dokumen baru, tidak mengubah dokumen sebelumnya.
+
+Daftar dokumen menyediakan Buka / Lanjutkan serta Cetak / PDF per versi.
+Cetak / PDF Semua Versi dan Bundle Klaim memuat **semua versi** pada kunjungan,
+bukan hanya versi terakhir. Tidak ada halaman penanda tambahan jika kunjungan
+belum memiliki dokumen. Jika pembacaan atau rendering penanda gagal, Bundle
+Klaim dihentikan dengan pesan error agar dokumen tidak terlewat.
+Dokumen ini adalah pendukung lokasi tindakan, bukan pengganti laporan operasi,
+persetujuan tindakan, atau jaminan penerimaan klaim.
+
 Dashboard lokal dapat diakses melalui `/module/admin` maupun `/module/admin/`;
 base `../../` pada keduanya mengarah ke root aplikasi. API dashboard menggunakan
 session yang sudah dimulai oleh koneksi database, tanpa `session_start()` ulang
