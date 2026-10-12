@@ -108,7 +108,7 @@ require '../../controller/view.php';
                         $checkID = mysqli_query($koneksi, "SELECT id_patient FROM pasien_visit WHERE visit_ID='$no'");
                         $dataID = mysqli_fetch_array($checkID);
                         $pt = $dataID['id_patient'];
-                        $getquery = tampildata("SELECT pv.*, mp.nomor_rm FROM pasien_visit pv LEFT JOIN ms_patient mp ON mp.id_patient = pv.id_patient WHERE pv.id_patient='$pt' ORDER BY visit_date DESC");
+                        $getquery = tampildata("SELECT pv.*, mp.nomor_rm FROM pasien_visit pv LEFT JOIN ms_patient mp ON mp.id_patient = pv.id_patient WHERE pv.id_patient='$pt' AND (pv.visit_status IS NULL OR pv.visit_status <> 99) ORDER BY visit_date DESC");
                         ?>
                         <?php if (!empty($getquery)): ?>
                           <div class="accordion" id="accordionExample">
