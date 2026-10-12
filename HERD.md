@@ -51,6 +51,11 @@ Riwayat Pengobatan pada RME (termasuk rawat inap) dan detail pasien tidak
 menampilkan kunjungan yang dibatalkan (`visit_status = 99`). Kunjungan
 dengan status lain atau status kosong tetap ditampilkan seperti sebelumnya.
 Filter hanya mengubah daftar riwayat; data kunjungan batal tidak dihapus.
+Badge jenis layanan menggunakan `source_hub` dan `status_rawatinap`, bukan
+halaman RME yang sedang dibuka. Status pulang yang tercatat tetap ditampilkan;
+jika kosong, badge menggunakan jenis layanan (Poliklinik, UGD, atau Rawat
+Inap). Kode status pulang yang tidak dikenal ditampilkan sebagai `-`, bukan
+dianggap Rawat Inap.
 
 ## Log Update
 
