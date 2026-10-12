@@ -34,3 +34,13 @@ kunjungan. Foto yang disimpan di master tampil dari `uploads/patient/`.
 Jika belum ada foto atau file gagal dimuat, avatar menampilkan inisial nama.
 Nama menggunakan data kunjungan, dengan nama master pasien sebagai fallback.
 Jika data kartu gagal diambil, kartu menampilkan pesan untuk memuat ulang.
+
+## Simpan otomatis wajah kunjungan
+
+Pada Ambil Foto di registrasi poliklinik, foto kunjungan otomatis disimpan
+setelah wajah cocok dengan rekaman master (jarak descriptor maksimal 0.5)
+dan posisi wajah memenuhi panduan kamera. Penyimpanan memakai alur yang
+sama dengan tombol Ambil Wajah; foto master pasien tidak ditimpa.
+Tanpa rekaman master yang terbaca, gunakan pengambilan manual.
+Jika simpan otomatis gagal, error ditampilkan dan pengguna dapat mencoba
+lagi melalui tombol. Tidak ada pengiriman ulang otomatis berulang.
