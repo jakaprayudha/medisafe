@@ -26,3 +26,11 @@ Kunjungan harus terdaftar pada klinik yang sedang login.
 Untuk verifikasi, simpan satu entri uji pada kunjungan yang diizinkan,
 muat ulang halaman, edit entri tersebut, lalu hapus dan pastikan tabel
 kembali ke kondisi awal. Jangan mengirim entri uji sebagai pemeriksaan BPJS.
+
+## Foto pada kartu pasien
+
+Kartu pasien mengambil `patient_foto` dari master pasien melalui nomor
+kunjungan. Foto yang disimpan di master tampil dari `uploads/patient/`.
+Jika belum ada foto atau file gagal dimuat, avatar menampilkan inisial nama.
+Nama menggunakan data kunjungan, dengan nama master pasien sebagai fallback.
+Jika data kartu gagal diambil, kartu menampilkan pesan untuk memuat ulang.

@@ -1,15 +1,15 @@
 <?php
-require '../../database/connect.php';
-session_start();
+require_once __DIR__ . '/../../database/connect.php';
 
-header("Content-Type: application/json");
+header("Content-Type: application/json; charset=utf-8");
 
 $id_customer = $_SESSION['id_customer'] ?? null;
 // $id_customer = $_GET['id_customer'] ?? null;
 $no = $_GET['no'] ?? null;
 
 if (!$id_customer || !$no) {
-   echo json_encode(["status" => "error"]);
+   http_response_code(400);
+   echo json_encode(["status" => "error", "message" => "Session klinik atau nomor kunjungan tidak ditemukan"]);
    exit;
 }
 
@@ -18,6 +18,7 @@ $stmt = $koneksi->prepare("SELECT
       v.visit_ID,
       v.visit_status,
       v.patient_name_pcare,
+      p.patient_name,
       p.nomor_rm,
       p.patient_foto,
       p.patient_gender,
