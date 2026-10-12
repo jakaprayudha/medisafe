@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../controller/visit/historyLabels.php';
 $title = 'Pasien Details';
 require '../../controller/view.php';
 $pt = $_GET['pt'];
@@ -510,6 +511,7 @@ $pt = $_GET['pt'];
                                             </small>
                                           </div>
                                           <span class="badge bg-light text-dark border">
+                                            <?= htmlspecialchars(historyVisitType($row), ENT_QUOTES, 'UTF-8') ?> |
                                             <?= $row['id_poli'] ?>
                                           </span>
                                         </div>
@@ -770,20 +772,7 @@ $pt = $_GET['pt'];
                                                 <strong>Status Pulang</strong>
                                                 <div>
                                                   <span class="badge bg-success">
-                                                    <?php
-                                                    $statuspulang = $row['status_pulang'] ?? '';
-                                                    if ($statuspulang == '0') {
-                                                      echo 'Berobat Jalan';
-                                                    } else if ($statuspulang == '3') {
-                                                      echo 'Berobat Jalan';
-                                                    } elseif ($statuspulang == '4') {
-                                                      echo 'Rujuk Lanjut';
-                                                    } elseif ($statuspulang == '5') {
-                                                      echo 'Rujuk Internal';
-                                                    } else {
-                                                      echo 'Rawat Inap';
-                                                    }
-                                                    ?>
+                                                    <?= htmlspecialchars(historyDischargeStatus($row), ENT_QUOTES, 'UTF-8') ?>
                                                   </span>
                                                 </div>
                                               </div>
