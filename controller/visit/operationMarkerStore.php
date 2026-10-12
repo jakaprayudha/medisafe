@@ -29,3 +29,21 @@ function operationMarkerDocuments(mysqli $db, string $visit, int $clinic, ?int $
    $stmt->execute();
    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
+
+function operationMarkerPatientHistory(mysqli $db, string $patient, int $clinic): array
+{
+   $stmt = $db->prepare("SELECT m.id, m.visit_ID, m.marker_type, m.notes,
+      m.created_by, m.created_at, (OCTET_LENGTH(m.image_png) > 0) AS has_image
+      FROM operation_markers m
+      JOIN pasien_visit v ON v.visit_ID = m.visit_ID COLLATE utf8mb4_general_ci AND v.id_customer = m.id_customer
+      WHERE v.id_patient = ? AND m.id_customer = ?
+      AND (v.visit_status IS NULL OR v.visit_status <> 99)
+      ORDER BY m.id DESC");
+   $stmt->bind_param('si', $patient, $clinic);
+   $stmt->execute();
+   $history = [];
+   foreach ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) as $document) {
+      $history[$document['visit_ID']][] = $document;
+   }
+   return $history;
+}

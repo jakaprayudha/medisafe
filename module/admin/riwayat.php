@@ -2,6 +2,37 @@
 $title = 'Riwayat';
 require '../../controller/view.php';
 require_once __DIR__ . '/../../controller/visit/historyLabels.php';
+require_once __DIR__ . '/../../controller/visit/operationMarkerHistory.php';
+$no = $_GET['no'] ?? '';
+$clinic = (int) $_SESSION['id_customer'];
+if (!is_string($no) || $no === '') {
+  http_response_code(400);
+  exit('Nomor kunjungan wajib diisi.');
+}
+$historyVisitStmt = $koneksi->prepare("SELECT id_patient FROM pasien_visit WHERE visit_ID = ? AND id_customer = ? LIMIT 1");
+$historyVisitStmt->bind_param('si', $no, $clinic);
+$historyVisitStmt->execute();
+$historyPatient = $historyVisitStmt->get_result()->fetch_assoc();
+if (!$historyPatient) {
+  http_response_code(404);
+  exit('Kunjungan tidak ditemukan pada klinik ini.');
+}
+$pt = (string) $historyPatient['id_patient'];
+$historyStmt = $koneksi->prepare("SELECT pv.*, mp.nomor_rm FROM pasien_visit pv
+  LEFT JOIN ms_patient mp ON mp.id_patient = pv.id_patient
+  WHERE pv.id_patient = ? AND pv.id_customer = ?
+  AND (pv.visit_status IS NULL OR pv.visit_status <> 99) ORDER BY visit_date DESC");
+$historyStmt->bind_param('si', $pt, $clinic);
+$historyStmt->execute();
+$getquery = $historyStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$operationHistory = [];
+$operationHistoryError = '';
+try {
+  $operationHistory = operationMarkerPatientHistory($koneksi, $pt, $clinic);
+} catch (mysqli_sql_exception $error) {
+  error_log('Operation marker history: ' . $error->getMessage());
+  $operationHistoryError = 'Gagal membaca riwayat penanda operasi. Hubungi administrator untuk memeriksa database.';
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -104,13 +135,9 @@ require_once __DIR__ . '/../../controller/visit/historyLabels.php';
                       <!-- 🔥 WRAPPER SCROLL -->
                       <div style="max-height: 500px; overflow-y: auto; padding-right: 5px;">
 
-                        <?php
-                        $no = $_GET['no'];
-                        $checkID = mysqli_query($koneksi, "SELECT id_patient FROM pasien_visit WHERE visit_ID='$no'");
-                        $dataID = mysqli_fetch_array($checkID);
-                        $pt = $dataID['id_patient'];
-                        $getquery = tampildata("SELECT pv.*, mp.nomor_rm FROM pasien_visit pv LEFT JOIN ms_patient mp ON mp.id_patient = pv.id_patient WHERE pv.id_patient='$pt' AND (pv.visit_status IS NULL OR pv.visit_status <> 99) ORDER BY visit_date DESC");
-                        ?>
+                        <?php if ($operationHistoryError !== ''): ?>
+                          <div class="alert alert-danger" role="alert"><?= htmlspecialchars($operationHistoryError, ENT_QUOTES, 'UTF-8') ?></div>
+                        <?php endif; ?>
                         <?php if (!empty($getquery)): ?>
                           <div class="accordion" id="accordionExample">
                             <?php foreach ($getquery as $index => $row): ?>
@@ -681,6 +708,7 @@ require_once __DIR__ . '/../../controller/visit/historyLabels.php';
                                       </div>
 
                                     </div>
+                                    <?= operationMarkerHistoryHtml($operationHistory[$row['visit_ID']] ?? [], (string) $row['nomor_rm']) ?>
 
                                   </div>
 
@@ -722,6 +750,16 @@ require_once __DIR__ . '/../../controller/visit/historyLabels.php';
   <?php
   require 'library.php';
   ?>
+  <script>
+    document.querySelectorAll('.operation-history-picture img').forEach(image => {
+      const showError = () => {
+        image.classList.add('d-none');
+        image.parentElement.querySelector('.operation-history-image-error').classList.remove('d-none');
+      };
+      image.addEventListener('error', showError);
+      if (image.complete && !image.naturalWidth) showError();
+    });
+  </script>
 </body>
 
 

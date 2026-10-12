@@ -63,6 +63,17 @@ Klaim dihentikan dengan pesan error agar dokumen tidak terlewat.
 Dokumen ini adalah pendukung lokasi tindakan, bukan pengganti laporan operasi,
 persetujuan tindakan, atau jaminan penerimaan klaim.
 
+Riwayat Pengobatan menampilkan bagian Laporan / Penanda Operasi pada detail
+kunjungan yang memiliki dokumen tersimpan, termasuk semua versi, catatan,
+pencatat, waktu, gambar hasil penandaan, link gambar besar, dan PDF per versi.
+Kunjungan tanpa dokumen tidak menampilkan bagian ini. Riwayat dokumen dibatasi
+ke pasien dan klinik login, serta tidak menyertakan kunjungan batal.
+Gambar dimuat secara lazy melalui endpoint session klinik
+`controller/visit/operationMarkerImage.php`, bukan URL publik; kegagalan baca
+riwayat atau gambar ditampilkan sebagai pesan error.
+Uji tampilan/query riwayat dengan `php tests/operationMarkerHistoryTest.php`;
+fixture memakai tabel sementara dan tidak menambah rekam medis pasien.
+
 Dashboard lokal dapat diakses melalui `/module/admin` maupun `/module/admin/`;
 base `../../` pada keduanya mengarah ke root aplikasi. API dashboard menggunakan
 session yang sudah dimulai oleh koneksi database, tanpa `session_start()` ulang
