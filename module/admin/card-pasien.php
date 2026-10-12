@@ -2,10 +2,10 @@
    <div class="card-body">
       <div class="d-flex align-items-center justify-content-between">
          <div class="d-flex align-items-center gap-3">
-            <div class="avatar-circle bg-primary text-white">
+            <button type="button" id="pc_photo_button" class="avatar-circle bg-primary text-white border-0 p-0" aria-label="Perbesar foto pasien" disabled>
                <span id="pc_initial">-</span>
                <img id="pc_photo" alt="Foto pasien" style="display: none;">
-            </div>
+            </button>
             <div>
                <h5 class="mb-0 fw-semibold" id="pc_name">-</h5>
                <small class="text-muted" id="pc_rm">No RM: -</small>
@@ -122,7 +122,29 @@
       </div>
    </div>
 </div>
+<div class="modal fade" id="patientPhotoModal" tabindex="-1" aria-labelledby="patientPhotoTitle" aria-hidden="true">
+   <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h5 class="modal-title" id="patientPhotoTitle">Foto pasien</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+         </div>
+         <div class="modal-body text-center">
+            <img id="patientPhotoPreview" class="img-fluid" alt="Foto pasien">
+         </div>
+      </div>
+   </div>
+</div>
 <style>
+      #pc_photo_button:enabled {
+         cursor: zoom-in;
+      }
+
+      #patientPhotoPreview {
+         max-height: 75vh;
+         object-fit: contain;
+      }
+
       #patientCard {
          border-radius: 18px;
          overflow: hidden;
@@ -348,7 +370,20 @@
       setText("pc_initial", name !== "-" ? name.charAt(0).toUpperCase() : "-");
       const photo = document.getElementById("pc_photo");
       const initial = document.getElementById("pc_initial");
+      const photoButton = document.getElementById("pc_photo_button");
+      photoButton.disabled = true;
       const photoFile = typeof data.patient_foto === "string" ? data.patient_foto.trim() : "";
+      const faceFile = typeof data.face_image === "string" ? data.face_image.trim() : "";
+      const photoSources = [];
+      if (photoFile && photoFile !== "null") {
+         photoSources.push(new URL(`uploads/patient/${encodeURIComponent(photoFile)}`, document.baseURI).href);
+      }
+      if (faceFile && faceFile !== "null") {
+         const filename = faceFile.replace(/\\/g, "/").split("/").pop();
+         if (filename) {
+            photoSources.push(new URL(`uploads/faces/${encodeURIComponent(filename)}`, document.baseURI).href);
+         }
+      }
 
       photo.onload = null;
       photo.onerror = null;
@@ -357,17 +392,24 @@
       initial.style.display = "";
       photo.alt = name !== "-" ? "Foto pasien " + name : "Foto pasien";
 
-      if (photoFile && photoFile !== "null") {
+      if (photoSources.length > 0) {
+         let sourceIndex = 0;
          photo.onload = () => {
             photo.style.display = "block";
             initial.style.display = "none";
+            photoButton.disabled = false;
          };
          photo.onerror = () => {
-            console.error("Foto pasien gagal dimuat:", photoFile);
+            console.error("Foto pasien gagal dimuat:", photo.src);
             photo.style.display = "none";
             initial.style.display = "";
+            photoButton.disabled = true;
+            sourceIndex++;
+            if (sourceIndex < photoSources.length) {
+               photo.src = photoSources[sourceIndex];
+            }
          };
-         photo.src = new URL(`uploads/patient/${encodeURIComponent(photoFile)}`, document.baseURI).href;
+         photo.src = photoSources[sourceIndex];
       }
 
       setText("pc_rm", "No RM: " + safeVal(data.nomor_rm));
@@ -492,6 +534,20 @@
    // AUTO LOAD (ANTI DOM ISSUE)
    // ===============================
    document.addEventListener("DOMContentLoaded", () => {
+      const photoModal = document.getElementById("patientPhotoModal");
+      document.body.appendChild(photoModal);
+      document.getElementById("pc_photo_button").addEventListener("click", () => {
+         const photo = document.getElementById("pc_photo");
+         if (!photo.naturalWidth || photo.style.display === "none") return;
+         const preview = document.getElementById("patientPhotoPreview");
+         preview.src = photo.currentSrc || photo.src;
+         preview.alt = photo.alt;
+         document.getElementById("patientPhotoTitle").textContent = photo.alt;
+         bootstrap.Modal.getOrCreateInstance(photoModal).show();
+      });
+      photoModal.addEventListener("hidden.bs.modal", () => {
+         document.getElementById("patientPhotoPreview").removeAttribute("src");
+      });
 
       const url = new URLSearchParams(window.location.search);
       const no = url.get("no");
@@ -512,10 +568,7 @@
 
             if (res.status === "success") {
 
-               // 🔥 pastikan DOM sudah siap
-               requestAnimationFrame(() => {
-                  renderPatientCard(res.data);
-               });
+               renderPatientCard(res.data);
 
             }
          })

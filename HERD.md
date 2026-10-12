@@ -37,7 +37,13 @@ kembali ke kondisi awal. Jangan mengirim entri uji sebagai pemeriksaan BPJS.
 
 Kartu pasien mengambil `patient_foto` dari master pasien melalui nomor
 kunjungan. Foto yang disimpan di master tampil dari `uploads/patient/`.
-Jika belum ada foto atau file gagal dimuat, avatar menampilkan inisial nama.
+Jika foto upload belum tersedia atau gagal dimuat, kartu mencoba rekaman
+wajah master `face_image` dari `uploads/faces/`. Path rekaman lama seperti
+`/../../uploads/faces/nama.jpg` dinormalisasi ke folder rekaman wajah.
+Jika kedua foto tidak tersedia atau gagal dimuat, avatar menampilkan inisial nama.
+Klik foto yang sudah dimuat untuk membuka pratinjau besar dalam modal.
+Avatar inisial tidak dapat diklik; modal dapat ditutup lewat tombol Tutup
+atau Escape.
 Nama menggunakan data kunjungan, dengan nama master pasien sebagai fallback.
 Jika data kartu gagal diambil, kartu menampilkan pesan untuk memuat ulang.
 
