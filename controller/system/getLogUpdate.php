@@ -16,6 +16,7 @@ $sql = "
         created_at,
         is_read
     FROM system_update_log
+    WHERE DATE_ADD(created_at, INTERVAL 1 MONTH) > NOW()
     ORDER BY created_at DESC
 ";
 
