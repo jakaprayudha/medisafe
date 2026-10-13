@@ -424,16 +424,23 @@ require '../../controller/view.php';
   $('#btnLihatTempatTidur').on('click', function() {
 
     $('#bedModal').modal('show');
+    $('#bedTableBody').html('<tr><td colspan="8" class="text-center text-muted py-3"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Memuat data tempat tidur...</td></tr>');
 
     fetch('controller/master/bedControllerPatient')
       .then(res => res.json())
       .then(res => {
-
-        allBeds = res.data;
-
-        renderBedTable(allBeds);
-        buildFilter(allBeds);
-
+        if (res.status === 'success' && Array.isArray(res.data)) {
+          allBeds = res.data;
+          renderBedTable(allBeds);
+          buildFilter(allBeds);
+        } else {
+          allBeds = [];
+          $('#bedTableBody').html('<tr><td colspan="8" class="text-center text-danger">' + (res.message || 'Gagal memuat data') + '</td></tr>');
+        }
+      })
+      .catch(err => {
+        console.error('Error load beds:', err);
+        $('#bedTableBody').html('<tr><td colspan="8" class="text-center text-danger">Gagal terhubung ke server</td></tr>');
       });
 
   });
@@ -442,12 +449,14 @@ require '../../controller/view.php';
 
     let html = '';
 
-    if (data.length > 0) {
+    if (data && data.length > 0) {
 
       data.forEach((bed, i) => {
 
-        // Bed dianggap digunakan jika ada pasien aktif atau bed_status == 0
-        let isOccupied = (bed.is_occupied == 1 || (bed.patient_name_pcare && bed.patient_name_pcare !== '-'));
+        // Cek apakah ada pasien aktif
+        let hasActivePatient = !!(bed.patient_name_pcare || bed.patient_name);
+        // Bed berstatus digunakan jika ada pasien aktif atau bed_status == '0'
+        let isOccupied = hasActivePatient || String(bed.bed_status) === '0';
 
         let statusBadge = isOccupied ?
           '<span class="badge bg-warning-subtle text-warning d-block text-center">Digunakan</span>' :
@@ -463,12 +472,12 @@ require '../../controller/view.php';
         </label>
       `;
 
-        let patientName = (isOccupied && bed.patient_name_pcare) ? bed.patient_name_pcare : '-';
+        let patientName = hasActivePatient ? (bed.patient_name_pcare || bed.patient_name) : '-';
 
         let genderBadge = '';
-        if (isOccupied && (bed.patient_gender === 'L' || bed.patient_gender?.toLowerCase().includes('laki'))) {
+        if (hasActivePatient && (bed.patient_gender === 'L' || bed.patient_gender?.toLowerCase().includes('laki'))) {
           genderBadge = `<span class="badge bg-primary ms-1">L</span>`;
-        } else if (isOccupied && (bed.patient_gender === 'P' || bed.patient_gender?.toLowerCase().includes('perempuan'))) {
+        } else if (hasActivePatient && (bed.patient_gender === 'P' || bed.patient_gender?.toLowerCase().includes('perempuan'))) {
           genderBadge = `<span class="badge bg-danger ms-1">P</span>`;
         }
 
@@ -487,7 +496,7 @@ require '../../controller/view.php';
       });
 
     } else {
-      html = `<tr><td colspan="8" class="text-center text-muted">Tidak ada data</td></tr>`;
+      html = `<tr><td colspan="8" class="text-center text-muted">Tidak ada data tempat tidur</td></tr>`;
     }
 
     $('#bedTableBody').html(html);
