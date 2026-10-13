@@ -41,6 +41,7 @@ function getData()
    $stmt = $koneksi->prepare("SELECT 
          permintaan_pharmacy.*,
          pasien_visit.visit_ID,
+         COALESCE(ms_patient.patient_name, pasien_visit.patient_name_pcare) AS patient_name,
          pasien_visit.patient_name_pcare,
          pasien_visit.id_doctor,
          ms_patient.nomor_rm,
