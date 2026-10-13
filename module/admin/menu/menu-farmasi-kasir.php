@@ -65,6 +65,16 @@
               <span class="hide-menu">Expired Obat</span>
            </a>
         </li>
+        <li class="sidebar-item">
+           <a class="sidebar-link <?php if ($title == 'Pemakaian Obat Pasien') {
+                                       echo 'active';
+                                    } ?>"
+              href="module/admin/pharmacy_usage"
+              aria-expanded="false">
+              <iconify-icon icon="solar:users-group-two-rounded-bold-duotone"></iconify-icon>
+              <span class="hide-menu">Pemakaian Obat Pasien</span>
+           </a>
+        </li>
 
         <li class="sidebar-item">
            <a class="sidebar-link <?php if ($title == 'Persediaan') {

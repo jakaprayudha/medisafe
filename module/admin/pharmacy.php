@@ -205,10 +205,17 @@ require '../../controller/view.php';
                 >
                     <i class="fas fa-boxes-stacked"></i>
                 </a>
-                	<a class="btn btn-info" href="module/admin/pharmacy_details?no=${row.id_pharmacy}">
+                <a 
+                    class="btn btn-primary" 
+                    href="module/admin/pharmacy_usage?id_pharmacy=${row.id_pharmacy}"
+                    title="Pasien Pengguna Obat"
+                >
+                    <i class="fas fa-users"></i>
+                </a>
+                	<a class="btn btn-info" href="module/admin/pharmacy_details?no=${row.id_pharmacy}" title="Detail">
 											<i class="fas fa-info-circle"></i>
 									</a>
-									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_pharmacy} data-parrent="${row.id_customer}">
+									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_pharmacy}" data-parrent="${row.id_customer}" title="Hapus">
 											<i class="fas fa-trash"></i>
 									</a>
 								</div>
