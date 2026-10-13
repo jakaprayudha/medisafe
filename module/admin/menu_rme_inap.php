@@ -36,6 +36,9 @@
            <a href="module/admin/riwayat?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
               <button class="nav-link <?= ($current == 'riwayat.php') ? 'active' : '' ?>">Riwayat Pengobatan</button>
            </a>
+           <a href="module/admin/penanda_operasi?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
+              <button class="nav-link <?= ($current == 'penanda_operasi.php') ? 'active' : '' ?>">Penanda Operasi</button>
+           </a>
            <a href="module/admin/cppt?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
               <button class="nav-link <?= ($current == 'cppt.php') ? 'active' : '' ?>">CPPT</button>
            </a>

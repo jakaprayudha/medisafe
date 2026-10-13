@@ -339,6 +339,8 @@
    const urlParams = new URLSearchParams(window.location.search);
    const rmeParam = urlParams.get('rme') || 'c'; // default kalau kosong
    const nomorm = urlParams.get('rm') || 'c'; // default kalau kosong
+   const cycleQuery = document.getElementById('rmeCycleFields') ? '&cycle=1' : '';
+   const cycleTarget = cycleQuery ? 'target="_blank" rel="noopener"' : '';
 
    $(document).ready(function() {
       var table = $('#periodeTableFarmasi').DataTable({
@@ -370,7 +372,7 @@
       <div class="btn-group btn-group-sm" role="group">
         
         <a class="btn btn-info" 
-          href="module/admin/permintaan_farmasi_details?no=${urlParams.get('no')}&rm=${nomorm}&rme=${rmeParam}&id=${row.id_permintaan_farmasi}">
+          href="module/admin/permintaan_farmasi_details?no=${urlParams.get('no')}&rm=${nomorm}&rme=${rmeParam}&id=${row.id_permintaan_farmasi}${cycleQuery}" ${cycleTarget}>
           <i class="fas fa-pencil"></i>
         </a>
 
@@ -464,7 +466,7 @@
          let formData = new URLSearchParams(new FormData(this));
          let id = $('#id_permintaan_farmasi').val();
 
-         fetch(apiUrl + (id ? `?id=${id}` : ''), {
+         fetch(apiUrl + (id ? `&id=${id}` : ''), {
                method: id ? 'PUT' : 'POST',
                headers: {
                   'Content-Type': 'application/x-www-form-urlencoded'
@@ -480,6 +482,10 @@
                } else {
                   Swal.fire('Gagal!', data.message, 'error');
                }
+            })
+            .catch(error => {
+               console.error(error);
+               Swal.fire('Gagal!', 'Respons simpan resep tidak dapat dibaca. Periksa daftar resep sebelum mencoba kembali.', 'error');
             });
       });
 

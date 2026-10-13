@@ -24,6 +24,9 @@
         <a href="module/admin/riwayat?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=b">
            <button class="nav-link <?= ($current == 'riwayat.php') ? 'active' : '' ?>">Riwayat Pengobatan</button>
         </a>
+        <a href="module/admin/penanda_operasi?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=b">
+           <button class="nav-link <?= ($current == 'penanda_operasi.php') ? 'active' : '' ?>">Penanda Operasi</button>
+        </a>
         <a href="module/admin/rawat_inap?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=b">
            <button class="nav-link <?= ($current == 'rawat_inap.php') ? 'active' : '' ?>">Rawat Inap</button>
         </a>

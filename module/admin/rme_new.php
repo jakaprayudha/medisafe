@@ -3,8 +3,24 @@ $title = 'Pemeriksaan';
 require '../../controller/view.php';
 require '../../database/connect.php';
 require '../../controller/visit/assesmen.php';
-$no = $_GET['no'];
-$rm = $_GET['rm'];
+$no = $_GET['no'] ?? '';
+$rm = $_GET['rm'] ?? '';
+if (!is_string($no) || !is_string($rm) || $no === '' || $rm === '') {
+  http_response_code(400);
+  exit('Nomor kunjungan dan nomor RM wajib diisi.');
+}
+$cycleVisitStmt = $koneksi->prepare("SELECT v.id_patient FROM pasien_visit v
+  JOIN ms_patient p ON p.id_patient = v.id_patient
+  WHERE v.visit_ID = ? AND v.id_customer = ? AND p.nomor_rm = ? LIMIT 1");
+$cycleVisitStmt->bind_param('sis', $no, $_SESSION['id_customer'], $rm);
+$cycleVisitStmt->execute();
+$cycleVisit = $cycleVisitStmt->get_result()->fetch_assoc();
+if (!$cycleVisit) {
+  http_response_code(404);
+  exit('Kunjungan tidak ditemukan pada klinik ini atau nomor RM tidak sesuai.');
+}
+$id_patient = $cycleVisit['id_patient'];
+$_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
 ?>
 <!doctype html>
 <html lang="en">
@@ -36,10 +52,12 @@ $rm = $_GET['rm'];
             <?php
             require 'menu_rme.php';
             ?>
-            <form id="formPemeriksaan" class="w-100" method="POST">
+            <form id="formPemeriksaan" method="POST"></form>
+            <div id="rmeCycleFields" class="w-100">
+              <input type="hidden" name="rme_cycle_token" value="<?= htmlspecialchars($_SESSION['rme_cycle_token'], ENT_QUOTES, 'UTF-8') ?>">
               <input type="hidden" name="nomor_rm" value="<?= htmlspecialchars($rm, ENT_QUOTES, 'UTF-8') ?>">
               <input type="hidden" name="nomor_visit" value="<?= htmlspecialchars($no, ENT_QUOTES, 'UTF-8') ?>">
-              <input type="hidden" name="id_patient" id="id_patient">
+              <input type="hidden" name="id_patient" id="id_patient" value="<?= htmlspecialchars((string) $id_patient, ENT_QUOTES, 'UTF-8') ?>">
               <input type="hidden" id="terapiObat" name="terapiObat">
               <input type="hidden" id="terapiNonObat" name="terapiNonObat">
               <input type="hidden" id="bmhp" name="bmhp">
@@ -1152,8 +1170,8 @@ $rm = $_GET['rm'];
                         <strong>Permintaan Farmasi</strong>
 
                         <p>
-                          Section ini disiapkan untuk
-                          permintaan obat/resep pasien.
+                          Resep disimpan sebagai draft terlebih dahulu. Setelah
+                              Simpan Pemeriksaan berhasil, resep otomatis dikirim ke farmasi.
                         </p>
 
                       </div>
@@ -2168,7 +2186,7 @@ $rm = $_GET['rm'];
           </div>
         </div>
       </div>
-      </form>
+      </div>
     </div>
   </div>
 
@@ -2216,6 +2234,7 @@ $rm = $_GET['rm'];
   ?>
   <?php require 'library.php'; ?>
   <script src="controller/admisi/helper.js?v=<?= filemtime(__DIR__ . '/../../controller/admisi/helper.js') ?>"></script>
+  <script src="controller/doctor/rmeCycle.js?v=<?= filemtime(__DIR__ . '/../../controller/doctor/rmeCycle.js') ?>"></script>
   <script src="controller/doctor/kunjunganrj.js?v=<?= filemtime(__DIR__ . '/../../controller/doctor/kunjunganrj.js') ?>"></script>
 </body>
 

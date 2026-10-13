@@ -11,6 +11,75 @@ Arahkan domain Herd ke root repository dan buka `https://medisafe.test/`.
 Driver ditemukan otomatis oleh Herd; tidak perlu mengubah konfigurasi global.
 Koneksi database dan session tetap menggunakan konfigurasi aplikasi yang ada.
 
+## RME satu siklus dan resep
+
+Halaman `module/admin/rme_new` memakai controller khusus
+`controller/doctor/saveRmeCycle.php`. Resep dan rincian obat dapat dibuat
+sebagai draft sebelum nomor kunjungan BPJS tersedia. Link rincian resep dari
+halaman ini membawa `cycle=1`; tombol Kirim Obat manual tidak ditampilkan.
+Rincian dibuka pada tab baru agar isian pemeriksaan di tab RME tidak hilang.
+Kembali ke tab RME, lengkapi pemeriksaan, lalu klik Simpan Pemeriksaan.
+
+Controller membaca resep dari database klinik/kunjungan (bukan terapi dari
+browser), memvalidasi rincian, dan menggabungkan seluruh daftar obat ke
+`terapiObat` saat membuat/memperbarui kunjungan. Setelah kunjungan berhasil,
+tiket draft berubah menjadi Sudah Kirim. Status Persiapan/Selesai tidak diubah.
+Jika kunjungan gagal atau rincian draft kosong/tidak lengkap, tiket tetap draft.
+Tanpa resep, simpan pemeriksaan tetap berjalan. Tidak diperlukan migrasi.
+Modul pemeriksaan dan kirim resep lama tetap memakai endpoint sebelumnya.
+
+Form pemeriksaan pada halaman satu siklus dipisahkan dari form modal komponen
+agar HTML tidak memiliki form bertumpuk dan semua field pemeriksaan ikut
+terkirim. Controller socket menggunakan session yang sudah aktif agar daftar
+resep tetap JSON valid pada Herd.
+Uji regresi: `php tests/rmeCycleTest.php`. Uji menggunakan tabel sementara
+pada koneksi tersendiri dan stub simpan kunjungan, bukan data pasien nyata
+atau request BPJS.
+
+## Penanda Operasi
+
+Menu Penanda Operasi berada setelah Riwayat Pengobatan pada RME a, b,
+dan rawat inap c (mengikuti akses menu Riwayat Pengobatan).
+Halaman mempertahankan parameter kunjungan, nomor RM, dan jenis RME.
+Tab Wanita, Pria, Gigi & Mulut, Ekstremitas, dan Mata menampilkan gambar `site-marker-*.png` dari
+`assets/images/`. Pilih alat Coretan atau Teks, warna, dan ukuran garis.
+Untuk teks, isi teks lalu klik lokasi pada gambar. Urungkan menghapus penanda
+terakhir; Bersihkan mengosongkan gambar aktif. Draft tiap gambar tetap ada
+saat berpindah tab. Isi catatan, lalu Simpan Versi Baru untuk gambar aktif.
+
+Sebelum mengaktifkan penyimpanan, jalankan migrasi
+`controller/visit/sql/create-operation-markers.sql` pada database aplikasi.
+Tabel `operation_markers` menyimpan PNG resolusi asli, koordinat yang dapat
+dilanjutkan, catatan, pengguna pencatat, klinik, kunjungan, dan waktu.
+Gambar disimpan dalam database, bukan URL upload publik. Akses baca, simpan,
+dan PDF dibatasi ke klinik pada session; simpan memerlukan token formulir.
+Setiap simpan membuat dokumen baru, tidak mengubah dokumen sebelumnya.
+
+Daftar dokumen menyediakan Buka / Lanjutkan serta Cetak / PDF per versi.
+Cetak / PDF Semua Versi dan Bundle Klaim memuat **semua versi** pada kunjungan,
+bukan hanya versi terakhir. Tidak ada halaman penanda tambahan jika kunjungan
+belum memiliki dokumen. Jika pembacaan atau rendering penanda gagal, Bundle
+Klaim dihentikan dengan pesan error agar dokumen tidak terlewat.
+Dokumen ini adalah pendukung lokasi tindakan, bukan pengganti laporan operasi,
+persetujuan tindakan, atau jaminan penerimaan klaim.
+
+Riwayat Pengobatan menampilkan bagian Laporan / Penanda Operasi pada detail
+kunjungan yang memiliki dokumen tersimpan, termasuk semua versi, catatan,
+pencatat, waktu, gambar hasil penandaan, link gambar besar, dan PDF per versi.
+Kunjungan tanpa dokumen tidak menampilkan bagian ini. Riwayat dokumen dibatasi
+ke pasien dan klinik login, serta tidak menyertakan kunjungan batal.
+Gambar dimuat secara lazy melalui endpoint session klinik
+`controller/visit/operationMarkerImage.php`, bukan URL publik; kegagalan baca
+riwayat atau gambar ditampilkan sebagai pesan error.
+Uji tampilan/query riwayat dengan `php tests/operationMarkerHistoryTest.php`;
+fixture memakai tabel sementara dan tidak menambah rekam medis pasien.
+
+Dashboard lokal dapat diakses melalui `/module/admin` maupun `/module/admin/`;
+base `../../` pada keduanya mengarah ke root aplikasi. API dashboard menggunakan
+session yang sudah dimulai oleh koneksi database, tanpa `session_start()` ulang
+yang dapat mencampurkan notice PHP ke respons JSON. Grafik template hanya
+diinisialisasi ketika elemen grafiknya tersedia pada halaman.
+
 ## Pemeriksaan odontogram
 
 Di modul Odontogram atau bagian odontogram pada RME, pilih nomor gigi lalu
@@ -31,7 +100,13 @@ kembali ke kondisi awal. Jangan mengirim entri uji sebagai pemeriksaan BPJS.
 
 Kartu pasien mengambil `patient_foto` dari master pasien melalui nomor
 kunjungan. Foto yang disimpan di master tampil dari `uploads/patient/`.
-Jika belum ada foto atau file gagal dimuat, avatar menampilkan inisial nama.
+Jika foto upload belum tersedia atau gagal dimuat, kartu mencoba rekaman
+wajah master `face_image` dari `uploads/faces/`. Path rekaman lama seperti
+`/../../uploads/faces/nama.jpg` dinormalisasi ke folder rekaman wajah.
+Jika kedua foto tidak tersedia atau gagal dimuat, avatar menampilkan inisial nama.
+Klik foto yang sudah dimuat untuk membuka pratinjau besar dalam modal.
+Avatar inisial tidak dapat diklik; modal dapat ditutup lewat tombol Tutup
+atau Escape.
 Nama menggunakan data kunjungan, dengan nama master pasien sebagai fallback.
 Jika data kartu gagal diambil, kartu menampilkan pesan untuk memuat ulang.
 

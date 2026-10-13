@@ -377,13 +377,15 @@ $(function () {
   // BTN INSERT
   $("#simpan_pemeriksaan").on("click", function () {
     const btn = $(this);
+    if (btn.prop("disabled")) return;
     let data = $("#formPemeriksaan").serialize();
     $.ajax({
-      url: "controller/admisi/services/doctor/insertKunjungan.php",
+      url: APP.pemeriksaanSaveUrl || "controller/admisi/services/doctor/insertKunjungan.php",
       type: "POST",
       data: data,
       dataType: "json",
       beforeSend: function () {
+        btn.prop("disabled", true);
         APP.load_btn_aktif(btn);
       },
       success: function (res) {
@@ -406,7 +408,15 @@ $(function () {
           });
         }
       },
+      error: function (xhr) {
+        Swal.fire({
+          icon: "error",
+          title: "Gagal menyimpan",
+          text: xhr.responseJSON?.message || "Respons simpan tidak dapat dibaca. Periksa status kunjungan sebelum mencoba kembali.",
+        });
+      },
       complete: function () {
+        btn.prop("disabled", false);
         APP.load_btn_non(btn, "Simpan Pemeriksaan");
       },
     });

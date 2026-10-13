@@ -132,6 +132,14 @@ ORDER BY p.pharmacy_name_generic ASC
                     <i class="ti ti-send me-1"></i> Kirim Obat
                   </button>
                 </div>
+                <?php if (($_GET['cycle'] ?? '') === '1'): ?>
+                  <div class="alert alert-info">
+                    Rincian obat tersimpan sebagai draft. Resep dikirim setelah Simpan Pemeriksaan berhasil.
+                    <a class="btn btn-sm btn-primary ms-2" href="module/admin/rme_new?<?= htmlspecialchars(http_build_query([
+                      'no' => $_GET['no'] ?? '', 'rm' => $_GET['rm'] ?? '', 'rme' => $_GET['rme'] ?? 'a'
+                    ]), ENT_QUOTES, 'UTF-8') ?>">Kembali ke RME / Simpan Pemeriksaan</a>
+                  </div>
+                <?php endif; ?>
 
                 <!-- Menggunakan col-md-3 agar 8 item pas menjadi 2 baris (4 kolom per baris) -->
                 <div class="row g-3">
@@ -656,6 +664,7 @@ ORDER BY p.pharmacy_name_generic ASC
   };
 
   const idPermintaan = getParam('id');
+  const rmeCycle = getParam('cycle') === '1';
 
   fetch(`controller/farmasi/getPermintaanById.php?id=${idPermintaan}`)
     .then(res => res.json())
@@ -705,7 +714,7 @@ ORDER BY p.pharmacy_name_generic ASC
         statusClass = 'bg-warning text-dark';
 
         // tampilkan tombol kirim
-        $('#btnKirim').removeClass('d-none');
+        if (!rmeCycle) $('#btnKirim').removeClass('d-none');
 
       } else if (d.status_permintaan == 1) {
         statusText = 'Terikirim Ke Farmasi';
@@ -744,6 +753,10 @@ ORDER BY p.pharmacy_name_generic ASC
   // ACTION TOMBOL KIRIM
   // =========================
   $('#btnKirim').on('click', function() {
+    if (rmeCycle) {
+      Swal.fire('Resep Draft', 'Kembali ke RME dan Simpan Pemeriksaan untuk mengirim resep setelah kunjungan berhasil dibuat.', 'info');
+      return;
+    }
     Swal.fire({
       title: 'Kirim obat?',
       text: 'Pastikan data sudah benar',
