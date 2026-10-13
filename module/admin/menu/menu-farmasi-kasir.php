@@ -55,6 +55,16 @@
 
            </a>
         </li>
+        <li class="sidebar-item">
+           <a class="sidebar-link <?php if ($title == 'Expired Obat') {
+                                       echo 'active';
+                                    } ?>"
+              href="module/admin/pharmacy_expired"
+              aria-expanded="false">
+              <iconify-icon icon="solar:calendar-date-bold-duotone"></iconify-icon>
+              <span class="hide-menu">Expired Obat</span>
+           </a>
+        </li>
 
         <li class="sidebar-item">
            <a class="sidebar-link <?php if ($title == 'Persediaan') {

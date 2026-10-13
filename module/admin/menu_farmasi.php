@@ -28,5 +28,10 @@ $current = basename($_SERVER['PHP_SELF']);
          role="tab">
          <iconify-icon icon="vaadin:stock"></iconify-icon> Persediaan (Stock)
       </a>
+      <a class="nav-link <?= ($current == 'pharmacy_expired.php' || $current == 'expired-obat.php' ? 'active' : '') ?>"
+         href="module/admin/pharmacy_expired"
+         role="tab">
+         <iconify-icon icon="solar:calendar-date-bold-duotone"></iconify-icon> Expired Obat
+      </a>
    </div>
 </nav>

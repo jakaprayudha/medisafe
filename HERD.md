@@ -32,6 +32,9 @@ Form pemeriksaan pada halaman satu siklus dipisahkan dari form modal komponen
 agar HTML tidak memiliki form bertumpuk dan semua field pemeriksaan ikut
 terkirim. Controller socket menggunakan session yang sudah aktif agar daftar
 resep tetap JSON valid pada Herd.
+API Penunjang (`controller/visit/penunjang.php`) juga menggunakan session dari
+koneksi database tanpa memanggil `session_start()` ulang, dan mengirim header
+JSON agar notice session tidak menyebabkan DataTables Invalid JSON response.
 Uji regresi: `php tests/rmeCycleTest.php`. Uji menggunakan tabel sementara
 pada koneksi tersendiri dan stub simpan kunjungan, bukan data pasien nyata
 atau request BPJS.
