@@ -225,21 +225,30 @@ require '../../controller/view.php';
         fetch(`controller/visit/getRoomRanap.php?type=bed_name&value=${id_room}`)
           .then(res => res.json())
           .then(resp => {
-            if (resp.status === 'success') {
+            if (resp.status === 'success' && Array.isArray(resp.data)) {
+              if (resp.data.length === 0) {
+                $('#bed_name').html('<option value="">-- Tidak ada tempat tidur --</option>');
+                return;
+              }
               let opt = '<option value="">-- Pilih Tempat Tidur --</option>';
               resp.data.forEach(b => {
-                let isUsed = b.is_used == 1;
+                let isUsed = (b.is_used == 1);
+                let gender = b.bed_gender ? `-${b.bed_gender}` : '';
                 opt += `
                 <option value="${b.id_bed}" ${isUsed ? 'disabled' : ''}>
-                  ${b.bed_name}-${b.bed_gender} 
+                  ${b.bed_name}${gender} 
                   ${isUsed ? '(Terpakai)' : ''}
                 </option>
               `;
               });
               $('#bed_name').html(opt);
             } else {
-              $('#bed_name').html('<option value="">Tidak ada data</option>');
+              $('#bed_name').html('<option value="">' + (resp.message || 'Tidak ada data') + '</option>');
             }
+          })
+          .catch(err => {
+            console.error('Error load bed:', err);
+            $('#bed_name').html('<option value="">Gagal memuat tempat tidur</option>');
           });
       } else {
         $('#bed_name').html('');
