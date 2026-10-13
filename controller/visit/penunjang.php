@@ -1,7 +1,6 @@
 <?php
-include '../../database/connect.php';
-
-session_start();
+require_once __DIR__ . '/../../database/connect.php';
+header('Content-Type: application/json; charset=utf-8');
 $id_customer = $_SESSION['id_customer'] ?? null;
 
 if (!$id_customer) {

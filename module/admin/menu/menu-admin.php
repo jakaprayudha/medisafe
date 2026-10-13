@@ -62,6 +62,7 @@
             <li><a href="module/admin/rpt_ranap">Rawat Inap</a></li>
             <li><a href="module/admin/rpt_prosedur">Tindakan (Prosedur)</a></li>
             <li><a href="module/admin/rpt_farmasi">Farmasi</a></li>
+            <li><a href="module/admin/pharmacy_expired">Expired Obat</a></li>
          </ul>
       </li>
 
@@ -219,6 +220,16 @@
             aria-expanded="false">
             <iconify-icon icon="mdi:register-outline"></iconify-icon>
             <span class="hide-menu">Permintaan Resep</span>
+         </a>
+      </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Expired Obat') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/admin/pharmacy_expired"
+            aria-expanded="false">
+            <iconify-icon icon="solar:calendar-date-bold-duotone"></iconify-icon>
+            <span class="hide-menu">Expired Obat</span>
          </a>
       </li>
       <li class="sidebar-item">
