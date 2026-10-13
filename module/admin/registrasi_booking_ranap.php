@@ -426,8 +426,13 @@ require '../../controller/view.php';
     $('#bedModal').modal('show');
     $('#bedTableBody').html('<tr><td colspan="8" class="text-center text-muted py-3"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Memuat data tempat tidur...</td></tr>');
 
-    fetch('controller/master/bedControllerPatient')
-      .then(res => res.json())
+    fetch('controller/master/bedControllerPatient.php')
+      .then(res => {
+        if (!res.ok && res.status === 401) {
+          return res.json().then(j => { throw new Error(j.message || 'Session anda telah berakhir, silakan login kembali.'); });
+        }
+        return res.json();
+      })
       .then(res => {
         if (res.status === 'success' && Array.isArray(res.data)) {
           allBeds = res.data;
@@ -440,7 +445,7 @@ require '../../controller/view.php';
       })
       .catch(err => {
         console.error('Error load beds:', err);
-        $('#bedTableBody').html('<tr><td colspan="8" class="text-center text-danger">Gagal terhubung ke server</td></tr>');
+        $('#bedTableBody').html('<tr><td colspan="8" class="text-center text-danger">' + (err.message || 'Gagal terhubung ke server') + '</td></tr>');
       });
 
   });
@@ -521,7 +526,7 @@ require '../../controller/view.php';
       cancelButtonText: 'Batal'
     }).then((result) => {
       if (result.isConfirmed) {
-        fetch('controller/master/bedControllerPatient?toggle_status=1', {
+        fetch('controller/master/bedControllerPatient.php?toggle_status=1', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: `id_bed=${id_bed}&bed_status=${newStatus}`
@@ -537,7 +542,7 @@ require '../../controller/view.php';
               showConfirmButton: false
             });
             // Muat ulang data tempat tidur
-            fetch('controller/master/bedControllerPatient')
+            fetch('controller/master/bedControllerPatient.php')
               .then(r => r.json())
               .then(r => {
                 allBeds = r.data;
