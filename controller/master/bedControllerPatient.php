@@ -29,28 +29,19 @@ switch ($method) {
    // =============================
    case 'GET':
 
-      $query = mysqli_query($koneksi, "
+      $sql = "
 SELECT 
-    b.id_bed,
-    b.id_room,
-    b.bed_name,
-    b.bed_gender,
-    b.bed_notes,
-    b.bed_status,
+    b.*,
     r.room_name,
     r.service_class,
 
-    -- Hanya ambil pasien yang statusnya BENAR-BENAR aktif di ranap
+    -- Data pasien aktif jika ada
     active_ranap.visit_ID,
     active_ranap.id_ranap,
     active_ranap.patient_name_pcare,
     active_ranap.patient_name,
     active_ranap.patient_gender,
-    active_ranap.nomor_rm,
-    CASE 
-        WHEN active_ranap.id_ranap IS NOT NULL THEN 1
-        ELSE 0
-    END AS is_occupied
+    active_ranap.nomor_rm
 
 FROM ms_room_bed b
 
@@ -79,7 +70,19 @@ LEFT JOIN (
 WHERE b.id_customer = '$id_customer'
 
 ORDER BY r.service_class ASC, r.room_name ASC, b.bed_name ASC
-");
+";
+
+      $query = mysqli_query($koneksi, $sql);
+
+      if (!$query) {
+         echo json_encode([
+            "status" => "error",
+            "message" => mysqli_error($koneksi),
+            "data" => []
+         ]);
+         exit;
+      }
+
       $data = [];
 
       while ($row = mysqli_fetch_assoc($query)) {

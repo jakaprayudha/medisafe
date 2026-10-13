@@ -53,7 +53,7 @@ switch ($type) {
             WHEN EXISTS (
                SELECT 1 
                FROM permintaan_ranap r 
-               LEFT JOIN pasien_visit pv
+               INNER JOIN pasien_visit pv
                   ON pv.visit_ID = r.visit_ID_inpatient
                WHERE r.id_bed = b.id_bed 
                  AND r.status = 'aktif'
