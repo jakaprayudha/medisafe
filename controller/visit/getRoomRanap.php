@@ -50,29 +50,28 @@ switch ($type) {
          b.bed_name, 
          b.bed_gender,
          CASE 
-            WHEN active_r.id_bed IS NOT NULL THEN 1
-            WHEN b.bed_status = 2 THEN 1
+            WHEN EXISTS (
+               SELECT 1 
+               FROM permintaan_ranap r 
+               LEFT JOIN pasien_visit pv
+                  ON pv.visit_ID = r.visit_ID_inpatient
+               WHERE r.id_bed = b.id_bed 
+                 AND r.status = 'aktif'
+                 AND (pv.visit_status IS NULL OR pv.visit_status NOT IN (4, 99))
+            ) THEN 1
             ELSE 0
          END as is_used
 
       FROM ms_room_bed b
-
-      LEFT JOIN (
-         SELECT pr.id_bed
-         FROM permintaan_ranap pr
-         INNER JOIN pasien_visit pv
-            ON pv.visit_ID = pr.visit_ID_inpatient
-         WHERE pr.status = 'aktif'
-           AND pr.ranap_booking = 1
-           AND (pv.visit_status IS NULL OR pv.visit_status NOT IN (4, 99))
-           AND pv.visit_date_out IS NULL
-      ) active_r ON active_r.id_bed = b.id_bed
-
       WHERE b.id_room = ? 
-      AND b.id_customer = ?
-      GROUP BY b.id_bed
+        AND b.id_customer = ?
       ORDER BY b.bed_name ASC
    ");
+
+      if (!$stmt) {
+         echo json_encode(['status' => 'error', 'message' => 'Gagal menyiapkan query: ' . $koneksi->error]);
+         exit;
+      }
 
       $stmt->bind_param("ii", $value, $id_customer);
       $stmt->execute();
@@ -82,6 +81,7 @@ switch ($type) {
       while ($row = $result->fetch_assoc()) {
          $data[] = $row;
       }
+      $stmt->close();
 
       echo json_encode(['status' => 'success', 'data' => $data]);
       break;

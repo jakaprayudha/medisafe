@@ -74,7 +74,6 @@ LEFT JOIN (
     WHERE pr.status = 'aktif'
       AND pr.ranap_booking = 1
       AND (v.visit_status IS NULL OR v.visit_status NOT IN (4, 99))
-      AND v.visit_date_out IS NULL
 ) active_ranap ON active_ranap.id_bed = b.id_bed
 
 WHERE b.id_customer = '$id_customer'

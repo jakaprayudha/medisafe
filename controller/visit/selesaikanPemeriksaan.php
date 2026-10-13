@@ -19,10 +19,10 @@ $koneksi->begin_transaction();
 
 try {
 
-   // 1. update status pasien visit & tanggal keluar
+   // 1. update status pasien visit
    $stmt = $koneksi->prepare("
       UPDATE pasien_visit 
-      SET visit_status = 4, visit_date_out = CURDATE()
+      SET visit_status = 4
       WHERE visit_ID = ?
    ");
    $stmt->bind_param("s", $visit_ID);

@@ -160,7 +160,7 @@ function updateStatus()
 
          // Update visit jika ada
          if (!empty($visit_ID)) {
-            $stmtVisit = $koneksi->prepare("UPDATE pasien_visit SET visit_status=4, visit_date_out=CURDATE() WHERE visit_ID=?");
+            $stmtVisit = $koneksi->prepare("UPDATE pasien_visit SET visit_status=4 WHERE visit_ID=?");
             $stmtVisit->bind_param("s", $visit_ID);
             $stmtVisit->execute();
             $stmtVisit->close();
@@ -212,7 +212,7 @@ function updateStatus()
 
          // Update visit jika ada
          if (!empty($visit_ID)) {
-            $stmtVisit = $koneksi->prepare("UPDATE pasien_visit SET visit_status=1, visit_date_out=NULL WHERE visit_ID=?");
+            $stmtVisit = $koneksi->prepare("UPDATE pasien_visit SET visit_status=1 WHERE visit_ID=?");
             $stmtVisit->bind_param("s", $visit_ID);
             $stmtVisit->execute();
             $stmtVisit->close();
