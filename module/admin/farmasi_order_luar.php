@@ -88,13 +88,20 @@ $apiUrl = getenv('API_URL');
     // Initialize DataTable
     var table = $('#zero_config').DataTable({
       "processing": true,
-      "serverSide": true,
+      "serverSide": false,
       "ajax": {
         "url": apiUrl, // Ganti dengan URL API yang sesuai
         "type": "GET",
         "dataSrc": function(json) {
+          if (!json || !json.data) return [];
           // Format data yang akan ditampilkan dalam tabel
           return json.data.map(function(row, index) {
+            let patientName = row.patient_name || row.patient_name_pcare || '-';
+            let tanggal = (row.visit_date ? row.visit_date + ' ' + (row.visit_time || '') : (row.created_at || '-')).trim();
+            let dokter = row.doctor_name || row.id_doctor || '-';
+            let layanan = (row.source_hub ? row.source_hub + ' ' : '') + (row.poli_name || row.id_poli || '');
+            let ttl = (row.patient_place || '-') + '/' + (row.patient_datebirth || '-');
+            let isSelesai = (row.status_permintaan == 3 || row.status_visit == 1);
             return {
               "actions": `
                   <div class="text-center">
@@ -103,14 +110,14 @@ $apiUrl = getenv('API_URL');
                     </a>
                   </div>
               `,
-              "tanggal": row.visit_date + ' ' + row.visit_time,
-              "nomor_rm": row.nomor_rm,
-              "nama_pasien": row.patient_name,
-              "gender": row.patient_gender,
-              "ttl": row.patient_place + '/' + row.patient_datebirth,
-              "dokter": row.doctor_name,
-              "layanan": row.source_hub + ' ' + row.poli_name,
-              "status_visit": '<span class="badge ' + (row.status_visit == 1 ? 'bg-success' : 'bg-danger') + ' d-block text-center">' + (row.status_visit == 1 ? 'Selesai' : 'Belum') + '</span>'
+              "tanggal": tanggal || '-',
+              "nomor_rm": row.nomor_rm || '-',
+              "nama_pasien": patientName,
+              "gender": row.patient_gender || '-',
+              "ttl": ttl,
+              "dokter": dokter,
+              "layanan": layanan.trim() || '-',
+              "status_visit": '<span class="badge ' + (isSelesai ? 'bg-success' : 'bg-danger') + ' d-block text-center">' + (isSelesai ? 'Selesai' : 'Belum') + '</span>'
             };
           });
         }

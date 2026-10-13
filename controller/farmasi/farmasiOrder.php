@@ -41,12 +41,17 @@ function getData()
    $stmt = $koneksi->prepare("SELECT 
          permintaan_pharmacy.*,
          pasien_visit.visit_ID,
+         pasien_visit.visit_date,
+         pasien_visit.visit_time,
+         pasien_visit.visit_status,
          COALESCE(ms_patient.patient_name, pasien_visit.patient_name_pcare) AS patient_name,
          pasien_visit.patient_name_pcare,
          pasien_visit.id_doctor,
+         COALESCE(ms_doctor.doctor_name, pasien_visit.id_doctor) AS doctor_name,
          ms_patient.nomor_rm,
          ms_patient.patient_gender,
          pasien_visit.id_poli,
+         COALESCE(ms_poli.poli_name, pasien_visit.id_poli) AS poli_name,
          ms_patient.patient_place,
          ms_patient.patient_datebirth,
          pasien_visit.source_hub,
@@ -56,6 +61,10 @@ function getData()
          ON pasien_visit.visit_ID = permintaan_pharmacy.id_visit 
       LEFT JOIN ms_patient 
          ON ms_patient.id_patient = pasien_visit.id_patient  
+      LEFT JOIN ms_doctor 
+         ON ms_doctor.id_doctor = pasien_visit.id_doctor
+      LEFT JOIN ms_poli 
+         ON ms_poli.id_poli = pasien_visit.id_poli
       LEFT JOIN ms_provider 
          ON ms_provider.id_provider = pasien_visit.id_provider
       WHERE pasien_visit.id_customer = ? 
