@@ -31,37 +31,55 @@ switch ($method) {
 
       $query = mysqli_query($koneksi, "
 SELECT 
-    b.*,
+    b.id_bed,
+    b.id_room,
+    b.bed_name,
+    b.bed_gender,
+    b.bed_notes,
+    b.bed_status,
     r.room_name,
     r.service_class,
 
-    -- hanya ambil pasien aktif
-    v.visit_ID,
-    v.patient_name_pcare,
-    v.visit_date_out,
-
-    mp.patient_gender
+    -- Hanya ambil pasien yang statusnya BENAR-BENAR aktif di ranap
+    active_ranap.visit_ID,
+    active_ranap.id_ranap,
+    active_ranap.patient_name_pcare,
+    active_ranap.patient_name,
+    active_ranap.patient_gender,
+    active_ranap.nomor_rm,
+    CASE 
+        WHEN active_ranap.id_ranap IS NOT NULL THEN 1
+        ELSE 0
+    END AS is_occupied
 
 FROM ms_room_bed b
 
 LEFT JOIN ms_room r 
     ON r.id_room = b.id_room
 
-LEFT JOIN permintaan_ranap pr 
-    ON pr.id_bed = b.id_bed
-
-LEFT JOIN pasien_visit v 
-    ON pr.visit_ID_inpatient = v.visit_ID
-    AND v.visit_date_out IS NULL
-
-LEFT JOIN ms_patient mp 
-    ON mp.id_patient = v.id_patient
+LEFT JOIN (
+    SELECT 
+        pr.id_bed,
+        pr.id_ranap,
+        pr.visit_ID_inpatient AS visit_ID,
+        COALESCE(mp.patient_name, v.patient_name_pcare) AS patient_name,
+        v.patient_name_pcare,
+        mp.patient_gender,
+        mp.nomor_rm
+    FROM permintaan_ranap pr
+    INNER JOIN pasien_visit v 
+        ON v.visit_ID = pr.visit_ID_inpatient
+    LEFT JOIN ms_patient mp 
+        ON mp.id_patient = v.id_patient
+    WHERE pr.status = 'aktif'
+      AND pr.ranap_booking = 1
+      AND (v.visit_status IS NULL OR v.visit_status NOT IN (4, 99))
+      AND v.visit_date_out IS NULL
+) active_ranap ON active_ranap.id_bed = b.id_bed
 
 WHERE b.id_customer = '$id_customer'
 
-GROUP BY b.id_bed
-
-ORDER BY b.id_bed DESC
+ORDER BY r.service_class ASC, r.room_name ASC, b.bed_name ASC
 ");
       $data = [];
 
@@ -87,7 +105,7 @@ ORDER BY b.id_bed DESC
       if (isset($_GET['toggle_status'])) {
 
          $id_bed = $_PUT['id_bed'] ?? null;
-         $status = $_PUT['bed_status'] ?? 0;
+         $status = isset($_PUT['bed_status']) ? (int)$_PUT['bed_status'] : 1;
 
          if (!$id_bed) {
             echo json_encode([
@@ -111,6 +129,16 @@ ORDER BY b.id_bed DESC
                "message" => "Data tidak valid"
             ]);
             exit;
+         }
+
+         // Jika status diubah menjadi 1 (kosong), lepaskan/pulangkan pasien aktif yang menggantung di bed ini
+         if ($status == 1) {
+            mysqli_query($koneksi, "
+               UPDATE permintaan_ranap 
+               SET status = 'pulang' 
+               WHERE id_bed = '$id_bed' 
+                 AND status = 'aktif'
+            ");
          }
 
          // 🔥 UPDATE STATUS

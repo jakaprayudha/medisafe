@@ -19,10 +19,10 @@ $koneksi->begin_transaction();
 
 try {
 
-   // 1. update status pasien visit
+   // 1. update status pasien visit & tanggal keluar
    $stmt = $koneksi->prepare("
       UPDATE pasien_visit 
-      SET visit_status = 4
+      SET visit_status = 4, visit_date_out = CURDATE()
       WHERE visit_ID = ?
    ");
    $stmt->bind_param("s", $visit_ID);
@@ -54,10 +54,10 @@ try {
       $row = $result->fetch_assoc();
       $id_bed = $row['id_bed'];
 
-      // 4. kosongkan bed
+      // 4. kosongkan bed (1 = kosong)
       $updateBed = $koneksi->prepare("
          UPDATE ms_room_bed 
-         SET bed_status = 0 
+         SET bed_status = 1 
          WHERE id_bed = ?
       ");
       $updateBed->bind_param("i", $id_bed);
