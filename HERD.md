@@ -144,7 +144,7 @@ filter diterapkan saat halaman atau API dimuat, dan badge diperiksa berkala.
 Arsip lama tetap tersedia di master log administrator, tanpa dihapus.
 
 Ringkasan empat commit tanggal 12 Oktober 2026 tersedia dalam
-`controller/system/sql/seed-system-update-2026-10-12.sql`. Jalankan SQL ini pada database
+`controller/system/sql/seed-system-update-2026-10-12.sql`. Ringkasan pembaruan berikutnya (penanda operasi, RME satu siklus, expired obat, dan pemakaian obat pasien) tersedia dalam `controller/system/sql/seed-system-update-2026-10-13.sql`. Jalankan SQL ini pada database
 deployment untuk menerbitkan ringkasannya. Tanggal mengikuti commit dan
 `version` berisi hash singkat commit; eksekusi ulang tidak menambah duplikat.
 Ringkasan berikutnya tetap ditambahkan melalui master log, bukan sinkronisasi

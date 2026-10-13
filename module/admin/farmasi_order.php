@@ -89,13 +89,18 @@ $apiUrl = getenv('API_URL');
     // Initialize DataTable
     var table = $('#zero_config').DataTable({
       "processing": true,
-      "serverSide": true,
+      "serverSide": false,
       "ajax": {
         "url": apiUrl, // Ganti dengan URL API yang sesuai
         "type": "GET",
         "dataSrc": function(json) {
+          if (!json || !json.data) return [];
           // Format data yang akan ditampilkan dalam tabel
           return json.data.map(function(row, index) {
+            let patientName = row.patient_name || row.patient_name_pcare || '-';
+            let dokter = row.doctor_name || row.id_doctor || '-';
+            let layanan = (row.source_hub ? row.source_hub + ' ' : '') + (row.poli_name || row.id_poli || '');
+            let ttl = (row.patient_place || '-') + '/' + (row.patient_datebirth || '-');
             return {
               "actions": `
                   <div class="text-center">
@@ -104,14 +109,14 @@ $apiUrl = getenv('API_URL');
                     </a>
                   </div>
               `,
-              "permintaan_number": row.permintaan_number,
-              "tanggal": row.created_at,
-              "nomor_rm": row.nomor_rm,
-              "nama_pasien": row.patient_name,
-              "gender": row.patient_gender,
-              "ttl": row.patient_place + '/' + row.patient_datebirth,
-              "dokter": row.doctor_name,
-              "layanan": row.source_hub + ' ' + row.poli_name,
+              "permintaan_number": row.permintaan_number || '-',
+              "tanggal": row.created_at || '-',
+              "nomor_rm": row.nomor_rm || '-',
+              "nama_pasien": patientName,
+              "gender": row.patient_gender || '-',
+              "ttl": ttl,
+              "dokter": dokter,
+              "layanan": layanan.trim() || '-',
               "status_visit": '<span class="badge ' + (row.status_permintaan == 1 ? 'bg-primary' : 'bg-danger') + ' d-block text-center">' + (row.status_permintaan == 1 ? 'Persiapan' : 'Belum') + '</span>'
             };
           });

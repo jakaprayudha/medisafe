@@ -110,29 +110,26 @@ SELECT
 
     /* ========================================================
        BARANG MASUK
+       TABLE: pharmacy_stock_penerimaan
        ======================================================== */
 
     COALESCE(
 
         (
 
-            SELECT SUM(pb.buy_qty)
+            SELECT SUM(psp.jumlah)
 
-            FROM pharmacy_buy_detail pb
+            FROM pharmacy_stock_penerimaan psp
 
             WHERE
 
-                (
-                    pb.buy_item = p.pharmacy_code
-                    OR pb.buy_item = p.pharmacy_name_generic
-                    OR pb.buy_item = p.pharmacy_name_trade
-                )
+                psp.id_pharmacy = CAST(p.id_pharmacy AS CHAR)
 
-                AND pb.buy_status = 1
+                AND psp.id_customer = CAST(? AS CHAR)
 
-                AND pb.created_at >= CONCAT(?, ' 00:00:00')
+                AND psp.tanggal >= ?
 
-                AND pb.created_at < DATE_ADD(?, INTERVAL 1 DAY)
+                AND psp.tanggal <= ?
 
         ),
 
@@ -143,6 +140,7 @@ SELECT
 
     /* ========================================================
        BARANG KELUAR
+       TABLE: permintaan_pharmacy_details
        ======================================================== */
 
     COALESCE(
@@ -159,7 +157,7 @@ SELECT
 
                 AND pd.created_at >= CONCAT(?, ' 00:00:00')
 
-                AND pd.created_at < DATE_ADD(?, INTERVAL 1 DAY)
+                AND pd.created_at <= CONCAT(?, ' 23:59:59')
 
         ),
 
@@ -170,14 +168,33 @@ SELECT
 
 FROM ms_pharmacy p
 
+LEFT JOIN ms_pharmacy_parrent log
+    ON log.parent_id = p.id_pharmacy
+    AND log.id_customer_real = ?
+
 
 /* ============================================================
-   FILTER CUSTOMER
+   FILTER CUSTOMER & STATUS MASTER
    ============================================================ */
 
 WHERE
 
-    p.id_customer = ?
+    (
+        p.id_customer = ?
+        OR (
+            p.id_customer = 0
+            AND log.id IS NULL
+        )
+    )
+
+    -- Filter obat yang sudah dihapus
+    AND (
+        log.status_log IS NULL
+        OR log.status_log != 'DELETE'
+    )
+
+    AND p.pharmacy_name_generic IS NOT NULL
+    AND TRIM(p.pharmacy_name_generic) != ''
 
     AND p.pharmacy_status = 1
 
@@ -211,11 +228,13 @@ if (!$stmt) {
 // ============================================================
 
 $stmt->bind_param(
-    "sssss",
+    "sssssii",
+    $id_customer,
     $fromDate,
     $toDate,
     $fromDate,
     $toDate,
+    $id_customer,
     $id_customer
 );
 
