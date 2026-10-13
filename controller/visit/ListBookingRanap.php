@@ -23,7 +23,24 @@ function getData()
 {
    global $koneksi;
    $id_customer = $_SESSION['id_customer'];
-   $query = "SELECT * FROM permintaan_ranap rn LEFT JOIN ms_patient mp ON rn.id_patient = mp.id_patient LEFT JOIN pasien_visit pv ON rn.visit_ID_inpatient = pv.visit_ID WHERE rn.ranap_booking=0 AND pv.id_customer = '$id_customer'  ORDER BY rn.id_ranap DESC";
+   $query = "SELECT 
+        rn.*, 
+        COALESCE(mp.patient_name, pv.patient_name_pcare) AS patient_name,
+        mp.patient_gender,
+        mp.nomor_rm,
+        pv.visit_date AS ranap_date,
+        pv.visit_time AS ranap_time,
+        pv.id_doctor,
+        r.room_name,
+        b.bed_name
+     FROM permintaan_ranap rn 
+     LEFT JOIN ms_patient mp ON rn.id_patient = mp.id_patient 
+     LEFT JOIN pasien_visit pv ON rn.visit_ID_inpatient = pv.visit_ID 
+     LEFT JOIN ms_room r ON r.id_room = rn.id_room
+     LEFT JOIN ms_room_bed b ON b.id_bed = rn.id_bed
+     WHERE rn.ranap_booking = 1 
+       AND pv.id_customer = '$id_customer'  
+     ORDER BY (rn.status = 'aktif') DESC, rn.id_ranap DESC";
    $result = mysqli_query($koneksi, $query);
 
    if (!$result) {
@@ -105,8 +122,8 @@ function updateStatus()
 
    try {
 
-      // 🔹 Ambil bed lama
-      $getRanap = $koneksi->prepare("SELECT id_bed FROM permintaan_ranap WHERE id_ranap=?");
+      // 🔹 Ambil data ranap lama
+      $getRanap = $koneksi->prepare("SELECT id_bed, visit_ID_inpatient FROM permintaan_ranap WHERE id_ranap=?");
       $getRanap->bind_param("i", $id);
       $getRanap->execute();
       $resultRanap = $getRanap->get_result();
@@ -114,6 +131,7 @@ function updateStatus()
       $getRanap->close();
 
       $old_bed = $dataRanap['id_bed'] ?? null;
+      $visit_ID = $dataRanap['visit_ID_inpatient'] ?? null;
 
       // 🔹 Update status ranap
       $stmt = $koneksi->prepare("UPDATE permintaan_ranap SET status=? WHERE id_ranap=?");
@@ -130,13 +148,22 @@ function updateStatus()
       if ($status === 'pulang') {
 
          if (!empty($old_bed)) {
-            $stmtBed = $koneksi->prepare("UPDATE ms_room_bed SET bed_status=0 WHERE id_bed=?");
+            // 1 = kosong
+            $stmtBed = $koneksi->prepare("UPDATE ms_room_bed SET bed_status=1 WHERE id_bed=?");
             $stmtBed->bind_param("i", $old_bed);
 
             if (!$stmtBed->execute()) {
                throw new Exception($stmtBed->error);
             }
             $stmtBed->close();
+         }
+
+         // Update visit jika ada
+         if (!empty($visit_ID)) {
+            $stmtVisit = $koneksi->prepare("UPDATE pasien_visit SET visit_status=4, visit_date_out=CURDATE() WHERE visit_ID=?");
+            $stmtVisit->bind_param("s", $visit_ID);
+            $stmtVisit->execute();
+            $stmtVisit->close();
          }
       }
 
@@ -154,25 +181,9 @@ function updateStatus()
             throw new Exception("Bed tidak tersedia, silakan pilih bed");
          }
 
-         // 🔒 cek bed tersedia
-         $cekBed = $koneksi->prepare("SELECT bed_status FROM ms_room_bed WHERE id_bed=?");
-         $cekBed->bind_param("i", $id_bed);
-         $cekBed->execute();
-         $result = $cekBed->get_result();
-         $dataBed = $result->fetch_assoc();
-         $cekBed->close();
-
-         if (!$dataBed) {
-            throw new Exception("Bed tidak ditemukan");
-         }
-
-         if ($dataBed['bed_status'] == 1) {
-            throw new Exception("Bed sudah terisi pasien lain");
-         }
-
          // 🔹 kosongkan bed lama kalau beda
          if (!empty($old_bed) && $old_bed != $id_bed) {
-            $stmtOld = $koneksi->prepare("UPDATE ms_room_bed SET bed_status=0 WHERE id_bed=?");
+            $stmtOld = $koneksi->prepare("UPDATE ms_room_bed SET bed_status=1 WHERE id_bed=?");
             $stmtOld->bind_param("i", $old_bed);
 
             if (!$stmtOld->execute()) {
@@ -181,8 +192,8 @@ function updateStatus()
             $stmtOld->close();
          }
 
-         // 🔹 isi bed baru
-         $stmtNew = $koneksi->prepare("UPDATE ms_room_bed SET bed_status=1 WHERE id_bed=?");
+         // 🔹 isi bed baru (0 = digunakan)
+         $stmtNew = $koneksi->prepare("UPDATE ms_room_bed SET bed_status=0 WHERE id_bed=?");
          $stmtNew->bind_param("i", $id_bed);
 
          if (!$stmtNew->execute()) {
@@ -198,6 +209,14 @@ function updateStatus()
             throw new Exception($stmtUpdate->error);
          }
          $stmtUpdate->close();
+
+         // Update visit jika ada
+         if (!empty($visit_ID)) {
+            $stmtVisit = $koneksi->prepare("UPDATE pasien_visit SET visit_status=1, visit_date_out=NULL WHERE visit_ID=?");
+            $stmtVisit->bind_param("s", $visit_ID);
+            $stmtVisit->execute();
+            $stmtVisit->close();
+         }
       }
 
       $koneksi->commit();

@@ -406,15 +406,18 @@ require '../../controller/view.php';
 
       data.forEach((bed, i) => {
 
-        let statusBadge = bed.bed_status == 1 ?
-          '<span class="badge bg-warning-subtle text-warning d-block text-center">Digunakan</span>' :
-          '<span class="badge bg-success-subtle text-success d-block text-center">Kosong</span>';
+        let isKosong = (bed.bed_status == 1);
+
+        let statusBadge = isKosong ?
+          '<span class="badge bg-success-subtle text-success d-block text-center">Kosong</span>' :
+          '<span class="badge bg-warning-subtle text-warning d-block text-center">Digunakan</span>';
 
         let statusSwitch = `
         <label class="switch">
           <input type="checkbox" class="toggle-status-bed"
             data-id="${bed.id_bed}"
-            ${bed.bed_status == 1 ? 'checked' : ''}>
+            ${!isKosong ? 'checked' : ''}
+            title="${!isKosong ? 'Klik untuk mengosongkan bed' : 'Klik untuk menandai digunakan'}">
           <span class="slider"></span>
         </label>
       `;
@@ -422,9 +425,9 @@ require '../../controller/view.php';
         html += `
         <tr>
           <td>${i + 1}</td>
-          <td>${bed.service_class}</td>
-          <td>${bed.room_name}</td>
-          <td>${bed.bed_name}</td>
+          <td>${bed.service_class || '-'}</td>
+          <td>${bed.room_name || '-'}</td>
+          <td>${bed.bed_name || '-'}</td>
           <td>${bed.bed_gender || '-'}</td>
           <td>${statusBadge}</td>
           <td>${statusSwitch}</td>
@@ -439,6 +442,30 @@ require '../../controller/view.php';
 
     $('#bedTableBody').html(html);
   }
+
+  // 🔹 Toggle status bed langsung dari modal
+  $(document).on('change', '.toggle-status-bed', function() {
+    let id_bed = $(this).data('id');
+    let isChecked = $(this).is(':checked');
+    let newStatus = isChecked ? 0 : 1; // 0 = digunakan, 1 = kosong
+
+    fetch('controller/master/bedController?toggle_status=1', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `id_bed=${id_bed}&bed_status=${newStatus}`
+    })
+    .then(res => res.json())
+    .then(resp => {
+      if (resp.status === 'success') {
+        fetch('controller/master/bedController')
+          .then(r => r.json())
+          .then(r => {
+            allBeds = r.data;
+            renderBedTable(allBeds);
+          });
+      }
+    });
+  });
 
   function buildFilter(data) {
 

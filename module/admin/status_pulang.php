@@ -91,6 +91,7 @@ require '../../controller/view.php';
                       <thead>
                         <tr>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
+                          <th scope="col" class="text-dark fw-normal">Kamar & Bed</th>
                           <th>Tanggal Masuk</th>
                           <th class="text-dark fw-normal">Nomor RM</th>
                           <th scope="col" class="text-dark fw-normal">Nama Lengkap</th>
@@ -131,20 +132,27 @@ require '../../controller/view.php';
         url: apiUrl,
         type: "GET",
         dataSrc: function(json) {
+          if (!json || !json.data) return [];
           return json.data.map(function(row) {
+            let isPulang = (row.status === 'pulang');
+            let roomBed = (row.room_name || '-') + ' / ' + (row.bed_name || '-');
             return {
               "actions": `
-                <div class="text-center d-flex justify-content-center">
-                  <label class="form-switch">
+                <div class="text-center d-flex justify-content-center align-items-center gap-2">
+                  <label class="form-switch mb-0">
                     <input type="checkbox" class="status-toggle"
                       data-id="${row.id_ranap}"
                       data-bed="${row.id_bed}"
-                      ${row.status === 'pulang' ? 'checked' : ''}>
+                      ${isPulang ? 'checked' : ''}>
                     <i></i>
                   </label>
+                  <span class="badge ${isPulang ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'}">
+                    ${isPulang ? 'Pulang' : 'Aktif'}
+                  </span>
                 </div>
               `,
-              "date": row.ranap_date + ' ' + row.ranap_time ?? "-",
+              "room_bed": roomBed,
+              "date": (row.ranap_date || '-') + ' ' + (row.ranap_time || ''),
               "rm": row.nomor_rm ?? "-",
               "name": row.patient_name ?? "-",
               "gender": row.patient_gender ?? "-",
@@ -157,6 +165,9 @@ require '../../controller/view.php';
           data: "actions",
           orderable: false,
           searchable: false
+        },
+        {
+          data: "room_bed"
         },
         {
           data: "date"
@@ -198,11 +209,18 @@ require '../../controller/view.php';
           status: status
         },
         success: function(res) {
-          console.log(res);
+          Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: isChecked ? 'Status diubah: Pasien Pulang (Bed dikosongkan)' : 'Status diubah: Pasien Aktif Dirawat',
+            timer: 1500,
+            showConfirmButton: false
+          });
+          table.ajax.reload(null, false);
         },
         error: function(err) {
-          alert('Gagal update status');
-          console.log(err);
+          Swal.fire('Gagal', 'Gagal memperbarui status pasien', 'error');
+          table.ajax.reload(null, false);
         }
       });
     });

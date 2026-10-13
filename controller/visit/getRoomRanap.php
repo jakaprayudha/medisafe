@@ -50,15 +50,23 @@ switch ($type) {
          b.bed_name, 
          b.bed_gender,
          CASE 
-            WHEN r.id_bed IS NOT NULL THEN 1
+            WHEN active_r.id_bed IS NOT NULL THEN 1
+            WHEN b.bed_status = 2 THEN 1
             ELSE 0
          END as is_used
 
       FROM ms_room_bed b
 
-      LEFT JOIN permintaan_ranap r 
-         ON r.id_bed = b.id_bed 
-         AND r.status = 'aktif'
+      LEFT JOIN (
+         SELECT pr.id_bed
+         FROM permintaan_ranap pr
+         INNER JOIN pasien_visit pv
+            ON pv.visit_ID = pr.visit_ID_inpatient
+         WHERE pr.status = 'aktif'
+           AND pr.ranap_booking = 1
+           AND (pv.visit_status IS NULL OR pv.visit_status NOT IN (4, 99))
+           AND pv.visit_date_out IS NULL
+      ) active_r ON active_r.id_bed = b.id_bed
 
       WHERE b.id_room = ? 
       AND b.id_customer = ?

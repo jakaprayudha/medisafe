@@ -437,7 +437,10 @@ require '../../controller/view.php';
 
       data.forEach((bed, i) => {
 
-        let statusBadge = bed.bed_status == 1 ?
+        // Bed dianggap digunakan jika ada pasien aktif atau bed_status == 0
+        let isOccupied = (bed.is_occupied == 1 || (bed.patient_name_pcare && bed.patient_name_pcare !== '-'));
+
+        let statusBadge = isOccupied ?
           '<span class="badge bg-warning-subtle text-warning d-block text-center">Digunakan</span>' :
           '<span class="badge bg-success-subtle text-success d-block text-center">Kosong</span>';
 
@@ -445,26 +448,27 @@ require '../../controller/view.php';
         <label class="switch">
           <input type="checkbox" class="toggle-status-bed"
             data-id="${bed.id_bed}"
-            ${bed.bed_status == 1 ? 'checked' : ''}>
+            ${isOccupied ? 'checked' : ''}
+            title="${isOccupied ? 'Klik untuk mengosongkan bed' : 'Klik untuk menandai terpakai'}">
           <span class="slider"></span>
         </label>
       `;
 
-        let patientName = bed.patient_name_pcare || '-';
+        let patientName = (isOccupied && bed.patient_name_pcare) ? bed.patient_name_pcare : '-';
 
         let genderBadge = '';
-        if (bed.patient_gender === 'L' || bed.patient_gender?.toLowerCase().includes('laki')) {
+        if (isOccupied && (bed.patient_gender === 'L' || bed.patient_gender?.toLowerCase().includes('laki'))) {
           genderBadge = `<span class="badge bg-primary ms-1">L</span>`;
-        } else if (bed.patient_gender === 'P' || bed.patient_gender?.toLowerCase().includes('perempuan')) {
+        } else if (isOccupied && (bed.patient_gender === 'P' || bed.patient_gender?.toLowerCase().includes('perempuan'))) {
           genderBadge = `<span class="badge bg-danger ms-1">P</span>`;
         }
 
         html += `
         <tr>
           <td>${i + 1}</td>
-          <td>${bed.service_class}</td>
-          <td>${bed.room_name}</td>
-          <td>${bed.bed_name}</td>
+          <td>${bed.service_class || '-'}</td>
+          <td>${bed.room_name || '-'}</td>
+          <td>${bed.bed_name || '-'}</td>
           <td>${bed.bed_gender || '-'}</td>
           <td>${statusBadge}</td>
           <td>${statusSwitch}</td>
@@ -479,6 +483,69 @@ require '../../controller/view.php';
 
     $('#bedTableBody').html(html);
   }
+
+  // 🔹 Handler untuk toggle status tempat tidur langsung dari modal
+  $(document).on('change', '.toggle-status-bed', function() {
+    let id_bed = $(this).data('id');
+    let isChecked = $(this).is(':checked');
+    let newStatus = isChecked ? 0 : 1; // 0 = digunakan, 1 = kosong
+
+    let confirmText = isChecked ? 
+      'Tandai tempat tidur ini sebagai Digunakan?' : 
+      'Kosongkan tempat tidur ini? Pasien aktif pada bed ini akan dipulangkan/dilepaskan.';
+
+    Swal.fire({
+      title: 'Konfirmasi Tempat Tidur',
+      text: confirmText,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Ubah',
+      cancelButtonText: 'Batal'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch('controller/master/bedControllerPatient?toggle_status=1', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `id_bed=${id_bed}&bed_status=${newStatus}`
+        })
+        .then(res => res.json())
+        .then(resp => {
+          if (resp.status === 'success') {
+            Swal.fire({
+              icon: 'success',
+              title: 'Berhasil!',
+              text: resp.message || 'Status tempat tidur berhasil diperbarui.',
+              timer: 1500,
+              showConfirmButton: false
+            });
+            // Muat ulang data tempat tidur
+            fetch('controller/master/bedControllerPatient')
+              .then(r => r.json())
+              .then(r => {
+                allBeds = r.data;
+                let selectedClass = $('#filterClass').val();
+                let selectedRoom = $('#filterRoom').val();
+                let filtered = allBeds.filter(bed => {
+                  let matchClass = selectedClass ? bed.service_class?.trim().toLowerCase() === selectedClass.trim().toLowerCase() : true;
+                  let matchRoom = selectedRoom ? bed.room_name?.trim().toLowerCase() === selectedRoom.trim().toLowerCase() : true;
+                  return matchClass && matchRoom;
+                });
+                renderBedTable(filtered);
+              });
+          } else {
+            Swal.fire('Gagal', resp.message || 'Gagal mengubah status tempat tidur.', 'error');
+            $('.toggle-status-bed[data-id="' + id_bed + '"]').prop('checked', !isChecked);
+          }
+        })
+        .catch(() => {
+          Swal.fire('Error', 'Gagal terhubung ke server.', 'error');
+          $('.toggle-status-bed[data-id="' + id_bed + '"]').prop('checked', !isChecked);
+        });
+      } else {
+        $('.toggle-status-bed[data-id="' + id_bed + '"]').prop('checked', !isChecked);
+      }
+    });
+  });
 
   function buildFilter(data) {
 
