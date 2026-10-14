@@ -250,7 +250,7 @@ $apiUrl = getenv('API_URL');
               <div class="card stat-card card-total h-100 mb-0" onclick="applyCategoryFilter('all')">
                 <div class="card-body p-3 d-flex align-items-center justify-content-between">
                   <div>
-                    <span class="text-muted text-uppercase fs-2 fw-semibold">Total Item / Batch</span>
+                    <span class="text-muted text-uppercase fs-2 fw-semibold">Total Obat / Item</span>
                     <h3 class="fw-bold my-1 text-primary" id="statTotal">0</h3>
                     <span class="fs-2 text-muted">Seluruh obat terdata</span>
                   </div>
@@ -452,6 +452,10 @@ $apiUrl = getenv('API_URL');
 
   <script>
     const expiredApiUrl = 'controller/pharmacy/pharmacyExpiredController.php';
+
+    function escapeExpiredText(value) {
+      return $('<div>').text(value == null ? '' : String(value)).html();
+    }
 
     let tableExpired = null;
     let currentCategoryFilter = 'all';
@@ -752,6 +756,15 @@ $apiUrl = getenv('API_URL');
           {
             data: 'batch',
             render: function(data, type, row) {
+              if (row.batches && row.batches.length) {
+                if (type !== 'display') return row.batches.map(batch => batch.batch || '-').join(' ');
+                return row.batches.map(batch => `
+                  <div class="mb-2">
+                    <code>${escapeExpiredText(batch.batch || '-')}</code>
+                    <div class="fs-2 text-muted">${escapeExpiredText(batch.expired || 'Belum diatur')}</div>
+                  </div>
+                `).join('');
+              }
               const b = (data && data !== '-') ? `<code>${data}</code>` : '<span class="text-muted">-</span>';
               const faktur = row.nomor_faktur ? `<div class="fs-2 text-muted">Faktur: ${row.nomor_faktur}</div>` : '';
               return `<div><span class="fw-semibold">${b}</span>${faktur}</div>`;
@@ -759,7 +772,11 @@ $apiUrl = getenv('API_URL');
           },
           {
             data: 'supplier',
-            render: function(data) {
+            render: function(data, type, row) {
+              if (row.batches && row.batches.length) {
+                const suppliers = [...new Set(row.batches.map(batch => batch.supplier || '-'))];
+                return type === 'display' ? suppliers.map(escapeExpiredText).join('<br>') : suppliers.join(' ');
+              }
               return data ? `<span class="fs-2">${data}</span>` : '<span class="text-muted fs-2">-</span>';
             }
           },
@@ -806,6 +823,16 @@ $apiUrl = getenv('API_URL');
             className: 'text-center no-print',
             orderable: false,
             render: function(data, type, row) {
+              if (row.batches && row.batches.length) {
+                return row.batches.map(batch => `
+                  <button type="button" class="btn btn-sm btn-outline-primary btn-detail-batch mb-1"
+                          data-penerimaan="${escapeExpiredText(batch.id_penerimaan)}"
+                          data-pharmacy="${escapeExpiredText(row.id_pharmacy)}"
+                          title="Detail batch ${escapeExpiredText(batch.batch || '-')}">
+                    <i class="ti ti-eye"></i>
+                  </button>
+                `).join(' ');
+              }
               const idPenerimaan = row.id_penerimaan || '';
               const idPharmacy = row.id_pharmacy || '';
               return `

@@ -162,9 +162,67 @@ function calculateExpiryDifference($expiryDateStr)
 /**
  * Ambil daftar obat dan status kedaluwarsanya
  */
+function expiredMasterFilter($id_customer)
+{
+   global $koneksi;
+
+   $customer = $koneksi->real_escape_string((string) $id_customer);
+
+   return "
+      (mp.id_customer = '$customer' OR (
+         mp.id_customer = 0
+         AND NOT EXISTS (
+            SELECT 1 FROM ms_pharmacy_parrent visibility_log
+            WHERE visibility_log.parent_id = mp.id_pharmacy
+              AND visibility_log.id_customer_real = '$customer'
+         )
+      ))
+      AND NOT EXISTS (
+         SELECT 1 FROM ms_pharmacy_parrent delete_log
+         WHERE delete_log.parent_id = mp.id_pharmacy
+           AND delete_log.id_customer_real = '$customer'
+           AND delete_log.status_log = 'DELETE'
+      )
+      AND mp.pharmacy_name_generic IS NOT NULL
+      AND TRIM(mp.pharmacy_name_generic) != ''
+      AND mp.pharmacy_status = 1
+   ";
+}
+
+function groupExpiredMedicines($rows)
+{
+   $medicines = [];
+   foreach ($rows as $row) {
+      $key = (string) $row['id_pharmacy'];
+      if (!isset($medicines[$key])) {
+         $medicines[$key] = $row;
+         $medicines[$key]['batches'] = [];
+         $medicines[$key]['qty_masuk'] = 0;
+      }
+
+      $batches = $medicines[$key]['batches'];
+      $quantity = $medicines[$key]['qty_masuk'] + (float) ($row['qty_masuk'] ?? 0);
+      $expiry = $row['expired'] ?? null;
+      $currentExpiry = $medicines[$key]['expired'] ?? null;
+      if ($expiry && $expiry !== '0000-00-00' &&
+         (!$currentExpiry || $currentExpiry === '0000-00-00' || $expiry < $currentExpiry)) {
+         $medicines[$key] = $row;
+      }
+
+      if (!empty($row['id_penerimaan'])) {
+         $batches[] = $row;
+      }
+      $medicines[$key]['batches'] = $batches;
+      $medicines[$key]['qty_masuk'] = $quantity;
+   }
+   return array_values($medicines);
+}
+
 function getExpiredList($id_customer)
 {
    global $koneksi;
+
+   $masterFilter = expiredMasterFilter($id_customer);
 
    $kategoriFilter     = $_GET['kategori'] ?? 'all'; // all, aman, risiko, kadaluarsa, lainnya, kadaluarsa_lainnya
    $kategoriObatFilter = $_GET['category_obat'] ?? '';
@@ -202,10 +260,10 @@ function getExpiredList($id_customer)
          COALESCE(mp.stok_max, 0) AS stok_max,
          COALESCE(mp.pharmacy_stock, 0) AS stok_master
       FROM pharmacy_stock_penerimaan psp
-      LEFT JOIN ms_pharmacy mp 
+         INNER JOIN ms_pharmacy mp 
          ON CAST(mp.id_pharmacy AS CHAR) = CAST(psp.id_pharmacy AS CHAR)
-         AND CAST(mp.id_customer AS CHAR) = CAST(psp.id_customer AS CHAR)
       WHERE CAST(psp.id_customer AS CHAR) = CAST(? AS CHAR)
+            AND $masterFilter
 
       UNION ALL
 
@@ -234,11 +292,11 @@ function getExpiredList($id_customer)
          COALESCE(mp.stok_max, 0) AS stok_max,
          COALESCE(mp.pharmacy_stock, 0) AS stok_master
       FROM ms_pharmacy mp
-      WHERE CAST(mp.id_customer AS CHAR) = CAST(? AS CHAR)
+         WHERE $masterFilter
         AND NOT EXISTS (
             SELECT 1 FROM pharmacy_stock_penerimaan psp 
             WHERE CAST(psp.id_pharmacy AS CHAR) = CAST(mp.id_pharmacy AS CHAR) 
-              AND CAST(psp.id_customer AS CHAR) = CAST(mp.id_customer AS CHAR)
+                     AND CAST(psp.id_customer AS CHAR) = CAST(? AS CHAR)
         )
    ";
 
@@ -265,7 +323,7 @@ function getExpiredList($id_customer)
       'kadaluarsa_lainnya' => 0
    ];
 
-   while ($row = $result->fetch_assoc()) {
+   foreach (groupExpiredMedicines($result->fetch_all(MYSQLI_ASSOC)) as $row) {
       $diffInfo = calculateExpiryDifference($row['expired']);
       $kategori = $diffInfo['kategori'];
 
@@ -366,22 +424,29 @@ function getExpiredSummary($id_customer)
 {
    global $koneksi;
 
+   $masterFilter = expiredMasterFilter($id_customer);
+
    $sql = "
       SELECT 
+         psp.id_pharmacy,
          psp.expired
       FROM pharmacy_stock_penerimaan psp
+      INNER JOIN ms_pharmacy mp
+         ON CAST(mp.id_pharmacy AS CHAR) = CAST(psp.id_pharmacy AS CHAR)
       WHERE CAST(psp.id_customer AS CHAR) = CAST(? AS CHAR)
+        AND $masterFilter
 
       UNION ALL
 
       SELECT 
+         mp.id_pharmacy,
          NULL AS expired
       FROM ms_pharmacy mp
-      WHERE CAST(mp.id_customer AS CHAR) = CAST(? AS CHAR)
+         WHERE $masterFilter
         AND NOT EXISTS (
             SELECT 1 FROM pharmacy_stock_penerimaan psp 
             WHERE CAST(psp.id_pharmacy AS CHAR) = CAST(mp.id_pharmacy AS CHAR) 
-              AND CAST(psp.id_customer AS CHAR) = CAST(mp.id_customer AS CHAR)
+                     AND CAST(psp.id_customer AS CHAR) = CAST(? AS CHAR)
         )
    ";
 
@@ -404,7 +469,7 @@ function getExpiredSummary($id_customer)
       'kadaluarsa_lainnya' => 0
    ];
 
-   while ($row = $res->fetch_assoc()) {
+   foreach (groupExpiredMedicines($res->fetch_all(MYSQLI_ASSOC)) as $row) {
       $diff = calculateExpiryDifference($row['expired']);
       $kat  = $diff['kategori'];
 
@@ -437,6 +502,8 @@ function getExpiredDetail($id_customer)
 {
    global $koneksi;
 
+   $masterFilter = expiredMasterFilter($id_customer);
+
    $idPenerimaan = $_GET['id_penerimaan'] ?? null;
    $idPharmacy   = $_GET['id_pharmacy'] ?? null;
 
@@ -464,11 +531,11 @@ function getExpiredDetail($id_customer)
             mp.stok_max,
             mp.pharmacy_stock
          FROM pharmacy_stock_penerimaan psp
-         LEFT JOIN ms_pharmacy mp 
+             INNER JOIN ms_pharmacy mp 
             ON CAST(mp.id_pharmacy AS CHAR) = CAST(psp.id_pharmacy AS CHAR)
-            AND CAST(mp.id_customer AS CHAR) = CAST(psp.id_customer AS CHAR)
          WHERE psp.id_penerimaan = ?
            AND CAST(psp.id_customer AS CHAR) = CAST(? AS CHAR)
+                AND $masterFilter
          LIMIT 1
       ";
       $stmt = $koneksi->prepare($sql);
@@ -502,11 +569,11 @@ function getExpiredDetail($id_customer)
             mp.pharmacy_stock
          FROM ms_pharmacy mp
          WHERE mp.id_pharmacy = ?
-           AND CAST(mp.id_customer AS CHAR) = CAST(? AS CHAR)
+                AND $masterFilter
          LIMIT 1
       ";
       $stmt = $koneksi->prepare($sql);
-      $stmt->bind_param('is', $idPharmacy, $id_customer);
+         $stmt->bind_param('i', $idPharmacy);
    }
 
    $stmt->execute();

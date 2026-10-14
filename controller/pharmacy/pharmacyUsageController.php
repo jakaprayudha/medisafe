@@ -49,9 +49,38 @@ switch ($method) {
 /**
  * Mengambil daftar master obat untuk dropdown pencarian / pilihan obat
  */
+function usageMasterFilter($id_customer)
+{
+   global $koneksi;
+
+   $customer = $koneksi->real_escape_string((string) $id_customer);
+
+   return "
+      (mp.id_customer = '$customer' OR (
+         mp.id_customer = 0
+         AND NOT EXISTS (
+            SELECT 1 FROM ms_pharmacy_parrent visibility_log
+            WHERE visibility_log.parent_id = mp.id_pharmacy
+              AND visibility_log.id_customer_real = '$customer'
+         )
+      ))
+      AND NOT EXISTS (
+         SELECT 1 FROM ms_pharmacy_parrent delete_log
+         WHERE delete_log.parent_id = mp.id_pharmacy
+           AND delete_log.id_customer_real = '$customer'
+           AND delete_log.status_log = 'DELETE'
+      )
+      AND mp.pharmacy_name_generic IS NOT NULL
+      AND TRIM(mp.pharmacy_name_generic) != ''
+      AND mp.pharmacy_status = 1
+   ";
+}
+
 function getMedicinesList($id_customer)
 {
    global $koneksi;
+
+   $masterFilter = usageMasterFilter($id_customer);
 
    $search = trim($_GET['q'] ?? '');
 
@@ -71,7 +100,7 @@ function getMedicinesList($id_customer)
             INNER JOIN permintaan_pharmacy pp 
                ON pp.id_permintaan_farmasi = ppd.id_permintaan_farmasi
             WHERE ppd.id_pharmacy = mp.id_pharmacy
-              AND CAST(pp.id_customer AS CHAR) = CAST(mp.id_customer AS CHAR)
+                     AND CAST(pp.id_customer AS CHAR) = CAST(? AS CHAR)
          ) AS total_pasien_terlayani,
          (
             SELECT COALESCE(SUM(ppd.qty), 0)
@@ -79,14 +108,14 @@ function getMedicinesList($id_customer)
             INNER JOIN permintaan_pharmacy pp 
                ON pp.id_permintaan_farmasi = ppd.id_permintaan_farmasi
             WHERE ppd.id_pharmacy = mp.id_pharmacy
-              AND CAST(pp.id_customer AS CHAR) = CAST(mp.id_customer AS CHAR)
+                     AND CAST(pp.id_customer AS CHAR) = CAST(? AS CHAR)
          ) AS total_qty_terpakai
       FROM ms_pharmacy mp
-      WHERE CAST(mp.id_customer AS CHAR) = CAST(? AS CHAR)
+      WHERE $masterFilter
    ";
 
-   $params = [$id_customer];
-   $types  = 's';
+   $params = [$id_customer, $id_customer];
+   $types  = 'ss';
 
    if (!empty($search)) {
       $sql .= " AND (
@@ -135,6 +164,8 @@ function getUsageList($id_customer)
 {
    global $koneksi;
 
+   $masterFilter = usageMasterFilter($id_customer);
+
    $idPharmacy = trim($_GET['id_pharmacy'] ?? '');
    $fromDate   = trim($_GET['fromDate'] ?? '');
    $toDate     = trim($_GET['toDate'] ?? '');
@@ -143,7 +174,8 @@ function getUsageList($id_customer)
    $search     = trim($_GET['search'] ?? '');
 
    $whereClauses = [
-      "CAST(pp.id_customer AS CHAR) = CAST(? AS CHAR)"
+      "CAST(pp.id_customer AS CHAR) = CAST(? AS CHAR)",
+      $masterFilter
    ];
    $params = [$id_customer];
    $types  = 's';
@@ -257,7 +289,7 @@ function getUsageList($id_customer)
       INNER JOIN permintaan_pharmacy pp
          ON pp.id_permintaan_farmasi = ppd.id_permintaan_farmasi
 
-      LEFT JOIN ms_pharmacy mp
+      INNER JOIN ms_pharmacy mp
          ON mp.id_pharmacy = ppd.id_pharmacy
 
       LEFT JOIN pasien_visit pv
@@ -376,13 +408,13 @@ function getUsageList($id_customer)
             COALESCE(pharmacy_stock, 0) AS pharmacy_stock,
             stok_min,
             stok_max
-         FROM ms_pharmacy
-         WHERE id_pharmacy = ?
-           AND CAST(id_customer AS CHAR) = CAST(? AS CHAR)
+             FROM ms_pharmacy mp
+             WHERE mp.id_pharmacy = ?
+                AND $masterFilter
          LIMIT 1
       ");
       if ($stmtInfo) {
-         $stmtInfo->bind_param('is', $idPharmacy, $id_customer);
+         $stmtInfo->bind_param('i', $idPharmacy);
          $stmtInfo->execute();
          $selectedPharmacyInfo = $stmtInfo->get_result()->fetch_assoc();
          $stmtInfo->close();
@@ -411,6 +443,8 @@ function getUsageList($id_customer)
 function getUsageDetail($id_customer)
 {
    global $koneksi;
+
+   $masterFilter = usageMasterFilter($id_customer);
 
    $idDetail = $_GET['id_pharmacy_details'] ?? null;
    if (!$idDetail) {
@@ -454,10 +488,11 @@ function getUsageDetail($id_customer)
       FROM permintaan_pharmacy_details ppd
       INNER JOIN permintaan_pharmacy pp 
          ON pp.id_permintaan_farmasi = ppd.id_permintaan_farmasi
-      LEFT JOIN ms_pharmacy mp 
+      INNER JOIN ms_pharmacy mp 
          ON mp.id_pharmacy = ppd.id_pharmacy
       LEFT JOIN pasien_visit pv 
          ON pv.visit_ID = pp.id_visit
+         AND CAST(pv.id_customer AS CHAR) = CAST(pp.id_customer AS CHAR)
       LEFT JOIN ms_patient p 
          ON p.id_patient = pv.id_patient
       LEFT JOIN ms_doctor md 
@@ -468,6 +503,7 @@ function getUsageDetail($id_customer)
          ON mprov.id_provider = pv.id_provider
       WHERE ppd.id_pharmacy_details = ?
         AND CAST(pp.id_customer AS CHAR) = CAST(? AS CHAR)
+            AND $masterFilter
       LIMIT 1
    ";
 
@@ -496,11 +532,12 @@ function getUsageDetail($id_customer)
          d.signa,
          d.catatan,
          d.harga,
-         COALESCE(m.pharmacy_name_generic, d.item_name) AS nama_obat,
-         m.pharmacy_unit
+         COALESCE(mp.pharmacy_name_generic, d.item_name) AS nama_obat,
+         mp.pharmacy_unit
       FROM permintaan_pharmacy_details d
-      LEFT JOIN ms_pharmacy m ON m.id_pharmacy = d.id_pharmacy
+      INNER JOIN ms_pharmacy mp ON mp.id_pharmacy = d.id_pharmacy
       WHERE d.id_permintaan_farmasi = ?
+        AND $masterFilter
       ORDER BY d.id_pharmacy_details ASC
    ");
    if ($stmtOther) {
