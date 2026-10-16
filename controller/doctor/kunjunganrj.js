@@ -151,6 +151,7 @@ $(function () {
               APP.cetak("#keluhan_utama", d.anamnesa || "");
               APP.cetak("#tindakan", d.tindakan || "");
               APP.cetak("#terapiObat", d.terapiObat || "");
+              APP.cetak("#kdnonSpesialis1", d.kdnonSpesialis1 || "false");
               //   APP.cetakhtml("#idUmur", d.umur);
               //   APP.cetakhtml("#nomor_bpjs", d.noKartu);
               //   APP.cetakhtml("#nomor_nik", d.patient_nik);
@@ -195,13 +196,14 @@ $(function () {
               }
               checkRujuk(d.subSpesialis, d.kdkhSpesialis);
               window.kdTacc = d.kdTacc;
-              window.alasanTacc = d.alasanTacc;
+              window.alasanTacc = d.alasanTacc = 'null' ? '': d.alasanTacc;
               window.kdKhusus = d.kdKhusus;
               window.subSpesialis = d.subSpesialis;
               window.kdSarana = d.kdSarana;
               window.tglEstRujuk = d.tglEstRujuk;
               window.kdfaskes = d.kdfaskes;
               window.nmfaskes = d.nmfaskes;
+              chackTacc();
               if (d.kdppk != "") {
                 $(".btn-print").removeClass("d-none");
               }
