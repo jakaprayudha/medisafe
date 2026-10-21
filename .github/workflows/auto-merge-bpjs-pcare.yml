@@ -17,6 +17,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: pkfi_deli_serdang
+          token: ${{ secrets.GH_PAT }}
 
       - name: Configure git identity
         run: |
