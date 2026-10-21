@@ -1,0 +1,18 @@
+name: Deploy pkfi_deli_serdang to server
+
+on:
+  push:
+    branches:
+      - pkfi_deli_serdang
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 76.13.21.22
+          username: root
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: deploy
