@@ -9,6 +9,9 @@
            <a href="module/admin/rme_inap?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
               <button class="nav-link <?= ($current == 'rme_inap.php') ? 'active' : '' ?>">Pemeriksaan Medis</button>
            </a>
+              <a href="module/admin/pemeriksaan_generalis_tubuh?no=<?= urlencode($_GET['no'] ?? '') ?>&rm=<?= urlencode($_GET['rm'] ?? '') ?>&rme=c">
+                 <button class="nav-link <?= ($current == 'pemeriksaan_generalis_tubuh.php') ? 'active' : '' ?>">Pemeriksaan Generalis Tubuh</button>
+              </a>
            <a href="module/admin/triase?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=c">
               <button class="nav-link <?= ($current == 'triase.php') ? 'active' : '' ?>">Triase</button>
            </a>
