@@ -30,3 +30,35 @@ jobs:
 
       - name: Push
         run: git push origin pkfi_deli_serdang
+
+      - name: Email on success
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: Medisafe CI
+          to: jakaprayudha3@gmail.com
+          subject: "✅ [medisafe] Auto-merge bpjs_pcare -> pkfi_deli_serdang sukses"
+          body: |
+            Auto-merge bpjs_pcare -> pkfi_deli_serdang berhasil.
+            Commit: ${{ github.sha }}
+            Detail: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Email on failure
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: Medisafe CI
+          to: jakaprayudha3@gmail.com
+          subject: "❌ [medisafe] Auto-merge bpjs_pcare -> pkfi_deli_serdang GAGAL"
+          body: |
+            Auto-merge bpjs_pcare -> pkfi_deli_serdang GAGAL (kemungkinan konflik merge).
+            Perlu di-cek dan di-merge manual.
+            Detail: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

@@ -16,3 +16,35 @@ jobs:
           username: root
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: deploy
+
+      - name: Email on success
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: Medisafe CI
+          to: jakaprayudha3@gmail.com
+          subject: "✅ [medisafe] Deploy ke server sukses"
+          body: |
+            Deploy pkfi_deli_serdang ke server berhasil.
+            Commit: ${{ github.sha }}
+            Detail: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Email on failure
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: Medisafe CI
+          to: jakaprayudha3@gmail.com
+          subject: "❌ [medisafe] Deploy ke server GAGAL"
+          body: |
+            Deploy pkfi_deli_serdang ke server GAGAL.
+            Perlu dicek manual, kemungkinan SSH/composer error di server.
+            Detail: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
