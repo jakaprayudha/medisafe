@@ -26,6 +26,29 @@ function generalisTubuhFields()
          'mukosa' => ['label' => 'Mukosa', 'storage_label' => 'Mukosa', 'options' => ['Hiperemis', 'Tidak Hiperemis']],
          'orofaring_massa' => ['label' => 'Massa', 'storage_label' => 'Orofaring - Massa', 'options' => ['Positif', 'Negatif']],
       ],
+      'Leher' => [
+         'kgb' => ['label' => 'KGB', 'storage_label' => 'Leher - KGB', 'options' => ['Membesar', 'Tidak Membesar']],
+         'kelenjar_thyroid' => ['label' => 'Kelenjar Thyroid', 'storage_label' => 'Leher - Kelenjar Thyroid', 'options' => ['Membesar', 'Tidak Membesar']],
+      ],
+      'Paru' => [
+         'ronkhi' => ['label' => 'Ronkhi', 'storage_label' => 'Paru - Ronkhi', 'options' => ['Positif', 'Negatif']],
+         'wheezing' => ['label' => 'Wheezing', 'storage_label' => 'Paru - Wheezing', 'options' => ['Positif', 'Negatif']],
+      ],
+      'Jantung' => [
+         'murmur' => ['label' => 'Murmur', 'storage_label' => 'Jantung - Murmur', 'options' => ['Positif', 'Negatif']],
+      ],
+      'Abdomen' => [
+         'bising_usus' => ['label' => 'Bising Usus', 'storage_label' => 'Abdomen - Bising Usus', 'options' => ['Positif', 'Negatif']],
+         'nyeri_tekan' => ['label' => 'Nyeri Tekan', 'storage_label' => 'Abdomen - Nyeri Tekan', 'options' => ['Positif', 'Negatif']],
+      ],
+      'Ekstremitas Atas' => [
+         'ekstremitas_atas_edema' => ['label' => 'Edema', 'storage_label' => 'Ekstremitas Atas - Edema', 'options' => ['Positif', 'Negatif']],
+         'ekstremitas_atas_parese' => ['label' => 'Parese', 'storage_label' => 'Ekstremitas Atas - Parese', 'options' => ['Positif', 'Negatif']],
+      ],
+      'Ekstremitas Bawah' => [
+         'ekstremitas_bawah_edema' => ['label' => 'Edema', 'storage_label' => 'Ekstremitas Bawah - Edema', 'options' => ['Positif', 'Negatif']],
+         'ekstremitas_bawah_parese' => ['label' => 'Parese', 'storage_label' => 'Ekstremitas Bawah - Parese', 'options' => ['Positif', 'Negatif']],
+      ],
    ];
 }
 
