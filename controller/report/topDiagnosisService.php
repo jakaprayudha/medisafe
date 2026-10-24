@@ -69,3 +69,45 @@ function topDiagnosisReport(mysqli $connection, string $customerId, array $input
    unset($row);
    return array_merge($period, ['data' => $rows, 'total_top10' => $total]);
 }
+
+function topDiagnosisPatientsSql(): string
+{
+   return "
+      SELECT DISTINCT pv.visit_ID,
+             COALESCE(NULLIF(ms.nomor_rm, ''), '-') AS nomor_rm,
+             COALESCE(NULLIF(ms.patient_name, ''), NULLIF(pv.patient_name_pcare, ''), '-') AS patient_name,
+             COALESCE(NULLIF(ms.patient_gender, ''), '-') AS patient_gender,
+             COALESCE(NULLIF(md.doctor_name, ''), NULLIF(pv.id_doctor, ''), '-') AS doctor_name
+      FROM pasien_visit pv
+      LEFT JOIN ms_patient ms ON ms.id_patient = pv.id_patient
+      LEFT JOIN ms_doctor md ON CAST(md.id_doctor AS CHAR) = CAST(pv.id_doctor AS CHAR)
+      WHERE pv.id_customer = ?
+        AND pv.visit_date >= ? AND pv.visit_date < ?
+        AND (pv.visit_status IS NULL OR pv.visit_status <> 99)
+        AND UPPER(TRIM(pv.diagnosa)) = ?
+      ORDER BY patient_name ASC, pv.visit_ID ASC
+   ";
+}
+
+function topDiagnosisPatients(mysqli $connection, string $customerId, array $input): array
+{
+   $period = topDiagnosisPeriod($input);
+   $code = $input['icd_code'] ?? '';
+   if (!is_string($code) || trim($code) === '' || strlen($code) > 32) {
+      throw new InvalidArgumentException('Kode diagnosis tidak valid.');
+   }
+   $code = strtoupper(trim($code));
+   $fromDate = $period['fromDate'];
+   $untilDate = (new DateTimeImmutable($period['toDate']))->modify('+1 day')->format('Y-m-d');
+   $statement = $connection->prepare(topDiagnosisPatientsSql());
+   if (!$statement) {
+      throw new RuntimeException('Gagal menyiapkan daftar pasien diagnosis.');
+   }
+   $statement->bind_param('ssss', $customerId, $fromDate, $untilDate, $code);
+   if (!$statement->execute()) {
+      throw new RuntimeException('Gagal mengambil daftar pasien diagnosis.');
+   }
+   $rows = $statement->get_result()->fetch_all(MYSQLI_ASSOC);
+   $statement->close();
+   return array_merge($period, ['icd_code' => $code, 'data' => $rows, 'total' => count($rows)]);
+}
