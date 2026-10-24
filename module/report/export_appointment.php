@@ -20,6 +20,7 @@ $fromDate = $_GET['fromDate'] ?? date('Y-m-d');
 $toDate   = $_GET['toDate']   ?? date('Y-m-d');
 $doctor   = $_GET['doctor']   ?? '';
 $provider = $_GET['provider'] ?? '';
+$gender   = $_GET['gender'] ?? '';
 
 $sql = "
     SELECT pv.visit_status, pv.noKartu, ms.patient_nik, pv.visit_date, pv.visit_time,
@@ -32,6 +33,11 @@ $sql = "
 ";
 if (!empty($doctor))   $sql .= " AND pv.id_doctor   = '$doctor'";
 if (!empty($provider)) $sql .= " AND pv.id_provider = '$provider'";
+if ($gender === 'pria') {
+    $sql .= " AND LOWER(TRIM(ms.patient_gender)) IN ('l', 'pria', 'laki-laki', 'laki laki') ";
+} elseif ($gender === 'wanita') {
+    $sql .= " AND LOWER(TRIM(ms.patient_gender)) IN ('p', 'wanita', 'perempuan') ";
+}
 $sql .= " ORDER BY pv.visit_date DESC, pv.visit_time DESC";
 
 $query = mysqli_query($koneksi, $sql);

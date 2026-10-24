@@ -203,6 +203,14 @@ require '../../controller/view.php';
                 <option value="">Semua Metode Pembayaran</option>
               </select>
             </div>
+            <div class="col-12 mb-3">
+              <label for="genderSelect" class="form-label mb-0">Gender</label>
+              <select name="genderSelect" class="form-select" id="genderSelect">
+                <option value="">Semua Gender</option>
+                <option value="pria">Pria</option>
+                <option value="wanita">Wanita</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -287,6 +295,7 @@ require '../../controller/view.php';
           d.doctor = $('#doctorSelect').val();
           d.provider = $('#providerSelect').val();
           d.poli = $('#poliSelect').val();
+          d.gender = $('#genderSelect').val();
         },
         dataSrc: function(json) {
           return json.data || [];
@@ -350,6 +359,7 @@ require '../../controller/view.php';
       $('#doctorSelect').val('');
       $('#providerSelect').val('');
       $('#poliSelect').val('');
+      $('#genderSelect').val('');
 
       table.ajax.reload();
     });
@@ -359,7 +369,8 @@ require '../../controller/view.php';
       let doctor   = $('#doctorSelect').val();
       let provider = $('#providerSelect').val();
 
-      let url = `module/report/export_appointment.php?fromDate=${fromDate}&toDate=${toDate}&doctor=${doctor}&provider=${provider}`;
+      let gender = $('#genderSelect').val();
+      let url = `module/report/export_appointment.php?fromDate=${fromDate}&toDate=${toDate}&doctor=${doctor}&provider=${provider}&gender=${encodeURIComponent(gender)}`;
       window.location.href = url;
     });
 
@@ -369,7 +380,8 @@ require '../../controller/view.php';
       let doctor   = $('#doctorSelect').val();
       let provider = $('#providerSelect').val();
 
-      let url = `module/report/print_appointment.php?fromDate=${fromDate}&toDate=${toDate}&doctor=${doctor}&provider=${provider}`;
+      let gender = $('#genderSelect').val();
+      let url = `module/report/print_appointment.php?fromDate=${fromDate}&toDate=${toDate}&doctor=${doctor}&provider=${provider}&gender=${encodeURIComponent(gender)}`;
       window.open(url, '_blank');
     });
   });
