@@ -5,6 +5,15 @@ require_once __DIR__ . '/generalisTubuhService.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
+set_exception_handler(static function (Throwable $error) {
+   error_log('Generalis Tubuh save failed: ' . get_class($error) . ' (' . $error->getCode() . ')');
+   http_response_code(500);
+   $message = $error instanceof mysqli_sql_exception && $error->getCode() === 1406
+      ? 'Kapasitas penyimpanan pemeriksaan belum cukup. Administrator perlu memperbarui kolom pemeriksaan_fisik menjadi TEXT.'
+      : 'Pemeriksaan gagal disimpan. Silakan coba kembali atau hubungi administrator.';
+   echo json_encode(['status' => 'error', 'message' => $message]);
+});
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
    http_response_code(405);
    echo json_encode(['status' => 'error', 'message' => 'Metode tidak diizinkan.']);
