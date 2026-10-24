@@ -10,6 +10,7 @@ $toDate   = $_GET['toDate'] ?? null;
 $doctor   = $_GET['doctor'] ?? null;
 $provider = $_GET['provider'] ?? null;
 $poli     = $_GET['poli'] ?? null;
+$gender   = $_GET['gender'] ?? '';
 
 $sql = "
 SELECT pv.*, mp.provider_name,  ms.patient_nik AS nik
@@ -48,6 +49,11 @@ if (!empty($poli)) {
    $sql .= " AND pv.id_poli = '$poli' ";
 }
 
+if ($gender === 'pria') {
+   $sql .= " AND LOWER(TRIM(ms.patient_gender)) IN ('l', 'pria', 'laki-laki', 'laki laki') ";
+} elseif ($gender === 'wanita') {
+   $sql .= " AND LOWER(TRIM(ms.patient_gender)) IN ('p', 'wanita', 'perempuan') ";
+}
 
 // =============================
 $sql .= " ORDER BY pv.visit_date DESC, pv.visit_time DESC ";

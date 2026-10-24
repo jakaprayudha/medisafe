@@ -5,6 +5,13 @@ $fromDate = $_GET['fromDate'] ?? date('Y-m-d');
 $toDate   = $_GET['toDate'] ?? date('Y-m-d');
 $doctor   = $_GET['doctor'] ?? '';
 $provider = $_GET['provider'] ?? '';
+$gender   = $_GET['gender'] ?? '';
+$genderFilter = '';
+if ($gender === 'pria') {
+   $genderFilter = " AND LOWER(TRIM(ms_patient.patient_gender)) IN ('l', 'pria', 'laki-laki', 'laki laki') ";
+} elseif ($gender === 'wanita') {
+   $genderFilter = " AND LOWER(TRIM(ms_patient.patient_gender)) IN ('p', 'wanita', 'perempuan') ";
+}
 session_start();
 $id_customer = $_SESSION['id_customer'] ?? null;
 
@@ -22,6 +29,7 @@ LEFT JOIN ms_patient
     AND DATE(pasien_visit.visit_date) BETWEEN '$fromDate' AND '$toDate'
     " . ($doctor ? " AND pasien_visit.id_doctor = '$doctor'" : "") . "
     " . ($provider ? " AND pasien_visit.id_provider = '$provider'" : "") . "
+      $genderFilter
   ORDER BY pasien_visit.visit_date DESC
 ");
 
