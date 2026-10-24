@@ -59,6 +59,7 @@
 
          <ul class="collapse-menu">
             <li><a href="module/admin/rpt_appointment">Appointment</a></li>
+            <li><a href="module/admin/rpt_diagnosis">10 Diagnosis ICD-10 Tertinggi</a></li>
             <li><a href="module/admin/rpt_ranap">Rawat Inap</a></li>
             <li><a href="module/admin/rpt_prosedur">Tindakan (Prosedur)</a></li>
             <li><a href="module/admin/rpt_farmasi">Farmasi</a></li>
