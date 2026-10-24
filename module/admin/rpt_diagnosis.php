@@ -48,11 +48,34 @@ if (($_SESSION['roles'] ?? '') !== 'admin') {
           <div class="table-responsive">
             <table class="table align-middle" id="diagnosisTable">
               <thead class="table-light">
-                <tr><th>Peringkat</th><th>Kode ICD-10</th><th>Diagnosis</th><th class="text-end">Jumlah Kunjungan</th></tr>
+                <tr><th>Peringkat</th><th>Kode ICD-10</th><th>Diagnosis</th><th class="text-end">Jumlah Kunjungan</th><th class="text-center">Aksi</th></tr>
               </thead>
-              <tbody><tr><td colspan="4" class="text-center py-4">Memuat data...</td></tr></tbody>
+              <tbody><tr><td colspan="5" class="text-center py-4">Memuat data...</td></tr></tbody>
             </table>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="diagnosisPatientsModal" tabindex="-1" aria-labelledby="diagnosisPatientsTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="diagnosisPatientsTitle">Daftar Pasien Diagnosis</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div id="diagnosisPatientsPeriod" class="text-muted mb-2"></div>
+          <div id="diagnosisPatientsStatus" class="mb-3" role="status" aria-live="polite"></div>
+          <div class="table-responsive">
+            <table class="table align-middle w-100" id="diagnosisPatientsTable">
+              <thead class="table-light"><tr><th>RM</th><th>Nama Pasien</th><th>Gender</th><th>Dokter</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
         </div>
       </div>
     </div>
@@ -65,6 +88,31 @@ if (($_SESSION['roles'] ?? '') !== 'admin') {
     const diagnosisError = document.getElementById('diagnosisError');
     const diagnosisTotal = document.getElementById('diagnosisTotal');
     let diagnosisRequest = null;
+    let diagnosisPatientsRequest = null;
+    const patientsModalElement = document.getElementById('diagnosisPatientsModal');
+    const patientsStatus = document.getElementById('diagnosisPatientsStatus');
+    const patientsTable = $('#diagnosisPatientsTable').DataTable({
+      data: [],
+      columns: ['nomor_rm', 'patient_name', 'patient_gender', 'doctor_name'].map(field => ({
+        data: field, defaultContent: '-', render: $.fn.dataTable.render.text()
+      })),
+      pageLength: 10,
+      order: [[1, 'asc']],
+      language: {
+        search: 'Cari Pasien:',
+        lengthMenu: 'Tampilkan _MENU_ data',
+        info: 'Menampilkan _START_ - _END_ dari _TOTAL_ kunjungan',
+        infoEmpty: 'Tidak ada data',
+        emptyTable: 'Tidak ada data pasien.',
+        zeroRecords: 'Tidak ada pasien yang sesuai pencarian.',
+        paginate: { next: 'Berikutnya', previous: 'Sebelumnya' }
+      }
+    });
+    patientsModalElement.addEventListener('shown.bs.modal', () => patientsTable.columns.adjust());
+    patientsModalElement.addEventListener('hidden.bs.modal', () => {
+      if (diagnosisPatientsRequest) diagnosisPatientsRequest.abort();
+      patientsTable.clear().draw();
+    });
 
     function diagnosisParams(format = 'json') {
       if (!diagnosisForm.reportValidity()) return null;
@@ -85,7 +133,7 @@ if (($_SESSION['roles'] ?? '') !== 'admin') {
       if (diagnosisRequest) diagnosisRequest.abort();
       const request = new AbortController();
       diagnosisRequest = request;
-      diagnosisBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Memuat data...</td></tr>';
+      diagnosisBody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Memuat data...</td></tr>';
       diagnosisTotal.textContent = 'Memuat data...';
       try {
         const response = await fetch(diagnosisApi + '?' + params, { signal: request.signal });
@@ -100,18 +148,61 @@ if (($_SESSION['roles'] ?? '') !== 'admin') {
             if (index === 3) cell.className = 'text-end fw-semibold';
             tableRow.appendChild(cell);
           }
+          const actionCell = document.createElement('td');
+          actionCell.className = 'text-center';
+          const actionButton = document.createElement('button');
+          actionButton.type = 'button';
+          actionButton.className = 'btn btn-sm btn-outline-primary diagnosis-patients';
+          actionButton.title = 'Lihat pasien ' + row.icd_code;
+          actionButton.setAttribute('aria-label', actionButton.title);
+          actionButton.innerHTML = '<i class="fas fa-users" aria-hidden="true"></i>';
+          actionButton.dataset.code = row.icd_code;
+          actionButton.dataset.name = row.diagnosis_name;
+          actionButton.dataset.fromDate = result.fromDate;
+          actionButton.dataset.toDate = result.toDate;
+          actionCell.appendChild(actionButton);
+          tableRow.appendChild(actionCell);
           diagnosisBody.appendChild(tableRow);
         }
-        if (!result.data.length) diagnosisBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Tidak ada data diagnosis pada periode ini.</td></tr>';
+        if (!result.data.length) diagnosisBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Tidak ada data diagnosis pada periode ini.</td></tr>';
         diagnosisTotal.textContent = 'Total kunjungan pada 10 diagnosis: ' + Number(result.total_top10).toLocaleString('id-ID');
       } catch (error) {
         if (error.name === 'AbortError') return;
         diagnosisError.textContent = error.message || 'Gagal terhubung ke server.';
         diagnosisError.classList.remove('d-none');
-        diagnosisBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Laporan gagal dimuat.</td></tr>';
+        diagnosisBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Laporan gagal dimuat.</td></tr>';
         diagnosisTotal.textContent = '-';
       }
     }
+
+    diagnosisBody.addEventListener('click', async event => {
+      const button = event.target.closest('.diagnosis-patients');
+      if (!button) return;
+      if (diagnosisPatientsRequest) diagnosisPatientsRequest.abort();
+      const request = new AbortController();
+      diagnosisPatientsRequest = request;
+      document.getElementById('diagnosisPatientsTitle').textContent = button.dataset.code + ' - ' + button.dataset.name;
+      document.getElementById('diagnosisPatientsPeriod').textContent = 'Periode: ' + button.dataset.fromDate + ' s/d ' + button.dataset.toDate;
+      patientsStatus.className = 'mb-3 text-muted';
+      patientsStatus.textContent = 'Memuat daftar pasien...';
+      patientsTable.clear().search('').draw();
+      bootstrap.Modal.getOrCreateInstance(patientsModalElement).show();
+      const params = new URLSearchParams({
+        action: 'patients', format: 'json', icd_code: button.dataset.code,
+        fromDate: button.dataset.fromDate, toDate: button.dataset.toDate
+      });
+      try {
+        const response = await fetch(diagnosisApi + '?' + params, { signal: request.signal });
+        const result = await response.json();
+        if (!response.ok || result.status !== 'success') throw new Error(result.message || 'Gagal memuat daftar pasien.');
+        patientsTable.clear().rows.add(result.data).draw();
+        patientsStatus.textContent = 'Jumlah kunjungan: ' + Number(result.total).toLocaleString('id-ID');
+      } catch (error) {
+        if (error.name === 'AbortError') return;
+        patientsStatus.className = 'mb-3 text-danger';
+        patientsStatus.textContent = error.message || 'Gagal memuat daftar pasien.';
+      }
+    });
 
     diagnosisForm.addEventListener('submit', event => { event.preventDefault(); loadDiagnosis(); });
     document.getElementById('diagnosisReset').addEventListener('click', () => { diagnosisForm.reset(); loadDiagnosis(); });

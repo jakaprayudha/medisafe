@@ -20,6 +20,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 try {
+   if (($_GET['action'] ?? '') === 'patients') {
+      $patients = topDiagnosisPatients($koneksi, (string) $_SESSION['id_customer'], $_GET);
+      header('Content-Type: application/json; charset=utf-8');
+      header('Cache-Control: no-store');
+      echo json_encode(array_merge(['status' => 'success'], $patients), JSON_UNESCAPED_UNICODE);
+      exit;
+   }
    $report = topDiagnosisReport($koneksi, (string) $_SESSION['id_customer'], $_GET);
    $title = '10 Diagnosis ICD-10 Tertinggi';
    $period = 'Periode: ' . $report['fromDate'] . ' s/d ' . $report['toDate'];
