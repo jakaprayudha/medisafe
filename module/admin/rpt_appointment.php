@@ -226,7 +226,8 @@ require '../../controller/view.php';
 
 <script>
   $(document).ready(function() {
-    $('#filterModal').on('show.bs.modal', function() {
+    // load options once; re-filling on every open wiped the chosen values
+    $('#filterModal').one('show.bs.modal', function() {
       loadDoctors();
       loadProviders();
     });
@@ -265,11 +266,6 @@ require '../../controller/view.php';
       });
     }
 
-
-    $('#btnApplyFilter').on('click', function() {
-      table.ajax.reload();
-      $('#filterModal').modal('hide');
-    });
     var today = new Date().toISOString().split('T')[0];
 
     // default tanggal
