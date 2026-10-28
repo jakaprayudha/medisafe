@@ -2,7 +2,7 @@
 <?php
 include '../../database/connect.php';
 
-$query = "SELECT id_provider, provider_name FROM ms_provider ORDER BY id ASC";
+$query = "SELECT id_provider, provider_name FROM ms_provider ORDER BY id_provider ASC";
 $result = mysqli_query($koneksi, $query);
 
 $data = [];
