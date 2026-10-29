@@ -196,7 +196,7 @@ $(function () {
               }
               checkRujuk(d.subSpesialis, d.kdkhSpesialis);
               window.kdTacc = d.kdTacc;
-              window.alasanTacc = d.alasanTacc = 'null' ? '': d.alasanTacc;
+              window.alasanTacc = d.alasanTacc = 'null' ? '' : d.alasanTacc;
               window.kdKhusus = d.kdKhusus;
               window.subSpesialis = d.subSpesialis;
               window.kdSarana = d.kdSarana;
@@ -379,8 +379,44 @@ $(function () {
   // BTN INSERT
   $("#simpan_pemeriksaan").on("click", function () {
     const btn = $(this);
+
     if (btn.prop("disabled")) return;
+
+    let isValid = true;
+
+    // Validasi semua field yang memiliki atribut required
+    $("#formPemeriksaan")
+      .find("input[required], select[required], textarea[required]")
+      .each(function () {
+        const field = $(this);
+
+        if (!this.checkValidity()) {
+          const label = field.attr("id")
+            ? $(`label[for="${field.attr("id")}"]`).first().text().replace("*", "").trim()
+            : "";
+
+          Swal.fire({
+            icon: "warning",
+            title: "Data Belum Lengkap",
+            text: `${label || field.attr("name") || "Field"} wajib diisi dengan nilai yang valid!`,
+            confirmButtonText: "OK",
+          }).then(() => {
+            field.trigger("focus");
+
+            if (this.reportValidity) {
+              this.reportValidity();
+            }
+          });
+
+          isValid = false;
+          return false; // Berhenti di field pertama yang tidak valid
+        }
+      });
+
+    if (!isValid) return;
+
     let data = $("#formPemeriksaan").serialize();
+
     $.ajax({
       url: APP.pemeriksaanSaveUrl || "controller/admisi/services/doctor/insertKunjungan.php",
       type: "POST",
@@ -414,7 +450,8 @@ $(function () {
         Swal.fire({
           icon: "error",
           title: "Gagal menyimpan",
-          text: xhr.responseJSON?.message || "Respons simpan tidak dapat dibaca. Periksa status kunjungan sebelum mencoba kembali.",
+          text: xhr.responseJSON?.message ||
+            "Respons simpan tidak dapat dibaca. Periksa status kunjungan sebelum mencoba kembali.",
         });
       },
       complete: function () {
@@ -660,11 +697,11 @@ $(function () {
           new Option("Rujuk Horizontal", "6", false, false)
         );
       }
-      
+
       // HAPUS ATAU COMMENT BARIS DI BAWAH INI
       // $("#kdStatusPulang").trigger("change"); 
     }
-    
+
     if (statusEdit) {
       $("#formTacc").removeClass("d-none");
       $("#kdTacc").val(kdTacc).trigger("change");

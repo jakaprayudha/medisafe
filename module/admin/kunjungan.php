@@ -192,7 +192,7 @@ $rm = $_GET['rm'];
                             id="suhu"
                             min="25"
                             max="45"
-                            step="0.1">
+                            step="0.1" required>
                           <span class="input-group-text"><b>℃</b></span>
                         </div>
                       </div>
@@ -200,7 +200,7 @@ $rm = $_GET['rm'];
                       <div class="col-md-2">
                         <label for="saturasi">Saturasi</label>
                         <div class="input-group mb-2">
-                          <input type="number" id="saturasi" name="saturasi" class="form-control">
+                          <input type="number" id="saturasi" name="saturasi" class="form-control" required>
                           <span class="input-group-text"><b>(Spo2 %)</b></span>
                         </div>
                       </div>
@@ -208,14 +208,14 @@ $rm = $_GET['rm'];
                       <div class="col-md-3">
                         <label for="bmi">BMI</label>
                         <div class="input-group mb-2">
-                          <input type="text" id="bmi" name="bmi" readonly class="form-control bg-light">
+                          <input type="text" id="bmi" name="bmi" readonly class="form-control bg-light" required>
                           <span class="input-group-text"><b>kg/m2</b></span>
                         </div>
                       </div>
                       <div class="col-md-3">
                         <label for="bmiKet">Keterangan BMI</label>
                         <div class="input-group mb-2">
-                          <input type="text" id="bmiKet" name="bmi_keterangan" readonly class="form-control bg-light">
+                          <input type="text" id="bmiKet" name="bmi_keterangan" readonly class="form-control bg-light" required>
                           <span class="input-group-text"><b>Ket</b></span>
                         </div>
                       </div>
