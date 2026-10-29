@@ -305,6 +305,46 @@ function getDetailStock()
    $data['stok_tersedia'] = $stok_tersedia;
 
 
+   /**
+    * ========================================================
+    * STOK AKHIR 30 HARI LALU
+    * ========================================================
+    *
+    * stok sekarang - masuk 30 hari + keluar 30 hari
+    */
+
+   $stmt30 = $koneksi->prepare("
+        SELECT
+            (SELECT COALESCE(SUM(jumlah), 0)
+               FROM pharmacy_stock_penerimaan
+              WHERE id_pharmacy = ?
+                AND id_customer = ?
+                AND tanggal >= CURDATE() - INTERVAL 30 DAY) AS masuk_30,
+            (SELECT COALESCE(SUM(qty), 0)
+               FROM permintaan_pharmacy_details
+              WHERE id_pharmacy = ?
+                AND status_item = 1
+                AND created_at >= CURDATE() - INTERVAL 30 DAY) AS keluar_30
+    ");
+
+   if (!$stmt30) {
+      echo json_encode([
+         'status'  => false,
+         'message' => $koneksi->error
+      ]);
+      return;
+   }
+
+   $stmt30->bind_param("ssi", $id_pharmacy, $id_customer, $id_pharmacy);
+   $stmt30->execute();
+   $row30 = $stmt30->get_result()->fetch_assoc();
+   $stmt30->close();
+
+   $data['stok_akhir_30'] = $stok_tersedia
+      - (int) $row30['masuk_30']
+      + (int) $row30['keluar_30'];
+
+
    echo json_encode([
       'status' => true,
       'data'   => $data
