@@ -977,8 +977,8 @@ date_default_timezone_set('Asia/Jakarta');
 
             <!-- Tambahan Input Lingkar Perut -->
             <div class="col-md-4 mt-2">
-              <label for="lingkar_perut" class="form-label">Lingkar Perut (cm)</label>
-              <input type="number" id="lingkar_perut" name="lingkar_perut" class="form-control">
+              <label for="lingkar_perut" class="form-label">Lingkar Perut (cm) <span class="text-danger">*</span></label>
+              <input type="number" id="lingkar_perut" name="lingkar_perut" required class="form-control">
             </div>
           </div>
 
@@ -1949,6 +1949,16 @@ date_default_timezone_set('Asia/Jakarta');
         icon: 'warning',
         title: 'Perhatian!',
         text: 'Tekanan darah (Sistole dan Diastole) harus diisi!',
+        confirmButtonText: 'Mengerti'
+      });
+      return;
+    }
+
+    if (!lingkarPerut) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Perhatian!',
+        text: 'Lingkar Perut harus diisi!',
         confirmButtonText: 'Mengerti'
       });
       return;
