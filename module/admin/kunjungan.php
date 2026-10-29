@@ -104,7 +104,7 @@ $rm = $_GET['rm'];
 
                       <!-- Lingkar Perut -->
                       <div class="col-md-2">
-                        <label for="lingkarPerut">Lingkar Perut</label>
+                        <label for="lingkarPerut">Lingkar Perut <span class="text-danger">*</span></label>
                         <div class="input-group mb-2">
                           <input
                             type="number"
@@ -113,7 +113,8 @@ $rm = $_GET['rm'];
                             id="lingkarPerut"
                             min="30"
                             max="200"
-                            step="0.1">
+                            step="0.1"
+                            required>
                           <span class="input-group-text">CM</span>
                         </div>
                       </div>
