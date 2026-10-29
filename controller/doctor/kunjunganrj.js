@@ -377,62 +377,98 @@ $(function () {
   });
 
   // BTN INSERT
-  $("#simpan_pemeriksaan").on("click", function () {
+
+  $("#simpan_pemeriksaan").on("click", function (e) {
+    e.preventDefault();
+
     const btn = $(this);
 
     if (btn.prop("disabled")) return;
 
+    // Hanya field berikut yang wajib diisi
+    const requiredFields = [
+      "tinggiBadan",
+      "beratBadan",
+      "lingkarPerut",
+      "sistole",
+      "diastole",
+      "respRate",
+      "heartRate",
+      "suhu",
+      "saturasi",
+      "bmi",
+      "bmiKet"
+    ];
+
     let isValid = true;
 
-    // Validasi semua field yang memiliki atribut required
+    // Hilangkan required dari field lain
     $("#formPemeriksaan")
-      .find("input[required], select[required], textarea[required]")
-      .each(function () {
-        const field = $(this);
+      .find("input, select, textarea")
+      .not(requiredFields.map(id => "#" + id).join(","))
+      .prop("required", false);
 
-        if (!this.checkValidity()) {
-          const label = field.attr("id")
-            ? $(`label[for="${field.attr("id")}"]`).first().text().replace("*", "").trim()
-            : "";
+    // Validasi hanya field yang ditentukan
+    for (const id of requiredFields) {
+      const field = $("#" + id);
 
-          Swal.fire({
-            icon: "warning",
-            title: "Data Belum Lengkap",
-            text: `${label || field.attr("name") || "Field"} wajib diisi dengan nilai yang valid!`,
-            confirmButtonText: "OK",
-          }).then(() => {
-            field.trigger("focus");
+      if (!field.length) {
+        Swal.fire({
+          icon: "error",
+          title: "Kesalahan Form",
+          text: `Field ${id} tidak ditemukan!`
+        });
+        isValid = false;
+        break;
+      }
 
-            if (this.reportValidity) {
-              this.reportValidity();
-            }
-          });
+      field.prop("required", true);
 
-          isValid = false;
-          return false; // Berhenti di field pertama yang tidak valid
-        }
-      });
+      if (!field[0].checkValidity()) {
+        const label = $(`label[for="${id}"]`)
+          .first()
+          .text()
+          .replace("*", "")
+          .trim();
+
+        Swal.fire({
+          icon: "warning",
+          title: "Data Belum Lengkap",
+          text: `${label || id} wajib diisi dengan nilai yang valid!`,
+          confirmButtonText: "OK"
+        }).then(() => {
+          field.trigger("focus");
+          field[0].reportValidity();
+        });
+
+        isValid = false;
+        break;
+      }
+    }
 
     if (!isValid) return;
 
-    let data = $("#formPemeriksaan").serialize();
+    const data = $("#formPemeriksaan").serialize();
 
     $.ajax({
-      url: APP.pemeriksaanSaveUrl || "controller/admisi/services/doctor/insertKunjungan.php",
+      url: APP.pemeriksaanSaveUrl ||
+        "controller/admisi/services/doctor/insertKunjungan.php",
       type: "POST",
       data: data,
       dataType: "json",
+
       beforeSend: function () {
         btn.prop("disabled", true);
         APP.load_btn_aktif(btn);
       },
+
       success: function (res) {
         if (res.success) {
           Swal.fire({
             title: "Berhasil",
             text: res.message,
             icon: "success",
-            confirmButtonText: "Ok",
+            confirmButtonText: "Ok"
           }).then((result) => {
             if (result.isConfirmed) {
               location.reload();
@@ -442,24 +478,27 @@ $(function () {
           Swal.fire({
             icon: "error",
             title: "Oops...",
-            text: res.message,
+            text: res.message
           });
         }
       },
+
       error: function (xhr) {
         Swal.fire({
           icon: "error",
           title: "Gagal menyimpan",
           text: xhr.responseJSON?.message ||
-            "Respons simpan tidak dapat dibaca. Periksa status kunjungan sebelum mencoba kembali.",
+            "Respons simpan tidak dapat dibaca. Periksa status kunjungan sebelum mencoba kembali."
         });
       },
+
       complete: function () {
         btn.prop("disabled", false);
         APP.load_btn_non(btn, "Simpan Pemeriksaan");
-      },
+      }
     });
   });
+
 
   // action Rujuk
   $("#kdStatusPulang").on("change", function () {
