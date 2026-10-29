@@ -431,6 +431,52 @@ $id_customer = $_SESSION['id_customer'] ?? '';
             </div>
 
 
+            <!-- STOCK AKHIR 30 HARI -->
+
+            <div class="col-xl-3 col-md-6">
+
+              <div class="card stock-card h-100">
+
+                <div class="card-body">
+
+                  <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                      <div class="stock-label">
+                        Stock Akhir / 30 hari
+                      </div>
+
+                      <div
+                        class="stock-number"
+                        id="stockAkhir30">
+
+                        0
+
+                      </div>
+
+                      <small class="text-muted">
+                        Satuan
+                      </small>
+
+                    </div>
+
+
+                    <div class="stock-icon">
+
+                      <i class="fas fa-clock-rotate-left"></i>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+
             <!-- TRANSAKSI -->
 
             <div class="col-xl-3 col-md-6">
@@ -1158,6 +1204,11 @@ $id_customer = $_SESSION['id_customer'] ?? '';
 
             $('#totalStock').text(
               formatNumber(d.stok_tersedia)
+            );
+
+
+            $('#stockAkhir30').text(
+              formatNumber(d.stok_akhir_30)
             );
 
 
