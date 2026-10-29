@@ -310,7 +310,8 @@ function getDetailStock()
     * STOK AKHIR 30 HARI LALU
     * ========================================================
     *
-    * stok sekarang - masuk 30 hari + keluar 30 hari
+    * Sama dengan laporan farmasi (rpt_farmasi) untuk periode 30 hari:
+    * stok awal + masuk 30 hari - keluar 30 hari
     */
 
    $stmt30 = $koneksi->prepare("
@@ -323,7 +324,6 @@ function getDetailStock()
             (SELECT COALESCE(SUM(qty), 0)
                FROM permintaan_pharmacy_details
               WHERE id_pharmacy = ?
-                AND status_item = 1
                 AND created_at >= CURDATE() - INTERVAL 30 DAY) AS keluar_30
     ");
 
@@ -340,9 +340,9 @@ function getDetailStock()
    $row30 = $stmt30->get_result()->fetch_assoc();
    $stmt30->close();
 
-   $data['stok_akhir_30'] = $stok_tersedia
-      - (int) $row30['masuk_30']
-      + (int) $row30['keluar_30'];
+   $data['stok_akhir_30'] = $stok_awal
+      + (int) $row30['masuk_30']
+      - (int) $row30['keluar_30'];
 
 
    echo json_encode([
