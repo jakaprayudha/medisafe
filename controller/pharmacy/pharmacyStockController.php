@@ -241,8 +241,8 @@ function getDetailStock()
     * TOTAL STOK KELUAR
     * ========================================================
     *
-    * Untuk sementara menggunakan status_item = 1
-    * sebagai item yang sudah keluar.
+    * Semua item permintaan dihitung, sama dengan
+    * laporan farmasi (rpt_farmasi).
     */
 
    $sqlKeluar = "
@@ -252,7 +252,6 @@ function getDetailStock()
         FROM permintaan_pharmacy_details
 
         WHERE id_pharmacy = ?
-        AND status_item = 1
     ";
 
    $stmtKeluar = $koneksi->prepare($sqlKeluar);
