@@ -163,7 +163,35 @@ SELECT
 
         0
 
-    ) AS stok_keluar
+    ) AS stok_keluar,
+
+
+    /* ========================================================
+       30 HARI TERAKHIR (termasuk hari ini)
+       ======================================================== */
+
+    COALESCE(
+        (
+            SELECT SUM(psp.jumlah)
+            FROM pharmacy_stock_penerimaan psp
+            WHERE
+                psp.id_pharmacy = CAST(p.id_pharmacy AS CHAR)
+                AND psp.id_customer = CAST(? AS CHAR)
+                AND psp.tanggal >= CURDATE() - INTERVAL 29 DAY
+        ),
+        0
+    ) AS masuk_30,
+
+    COALESCE(
+        (
+            SELECT SUM(pd.qty)
+            FROM permintaan_pharmacy_details pd
+            WHERE
+                pd.id_pharmacy = p.id_pharmacy
+                AND pd.created_at >= CURDATE() - INTERVAL 29 DAY
+        ),
+        0
+    ) AS keluar_30
 
 
 FROM ms_pharmacy p
@@ -228,12 +256,13 @@ if (!$stmt) {
 // ============================================================
 
 $stmt->bind_param(
-    "sssssii",
+    "ssssssii",
     $id_customer,
     $fromDate,
     $toDate,
     $fromDate,
     $toDate,
+    $id_customer,
     $id_customer,
     $id_customer
 );
@@ -268,7 +297,7 @@ $sheet->setTitle('Stok Farmasi');
 // JUDUL
 // ============================================================
 
-$sheet->mergeCells('A1:L1');
+$sheet->mergeCells('A1:M1');
 
 $sheet->setCellValue(
     'A1',
@@ -296,7 +325,7 @@ $sheet->getRowDimension(1)->setRowHeight(25);
 // PERIODE
 // ============================================================
 
-$sheet->mergeCells('A2:L2');
+$sheet->mergeCells('A2:M2');
 
 $sheet->setCellValue(
     'A2',
@@ -334,7 +363,8 @@ $headers = [
     'Stok Akhir',
     'Stok Min',
     'Stok Max',
-    'Nilai Stok'
+    'Nilai Stok',
+    'Stok Akhir / 30 hari'
 
 ];
 
@@ -395,7 +425,7 @@ $headerStyle = [
 
 
 $sheet
-    ->getStyle('A4:L4')
+    ->getStyle('A4:M4')
     ->applyFromArray($headerStyle);
 
 
@@ -474,6 +504,14 @@ while ($row = $result->fetch_assoc()) {
 
     $nilaiStok =
         $stokAkhir * $hargaBeli;
+
+
+    // Stok akhir 30 hari terakhir: awal + masuk - keluar
+
+    $stokAkhir30 =
+        $stokSaatIni
+        + (float) ($row['masuk_30'] ?? 0)
+        - (float) ($row['keluar_30'] ?? 0);
 
 
     // ========================================================
@@ -600,6 +638,11 @@ while ($row = $result->fetch_assoc()) {
         $nilaiStok
     );
 
+    $sheet->setCellValue(
+        'M' . $rowNum,
+        $stokAkhir30
+    );
+
 
     // ========================================================
     // FORMAT ANGKA
@@ -607,6 +650,12 @@ while ($row = $result->fetch_assoc()) {
 
     $sheet
         ->getStyle("F{$rowNum}:K{$rowNum}")
+        ->getNumberFormat()
+        ->setFormatCode('#,##0');
+
+
+    $sheet
+        ->getStyle("M{$rowNum}")
         ->getNumberFormat()
         ->setFormatCode('#,##0');
 
@@ -640,7 +689,7 @@ while ($row = $result->fetch_assoc()) {
     // ========================================================
 
     $sheet
-        ->getStyle("A{$rowNum}:L{$rowNum}")
+        ->getStyle("A{$rowNum}:M{$rowNum}")
         ->getAlignment()
         ->setVertical(
             Alignment::VERTICAL_CENTER
@@ -664,7 +713,7 @@ while ($row = $result->fetch_assoc()) {
 
 
     $sheet
-        ->getStyle("F{$rowNum}:L{$rowNum}")
+        ->getStyle("F{$rowNum}:M{$rowNum}")
         ->getAlignment()
         ->setHorizontal(
             Alignment::HORIZONTAL_RIGHT
@@ -676,7 +725,7 @@ while ($row = $result->fetch_assoc()) {
     // ========================================================
 
     $sheet
-        ->getStyle("A{$rowNum}:L{$rowNum}")
+        ->getStyle("A{$rowNum}:M{$rowNum}")
         ->applyFromArray([
 
             'borders' => [
@@ -704,12 +753,12 @@ while ($row = $result->fetch_assoc()) {
     if ($rowNum % 2 === 0) {
 
         $sheet
-            ->getStyle("B{$rowNum}:L{$rowNum}")
+            ->getStyle("B{$rowNum}:M{$rowNum}")
             ->getFill()
             ->setFillType(Fill::FILL_SOLID);
 
         $sheet
-            ->getStyle("B{$rowNum}:L{$rowNum}")
+            ->getStyle("B{$rowNum}:M{$rowNum}")
             ->getFill()
             ->getStartColor()
             ->setRGB('F8FAFC');
@@ -761,11 +810,19 @@ $sheet->setCellValue(
 );
 
 
+// Total stok akhir 30 hari
+
+$sheet->setCellValue(
+    "M{$totalRow}",
+    "=SUM(M5:M" . ($totalRow - 1) . ")"
+);
+
+
 // Total nilai stok
 
 $sheet->setCellValue(
     "L{$totalRow}",
-    "=SUM(L5:L" . ($totalRow - 1) . ")"
+    "=SUM(L5:M" . ($totalRow - 1) . ")"
 );
 
 
@@ -774,7 +831,7 @@ $sheet->setCellValue(
 // ============================================================
 
 $sheet
-    ->getStyle("A{$totalRow}:L{$totalRow}")
+    ->getStyle("A{$totalRow}:M{$totalRow}")
     ->applyFromArray([
 
         'font' => [
@@ -817,6 +874,12 @@ $sheet
 
 
 $sheet
+    ->getStyle("M{$totalRow}")
+    ->getNumberFormat()
+    ->setFormatCode('#,##0');
+
+
+$sheet
     ->getStyle("L{$totalRow}")
     ->getNumberFormat()
     ->setFormatCode(
@@ -841,7 +904,8 @@ $widths = [
     'I' => 15,
     'J' => 15,
     'K' => 15,
-    'L' => 22
+    'L' => 22,
+    'M' => 22
 
 ];
 
@@ -866,7 +930,7 @@ $sheet->freezePane('A5');
 // ============================================================
 
 $sheet->setAutoFilter(
-    "A4:L" . ($totalRow - 1)
+    "A4:M" . ($totalRow - 1)
 );
 
 
