@@ -319,11 +319,11 @@ function getDetailStock()
                FROM pharmacy_stock_penerimaan
               WHERE id_pharmacy = ?
                 AND id_customer = ?
-                AND tanggal >= CURDATE() - INTERVAL 30 DAY) AS masuk_30,
+                AND tanggal >= CURDATE() - INTERVAL 29 DAY) AS masuk_30,
             (SELECT COALESCE(SUM(qty), 0)
                FROM permintaan_pharmacy_details
               WHERE id_pharmacy = ?
-                AND created_at >= CURDATE() - INTERVAL 30 DAY) AS keluar_30
+                AND created_at >= CURDATE() - INTERVAL 29 DAY) AS keluar_30
     ");
 
    if (!$stmt30) {
