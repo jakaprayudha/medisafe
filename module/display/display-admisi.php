@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <title>Display Admisi Poliklinik</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    /* ===== BASE ===== */
     * {
       box-sizing: border-box;
     }
@@ -232,8 +232,83 @@
       flex: 1;
       overflow: hidden;
     }
+
+    /* Tambahan ruang video di kiri bawah */
+    .container {
+      min-height: 0;
+    }
+
+    .left-panel {
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .left-panel .card-call {
+      min-height: 0;
+      padding: 15px;
+      overflow: auto;
+    }
+
+    .left-panel .call-label {
+      font-size: clamp(18px, 2.6vh, 28px);
+      margin-bottom: 10px;
+    }
+
+    .left-panel .call-number {
+      font-size: clamp(28px, 6vh, 70px);
+      margin: 10px 0;
+      overflow-wrap: anywhere;
+    }
+
+    .left-panel .call-counter {
+      font-size: clamp(18px, 3vh, 32px);
+      padding: 10px 20px;
+    }
+
+    .admisi-video-panel {
+      flex: 0 0 50%;
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+      background: #000;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, .1);
+    }
+
+    .admisi-video-panel video {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .admisi-video-message {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: white;
+      text-align: center;
+    }
+
+    .admisi-video-message[hidden] {
+      display: none;
+    }
+
+    .admisi-video-start {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      padding: 10px 18px;
+      border: 0;
+      border-radius: 6px;
+      cursor: pointer;
+    }
   </style>
 </head>
+
 <body>
   <div class="header">
     <div class="header-title">
@@ -253,6 +328,28 @@
         <div>
           <div class="call-counter" id="callQueue">Menunggu...</div>
         </div>
+      </div>
+      <?php
+      $admisiVideoDir = dirname(__DIR__, 2) . '/video';
+      $admisiVideoUrl = '../../video/';
+      $admisiVideoFiles = [];
+      if (is_dir($admisiVideoDir) && is_readable($admisiVideoDir)) {
+        foreach (scandir($admisiVideoDir) ?: [] as $file) {
+          $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+          if (is_file($admisiVideoDir . '/' . $file) && in_array($extension, ['mp4'], true)) {
+            $admisiVideoFiles[] = $file;
+          }
+        }
+      }
+      natcasesort($admisiVideoFiles);
+      $admisiVideoPlaylist = array_map(function ($file) use ($admisiVideoUrl) {
+        return $admisiVideoUrl . rawurlencode($file);
+      }, array_values($admisiVideoFiles));
+      ?>
+      <div class="admisi-video-panel">
+        <video id="admisiVideo" autoplay muted playsinline preload="auto"></video>
+        <div id="admisiVideoMessage" class="admisi-video-message" hidden></div>
+        <button id="admisiVideoStart" class="admisi-video-start" type="button" hidden>Putar video</button>
       </div>
     </div>
     <div class="right-panel">
@@ -336,6 +433,7 @@
           }
         });
       }
+
       function renderCurrentPoli() {
         if (poliKeys.length === 0) return;
         let currentPoliName = poliKeys[currentPoliIndex];
@@ -389,6 +487,62 @@
       }
 
     });
+  </script>
+  <script>
+    (function() {
+      const playlist = <?= json_encode($admisiVideoPlaylist, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE) ?>;
+      const video = document.getElementById('admisiVideo');
+      const message = document.getElementById('admisiVideoMessage');
+      const startButton = document.getElementById('admisiVideoStart');
+      let index = 0,
+        failures = 0,
+        retryTimer;
+
+      function showMessage(text) {
+        message.textContent = text;
+        message.hidden = false;
+      }
+
+      function playVideo() {
+        const attempt = video.play();
+        if (attempt) attempt.catch(function(error) {
+          if (error.name === 'NotAllowedError') startButton.hidden = false;
+        });
+      }
+
+      function loadVideo() {
+        clearTimeout(retryTimer);
+        message.hidden = true;
+        startButton.hidden = true;
+        video.src = playlist[index];
+        video.load();
+        playVideo();
+      }
+      video.muted = true;
+      video.addEventListener('playing', function() {
+        failures = 0;
+        message.hidden = true;
+        startButton.hidden = true;
+      });
+      video.addEventListener('ended', function() {
+        index = (index + 1) % playlist.length;
+        loadVideo();
+      });
+      video.addEventListener('error', function() {
+        if (!playlist.length) return;
+        failures++;
+        if (failures >= playlist.length) {
+          showMessage('Video tidak dapat diputar. Periksa file dan alamat folder video.');
+          return;
+        }
+        index = (index + 1) % playlist.length;
+        retryTimer = setTimeout(loadVideo, 500);
+      });
+      startButton.addEventListener('click', playVideo);
+
+      if (playlist.length) loadVideo();
+      else showMessage('Belum ada video di folder video.');
+    })();
   </script>
 
 </body>
