@@ -163,7 +163,28 @@ SELECT
 
         0
 
-    ) AS stok_keluar
+    ) AS stok_keluar,
+
+    /* REALTIME (semua waktu) */
+    COALESCE(
+        (
+            SELECT SUM(psp2.jumlah)
+            FROM pharmacy_stock_penerimaan psp2
+            WHERE
+                psp2.id_pharmacy = CAST(p.id_pharmacy AS CHAR)
+                AND psp2.id_customer = CAST(? AS CHAR)
+        ),
+        0
+    ) AS masuk_all,
+
+    COALESCE(
+        (
+            SELECT SUM(pd2.qty)
+            FROM permintaan_pharmacy_details pd2
+            WHERE pd2.id_pharmacy = p.id_pharmacy
+        ),
+        0
+    ) AS keluar_all
 
 
 FROM ms_pharmacy p
@@ -226,12 +247,13 @@ if (!$stmt) {
 // ============================================================
 
 $stmt->bind_param(
-   "sssssii",
+   "ssssssii",
    $id_customer,
    $fromDate,
    $toDate,
    $fromDate,
    $toDate,
+   $id_customer,
    $id_customer,
    $id_customer
 );
@@ -793,7 +815,10 @@ function angka($number)
             // STOK AKHIR
             // =================================================
 
-            $stokAkhir = $stokSaatIni;
+            $stokAkhir =
+               $stokSaatIni
+               + (float) ($row['masuk_all'] ?? 0)
+               - (float) ($row['keluar_all'] ?? 0);
 
 
             // =================================================
