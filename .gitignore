@@ -12,3 +12,4 @@ models/proto/
 
 # Local IDE settings
 .vscode/
+/vendor/
