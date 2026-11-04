@@ -258,15 +258,24 @@ require '../../controller/view.php';
           },
           body: formData
         })
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) {
+            throw new Error('HTTP ' + res.status);
+          }
+          return res.json();
+        })
         .then(data => {
           if (data.status === 'success') {
             Swal.fire('Berhasil!', data.message, 'success');
             $('#programModal').modal('hide');
             table.ajax.reload(null, false);
           } else {
-            Swal.fire('Gagal!', data.message, 'error');
+            Swal.fire('Gagal!', data.message || 'Data gagal disimpan.', 'error');
           }
+        })
+        .catch(err => {
+          console.error('Simpan faskes gagal:', err);
+          Swal.fire('Gagal!', 'Tidak dapat terhubung ke server atau respons tidak valid. Silakan coba lagi.', 'error');
         });
     });
     // 🔹 Edit
