@@ -28,7 +28,9 @@
  * ============================================================
  */
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+   session_start();
+}
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -633,10 +635,16 @@ function getDatabaseStatus()
    global $koneksi;
 
 
-   if (
-      $koneksi &&
-      mysqli_ping($koneksi)
-   ) {
+   $ping = false;
+   if ($koneksi) {
+      $pingResult = @$koneksi->query('SELECT 1');
+      if ($pingResult) {
+         $ping = true;
+         mysqli_free_result($pingResult);
+      }
+   }
+
+   if ($ping) {
 
       return [
 
