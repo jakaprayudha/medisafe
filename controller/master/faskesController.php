@@ -4,6 +4,31 @@ include '../../database/connect.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
+/*
+|--------------------------------------------------------------------------
+| GLOBAL ERROR HANDLER
+|--------------------------------------------------------------------------
+| PHP 8.1+ melempar mysqli_sql_exception untuk error database.
+| Tanpa handler ini, exception membuat respons bukan JSON dan
+| fetch() di halaman gagal parsing tanpa pesan yang jelas.
+*/
+
+set_exception_handler(function (Throwable $e) {
+   error_log('faskesController error: ' . $e->getMessage());
+
+   if (!headers_sent()) {
+      http_response_code(500);
+      header('Content-Type: application/json; charset=utf-8');
+   }
+
+   echo json_encode([
+      'status'  => 'error',
+      'message' => 'Terjadi kesalahan pada server: ' . $e->getMessage()
+   ], JSON_UNESCAPED_UNICODE);
+
+   exit;
+});
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 
