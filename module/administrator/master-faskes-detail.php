@@ -10,6 +10,87 @@ require '../../controller/view.php';
   <?php
   require '../../assets/template/head.php';
   ?>
+  <style>
+    /* =========================
+       DATA FASKES - MODERN FORM
+    ========================= */
+    .faskes-section {
+      border: 1px solid #e9edf3;
+      border-radius: 14px;
+      background: #fff;
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+
+    .faskes-section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      background: #f8f9fc;
+      border-bottom: 1px solid #eef1f6;
+    }
+
+    .faskes-section-header .section-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .faskes-section-header h6 {
+      margin: 0;
+      font-weight: 700;
+      color: #2a3547;
+    }
+
+    .faskes-section-header small {
+      display: block;
+      color: #8a93a6;
+      font-size: 11px;
+      margin-top: 1px;
+    }
+
+    .faskes-section-body {
+      padding: 18px;
+    }
+
+    .faskes-section-body .form-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #5a6a85;
+      margin-bottom: 5px;
+    }
+
+    .faskes-section-body .form-control,
+    .faskes-section-body .form-select {
+      border-radius: 9px;
+      border-color: #dfe5ef;
+      font-size: 14px;
+    }
+
+    .faskes-section-body .form-control:focus,
+    .faskes-section-body .form-select:focus {
+      border-color: #635bff;
+      box-shadow: 0 0 0 3px rgba(99, 91, 255, .12);
+    }
+
+    .faskes-save-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 14px 18px;
+      background: #f8f9fc;
+      border: 1px solid #e9edf3;
+      border-radius: 14px;
+      position: sticky;
+      bottom: 10px;
+      z-index: 10;
+    }
+  </style>
 </head>
 
 <body>
@@ -65,34 +146,39 @@ require '../../controller/view.php';
                   <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
                     <div class="card-body p-4">
                       <form id="programForm">
-                        <div class="row">
-                          <input type="faskesForm" hidden name="id_faskes" id="faskes_id">
-                          <!-- 🏥 INFORMASI FASKES -->
-                          <div class="col-12 mb-4">
-                            <h5>🏥 Informasi Faskes</h5>
-                            <hr />
-                            <div class="row">
-                              <div class="col-6 mb-3">
-                                <label>Faskes Code</label>
-                                <input type="text" name="faskes_code" class="form-control" />
-                              </div>
+                        <input type="hidden" name="id_faskes" id="faskes_id">
 
-                              <div class="col-6 mb-3">
-                                <label>Faskes Name</label>
-                                <input type="text" name="faskes_name" class="form-control" />
+                        <!-- 🏥 INFORMASI FASKES -->
+                        <div class="faskes-section">
+                          <div class="faskes-section-header">
+                            <div class="section-icon bg-primary-subtle text-primary">
+                              <iconify-icon icon="solar:hospital-bold-duotone"></iconify-icon>
+                            </div>
+                            <div>
+                              <h6>Informasi Faskes</h6>
+                              <small>Identitas dan status faskes</small>
+                            </div>
+                          </div>
+                          <div class="faskes-section-body">
+                            <div class="row g-3">
+                              <div class="col-md-6">
+                                <label class="form-label">Faskes Code</label>
+                                <input type="text" name="faskes_code" class="form-control" placeholder="Kode faskes" />
                               </div>
-
-                              <div class="col-6 mb-3">
-                                <label>Status</label>
+                              <div class="col-md-6">
+                                <label class="form-label">Faskes Name</label>
+                                <input type="text" name="faskes_name" class="form-control" placeholder="Nama faskes" />
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label">Status</label>
                                 <select name="faskes_status" class="form-select">
                                   <option value="">-- Pilih Status --</option>
                                   <option value="1">Aktif</option>
                                   <option value="0">Nonaktif</option>
                                 </select>
                               </div>
-
-                              <div class="col-6 mb-3">
-                                <label>Metode Pembayaran</label>
+                              <div class="col-md-6">
+                                <label class="form-label">Metode Pembayaran</label>
                                 <select name="faskes_payment" class="form-select">
                                   <option value="">-- Pilih Metode --</option>
                                   <option value="Tunai">Tunai</option>
@@ -101,105 +187,120 @@ require '../../controller/view.php';
                               </div>
                             </div>
                           </div>
+                        </div>
 
-                          <!-- 👤 PIC -->
-                          <div class="col-12 mb-4">
-                            <h5>👤 PIC (Penanggung Jawab)</h5>
-                            <hr />
-                            <div class="row">
-                              <div class="col-6 mb-3">
-                                <label>Nama PIC</label>
-                                <input type="text" name="pic_name" class="form-control" />
+                        <!-- 👤 PIC -->
+                        <div class="faskes-section">
+                          <div class="faskes-section-header">
+                            <div class="section-icon bg-success-subtle text-success">
+                              <iconify-icon icon="solar:user-id-bold-duotone"></iconify-icon>
+                            </div>
+                            <div>
+                              <h6>PIC (Penanggung Jawab)</h6>
+                              <small>Kontak penanggung jawab faskes</small>
+                            </div>
+                          </div>
+                          <div class="faskes-section-body">
+                            <div class="row g-3">
+                              <div class="col-md-6">
+                                <label class="form-label">Nama PIC</label>
+                                <input type="text" name="pic_name" class="form-control" placeholder="Nama lengkap PIC" />
                               </div>
-
-                              <div class="col-6 mb-3">
-                                <label>No HP PIC</label>
-                                <input type="text" name="pic_phone" class="form-control" />
+                              <div class="col-md-6">
+                                <label class="form-label">No HP PIC</label>
+                                <input type="text" name="pic_phone" class="form-control" placeholder="08xxxxxxxxxx" />
                               </div>
-
-                              <div class="col-6 mb-3">
-                                <label>Email PIC</label>
-                                <input type="email" name="pic_email" class="form-control" />
+                              <div class="col-md-6">
+                                <label class="form-label">Email PIC</label>
+                                <input type="email" name="pic_email" class="form-control" placeholder="email@faskes.id" />
                               </div>
                             </div>
                           </div>
+                        </div>
 
-                          <!-- 📍 ALAMAT -->
-                          <div class="col-12 mb-4">
-                            <h5>📍 Alamat</h5>
-                            <hr />
-                            <div class="row">
-                              <div class="col-6 mb-3">
-                                <label>Alamat</label>
-                                <input type="text" name="faskes_address" class="form-control" />
+                        <!-- 📍 ALAMAT -->
+                        <div class="faskes-section">
+                          <div class="faskes-section-header">
+                            <div class="section-icon bg-warning-subtle text-warning">
+                              <iconify-icon icon="solar:map-point-bold-duotone"></iconify-icon>
+                            </div>
+                            <div>
+                              <h6>Alamat</h6>
+                              <small>Domisili faskes</small>
+                            </div>
+                          </div>
+                          <div class="faskes-section-body">
+                            <div class="row g-3">
+                              <div class="col-12">
+                                <label class="form-label">Alamat</label>
+                                <input type="text" name="faskes_address" class="form-control" placeholder="Alamat lengkap" />
                               </div>
-
-                              <div class="col-6 mb-3">
-                                <label>Provinsi</label>
-                                <input type="text" name="faskes_prov" class="form-control" />
+                              <div class="col-md-6">
+                                <label class="form-label">Provinsi</label>
+                                <input type="text" name="faskes_prov" class="form-control" placeholder="Provinsi" />
                               </div>
-
-                              <div class="col-6 mb-3">
-                                <label>Kota</label>
-                                <input type="text" name="faskes_city" class="form-control" />
+                              <div class="col-md-6">
+                                <label class="form-label">Kota</label>
+                                <input type="text" name="faskes_city" class="form-control" placeholder="Kota/Kabupaten" />
                               </div>
-
-                              <div class="col-6 mb-3">
-                                <label>Kecamatan</label>
-                                <input type="text" name="faskes_district" class="form-control" />
+                              <div class="col-md-6">
+                                <label class="form-label">Kecamatan</label>
+                                <input type="text" name="faskes_district" class="form-control" placeholder="Kecamatan" />
                               </div>
-
-                              <div class="col-6 mb-3">
-                                <label>Kelurahan</label>
-                                <input type="text" name="faskes_village" class="form-control" />
+                              <div class="col-md-6">
+                                <label class="form-label">Kelurahan</label>
+                                <input type="text" name="faskes_village" class="form-control" placeholder="Kelurahan/Desa" />
                               </div>
                             </div>
                           </div>
+                        </div>
 
-                          <!-- 📄 KONTRAK -->
-                          <div class="col-12 mb-4">
-                            <h5>📄 Informasi Kontrak</h5>
-                            <hr />
-                            <div class="row">
-                              <div class="col-6 mb-3">
-                                <label>Contract Number</label>
-                                <input type="text" name="contract_number" class="form-control" />
+                        <!-- 📄 KONTRAK -->
+                        <div class="faskes-section">
+                          <div class="faskes-section-header">
+                            <div class="section-icon bg-danger-subtle text-danger">
+                              <iconify-icon icon="solar:document-bold-duotone"></iconify-icon>
+                            </div>
+                            <div>
+                              <h6>Informasi Kontrak</h6>
+                              <small>Detail kontrak kerja sama</small>
+                            </div>
+                          </div>
+                          <div class="faskes-section-body">
+                            <div class="row g-3">
+                              <div class="col-md-6">
+                                <label class="form-label">Contract Number</label>
+                                <input type="text" name="contract_number" class="form-control" placeholder="Nomor kontrak" />
                               </div>
-
-                              <div class="col-6 mb-3">
-                                <label>Order Number</label>
+                              <div class="col-md-6">
+                                <label class="form-label">Order Number</label>
                                 <input type="text" readonly name="order_number" class="form-control bg-light" />
                               </div>
-
-                              <div class="col-6 mb-3">
-                                <label>Contract Date</label>
+                              <div class="col-md-6">
+                                <label class="form-label">Contract Date</label>
                                 <input type="date" name="contract_date" class="form-control" />
                               </div>
-
-                              <div class="col-6 mb-3">
-                                <label>Contract Start</label>
+                              <div class="col-md-6">
+                                <label class="form-label">Contract Amount</label>
+                                <input type="number" name="contract_amount" class="form-control" placeholder="0" />
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label">Contract Start</label>
                                 <input type="date" name="contract_start" class="form-control" />
                               </div>
-
-                              <div class="col-6 mb-3">
-                                <label>Contract End</label>
+                              <div class="col-md-6">
+                                <label class="form-label">Contract End</label>
                                 <input type="date" name="contract_end" class="form-control" />
-                              </div>
-
-                              <div class="col-6 mb-3">
-                                <label>Contract Amount</label>
-                                <input type="number" name="contract_amount" class="form-control" />
                               </div>
                             </div>
                           </div>
+                        </div>
 
-                          <!-- BUTTON -->
-                          <div class="col-12 text-end mt-3">
-                            <button type="submit" class="btn btn-primary">
-                              💾 Simpan Data
-                            </button>
-                          </div>
-
+                        <!-- BUTTON -->
+                        <div class="faskes-save-bar">
+                          <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Simpan Data
+                          </button>
                         </div>
                       </form>
                     </div>

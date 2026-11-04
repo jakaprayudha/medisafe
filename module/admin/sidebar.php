@@ -2,8 +2,8 @@
 $role = $_SESSION['roles']; // ambil dari session login
 $id_customer = $_SESSION['id_customer'];
 $checkstatus = mysqli_query($koneksi, "SELECT status_farmasi_kasir FROM setting_clinic LEFT JOIN ms_faskes ON ms_faskes.id_clinic = setting_clinic.id WHERE setting_clinic.id_customer = '$id_customer' LIMIT 1");
-$datafaskes = mysqli_fetch_array($checkstatus);
-$statusfarmasikasir = $datafaskes['status_farmasi_kasir'];
+$datafaskes = ($checkstatus instanceof mysqli_result) ? mysqli_fetch_array($checkstatus) : null;
+$statusfarmasikasir = $datafaskes['status_farmasi_kasir'] ?? null;
 ?>
 <!-- Sidebar Start -->
 <aside class="left-sidebar">
