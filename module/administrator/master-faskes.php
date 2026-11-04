@@ -41,6 +41,59 @@ require '../../controller/view.php';
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
                     </div>
                   </div>
+
+                  <!-- 🔹 Kartu Statistik Faskes -->
+                  <div class="row g-3 mb-4" id="faskesStats">
+                    <div class="col-xl-3 col-sm-6">
+                      <div class="card border shadow-none h-100 mb-0">
+                        <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                          <div>
+                            <span class="text-muted text-uppercase fs-2 fw-semibold">Total Faskes</span>
+                            <h3 class="fw-bold my-1 text-primary" id="statTotalFaskes">0</h3>
+                            <span class="fs-2 text-muted">Faskes terdaftar</span>
+                          </div>
+                          <iconify-icon icon="solar:hospital-bold-duotone" class="fs-8 text-primary"></iconify-icon>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                      <div class="card border shadow-none h-100 mb-0">
+                        <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                          <div>
+                            <span class="text-muted text-uppercase fs-2 fw-semibold">Total Biaya Penerimaan</span>
+                            <h4 class="fw-bold my-1 text-success" id="statTotalBiaya">Rp 0</h4>
+                            <span class="fs-2 text-muted">Akumulasi nilai kontrak</span>
+                          </div>
+                          <iconify-icon icon="solar:wallet-money-bold-duotone" class="fs-8 text-success"></iconify-icon>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                      <div class="card border shadow-none h-100 mb-0">
+                        <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                          <div>
+                            <span class="text-muted text-uppercase fs-2 fw-semibold">Belum Kontrak</span>
+                            <h3 class="fw-bold my-1 text-secondary" id="statBelumKontrak">0</h3>
+                            <span class="fs-2 text-muted">Belum memiliki kontrak</span>
+                          </div>
+                          <iconify-icon icon="solar:document-add-bold-duotone" class="fs-8 text-secondary"></iconify-icon>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                      <div class="card border shadow-none h-100 mb-0">
+                        <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                          <div>
+                            <span class="text-muted text-uppercase fs-2 fw-semibold">Kontrak Akan Habis</span>
+                            <h3 class="fw-bold my-1 text-danger" id="statAkanHabis">0</h3>
+                            <span class="fs-2 text-muted">Berakhir dalam 30 hari</span>
+                          </div>
+                          <iconify-icon icon="solar:alarm-bold-duotone" class="fs-8 text-danger"></iconify-icon>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div class="table-responsive" data-simplebar>
                     <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
                       <thead>
@@ -136,6 +189,46 @@ require '../../controller/view.php';
 
 <script>
   const apiUrl = 'controller/master/faskesController';
+
+  // 🔹 Hitung statistik faskes dari data tabel
+  function updateFaskesStats(data) {
+    if (!Array.isArray(data)) return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const batasHabis = new Date(today);
+    batasHabis.setDate(batasHabis.getDate() + 30);
+
+    let totalBiaya = 0;
+    let belumKontrak = 0;
+    let akanHabis = 0;
+
+    data.forEach(function(row) {
+      totalBiaya += parseFloat(row.contract_amount) || 0;
+
+      const punyaKontrak = (row.contract_number && String(row.contract_number).trim() !== '') ||
+        (row.contract_start && String(row.contract_start).trim() !== '') ||
+        (row.contract_end && String(row.contract_end).trim() !== '');
+
+      if (!punyaKontrak) {
+        belumKontrak++;
+        return;
+      }
+
+      if (row.contract_end) {
+        const end = new Date(row.contract_end + 'T00:00:00');
+        if (!isNaN(end.getTime()) && end >= today && end <= batasHabis) {
+          akanHabis++;
+        }
+      }
+    });
+
+    $('#statTotalFaskes').text(data.length.toLocaleString('id-ID'));
+    $('#statTotalBiaya').text('Rp ' + totalBiaya.toLocaleString('id-ID'));
+    $('#statBelumKontrak').text(belumKontrak.toLocaleString('id-ID'));
+    $('#statAkanHabis').text(akanHabis.toLocaleString('id-ID'));
+  }
+
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
       processing: true,
@@ -145,6 +238,7 @@ require '../../controller/view.php';
         url: apiUrl,
         type: "GET",
         dataSrc: function(json) {
+          updateFaskesStats(json.data || []);
           return json.data.map(function(row) {
             return {
               "actions": `
@@ -164,7 +258,7 @@ require '../../controller/view.php';
                     `,
               "id": row.id_customer,
               "pks": row.contract_number,
-              "code": row.faskes_code,
+              "code": row.kode_ppk || row.faskes_code || '-',
               "name": row.clinic_name,
               "pic": row.fullname ? `${row.fullname}` : '-',
               "start": row.contract_start,

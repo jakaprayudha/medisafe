@@ -1186,6 +1186,8 @@ function getData()
             ms_faskes.contract_amount,
             ms_faskes.order_number,
 
+            setting_pcare.KodePPK AS kode_ppk,
+
             ms_users.fullname,
             ms_users.username,
             ms_users.password
@@ -1195,6 +1197,10 @@ function getData()
         LEFT JOIN ms_faskes
             ON setting_clinic.id =
                ms_faskes.id_clinic
+
+        LEFT JOIN setting_pcare
+            ON setting_pcare.id_customer =
+               setting_clinic.id_customer
 
         LEFT JOIN ms_users
             ON ms_users.id_customer =
