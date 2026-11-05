@@ -27,6 +27,16 @@
          </a>
       </li>
       <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Verifikasi eKYC') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/administrator/ekyc_verify"
+            aria-expanded="false">
+            <iconify-icon icon="solar:shield-user-bold-duotone"></iconify-icon>
+            <span class="hide-menu">Verifikasi eKYC</span>
+         </a>
+      </li>
+      <li class="sidebar-item">
          <a class="sidebar-link <?php if ($title == 'Data Import') {
                                     echo 'active';
                                  } ?>"
