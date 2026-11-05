@@ -1087,8 +1087,24 @@ html
               return;
             }
 
-            el.value =
-              data[key] ?? '';
+            /*
+             * Tanggal kosong dari proses lama tersimpan
+             * sebagai 1970-01-01 / 0000-00-00.
+             * Jangan isi input date dengan nilai tersebut.
+             */
+            let fieldValue = data[key] ?? '';
+
+            if (
+              el.type === 'date' &&
+              (
+                fieldValue === '1970-01-01' ||
+                fieldValue === '0000-00-00'
+              )
+            ) {
+              fieldValue = '';
+            }
+
+            el.value = fieldValue;
           });
         });
 

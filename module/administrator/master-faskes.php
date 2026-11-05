@@ -190,6 +190,14 @@ require '../../controller/view.php';
 <script>
   const apiUrl = 'controller/master/faskesController';
 
+  // 🔹 Tanggal kontrak kosong tersimpan sebagai 1970-01-01/0000-00-00 oleh proses lama → tampilkan '-'
+  function cleanContractDate(value) {
+    if (!value) return '-';
+    const v = String(value).trim();
+    if (v === '0000-00-00' || v === '1970-01-01' || v === '' || v.toLowerCase() === 'null') return '-';
+    return v;
+  }
+
   // 🔹 Hitung statistik faskes dari data tabel
   function updateFaskesStats(data) {
     if (!Array.isArray(data)) return;
@@ -261,8 +269,8 @@ require '../../controller/view.php';
               "code": row.kode_ppk || row.faskes_code || '-',
               "name": row.clinic_name,
               "pic": row.fullname ? `${row.fullname}` : '-',
-              "start": row.contract_start,
-              "end": row.contract_end,
+              "start": cleanContractDate(row.contract_start),
+              "end": cleanContractDate(row.contract_end),
               "amount": row.contract_amount,
               "status": `
                 <label class="switch">
