@@ -176,6 +176,16 @@
             <span class="hide-menu">Surat</span>
          </a>
       </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'eKYC TTE') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/admin/ekyc_tte"
+            aria-expanded="false">
+            <iconify-icon icon="solar:shield-user-bold-duotone"></iconify-icon>
+            <span class="hide-menu">eKYC TTE</span>
+         </a>
+      </li>
       <li class="nav-small-cap">
          <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
          <span class="hide-menu">RME</span>
