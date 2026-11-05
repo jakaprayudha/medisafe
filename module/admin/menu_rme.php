@@ -22,6 +22,9 @@
         <a href="module/admin/vaksin?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=a">
            <button class="nav-link <?= ($current == 'vaksin.php') ? 'active' : '' ?>">Vaksin</button>
         </a>
+        <a href="module/admin/imunisasi?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=a">
+           <button class="nav-link <?= ($current == 'imunisasi.php') ? 'active' : '' ?>">Imunisasi</button>
+        </a>
         <a href="module/admin/billing?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=a">
            <button class="nav-link <?= ($current == 'billing.php') ? 'active' : '' ?>">Tindakan</button>
         </a>
