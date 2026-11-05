@@ -638,17 +638,23 @@ function saveFaskes()
     */
 
    $contract_date =
-      $contract_date !== ''
+      $contract_date !== '' &&
+      $contract_date !== '0000-00-00' &&
+      $contract_date !== '1970-01-01'
       ? $contract_date
       : null;
 
    $contract_start =
-      $contract_start !== ''
+      $contract_start !== '' &&
+      $contract_start !== '0000-00-00' &&
+      $contract_start !== '1970-01-01'
       ? $contract_start
       : null;
 
    $contract_end =
-      $contract_end !== ''
+      $contract_end !== '' &&
+      $contract_end !== '0000-00-00' &&
+      $contract_end !== '1970-01-01'
       ? $contract_end
       : null;
 
