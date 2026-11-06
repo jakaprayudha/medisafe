@@ -3,7 +3,7 @@ require '../../database/connect.php';
 
 if (isset($_POST['simpan_pemeriksaan'])) {
 
-   var_dump($_POST);die();
+   // var_dump($_POST);die();
    $rm = $_POST['nomor_rm'];
    $nomor_visit = $_POST['nomor_visit'];
    $id_patient = $_POST['id_patient'];
