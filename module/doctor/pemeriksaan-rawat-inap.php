@@ -208,7 +208,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                       </a>
                     </li>
                         <li>
-                        <a class="dropdown-item" href="module/admin/rme_inap?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
+                        <a class="dropdown-item" href="module/admin/rme_inap?no=${encodeURIComponent(row.visit_ID)}&rm=${encodeURIComponent(row.nomor_rm)}&rme=c">
                           <i class="bi bi-file-earmark-text me-2"></i>Pemeriksaan Rawat Inap
                         </a>
                       </li>
