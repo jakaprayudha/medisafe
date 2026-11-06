@@ -53,9 +53,9 @@ $data = mysqli_fetch_array($check);
               <div class="card w-100">
                 <div class="card-body p-4">
                   <form id="formPemeriksaan" class="p-4 border rounded shadow-sm" method="POST">
-                    <input type="hidden" name="nomor_rm" value="<?= $rm ?>">
-                    <input type="hidden" name="nomor_visit" value="<?= $no ?>">
-                    <input type="hidden" name="id_patient" id="id_patient" value="<?= $data['id_patient'] ?>" hidden>
+                    <input type="text" name="nomor_rm" value="<?= $rm ?>">
+                    <input type="text" name="nomor_visit" value="<?= $no ?>">
+                    <input type="text" name="id_patient" id="id_patient" value="<?= $data['id_patient'] ?>" hidden>
                     <h4 class="mb-3">Form Pemeriksaan Medis</h4>
                     <hr>
                     <?php
