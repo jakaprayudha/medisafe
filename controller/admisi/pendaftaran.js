@@ -128,6 +128,9 @@ $(function () {
                         APP.cetak('#Kelamin', sex === 'p' || sex === 'perempuan' ? "Perempuan" : "Laki - Laki");
                         APP.cetak('#tgllahir', response.data.tglLahir || '-');
                         APP.cetakhtml('#no_rekammedis', response.data.rm || '-');
+                        APP.cetakhtml('#jns_peserta', response.data.jnsPeserta || '-');
+                        APP.cetakhtml('#klsPeserta', response.data.jnsKelas.nama || '-');
+                        APP.cetakhtml('#hubunganKeluarga', response.data.hubunganKeluarga || '-');
                         APP.cetakhtml('#status_prolanis', response.data.informasi.prolanis ?? '');
                         APP.cetakhtml('#status_PRB', response.data.informasi.prb ?? '');
                         APP.cetak('#norm', response.data.rm || '-');

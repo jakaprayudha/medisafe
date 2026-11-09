@@ -31,6 +31,15 @@
                         <div class="col-5 text-muted">No. Rekam Medis</div>
                         <div class="col-7" id="no_rekammedis">-</div>
 
+                        <div class="col-5 text-muted">Jenis Peserta</div>
+                        <div class="col-7" id="jns_peserta">-</div>
+
+                        <div class="col-5 text-muted">Kelas</div>
+                        <div class="col-7" id="klsPeserta">-</div>
+
+                        <div class="col-5 text-muted">Status</div>
+                        <div class="col-7" id="hubunganKeluarga">-</div>
+
                         <div class="col-5 text-muted">Prolanis</div>
                         <div class="col-7" id="status_prolanis" style="color:red"></div>
                         

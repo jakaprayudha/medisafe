@@ -85,6 +85,12 @@ if (!in_array($lengthkartu, [13, 16, 19])) {
                     'rm' => $data['nomor_rm'] ?? null,
                     'kdProvider' => $result['data']['kdProviderPst']['kdProvider'] ?? null,
                     'nmProvider' => $result['data']['kdProviderPst']['nmProvider'] ?? null,
+                    'jnsPeserta' => $result['data']['jnsPeserta']['nama'],
+                    'hubunganKeluarga' => $result['data']['hubunganKeluarga'],
+                    'jnsKelas' => [
+                            "nama" => $result['data']['jnsKelas']['nama'],
+                            "kode" => $result['data']['jnsKelas']['kode'],
+                    ],
                     'informasi' => [
                         'tunggakan' => $result['data']['tunggakan'],
                         'prb' => $result['data']['pstPrb'],
