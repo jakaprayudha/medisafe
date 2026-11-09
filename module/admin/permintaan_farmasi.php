@@ -222,6 +222,20 @@ require '../../controller/view.php';
               "actions": (function() {
 
                 let btnDelete = '';
+                let btnKirim = '';
+
+                // 📤 belum dikirim → tombol kirim obat per tiket
+                if (row.status_permintaan == 0) {
+                  btnKirim = `
+      <a class="btn btn-primary kirim-btn"
+         href="javascript:;"
+         title="Kirim Obat"
+         data-id="${row.id_permintaan_farmasi}">
+        <i class="ti ti-send"></i>
+      </a>
+    `;
+                }
+
                 // ❌ kalau selesai → tidak ada delete
                 if (row.status_permintaan != 3) {
                   btnDelete = `
@@ -249,6 +263,8 @@ require '../../controller/view.php';
           href="module/admin/permintaan_farmasi_details?no=${urlParams.get('no')}&rm=${nomorm}&rme=${rmeParam}&id=${row.id_permintaan_farmasi}">
           <i class="fas fa-pencil"></i>
         </a>
+
+        ${btnKirim}
 
         ${btnDelete}
 
@@ -400,16 +416,25 @@ require '../../controller/view.php';
         });
     });
 
-    // 📤 Kirim Obat (semua tiket Belum Dikirim sekaligus)
+    // 📤 Kirim Obat: satu tiket (tombol di Actions)
+    $(document).on('click', '.kirim-btn', function() {
+      kirimObat([$(this).data('id')], 'Pastikan data sudah benar.');
+    });
+
+    // 📤 Kirim Obat: semua tiket Belum Dikirim sekaligus (tombol header)
     $('#btnKirimObat').on('click', function() {
       const ids = tiketBelumKirim.slice();
       if (!ids.length) {
         Swal.fire('Info', 'Tidak ada tiket yang belum dikirim.', 'info');
         return;
       }
+      kirimObat(ids, `${ids.length} tiket akan dikirim bersamaan. Pastikan data sudah benar.`);
+    });
+
+    function kirimObat(ids, konfirmasi) {
       Swal.fire({
         title: 'Kirim obat?',
-        text: `${ids.length} tiket akan dikirim bersamaan. Pastikan data sudah benar.`,
+        text: konfirmasi,
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: 'Ya, kirim',
@@ -467,7 +492,7 @@ require '../../controller/view.php';
           }
         });
       });
-    });
+    }
 
     // 🔹 Delete
     $(document).on('click', '.delete-btn', function() {
