@@ -150,6 +150,36 @@ require '../../controller/view.php';
     </form>
   </div>
 </div>
+<!-- 💊 Modal Rincian Obat -->
+<div class="modal fade" id="rincianObatModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Rincian Obat <small class="text-muted fw-normal" id="rincianObatInfo"></small></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="text-center" style="width:40px">No</th>
+                <th>Item</th>
+                <th class="text-center">Qty</th>
+                <th>Signa</th>
+                <th>Catatan</th>
+              </tr>
+            </thead>
+            <tbody id="rincianObatBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
   $(document).ready(function() {
     $('#id_pharmacy').select2({
@@ -210,7 +240,15 @@ require '../../controller/view.php';
                 return `
     <div class="text-center">
       <div class="btn-group btn-group-sm" role="group">
-        
+
+        <a class="btn btn-success rincian-btn"
+           href="javascript:;"
+           title="Rincian Obat"
+           data-id="${row.id_permintaan_farmasi}"
+           data-tipe="${row.tipe_obat ?? ''}">
+          <i class="fas fa-pills"></i>
+        </a>
+
         <a class="btn btn-info" 
           href="module/admin/permintaan_farmasi_details?no=${urlParams.get('no')}&rm=${nomorm}&rme=${rmeParam}&id=${row.id_permintaan_farmasi}">
           <i class="fas fa-pencil"></i>
@@ -324,6 +362,47 @@ require '../../controller/view.php';
           } else {
             Swal.fire('Gagal!', data.message, 'error');
           }
+        });
+    });
+
+    // 💊 Rincian Obat per tiket
+    const escapeHtml = (v) => String(v ?? '-').replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+
+    $(document).on('click', '.rincian-btn', function() {
+      const id = $(this).data('id');
+      const isRacikan = String($(this).data('tipe') || '').trim().toLowerCase() === 'racikan';
+      const $body = $('#rincianObatBody');
+
+      $('#rincianObatInfo').text($(this).data('tipe') ? `(${$(this).data('tipe')})` : '');
+      $body.html('<tr><td colspan="5" class="text-center text-muted">Memuat data...</td></tr>');
+      $('#rincianObatModal').modal('show');
+
+      fetch(`controller/visit/permintaanFarmasiDetails?no=${encodeURIComponent(id)}`)
+        .then(res => res.json())
+        .then(res => {
+          const items = (res && res.status === 'success') ? (res.data || []) : null;
+          if (items === null) {
+            $body.html(`<tr><td colspan="5" class="text-center text-danger">${escapeHtml(res?.message || 'Gagal memuat data.')}</td></tr>`);
+            return;
+          }
+          if (!items.length) {
+            $body.html('<tr><td colspan="5" class="text-center text-muted">Belum ada obat pada tiket ini.</td></tr>');
+            return;
+          }
+          $body.html(items.map((item, i) => `
+            <tr>
+              <td class="text-center">${i + 1}</td>
+              <td>${escapeHtml(item.pharmacy_name_generic)}</td>
+              <td class="text-center">${escapeHtml(item.qty)}</td>
+              <td>${isRacikan ? '-' : escapeHtml(item.signa)}</td>
+              <td>${escapeHtml(item.catatan)}</td>
+            </tr>
+          `).join(''));
+        })
+        .catch(() => {
+          $body.html('<tr><td colspan="5" class="text-center text-danger">Terjadi kesalahan pada server.</td></tr>');
         });
     });
 
