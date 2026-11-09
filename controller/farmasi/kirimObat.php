@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../admisi/services/view.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../admisi/services/servicebpjs.php';
+require_once __DIR__ . '/../doctor/rmeCycleService.php';
 
 header('Content-Type: application/json');
 
@@ -28,10 +29,13 @@ if (!$ids || !$id_customer) {
 // ================== GET VISIT ==================
 $placeholders = implode(',', array_fill(0, count($ids), '?'));
 $stmt = $koneksi->prepare("
-   SELECT id_permintaan_farmasi, id_visit 
-   FROM permintaan_pharmacy 
-   WHERE id_permintaan_farmasi IN ($placeholders) 
-   AND id_customer = ?
+   SELECT pp.id_permintaan_farmasi, pp.id_visit, pp.status_permintaan,
+      (SELECT COUNT(*) FROM permintaan_pharmacy_details AS pd
+         INNER JOIN ms_pharmacy AS mp ON mp.id_pharmacy = pd.id_pharmacy
+         WHERE pd.id_permintaan_farmasi = pp.id_permintaan_farmasi) AS jumlah_item
+   FROM permintaan_pharmacy AS pp 
+   WHERE pp.id_permintaan_farmasi IN ($placeholders) 
+   AND pp.id_customer = ?
 ");
 $bindVals = array_merge($ids, [$id_customer]);
 $stmt->bind_param(str_repeat('s', count($bindVals)), ...$bindVals);
@@ -57,11 +61,30 @@ if (count($visits) !== 1) {
 
 $nomor_visit = reset($visits);
 
+// Hanya tiket "Belum Dikirim" yang boleh dikirim, agar status Persiapan/Selesai
+// tidak mundur ke Sudah Kirim (mis. halaman lama yang belum di-refresh).
+foreach ($rows as $row) {
+   if ((int)$row['status_permintaan'] !== 0) {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Ada tiket yang sudah dikirim/diproses. Silakan refresh halaman.'
+      ]);
+      exit;
+   }
+   if ((int)$row['jumlah_item'] === 0) {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Ada tiket yang belum memiliki obat. Lengkapi rincian obat terlebih dahulu.'
+      ]);
+      exit;
+   }
+}
+
 // Update status semua tiket yang dikirim
 function updateStatusTiket($koneksi, $ids, $id_customer)
 {
    $ph = implode(',', array_fill(0, count($ids), '?'));
-   $st = $koneksi->prepare("UPDATE permintaan_pharmacy SET status_permintaan = 1 WHERE id_permintaan_farmasi IN ($ph) AND id_customer = ?");
+   $st = $koneksi->prepare("UPDATE permintaan_pharmacy SET status_permintaan = 1 WHERE id_permintaan_farmasi IN ($ph) AND id_customer = ? AND status_permintaan = 0");
    $vals = array_merge($ids, [$id_customer]);
    $st->bind_param(str_repeat('s', count($vals)), ...$vals);
    $ok = $st->execute();
@@ -72,7 +95,7 @@ function updateStatusTiket($koneksi, $ids, $id_customer)
 
 // ================== CEK PROVIDER ==================
 $stmtProv = $koneksi->prepare("
-   SELECT id_provider 
+   SELECT id_provider, visit_status 
    FROM pasien_visit 
    WHERE visit_ID = ? AND id_customer = ?
 ");
@@ -81,6 +104,21 @@ $stmtProv->execute();
 $prov = $stmtProv->get_result()->fetch_assoc();
 
 $id_provider = $prov['id_provider'] ?? null;
+
+if (!$prov) {
+   echo json_encode([
+      'status' => 'error',
+      'message' => 'Data kunjungan tidak ditemukan'
+   ]);
+   exit;
+}
+if ((int)$prov['visit_status'] === 99) {
+   echo json_encode([
+      'status' => 'error',
+      'message' => 'Kunjungan sudah dibatalkan'
+   ]);
+   exit;
+}
 
 $stmt_statusRI = $koneksi->prepare("SELECT status_rawatinap FROM pasien_visit WHERE id_customer = ? AND visit_ID = ?");
 $stmt_statusRI->bind_param("ss", $id_customer, $nomor_visit);
@@ -113,30 +151,43 @@ if ($id_provider != 1 || $status_RI == '1') {
 } else {
    // PUT kunjungan mengganti seluruh terapiObat, jadi gabungkan obat dari tiket
    // yang dikirim sekarang + tiket lain di kunjungan ini yang sudah terkirim.
-   $stmt2 = $koneksi->prepare("SELECT p.pharmacy_name_generic, pd.qty, pd.signa 
+   // Format & validasi sama dengan RME satu siklus (rmeCycleTherapy):
+   // nama/signa/qty, signa racikan diambil dari rck_signa, item tidak lengkap ditolak.
+   $stmt2 = $koneksi->prepare("SELECT pd.*, p.pharmacy_name_generic, pp.rck_signa 
       FROM permintaan_pharmacy_details AS pd 
-      INNER JOIN ms_pharmacy AS p ON p.id_pharmacy = pd.id_pharmacy 
       INNER JOIN permintaan_pharmacy AS pp ON pp.id_permintaan_farmasi = pd.id_permintaan_farmasi 
+      LEFT JOIN ms_pharmacy AS p ON p.id_pharmacy = pd.id_pharmacy 
       WHERE pp.id_customer = ? AND pp.id_visit = ? 
       AND (pp.id_permintaan_farmasi IN ($placeholders) OR pp.status_permintaan >= 1) 
       ORDER BY pp.id_permintaan_farmasi ASC, pd.id_pharmacy_details ASC");
    $vals2 = array_merge([$id_customer, $nomor_visit], $ids);
    $stmt2->bind_param(str_repeat('s', count($vals2)), ...$vals2);
    $stmt2->execute();
-   $result = $stmt2->get_result();
-   $data_detailobat = $result->fetch_all(MYSQLI_ASSOC);
-   
-   $terapiObatArr = [];
-   foreach ($data_detailobat as $row) {
-      $terapiObatArr[] = $row['pharmacy_name_generic'] . '/' . $row['signa'] . '/' . $row['qty'];
+   $data_detailobat = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
+
+   try {
+      $terapiObat = rmeCycleTherapy($rows, $data_detailobat);
+   } catch (InvalidArgumentException $e) {
+      echo json_encode([
+         'status' => 'error',
+         'message' => $e->getMessage()
+      ]);
+      exit;
    }
-   $terapiObat = implode(', ', $terapiObatArr);
 
    $stmt1 = $koneksi->prepare("SELECT pv.visit_ID,pv.id_patient,pv.visit_notes,pv.saturasi,pv.tindakan,p.patient_datebirth,CONCAT(TIMESTAMPDIFF(YEAR, p.patient_datebirth, CURDATE()), ' Tahun ',TIMESTAMPDIFF(MONTH, p.patient_datebirth, CURDATE()) % 12, ' Bulan ',DATEDIFF(CURDATE(),DATE_ADD(DATE_ADD(p.patient_datebirth,INTERVAL TIMESTAMPDIFF(YEAR, p.patient_datebirth, CURDATE()) YEAR),INTERVAL (TIMESTAMPDIFF(MONTH, p.patient_datebirth, CURDATE()) % 12) MONTH)), ' Hari') AS umur, pk.* FROM pasien_visit AS pv INNER JOIN pcare_kunjungan AS pk ON pv.noKunjung = pk.noKunjungan INNER JOIN ms_patient AS p ON p.patient_bpjs = pv.noKartu WHERE pv.visit_ID = ? AND pv.id_customer = ?");
    $stmt1->bind_param('ss', $nomor_visit, $id_customer);
    $stmt1->execute();
    $data = $stmt1->get_result()->fetch_assoc();
-   $noKunjungan = $data['noKunjungan'];
+   $noKunjungan = $data['noKunjungan'] ?? null;
+
+   if (!$noKunjungan) {
+      echo json_encode([
+         'status' => 'error',
+         'message' => 'Kunjungan BPJS (PCare) belum tersedia untuk pasien ini. Simpan pemeriksaan terlebih dahulu.'
+      ]);
+      exit;
+   }
 
    $payload = [
       "noKunjungan" => $noKunjungan,
