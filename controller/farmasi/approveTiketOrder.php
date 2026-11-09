@@ -8,7 +8,9 @@ $data = json_decode(file_get_contents("php://input"), true);
 $visit  = $data['visit'] ?? '';
 $status = $data['status'] ?? '';
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+   session_start();
+}
 $id_customer = $_SESSION['id_customer'] ?? null;
 
 if (!$visit || !$id_customer) {
