@@ -55,6 +55,7 @@ require '../../controller/view.php';
                       <a href="module/admin/print/print_all_resep?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
                         <button class="btn btn-light"><i class="fas fa-print"></i> Print</button>
                       </a>
+                      <button class="btn btn-success d-none" id="btnKirimObat"><i class="ti ti-send"></i> Kirim Obat <span class="badge bg-light text-dark ms-1" id="btnKirimObatCount">0</span></button>
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
                     </div>
                   </div>
@@ -199,6 +200,8 @@ require '../../controller/view.php';
   const rmeParam = urlParams.get('rme') || 'c'; // default kalau kosong
   const nomorm = urlParams.get('rm') || 'c'; // default kalau kosong
 
+  let tiketBelumKirim = [];
+
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
       processing: true,
@@ -207,25 +210,18 @@ require '../../controller/view.php';
         url: apiUrl,
         type: "GET",
         dataSrc: function(json) {
+          // 📤 kumpulkan tiket yang belum dikirim
+          tiketBelumKirim = (json.data || [])
+            .filter(row => row.status_permintaan == 0)
+            .map(row => row.id_permintaan_farmasi);
+          $('#btnKirimObatCount').text(tiketBelumKirim.length);
+          $('#btnKirimObat').toggleClass('d-none', tiketBelumKirim.length === 0);
+
           return json.data.map(function(row) {
             return {
               "actions": (function() {
 
                 let btnDelete = '';
-                let btnKirim = '';
-
-                // 📤 belum dikirim → tampilkan tombol kirim obat
-                if (row.status_permintaan == 0) {
-                  btnKirim = `
-      <a class="btn btn-primary kirim-btn"
-         href="javascript:;"
-         title="Kirim Obat"
-         data-id="${row.id_permintaan_farmasi}">
-        <i class="ti ti-send"></i>
-      </a>
-    `;
-                }
-
                 // ❌ kalau selesai → tidak ada delete
                 if (row.status_permintaan != 3) {
                   btnDelete = `
@@ -253,8 +249,6 @@ require '../../controller/view.php';
           href="module/admin/permintaan_farmasi_details?no=${urlParams.get('no')}&rm=${nomorm}&rme=${rmeParam}&id=${row.id_permintaan_farmasi}">
           <i class="fas fa-pencil"></i>
         </a>
-
-        ${btnKirim}
 
         ${btnDelete}
 
@@ -406,12 +400,16 @@ require '../../controller/view.php';
         });
     });
 
-    // 📤 Kirim Obat (clone dari permintaan_farmasi_details)
-    $(document).on('click', '.kirim-btn', function() {
-      let id = $(this).data('id');
+    // 📤 Kirim Obat (semua tiket Belum Dikirim sekaligus)
+    $('#btnKirimObat').on('click', function() {
+      const ids = tiketBelumKirim.slice();
+      if (!ids.length) {
+        Swal.fire('Info', 'Tidak ada tiket yang belum dikirim.', 'info');
+        return;
+      }
       Swal.fire({
         title: 'Kirim obat?',
-        text: 'Pastikan data sudah benar',
+        text: `${ids.length} tiket akan dikirim bersamaan. Pastikan data sudah benar.`,
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: 'Ya, kirim',
@@ -439,14 +437,14 @@ require '../../controller/view.php';
           contentType: 'application/json',
           dataType: 'json',
           data: JSON.stringify({
-            id: id
+            ids: ids
           }),
           success: function(res) {
             if (res.status == 'success') {
               Swal.fire({
                 icon: 'success',
                 title: 'Berhasil!',
-                text: 'Obat berhasil dikirim.',
+                text: `${res.total || ids.length} tiket obat berhasil dikirim.`,
                 confirmButtonText: 'OK'
               });
               table.ajax.reload(null, false);

@@ -11,11 +11,13 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // ================== INPUT ==================
+// Mendukung satu tiket (`id`) atau beberapa tiket sekaligus (`ids`)
 $data_obat = json_decode(file_get_contents("php://input"), true);
-$id = $data_obat['id'] ?? null;
+$ids = $data_obat['ids'] ?? (isset($data_obat['id']) ? [$data_obat['id']] : []);
+$ids = array_values(array_unique(array_filter(array_map('strval', (array)$ids), 'strlen')));
 $id_customer = $_SESSION['id_customer'] ?? null;
 
-if (!$id || !$id_customer) {
+if (!$ids || !$id_customer) {
    echo json_encode([
       'status' => 'error',
       'message' => 'Data tidak valid'
@@ -24,17 +26,19 @@ if (!$id || !$id_customer) {
 }
 
 // ================== GET VISIT ==================
+$placeholders = implode(',', array_fill(0, count($ids), '?'));
 $stmt = $koneksi->prepare("
-   SELECT id_visit 
+   SELECT id_permintaan_farmasi, id_visit 
    FROM permintaan_pharmacy 
-   WHERE id_permintaan_farmasi = ? 
+   WHERE id_permintaan_farmasi IN ($placeholders) 
    AND id_customer = ?
 ");
-$stmt->bind_param('ss', $id, $id_customer);
+$bindVals = array_merge($ids, [$id_customer]);
+$stmt->bind_param(str_repeat('s', count($bindVals)), ...$bindVals);
 $stmt->execute();
-$cek = $stmt->get_result()->fetch_assoc();
+$rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-if (!$cek) {
+if (count($rows) !== count($ids)) {
    echo json_encode([
       'status' => 'error',
       'message' => 'Data permintaan tidak ditemukan'
@@ -42,7 +46,29 @@ if (!$cek) {
    exit;
 }
 
-$nomor_visit = $cek['id_visit'];
+$visits = array_unique(array_column($rows, 'id_visit'));
+if (count($visits) !== 1) {
+   echo json_encode([
+      'status' => 'error',
+      'message' => 'Tiket yang dikirim harus berasal dari kunjungan yang sama'
+   ]);
+   exit;
+}
+
+$nomor_visit = reset($visits);
+
+// Update status semua tiket yang dikirim
+function updateStatusTiket($koneksi, $ids, $id_customer)
+{
+   $ph = implode(',', array_fill(0, count($ids), '?'));
+   $st = $koneksi->prepare("UPDATE permintaan_pharmacy SET status_permintaan = 1 WHERE id_permintaan_farmasi IN ($ph) AND id_customer = ?");
+   $vals = array_merge($ids, [$id_customer]);
+   $st->bind_param(str_repeat('s', count($vals)), ...$vals);
+   $ok = $st->execute();
+   $err = $st->error;
+   $st->close();
+   return [$ok, $err];
+}
 
 // ================== CEK PROVIDER ==================
 $stmtProv = $koneksi->prepare("
@@ -70,29 +96,32 @@ $stmt3 = null;
 
 // ================== JIKA BUKAN BPJS ==================
 if ($id_provider != 1 || $status_RI == '1') {
-   $stmt3 = $koneksi->prepare("
-      UPDATE permintaan_pharmacy 
-      SET status_permintaan = 1 
-      WHERE id_permintaan_farmasi = ? 
-      AND id_customer = ?
-   ");
-   // Ubah "ii" menjadi "ss" (atau sesuaikan jika kolom bertipe integer di DB, misal "is")
-   $stmt3->bind_param("ss", $id, $id_customer);
-   
-   if ($stmt3->execute()) {
+   [$okUpdate, $errUpdate] = updateStatusTiket($koneksi, $ids, $id_customer);
+
+   if ($okUpdate) {
       echo json_encode([
          'status' => 'success',
-         'message' => 'Berhasil (pasien umum, tidak kirim BPJS)'
+         'message' => 'Berhasil (pasien umum, tidak kirim BPJS)',
+         'total' => count($ids)
       ]);
    } else {
       echo json_encode([
          'status' => 'error',
-         'message' => $stmt3->error
+         'message' => $errUpdate
       ]);
    }
 } else {
-   $stmt2 = $koneksi->prepare("SELECT p.pharmacy_name_generic, pd.qty, pd.signa FROM permintaan_pharmacy_details AS pd INNER JOIN ms_pharmacy AS p ON p.id_pharmacy = pd.id_pharmacy WHERE id_permintaan_farmasi = ?");
-   $stmt2->bind_param('s', $id);
+   // PUT kunjungan mengganti seluruh terapiObat, jadi gabungkan obat dari tiket
+   // yang dikirim sekarang + tiket lain di kunjungan ini yang sudah terkirim.
+   $stmt2 = $koneksi->prepare("SELECT p.pharmacy_name_generic, pd.qty, pd.signa 
+      FROM permintaan_pharmacy_details AS pd 
+      INNER JOIN ms_pharmacy AS p ON p.id_pharmacy = pd.id_pharmacy 
+      INNER JOIN permintaan_pharmacy AS pp ON pp.id_permintaan_farmasi = pd.id_permintaan_farmasi 
+      WHERE pp.id_customer = ? AND pp.id_visit = ? 
+      AND (pp.id_permintaan_farmasi IN ($placeholders) OR pp.status_permintaan >= 1) 
+      ORDER BY pp.id_permintaan_farmasi ASC, pd.id_pharmacy_details ASC");
+   $vals2 = array_merge([$id_customer, $nomor_visit], $ids);
+   $stmt2->bind_param(str_repeat('s', count($vals2)), ...$vals2);
    $stmt2->execute();
    $result = $stmt2->get_result();
    $data_detailobat = $result->fetch_all(MYSQLI_ASSOC);
@@ -157,22 +186,24 @@ if ($id_provider != 1 || $status_RI == '1') {
          'result' => $resultBpjs
       ]);
    } else {
-      $stmt3 = $koneksi->prepare("UPDATE permintaan_pharmacy SET status_permintaan = 1 WHERE id_permintaan_farmasi = ? AND id_customer = ?");
-      $stmt3->bind_param("ss", $id, $id_customer);
+      [$okUpdate, $errUpdate] = updateStatusTiket($koneksi, $ids, $id_customer);
 
       $stmt4 = $koneksi->prepare("UPDATE pcare_kunjungan SET terapiObat = ? WHERE noKunjungan = ?");
       $stmt4->bind_param('ss', $terapiObat, $noKunjungan);
-      if ($stmt3->execute() AND $stmt4->execute()) {
+      $okKunjungan = $stmt4->execute();
+      if ($okUpdate AND $okKunjungan) {
          echo json_encode([
             'status' => 'success',
-            'message' => 'Berhasil kirim ke farmasi'
+            'message' => 'Berhasil kirim ke farmasi',
+            'total' => count($ids)
          ]);
       } else {
          echo json_encode([
             'status' => 'error',
-            'message' => $stmt3->error
+            'message' => $errUpdate ?: $stmt4->error
          ]);
       }
+      $stmt4->close();
    }
 }
 
