@@ -124,7 +124,7 @@ $useLocalDokter = $cekAntrol && mysqli_num_rows($cekAntrol) > 0;
     <?php require '../admin/library.php'; ?>
     <script src="controller/admisi/helper.js"></script>
     <script>window.USE_LOCAL_DOKTER = <?= $useLocalDokter ? 'true' : 'false' ?>;</script>
-    <script src="controller/admisi/pendaftaran.js"></script>
+    <script src="controller/admisi/pendaftaran.js?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'].'/controller/admisi/pendaftaran.js') ?>"></script>
     <div class="modal fade" id="modalCariBPJS" tabindex="-1"
         data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
