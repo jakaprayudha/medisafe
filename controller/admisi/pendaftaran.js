@@ -115,6 +115,7 @@ $(function () {
                             $('.viewBpjs').removeClass('d-none');
                         }
                         // APP.cetak('#typePatient', tipe);
+                        console.log(response.data);
                         const sex = (response.data.sex || '').toLowerCase();
                         APP.cetakhtml('#noK', response.data.noKartu || '-');
                         APP.cetakhtml('#nama', response.data.nama || '-');
@@ -130,11 +131,9 @@ $(function () {
                         APP.cetakhtml('#no_rekammedis', response.data.rm || '-');
 
                         APP.cetakhtml('#jns_peserta', response.data.jnsPeserta || '-');
-                        APP.cetakhtml('#klsPeserta', response.data.jnsKelas?.nama ?? '-');
-                        APP.cetakhtml('#status_prolanis', response.data.informasi?.prolanis ?? '');
-                        console.log(response.data.jnsPeserta);
-                        console.log(response.data);
-
+                        APP.cetakhtml('#klsPeserta', response.data.jnsKelas.nama || '-');
+                        APP.cetakhtml('#hubunganKeluarga', response.data.hubunganKeluarga || '-');
+                        
                         APP.cetakhtml('#status_prolanis', response.data.informasi.prolanis ?? '');
                         APP.cetakhtml('#status_PRB', response.data.informasi.prb ?? '');
                         APP.cetak('#norm', response.data.rm || '-');
