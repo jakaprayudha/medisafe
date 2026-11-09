@@ -182,6 +182,19 @@ require '../../controller/view.php';
               "actions": (function() {
 
                 let btnDelete = '';
+                let btnKirim = '';
+
+                // 📤 belum dikirim → tampilkan tombol kirim obat
+                if (row.status_permintaan == 0) {
+                  btnKirim = `
+      <a class="btn btn-primary kirim-btn"
+         href="javascript:;"
+         title="Kirim Obat"
+         data-id="${row.id_permintaan_farmasi}">
+        <i class="ti ti-send"></i>
+      </a>
+    `;
+                }
 
                 // ❌ kalau selesai → tidak ada delete
                 if (row.status_permintaan != 3) {
@@ -202,6 +215,8 @@ require '../../controller/view.php';
           href="module/admin/permintaan_farmasi_details?no=${urlParams.get('no')}&rm=${nomorm}&rme=${rmeParam}&id=${row.id_permintaan_farmasi}">
           <i class="fas fa-pencil"></i>
         </a>
+
+        ${btnKirim}
 
         ${btnDelete}
 
@@ -310,6 +325,71 @@ require '../../controller/view.php';
             Swal.fire('Gagal!', data.message, 'error');
           }
         });
+    });
+
+    // 📤 Kirim Obat (clone dari permintaan_farmasi_details)
+    $(document).on('click', '.kirim-btn', function() {
+      let id = $(this).data('id');
+      Swal.fire({
+        title: 'Kirim obat?',
+        text: 'Pastikan data sudah benar',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, kirim',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+      }).then((result) => {
+        if (!result.isConfirmed) {
+          return;
+        }
+        Swal.fire({
+          title: 'Sedang mengirim...',
+          text: 'Mohon tunggu, proses sedang berjalan.',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          allowEnterKey: false,
+          showConfirmButton: false,
+          showCancelButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+        $.ajax({
+          url: 'controller/farmasi/kirimObat.php',
+          type: 'POST',
+          contentType: 'application/json',
+          dataType: 'json',
+          data: JSON.stringify({
+            id: id
+          }),
+          success: function(res) {
+            if (res.status == 'success') {
+              Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Obat berhasil dikirim.',
+                confirmButtonText: 'OK'
+              });
+              table.ajax.reload(null, false);
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: res.message || 'Terjadi kesalahan.',
+                confirmButtonText: 'OK'
+              });
+            }
+          },
+          error: function(xhr) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Gagal!',
+              text: (xhr.responseJSON && xhr.responseJSON.message) || 'Terjadi kesalahan pada server.',
+              confirmButtonText: 'OK'
+            });
+          }
+        });
+      });
     });
 
     // 🔹 Delete
