@@ -35,6 +35,55 @@ switch ($method) {
       break;
 }
 
+// 🔒 Tiket yang sudah Selesai (approved) tidak boleh diubah/dihapus itemnya.
+// Kembalikan pesan error, atau null kalau boleh diubah.
+function cekTiketTerkunci($idPermintaan = null, $idDetail = null)
+{
+   global $koneksi;
+
+   $id_customer = $_SESSION['id_customer'] ?? null;
+   if (!$id_customer) {
+      return 'Session tidak ditemukan.';
+   }
+
+   if ($idDetail !== null) {
+      $stmt = $koneksi->prepare("SELECT pp.status_permintaan 
+         FROM permintaan_pharmacy_details AS pd 
+         INNER JOIN permintaan_pharmacy AS pp ON pp.id_permintaan_farmasi = pd.id_permintaan_farmasi 
+         WHERE pd.id_pharmacy_details = ? AND pp.id_customer = ?");
+      $stmt->bind_param('ss', $idDetail, $id_customer);
+   } else {
+      $stmt = $koneksi->prepare("SELECT status_permintaan FROM permintaan_pharmacy 
+         WHERE id_permintaan_farmasi = ? AND id_customer = ?");
+      $stmt->bind_param('ss', $idPermintaan, $id_customer);
+   }
+   $stmt->execute();
+   $tiket = $stmt->get_result()->fetch_assoc();
+   $stmt->close();
+
+   if (!$tiket) {
+      return 'Data permintaan tidak ditemukan.';
+   }
+   if ((int)$tiket['status_permintaan'] === 3) {
+      return 'Tiket sudah selesai (approved), obat tidak dapat ditambah, diubah, atau dihapus.';
+   }
+   return null;
+}
+
+function tolakJikaTerkunci($idPermintaan = null, $idDetail = null)
+{
+   $error = cekTiketTerkunci($idPermintaan, $idDetail);
+   if ($error !== null) {
+      http_response_code(403);
+      header('Content-Type: application/json');
+      echo json_encode([
+         'status' => 'error',
+         'message' => $error
+      ]);
+      exit;
+   }
+}
+
 // Function untuk Create
 function createData()
 {
@@ -54,6 +103,8 @@ function createData()
       ]);
       exit;
    }
+
+   tolakJikaTerkunci((string)($_POST['id_permintaan_farmasi'] ?? ''));
 
    // ================== AMBIL HARGA DARI DB ==================
    $id_pharmacy = $_POST['id_pharmacy'] ?? null;
@@ -232,6 +283,8 @@ function updateData()
 
    $id = $_PUT['id_pharmacy_details'];
 
+   tolakJikaTerkunci(null, (string)$id);
+
    // ================== AMBIL HARGA DARI DB ==================
    $harga = 0;
 
@@ -336,13 +389,20 @@ function deleteData()
       exit;
    }
 
+   tolakJikaTerkunci(null, (string)$id);
+
    // Query untuk menghapus data user
    $query = "DELETE FROM permintaan_pharmacy_details WHERE id_pharmacy_details = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $id);
 
-      if ($stmt->execute()) {
+      if ($stmt->execute() && $stmt->affected_rows < 1) {
+         echo json_encode([
+            'status' => 'error',
+            'message' => 'Data obat tidak ditemukan atau sudah terhapus.'
+         ]);
+      } elseif ($stmt->errno === 0) {
          echo json_encode([
             'status' => 'success',
             'message' => 'Data berhasil dihapus.'

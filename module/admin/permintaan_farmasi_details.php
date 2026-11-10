@@ -286,6 +286,11 @@ ORDER BY p.pharmacy_name_generic ASC
 </script>
 <script>
   let tipeObatGlobal = ''
+  // 🔒 true kalau tiket sudah Selesai (approved) → item tidak boleh diubah/dihapus
+  let tiketSelesai = false;
+  const tolakTiketSelesai = () => {
+    Swal.fire('Tiket Selesai', 'Tiket sudah selesai (approved), obat tidak dapat ditambah, diubah, atau dihapus.', 'warning');
+  };
   const apiUrl = 'controller/visit/permintaanFarmasiDetails?no=<?= $_GET['id'] ?>';
   $(document).ready(function() {
     const formatRupiah = (angka) => {
@@ -394,6 +399,7 @@ ORDER BY p.pharmacy_name_generic ASC
     });
 
     $('#btnTambah').on('click', async function() {
+      if (tiketSelesai) return tolakTiketSelesai();
       let tipe = (tipeObatGlobal || '').toString().trim().toLowerCase();
       let isRacikan = tipe === 'racikan';
       let signaInput = isRacikan ?
@@ -453,6 +459,12 @@ ORDER BY p.pharmacy_name_generic ASC
     });
 
     function saveRow(row) {
+      // ⏳ kalau insert baris ini masih berjalan, tunggu dulu supaya tidak insert dobel
+      const pending = row.data('saving');
+      if (pending) {
+        return pending.then(() => saveRow(row));
+      }
+
       let signaVal = row.find('.signa').val();
       // 🔥 FORCE RACIKAN
       let tipe = (tipeObatGlobal || '').toString().trim().toLowerCase();
@@ -487,7 +499,7 @@ ORDER BY p.pharmacy_name_generic ASC
       // 🔥 INSERT
       if (!id) {
 
-        return fetch(apiUrl, {
+        const saving = fetch(apiUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded'
@@ -499,8 +511,15 @@ ORDER BY p.pharmacy_name_generic ASC
             if (res.status === 'success') {
               row.data('id', res.id); // 🔥 WAJIB ADA
               row.removeClass('bg-light').addClass('bg-success-subtle');
+            } else {
+              Swal.fire('Gagal!', res.message || 'Gagal menyimpan obat.', 'error');
             }
-          });
+          })
+          .catch(() => Swal.fire('Gagal!', 'Terjadi kesalahan pada server.', 'error'))
+          .finally(() => row.removeData('saving'));
+
+        row.data('saving', saving);
+        return saving;
       }
 
       // 🔥 UPDATE
@@ -518,12 +537,58 @@ ORDER BY p.pharmacy_name_generic ASC
     }
 
 
-    $(document).on('click', '.remove-row', function() {
-      $(this).closest('tr').remove();
+    // ❌ Hapus baris baru. Item yang sudah terpilih otomatis tersimpan ke DB,
+    // jadi kalau sudah punya id harus dihapus juga di DB (bukan cuma di layar).
+    $(document).on('click', '.remove-row', async function() {
+      const row = $(this).closest('tr');
+
+      clearTimeout(row.data('timer'));
+
+      const pending = row.data('saving');
+      if (pending) {
+        await pending.catch(() => {});
+      }
+
+      const id = row.data('id');
+      if (!id) {
+        row.remove();
+        return;
+      }
+
+      const result = await Swal.fire({
+        title: 'Hapus?',
+        text: 'Obat ini sudah tersimpan dan akan dihapus.',
+        icon: 'warning',
+        showCancelButton: true
+      });
+      if (!result.isConfirmed) return;
+
+      fetch(`controller/visit/permintaanFarmasiDetails?id=${id}`, {
+          method: 'DELETE'
+        })
+        .then(res => res.json())
+        .then(res => {
+          if (res.status === 'success') {
+            row.remove();
+            Swal.fire({
+              toast: true,
+              icon: 'success',
+              title: 'Terhapus',
+              position: 'top-end',
+              timer: 1500,
+              showConfirmButton: false
+            });
+            $('#periodeTable').DataTable().ajax.reload(null, false);
+          } else {
+            Swal.fire('Gagal!', res.message || 'Gagal menghapus.', 'error');
+          }
+        })
+        .catch(() => Swal.fire('Gagal!', 'Terjadi kesalahan pada server.', 'error'));
     });
 
 
     $(document).on('change', '.item-select', function() {
+      if (tiketSelesai) return;
       let row = $(this).closest('tr');
       let val = $(this).val();
 
@@ -533,6 +598,7 @@ ORDER BY p.pharmacy_name_generic ASC
       saveRow(row);
     });
     $(document).on('input', '.qty, .signa, .catatan', function() {
+      if (tiketSelesai) return;
 
       let row = $(this).closest('tr');
 
@@ -548,6 +614,7 @@ ORDER BY p.pharmacy_name_generic ASC
     });
 
     $(document).on('click', '.edit-btn', function() {
+      if (tiketSelesai) return tolakTiketSelesai();
 
       let btn = $(this);
       let row = btn.closest('tr');
@@ -614,6 +681,7 @@ ORDER BY p.pharmacy_name_generic ASC
     });
 
     $(document).on('click', '.delete-btn', function() {
+      if (tiketSelesai) return tolakTiketSelesai();
 
       let id = $(this).data('id');
 
@@ -645,9 +713,12 @@ ORDER BY p.pharmacy_name_generic ASC
                 });
 
                 $('#periodeTable').DataTable().ajax.reload(null, false);
+              } else {
+                Swal.fire('Gagal!', res.message || 'Gagal menghapus.', 'error');
               }
 
-            });
+            })
+            .catch(() => Swal.fire('Gagal!', 'Terjadi kesalahan pada server.', 'error'));
 
         }
 
@@ -708,6 +779,13 @@ ORDER BY p.pharmacy_name_generic ASC
       let statusClass = '';
 
       $('#btnKirim').addClass('d-none'); // default hide
+
+      // 🔒 tiket selesai → kunci tambah/edit/hapus item
+      tiketSelesai = d.status_permintaan == 3;
+      if (tiketSelesai) {
+        $('#btnTambah').addClass('d-none');
+        $('#periodeTable tbody tr.new-row').remove();
+      }
 
       if (d.status_permintaan == 0) {
         statusText = 'Menunggu Kirim';
