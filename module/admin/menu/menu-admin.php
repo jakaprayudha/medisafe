@@ -69,6 +69,17 @@
          </ul>
       </li>
 
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Monitoring Satu Sehat') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/admin/monitoring-satusehat"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:heart-pulse"></iconify-icon>
+            <span class="hide-menu">Monitoring Satu Sehat</span>
+         </a>
+      </li>
+
       <li class="sidebar-item has-sub">
          <a href="javascript:void(0)" class="sidebar-link" onclick="toggleSidebarMenu(this)">
             <iconify-icon icon="solar:folder-bold"></iconify-icon>
