@@ -1,10 +1,6 @@
 <?php
 
-// connect.php echoes "ok"; discard it so the response stays valid JSON.
-ob_start();
 require_once __DIR__ . '/../../database/connect.php';
-ob_end_clean();
-mysqli_report(MYSQLI_REPORT_OFF);
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -53,16 +49,16 @@ const SS_RESOURCES = [
    ['Encounter', 'pasien_visit', 'id_encounter', 'error_encounter'],
    ['Condition', 'pasien_visit', 'id_condition', 'error_condition'],
    ['Medication', 'obat', 'medication_id', 'error_medication'],
-   ['ServiceRequest (Lab)', 'permintaan_lab_detail', 'id_service_request', 'error_service_request'],
-   ['Observation (Lab)', 'permintaan_lab_detail', 'id_observation', 'error_observation'],
-   ['DiagnosticReport (Lab)', 'permintaan_lab_detail', 'id_diagnostic_report', 'error_diagnostic_report'],
-   ['ServiceRequest (Rad)', 'permintaan_radiologi_detail', 'id_service_request', 'error_service_request'],
-   ['ImagingStudy', 'permintaan_radiologi_detail', 'id_imaging_study', 'error_imaging_study'],
-   ['Observation (Rad)', 'permintaan_radiologi_detail', 'id_observation', 'error_observation'],
-   ['DiagnosticReport (Rad)', 'permintaan_radiologi_detail', 'id_diagnostic_report', 'error_diagnostic_report'],
-   ['MedicationRequest', 'permintaan_resep_detail', 'medication_request_id', 'error_medication_request'],
-   ['MedicationDispense', 'permintaan_resep_detail', 'medication_dispense_id', 'error_medication_dispense'],
-   ['MedicationStatement', 'permintaan_resep_detail', 'medication_statement_id', 'error_medication_statement'],
+   // ['ServiceRequest (Lab)', 'permintaan_lab_detail', 'id_service_request', 'error_service_request'],
+   // ['Observation (Lab)', 'permintaan_lab_detail', 'id_observation', 'error_observation'],
+   // ['DiagnosticReport (Lab)', 'permintaan_lab_detail', 'id_diagnostic_report', 'error_diagnostic_report'],
+   // ['ServiceRequest (Rad)', 'permintaan_radiologi_detail', 'id_service_request', 'error_service_request'],
+   // ['ImagingStudy', 'permintaan_radiologi_detail', 'id_imaging_study', 'error_imaging_study'],
+   // ['Observation (Rad)', 'permintaan_radiologi_detail', 'id_observation', 'error_observation'],
+   // ['DiagnosticReport (Rad)', 'permintaan_radiologi_detail', 'id_diagnostic_report', 'error_diagnostic_report'],
+   ['MedicationRequest', 'permintaan_pharmacy_details', 'medication_request_id', 'error_medication_request'],
+   ['MedicationDispense', 'permintaan_pharmacy_details', 'medication_dispense_id', 'error_medication_dispense'],
+   ['MedicationStatement', 'permintaan_pharmacy_details', 'medication_statement_id', 'error_medication_statement'],
 ];
 
 // ok / error / pending per source row. Detail tables have no id_customer of their own, so they are only
