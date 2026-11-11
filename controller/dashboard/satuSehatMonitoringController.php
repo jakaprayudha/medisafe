@@ -13,7 +13,7 @@ function out($data, $code = 200)
 }
 
 $roles = $_SESSION['roles'] ?? '';
-if (empty($_SESSION['id_customer']) || !in_array($roles, ['superadmin', 'admin'], true)) {
+if (!in_array($roles, ['superadmin', 'admin'], true)) {
    out(['status' => 'error', 'message' => 'Akses tidak diizinkan.'], 403);
 }
 $isSuper = $roles === 'superadmin';
