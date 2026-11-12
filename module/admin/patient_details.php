@@ -912,17 +912,19 @@ $pt = $_GET['pt'];
                                           <div class="tab-pane fade" id="lab<?= $index ?>">
 
                                             <?php
-                                            $lab = tampildata("
+                                            // 🧪 Pemeriksaan lab kunjungan ini (PK visit_inspection = id_inspection)
+                                            $stmtLab = $koneksi->prepare("
                                                 SELECT * 
                                                 FROM visit_inspection 
-                                                WHERE id_visit='" . $row['visit_ID'] . "'
-                                                ORDER BY inspection_date DESC
+                                                WHERE id_visit = ?
+                                                ORDER BY inspection_date DESC, id_inspection DESC
                                               ");
+                                            $stmtLab->bind_param('s', $row['visit_ID']);
+                                            $stmtLab->execute();
+                                            $lab = $stmtLab->get_result()->fetch_all(MYSQLI_ASSOC);
+                                            $stmtLab->close();
 
-                                            if ($lab) {
-                                              foreach ($lab as $l) {
-                                                // 🔥 ambil hasil + join item
-                                                $hasil = tampildata("
+                                            $stmtHasil = $koneksi->prepare("
                                               SELECT 
                                                   lr.*, 
                                                   li.assemen, 
@@ -932,17 +934,30 @@ $pt = $_GET['pt'];
                                               FROM laboratorium_result lr
                                               LEFT JOIN laboratorium_item li 
                                                   ON li.id = lr.id_item
-                                              WHERE lr.id_inspection = '" . $l['id'] . "'
+                                              WHERE lr.id_inspection = ?
                                               ORDER BY li.urutan ASC
                                             ");
+
+                                            if ($lab) {
+                                              foreach ($lab as $l) {
+                                                // 🔥 ambil hasil + join item
+                                                $idInspection = (int) $l['id_inspection'];
+                                                $stmtHasil->bind_param('i', $idInspection);
+                                                $stmtHasil->execute();
+                                                $hasil = $stmtHasil->get_result()->fetch_all(MYSQLI_ASSOC);
+                                                $catatanLab = trim((string) ($l['inspection_note'] ?? ''));
+                                                // catatan yang sama persis dengan hasil tunggal tidak perlu ditampilkan dua kali
+                                                if (count($hasil) === 1 && $catatanLab === trim((string) ($hasil[0]['hasil'] ?? ''))) {
+                                                  $catatanLab = '';
+                                                }
                                             ?>
                                                 <!-- 🔹 HEADER LAB -->
                                                 <div class="lab-card mb-3">
 
                                                   <div class="lab-header">
-                                                    🧪 <?= $l['inspection_name'] ?>
+                                                    🧪 <?= htmlspecialchars((string) $l['inspection_name']) ?>
                                                     <span class="lab-date">
-                                                      <?= date('d M Y H:i', strtotime($l['inspection_date'])) ?>
+                                                      <?= !empty($l['inspection_date']) ? date('d M Y', strtotime($l['inspection_date'])) : '-' ?>
                                                     </span>
                                                   </div>
 
@@ -972,18 +987,22 @@ $pt = $_GET['pt'];
                                                             }
                                                           ?>
                                                             <tr>
-                                                              <td><?= $h['assemen'] ?></td>
-                                                              <td class="<?= $flag ?>"><?= $h['hasil'] ?></td>
-                                                              <td><?= $h['satuan'] ?></td>
-                                                              <td><?= $h['minimum'] ?> - <?= $h['maksimum'] ?></td>
-                                                              <td><?= $h['keterangan'] ?? '-' ?></td>
+                                                              <td><?= htmlspecialchars((string) ($h['assemen'] ?? '-')) ?></td>
+                                                              <td class="<?= $flag ?>"><?= htmlspecialchars((string) ($h['hasil'] ?? '-')) ?></td>
+                                                              <td><?= htmlspecialchars((string) ($h['satuan'] ?? '')) ?></td>
+                                                              <?php
+                                                              $minLab = trim((string) ($h['minimum'] ?? ''));
+                                                              $maxLab = trim((string) ($h['maksimum'] ?? ''));
+                                                              ?>
+                                                              <td><?= ($minLab === '' && $maxLab === '') ? '-' : htmlspecialchars($minLab . ' - ' . $maxLab) ?></td>
+                                                              <td><?= htmlspecialchars((string) ($h['keterangan'] ?? '-')) ?></td>
                                                             </tr>
                                                           <?php } ?>
                                                         </tbody>
                                                       </table>
                                                     </div>
 
-                                                  <?php } else { ?>
+                                                  <?php } elseif ($catatanLab === '') { ?>
 
                                                     <div class="text-muted small p-2">
                                                       Tidak ada hasil lab
@@ -991,11 +1010,20 @@ $pt = $_GET['pt'];
 
                                                   <?php } ?>
 
+                                                  <?php if ($catatanLab !== '') { ?>
+                                                    <div class="small p-2">
+                                                      <strong>Hasil / Catatan:</strong>
+                                                      <?= nl2br(htmlspecialchars($catatanLab)) ?>
+                                                    </div>
+                                                  <?php } ?>
+
                                                 </div>
 
                                               <?php
                                               }
+                                              $stmtHasil->close();
                                             } else {
+                                              $stmtHasil->close();
                                               ?>
 
                                               <div class="text-center text-muted py-3">
