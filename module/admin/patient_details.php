@@ -430,8 +430,19 @@ $pt = $_GET['pt'];
                           <div style="max-height: 500px; overflow-y: auto; padding-right: 5px;">
 
                             <?php
-                            $pt = $_GET['pt'] ?? '';
-                            $getquery = tampildata("SELECT pv.*, mp.nomor_rm FROM pasien_visit pv LEFT JOIN ms_patient mp ON mp.id_patient = pv.id_patient WHERE pv.id_patient='$pt' AND (pv.visit_status IS NULL OR pv.visit_status <> 99) ORDER BY visit_date DESC");
+                            $pt = (string) ($_GET['pt'] ?? '');
+                            // Riwayat kunjungan pasien, kunjungan batal (visit_status 99) tidak ditampilkan.
+                            // Prepared statement agar parameter ?pt= tidak bisa disisipi SQL.
+                            $stmtRiwayat = $koneksi->prepare("SELECT pv.*, mp.nomor_rm
+                              FROM pasien_visit pv
+                              LEFT JOIN ms_patient mp ON mp.id_patient = pv.id_patient
+                              WHERE pv.id_patient = ?
+                                AND (pv.visit_status IS NULL OR pv.visit_status <> 99)
+                              ORDER BY pv.visit_date DESC, pv.visit_time DESC");
+                            $stmtRiwayat->bind_param('s', $pt);
+                            $stmtRiwayat->execute();
+                            $getquery = $stmtRiwayat->get_result()->fetch_all(MYSQLI_ASSOC);
+                            $stmtRiwayat->close();
                             ?>
                             <?php if (!empty($getquery)): ?>
                               <div class="accordion" id="accordionExample">
