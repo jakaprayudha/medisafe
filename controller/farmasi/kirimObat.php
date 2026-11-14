@@ -133,7 +133,7 @@ $stmt2 = null;
 $stmt3 = null;
 
 // ================== JIKA BUKAN BPJS ==================
-if ($id_provider != 1 || $status_RI == '1') {
+if ($id_provider != 1) {
    [$okUpdate, $errUpdate] = updateStatusTiket($koneksi, $ids, $id_customer);
 
    if ($okUpdate) {
