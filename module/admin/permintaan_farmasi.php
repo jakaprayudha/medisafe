@@ -181,6 +181,656 @@ require '../../controller/view.php';
     </div>
   </div>
 </div>
+<!-- 🧪 Modal Form Racikan -->
+<style>
+  #racikanModal .modal-content {
+    border: 0;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  #racikanModal .modal-header {
+    background: linear-gradient(135deg, #5d87ff 0%, #49beff 100%);
+    color: #fff;
+    border: 0;
+  }
+
+  #racikanModal .modal-header .btn-close {
+    filter: invert(1) brightness(2);
+  }
+
+  #racikanModal .modal-body {
+    background: #f6f8fb;
+  }
+
+  #racikanModal .rck-card {
+    background: #fff;
+    border: 1px solid #e5eaef;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+
+  #racikanModal .rck-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  #racikanModal .rck-step-no {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #5d87ff;
+    color: #fff;
+    font-weight: 600;
+    font-size: .85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  #racikanModal .rck-step-title {
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 0;
+  }
+
+  #racikanModal .rck-step-sub {
+    font-size: .78rem;
+    color: #6c757d;
+    margin: 0;
+  }
+
+  #racikanModal .form-label {
+    font-size: .8rem;
+    font-weight: 600;
+    color: #2a3547;
+    margin-bottom: 4px;
+  }
+
+  #racikanModal .req {
+    color: #fa896b;
+  }
+
+  #racikanModal .rck-help {
+    font-size: .75rem;
+    color: #6c757d;
+  }
+
+  /* pilihan tipe racik */
+  #racikanModal .tipe-option {
+    display: block;
+    border: 2px solid #e5eaef;
+    border-radius: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    height: 100%;
+    transition: all .15s;
+  }
+
+  #racikanModal .btn-check:checked+.tipe-option {
+    border-color: #5d87ff;
+    background: #ecf2ff;
+  }
+
+  #racikanModal .tipe-option .tipe-nama {
+    font-weight: 600;
+  }
+
+  #racikanModal .tipe-option .tipe-desc {
+    font-size: .75rem;
+    color: #6c757d;
+  }
+
+  /* template */
+  #racikanModal .rck-template {
+    background: #fff8e6;
+    border: 1px dashed #ffae1f;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+  }
+
+  /* ringkasan */
+  #racikanModal .rck-summary {
+    background: #ecf2ff;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: .85rem;
+    color: #2a3547;
+  }
+
+  /* tabel bahan */
+  #racikanModal .bahan-table th {
+    font-size: .75rem;
+    font-weight: 600;
+    color: #5a6a85;
+    background: #f6f8fb;
+    white-space: nowrap;
+  }
+
+  #racikanModal .bahan-table td {
+    vertical-align: middle;
+  }
+
+  #racikanModal .bahan-no {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #e5eaef;
+    font-size: .8rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #racikanModal .bahan-total {
+    display: inline-block;
+    font-weight: 600;
+    color: #13a58b;
+    white-space: nowrap;
+  }
+
+  #racikanModal .bahan-total small {
+    display: block;
+    font-weight: 400;
+    color: #6c757d;
+  }
+
+  #racikanModal .bahan-empty {
+    text-align: center;
+    color: #6c757d;
+    padding: 24px 0;
+  }
+
+  #racikanModal .select2-container .select2-selection--single {
+    height: 38px;
+    border-color: #dfe5ef;
+  }
+
+  #racikanModal .select2-container .select2-selection--single .select2-selection__rendered {
+    line-height: 36px;
+  }
+
+  #racikanModal .select2-container .select2-selection--single .select2-selection__arrow {
+    height: 36px;
+  }
+
+  #racikanModal .is-invalid+.select2-container .select2-selection {
+    border-color: #fa896b;
+  }
+</style>
+<div class="modal fade" id="racikanModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <form id="racikanForm" class="modal-content" novalidate>
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title text-white mb-0"><i class="fas fa-mortar-pestle me-2"></i>Form Racikan</h5>
+          <small class="opacity-75" id="racikanInfo"></small>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <input type="hidden" id="rckId">
+
+        <!-- TEMPLATE -->
+        <div class="rck-template d-flex flex-wrap align-items-center gap-3">
+          <div class="d-flex align-items-center gap-2">
+            <i class="fas fa-bookmark text-warning fs-5"></i>
+            <div>
+              <div class="fw-semibold">Pakai racikan tersimpan?</div>
+              <div class="rck-help">Pilih template untuk mengisi form otomatis.</div>
+            </div>
+          </div>
+          <div class="flex-grow-1" style="min-width:260px">
+            <select id="rckTemplate" class="form-select" style="width:100%"></select>
+          </div>
+        </div>
+
+        <!-- 1. INFORMASI RACIKAN -->
+        <div class="rck-card">
+          <div class="rck-step">
+            <span class="rck-step-no">1</span>
+            <div>
+              <p class="rck-step-title">Informasi Racikan</p>
+              <p class="rck-step-sub">Nama racikan dan berapa banyak yang dibuat.</p>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="rckNama">Nama Racikan <span class="req">*</span></label>
+              <input type="text" id="rckNama" class="form-control" maxlength="255" placeholder="Contoh: Racikan Batuk Anak">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="rckJumlah">Jumlah yang Dibuat <span class="req">*</span></label>
+              <div class="input-group">
+                <input type="number" id="rckJumlah" class="form-control" min="1" step="1" placeholder="10">
+                <input type="text" id="rckSatuan" class="form-control" list="rckSatuanList" maxlength="100" placeholder="Satuan, mis. Pulvis" style="max-width:55%">
+              </div>
+              <datalist id="rckSatuanList">
+                <option value="Pulvis">
+                <option value="Kapsul">
+                <option value="Salep">
+                <option value="Krim">
+                <option value="Sirup">
+                <option value="Botol">
+                <option value="Pot">
+              </datalist>
+              <div class="rck-help mt-1">Contoh: 10 Pulvis = dibuat 10 bungkus puyer.</div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Tipe Racik <span class="req">*</span></label>
+              <div class="row g-2">
+                <div class="col-md-6">
+                  <input type="radio" class="btn-check" name="rckTipe" id="rckTipeDtd" value="DTD">
+                  <label class="tipe-option" for="rckTipeDtd">
+                    <div class="tipe-nama"><i class="fas fa-cube me-1 text-primary"></i> DTD</div>
+                    <div class="tipe-desc">Jumlah bahan diisi <b>untuk 1 bungkus</b>. Total dihitung otomatis (per bungkus × jumlah dibuat).</div>
+                  </label>
+                </div>
+                <div class="col-md-6">
+                  <input type="radio" class="btn-check" name="rckTipe" id="rckTipeNonDtd" value="NON_DTD" checked>
+                  <label class="tipe-option" for="rckTipeNonDtd">
+                    <div class="tipe-nama"><i class="fas fa-cubes me-1 text-primary"></i> Non DTD</div>
+                    <div class="tipe-desc">Jumlah bahan diisi <b>total untuk semua bungkus</b>, lalu dibagi rata.</div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. ATURAN PAKAI -->
+        <div class="rck-card">
+          <div class="rck-step">
+            <span class="rck-step-no">2</span>
+            <div>
+              <p class="rck-step-title">Aturan Pakai</p>
+              <p class="rck-step-sub">Isi frekuensi, signatura akan terisi otomatis.</p>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Frekuensi Pemberian</label>
+              <div class="input-group">
+                <input type="number" id="rckFrekKali" class="form-control" min="0" step="any" placeholder="3">
+                <span class="input-group-text">kali ×</span>
+                <input type="number" id="rckFrekDosis" class="form-control" min="0" step="any" placeholder="1">
+                <select id="rckFrekPeriode" class="form-select">
+                  <option value="">Periode</option>
+                  <option value="Hari">per Hari</option>
+                  <option value="Minggu">per Minggu</option>
+                  <option value="Bulan">per Bulan</option>
+                </select>
+              </div>
+              <div class="rck-help mt-1">Contoh: 3 kali × 1 per Hari.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="rckSigna">Signatura <span class="req">*</span></label>
+              <input type="text" id="rckSigna" class="form-control" maxlength="255" placeholder="Contoh: 3x1 sesudah makan">
+              <div class="rck-help mt-1">Ketik <b>-</b> (strip) jika tidak ada signatura.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. BAHAN -->
+        <div class="rck-card">
+          <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+            <div class="rck-step mb-2">
+              <span class="rck-step-no">3</span>
+              <div>
+                <p class="rck-step-title">Bahan Racikan <span class="badge bg-light text-dark ms-1" id="rckBahanCount">0</span></p>
+                <p class="rck-step-sub" id="rckTipeHelp"></p>
+              </div>
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm" id="rckTambahBahan">
+              <i class="fas fa-plus me-1"></i> Tambah Bahan
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table bahan-table align-top mb-0">
+              <thead>
+                <tr>
+                  <th style="width:40px">#</th>
+                  <th style="min-width:260px">Nama Obat <span class="req">*</span></th>
+                  <th style="width:150px" id="rckQtyHeader">Jumlah <span class="req">*</span></th>
+                  <th style="width:130px">Total Diambil</th>
+                  <th style="min-width:200px">Keterangan</th>
+                  <th style="width:50px"></th>
+                </tr>
+              </thead>
+              <tbody id="rckBahanList"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- RINGKASAN -->
+        <div class="rck-summary" id="rckSummary"></div>
+      </div>
+      <div class="modal-footer bg-white">
+        <div class="form-check me-auto">
+          <input class="form-check-input" type="checkbox" id="rckSimpanTemplate">
+          <label class="form-check-label" for="rckSimpanTemplate">
+            <i class="fas fa-bookmark text-warning me-1"></i> Simpan sebagai template racikan
+          </label>
+          <div class="rck-help">Bisa dipakai lagi untuk pasien lain. Nama yang sama akan ditimpa.</div>
+        </div>
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+        <button type="submit" class="btn btn-primary" id="rckSimpan"><i class="fas fa-save me-1"></i> Simpan Racikan</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+  $(function() {
+    const rckApi = 'controller/farmasi/racikan.php';
+    const $modal = $('#racikanModal');
+    const $list = $('#rckBahanList');
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+    const tipeRacik = () => $('input[name="rckTipe"]:checked').val() || 'NON_DTD';
+    const angka = (v) => Math.round(v * 10000) / 10000;
+    const fmt = (v) => Number(v).toLocaleString('id-ID', {
+      maximumFractionDigits: 4
+    });
+
+    // select2 obat (ajax) untuk satu baris bahan
+    function initSelectObat($select) {
+      $select.select2({
+        dropdownParent: $modal,
+        width: '100%',
+        placeholder: 'Ketik nama obat...',
+        ajax: {
+          url: rckApi,
+          dataType: 'json',
+          delay: 250,
+          data: params => ({
+            obat: 1,
+            q: params.term || ''
+          }),
+          processResults: data => ({
+            results: data.results || []
+          })
+        }
+      });
+    }
+
+    function kosongkanBahan() {
+      $list.find('.bahan-obat').each(function() {
+        if ($(this).data('select2')) $(this).select2('destroy');
+      });
+      $list.empty();
+    }
+
+    function tambahBahan(b = {}, buka = false) {
+      $list.find('.bahan-empty-row').remove();
+      const $row = $(`
+        <tr class="bahan-row">
+          <td><span class="bahan-no"></span></td>
+          <td><select class="form-select bahan-obat"></select></td>
+          <td>
+            <div class="input-group">
+              <input type="number" class="form-control bahan-qty" min="0" step="any" placeholder="mis. 1">
+            </div>
+          </td>
+          <td><span class="bahan-total">-</span></td>
+          <td><input type="text" class="form-control bahan-catatan" maxlength="1000" placeholder="Opsional"></td>
+          <td class="text-end">
+            <button type="button" class="btn btn-light text-danger bahan-hapus" title="Hapus bahan">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>`);
+      $row.attr('data-id', b.id || '');
+      const $select = $row.find('.bahan-obat');
+      if (b.id_pharmacy) {
+        $select.append(new Option(b.nama || ('#' + b.id_pharmacy), b.id_pharmacy, true, true));
+      }
+      $row.find('.bahan-qty').val(b.qty ?? '');
+      $row.find('.bahan-catatan').val(b.catatan || '');
+      $list.append($row);
+      initSelectObat($select);
+      perbarui();
+      if (buka) $select.select2('open');
+    }
+
+    // hitung total per bahan + label + ringkasan
+    function perbarui() {
+      const dtd = tipeRacik() === 'DTD';
+      const jumlah = parseFloat($('#rckJumlah').val()) || 0;
+      const satuan = $('#rckSatuan').val().trim() || 'bungkus';
+      const $rows = $list.find('.bahan-row');
+
+      $('#rckQtyHeader').html((dtd ? 'Jumlah / 1 Bungkus' : 'Jumlah Total') + ' <span class="req">*</span>');
+      $('#rckTipeHelp').html(dtd ?
+        'DTD: isi jumlah bahan untuk <b>1 bungkus</b>, total dihitung otomatis.' :
+        'Non DTD: isi jumlah <b>total</b> bahan untuk seluruh racikan.');
+      $('#rckBahanCount').text($rows.length);
+
+      if (!$rows.length) {
+        $list.html(`<tr class="bahan-empty-row"><td colspan="6" class="bahan-empty">
+          <i class="fas fa-pills fs-4 d-block mb-2"></i>Belum ada bahan. Klik <b>Tambah Bahan</b>.</td></tr>`);
+      }
+
+      $rows.each(function(i) {
+        $(this).find('.bahan-no').text(i + 1);
+        const qty = parseFloat($(this).find('.bahan-qty').val()) || 0;
+        let total = '-';
+        if (qty > 0) {
+          const t = dtd ? (jumlah > 0 ? angka(qty * jumlah) : null) : qty;
+          if (t === null) {
+            total = '<span class="text-muted fw-normal">isi jumlah dibuat</span>';
+          } else {
+            total = Number.isInteger(t) ? fmt(t) :
+              `${fmt(Math.ceil(t))}<small>${fmt(t)} dibulatkan ke atas</small>`;
+          }
+        }
+        $(this).find('.bahan-total').html(total);
+      });
+
+      // ringkasan
+      const nama = $('#rckNama').val().trim();
+      const kali = $('#rckFrekKali').val(),
+        dosis = $('#rckFrekDosis').val(),
+        periode = $('#rckFrekPeriode').val();
+      const frek = kali && dosis && periode ? `${kali} × ${dosis} per ${periode}` : '';
+      const signa = $('#rckSigna').val().trim();
+      const bagian = [
+        `<b>${esc(nama || 'Racikan tanpa nama')}</b>`,
+        jumlah ? `${esc(jumlah)} ${esc(satuan)}` : '<span class="text-muted">jumlah belum diisi</span>',
+        dtd ? 'DTD' : 'Non DTD',
+        `${$rows.length} bahan`,
+        frek ? esc(frek) : (signa ? `Signa: ${esc(signa)}` : '<span class="text-muted">aturan pakai belum diisi</span>')
+      ];
+      $('#rckSummary').html(`<i class="fas fa-clipboard-check me-1 text-primary"></i> ${bagian.join(' &nbsp;•&nbsp; ')}`);
+    }
+
+    function isiForm(d) {
+      $('#rckNama').val(d.nama || '');
+      $(d.tipe === 'DTD' ? '#rckTipeDtd' : '#rckTipeNonDtd').prop('checked', true);
+      $('#rckJumlah').val(d.jumlah || '');
+      $('#rckSatuan').val(d.satuan || '');
+      $('#rckSigna').val(d.signa || '');
+      $('#rckFrekKali').val(d.frek_kali || '');
+      $('#rckFrekDosis').val(d.frek_dosis || '');
+      $('#rckFrekPeriode').val(d.frek_periode || '');
+      $modal.find('.is-invalid').removeClass('is-invalid');
+      kosongkanBahan();
+      (d.bahan || []).forEach(b => tambahBahan(b));
+      if (!(d.bahan || []).length) tambahBahan();
+      perbarui();
+    }
+
+    // template racikan
+    $('#rckTemplate').select2({
+      dropdownParent: $modal,
+      width: '100%',
+      allowClear: true,
+      placeholder: 'Cari template racikan...',
+      ajax: {
+        url: rckApi,
+        dataType: 'json',
+        delay: 250,
+        data: params => ({
+          templates: 1,
+          q: params.term || ''
+        }),
+        processResults: data => ({
+          results: data.results || []
+        })
+      }
+    }).on('select2:select', function(e) {
+      fetch(`${rckApi}?template=${encodeURIComponent(e.params.data.id)}`)
+        .then(res => res.json())
+        .then(res => {
+          if (res.status !== 'success') {
+            Swal.fire('Gagal!', res.message || 'Template tidak dapat dimuat.', 'error');
+            return;
+          }
+          isiForm(res.data); // bahan lama diganti bahan dari template
+        });
+    });
+
+    // buka form dari tombol "+ Racikan" di Actions
+    $(document).on('click', '.racikan-btn', function() {
+      const id = $(this).data('id');
+      $('#rckId').val(id);
+      $('#racikanInfo').text(`Resep #${id}`);
+      $('#rckSimpanTemplate').prop('checked', false);
+      $('#rckTemplate').val(null).trigger('change');
+      kosongkanBahan();
+      $list.html('<tr><td colspan="6" class="bahan-empty"><span class="spinner-border spinner-border-sm me-2"></span>Memuat data...</td></tr>');
+      $modal.modal('show');
+
+      fetch(`${rckApi}?id=${encodeURIComponent(id)}`)
+        .then(res => res.json())
+        .then(res => {
+          if (res.status !== 'success') {
+            $modal.modal('hide');
+            Swal.fire('Gagal!', res.message || 'Data racikan tidak dapat dimuat.', 'error');
+            return;
+          }
+          isiForm(res.data);
+        })
+        .catch(() => {
+          $modal.modal('hide');
+          Swal.fire('Gagal!', 'Terjadi kesalahan pada server.', 'error');
+        });
+    });
+
+    $('#rckTambahBahan').on('click', () => tambahBahan({}, true));
+    $list.on('click', '.bahan-hapus', function() {
+      const $row = $(this).closest('.bahan-row');
+      const $select = $row.find('.bahan-obat');
+      if ($select.data('select2')) $select.select2('destroy');
+      $row.remove();
+      perbarui();
+    });
+    $list.on('input', '.bahan-qty', perbarui);
+    $list.on('change', '.bahan-obat', function() {
+      $(this).removeClass('is-invalid');
+    });
+    $modal.on('input change', '#rckNama, #rckJumlah, #rckSatuan, #rckSigna, #rckFrekKali, #rckFrekDosis, #rckFrekPeriode, input[name="rckTipe"]', function() {
+      $(this).removeClass('is-invalid');
+      perbarui();
+    });
+
+    // signatura otomatis dari frekuensi (kalau signatura masih kosong / hasil otomatis)
+    $('#rckFrekKali, #rckFrekDosis').on('input', function() {
+      const kali = $('#rckFrekKali').val(),
+        dosis = $('#rckFrekDosis').val();
+      const $signa = $('#rckSigna');
+      if (kali && dosis && ($signa.val().trim() === '' || $signa.data('auto'))) {
+        $signa.val(`${kali}x${dosis}`).data('auto', true);
+        perbarui();
+      }
+    });
+    $('#rckSigna').on('input', function() {
+      $(this).data('auto', false);
+    });
+
+    function tandai($el) {
+      $el.addClass('is-invalid');
+      return false;
+    }
+
+    $('#racikanForm').on('submit', function(e) {
+      e.preventDefault();
+      $modal.find('.is-invalid').removeClass('is-invalid');
+
+      // validasi di browser supaya field yang kurang langsung terlihat (validasi utama tetap di server)
+      let valid = true;
+      if (!$('#rckNama').val().trim()) valid = tandai($('#rckNama'));
+      if (!(parseInt($('#rckJumlah').val(), 10) > 0)) valid = tandai($('#rckJumlah'));
+      if (!$('#rckSatuan').val().trim()) valid = tandai($('#rckSatuan'));
+      if (!$('#rckSigna').val().trim()) valid = tandai($('#rckSigna'));
+      const $rows = $list.find('.bahan-row');
+      $rows.each(function() {
+        if (!$(this).find('.bahan-obat').val()) valid = tandai($(this).find('.bahan-obat'));
+        if (!(parseFloat($(this).find('.bahan-qty').val()) > 0)) valid = tandai($(this).find('.bahan-qty'));
+      });
+      if (!$rows.length) {
+        Swal.fire('Lengkapi data', 'Tambahkan minimal 1 bahan racikan.', 'warning');
+        return;
+      }
+      if (!valid) {
+        Swal.fire('Lengkapi data', 'Kolom bertanda merah wajib diisi.', 'warning');
+        return;
+      }
+
+      const payload = {
+        id: $('#rckId').val(),
+        nama: $('#rckNama').val().trim(),
+        tipe: tipeRacik(),
+        jumlah: $('#rckJumlah').val(),
+        satuan: $('#rckSatuan').val().trim(),
+        signa: $('#rckSigna').val().trim(),
+        frek_kali: $('#rckFrekKali').val(),
+        frek_dosis: $('#rckFrekDosis').val(),
+        frek_periode: $('#rckFrekPeriode').val(),
+        simpan_template: $('#rckSimpanTemplate').is(':checked'),
+        bahan: $rows.map(function() {
+          return {
+            id: $(this).attr('data-id') || null,
+            id_pharmacy: $(this).find('.bahan-obat').val(),
+            qty: $(this).find('.bahan-qty').val(),
+            catatan: $(this).find('.bahan-catatan').val().trim()
+          };
+        }).get()
+      };
+
+      const $btn = $('#rckSimpan').prop('disabled', true);
+      fetch(rckApi, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(res => {
+          if (res.status === 'success') {
+            $modal.modal('hide');
+            Swal.fire('Berhasil!', res.message, 'success');
+            $('#periodeTable').DataTable().ajax.reload(null, false);
+          } else {
+            Swal.fire('Gagal!', res.message || 'Racikan gagal disimpan.', 'error');
+          }
+        })
+        .catch(() => Swal.fire('Gagal!', 'Terjadi kesalahan pada server.', 'error'))
+        .finally(() => $btn.prop('disabled', false));
+    });
+  });
+</script>
 <script>
   $(document).ready(function() {
     $('#id_pharmacy').select2({
@@ -201,6 +851,9 @@ require '../../controller/view.php';
   const nomorm = urlParams.get('rm') || 'c'; // default kalau kosong
 
   let tiketBelumKirim = [];
+  const escapeHtmlRow = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({
@@ -223,6 +876,19 @@ require '../../controller/view.php';
 
                 let btnDelete = '';
                 let btnKirim = '';
+                let btnRacikan = '';
+
+                // 🧪 tiket racikan yang belum selesai → form racikan
+                if (String(row.tipe_obat || '').trim().toLowerCase() === 'racikan' && row.status_permintaan != 3) {
+                  btnRacikan = `
+      <a class="btn btn-warning racikan-btn"
+         href="javascript:;"
+         title="Form Racikan"
+         data-id="${row.id_permintaan_farmasi}">
+        <i class="fas fa-mortar-pestle"></i> + Racikan
+      </a>
+    `;
+                }
 
                 // 📤 belum dikirim → tombol kirim obat per tiket
                 if (row.status_permintaan == 0) {
@@ -264,6 +930,8 @@ require '../../controller/view.php';
           <i class="fas fa-pencil"></i>
         </a>
 
+        ${btnRacikan}
+
         ${btnKirim}
 
         ${btnDelete}
@@ -274,7 +942,7 @@ require '../../controller/view.php';
 
               })(),
               "timestamp": row.created_at ?? "-",
-              "tipe_obat": row.tipe_obat ?? "-",
+              "tipe_obat": escapeHtmlRow(row.tipe_obat ?? "-") + (row.rck_nama ? `<div class="small text-muted">${escapeHtmlRow(row.rck_nama)}</div>` : ''),
               "catatan": row.catatan_permintaan ?? "-",
               "status_permintaan": (function() {
                 let status = row.status_permintaan;

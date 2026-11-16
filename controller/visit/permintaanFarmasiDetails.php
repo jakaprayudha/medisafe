@@ -320,6 +320,13 @@ function updateData()
    $fields = [];
    $values = [];
 
+   // qty racikan (per bungkus) dari form racikan jadi tidak berlaku kalau qty total diubah di sini.
+   // Harus di depan qty=? karena MySQL meng-update kolom berurutan dari kiri.
+   if (isset($_PUT['qty'])) {
+      $fields[] = "qty_racik=IF(qty=?, qty_racik, NULL)";
+      $values[] = $_PUT['qty'];
+   }
+
    foreach ($allowedFields as $f) {
       if (isset($_PUT[$f])) {
          $fields[] = "$f=?";
