@@ -1,29 +1,48 @@
 <?php
 
-function rmeCycleTherapy(array $requests, array $details): string
-{
-    $items = [];
-    $counts = [];
+function rmeCycleTherapy(array $requests, array $details): array{
+    $obatItems = [];
+    $bmhpItems = [];
+    $counts    = [];
+
     foreach ($details as $detail) {
         $requestId = (int) $detail['id_permintaan_farmasi'];
-        $name = trim((string) ($detail['pharmacy_name_generic'] ?? ''));
-        $qty = $detail['qty'] ?? null;
+        $category  = strtoupper(trim((string) ($detail['pharmacy_category'] ?? 'OBAT')));
+        $name      = trim((string) ($detail['pharmacy_name_generic'] ?? ''));
+        $qty       = $detail['qty'] ?? null;
+
         $signa = trim((string) ($detail['signa'] ?? ''));
         if ($signa === '' || $signa === '-') {
             $signa = trim((string) ($detail['rck_signa'] ?? ''));
         }
-        if ($name === '' || !is_numeric($qty) || (float) $qty <= 0 || $signa === '') {
-            throw new InvalidArgumentException("Rincian resep #$requestId belum lengkap. Periksa nama obat, jumlah, dan signa.");
+
+        if ($category === 'BMHP') {
+            if ($name === '' || !is_numeric($qty) || (float) $qty <= 0) {
+                throw new InvalidArgumentException("Rincian BMHP #$requestId belum lengkap. Periksa nama item dan jumlah.");
+            }
+            $counts[$requestId] = ($counts[$requestId] ?? 0) + 1;
+            $bmhpItems[] = ($signa !== '' && $signa !== '-')
+                ? "$name/$signa/$qty"
+                : "$name/$qty";
+        } else {
+            if ($name === '' || !is_numeric($qty) || (float) $qty <= 0 || $signa === '' || $signa === '-') {
+                throw new InvalidArgumentException("Rincian resep #$requestId belum lengkap. Periksa nama obat, jumlah, dan signa.");
+            }
+            $counts[$requestId] = ($counts[$requestId] ?? 0) + 1;
+            $obatItems[] = "$name/$signa/$qty";
         }
-        $counts[$requestId] = ($counts[$requestId] ?? 0) + 1;
-        $items[] = $name . '/' . $signa . '/' . $qty;
     }
+
     foreach ($requests as $request) {
         if ((int) $request['status_permintaan'] === 0 && empty($counts[(int) $request['id_permintaan_farmasi']])) {
-            throw new InvalidArgumentException("Resep #" . $request['id_permintaan_farmasi'] . " belum memiliki rincian obat. Lengkapi atau hapus tiket kosong sebelum menyimpan pemeriksaan.");
+            throw new InvalidArgumentException("Resep #" . $request['id_permintaan_farmasi'] . " belum memiliki rincian obat/BMHP. Lengkapi atau hapus tiket kosong sebelum mengirim.");
         }
     }
-    return implode(', ', $items);
+
+    return [
+        'terapiObat' => implode(', ', $obatItems),
+        'bmhp'       => implode(', ', $bmhpItems),
+    ];
 }
 
 function saveRmeCycle(mysqli $db, array $post, int $clinic, callable $saveVisit): array

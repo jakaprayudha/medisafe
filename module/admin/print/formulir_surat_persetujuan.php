@@ -176,7 +176,7 @@ $signatureSaksi = $saksi['signature_user'] ?? null;
          $dokter = mysqli_fetch_assoc($dokter);
          $signatureDokter = $dokter['signature_user'] ?? null;
       }
-      ?>
+         ?>
       <div class="kolom-ttd">
          <p>Dokter yang Merawat</p>
          <?php if ($signatureDokter): ?>

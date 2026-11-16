@@ -82,11 +82,7 @@ try {
    }
 
    // ================== CEK PROVIDER ==================
-   $stmtProv = $koneksi->prepare("
-      SELECT id_provider, status_rawatinap, visit_status 
-      FROM pasien_visit 
-      WHERE visit_ID = ? AND id_customer = ?
-   ");
+   $stmtProv = $koneksi->prepare("SELECT id_provider, status_rawatinap, visit_status FROM pasien_visit  WHERE visit_ID = ? AND id_customer = ? ");
    $stmtProv->bind_param("ss", $nomor_visit, $id_customer);
    $stmtProv->execute();
    $prov = $stmtProv->get_result()->fetch_assoc();
@@ -99,7 +95,6 @@ try {
       throw new RuntimeException('Kunjungan sudah dibatalkan');
    }
 
-   // ================== JIKA BUKAN BPJS ==================
    if ((int)$prov['id_provider'] !== 1 || $prov['status_rawatinap'] == '1') {
       [$okUpdate, $errUpdate] = updateStatusTiket($koneksi, $ids, $id_customer);
       if (!$okUpdate) {
@@ -132,7 +127,7 @@ try {
    $stmtTickets->close();
 
    $stmt2 = $koneksi->prepare("
-      SELECT pd.*, p.pharmacy_name_generic, pp.rck_signa 
+      SELECT pd.*, p.pharmacy_category, p.pharmacy_name_generic, pp.rck_signa 
       FROM permintaan_pharmacy_details AS pd 
       INNER JOIN permintaan_pharmacy AS pp ON pp.id_permintaan_farmasi = pd.id_permintaan_farmasi 
       LEFT JOIN ms_pharmacy AS p ON p.id_pharmacy = pd.id_pharmacy 
@@ -145,9 +140,12 @@ try {
    $data_detailobat = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
    $stmt2->close();
 
-   $terapiObat = trim((string)rmeCycleTherapy($allTickets, $data_detailobat));
-   if ($terapiObat === '') {
-      throw new RuntimeException('Data terapi obat kosong setelah diproses. Periksa kelengkapan item obat.');
+   $hasilTerapi = rmeCycleTherapy($allTickets, $data_detailobat);
+   $terapiObat = $hasilTerapi['terapiObat'];
+   $bmhp       = $hasilTerapi['bmhp'];
+
+   if ($terapiObat === '' && $bmhp === '') {
+      throw new RuntimeException('Data terapi obat dan BMHP kosong setelah diproses. Periksa kelengkapan item.');
    }
 
    // Gunakan INNER JOIN id_patient agar tidak gagal jika format noKartu berbeda
@@ -173,7 +171,7 @@ try {
       $decodedRujuk = is_string($data['rujukLanjut']) ? json_decode($data['rujukLanjut'], true) : $data['rujukLanjut'];
       $rujukLanjut = is_array($decodedRujuk) ? $decodedRujuk : null;
    }
-
+   
    $payload = [
       "noKunjungan" => $noKunjungan,
       "noKartu" => $data['noKartu'] ?? null,
@@ -203,9 +201,9 @@ try {
       "alergiUdara" => $data['alergiUdara'] ?? null,
       "alergiObat" => $data['alergiObat'] ?? null,
       "kdPrognosa" => $data['kdPrognosa'] ?? null,
-      "terapiObat" => $terapiObat,
+      "terapiObat" => $terapiObat !== '' ? $terapiObat : "Tidak Ada Obat",
       "terapiNonObat" => $data['terapiNonObat'] ?? null,
-      "bmhp" => $data['bmhp'] ?? null,
+      "bmhp" => $bmhp !== '' ? $bmhp : "Tidak Ada Bmhp",
       "suhu" => $data['suhu'] ?? null
    ];
 
@@ -237,8 +235,10 @@ try {
       throw new RuntimeException($errUpdate ?: 'Gagal update status permintaan farmasi');
    }
 
-   $stmt4 = $koneksi->prepare("UPDATE pcare_kunjungan SET terapiObat = ? WHERE noKunjungan = ?");
-   $stmt4->bind_param('ss', $terapiObat, $noKunjungan);
+   $terapiObatDb = $terapiObat !== '' ? $terapiObat : 'Tidak Ada';
+   $bmhpDb       = $bmhp !== '' ? $bmhp : null;
+   $stmt4 = $koneksi->prepare("UPDATE pcare_kunjungan SET terapiObat = ?, bmhp = ? WHERE noKunjungan = ?");
+   $stmt4->bind_param('sss', $terapiObatDb, $bmhpDb, $noKunjungan);
    $okKunjungan = $stmt4->execute();
    $errKunjungan = $stmt4->error;
    $stmt4->close();
@@ -253,7 +253,6 @@ try {
       'message' => 'Berhasil kirim ke farmasi dan PCare BPJS',
       'total' => count($ids)
    ]);
-
 } catch (Throwable $e) {
    $koneksi->rollback();
    echo json_encode([
