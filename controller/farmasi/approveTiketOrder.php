@@ -21,6 +21,16 @@ if (!$visit || !$id_customer) {
    exit;
 }
 
+// Farmasi hanya boleh set Waiting(1) / Persiapan(2) / Selesai(3)
+$status = (int) $status;
+if (!in_array($status, [1, 2, 3], true)) {
+   echo json_encode([
+      'status' => 'error',
+      'message' => 'Status tidak valid'
+   ]);
+   exit;
+}
+
 try {
 
    $stmt = $koneksi->prepare("
@@ -28,7 +38,7 @@ try {
       SET status_permintaan = ?
       WHERE id_visit = ? 
       AND id_customer = ?
-      AND status_permintaan != 3
+      AND status_permintaan IN (1, 2)
    ");
 
    $stmt->bind_param("isi", $status, $visit, $id_customer);
@@ -36,7 +46,8 @@ try {
 
    echo json_encode([
       'status' => 'success',
-      'message' => 'Tiket selain status selesai berhasil diupdate'
+      'message' => 'Status tiket yang sudah dikirim berhasil diupdate',
+      'total' => $stmt->affected_rows
    ]);
 
    $result = farmasiupdate([
