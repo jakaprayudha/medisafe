@@ -115,17 +115,45 @@ foreach (rows(
 ) as $a) {
    $antrean[$a['nomor_visit']] = $a;
 }
+// resep per kunjungan + tiket yang belum dikirim (status_permintaan 0)
 $resep = [];
+$tiketBelum = [];
 foreach (rows(
    $koneksi,
-   "SELECT id_visit, MIN(created_at) resep_at FROM permintaan_pharmacy
-    WHERE id_customer = ? AND created_at >= ? AND created_at < ? + INTERVAL 2 DAY
-    GROUP BY id_visit",
+   "SELECT id_visit, id_permintaan_farmasi, status_permintaan, created_at FROM permintaan_pharmacy
+    WHERE id_customer = ? AND created_at >= ? AND created_at < ? + INTERVAL 2 DAY",
    'sss',
    [$idc, $from, $to]
 ) as $r) {
-   $resep[$r['id_visit']] = $r['resep_at'];
+   $v = $r['id_visit'];
+   $resep[$v]['resep_at'] = min($resep[$v]['resep_at'] ?? $r['created_at'], $r['created_at']);
+   $resep[$v]['total'] = ($resep[$v]['total'] ?? 0) + 1;
+   if ((int) $r['status_permintaan'] === 0) {
+      $tiketBelum[(int) $r['id_permintaan_farmasi']] = $v;
+   }
 }
+// jumlah obat valid per tiket belum dikirim (tiket kosong ditolak kirimObat.php)
+$itemTiket = [];
+if ($tiketBelum) {
+   $ids = array_keys($tiketBelum);
+   $ph = implode(',', array_fill(0, count($ids), '?'));
+   foreach (rows(
+      $koneksi,
+      "SELECT pd.id_permintaan_farmasi, COUNT(*) c FROM permintaan_pharmacy_details pd
+       INNER JOIN ms_pharmacy mp ON mp.id_pharmacy = pd.id_pharmacy
+       WHERE pd.id_permintaan_farmasi IN ($ph) GROUP BY pd.id_permintaan_farmasi",
+      str_repeat('i', count($ids)),
+      $ids
+   ) as $r) {
+      $itemTiket[(int) $r['id_permintaan_farmasi']] = (int) $r['c'];
+   }
+}
+$belumPerVisit = [];
+foreach ($tiketBelum as $idTiket => $v) {
+   $belumPerVisit[$v][$itemTiket[$idTiket] ?? 0 ? 'siap' : 'kosong'][] = $idTiket;
+}
+// tombol kirim hanya untuk faskes sesuai session (kirimObat.php memakai id_customer session)
+$bisaKirim = $idc === (string) (int) $_SESSION['id_customer'];
 
 // ================== KLASIFIKASI ==================
 function sumber($createdUser)
@@ -186,7 +214,24 @@ foreach ($visits as $v) {
 
    $hadirAt = $v['visit_time'] ? $v['visit_date'] . ' ' . $v['visit_time'] : null;
    $ambilAt = $ap['created_at'] ?? $v['created_at'];
-   $resepAt = $resep[$v['visit_ID']] ?? null;
+   $resepAt = $resep[$v['visit_ID']]['resep_at'] ?? null;
+
+   // status obat ke PCare
+   $belum = $belumPerVisit[$v['visit_ID']] ?? [];
+   $tiketSiap = $belum['siap'] ?? [];
+   if ($vs === 99) {
+      $obat = 'batal';
+   } elseif (empty($resep[$v['visit_ID']])) {
+      $obat = 'tidak_ada';
+   } elseif (!$belum) {
+      $obat = 'terkirim';
+   } elseif (!$tiketSiap) {
+      $obat = 'tiket_kosong';
+   } elseif (!$v['periksa_at']) {
+      $obat = 'belum_pcare';
+   } else {
+      $obat = 'belum';
+   }
    $dilayani = !in_array($vs, [99, 10], true);
 
    $detail[] = [
@@ -206,6 +251,8 @@ foreach ($visits as $v) {
       'hadir_at' => $hadirAt,
       'periksa_at' => $v['periksa_at'],
       'resep_at' => $resepAt,
+      'status_obat' => $obat,
+      'tiket_belum' => $tiketSiap,
       // ambil antrean -> hadir hanya dihitung di hari yang sama (booking Mobile JKN bisa H-1)
       'm_ambil_hadir' => $ambilAt && substr($ambilAt, 0, 10) === $v['visit_date'] ? menit($ambilAt, $hadirAt) : null,
       'm_hadir_periksa' => menit($hadirAt, $v['periksa_at']),
@@ -221,10 +268,13 @@ function agregat(array $rows)
       'sakit' => 0, 'sehat' => 0,
       'dilayani' => 0, 'online_dilayani' => 0, 'mobile_dilayani' => 0,
       'antrean_online' => 0, 'mobile' => 0, 'onsite' => 0, 'tanpa_antrol' => 0,
+      'obat_belum' => 0, 'obat_terkirim' => 0,
       'hadir' => 0, 'batal' => 0, 'tidak_checkin' => 0, 'belum_lapor' => 0, 'menunggu' => 0, 'tanpa_antrean' => 0,
    ];
    $waktu = ['m_ambil_hadir' => [], 'm_hadir_periksa' => [], 'm_periksa_resep' => []];
    foreach ($rows as $r) {
+      if (in_array($r['status_obat'], ['belum', 'belum_pcare', 'tiket_kosong'], true)) $a['obat_belum']++;
+      if ($r['status_obat'] === 'terkirim') $a['obat_terkirim']++;
       if ($r['sumber'] === 'sehat') {
          $a['sehat']++;
          continue;
@@ -284,7 +334,7 @@ function kelompok(array $rows, string $kunci)
 out([
    'status' => 'success',
    'periode' => ['from' => $from, 'to' => $to],
-   'config' => $config,
+   'config' => $config + ['bisa_kirim' => $bisaKirim],
    'kpi' => agregat($detail),
    'harian' => kelompok($detail, 'tanggal'),
    'poli' => kelompok($detail, 'poli'),
