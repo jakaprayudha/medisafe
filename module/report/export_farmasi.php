@@ -1,7 +1,9 @@
 <?php
-
+// Excel Laporan Stok Farmasi - kolom, urutan, filter & ringkasan sama dengan module/admin/rpt_farmasi
 require_once '../../vendor/autoload.php';
 include '../../database/connect.php';
+require_once __DIR__ . '/../../controller/report/farmasiStokService.php';
+mysqli_report(MYSQLI_REPORT_OFF);
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -9,934 +11,203 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 
-
-// ============================================================
-// SESSION
-// ============================================================
-
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
 $id_customer = $_SESSION['id_customer'] ?? null;
-
 if (!$id_customer) {
-
     http_response_code(403);
-
     exit('Session tidak ditemukan');
 }
 
-
-// ============================================================
-// FILTER TANGGAL
-// ============================================================
-
-$fromDate = $_GET['fromDate'] ?? date('Y-m-d');
-$toDate   = $_GET['toDate'] ?? date('Y-m-d');
-
-
-// ============================================================
-// VALIDASI TANGGAL
-// ============================================================
-
-$fromDateValid = DateTime::createFromFormat('Y-m-d', $fromDate);
-$toDateValid   = DateTime::createFromFormat('Y-m-d', $toDate);
-
-if (
-    !$fromDateValid ||
-    !$toDateValid ||
-    $fromDateValid->format('Y-m-d') !== $fromDate ||
-    $toDateValid->format('Y-m-d') !== $toDate
-) {
-
-    exit('Format tanggal tidak valid');
+$fromDate = (string) ($_GET['fromDate'] ?? date('Y-m-d'));
+$toDate = (string) ($_GET['toDate'] ?? date('Y-m-d'));
+if (($error = farmasiStokValidasiPeriode($fromDate, $toDate)) !== null) {
+    exit(htmlspecialchars($error));
 }
+$filter = farmasiStokParamFilter($_GET);
 
-
-if ($fromDate > $toDate) {
-
-    exit('Tanggal mulai tidak boleh lebih besar dari tanggal akhir');
+try {
+    $hasil = farmasiStokReport($koneksi, (string) $id_customer, $fromDate, $toDate);
+} catch (Throwable $e) {
+    error_log('[export farmasi] ' . $e->getMessage());
+    exit('Gagal mengambil data laporan farmasi');
 }
-
-
-// ============================================================
-// QUERY FARMASI
-// ============================================================
-
-$sql = "
-
-SELECT
-
-    /* ========================================================
-       MASTER OBAT
-       ======================================================== */
-
-    p.id_pharmacy,
-
-    p.pharmacy_code,
-
-    p.pharmacy_name_generic,
-
-    p.pharmacy_name_trade,
-
-    p.pharmacy_category,
-
-    p.pharmacy_unit,
-
-
-    /* ========================================================
-       STOCK MIN / MAX
-       ======================================================== */
-
-    COALESCE(p.stok_min, 0) AS stok_min,
-
-    COALESCE(p.stok_max, 0) AS stok_max,
-
-
-    /* ========================================================
-       STOCK SAAT INI
-       ======================================================== */
-
-    COALESCE(p.pharmacy_stock, 0) AS stok_saat_ini,
-
-
-    /* ========================================================
-       HARGA BELI
-       ======================================================== */
-
-    COALESCE(p.pharmacy_price_buy, 0) AS pharmacy_price_buy,
-
-
-    /* ========================================================
-       BARANG MASUK
-       TABLE: pharmacy_stock_penerimaan
-       ======================================================== */
-
-    COALESCE(
-
-        (
-
-            SELECT SUM(psp.jumlah)
-
-            FROM pharmacy_stock_penerimaan psp
-
-            WHERE
-
-                psp.id_pharmacy = CAST(p.id_pharmacy AS CHAR)
-
-                AND psp.id_customer = CAST(? AS CHAR)
-
-                AND psp.tanggal >= ?
-
-                AND psp.tanggal <= ?
-
-        ),
-
-        0
-
-    ) AS stok_masuk,
-
-
-    /* ========================================================
-       BARANG KELUAR
-       TABLE: permintaan_pharmacy_details
-       ======================================================== */
-
-    COALESCE(
-
-        (
-
-            SELECT SUM(pd.qty)
-
-            FROM permintaan_pharmacy_details pd
-
-            WHERE
-
-                pd.id_pharmacy = p.id_pharmacy
-
-                AND pd.created_at >= CONCAT(?, ' 00:00:00')
-
-                AND pd.created_at <= CONCAT(?, ' 23:59:59')
-
-        ),
-
-        0
-
-    ) AS stok_keluar,
-
-
-    /* ========================================================
-       REALTIME (semua waktu) - sama dengan stok_tersedia di Medisafe
-       ======================================================== */
-
-    COALESCE(
-        (
-            SELECT SUM(psp.jumlah)
-            FROM pharmacy_stock_penerimaan psp
-            WHERE
-                psp.id_pharmacy = CAST(p.id_pharmacy AS CHAR)
-                AND psp.id_customer = CAST(? AS CHAR)
-        ),
-        0
-    ) AS masuk_all,
-
-    COALESCE(
-        (
-            SELECT SUM(pd.qty)
-            FROM permintaan_pharmacy_details pd
-            WHERE
-                pd.id_pharmacy = p.id_pharmacy
-        ),
-        0
-    ) AS keluar_all
-
-
-FROM ms_pharmacy p
-
-LEFT JOIN ms_pharmacy_parrent log
-    ON log.parent_id = p.id_pharmacy
-    AND log.id_customer_real = ?
-
-
-/* ============================================================
-   FILTER CUSTOMER & STATUS MASTER
-   ============================================================ */
-
-WHERE
-
-    (
-        p.id_customer = ?
-        OR (
-            p.id_customer = 0
-            AND log.id IS NULL
-        )
-    )
-
-    -- Filter obat yang sudah dihapus
-    AND (
-        log.status_log IS NULL
-        OR log.status_log != 'DELETE'
-    )
-
-    AND p.pharmacy_name_generic IS NOT NULL
-    AND TRIM(p.pharmacy_name_generic) != ''
-
-    AND p.pharmacy_status = 1
-
-
-/* ============================================================
-   ORDER
-   ============================================================ */
-
-ORDER BY
-
-    p.pharmacy_name_generic ASC
-
-";
-
-
-// ============================================================
-// PREPARE
-// ============================================================
-
-$stmt = $koneksi->prepare($sql);
-
-if (!$stmt) {
-
-    exit('Prepare query gagal: ' .
-        $koneksi->error);
-}
-
-
-// ============================================================
-// BIND PARAMETER
-// ============================================================
-
-$stmt->bind_param(
-    "ssssssii",
-    $id_customer,
-    $fromDate,
-    $toDate,
-    $fromDate,
-    $toDate,
-    $id_customer,
-    $id_customer,
-    $id_customer
-);
-
-
-// ============================================================
-// EXECUTE
-// ============================================================
-
-if (!$stmt->execute()) {
-
-    exit('Execute query gagal: ' .
-        $stmt->error);
-}
-
-
-$result = $stmt->get_result();
-
-
-// ============================================================
-// SPREADSHEET
-// ============================================================
-
+$rows = farmasiStokFilter($hasil['data'], $filter);
+$ringkasan = farmasiStokRingkasan($rows);
+
+$stmt = $koneksi->prepare("SELECT clinic_name FROM setting_clinic WHERE id_customer = ? LIMIT 1");
+$stmt->bind_param('s', $id_customer);
+$stmt->execute();
+$namaKlinik = $stmt->get_result()->fetch_assoc()['clinic_name'] ?? '';
+$stmt->close();
+
+// ================== SHEET ==================
 $spreadsheet = new Spreadsheet();
-
 $sheet = $spreadsheet->getActiveSheet();
-
 $sheet->setTitle('Stok Farmasi');
+$spreadsheet->getDefaultStyle()->getFont()->setName('Arial')->setSize(10);
 
+$kolomAkhir = 'K';
+$fmtAngka = '#,##0';
+$fmtDesimal = '#,##0.00';
+// format per sel: bulat tanpa desimal, pecahan 2 desimal (setara tampilan layar)
+$formatAngka = function (string $sel, $nilai) use ($sheet, $fmtAngka, $fmtDesimal) {
+    $sheet->getStyle($sel)->getNumberFormat()->setFormatCode(fmod((float) $nilai, 1) == 0 ? $fmtAngka : $fmtDesimal);
+};
+$fmtRupiah = '"Rp "#,##0;-"Rp "#,##0;"Rp "0';
+$tgl = fn($d) => date('d/m/Y', strtotime($d));
 
-// ============================================================
-// JUDUL
-// ============================================================
+// kop
+$sheet->mergeCells("A1:{$kolomAkhir}1")->setCellValue('A1', strtoupper($namaKlinik ?: 'Klinik'));
+$sheet->mergeCells("A2:{$kolomAkhir}2")->setCellValue('A2', 'LAPORAN STOK FARMASI');
+$sheet->mergeCells("A3:{$kolomAkhir}3")->setCellValue('A3', 'Periode ' . $tgl($fromDate) . ' s/d ' . $tgl($toDate) . ' • ' . farmasiStokLabelFilter($filter));
+$sheet->getStyle('A1:A3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+$sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+$sheet->getStyle('A2')->getFont()->setBold(true)->setSize(12);
 
-$sheet->mergeCells('A1:L1');
-
-$sheet->setCellValue(
-    'A1',
-    'LAPORAN STOK FARMASI'
-);
-
-$sheet->getStyle('A1')->applyFromArray([
-
-    'font' => [
-        'bold' => true,
-        'size' => 16
-    ],
-
-    'alignment' => [
-        'horizontal' => Alignment::HORIZONTAL_CENTER,
-        'vertical' => Alignment::VERTICAL_CENTER
-    ]
-
-]);
-
-$sheet->getRowDimension(1)->setRowHeight(25);
-
-
-// ============================================================
-// PERIODE
-// ============================================================
-
-$sheet->mergeCells('A2:L2');
-
-$sheet->setCellValue(
-    'A2',
-    "Periode: $fromDate s/d $toDate"
-);
-
-$sheet->getStyle('A2')->applyFromArray([
-
-    'font' => [
-        'bold' => true,
-        'size' => 11
-    ],
-
-    'alignment' => [
-        'horizontal' => Alignment::HORIZONTAL_CENTER
-    ]
-
-]);
-
-
-// ============================================================
-// HEADER
-// ============================================================
-
-$headers = [
-
-    'Status',
-    'Kode Obat',
-    'Nama Obat',
-    'Kategori',
-    'Satuan',
-    'Stok Awal',
-    'Masuk',
-    'Keluar',
-    'Stok Akhir',
-    'Stok Min',
-    'Stok Max',
-    'Nilai Stok'
-
+// ringkasan (sama dengan kartu di layar)
+$ringkasanSel = [
+    ['A5', 'Obat ditampilkan', $ringkasan['total_item'], $fmtAngka],
+    ['C5', 'Stok habis', $ringkasan['habis'], $fmtAngka],
+    ['E5', 'Di bawah minimum', $ringkasan['minimum'], $fmtAngka],
+    ['G5', 'Di atas maksimum', $ringkasan['maximum'], $fmtAngka],
+    ['I5', 'Masuk periode', $ringkasan['stok_masuk'], $fmtAngka],
+    ['J5', 'Keluar periode', $ringkasan['stok_keluar'], $fmtAngka],
+    ['K5', 'Nilai stok akhir', $ringkasan['nilai_stok'], $fmtRupiah],
 ];
-
-
-$col = 'A';
-
-foreach ($headers as $header) {
-
-    $sheet->setCellValue(
-        $col . '4',
-        $header
-    );
-
-    $col++;
+foreach ($ringkasanSel as [$sel, $label, $nilai, $fmt]) {
+    $kol = preg_replace('/\d/', '', $sel);
+    $sheet->setCellValue($kol . '5', $label);
+    $sheet->setCellValue($kol . '6', $nilai);
+    $fmt === $fmtRupiah ? $sheet->getStyle($kol . '6')->getNumberFormat()->setFormatCode($fmt) : $formatAngka($kol . '6', $nilai);
+    $sheet->getStyle($kol . '5')->getFont()->setSize(9)->getColor()->setRGB('666666');
+    $sheet->getStyle($kol . '6')->getFont()->setBold(true)->setSize(12);
 }
 
+// header tabel (urutan sama dengan layar, plus No)
+$barisHeader = 8;
+$headers = ['No', 'Nama Obat', 'Kategori', 'Satuan', 'Stok Awal', 'Masuk', 'Keluar', 'Stok Akhir', 'Min / Max', 'Nilai Stok', 'Status'];
+$sheet->fromArray($headers, null, 'A' . $barisHeader);
+$sheet->getStyle("A{$barisHeader}:{$kolomAkhir}{$barisHeader}")->applyFromArray([
+    'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '2563EB']],
+    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+]);
+$sheet->getRowDimension($barisHeader)->setRowHeight(22);
 
-// ============================================================
-// HEADER STYLE
-// ============================================================
-
-$headerStyle = [
-
-    'font' => [
-        'bold' => true,
-        'color' => [
-            'rgb' => 'FFFFFF'
-        ]
-    ],
-
-    'fill' => [
-        'fillType' => Fill::FILL_SOLID,
-        'startColor' => [
-            'rgb' => '2563EB'
-        ]
-    ],
-
-    'alignment' => [
-        'horizontal' => Alignment::HORIZONTAL_CENTER,
-        'vertical' => Alignment::VERTICAL_CENTER
-    ],
-
-    'borders' => [
-
-        'allBorders' => [
-
-            'borderStyle' => Border::BORDER_THIN,
-
-            'color' => [
-                'rgb' => 'FFFFFF'
-            ]
-
-        ]
-
-    ]
-
+// data
+$warnaStatus = [
+    'habis' => ['FDE2DC', 'C0392B'], 'minimum' => ['FFF1D6', 'B7791F'],
+    'maximum' => ['DFF3FF', '1F78B4'], 'normal' => ['DCF7F0', '13A58B'],
 ];
+$baris = $barisHeader + 1;
+foreach ($rows as $i => $r) {
+    $sub = farmasiStokSubNama($r);
+    $nama = trim((string) $r['pharmacy_name_generic']) ?: '-';
+    $minMax = ((float) $r['stok_min'] || (float) $r['stok_max'])
+        ? farmasiStokAngka($r['stok_min']) . ' / ' . farmasiStokAngka($r['stok_max']) : '-';
 
+    $sheet->fromArray([
+        $i + 1,
+        $sub !== '' ? $nama . "\n" . $sub : $nama,
+        farmasiStokIsi($r['pharmacy_category']) ?: '-',
+        farmasiStokIsi($r['pharmacy_unit']) ?: '-',
+        (float) $r['stok_awal'],
+        (float) $r['stok_masuk'],
+        (float) $r['stok_keluar'],
+        (float) $r['stok_akhir'],
+        $minMax,
+        (float) $r['nilai_stok'],
+        $r['status_stock'],
+    ], null, 'A' . $baris, true);
 
-$sheet
-    ->getStyle('A4:L4')
-    ->applyFromArray($headerStyle);
-
-
-$sheet->getRowDimension(4)->setRowHeight(25);
-
-
-// ============================================================
-// DATA
-// ============================================================
-
-$rowNum = 5;
-
-
-while ($row = $result->fetch_assoc()) {
-
-
-    // ========================================================
-    // DATA
-    // ========================================================
-
-    $stokSaatIni =
-        (float) ($row['stok_saat_ini'] ?? 0);
-
-    $stokMasuk =
-        (float) ($row['stok_masuk'] ?? 0);
-
-    $stokKeluar =
-        (float) ($row['stok_keluar'] ?? 0);
-
-    $stokMin =
-        (float) ($row['stok_min'] ?? 0);
-
-    $stokMax =
-        (float) ($row['stok_max'] ?? 0);
-
-    $hargaBeli =
-        (float) ($row['pharmacy_price_buy'] ?? 0);
-
-
-    // ========================================================
-    // STOK AKHIR
-    // ========================================================
-    //
-    // pharmacy_stock = stok awal; stok akhir realtime
-    // = stok awal + semua masuk - semua keluar.
-    //
-
-    $stokAkhir =
-        $stokSaatIni
-        + (float) ($row['masuk_all'] ?? 0)
-        - (float) ($row['keluar_all'] ?? 0);
-
-
-    // ========================================================
-    // STOK AWAL
-    // ========================================================
-    //
-    // Stok Awal + Masuk - Keluar = Stok Akhir
-    //
-    // Stok Awal = Stok Akhir - Masuk + Keluar
-    //
-
-    $stokAwal =
-        $stokAkhir
-        - $stokMasuk
-        + $stokKeluar;
-
-
-    // Jangan sampai negatif
-
-    if ($stokAwal < 0) {
-        $stokAwal = 0;
-    }
-
-
-    // ========================================================
-    // NILAI STOK
-    // ========================================================
-
-    $nilaiStok =
-        $stokAkhir * $hargaBeli;
-
-
-    // ========================================================
-    // STATUS
-    // ========================================================
-
-    if ($stokAkhir <= 0) {
-
-        $status = 'Habis';
-
-        $statusColor = 'FFC7CE';
-    } elseif (
-        $stokMin > 0 &&
-        $stokAkhir < $stokMin
-    ) {
-
-        $status = 'Di Bawah Minimum';
-
-        $statusColor = 'FFF2CC';
-    } elseif (
-        $stokMax > 0 &&
-        $stokAkhir > $stokMax
-    ) {
-
-        $status = 'Di Atas Maksimum';
-
-        $statusColor = 'DDEBF7';
+    if ($sub !== '') {
+        // nama generik tebal, dagang • kode abu-abu (seperti di layar)
+        $rich = new \PhpOffice\PhpSpreadsheet\RichText\RichText();
+        $rich->createTextRun($nama)->getFont()->setBold(true)->setName('Arial')->setSize(10);
+        $run = $rich->createTextRun("\n" . $sub);
+        $run->getFont()->setName('Arial')->setSize(9)->getColor()->setRGB('777777');
+        $sheet->getCell('B' . $baris)->setValue($rich);
     } else {
-
-        $status = 'Normal';
-
-        $statusColor = 'C6EFCE';
+        $sheet->getStyle('B' . $baris)->getFont()->setBold(true);
     }
 
-
-    // ========================================================
-    // WRITE DATA
-    // ========================================================
-
-    $sheet->setCellValue(
-        'A' . $rowNum,
-        $status
-    );
-
-    $sheet->setCellValue(
-        'B' . $rowNum,
-        $row['pharmacy_code'] ?? '-'
-    );
-
-
-    // Nama obat
-
-    $namaObat =
-        $row['pharmacy_name_generic'] ?? '-';
-
-    if (!empty($row['pharmacy_name_trade'])) {
-
-        $namaObat .=
-            ' (' .
-            $row['pharmacy_name_trade'] .
-            ')';
+    foreach (['E' => 'stok_awal', 'F' => 'stok_masuk', 'G' => 'stok_keluar', 'H' => 'stok_akhir'] as $kol => $k) {
+        $formatAngka($kol . $baris, $r[$k]);
     }
-
-
-    $sheet->setCellValue(
-        'C' . $rowNum,
-        $namaObat
-    );
-
-
-    $sheet->setCellValue(
-        'D' . $rowNum,
-        $row['pharmacy_category'] ?? '-'
-    );
-
-
-    $sheet->setCellValue(
-        'E' . $rowNum,
-        $row['pharmacy_unit'] ?? '-'
-    );
-
-
-    // ========================================================
-    // STOCK
-    // ========================================================
-
-    $sheet->setCellValue(
-        'F' . $rowNum,
-        $stokAwal
-    );
-
-    $sheet->setCellValue(
-        'G' . $rowNum,
-        $stokMasuk
-    );
-
-    $sheet->setCellValue(
-        'H' . $rowNum,
-        $stokKeluar
-    );
-
-    $sheet->setCellValue(
-        'I' . $rowNum,
-        $stokAkhir
-    );
-
-    $sheet->setCellValue(
-        'J' . $rowNum,
-        $stokMin
-    );
-
-    $sheet->setCellValue(
-        'K' . $rowNum,
-        $stokMax
-    );
-
-
-    // ========================================================
-    // NILAI STOCK
-    // ========================================================
-
-    $sheet->setCellValue(
-        'L' . $rowNum,
-        $nilaiStok
-    );
-
-
-    // ========================================================
-    // FORMAT ANGKA
-    // ========================================================
-
-    $sheet
-        ->getStyle("F{$rowNum}:K{$rowNum}")
-        ->getNumberFormat()
-        ->setFormatCode('#,##0');
-
-
-    $sheet
-        ->getStyle("L{$rowNum}")
-        ->getNumberFormat()
-        ->setFormatCode(
-            '"Rp" #,##0'
-        );
-
-
-    // ========================================================
-    // STATUS COLOR
-    // ========================================================
-
-    $sheet
-        ->getStyle("A{$rowNum}")
-        ->getFill()
-        ->setFillType(Fill::FILL_SOLID);
-
-    $sheet
-        ->getStyle("A{$rowNum}")
-        ->getFill()
-        ->getStartColor()
-        ->setRGB($statusColor);
-
-
-    // ========================================================
-    // ALIGNMENT
-    // ========================================================
-
-    $sheet
-        ->getStyle("A{$rowNum}:L{$rowNum}")
-        ->getAlignment()
-        ->setVertical(
-            Alignment::VERTICAL_CENTER
-        );
-
-
-    $sheet
-        ->getStyle("A{$rowNum}")
-        ->getAlignment()
-        ->setHorizontal(
-            Alignment::HORIZONTAL_CENTER
-        );
-
-
-    $sheet
-        ->getStyle("E{$rowNum}")
-        ->getAlignment()
-        ->setHorizontal(
-            Alignment::HORIZONTAL_CENTER
-        );
-
-
-    $sheet
-        ->getStyle("F{$rowNum}:L{$rowNum}")
-        ->getAlignment()
-        ->setHorizontal(
-            Alignment::HORIZONTAL_RIGHT
-        );
-
-
-    // ========================================================
-    // BORDER
-    // ========================================================
-
-    $sheet
-        ->getStyle("A{$rowNum}:L{$rowNum}")
-        ->applyFromArray([
-
-            'borders' => [
-
-                'allBorders' => [
-
-                    'borderStyle' =>
-                    Border::BORDER_THIN,
-
-                    'color' => [
-                        'rgb' => 'CCCCCC'
-                    ]
-
-                ]
-
-            ]
-
-        ]);
-
-
-    // ========================================================
-    // ZEBRA ROW
-    // ========================================================
-
-    if ($rowNum % 2 === 0) {
-
-        $sheet
-            ->getStyle("B{$rowNum}:L{$rowNum}")
-            ->getFill()
-            ->setFillType(Fill::FILL_SOLID);
-
-        $sheet
-            ->getStyle("B{$rowNum}:L{$rowNum}")
-            ->getFill()
-            ->getStartColor()
-            ->setRGB('F8FAFC');
-    }
-
-
-    $rowNum++;
-}
-
-
-// ============================================================
-// TOTAL
-// ============================================================
-
-$totalRow = $rowNum;
-
-
-$sheet->setCellValue(
-    "A{$totalRow}",
-    'TOTAL'
-);
-
-$sheet->mergeCells(
-    "A{$totalRow}:E{$totalRow}"
-);
-
-
-// Total stok masuk
-
-$sheet->setCellValue(
-    "G{$totalRow}",
-    "=SUM(G5:G" . ($totalRow - 1) . ")"
-);
-
-
-// Total stok keluar
-
-$sheet->setCellValue(
-    "H{$totalRow}",
-    "=SUM(H5:H" . ($totalRow - 1) . ")"
-);
-
-
-// Total stok akhir
-
-$sheet->setCellValue(
-    "I{$totalRow}",
-    "=SUM(I5:I" . ($totalRow - 1) . ")"
-);
-
-
-// Total nilai stok
-
-$sheet->setCellValue(
-    "L{$totalRow}",
-    "=SUM(L5:L" . ($totalRow - 1) . ")"
-);
-
-
-// ============================================================
-// TOTAL STYLE
-// ============================================================
-
-$sheet
-    ->getStyle("A{$totalRow}:L{$totalRow}")
-    ->applyFromArray([
-
-        'font' => [
-            'bold' => true
-        ],
-
-        'fill' => [
-            'fillType' => Fill::FILL_SOLID,
-            'startColor' => [
-                'rgb' => 'E2E8F0'
-            ]
-        ],
-
-        'borders' => [
-
-            'allBorders' => [
-
-                'borderStyle' =>
-                Border::BORDER_THIN,
-
-                'color' => [
-                    'rgb' => '94A3B8'
-                ]
-
-            ]
-
-        ]
-
+    [$bg, $fg] = $warnaStatus[$r['status_code']] ?? $warnaStatus['normal'];
+    $sheet->getStyle('K' . $baris)->applyFromArray([
+        'font' => ['bold' => true, 'color' => ['rgb' => $fg]],
+        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $bg]],
     ]);
+    if ((float) $r['stok_masuk'] > 0) $sheet->getStyle('F' . $baris)->getFont()->setBold(true)->getColor()->setRGB('13A58B');
+    if ((float) $r['stok_keluar'] > 0) $sheet->getStyle('G' . $baris)->getFont()->setBold(true)->getColor()->setRGB('D9534F');
+    $sheet->getStyle('H' . $baris)->getFont()->setBold(true);
+    if ((float) $r['stok_akhir'] <= 0) $sheet->getStyle('H' . $baris)->getFont()->getColor()->setRGB('D9534F');
+    $baris++;
+}
+if (!$rows) {
+    $sheet->mergeCells("A{$baris}:{$kolomAkhir}{$baris}")->setCellValue('A' . $baris, 'Tidak ada data.');
+    $sheet->getStyle('A' . $baris)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+    $baris++;
+}
+$barisAkhirData = $baris - 1;
 
+// total (sama dengan baris total di layar)
+$sheet->mergeCells("A{$baris}:E{$baris}")->setCellValue('A' . $baris, 'Total (sesuai filter)');
+$sheet->setCellValue('F' . $baris, $ringkasan['stok_masuk']);
+$sheet->setCellValue('G' . $baris, $ringkasan['stok_keluar']);
+$sheet->setCellValue('J' . $baris, $ringkasan['nilai_stok']);
+$sheet->getStyle("A{$baris}:{$kolomAkhir}{$baris}")->applyFromArray([
+    'font' => ['bold' => true],
+    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'EEF2F7']],
+]);
+$sheet->getStyle('F' . $baris)->getFont()->getColor()->setRGB('13A58B');
+$sheet->getStyle('G' . $baris)->getFont()->getColor()->setRGB('D9534F');
 
-// ============================================================
-// FORMAT TOTAL
-// ============================================================
+// format kolom
+$formatAngka('F' . $baris, $ringkasan['stok_masuk']);
+$formatAngka('G' . $baris, $ringkasan['stok_keluar']);
+$sheet->getStyle("J" . ($barisHeader + 1) . ":J{$baris}")->getNumberFormat()->setFormatCode($fmtRupiah);
+$sheet->getStyle("E" . ($barisHeader + 1) . ":J{$baris}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+$sheet->getStyle("A" . ($barisHeader + 1) . ":A{$baris}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+$sheet->getStyle("D" . ($barisHeader + 1) . ":D{$baris}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+$sheet->getStyle("K" . ($barisHeader + 1) . ":K{$baris}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+$sheet->getStyle("B" . ($barisHeader + 1) . ":B{$baris}")->getAlignment()->setWrapText(true);
+$sheet->getStyle("A" . ($barisHeader + 1) . ":{$kolomAkhir}{$baris}")->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
+$sheet->getStyle("A{$barisHeader}:{$kolomAkhir}{$baris}")->getBorders()->getAllBorders()
+    ->setBorderStyle(Border::BORDER_THIN)->getColor()->setRGB('D0D7E2');
 
-$sheet
-    ->getStyle("G{$totalRow}:K{$totalRow}")
-    ->getNumberFormat()
-    ->setFormatCode('#,##0');
-
-
-$sheet
-    ->getStyle("L{$totalRow}")
-    ->getNumberFormat()
-    ->setFormatCode(
-        '"Rp" #,##0'
-    );
-
-
-// ============================================================
-// WIDTH
-// ============================================================
-
-$widths = [
-
-    'A' => 22,
-    'B' => 18,
-    'C' => 40,
-    'D' => 22,
-    'E' => 15,
-    'F' => 15,
-    'G' => 15,
-    'H' => 15,
-    'I' => 15,
-    'J' => 15,
-    'K' => 15,
-    'L' => 22
-
-];
-
-
-foreach ($widths as $column => $width) {
-
-    $sheet
-        ->getColumnDimension($column)
-        ->setWidth($width);
+foreach (['A' => 6, 'B' => 38, 'C' => 16, 'D' => 10, 'E' => 12, 'F' => 12, 'G' => 12, 'H' => 12, 'I' => 14, 'J' => 16, 'K' => 18] as $kol => $lebar) {
+    $sheet->getColumnDimension($kol)->setWidth($lebar);
 }
 
-
-// ============================================================
-// FREEZE HEADER
-// ============================================================
-
-$sheet->freezePane('A5');
-
-
-// ============================================================
-// AUTO FILTER
-// ============================================================
-
-$sheet->setAutoFilter(
-    "A4:L" . ($totalRow - 1)
+// keterangan
+$baris += 2;
+$sheet->mergeCells("A{$baris}:{$kolomAkhir}{$baris}")->setCellValue(
+    'A' . $baris,
+    'Keterangan: Stok Awal = stok pada awal periode. Stok Akhir = Stok Awal + Masuk − Keluar, posisi di tanggal akhir periode. '
+        . 'Masuk dari penerimaan obat, keluar dari resep klinik ini. Status dihitung dari stok akhir.'
 );
+$sheet->getStyle('A' . $baris)->getFont()->setItalic(true)->setSize(9)->getColor()->setRGB('555555');
+$sheet->setCellValue('A' . ($baris + 1), 'Dicetak ' . date('d/m/Y H:i'));
+$sheet->getStyle('A' . ($baris + 1))->getFont()->setSize(9)->getColor()->setRGB('777777');
 
+$sheet->freezePane('C' . ($barisHeader + 1));
+if ($rows) {
+    $sheet->setAutoFilter("A{$barisHeader}:{$kolomAkhir}{$barisAkhirData}");
+}
+$sheet->getPageSetup()->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE)
+    ->setFitToWidth(1)->setFitToHeight(0);
+$sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd($barisHeader, $barisHeader);
 
-// ============================================================
-// DOWNLOAD
-// ============================================================
+// ================== DOWNLOAD ==================
+$filename = 'laporan_stok_farmasi_' . $fromDate . '_' . $toDate . '.xlsx';
+header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+header('Content-Disposition: attachment; filename="' . $filename . '"');
+header('Cache-Control: max-age=0');
+header('Pragma: public');
 
-$filename =
-    'laporan_stok_farmasi_' .
-    $fromDate .
-    '_' .
-    $toDate .
-    '.xlsx';
-
-
-header(
-    'Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-);
-
-header(
-    'Content-Disposition: attachment; filename="' .
-        $filename .
-        '"'
-);
-
-header(
-    'Cache-Control: max-age=0'
-);
-
-header(
-    'Pragma: public'
-);
-
-
-// ============================================================
-// WRITE EXCEL
-// ============================================================
-
-$writer = new Xlsx($spreadsheet);
-
-$writer->save('php://output');
-
+(new Xlsx($spreadsheet))->save('php://output');
 exit;
