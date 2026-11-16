@@ -3,6 +3,24 @@ $title = 'Permintan Farmasi';
 require "../../controller/view.php";
 $id_cust = $_SESSION['id_customer'];
 
+$type = $_GET['type'] ?? '';
+$id_permintaan = $_GET['id'] ?? '';
+
+if (empty($type) && !empty($id_permintaan)) {
+  $id_permintaan_escaped = mysqli_real_escape_string($koneksi, $id_permintaan);
+  $cek_tipe = tampildata("SELECT tipe_obat FROM permintaan_pharmacy WHERE id_permintaan_farmasi = '$id_permintaan_escaped' LIMIT 1");
+  if (!empty($cek_tipe)) {
+    $type = $cek_tipe[0]['tipe_obat'] ?? '';
+  }
+}
+
+$cond_category = "";
+if (strcasecmp($type, 'BMHP') === 0) {
+  $cond_category = "AND p.pharmacy_category = 'BMHP'";
+} else if (strcasecmp($type, 'Obat') === 0 || strcasecmp($type, 'Racikan') === 0 || strcasecmp($type, 'Non Racikan') === 0) {
+  $cond_category = "AND p.pharmacy_category = 'Obat'";
+}
+
 $getbarang = tampildata("
 SELECT p.*
 FROM ms_pharmacy p
@@ -37,6 +55,7 @@ AND NOT EXISTS (
 
 AND p.pharmacy_name_generic IS NOT NULL
 AND TRIM(p.pharmacy_name_generic) != ''
+$cond_category
 
 ORDER BY p.pharmacy_name_generic ASC
 ");

@@ -70,7 +70,7 @@ require '../../controller/view.php';
                       <thead>
                         <tr>
                           <th class="text-dark fw-normal">Tanggal</th>
-                          <th class="text-dark fw-normal">Tipe Obat</th>
+                          <th class="text-dark fw-normal">Type</th>
                           <th scope="col" class="text-dark fw-normal">Catatan</th>
                           <th scope="col" class="text-dark fw-normal text-center">Status</th>
                           <th scope="col" class="text-dark fw-normal text-center">Actions</th>
@@ -109,11 +109,12 @@ require '../../controller/view.php';
           </div>
           <div class="col-12">
             <div class="mb-3">
-              <label class="form-label required">Tipe Obat</label>
+              <label class="form-label required">Type</label>
               <select class='form-select' required id="tipe_obat" name="tipe_obat">
                 <option value="">PILIH</option>
                 <option value="Racikan">Racikan</option>
                 <option value="Non Racikan">Non Racikan</option>
+                <option value="BMHP">BMHP</option>
               </select>
             </div>
           </div>
@@ -926,7 +927,7 @@ require '../../controller/view.php';
         </a>
 
         <a class="btn btn-info" 
-          href="module/admin/permintaan_farmasi_details?no=${urlParams.get('no')}&rm=${nomorm}&rme=${rmeParam}&id=${row.id_permintaan_farmasi}">
+          href="module/admin/permintaan_farmasi_details?no=${urlParams.get('no')}&rm=${nomorm}&rme=${rmeParam}&id=${row.id_permintaan_farmasi}&type=${encodeURIComponent(row.tipe_obat || '')}">
           <i class="fas fa-pencil"></i>
         </a>
 
