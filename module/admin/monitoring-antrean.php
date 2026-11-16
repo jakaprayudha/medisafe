@@ -173,40 +173,46 @@ $isSuper = $roles === 'superadmin';
 
           <!-- ANGKA RINGKAS -->
           <div class="row g-2 mb-4">
-            <div class="col-6 col-md-4 col-xl-2">
+            <div class="col-6 col-md-3 col-xl">
               <div class="ma-mini">
                 <div class="ma-mini-val" id="cTotal">-</div>
                 <div class="ma-mini-label">Kunjungan BPJS (rawat jalan)</div>
               </div>
             </div>
-            <div class="col-6 col-md-4 col-xl-2">
+            <div class="col-6 col-md-3 col-xl">
               <div class="ma-mini">
                 <div class="ma-mini-val text-info" id="cMobile">-</div>
                 <div class="ma-mini-label">Antrean Mobile JKN</div>
               </div>
             </div>
-            <div class="col-6 col-md-4 col-xl-2">
+            <div class="col-6 col-md-3 col-xl">
               <div class="ma-mini">
                 <div class="ma-mini-val text-primary" id="cOnsite">-</div>
                 <div class="ma-mini-label">Antrean Onsite (ke BPJS)</div>
               </div>
             </div>
-            <div class="col-6 col-md-4 col-xl-2">
+            <div class="col-6 col-md-3 col-xl">
               <div class="ma-mini">
                 <div class="ma-mini-val text-danger" id="cTanpa">-</div>
                 <div class="ma-mini-label">Kunjungan sakit tanpa antrean online</div>
               </div>
             </div>
-            <div class="col-6 col-md-4 col-xl-2">
+            <div class="col-6 col-md-3 col-xl">
               <div class="ma-mini">
                 <div class="ma-mini-val text-danger" id="cBatal">-</div>
                 <div class="ma-mini-label">Batal / tidak hadir</div>
               </div>
             </div>
-            <div class="col-6 col-md-4 col-xl-2">
+            <div class="col-6 col-md-3 col-xl">
               <div class="ma-mini">
                 <div class="ma-mini-val text-secondary" id="cSehat">-</div>
                 <div class="ma-mini-label">Kunjungan sehat (tidak wajib antrean)</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3 col-xl">
+              <div class="ma-mini border-warning">
+                <div class="ma-mini-val text-warning" id="cObat">-</div>
+                <div class="ma-mini-label">Obat belum dikirim ke PCare</div>
               </div>
             </div>
           </div>
@@ -227,7 +233,7 @@ $isSuper = $roles === 'superadmin';
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                 <h6 class="mb-0"><i class="fas fa-exclamation-triangle text-danger me-1"></i> Perlu Tindak Lanjut <span class="badge bg-danger ms-1" id="tindakCount">0</span></h6>
-                <small class="text-muted">Antrean belum dilaporkan hadir/tidak hadir, booking Mobile JKN tidak check-in, dan kunjungan sakit tanpa antrean online.</small>
+                <small class="text-muted">Antrean belum dilaporkan hadir/tidak hadir, booking Mobile JKN tidak check-in, kunjungan sakit tanpa antrean online, dan obat yang belum dikirim ke PCare.</small>
               </div>
               <div class="table-responsive">
                 <table class="table table-sm align-middle w-100" id="maTindakTable">
@@ -239,6 +245,7 @@ $isSuper = $roles === 'superadmin';
                       <th>Poli</th>
                       <th>Dokter</th>
                       <th>Masalah</th>
+                      <th>Obat PCare</th>
                     </tr>
                   </thead>
                   <tbody></tbody>
@@ -299,6 +306,9 @@ $isSuper = $roles === 'superadmin';
                   <select id="maFilterPanggil" class="form-select form-select-sm" style="min-width:190px">
                     <option value="">Semua status panggil</option>
                   </select>
+                  <select id="maFilterObat" class="form-select form-select-sm" style="min-width:190px">
+                    <option value="">Semua status obat</option>
+                  </select>
                 </div>
               </div>
               <div class="table-responsive">
@@ -312,6 +322,7 @@ $isSuper = $roles === 'superadmin';
                       <th>Sumber</th>
                       <th>Add Antrean</th>
                       <th>Status Panggil</th>
+                      <th>Obat PCare</th>
                       <th>Ambil</th>
                       <th>Hadir</th>
                       <th>Selesai Periksa</th>
@@ -339,6 +350,8 @@ $isSuper = $roles === 'superadmin';
                   <dd class="col-md-9">Antrean online yang statusnya sudah final (hadir atau batal/tidak hadir), dibanding antrean yang seharusnya sudah final (termasuk yang belum dilaporkan dan booking yang tidak check-in di hari yang sudah lewat). Antrean hari ini yang masih menunggu tidak dihitung.</dd>
                   <dt class="col-md-3">Waktu Hadir → Selesai Periksa</dt>
                   <dd class="col-md-9">Dari jam check-in/pendaftaran sampai kunjungan PCare tersimpan. Nilai di luar 0–12 jam diabaikan.</dd>
+                  <dt class="col-md-3">Obat PCare</dt>
+                  <dd class="col-md-9"><b>Terkirim</b> = semua resep kunjungan sudah dikirim (status tiket bukan "Belum Dikirim"). Tombol <b>Kirim ke PCare</b> memakai proses yang sama dengan tombol Kirim Obat di halaman permintaan farmasi: obat dari semua resep digabung lalu dikirim ke kunjungan PCare. Pengiriman butuh kunjungan PCare yang sudah tersimpan dan resep yang berisi obat.</dd>
                   <dt class="col-md-3">Sumber status</dt>
                   <dd class="col-md-9">Respons BPJS tidak disimpan, jadi status disimpulkan dari data sistem: antrean onsite hanya tersimpan bila <code>antrean/add</code> berhasil, dan status hadir dari data panggil/check-in antrean poli.</dd>
                 </dl>
@@ -407,10 +420,28 @@ $isSuper = $roles === 'superadmin';
         belum_checkin: ['Belum check-in', 'bg-warning-subtle text-warning'],
         tanpa_antrean: ['Tidak ada data antrean', 'bg-light text-muted']
       };
+      const OBAT = {
+        terkirim: ['Terkirim', 'bg-success-subtle text-success'],
+        belum: ['Belum dikirim', 'bg-danger-subtle text-danger'],
+        belum_pcare: ['Belum dikirim, kunjungan PCare belum ada', 'bg-warning-subtle text-warning'],
+        tiket_kosong: ['Resep belum berisi obat', 'bg-warning-subtle text-warning'],
+        tidak_ada: ['Tidak ada resep', 'bg-light text-muted'],
+        batal: ['-', 'bg-light text-muted']
+      };
+      let bisaKirim = false;
+      const obatCell = (r, t) => {
+        if (t !== 'display') return (OBAT[r.status_obat] || ['-'])[0];
+        let html = badge(OBAT, r.status_obat);
+        if (r.status_obat === 'belum' && bisaKirim) {
+          html += `<button type="button" class="btn btn-sm btn-success ms-1 py-0 px-2 ma-kirim-obat" data-visit="${esc(r.visit_ID)}" data-ids="${esc((r.tiket_belum || []).join(','))}" data-pasien="${esc(r.pasien || '')}" title="Kirim obat ke PCare"><i class="ti ti-send"></i> Kirim ke PCare</button>`;
+        }
+        return html;
+      };
       const badge = (map, key) => key && map[key] ?
         `<span class="badge ma-badge ${map[key][1]}">${map[key][0]}</span>` : '<span class="text-muted">-</span>';
 
       Object.entries(PANGGIL).forEach(([k, v]) => $('#maFilterPanggil').append(new Option(v[0], v[0])));
+      Object.entries(OBAT).filter(([k]) => k !== 'batal').forEach(([k, v]) => $('#maFilterObat').append(new Option(v[0], v[0])));
 
       // ---------- tanggal ----------
       const ymd = d => d.toLocaleDateString('sv-SE', {
@@ -519,7 +550,7 @@ $isSuper = $roles === 'superadmin';
         data: [],
         deferRender: true,
         pageLength: 25,
-        order: [[0, 'desc'], [8, 'desc']],
+        order: [[0, 'desc'], [9, 'desc']],
         language: lang,
         columns: [{
             data: 'tanggal',
@@ -550,6 +581,10 @@ $isSuper = $roles === 'superadmin';
             render: (v, t) => t === 'display' ? badge(PANGGIL, v) : (PANGGIL[v] || ['-'])[0]
           },
           {
+            data: null,
+            render: obatCell
+          },
+          {
             data: 'ambil_at',
             render: (v, t) => t === 'display' ? jam(v) : v
           },
@@ -578,13 +613,18 @@ $isSuper = $roles === 'superadmin';
       $('#maFilterPanggil').on('change', function() {
         tDetail.column(6).search(this.value ? '^' + $.fn.dataTable.util.escapeRegex(this.value) + '$' : '', true, false).draw();
       });
+      $('#maFilterObat').on('change', function() {
+        tDetail.column(7).search(this.value ? '^' + $.fn.dataTable.util.escapeRegex(this.value) + '$' : '', true, false).draw();
+      });
 
       const MASALAH = r => {
-        if (r.status_panggil === 'belum_lapor') return ['Belum dilaporkan hadir / tidak hadir', 'text-danger'];
-        if (r.status_panggil === 'tidak_checkin') return ['Booking Mobile JKN tidak check-in, belum dibatalkan', 'text-danger'];
-        if (r.status_add === 'tidak_dikirim' && r.dilayani) return ['Kunjungan sakit tidak masuk antrean online', 'text-warning'];
-        if (r.status_add === 'nonaktif' && r.dilayani) return ['Antrol belum aktif, antrean tidak dikirim', 'text-warning'];
-        return null;
+        const m = [];
+        if (r.status_panggil === 'belum_lapor') m.push(['Belum dilaporkan hadir / tidak hadir', 'text-danger']);
+        if (r.status_panggil === 'tidak_checkin') m.push(['Booking Mobile JKN tidak check-in, belum dibatalkan', 'text-danger']);
+        if (r.status_add === 'tidak_dikirim' && r.dilayani) m.push(['Kunjungan sakit tidak masuk antrean online', 'text-warning']);
+        if (r.status_add === 'nonaktif' && r.dilayani) m.push(['Antrol belum aktif, antrean tidak dikirim', 'text-warning']);
+        if (['belum', 'belum_pcare', 'tiket_kosong'].includes(r.status_obat)) m.push(['Obat belum dikirim ke PCare', 'text-warning']);
+        return m.length ? m : null;
       };
       const tTindak = $('#maTindakTable').DataTable({
         data: [],
@@ -613,10 +653,11 @@ $isSuper = $roles === 'superadmin';
           },
           {
             data: null,
-            render: r => {
-              const m = MASALAH(r);
-              return m ? `<span class="${m[1]} fw-semibold">${m[0]}</span>` : '-';
-            }
+            render: r => (MASALAH(r) || []).map(m => `<div class="${m[1]} fw-semibold">${m[0]}</div>`).join('') || '-'
+          },
+          {
+            data: null,
+            render: obatCell
           }
         ]
       });
@@ -703,6 +744,7 @@ $isSuper = $roles === 'superadmin';
       function render(d) {
         const k = d.kpi;
         const c = d.config;
+        bisaKirim = !!c.bisa_kirim;
         $('#maConfig').removeClass('d-none alert-success alert-warning')
           .addClass(c.antrol_aktif ? 'alert-success' : 'alert-warning')
           .html(c.antrol_aktif ?
@@ -722,6 +764,7 @@ $isSuper = $roles === 'superadmin';
         $('#cTanpa').text(n(k.tanpa_antrol));
         $('#cBatal').text(n(k.batal));
         $('#cSehat').text(n(k.sehat));
+        $('#cObat').text(n(k.obat_belum));
 
         const harian = [...d.harian].sort((a, b) => a.nama.localeCompare(b.nama));
         chart.data.labels = harian.map(h => tgl(h.nama));
@@ -775,6 +818,53 @@ $isSuper = $roles === 'superadmin';
       }
 
       $('#maRefresh').on('click', load);
+
+      // 📤 kirim obat ke PCare (proses sama dengan tombol Kirim Obat di permintaan farmasi)
+      $(document).on('click', '.ma-kirim-obat', function() {
+        const ids = String($(this).data('ids') || '').split(',').filter(Boolean);
+        const pasien = $(this).data('pasien');
+        if (!ids.length) return;
+        Swal.fire({
+          title: 'Kirim obat ke PCare?',
+          html: `${esc(pasien)}<br><small class="text-muted">${ids.length} resep belum dikirim akan digabung dengan resep yang sudah terkirim.</small>`,
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: 'Ya, kirim',
+          cancelButtonText: 'Batal',
+          reverseButtons: true
+        }).then(res => {
+          if (!res.isConfirmed) return;
+          Swal.fire({
+            title: 'Mengirim ke PCare...',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            didOpen: () => Swal.showLoading()
+          });
+          fetch('controller/farmasi/kirimObat.php', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                ids
+              })
+            })
+            .then(r => r.json().catch(() => ({
+              status: 'error',
+              message: 'Respons server tidak valid.'
+            })))
+            .then(r => {
+              if (r.status === 'success') {
+                Swal.fire('Berhasil!', `${r.total || ids.length} resep berhasil dikirim ke PCare.`, 'success');
+                load();
+              } else {
+                Swal.fire('Gagal!', r.message || 'Obat gagal dikirim.', 'error');
+              }
+            })
+            .catch(() => Swal.fire('Gagal!', 'Terjadi kesalahan pada server.', 'error'));
+        });
+      });
 
       if (isSuper) {
         fetch(api + '?action=faskes').then(r => r.json()).then(j => {
