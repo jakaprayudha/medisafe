@@ -17,8 +17,10 @@
  * karena permintaan_pharmacy_details (600rb+ baris) tidak ber-index id_pharmacy.
  */
 
-function farmasiStokReport(mysqli $koneksi, string $idCustomer, string $fromDate, string $toDate): array
+function farmasiStokReport(mysqli $koneksi, string $idCustomer, string $fromDate, string $toDate, ?int $idPharmacy = null): array
 {
+   // $idPharmacy diisi = hitung satu obat saja (halaman admin/pharmacy_stock), rumus tetap sama
+   $satuObat = $idPharmacy !== null;
    // ================== MASTER OBAT KLINIK ==================
    $stmt = $koneksi->prepare("SELECT
          p.id_pharmacy, p.pharmacy_code, p.pharmacy_name_generic, p.pharmacy_name_trade,
@@ -38,12 +40,12 @@ function farmasiStokReport(mysqli $koneksi, string $idCustomer, string $fromDate
         AND (log.status_log IS NULL OR log.status_log != 'DELETE')
         AND p.pharmacy_name_generic IS NOT NULL
         AND TRIM(p.pharmacy_name_generic) != ''
-        AND p.pharmacy_status = 1
+        AND p.pharmacy_status = 1" . ($satuObat ? " AND p.id_pharmacy = ?" : "") . "
       ORDER BY p.pharmacy_name_generic ASC");
    if (!$stmt) {
       throw new RuntimeException('Prepare query obat gagal: ' . $koneksi->error);
    }
-   $stmt->bind_param('ss', $idCustomer, $idCustomer);
+   $satuObat ? $stmt->bind_param('ssi', $idCustomer, $idCustomer, $idPharmacy) : $stmt->bind_param('ss', $idCustomer, $idCustomer);
    $stmt->execute();
    $obat = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
    $stmt->close();
@@ -58,12 +60,14 @@ function farmasiStokReport(mysqli $koneksi, string $idCustomer, string $fromDate
          SUM(CASE WHEN tanggal < ? THEN jumlah ELSE 0 END) AS sebelum,
          SUM(CASE WHEN tanggal BETWEEN ? AND ? THEN jumlah ELSE 0 END) AS periode
       FROM pharmacy_stock_penerimaan
-      WHERE id_customer = ?
+      WHERE id_customer = ?" . ($satuObat ? " AND id_pharmacy = ?" : "") . "
       GROUP BY id_pharmacy");
    if (!$stmt) {
       throw new RuntimeException('Prepare query stok masuk gagal: ' . $koneksi->error);
    }
-   $stmt->bind_param('ssss', $fromDate, $fromDate, $toDate, $idCustomer);
+   $idObatStr = (string) $idPharmacy;
+   $satuObat ? $stmt->bind_param('sssss', $fromDate, $fromDate, $toDate, $idCustomer, $idObatStr)
+      : $stmt->bind_param('ssss', $fromDate, $fromDate, $toDate, $idCustomer);
    $stmt->execute();
    foreach ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) as $r) {
       $masuk[(string) $r['id_pharmacy']] = $r;
@@ -78,12 +82,13 @@ function farmasiStokReport(mysqli $koneksi, string $idCustomer, string $fromDate
          SUM(CASE WHEN d.created_at BETWEEN ? AND ? THEN d.qty ELSE 0 END) AS periode
       FROM permintaan_pharmacy_details d
       INNER JOIN permintaan_pharmacy pp ON pp.id_permintaan_farmasi = d.id_permintaan_farmasi
-      WHERE pp.id_customer = ?
+      WHERE pp.id_customer = ?" . ($satuObat ? " AND d.id_pharmacy = ?" : "") . "
       GROUP BY d.id_pharmacy");
    if (!$stmt) {
       throw new RuntimeException('Prepare query stok keluar gagal: ' . $koneksi->error);
    }
-   $stmt->bind_param('ssss', $awalPeriode, $awalPeriode, $akhirPeriode, $idCustomer);
+   $satuObat ? $stmt->bind_param('ssssi', $awalPeriode, $awalPeriode, $akhirPeriode, $idCustomer, $idPharmacy)
+      : $stmt->bind_param('ssss', $awalPeriode, $awalPeriode, $akhirPeriode, $idCustomer);
    $stmt->execute();
    foreach ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) as $r) {
       $keluar[(string) $r['id_pharmacy']] = $r;

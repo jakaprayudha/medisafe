@@ -1,751 +1,313 @@
 <?php
+// Stok per obat (module/admin/pharmacy_stock).
+// Perhitungan stok memakai farmasiStokReport() yang sama dengan Laporan Farmasi (rpt_farmasi),
+// jadi angka di halaman ini selalu sama dengan laporan, Excel, dan Print.
+//
+//   GET    ?action=detail&id_pharmacy=&fromDate=&toDate=   -> info obat + stok periode
+//   GET    ?action=kartu&id_pharmacy=&fromDate=&toDate=    -> kartu stok (mutasi + saldo)
+//   GET    ?action=penerimaan&id_pharmacy=[&fromDate=&toDate=]
+//   POST   action=stock_awal | penerimaan
+//   DELETE ?id_penerimaan=
 
 include '../../database/connect.php';
+require_once __DIR__ . '/../report/farmasiStokService.php';
+mysqli_report(MYSQLI_REPORT_OFF);
 
 header('Content-Type: application/json; charset=utf-8');
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+   session_start();
+}
 
-$id_customer = $_SESSION['id_customer'] ?? null;
-$username    = $_SESSION['username'] ?? 'system';
+$id_customer = (string) ($_SESSION['id_customer'] ?? '');
+$username = $_SESSION['username'] ?? 'system';
 
-$method = $_SERVER['REQUEST_METHOD'];
-
-if (!$id_customer) {
-   echo json_encode([
-      'status'  => false,
-      'message' => 'Session customer tidak ditemukan.'
-   ]);
+function jawab(bool $ok, array $data = [], int $code = 200): void
+{
+   http_response_code($code);
+   echo json_encode(['status' => $ok] + $data, JSON_UNESCAPED_UNICODE);
    exit;
 }
 
-switch ($method) {
-
-   case 'GET':
-
-      $action = $_GET['action'] ?? 'detail';
-
-      switch ($action) {
-
-         case 'detail':
-            getDetailStock();
-            break;
-
-         case 'penerimaan':
-            getPenerimaan();
-            break;
-
-         default:
-            echo json_encode([
-               'status'  => false,
-               'message' => 'Action GET tidak ditemukan.'
-            ]);
-      }
-
-      break;
-
-
-   case 'POST':
-
-      $action = $_POST['action'] ?? '';
-
-      switch ($action) {
-
-         case 'stock_awal':
-            setStockAwal();
-            break;
-
-         case 'penerimaan':
-            savePenerimaan();
-            break;
-
-         default:
-            echo json_encode([
-               'status'  => false,
-               'message' => 'Action POST tidak ditemukan.'
-            ]);
-      }
-
-      break;
-
-
-   case 'PUT':
-
-      echo json_encode([
-         'status'  => false,
-         'message' => 'Method PUT belum digunakan.'
-      ]);
-
-      break;
-
-
-   case 'DELETE':
-
-      deletePenerimaan();
-
-      break;
-
-
-   default:
-
-      echo json_encode([
-         'status'  => false,
-         'message' => 'Method request tidak didukung.'
-      ]);
-
-      break;
+if ($id_customer === '') {
+   jawab(false, ['message' => 'Session customer tidak ditemukan.'], 401);
 }
 
-
-/**
- * ============================================================
- * GET DETAIL STOCK
- * ============================================================
- *
- * Stok awal:
- *      ms_pharmacy.pharmacy_stock
- *
- * Stok masuk:
- *      pharmacy_stock_penerimaan.jumlah
- *
- * Stok keluar:
- *      permintaan_pharmacy_details.qty
- *
- * Stok tersedia:
- *      stok awal + stok masuk - stok keluar
- */
-function getDetailStock()
+/** Periode dari request; default bulan berjalan. */
+function periode(array $src): array
 {
-   global $koneksi, $id_customer;
-
-   $id_pharmacy = $_GET['id_pharmacy'] ?? '';
-
-   if ($id_pharmacy === '') {
-      echo json_encode([
-         'status'  => false,
-         'message' => 'ID pharmacy tidak ditemukan.'
-      ]);
-      return;
+   $from = (string) ($src['fromDate'] ?? date('Y-m-01'));
+   $to = (string) ($src['toDate'] ?? date('Y-m-d'));
+   if (($err = farmasiStokValidasiPeriode($from, $to)) !== null) {
+      jawab(false, ['message' => $err], 422);
    }
+   return [$from, $to];
+}
 
-   /**
-    * Ambil data obat
-    */
-   $sql = "
-        SELECT
-            mp.id_pharmacy,
-            mp.pharmacy_code,
-            mp.pharmacy_name_generic,
-            mp.pharmacy_name_trade,
-            mp.pharmacy_category,
-            mp.pharmacy_sub_category,
-            mp.pharmacy_unit,
-            mp.pharmacy_kemasan,
-            mp.pharmacy_supplier,
-            mp.pharmacy_factory,
-            mp.pharmacy_buy,
-            mp.pharmacy_sale,
-            mp.stok_min,
-            mp.stok_max,
-            COALESCE(mp.pharmacy_stock, 0) AS stok_awal
-
-        FROM ms_pharmacy mp
-
-        WHERE mp.id_pharmacy = ?
-        AND mp.id_customer = ?
-
-        LIMIT 1
-    ";
-
-   $stmt = $koneksi->prepare($sql);
-
-   if (!$stmt) {
-      echo json_encode([
-         'status'  => false,
-         'message' => $koneksi->error
-      ]);
-      return;
+function idObat(array $src): int
+{
+   $id = (int) ($src['id_pharmacy'] ?? 0);
+   if ($id <= 0) {
+      jawab(false, ['message' => 'ID obat tidak ditemukan.'], 422);
    }
+   return $id;
+}
 
-   $stmt->bind_param(
-      "is",
-      $id_pharmacy,
-      $id_customer
-   );
-
+/** Obat milik klinik ini (boleh diubah). Obat master bersama hanya bisa dilihat. */
+function obatMilikKlinik(mysqli $koneksi, int $idObat, string $idCustomer): bool
+{
+   $stmt = $koneksi->prepare("SELECT 1 FROM ms_pharmacy WHERE id_pharmacy = ? AND id_customer = ? LIMIT 1");
+   $stmt->bind_param('is', $idObat, $idCustomer);
    $stmt->execute();
+   $ada = (bool) $stmt->get_result()->fetch_row();
+   $stmt->close();
+   return $ada;
+}
 
-   $result = $stmt->get_result();
+try {
+   switch ($_SERVER['REQUEST_METHOD']) {
+      case 'GET':
+         $action = $_GET['action'] ?? 'detail';
+         if ($action === 'detail') getDetailStock($koneksi, $id_customer);
+         if ($action === 'kartu') getKartuStock($koneksi, $id_customer);
+         if ($action === 'penerimaan') getPenerimaan($koneksi, $id_customer);
+         jawab(false, ['message' => 'Action GET tidak ditemukan.'], 400);
+         // no break: jawab() selalu exit
+      case 'POST':
+         $action = $_POST['action'] ?? '';
+         if ($action === 'stock_awal') setStockAwal($koneksi, $id_customer);
+         if ($action === 'penerimaan') savePenerimaan($koneksi, $id_customer, $username);
+         jawab(false, ['message' => 'Action POST tidak ditemukan.'], 400);
+         // no break
+      case 'DELETE':
+         deletePenerimaan($koneksi, $id_customer);
+         // no break
+      default:
+         jawab(false, ['message' => 'Method request tidak didukung.'], 405);
+   }
+} catch (Throwable $e) {
+   error_log('[pharmacyStock] ' . $e->getMessage());
+   jawab(false, ['message' => 'Terjadi kesalahan pada server.'], 500);
+}
 
-   if ($result->num_rows === 0) {
+// ============================================================
+// DETAIL STOK (sama persis dengan baris obat di Laporan Farmasi)
+// ============================================================
+function getDetailStock(mysqli $koneksi, string $idCustomer): void
+{
+   $idObat = idObat($_GET);
+   [$from, $to] = periode($_GET);
 
-      echo json_encode([
-         'status'  => false,
-         'message' => 'Data obat tidak ditemukan.'
-      ]);
-
-      $stmt->close();
-      return;
+   $hasil = farmasiStokReport($koneksi, $idCustomer, $from, $to, $idObat);
+   $obat = $hasil['data'][0] ?? null;
+   if (!$obat) {
+      jawab(false, ['message' => 'Data obat tidak ditemukan atau tidak aktif.'], 404);
    }
 
-   $data = $result->fetch_assoc();
+   $obat['stok_dasar'] = (float) $obat['stok_dasar'];
+   $obat['bisa_ubah'] = obatMilikKlinik($koneksi, $idObat, $idCustomer);
+   $obat['nama_dagang_kode'] = farmasiStokSubNama($obat);
+   $obat['kategori'] = farmasiStokIsi($obat['pharmacy_category']) ?: '-';
+   $obat['satuan'] = farmasiStokIsi($obat['pharmacy_unit']) ?: '';
 
+   jawab(true, ['periode' => ['fromDate' => $from, 'toDate' => $to], 'data' => $obat]);
+}
+
+// ============================================================
+// KARTU STOK: mutasi masuk (penerimaan) & keluar (resep) + saldo berjalan
+// ============================================================
+function getKartuStock(mysqli $koneksi, string $idCustomer): void
+{
+   $idObat = idObat($_GET);
+   [$from, $to] = periode($_GET);
+
+   $hasil = farmasiStokReport($koneksi, $idCustomer, $from, $to, $idObat);
+   $obat = $hasil['data'][0] ?? null;
+   if (!$obat) {
+      jawab(false, ['message' => 'Data obat tidak ditemukan atau tidak aktif.'], 404);
+   }
+
+   $mutasi = [];
+   $idObatStr = (string) $idObat;
+   $stmt = $koneksi->prepare("SELECT id_penerimaan, tanggal, nomor_faktur, supplier, batch, jumlah, created_at
+      FROM pharmacy_stock_penerimaan
+      WHERE id_pharmacy = ? AND id_customer = ? AND tanggal BETWEEN ? AND ?");
+   $stmt->bind_param('ssss', $idObatStr, $idCustomer, $from, $to);
+   $stmt->execute();
+   foreach ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) as $m) {
+      $ket = trim(implode(' • ', array_filter([
+         $m['nomor_faktur'] ? 'Faktur ' . $m['nomor_faktur'] : '',
+         $m['supplier'],
+         $m['batch'] ? 'Batch ' . $m['batch'] : '',
+      ])));
+      $mutasi[] = [
+         'waktu' => $m['tanggal'] . ' 00:00:00',
+         'jenis' => 'masuk',
+         'referensi' => 'Penerimaan',
+         'keterangan' => $m['supplier'] ?: ($m['nomor_faktur'] ? 'Faktur ' . $m['nomor_faktur'] : '-'),
+         'sub' => $ket,
+         'masuk' => (float) $m['jumlah'],
+         'keluar' => 0.0,
+         'urut' => 0,
+      ];
+   }
    $stmt->close();
 
-
-   /**
-    * ========================================================
-    * TOTAL STOK MASUK
-    * ========================================================
-    */
-
-   $sqlMasuk = "
-        SELECT
-            COALESCE(SUM(jumlah), 0) AS stok_masuk
-
-        FROM pharmacy_stock_penerimaan
-
-        WHERE id_pharmacy = ?
-        AND id_customer = ?
-    ";
-
-   $stmtMasuk = $koneksi->prepare($sqlMasuk);
-
-   if (!$stmtMasuk) {
-      echo json_encode([
-         'status'  => false,
-         'message' => $koneksi->error
-      ]);
-      return;
+   $awal = $from . ' 00:00:00';
+   $akhir = $to . ' 23:59:59';
+   $stmt = $koneksi->prepare("SELECT d.created_at, d.qty, pp.id_permintaan_farmasi, pp.id_visit, pp.status_permintaan,
+         pv.patient_name_pcare
+      FROM permintaan_pharmacy_details d
+      INNER JOIN permintaan_pharmacy pp ON pp.id_permintaan_farmasi = d.id_permintaan_farmasi
+      LEFT JOIN pasien_visit pv ON pv.visit_ID = pp.id_visit AND pv.id_customer = pp.id_customer
+      WHERE d.id_pharmacy = ? AND pp.id_customer = ? AND d.created_at BETWEEN ? AND ?");
+   $stmt->bind_param('isss', $idObat, $idCustomer, $awal, $akhir);
+   $stmt->execute();
+   foreach ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) as $k) {
+      $mutasi[] = [
+         'waktu' => $k['created_at'],
+         'jenis' => 'keluar',
+         'referensi' => 'Resep #' . $k['id_permintaan_farmasi'],
+         'keterangan' => $k['patient_name_pcare'] ?: '-',
+         'sub' => (string) $k['id_visit'],
+         'masuk' => 0.0,
+         'keluar' => (float) $k['qty'],
+         'urut' => 1,
+      ];
    }
+   $stmt->close();
 
-   $stmtMasuk->bind_param(
-      "ss",
-      $id_pharmacy,
-      $id_customer
-   );
-
-   $stmtMasuk->execute();
-
-   $resultMasuk = $stmtMasuk->get_result();
-
-   $dataMasuk = $resultMasuk->fetch_assoc();
-
-   $stok_masuk = (int) ($dataMasuk['stok_masuk'] ?? 0);
-
-   $stmtMasuk->close();
-
-
-   /**
-    * ========================================================
-    * TOTAL STOK KELUAR
-    * ========================================================
-    *
-    * Semua item permintaan dihitung, sama dengan
-    * laporan farmasi (rpt_farmasi).
-    */
-
-   $sqlKeluar = "
-        SELECT
-            COALESCE(SUM(qty), 0) AS stok_keluar
-
-        FROM permintaan_pharmacy_details
-
-        WHERE id_pharmacy = ?
-    ";
-
-   $stmtKeluar = $koneksi->prepare($sqlKeluar);
-
-   if (!$stmtKeluar) {
-      echo json_encode([
-         'status'  => false,
-         'message' => $koneksi->error
-      ]);
-      return;
+   usort($mutasi, fn($a, $b) => [$a['waktu'], $a['urut']] <=> [$b['waktu'], $b['urut']]);
+   $saldo = (float) $obat['stok_awal'];
+   foreach ($mutasi as &$m) {
+      $saldo += $m['masuk'] - $m['keluar'];
+      $m['saldo'] = $saldo;
+      unset($m['urut']);
    }
+   unset($m);
 
-   $stmtKeluar->bind_param(
-      "i",
-      $id_pharmacy
-   );
-
-   $stmtKeluar->execute();
-
-   $resultKeluar = $stmtKeluar->get_result();
-
-   $dataKeluar = $resultKeluar->fetch_assoc();
-
-   $stok_keluar = (int) ($dataKeluar['stok_keluar'] ?? 0);
-
-   $stmtKeluar->close();
-
-
-   /**
-    * ========================================================
-    * HITUNG STOK TERSEDIA
-    * ========================================================
-    */
-
-   $stok_awal = (int) ($data['stok_awal'] ?? 0);
-
-   $stok_tersedia =
-      $stok_awal
-      + $stok_masuk
-      - $stok_keluar;
-
-
-   /**
-    * Masukkan hasil ke response
-    */
-
-   $data['stok_awal']     = $stok_awal;
-   $data['stok_masuk']    = $stok_masuk;
-   $data['stok_keluar']   = $stok_keluar;
-   $data['stok_tersedia'] = $stok_tersedia;
-
-
-   echo json_encode([
-      'status' => true,
-      'data'   => $data
+   jawab(true, [
+      'stok_awal' => (float) $obat['stok_awal'],
+      'stok_akhir' => (float) $obat['stok_akhir'],
+      'data' => $mutasi,
    ]);
 }
 
-
-/**
- * ============================================================
- * SET STOCK AWAL
- * ============================================================
- *
- * Update:
- * ms_pharmacy.pharmacy_stock
- */
-function setStockAwal()
+// ============================================================
+// RIWAYAT PENERIMAAN (opsional per periode)
+// ============================================================
+function getPenerimaan(mysqli $koneksi, string $idCustomer): void
 {
-   global $koneksi, $id_customer, $username;
-
-   $id_pharmacy = $_POST['id_pharmacy'] ?? '';
-   $stock_awal  = $_POST['stock_awal'] ?? '';
-
-   if ($id_pharmacy === '') {
-      echo json_encode([
-         'status'  => false,
-         'message' => 'ID pharmacy tidak ditemukan.'
-      ]);
-      return;
-   }
-
-   if ($stock_awal === '' || !is_numeric($stock_awal)) {
-      echo json_encode([
-         'status'  => false,
-         'message' => 'Stock awal tidak valid.'
-      ]);
-      return;
-   }
-
-   $stock_awal = (int) $stock_awal;
-
-
-   /**
-    * Update stock langsung ke ms_pharmacy
-    */
-
-   $sql = "
-        UPDATE ms_pharmacy
-
-        SET
-            pharmacy_stock = ?
-
-        WHERE id_pharmacy = ?
-        AND id_customer = ?
-    ";
-
+   $idObat = (string) idObat($_GET);
+   $pakaiPeriode = isset($_GET['fromDate']) || isset($_GET['toDate']);
+   $sql = "SELECT id_penerimaan, id_pharmacy, tanggal, nomor_faktur, supplier, batch, expired,
+         jumlah, harga_beli, keterangan, created_at, created_by
+      FROM pharmacy_stock_penerimaan
+      WHERE id_pharmacy = ? AND id_customer = ?" . ($pakaiPeriode ? " AND tanggal BETWEEN ? AND ?" : "") . "
+      ORDER BY tanggal DESC, id_penerimaan DESC";
    $stmt = $koneksi->prepare($sql);
-
-   if (!$stmt) {
-      echo json_encode([
-         'status'  => false,
-         'message' => $koneksi->error
-      ]);
-      return;
-   }
-
-   $stmt->bind_param(
-      "iis",
-      $stock_awal,
-      $id_pharmacy,
-      $id_customer
-   );
-
-
-   if ($stmt->execute()) {
-
-      echo json_encode([
-         'status'  => true,
-         'message' => 'Stock awal berhasil disimpan.',
-         'data'    => [
-            'id_pharmacy' => $id_pharmacy,
-            'stock_awal'  => $stock_awal
-         ]
-      ]);
+   if ($pakaiPeriode) {
+      [$from, $to] = periode($_GET);
+      $stmt->bind_param('ssss', $idObat, $idCustomer, $from, $to);
    } else {
-
-      echo json_encode([
-         'status'  => false,
-         'message' => $stmt->error
-      ]);
+      $stmt->bind_param('ss', $idObat, $idCustomer);
    }
-
+   $stmt->execute();
+   $data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
    $stmt->close();
+   jawab(true, ['data' => $data]);
 }
 
-
-/**
- * ============================================================
- * SIMPAN PENERIMAAN STOCK
- * ============================================================
- *
- * Table:
- * pharmacy_stock_penerimaan
- */
-function savePenerimaan()
+// ============================================================
+// SIMPAN STOK DASAR (ms_pharmacy.pharmacy_stock)
+// ============================================================
+function setStockAwal(mysqli $koneksi, string $idCustomer): void
 {
-   global $koneksi, $id_customer, $username;
+   $idObat = idObat($_POST);
+   $stok = $_POST['stock_awal'] ?? '';
+   if ($stok === '' || !is_numeric($stok) || (float) $stok < 0) {
+      jawab(false, ['message' => 'Stok awal harus angka 0 atau lebih.'], 422);
+   }
+   if (!obatMilikKlinik($koneksi, $idObat, $idCustomer)) {
+      jawab(false, ['message' => 'Obat master bersama tidak bisa diubah stok awalnya dari klinik.'], 403);
+   }
+   $stok = (int) $stok;
+   $stmt = $koneksi->prepare("UPDATE ms_pharmacy SET pharmacy_stock = ? WHERE id_pharmacy = ? AND id_customer = ?");
+   $stmt->bind_param('iis', $stok, $idObat, $idCustomer);
+   if (!$stmt->execute()) {
+      error_log('[pharmacyStock] ' . $stmt->error);
+      jawab(false, ['message' => 'Stok awal gagal disimpan.'], 500);
+   }
+   $stmt->close();
+   jawab(true, ['message' => 'Stok awal berhasil disimpan.', 'data' => ['id_pharmacy' => $idObat, 'stock_awal' => $stok]]);
+}
 
-   $id_pharmacy  = $_POST['id_pharmacy'] ?? '';
-   $tanggal      = $_POST['tanggal'] ?? '';
-   $nomor_faktur = $_POST['nomor_faktur'] ?? '';
-   $supplier     = $_POST['supplier'] ?? '';
-   $batch        = $_POST['batch'] ?? '';
-   $expired      = $_POST['expired'] ?? null;
-   $jumlah       = $_POST['jumlah'] ?? 0;
-   $harga_beli   = $_POST['harga_beli'] ?? 0;
-   $keterangan   = $_POST['keterangan'] ?? '';
+// ============================================================
+// SIMPAN PENERIMAAN
+// ============================================================
+function savePenerimaan(mysqli $koneksi, string $idCustomer, string $username): void
+{
+   $idObat = idObat($_POST);
+   $tanggal = trim((string) ($_POST['tanggal'] ?? ''));
+   $expired = trim((string) ($_POST['expired'] ?? ''));
+   $jumlah = $_POST['jumlah'] ?? 0;
+   $hargaBeli = $_POST['harga_beli'] ?? 0;
+   $teks = fn($k, $max = 255) => mb_substr(trim((string) ($_POST[$k] ?? '')), 0, $max);
 
-
-   /**
-    * Validasi
-    */
-
-   if ($id_pharmacy === '') {
-      echo json_encode([
-         'status'  => false,
-         'message' => 'ID pharmacy wajib diisi.'
-      ]);
-      return;
+   $tglValid = fn($d) => ($x = DateTime::createFromFormat('Y-m-d', $d)) && $x->format('Y-m-d') === $d;
+   if (!$tglValid($tanggal)) {
+      jawab(false, ['message' => 'Tanggal penerimaan wajib diisi dengan benar.'], 422);
+   }
+   if ($expired !== '' && !$tglValid($expired)) {
+      jawab(false, ['message' => 'Tanggal expired tidak valid.'], 422);
+   }
+   if (!is_numeric($jumlah) || (int) $jumlah <= 0) {
+      jawab(false, ['message' => 'Jumlah penerimaan harus lebih dari 0.'], 422);
+   }
+   if (!obatMilikKlinik($koneksi, $idObat, $idCustomer)) {
+      jawab(false, ['message' => 'Obat tidak ditemukan pada master klinik ini.'], 404);
    }
 
-   if ($tanggal === '') {
-      echo json_encode([
-         'status'  => false,
-         'message' => 'Tanggal penerimaan wajib diisi.'
-      ]);
-      return;
-   }
-
-   if (!is_numeric($jumlah) || (int)$jumlah <= 0) {
-      echo json_encode([
-         'status'  => false,
-         'message' => 'Jumlah penerimaan harus lebih dari 0.'
-      ]);
-      return;
-   }
-
+   $idObatStr = (string) $idObat;
    $jumlah = (int) $jumlah;
+   $hargaBeli = is_numeric($hargaBeli) && (float) $hargaBeli >= 0 ? (float) $hargaBeli : 0.0;
+   $expired = $expired !== '' ? $expired : null;
+   $faktur = $teks('nomor_faktur');
+   $supplier = $teks('supplier');
+   $batch = $teks('batch');
+   $keterangan = $teks('keterangan', 2000);
 
-   $harga_beli = is_numeric($harga_beli)
-      ? (float) $harga_beli
-      : 0;
-
-
-   /**
-    * Validasi obat
-    */
-
-   $sqlCheck = "
-        SELECT id_pharmacy
-
-        FROM ms_pharmacy
-
-        WHERE id_pharmacy = ?
-        AND id_customer = ?
-
-        LIMIT 1
-    ";
-
-   $stmtCheck = $koneksi->prepare($sqlCheck);
-
-   $stmtCheck->bind_param(
-      "is",
-      $id_pharmacy,
-      $id_customer
-   );
-
-   $stmtCheck->execute();
-
-   $resultCheck = $stmtCheck->get_result();
-
-   if ($resultCheck->num_rows === 0) {
-
-      echo json_encode([
-         'status'  => false,
-         'message' => 'Obat tidak ditemukan.'
-      ]);
-
-      $stmtCheck->close();
-      return;
+   $stmt = $koneksi->prepare("INSERT INTO pharmacy_stock_penerimaan
+      (id_pharmacy, id_customer, tanggal, nomor_faktur, supplier, batch, expired, jumlah, harga_beli, keterangan, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+   $stmt->bind_param('sssssssidss', $idObatStr, $idCustomer, $tanggal, $faktur, $supplier, $batch, $expired, $jumlah, $hargaBeli, $keterangan, $username);
+   if (!$stmt->execute()) {
+      error_log('[pharmacyStock] ' . $stmt->error);
+      jawab(false, ['message' => 'Penerimaan gagal disimpan.'], 500);
    }
-
-   $stmtCheck->close();
-
-
-   /**
-    * ========================================================
-    * SIMPAN PENERIMAAN
-    * ========================================================
-    */
-
-   $sql = "
-        INSERT INTO pharmacy_stock_penerimaan
-        (
-            id_pharmacy,
-            id_customer,
-            tanggal,
-            nomor_faktur,
-            supplier,
-            batch,
-            expired,
-            jumlah,
-            harga_beli,
-            keterangan,
-            created_by
-        )
-
-        VALUES
-        (
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-        )
-    ";
-
-   $stmt = $koneksi->prepare($sql);
-
-   if (!$stmt) {
-
-      echo json_encode([
-         'status'  => false,
-         'message' => $koneksi->error
-      ]);
-
-      return;
-   }
-
-
-   /**
-    * 11 parameter:
-    *
-    * id_pharmacy
-    * id_customer
-    * tanggal
-    * nomor_faktur
-    * supplier
-    * batch
-    * expired
-    * jumlah
-    * harga_beli
-    * keterangan
-    * created_by
-    *
-    * s s s s s s s i d s s
-    */
-
-   $stmt->bind_param(
-      "sssssssidss",
-      $id_pharmacy,
-      $id_customer,
-      $tanggal,
-      $nomor_faktur,
-      $supplier,
-      $batch,
-      $expired,
-      $jumlah,
-      $harga_beli,
-      $keterangan,
-      $username
-   );
-
-
-   if ($stmt->execute()) {
-
-      echo json_encode([
-         'status'  => true,
-         'message' => 'Penerimaan stock berhasil disimpan.',
-         'id'      => $stmt->insert_id
-      ]);
-   } else {
-
-      echo json_encode([
-         'status'  => false,
-         'message' => $stmt->error
-      ]);
-   }
-
+   $id = $stmt->insert_id;
    $stmt->close();
+   jawab(true, ['message' => 'Penerimaan stok berhasil disimpan.', 'id' => $id]);
 }
 
-
-/**
- * ============================================================
- * GET HISTORI PENERIMAAN
- * ============================================================
- */
-function getPenerimaan()
+// ============================================================
+// HAPUS PENERIMAAN
+// ============================================================
+function deletePenerimaan(mysqli $koneksi, string $idCustomer): void
 {
-   global $koneksi, $id_customer;
-
-   $id_pharmacy = $_GET['id_pharmacy'] ?? '';
-
-   if ($id_pharmacy === '') {
-      echo json_encode([
-         'status'  => false,
-         'message' => 'ID pharmacy tidak ditemukan.'
-      ]);
-      return;
+   $id = (int) ($_GET['id_penerimaan'] ?? 0);
+   if ($id <= 0) {
+      jawab(false, ['message' => 'ID penerimaan tidak valid.'], 422);
    }
-
-
-   $sql = "
-        SELECT
-            id_penerimaan,
-            id_pharmacy,
-            id_customer,
-            tanggal,
-            nomor_faktur,
-            supplier,
-            batch,
-            expired,
-            jumlah,
-            harga_beli,
-            keterangan,
-            created_at,
-            created_by
-
-        FROM pharmacy_stock_penerimaan
-
-        WHERE id_pharmacy = ?
-        AND id_customer = ?
-
-        ORDER BY tanggal DESC, id_penerimaan DESC
-    ";
-
-   $stmt = $koneksi->prepare($sql);
-
-   if (!$stmt) {
-      echo json_encode([
-         'status'  => false,
-         'message' => $koneksi->error
-      ]);
-      return;
+   $stmt = $koneksi->prepare("DELETE FROM pharmacy_stock_penerimaan WHERE id_penerimaan = ? AND id_customer = ?");
+   $stmt->bind_param('is', $id, $idCustomer);
+   if (!$stmt->execute()) {
+      error_log('[pharmacyStock] ' . $stmt->error);
+      jawab(false, ['message' => 'Data penerimaan gagal dihapus.'], 500);
    }
-
-   $stmt->bind_param(
-      "ss",
-      $id_pharmacy,
-      $id_customer
-   );
-
-   $stmt->execute();
-
-   $result = $stmt->get_result();
-
-   $data = [];
-
-   while ($row = $result->fetch_assoc()) {
-      $data[] = $row;
-   }
-
+   $hapus = $stmt->affected_rows;
    $stmt->close();
-
-
-   echo json_encode([
-      'status' => true,
-      'data'   => $data
-   ]);
-}
-
-
-/**
- * ============================================================
- * DELETE PENERIMAAN
- * ============================================================
- */
-function deletePenerimaan()
-{
-   global $koneksi, $id_customer;
-
-   // Ambil ID dari query string
-   $id_penerimaan = $_GET['id_penerimaan'] ?? '';
-
-   if ($id_penerimaan === '') {
-      echo json_encode([
-         'status'  => false,
-         'message' => 'ID penerimaan tidak ditemukan.'
-      ]);
-      return;
-   }
-
-   $id_penerimaan = (int) $id_penerimaan;
-
-   if ($id_penerimaan <= 0) {
-      echo json_encode([
-         'status'  => false,
-         'message' => 'ID penerimaan tidak valid.'
-      ]);
-      return;
-   }
-
-   $sql = "
-        DELETE FROM pharmacy_stock_penerimaan
-        WHERE id_penerimaan = ?
-        AND id_customer = ?
-    ";
-
-   $stmt = $koneksi->prepare($sql);
-
-   if (!$stmt) {
-      echo json_encode([
-         'status'  => false,
-         'message' => 'Prepare statement gagal: ' . $koneksi->error
-      ]);
-      return;
-   }
-
-   $stmt->bind_param(
-      "is",
-      $id_penerimaan,
-      $id_customer
-   );
-
-   if ($stmt->execute()) {
-
-      if ($stmt->affected_rows > 0) {
-
-         echo json_encode([
-            'status'  => true,
-            'message' => 'Data penerimaan berhasil dihapus.'
-         ]);
-      } else {
-
-         echo json_encode([
-            'status'  => false,
-            'message' => 'Data penerimaan tidak ditemukan atau bukan milik customer ini.'
-         ]);
-      }
-   } else {
-
-      echo json_encode([
-         'status'  => false,
-         'message' => 'Gagal menghapus data: ' . $stmt->error
-      ]);
-   }
-
-   $stmt->close();
+   $hapus > 0
+      ? jawab(true, ['message' => 'Data penerimaan berhasil dihapus.'])
+      : jawab(false, ['message' => 'Data penerimaan tidak ditemukan atau bukan milik klinik ini.'], 404);
 }
