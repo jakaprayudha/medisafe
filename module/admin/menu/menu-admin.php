@@ -79,6 +79,16 @@
             <span class="hide-menu">Monitoring Satu Sehat</span>
          </a>
       </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Monitoring Antrean Online') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/admin/monitoring-antrean"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:human-queue"></iconify-icon>
+            <span class="hide-menu">Monitoring Antrean Online</span>
+         </a>
+      </li>
 
       <li class="sidebar-item has-sub">
          <a href="javascript:void(0)" class="sidebar-link" onclick="toggleSidebarMenu(this)">
