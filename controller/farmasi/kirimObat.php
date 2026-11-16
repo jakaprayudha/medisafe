@@ -100,7 +100,7 @@ try {
    }
 
    // ================== JIKA BUKAN BPJS ==================
-   if ((int)$prov['id_provider'] !== 1 && $prov['status_rawatinap'] == '1') {
+   if ((int)$prov['id_provider'] !== 1 || $prov['status_rawatinap'] == '1') {
       [$okUpdate, $errUpdate] = updateStatusTiket($koneksi, $ids, $id_customer);
       if (!$okUpdate) {
          throw new RuntimeException($errUpdate ?: 'Gagal memperbarui status tiket');
