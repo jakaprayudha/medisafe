@@ -83,7 +83,7 @@ try {
 
    // ================== CEK PROVIDER ==================
    $stmtProv = $koneksi->prepare("
-      SELECT id_provider, visit_status 
+      SELECT id_provider, status_rawatinap, visit_status 
       FROM pasien_visit 
       WHERE visit_ID = ? AND id_customer = ?
    ");
@@ -100,7 +100,7 @@ try {
    }
 
    // ================== JIKA BUKAN BPJS ==================
-   if ((int)$prov['id_provider'] !== 1) {
+   if ((int)$prov['id_provider'] !== 1 && $prov['status_rawatinap'] == '1') {
       [$okUpdate, $errUpdate] = updateStatusTiket($koneksi, $ids, $id_customer);
       if (!$okUpdate) {
          throw new RuntimeException($errUpdate ?: 'Gagal memperbarui status tiket');
