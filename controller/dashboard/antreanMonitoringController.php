@@ -40,12 +40,14 @@ function rows($koneksi, $sql, $types = '', $params = [])
 }
 
 $roles = $_SESSION['roles'] ?? '';
-if (empty($_SESSION['id_customer']) || !in_array($roles, ['superadmin', 'admin'], true)) {
+$isSuper = $roles === 'superadmin';
+$sessionIdc = (int) ($_SESSION['id_customer'] ?? 0);
+// Akun superadmin tidak terikat faskes (id_customer kosong), admin wajib punya faskes.
+if (!in_array($roles, ['superadmin', 'admin'], true) || (!$isSuper && $sessionIdc <= 0)) {
    out(['status' => 'error', 'message' => 'Akses tidak diizinkan.'], 403);
 }
-$isSuper = $roles === 'superadmin';
 // Admin selalu faskes sendiri; superadmin boleh memilih faskes.
-$idc = (string) ($isSuper && !empty($_GET['id_customer']) ? (int) $_GET['id_customer'] : (int) $_SESSION['id_customer']);
+$idc = (string) ($isSuper && !empty($_GET['id_customer']) ? (int) $_GET['id_customer'] : $sessionIdc);
 
 $action = $_GET['action'] ?? 'data';
 
@@ -62,6 +64,9 @@ if ($action === 'faskes') {
 
 if ($action !== 'data') {
    out(['status' => 'error', 'message' => 'Action tidak dikenal.'], 400);
+}
+if ((int) $idc <= 0) {
+   out(['status' => 'error', 'message' => 'Pilih faskes terlebih dahulu.'], 422);
 }
 
 // ================== PARAMETER ==================
@@ -153,7 +158,7 @@ foreach ($tiketBelum as $idTiket => $v) {
    $belumPerVisit[$v][$itemTiket[$idTiket] ?? 0 ? 'siap' : 'kosong'][] = $idTiket;
 }
 // tombol kirim hanya untuk faskes sesuai session (kirimObat.php memakai id_customer session)
-$bisaKirim = $idc === (string) (int) $_SESSION['id_customer'];
+$bisaKirim = $sessionIdc > 0 && $idc === (string) $sessionIdc;
 
 // ================== KLASIFIKASI ==================
 function sumber($createdUser)

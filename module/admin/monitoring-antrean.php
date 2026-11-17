@@ -78,6 +78,34 @@ $isSuper = $roles === 'superadmin';
       color: #5a6a85;
       margin-bottom: .6rem;
     }
+    /* select2 faskes: disamakan dengan .form-control (input tanggal) */
+    #maFaskesWrap .select2-container--default .select2-selection--single {
+      /* !important: menimpa aturan global .select2-selection di assets/template/head.php */
+      height: 43px !important; padding: 0 !important; border: 1px solid #e0e6eb !important; border-radius: 8px !important; background-color: transparent;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, .075); transition: border-color .15s, box-shadow .15s;
+    }
+    #maFaskesWrap .select2-container--default .select2-selection--single .select2-selection__rendered {
+      line-height: 41px; padding-left: 16px; padding-right: 36px; font-size: 14px; color: #29343d;
+    }
+    #maFaskesWrap .select2-container--default .select2-selection--single .select2-selection__placeholder { color: #8a97a3; }
+    #maFaskesWrap .select2-container--default .select2-selection--single .select2-selection__arrow { height: 41px; width: 34px; top: 1px; right: 4px; }
+    #maFaskesWrap .select2-container--default .select2-selection--single .select2-selection__arrow b {
+      border: solid #5a6a85; border-width: 0 1.5px 1.5px 0; padding: 3px; margin: -5px 0 0 -4px; transform: rotate(45deg);
+    }
+    #maFaskesWrap .select2-container--default.select2-container--open .select2-selection__arrow b { transform: rotate(-135deg); margin-top: -1px; }
+    #maFaskesWrap .select2-container--default.select2-container--focus .select2-selection--single,
+    #maFaskesWrap .select2-container--default.select2-container--open .select2-selection--single {
+      border-color: #b1adff !important; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .075), 0 0 0 .25rem rgba(99, 91, 255, .25);
+    }
+    .select2-container--default .ma-faskes-dd { border: 1px solid #e0e6eb; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 24px rgba(41, 52, 61, .12); margin-top: 4px; }
+    .select2-container--default .ma-faskes-dd .select2-search--dropdown { padding: 8px; }
+    .select2-container--default .ma-faskes-dd .select2-search__field { border: 1px solid #e0e6eb; border-radius: 6px; padding: 6px 10px; font-size: 13px; outline: 0; }
+    .select2-container--default .ma-faskes-dd .select2-search__field:focus { border-color: #b1adff; }
+    .select2-container--default .ma-faskes-dd .select2-results__option { font-size: 13px; padding: 7px 12px; color: #29343d; }
+    .select2-container--default .ma-faskes-dd .select2-results__option--highlighted.select2-results__option--selectable { background: #635bff; color: #fff; }
+    .select2-container--default .ma-faskes-dd .select2-results__option--selected { background: #efeeff; color: #635bff; font-weight: 600; }
+    .select2-container--default .ma-faskes-dd .select2-results__option--highlighted .ma-off { color: #e6e4ff; }
+    .ma-faskes-dd .ma-off, #maFaskesWrap .ma-off { color: #8a97a3; font-size: 11px; }
   </style>
 </head>
 
@@ -97,9 +125,9 @@ $isSuper = $roles === 'superadmin';
             </div>
             <div class="d-flex gap-2 align-items-end flex-wrap">
               <?php if ($isSuper): ?>
-                <div>
+                <div id="maFaskesWrap" style="min-width:280px">
                   <label class="form-label small mb-1">Faskes</label>
-                  <select id="maFaskes" class="form-select" style="min-width:240px"></select>
+                  <select id="maFaskes" class="form-select"></select>
                 </div>
               <?php endif; ?>
               <div>
@@ -868,9 +896,27 @@ $isSuper = $roles === 'superadmin';
 
       if (isSuper) {
         fetch(api + '?action=faskes').then(r => r.json()).then(j => {
-          (j.data || []).forEach(f => $faskes.append(new Option((f.clinic_name || ('#' + f.id_customer)) + (+f.antrol_aktif ? '' : ' (antrol nonaktif)'), f.id_customer)));
+          (j.data || []).forEach(f => {
+            const opt = new Option(f.clinic_name || ('#' + f.id_customer), f.id_customer);
+            opt.dataset.off = +f.antrol_aktif ? '' : '1';
+            $faskes.append(opt);
+          });
           $faskes.val('<?= (int) ($_SESSION['id_customer'] ?? 0) ?>');
           if (!$faskes.val()) $faskes.prop('selectedIndex', 0);
+          const fmtFaskes = o => {
+            if (!o.id || !o.element || !o.element.dataset.off) return o.text;
+            return $('<span>').text(o.text + ' ').append($('<span class="ma-off">').text('(antrol nonaktif)'));
+          };
+          if ($.fn.select2) {
+            $faskes.select2({
+              width: '100%',
+              placeholder: 'Cari faskes...',
+              dropdownCssClass: 'ma-faskes-dd',
+              templateResult: fmtFaskes,
+              templateSelection: fmtFaskes,
+              language: { noResults: () => 'Faskes tidak ditemukan', searching: () => 'Mencari...' }
+            });
+          }
           $faskes.on('change', load);
           load();
         }).catch(load);
