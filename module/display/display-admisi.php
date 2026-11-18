@@ -347,7 +347,7 @@
       }, array_values($admisiVideoFiles));
       ?>
       <div class="admisi-video-panel">
-        <video id="admisiVideo" autoplay muted playsinline preload="auto"></video>
+        <video id="admisiVideo" autoplay playsinline preload="auto"></video>
         <div id="admisiVideoMessage" class="admisi-video-message" hidden></div>
         <button id="admisiVideoStart" class="admisi-video-start" type="button" hidden>Putar video</button>
       </div>
@@ -387,6 +387,117 @@
     let currentPageIndex = 0;
     let itemsPerPage = 10;
     let rotationInterval;
+
+    const NORMAL_VOLUME = 0.8;
+    const DUCKED_VOLUME = 0.1;
+    const FALLBACK_DURATION = 8000; 
+
+    let restoreTimer = null;
+    let fadeInterval = null;
+    let activeAudios = new Set();
+
+    function fadeVideoVolume(targetVolume, duration = 300) {
+      const video = document.getElementById('admisiVideo');
+      if (!video) return;
+
+      clearInterval(fadeInterval);
+      const startVolume = video.volume;
+      const diff = targetVolume - startVolume;
+      if (Math.abs(diff) < 0.01) {
+        video.volume = targetVolume;
+        return;
+      }
+
+      const steps = 15;
+      const stepTime = duration / steps;
+      let currentStep = 0;
+
+      fadeInterval = setInterval(() => {
+        currentStep++;
+        const nextVol = startVolume + (diff * (currentStep / steps));
+        video.volume = Math.max(0, Math.min(1, nextVol));
+        if (currentStep >= steps) {
+          video.volume = targetVolume;
+          clearInterval(fadeInterval);
+        }
+      }, stepTime);
+    }
+
+    function isVoicePlaying() {
+      const ttsActive = ('speechSynthesis' in window) &&
+        (window.speechSynthesis.speaking || window.speechSynthesis.pending);
+      return activeAudios.size > 0 || ttsActive;
+    }
+
+    function duckVideoVolume(useFallbackTimer = false) {
+      clearTimeout(restoreTimer);
+      fadeVideoVolume(DUCKED_VOLUME);
+
+      if (useFallbackTimer) {
+        restoreTimer = setTimeout(() => {
+          if (!isVoicePlaying()) {
+            fadeVideoVolume(NORMAL_VOLUME);
+          }
+        }, FALLBACK_DURATION);
+      }
+    }
+
+    function scheduleRestoreVolume() {
+      clearTimeout(restoreTimer);
+      // Beri jeda 700ms agar tidak naik-turun jika panggilan terdiri dari beberapa file audio berurutan
+      restoreTimer = setTimeout(() => {
+        if (!isVoicePlaying()) {
+          fadeVideoVolume(NORMAL_VOLUME);
+        } else {
+          scheduleRestoreVolume();
+        }
+      }, 700);
+    }
+
+    // 1. Deteksi otomatis jika socket.js memutar audio (new Audio / <audio>)
+    const origAudioPlay = HTMLAudioElement.prototype.play;
+    HTMLAudioElement.prototype.play = function() {
+      const audioEl = this;
+      activeAudios.add(audioEl);
+      duckVideoVolume(false);
+
+      const onFinish = () => {
+        activeAudios.delete(audioEl);
+        scheduleRestoreVolume();
+      };
+
+      audioEl.addEventListener('ended', onFinish, {
+        once: true
+      });
+      audioEl.addEventListener('pause', onFinish, {
+        once: true
+      });
+      audioEl.addEventListener('error', onFinish, {
+        once: true
+      });
+
+      return origAudioPlay.apply(this, arguments);
+    };
+
+    // 2. Deteksi otomatis jika socket.js memakai Text-to-Speech (speechSynthesis)
+    if ('speechSynthesis' in window) {
+      const origSpeak = window.speechSynthesis.speak.bind(window.speechSynthesis);
+      window.speechSynthesis.speak = function(utterance) {
+        duckVideoVolume(false);
+        utterance.addEventListener('end', scheduleRestoreVolume, {
+          once: true
+        });
+        utterance.addEventListener('error', scheduleRestoreVolume, {
+          once: true
+        });
+        return origSpeak(utterance);
+      };
+    }
+
+    // Opsional: bisa dipanggil manual dari socket.js jika diperlukan
+    APP.duckVideoVolume = duckVideoVolume;
+    APP.restoreVideoVolume = scheduleRestoreVolume;
+
     $(function() {
       function updateClock() {
         const now = new Date();
@@ -400,6 +511,7 @@
       }
       setInterval(updateClock, 1000);
       updateClock();
+
       APP.showQueue = function() {
         $.ajax({
           url: '../../controller/queue/listAntriAdmisiDisplay',
@@ -458,11 +570,11 @@
         } else {
           paginatedPatients.forEach(function(item) {
             html += `
-                    <tr>
-                    <td><b>${item.no_antrian}</b></td>
-                    <td>${item.nama_pasien}</td>
-                    </tr>
-                `;
+              <tr>
+                <td><b>${item.no_antrian}</b></td>
+                <td>${item.nama_pasien}</td>
+              </tr>
+            `;
           });
         }
         $('#tableBody').html(html);
@@ -470,22 +582,23 @@
         if (currentPageIndex >= totalPages) {
           currentPageIndex = 0;
           currentPoliIndex++;
-
           if (currentPoliIndex >= poliKeys.length) {
             currentPoliIndex = 0;
           }
         }
       }
+
       APP.showQueue();
+
       APP.showAntrianPoli = function(nama, dokter) {
-        console.log(nama);
-        console.log(dokter);
+        // 3. Pelankan video ke 10% saat panggilan masuk (dengan timer cadangan 8 detik)
+        duckVideoVolume(true);
+
         $('#callPatient').html(nama.toUpperCase());
         let namaDokter = dokter.toUpperCase().replace(/^DR\./i, 'Dr.');
         $('#callQueue').html("Ruangan : " + namaDokter);
         APP.showQueue();
       }
-
     });
   </script>
   <script>
@@ -518,7 +631,10 @@
         video.load();
         playVideo();
       }
-      video.muted = true;
+
+      video.muted = false;
+      video.volume = 1.0;
+
       video.addEventListener('playing', function() {
         failures = 0;
         message.hidden = true;
@@ -544,6 +660,7 @@
       else showMessage('Belum ada video di folder video.');
     })();
   </script>
+
 
 </body>
 
