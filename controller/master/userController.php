@@ -1,5 +1,6 @@
 <?php
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/security.php';
 
 header('Content-Type: application/json');
 
@@ -16,6 +17,8 @@ if (!$id_customer) {
    ]);
    exit;
 }
+
+requireRole(['admin', 'superadmin', 'administrator']);
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -67,13 +70,18 @@ function createData($id_customer)
       return;
    }
 
+   if ($err = passwordPolicyError((string) ($_POST['password'] ?? ''))) {
+      echo json_encode(['status' => 'error', 'message' => $err]);
+      return;
+   }
+
    $fields = ['uid_user', 'id_customer', 'fullname', 'username', 'password', 'roles', 'path', 'kdDokter'];
    $values = [
       generateUserUID($koneksi),
       $id_customer,
       $_POST['fullname'],
       $_POST['username'],
-      md5($_POST['password']),
+      hashPassword($_POST['password']),
       $_POST['roles'],
       $_POST['path'],
       $_POST['kdDokter']
@@ -252,8 +260,12 @@ function updateData($id_customer)
 
    // password (opsional)
    if (isset($_PUT['password']) && trim($_PUT['password']) != '') {
+      if ($err = passwordPolicyError((string) $_PUT['password'])) {
+         echo json_encode(['status' => 'error', 'message' => $err]);
+         return;
+      }
       $fields[] = "password=?";
-      $values[] = md5($_PUT['password']);
+      $values[] = hashPassword($_PUT['password']);
    }
 
    // path
