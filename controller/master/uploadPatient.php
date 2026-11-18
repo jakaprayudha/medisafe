@@ -30,6 +30,20 @@ if (!$id_patient) {
    ]);
    exit;
 }
+
+// 🔐 pasien wajib milik faskes sesi
+$id_customer = (int) ($_SESSION['id_customer'] ?? 0);
+$id_patient = (string) (int) $id_patient;
+$cek = $koneksi->prepare("SELECT 1 FROM ms_patient WHERE id_patient = ? AND id_customer = ? LIMIT 1");
+$cek->bind_param("si", $id_patient, $id_customer);
+$cek->execute();
+$milik = $cek->get_result()->fetch_row();
+$cek->close();
+if ($id_customer <= 0 || !$milik) {
+   http_response_code(404);
+   echo json_encode(["status" => "error", "message" => "Data pasien tidak ditemukan."]);
+   exit;
+}
 // 🔥 validasi file
 $allowedExt = ['jpg', 'jpeg', 'png'];
 $maxSize = 2 * 1024 * 1024; // 2MB
@@ -51,6 +65,16 @@ foreach ($allowedFiles as $field => $prefix) {
          echo json_encode([
             "status" => "error",
             "message" => "Format file $field tidak diizinkan"
+         ]);
+         exit;
+      }
+
+      // 🔥 isi file harus benar-benar gambar (bukan sekadar ganti ekstensi)
+      $info = @getimagesize($fileTmp);
+      if (!$info || !in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG], true)) {
+         echo json_encode([
+            "status" => "error",
+            "message" => "File $field bukan gambar JPG/PNG yang valid"
          ]);
          exit;
       }
@@ -106,7 +130,10 @@ foreach ($uploadedFiles as $key => $file) {
 $params[] = $id_patient;
 $types   .= "s";
 
-$sql = "UPDATE ms_patient SET " . implode(",", $fields) . " WHERE id_patient=?";
+$params[] = $id_customer;
+$types   .= "i";
+
+$sql = "UPDATE ms_patient SET " . implode(",", $fields) . " WHERE id_patient=? AND id_customer=?";
 $stmt = $koneksi->prepare($sql);
 
 if (!$stmt) {

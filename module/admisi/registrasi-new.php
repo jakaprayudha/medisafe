@@ -515,6 +515,264 @@ require '../../controller/view.php';
       }
 
     }
+    /* =========================================================
+   DAFTAR PASIEN
+   ========================================================= */
+    .min-w-0 {
+      min-width: 0;
+    }
+
+    .pt-stat {
+      border: 1px solid #e5eaef;
+      border-radius: 12px;
+      background: #fff;
+      padding: 14px 16px;
+      height: 100%;
+    }
+
+    .pt-stat.pt-click {
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+
+    .pt-stat.pt-click:hover,
+    .pt-stat.pt-click.active {
+      border-color: #5d87ff;
+    }
+
+    .pt-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05rem;
+      flex-shrink: 0;
+    }
+
+    .pt-val {
+      font-size: 1.35rem;
+      font-weight: 700;
+      line-height: 1.2;
+      color: #2a3547;
+    }
+
+    .pt-label {
+      font-size: .75rem;
+      color: #6c757d;
+    }
+
+    .pt-bar {
+      height: 5px;
+      border-radius: 5px;
+      background: #eef2f6;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .pt-bar span {
+      display: block;
+      height: 100%;
+      border-radius: 5px;
+    }
+
+    .pt-chips .btn {
+      border-radius: 20px;
+      font-size: .8rem;
+      padding: .3rem .85rem;
+    }
+
+    .pt-search {
+      width: 320px;
+    }
+
+    .pt-search .form-control {
+      font-size: .875rem;
+    }
+
+    @media (max-width: 767.98px) {
+
+      .pt-tools,
+      .pt-search {
+        width: 100%;
+      }
+
+      .pt-search {
+        flex: 1;
+      }
+    }
+
+    #periodeTable {
+      width: 100% !important;
+    }
+
+    #periodeTable thead th {
+      font-size: .74rem;
+      font-weight: 600;
+      color: #5a6a85;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      background: #f6f9fc;
+      border-bottom: 0;
+      white-space: nowrap;
+    }
+
+    #periodeTable td {
+      font-size: .85rem;
+      vertical-align: middle;
+      padding-top: .6rem;
+      padding-bottom: .6rem;
+    }
+
+    #periodeTable tbody tr:hover {
+      background: #fafcff;
+    }
+
+    .pt-ava {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: .85rem;
+      overflow: hidden;
+    }
+
+    .pt-ava img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .pt-ava.l {
+      background: #ecf2ff;
+      color: #5d87ff;
+    }
+
+    .pt-ava.p {
+      background: #fdebf4;
+      color: #e0569b;
+    }
+
+    .pt-ava.x {
+      background: #f2f5f9;
+      color: #7c8fac;
+    }
+
+    .pt-name {
+      font-weight: 600;
+      color: #2a3547;
+      max-width: 260px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pt-sub {
+      font-size: .74rem;
+      color: #7c8fac;
+    }
+
+    .pt-rm {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: .74rem;
+      background: #f2f5f9;
+      color: #2a3547;
+      padding: .1em .45em;
+      border-radius: 5px;
+    }
+
+    .pt-id {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: .78rem;
+      color: #2a3547;
+    }
+
+    .pt-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: .68rem;
+      font-weight: 600;
+      padding: .2em .55em;
+      border-radius: 6px;
+    }
+
+    .pt-act {
+      white-space: nowrap;
+    }
+
+    .pt-act .btn {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+    }
+
+    .pt-loading {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, .6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      border-radius: 12px;
+    }
+
+    .pt-sec {
+      font-size: .74rem;
+      font-weight: 700;
+      color: #5a6a85;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 4px 0 12px;
+    }
+
+    .pt-sec::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e5eaef;
+    }
+
+    .gen-opt input {
+      display: none;
+    }
+
+    .gen-opt label {
+      border: 1.5px solid #e5eaef;
+      border-radius: 10px;
+      padding: 7px 10px;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+      font-weight: 600;
+      font-size: .82rem;
+      margin: 0;
+    }
+
+    .gen-opt input:checked+label {
+      border-color: #5d87ff;
+      background: #ecf2ff;
+      color: #5d87ff;
+    }
+
+    .gen-opt input.p:checked+label {
+      border-color: #e0569b;
+      background: #fdebf4;
+      color: #e0569b;
+    }
   </style>
 </head>
 
@@ -536,47 +794,118 @@ require '../../controller/view.php';
       <!--  Header End -->
       <div class="body-wrapper-inner">
         <div class="container-fluid">
-          <div class="row">
-            <div class="col-lg-12 d-flex align-items-stretch">
-              <div class="card w-100">
-                <div class="card-body p-4">
-                  <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Data Pasien</h5>
-                    <!-- Grup tombol di sisi kanan -->
-                    <div class="d-flex ms-auto gap-2">
-                      <!-- Tombol -->
-                      <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
-                    </div>
-                  </div>
-                  <div class="table-responsive" data-simplebar>
-                    <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
-                      <thead>
-                        <tr>
-                          <th scope="col" class="text-dark fw-normal text-center">Actions</th>
-                          <th class="text-dark fw-normal">Nomor RM</th>
-                          <th scope="col" class="text-dark fw-normal">Nama Lengkap</th>
-                          <th scope="col" class="text-dark fw-normal">NIK</th>
-                          <th scope="col" class="text-dark fw-normal">BPJS</th>
-                          <th scope="col" class="text-dark fw-normal">P/L</th>
-                          <th scope="col" class="text-dark fw-normal">No.Handphone</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Foto</th>
-                          <th scope="col" class="text-dark fw-normal">Face Status</th>
 
-                        </tr>
-                      </thead>
-                      <tbody></tbody>
-                    </table>
+          <!-- HEADER -->
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+            <div>
+              <h4 class="fw-semibold mb-1">Data Pasien</h4>
+              <div class="text-muted small">Cari, daftarkan dan kelola data pasien faskes.</div>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-light" id="btnRefresh" title="Muat ulang"><i class="fas fa-sync-alt"></i></button>
+              <button class="btn btn-primary" id="btnTambah"><i class="fas fa-user-plus me-1"></i> Pasien Baru</button>
+            </div>
+          </div>
+
+          <!-- STAT -->
+          <div class="row g-3 mb-3">
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="pt-stat pt-click" data-filter="">
+                <div class="d-flex gap-3 align-items-center">
+                  <span class="pt-icon bg-primary-subtle text-primary"><i class="fas fa-users"></i></span>
+                  <div class="min-w-0">
+                    <div class="pt-val" id="stTotal">-</div>
+                    <div class="pt-label">Total pasien terdaftar</div>
                   </div>
                 </div>
               </div>
             </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="pt-stat pt-click" data-filter="bpjs">
+                <div class="d-flex gap-3 align-items-center">
+                  <span class="pt-icon bg-success-subtle text-success"><i class="fas fa-id-card"></i></span>
+                  <div class="flex-grow-1">
+                    <div class="pt-val" id="stBpjs">-</div>
+                    <div class="pt-label" id="stBpjsSub">Peserta BPJS</div>
+                  </div>
+                </div>
+                <div class="pt-bar"><span id="stBpjsBar" style="width:0;background:#13deb9"></span></div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="pt-stat">
+                <div class="d-flex gap-3 align-items-center">
+                  <span class="pt-icon bg-info-subtle text-info"><i class="fas fa-heartbeat"></i></span>
+                  <div class="flex-grow-1">
+                    <div class="pt-val" id="stIhs">-</div>
+                    <div class="pt-label" id="stIhsSub">Terhubung Satu Sehat</div>
+                  </div>
+                </div>
+                <div class="pt-bar"><span id="stIhsBar" style="width:0;background:#49beff"></span></div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="pt-stat pt-click" data-filter="wajah">
+                <div class="d-flex gap-3 align-items-center">
+                  <span class="pt-icon bg-warning-subtle text-warning"><i class="fas fa-camera"></i></span>
+                  <div class="flex-grow-1">
+                    <div class="pt-val" id="stWajah">-</div>
+                    <div class="pt-label" id="stWajahSub">Wajah terekam</div>
+                  </div>
+                </div>
+                <div class="pt-bar"><span id="stWajahBar" style="width:0;background:#ffae1f"></span></div>
+              </div>
+            </div>
           </div>
+
+          <!-- TABEL -->
+          <div class="card position-relative">
+            <div class="pt-loading" id="ptLoading"><div class="spinner-border text-primary"></div></div>
+            <div class="card-body p-4">
+              <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div class="pt-chips d-flex flex-wrap gap-2" id="ptChips">
+                  <button class="btn btn-primary" data-filter="">Semua</button>
+                  <button class="btn btn-light" data-filter="bpjs">BPJS</button>
+                  <button class="btn btn-light" data-filter="umum">Non-BPJS</button>
+                  <button class="btn btn-light" data-filter="wajah">Wajah terekam</button>
+                  <button class="btn btn-light" data-filter="tanpa_wajah">Belum rekam wajah</button>
+                </div>
+                <div class="d-flex flex-wrap gap-2 align-items-center pt-tools">
+                  <select id="ptSort" class="form-select form-select-sm" style="width:auto">
+                    <option value="baru">Terbaru didaftarkan</option>
+                    <option value="lama">Terlama didaftarkan</option>
+                    <option value="nama">Nama A-Z</option>
+                    <option value="rm">No. RM</option>
+                  </select>
+                  <div class="input-group input-group-sm pt-search">
+                    <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                    <input type="search" id="ptSearch" class="form-control" placeholder="Nama, No. RM, NIK, No. BPJS atau HP" autocomplete="off">
+                  </div>
+                </div>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table align-middle mb-0" id="periodeTable">
+                  <thead>
+                    <tr>
+                      <th>Pasien</th>
+                      <th>NIK / BPJS</th>
+                      <th>Kontak</th>
+                      <th class="text-center">Kunjungan</th>
+                      <th class="text-center">Wajah</th>
+                      <th class="text-center" style="width:150px">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
   </div>
-
-
 
   <?php
   require '../admin/library.php';
@@ -644,10 +973,10 @@ require '../../controller/view.php';
 </body>
 
 <div class="modal fade" id="programModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
     <form id="programForm" class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title"></h5>
+        <h5 class="modal-title d-flex align-items-center gap-2"><i class="fas fa-user-plus text-primary"></i> <span id="ptModalTitle">Pasien Baru</span></h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
@@ -656,449 +985,533 @@ require '../../controller/view.php';
         <input type="hidden" name="patient_kabupaten" id="kabupaten_text">
         <input type="hidden" name="patient_kecamatan" id="kecamatan_text">
         <input type="hidden" name="patient_kelurahan" id="kelurahan_text">
-        <div class="row">
-          <div class="col-12">
-            <div class="alert alert-warning" role="alert">
-              Nomor rekam medis di generate otomatis, untuk melakukan perubahan silahkan klik tombol ubah pada data pasien
+
+        <div class="alert alert-light border small d-flex gap-2 align-items-start py-2" id="ptRmInfo">
+          <i class="fas fa-info-circle text-primary mt-1"></i>
+          <div>Nomor rekam medis dibuat otomatis saat disimpan. Isi <b>NIK</b> atau <b>No. BPJS</b> lalu klik <i class="fas fa-search"></i> untuk mengambil data dari BPJS.</div>
+        </div>
+
+        <div class="pt-sec">Identitas</div>
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label" for="patient_nik">NIK</label>
+            <div class="input-group">
+              <input type="text" id="patient_nik" name="patient_nik" class="form-control" inputmode="numeric" maxlength="16" placeholder="16 digit NIK">
+              <button class="btn btn-outline-primary" type="button" id="btncarinik" title="Cari di BPJS">
+                <span class="btn-text"><i class="fas fa-search"></i></span>
+                <span class="btn-loading d-none spinner-border spinner-border-sm"></span>
+              </button>
             </div>
           </div>
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label required">Nama Pasien</label>
-              <input type="text" id="patient_name" name="patient_name" class="form-control" required>
+          <div class="col-md-6">
+            <label class="form-label" for="patient_bpjs">No. BPJS</label>
+            <div class="input-group">
+              <input type="text" id="patient_bpjs" name="patient_bpjs" class="form-control" inputmode="numeric" maxlength="13" placeholder="13 digit No. Kartu">
+              <button class="btn btn-outline-primary" type="button" id="btncaribpjs" title="Cari di BPJS">
+                <span class="btn-text"><i class="fas fa-search"></i></span>
+                <span class="btn-loading d-none spinner-border spinner-border-sm"></span>
+              </button>
             </div>
           </div>
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label">NIK</label>
-              <div class="input-group">
-                <input
-                  type="text"
-                  id="patient_nik"
-                  name="patient_nik"
-                  class="form-control">
-                <button
-                  class="btn btn-primary"
-                  type="button" id="btncarinik">
-                  <i class="bi bi-search"></i>
-                </button>
-              </div>
+        </div>
+
+        <div class="pt-sec">Data Diri</div>
+        <div class="row g-3 mb-3">
+          <div class="col-md-8">
+            <label class="form-label required" for="patient_name">Nama Pasien</label>
+            <input type="text" id="patient_name" name="patient_name" class="form-control" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label required">Jenis Kelamin</label>
+            <select name="patient_gender" class="d-none" id="patient_gender" required>
+              <option value="">PILIH</option>
+              <option value="Laki-laki">Laki-laki</option>
+              <option value="Perempuan">Perempuan</option>
+            </select>
+            <div class="row g-2">
+              <div class="col-6 gen-opt"><input type="radio" name="_gender_ui" id="genL" value="Laki-laki"><label for="genL"><i class="fas fa-mars me-1"></i>Laki-laki</label></div>
+              <div class="col-6 gen-opt"><input type="radio" name="_gender_ui" id="genP" value="Perempuan" class="p"><label for="genP"><i class="fas fa-venus me-1"></i>Perempuan</label></div>
             </div>
           </div>
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label">No.BPJS</label>
-              <div class="input-group">
-                <input
-                  type="text"
-                  id="patient_bpjs"
-                  name="patient_bpjs"
-                  class="form-control">
-                <button
-                  class="btn btn-primary"
-                  type="button" id="btncaribpjs">
-                  <i class="bi bi-search"></i>
-                </button>
-              </div>
+          <div class="col-md-4">
+            <label class="form-label required" for="patient_place">Tempat Lahir</label>
+            <input type="text" id="patient_place" name="patient_place" class="form-control" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label required" for="patient_datebirth">Tanggal Lahir</label>
+            <input type="date" id="patient_datebirth" name="patient_datebirth" class="form-control" required>
+            <div class="form-text" id="ptUmur"></div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label required" for="patient_religion">Agama</label>
+            <select name="patient_religion" class="form-select" id="patient_religion" required>
+              <option value="">PILIH</option>
+              <option value="Islam">Islam</option>
+              <option value="Kristen">Kristen</option>
+              <option value="Katolik">Katolik</option>
+              <option value="Hindu">Hindu</option>
+              <option value="Budha">Budha</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="patient_phone">No. Handphone</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-phone-alt"></i></span>
+              <input type="tel" id="patient_phone" name="patient_phone" class="form-control" placeholder="08xxxxxxxxxx">
             </div>
           </div>
-          <div class="col-3">
-            <div class="mb-3">
-              <label class="form-label required">Jenis Kelamin</label>
-              <select name="patient_gender" class="form-select" id="patient_gender" required>
-                <option value="">PILIH</option>
-                <option value="Laki-laki">Laki-laki</option>
-                <option value="Perempuan">Perempuan</option>
-              </select>
-            </div>
-          </div>
-          <div class="col-3">
-            <div class="mb-3">
-              <label class="form-label required">Agama</label>
-              <select name="patient_religion" class="form-select" id="patient_religion" required>
-                <option value="">PILIH</option>
-                <option value="Islam">Islam</option>
-                <option value="Kristen">Kristen</option>
-                <option value="Katolik">Katolik</option>
-                <option value="Hindu">Hindu</option>
-                <option value="Budha">Budha</option>
-              </select>
-            </div>
-          </div>
-          <div class="col-3">
-            <div class="mb-3">
-              <label class="form-label required">Tempat Lahir</label>
-              <input type="text" id="patient_place" name="patient_place" class="form-control" required>
-            </div>
-          </div>
-          <div class="col-3">
-            <div class="mb-3">
-              <label class="form-label required">Tanggal Lahir</label>
-              <input type="date" id="patient_datebirth" name="patient_datebirth" class="form-control" required>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label ">No.Handphone</label>
-              <input type="text" id="patient_phone" name="patient_phone" class="form-control">
-            </div>
-          </div>
-          <div class="col-3">
-            <label class="form-label required">Provinsi</label>
+        </div>
+
+        <div class="pt-sec">Alamat</div>
+        <div class="small text-muted mb-2 d-none" id="ptWilayahNow"></div>
+        <div class="row g-3">
+          <div class="col-md-6 col-lg-3">
+            <label class="form-label" for="provinsi">Provinsi</label>
             <select id="provinsi" class="form-select">
               <option value="">PILIH</option>
             </select>
           </div>
-
-          <div class="col-3">
-            <label class="form-label required">Kabupaten/Kota</label>
+          <div class="col-md-6 col-lg-3">
+            <label class="form-label" for="kabupaten">Kabupaten/Kota</label>
             <select id="kabupaten" class="form-select">
               <option value="">PILIH</option>
             </select>
           </div>
-
-          <div class="col-3">
-            <label class="form-label required">Kecamatan</label>
+          <div class="col-md-6 col-lg-3">
+            <label class="form-label" for="kecamatan">Kecamatan</label>
             <select id="kecamatan" class="form-select">
               <option value="">PILIH</option>
             </select>
           </div>
-
-          <div class="col-3">
-            <label class="form-label required">Kelurahan</label>
+          <div class="col-md-6 col-lg-3">
+            <label class="form-label" for="kelurahan">Kelurahan</label>
             <select id="kelurahan" class="form-select">
               <option value="">PILIH</option>
             </select>
           </div>
           <div class="col-12">
-            <div class="mb-3">
-              <label class="form-label">Alamat</label>
-              <textarea name="patient_address" id="patient_address" class="form-control" rows="5"></textarea>
-            </div>
+            <label class="form-label" for="patient_address">Alamat Lengkap</label>
+            <textarea name="patient_address" id="patient_address" class="form-control" rows="2" placeholder="Jalan, nomor rumah, RT/RW"></textarea>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Simpan</button>
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+        <button type="submit" class="btn btn-primary" id="ptSave"><i class="fas fa-save me-1"></i> Simpan</button>
       </div>
     </form>
   </div>
 </div>
 <script>
-  const getBaseUrl = () => {
-    const path = window.location.pathname.split('/');
-    return path[1] ? `${window.location.origin}/${path[1]}/` : `${window.location.origin}/`;
-  };
-
-  const baseUrl = getBaseUrl();
   const apiUrl = 'controller/master/patientContrroller';
   let table;
-  $(document).ready(function() {
+  // dipanggil juga oleh skrip kamera setelah foto tersimpan
+  let muatStatistik = () => {};
+
+  (function() {
+    const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    } [c]));
+    const fmt = n => (Number(n) || 0).toLocaleString('id-ID');
+    const toast = (icon, title) => Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon,
+      title,
+      showConfirmButton: false,
+      timer: 2200,
+      timerProgressBar: true
+    });
+    const fmtTgl = t => t ? new Date(t + 'T00:00:00').toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    }) : '';
+    const fotoUrl = f => String(f || '').replace(/^(\.\.\/)+/, '').replace(/^\/+/, '');
+    const umur = tgl => {
+      if (!/^\d{4}-\d{2}-\d{2}/.test(tgl || '')) return '';
+      const b = new Date(tgl.slice(0, 10) + 'T00:00:00'),
+        n = new Date();
+      if (isNaN(b) || b > n) return '';
+      let th = n.getFullYear() - b.getFullYear(),
+        bl = n.getMonth() - b.getMonth();
+      if (n.getDate() < b.getDate()) bl--;
+      if (bl < 0) {
+        th--;
+        bl += 12;
+      }
+      return th > 0 ? `${th} th` : `${bl} bln`;
+    };
+    const inisial = n => {
+      const k = String(n || '').trim().split(/\s+/).filter(Boolean);
+      return ((k[0] || '?')[0] + (k.length > 1 ? k[k.length - 1][0] : '')).toUpperCase();
+    };
+    const waLink = hp => {
+      let n = String(hp || '').replace(/\D/g, '');
+      if (n.startsWith('0')) n = '62' + n.slice(1);
+      return n.length >= 9 ? `https://wa.me/${n}` : '';
+    };
+    const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+
+    let filter = '';
+
+    // ---------- statistik ----------
+    muatStatistik = function() {
+      fetch(apiUrl + '?stats=1').then(r => r.json()).then(r => {
+        if (r.status !== 'success') return;
+        const d = r.data;
+        $('#stTotal').text(fmt(d.total));
+        $('#stBpjs').text(fmt(d.bpjs));
+        $('#stBpjsSub').text(`Peserta BPJS · ${pct(d.bpjs, d.total)}%`);
+        $('#stBpjsBar').css('width', pct(d.bpjs, d.total) + '%');
+        $('#stIhs').text(fmt(d.ihs));
+        $('#stIhsSub').text(`Terhubung Satu Sehat · ${pct(d.ihs, d.total)}%`);
+        $('#stIhsBar').css('width', pct(d.ihs, d.total) + '%');
+        $('#stWajah').text(fmt(d.wajah));
+        $('#stWajahSub').text(`Wajah terekam · ${pct(d.wajah, d.total)}%`);
+        $('#stWajahBar').css('width', pct(d.wajah, d.total) + '%');
+      }).catch(() => {});
+    };
+
+    // ---------- tabel ----------
+    function kolomPasien(r) {
+      const g = /^l/i.test(r.patient_gender || '') ? 'l' : /^p/i.test(r.patient_gender || '') ? 'p' : 'x';
+      const foto = fotoUrl(r.face_image);
+      const u = umur(r.patient_datebirth);
+      const ava = foto ?
+        `<a href="${esc(foto)}" target="_blank" class="pt-ava ${g}" title="Lihat foto"><img src="${esc(foto)}" loading="lazy" alt=""></a>` :
+        `<div class="pt-ava ${g}">${esc(inisial(r.patient_name))}</div>`;
+      return `<div class="d-flex align-items-center gap-3">${ava}
+        <div class="min-w-0">
+          <a href="module/admin/patient_details?pt=${r.id_patient}" class="pt-name d-block text-reset" title="${esc(r.patient_name)}">${esc((r.patient_name || '-').trim())}</a>
+          <div class="pt-sub d-flex flex-wrap gap-2 align-items-center mt-1">
+            <span class="pt-rm" title="Nomor rekam medis">${esc((r.nomor_rm || '-').trim())}</span>
+            ${g === 'l' ? '<span><i class="fas fa-mars text-primary"></i> L</span>' : g === 'p' ? '<span><i class="fas fa-venus" style="color:#e0569b"></i> P</span>' : ''}
+            ${u ? `<span title="${esc(fmtTgl(r.patient_datebirth.slice(0, 10)))}">${u}</span>` : ''}
+          </div>
+        </div></div>`;
+    }
+
+    function kolomIdentitas(r) {
+      const nik = r.patient_nik ? `<div class="pt-id" title="NIK">${esc(r.patient_nik)}</div>` : '<div class="pt-sub">NIK belum diisi</div>';
+      const bpjs = r.patient_bpjs ?
+        `<span class="pt-badge bg-success-subtle text-success mt-1" title="No. BPJS"><i class="fas fa-id-card"></i>${esc(r.patient_bpjs)}</span>` :
+        '<span class="pt-badge bg-secondary-subtle text-secondary mt-1">Non-BPJS</span>';
+      const ihs = r.idsh ? `<span class="pt-badge bg-info-subtle text-info mt-1" title="ID IHS Satu Sehat: ${esc(r.idsh)}"><i class="fas fa-heartbeat"></i>IHS</span>` : '';
+      return `${nik}<div class="d-flex gap-1" style="white-space:nowrap">${bpjs}${ihs}</div>`;
+    }
+
+    function kolomKontak(r) {
+      const wa = waLink(r.patient_phone);
+      const hp = r.patient_phone ?
+        (wa ? `<a href="${wa}" target="_blank" rel="noopener" class="text-reset">${esc(r.patient_phone)} <i class="fab fa-whatsapp text-success"></i></a>` : esc(r.patient_phone)) :
+        '<span class="pt-sub">-</span>';
+      const lokasi = r.patient_kabupaten || r.patient_address || '';
+      return `<div>${hp}</div>${lokasi ? `<div class="pt-sub text-truncate" style="max-width:200px" title="${esc(r.patient_address || '')}">${esc(lokasi)}</div>` : ''}`;
+    }
+
+    function kolomKunjungan(r) {
+      if (!+r.jml_kunjungan) return '<span class="pt-sub">Belum ada</span>';
+      return `<div class="fw-semibold">${fmt(r.jml_kunjungan)}x</div><div class="pt-sub">${esc(fmtTgl(r.kunjungan_terakhir))}</div>`;
+    }
+
+    function kolomAksi(r) {
+      const dipakai = +r.jml_kunjungan > 0;
+      return `<div class="pt-act d-flex gap-1 justify-content-center">
+        <button class="btn btn-light text-warning camera-btn" data-id="${r.id_patient}" title="${r.face_image ? 'Rekam ulang wajah' : 'Rekam wajah'}"><i class="fas fa-camera"></i></button>
+        <a class="btn btn-light text-info" href="module/admin/patient_details?pt=${r.id_patient}" title="Detail"><i class="fas fa-id-badge"></i></a>
+        <button class="btn btn-light text-primary edit-btn" data-id="${r.id_patient}" title="Ubah"><i class="fas fa-pen"></i></button>
+        ${dipakai
+          ? `<span class="d-inline-block" tabindex="0" title="Tidak bisa dihapus: pasien sudah memiliki ${fmt(r.jml_kunjungan)} kunjungan"><button class="btn btn-light text-danger" disabled style="pointer-events:none"><i class="fas fa-trash"></i></button></span>`
+          : `<button class="btn btn-light text-danger delete-btn" data-id="${r.id_patient}" data-nama="${esc(r.patient_name)}" title="Hapus"><i class="fas fa-trash"></i></button>`}
+      </div>`;
+    }
+
     table = $('#periodeTable').DataTable({
-      processing: true,
+      processing: false,
       serverSide: true,
-      scrollX: true,
+      ordering: false,
+      searching: true,
+      autoWidth: false,
+      pageLength: 10,
+      lengthMenu: [10, 25, 50, 100],
+      dom: 'rt<"d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2"<"d-flex align-items-center gap-2"li>p>',
+      language: {
+        info: 'Menampilkan _START_-_END_ dari _TOTAL_ pasien',
+        infoEmpty: 'Tidak ada pasien',
+        infoFiltered: '(dari _MAX_)',
+        lengthMenu: '_MENU_',
+        emptyTable: '<div class="py-4 text-muted"><i class="fas fa-user-injured fa-2x mb-2 d-block"></i>Belum ada pasien. Data pasien juga otomatis bertambah saat faskes mendaftarkan pasien dari PCare BPJS.</div>',
+        zeroRecords: '<div class="py-4 text-muted"><i class="fas fa-search fa-2x mb-2 d-block"></i>Pasien tidak ditemukan.</div>',
+        paginate: {
+          previous: '‹',
+          next: '›'
+        }
+      },
       ajax: {
         url: apiUrl,
-        type: "GET",
-        dataSrc: function(json) {
-          return json.data.map(function(row) {
-
-
-            // 🔥 CEK DATA KOSONG
-            if (!json.data || json.data.length === 0) {
-
-              // hapus alert lama biar gak dobel
-              $('#emptyAlert').remove();
-
-              // tampilkan alert
-              $('.card-body').prepend(`
-                  <div id="emptyAlert" class="alert alert-warning">
-                    ⚠️ Data pasien ini akan tersedia ketika faskes mendaftarkan pasien 
-                    karena sudah terintegrasi dengan <b>PCare BPJS</b>
-                  </div>
-                `);
-
-              return []; // tetap return array kosong ke datatable
-            }
-
-            // 🔥 HAPUS ALERT kalau data sudah ada
-            $('#emptyAlert').remove();
-
-            return {
-              "actions": `
-                <div class="text-center">
-                  <div class="btn-group btn-group-sm" role="group">
-                    <button class="btn btn-light camera-btn" 
-                      data-id="${row.id_patient}" title="Ambil Foto">
-                      <i class="fas fa-camera"></i>
-                    </button>
-
-                    <a class="btn btn-info" 
-                      href="module/admin/patient_details?pt=${row.id_patient}" 
-                      title="Detail">
-                      <i class="fas fa-info-circle"></i>
-                    </a>
-
-                    <button class="btn btn-warning edit-btn" 
-                      data-id="${row.id_patient}" title="Edit">
-                      <i class="fas fa-edit"></i>
-                    </button>
-
-                    <button class="btn btn-danger delete-btn" 
-                      data-id="${row.id_patient}" title="Hapus">
-                      <i class="fas fa-trash"></i>
-                    </button>
-
-                  </div>
-                </div>
-              `,
-              "rm": row.nomor_rm ?? "-",
-              "name": row.patient_name ?? "-",
-              "nik": row.patient_nik ?? "-",
-              "bpjs": row.patient_bpjs ?? "-",
-              "gender": row.patient_gender ?? "-",
-              "phone": row.patient_phone ?? "-",
-              "face_image": row.face_image ? `
-                <a href="${baseUrl}${row.face_image.replace(/^(\.\.\/)+/,'')}" target="_blank">
-                  <img src="${baseUrl}${row.face_image.replace(/^(\.\.\/)+/,'')}" 
-                      style="width:50px;height:50px;object-fit:cover;border-radius:8px;">
-                </a>
-              ` : '-',
-              "face_status": row.face_image ?
-                '<span class="badge bg-success">✔️ Sudah direkam</span>' : '<span class="badge bg-danger">❌ Belum direkam</span>',
-            };
-          });
+        type: 'GET',
+        data: d => ({
+          draw: d.draw,
+          start: d.start,
+          length: d.length,
+          q: $('#ptSearch').val().trim(),
+          filter,
+          sort: $('#ptSort').val()
+        }),
+        error: () => {
+          $('#ptLoading').hide();
+          toast('error', 'Gagal memuat data pasien.');
         }
       },
       columns: [{
-          data: "actions",
-          orderable: false,
-          searchable: false
-        }, {
-          data: "rm"
-        }, {
-          data: "name"
-        },
-        {
-          data: "nik"
-        },
-        {
-          data: "bpjs"
-        },
-        {
-          data: "gender"
-        },
-        {
-          data: "phone"
-        },
-        {
-          data: "face_image"
-        },
-        {
-          data: "face_status"
-        },
-      ],
-      order: [
-        [1, 'asc']
-      ],
-      footerCallback: function(row, data, start, end, display) {
-        var api = this.api();
+        data: null,
+        render: (d, t, r) => kolomPasien(r)
+      }, {
+        data: null,
+        render: (d, t, r) => kolomIdentitas(r)
+      }, {
+        data: null,
+        render: (d, t, r) => kolomKontak(r)
+      }, {
+        data: null,
+        className: 'text-center',
+        render: (d, t, r) => kolomKunjungan(r)
+      }, {
+        data: null,
+        className: 'text-center',
+        render: (d, t, r) => r.face_image ?
+          '<span class="pt-badge bg-success-subtle text-success"><i class="fas fa-check-circle"></i>Terekam</span>' : '<span class="pt-badge bg-warning-subtle text-warning"><i class="fas fa-camera"></i>Belum</span>'
+      }, {
+        data: null,
+        className: 'text-center',
+        render: (d, t, r) => kolomAksi(r)
+      }]
+    }).on('preXhr.dt', () => $('#ptLoading').css('display', 'flex'))
+      .on('xhr.dt', () => $('#ptLoading').hide());
 
-        // Hitung total bobot
-        let total = api
-          .column(3, {
-            page: 'current'
-          })
-          .data()
-          .reduce((a, b) => {
-            return (parseFloat(a) || 0) + (parseFloat(b) || 0);
-          }, 0);
-
-        // Tampilkan di footer
-        $(api.column(3).footer()).html(total.toFixed(2) + " %");
+    // cari: tunggu user berhenti mengetik
+    let tCari;
+    $('#ptSearch').on('input', function() {
+      clearTimeout(tCari);
+      tCari = setTimeout(() => table.ajax.reload(), 400);
+    }).on('keydown', function(e) {
+      if (e.key === 'Enter') {
+        clearTimeout(tCari);
+        table.ajax.reload();
       }
     });
-
     $('#customSearch').on('keyup', function() {
-      table.search(this.value).draw();
+      $('#ptSearch').val(this.value).trigger('input');
+    });
+    $('#ptSort').on('change', () => table.ajax.reload());
+
+    function setFilter(f) {
+      filter = f;
+      $('#ptChips .btn').each(function() {
+        const on = String($(this).data('filter')) === f;
+        $(this).toggleClass('btn-primary', on).toggleClass('btn-light', !on);
+      });
+      $('.pt-stat.pt-click').each(function() {
+        $(this).toggleClass('active', f !== '' && String($(this).data('filter')) === f);
+      });
+      table.ajax.reload();
+    }
+    $('#ptChips').on('click', '.btn', function() {
+      setFilter(String($(this).data('filter')));
+    });
+    $('.pt-stat.pt-click').on('click', function() {
+      setFilter(String($(this).data('filter')));
+    });
+    $('#btnRefresh').on('click', () => {
+      muatStatistik();
+      table.ajax.reload(null, false);
     });
 
-    // 🔹 Tambah
+    // ---------- form ----------
+    function setGender(v) {
+      $('#patient_gender').val(v || '');
+      $('input[name="_gender_ui"]').prop('checked', false);
+      if (v) $(`input[name="_gender_ui"][value="${v}"]`).prop('checked', true);
+    }
+    $('input[name="_gender_ui"]').on('change', function() {
+      $('#patient_gender').val(this.value);
+    });
+    // hasil cari BPJS men-set select gender lewat trigger('change')
+    $('#patient_gender').on('change', function() {
+      setGender(this.value);
+    });
+    $('#patient_datebirth').on('change input', function() {
+      const u = umur(this.value);
+      $('#ptUmur').text(u ? `Umur ${u}` : '');
+    });
+
+    function resetWilayah() {
+      $('#provinsi').val('');
+      $('#kabupaten, #kecamatan, #kelurahan').html('<option value="">PILIH</option>');
+    }
+
     $('#btnTambah').on('click', function() {
-      $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
+      $('#programForm')[0].reset();
       $('#id_patient').val('');
-      $('#programModal .modal-title').text('Tambah Data');
+      $('#provinsi_text, #kabupaten_text, #kecamatan_text, #kelurahan_text').val('');
+      resetWilayah();
+      setGender('');
+      $('#ptUmur').text('');
+      $('#ptRmInfo').removeClass('d-none');
+      $('#ptWilayahNow').addClass('d-none');
+      $('#ptModalTitle').text('Pasien Baru');
       $('#programModal').modal('show');
     });
+    $('#programModal').on('shown.bs.modal', () => {
+      if (!$('#id_patient').val()) $('#patient_nik').trigger('focus');
+    });
 
-    // 🔹 Submit (Tambah / Update)
     $('#programForm').on('submit', function(e) {
       e.preventDefault();
-
-      let formData = $(this).serializeArray();
-
-      let id = $('#id_patient').val();
-
-      if (id) {
-        formData.push({
-          name: '_method',
-          value: 'PUT'
-        });
+      if (!$('#patient_gender').val()) return Swal.fire('Lengkapi data', 'Pilih jenis kelamin.', 'warning');
+      if (!this.checkValidity()) {
+        this.reportValidity();
+        return;
       }
-
+      const formData = $(this).serializeArray().filter(f => f.name !== '_gender_ui');
+      const id = $('#id_patient').val();
+      if (id) formData.push({
+        name: '_method',
+        value: 'PUT'
+      });
+      const $btn = $('#ptSave').prop('disabled', true);
       $.ajax({
         url: apiUrl,
-        type: 'POST', // 🔥 SELALU POST
+        type: 'POST',
         data: $.param(formData),
         success: function(res) {
-          let data = typeof res === 'string' ? JSON.parse(res) : res;
-
+          const data = typeof res === 'string' ? JSON.parse(res) : res;
           if (data.status === 'success') {
-            Swal.fire('Berhasil!', data.message, 'success');
             $('#programModal').modal('hide');
-            table.ajax.reload(null, false);
+            if (!id && data.nomor_rm) {
+              Swal.fire('Pasien terdaftar', `Nomor rekam medis: <b>${esc(data.nomor_rm)}</b>`, 'success');
+            } else {
+              toast('success', data.message || 'Data pasien tersimpan');
+            }
+            muatStatistik();
+            table.ajax.reload(null, !!id ? false : true);
           } else {
-            Swal.fire('Gagal!', data.message, 'error');
+            Swal.fire('Gagal', data.message || 'Gagal menyimpan.', 'error');
           }
-        }
+        },
+        error: () => Swal.fire('Gagal', 'Tidak dapat terhubung ke server.', 'error'),
+        complete: () => $btn.prop('disabled', false)
       });
     });
-    // 🔹 Edit
+
     $(document).on('click', '.edit-btn', function() {
-      let id = $(this).data('id');
+      const id = $(this).data('id');
       fetch(apiUrl + `?id=${id}`)
         .then(res => res.json())
         .then(resp => {
-          if (resp.status === 'success') {
-            let d = resp.data;
-
-            // isi otomatis berdasarkan name field
-            for (let key in d) {
-              $(`[name="${key}"]`).val(d[key]);
-            }
-
-            $('#programModal .modal-title').text('Edit Data');
-            $('#programModal').modal('show');
+          if (resp.status !== 'success') return Swal.fire('Gagal', resp.message || 'Data tidak ditemukan.', 'error');
+          const d = resp.data;
+          $('#programForm')[0].reset();
+          resetWilayah();
+          for (const key in d) {
+            $(`#programForm [name="${key}"]`).val(d[key] ?? '');
           }
+          if (d.patient_datebirth) $('#patient_datebirth').val(String(d.patient_datebirth).slice(0, 10)).trigger('change');
+          setGender(d.patient_gender);
+          const wil = [d.patient_kelurahan, d.patient_kecamatan, d.patient_kabupaten, d.patient_provinsi].filter(Boolean).join(', ');
+          $('#ptWilayahNow').toggleClass('d-none', !wil).html(wil ? `<i class="fas fa-map-marker-alt me-1"></i>Wilayah saat ini: <b>${esc(wil)}</b>. Pilih ulang di bawah hanya jika ingin mengubah.` : '');
+          $('#ptRmInfo').addClass('d-none');
+          $('#ptModalTitle').text(`Ubah Pasien · ${(d.nomor_rm || '').trim()}`);
+          $('#programModal').modal('show');
         });
     });
 
-    // 🔹 Delete
     $(document).on('click', '.delete-btn', function() {
-      let id = $(this).data('id');
-
+      const id = $(this).data('id');
       Swal.fire({
-        title: 'Hapus Data?',
-        text: 'Data akan dihapus',
+        title: 'Hapus pasien?',
+        html: `<b>${esc($(this).data('nama') || '')}</b> belum memiliki kunjungan dan akan dihapus permanen.`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Hapus',
-        cancelButtonText: 'Batal'
-      }).then((result) => {
-        if (result.isConfirmed) {
-
-          fetch(apiUrl + `?id=${id}`, {
-              method: 'DELETE'
-            })
-            .then(res => res.json())
-            .then(data => {
-
-              // 🔴 KALAU ADA RELASI
-              if (data.status === 'has_relation') {
-                Swal.fire({
-                  title: 'Data memiliki relasi!',
-                  text: 'Hapus juga semua data terkait?',
-                  icon: 'warning',
-                  showCancelButton: true,
-                  confirmButtonText: 'Ya, hapus semua',
-                  cancelButtonText: 'Tidak'
-                }).then((res2) => {
-                  if (res2.isConfirmed) {
-                    fetch(apiUrl + `?id=${id}&force=true`, {
-                        method: 'DELETE'
-                      })
-                      .then(res => res.json())
-                      .then(del => {
-                        if (del.status === 'success') {
-                          Swal.fire('Berhasil!', 'Semua data dihapus.', 'success');
-                          table.ajax.reload(null, false);
-                        }
-                      });
-                  }
-                });
-              }
-
-              // ✅ SUCCESS NORMAL
-              else if (data.status === 'success') {
-                Swal.fire('Berhasil!', data.message, 'success');
-                table.ajax.reload(null, false);
-              }
-
-              // ❌ ERROR
-              else {
-                Swal.fire('Gagal!', data.message, 'error');
-              }
-
-            });
-        }
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#fa896b'
+      }).then(result => {
+        if (!result.isConfirmed) return;
+        fetch(apiUrl + `?id=${id}`, {
+            method: 'DELETE'
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === 'success') {
+              toast('success', data.message);
+              muatStatistik();
+              table.ajax.reload(null, false);
+            } else {
+              Swal.fire('Gagal', data.message || 'Gagal menghapus.', 'error');
+            }
+          });
       });
     });
 
     $(document).on('click', '#btncarinik', function() {
       cariDataPatient('nik', '#btncarinik');
     });
-
     $(document).on('click', '#btncaribpjs', function() {
       cariDataPatient('noka', '#btncaribpjs');
     });
 
     function cariDataPatient(type, id) {
-      let btn = $(id);
-      const nomor = type == "nik" ?
-        $('#patient_nik').val() :
-        $('#patient_bpjs').val();
+      const btn = $(id);
+      const nomor = (type === 'nik' ? $('#patient_nik').val() : $('#patient_bpjs').val()).trim();
+      if (!nomor) return Swal.fire('Isi nomor', type === 'nik' ? 'Isi NIK terlebih dahulu.' : 'Isi No. BPJS terlebih dahulu.', 'info');
       $.ajax({
         type: 'GET',
         url: 'controller/admisi/services/getInfoPatient.php',
         data: {
-          type: type,
-          nomor: nomor
+          type,
+          nomor
         },
         dataType: 'json',
         beforeSend: function() {
           btn.prop('disabled', true);
           btn.find('.btn-text').addClass('d-none');
           btn.find('.btn-loading').removeClass('d-none');
-
         },
         complete: function() {
           btn.prop('disabled', false);
           btn.find('.btn-text').removeClass('d-none');
           btn.find('.btn-loading').addClass('d-none');
-
         },
         success: function(response) {
-          if (type == 'nik') {
+          if (!response || !response.nama) {
+            return Swal.fire('Tidak ditemukan', 'Data peserta tidak ditemukan di BPJS.', 'info');
+          }
+          if (type === 'nik') {
             $('#patient_bpjs').val(response.noKartu);
           } else {
             $('#patient_nik').val(response.nik);
           }
           $('#patient_name').val(response.nama);
-          $('#patient_datebirth').val(response.tglLahir);
+          $('#patient_datebirth').val(response.tglLahir).trigger('change');
           $('#patient_phone').val(response.noHP);
-          if (response.sex == 'L') {
-            $('#patient_gender').val('Laki-laki').trigger('change');
-          } else {
-            $('#patient_gender').val('Perempuan').trigger('change');
-          }
+          $('#patient_gender').val(response.sex == 'L' ? 'Laki-laki' : 'Perempuan').trigger('change');
+          toast('success', 'Data peserta BPJS ditemukan');
         },
         error: function(xhr, status, error) {
           console.log(error);
+          Swal.fire('Gagal', 'Tidak dapat mengambil data dari BPJS.', 'error');
         }
       });
     }
-  });
+
+    muatStatistik();
+  })();
 </script>
 <script src="assets/js/face-api.min.js"></script>
 <script>
@@ -1376,6 +1789,7 @@ require '../../controller/view.php';
 
           setTimeout(() => {
             table.ajax.reload(null, false);
+            muatStatistik();
           }, 500);
 
         } else {
