@@ -140,7 +140,7 @@ require '../../controller/view.php';
           </div>
           <div class="col-12">
             <div class="mb-3">
-              <label class="form-label">Catatan</label>
+              <label class="form-label">Catatan Bebas</label>
               <textarea name="catatan_permintaan" id="catatan_permintaan" class="form-control" rows="5"></textarea>
             </div>
           </div>
