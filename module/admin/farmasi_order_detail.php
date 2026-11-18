@@ -475,15 +475,20 @@ $data = mysqli_fetch_array($check);
                 ");
                 ?>
 
-                <?php foreach ($getbarang as $barang): ?>
+                <?php
+                // nama tampil: generik / dagang; isian kosong seperti '-', ', ., " tidak ditampilkan
+                $namaIsi = fn($v) => preg_match('/[\p{L}\p{N}]/u', (string) $v) ? trim((string) $v) : '';
+                ?>
+                <?php foreach ($getbarang as $barang):
+                  $generik = $namaIsi($barang['pharmacy_name_generic']);
+                  $dagang = $namaIsi($barang['pharmacy_name_trade']);
+                  $label = $generik !== '' ? $generik : $dagang;
+                  if ($generik !== '' && $dagang !== '' && strcasecmp($generik, $dagang) !== 0) $label .= ' / ' . $dagang;
+                ?>
 
                   <option
                     value="<?= htmlspecialchars($barang['id_pharmacy']); ?>"
-                    data-harga="<?= htmlspecialchars($barang['pharmacy_sale']); ?>">
-                    <?= htmlspecialchars($barang['pharmacy_name_generic']); ?>
-                    /
-                    <?= htmlspecialchars($barang['pharmacy_name_trade']); ?>
-                  </option>
+                    data-harga="<?= htmlspecialchars($barang['pharmacy_sale']); ?>"><?= htmlspecialchars($label !== '' ? $label : '(tanpa nama)'); ?></option>
 
                 <?php endforeach; ?>
 
@@ -600,6 +605,14 @@ $data = mysqli_fetch_array($check);
 </html>
 <script src="controller/socket/socket.js"></script>
 <script>
+  // nama obat: generik / dagang, isian kosong seperti '-', ', . tidak ditampilkan
+  function namaObat(row) {
+    const isi = v => /[\p{L}\p{N}]/u.test(String(v ?? '')) ? String(v).trim() : '';
+    const g = isi(row.pharmacy_name_generic), t = isi(row.pharmacy_name_trade);
+    const label = g && t && g.toLowerCase() !== t.toLowerCase() ? `${g} / ${t}` : (g || t || '-');
+    return label.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
   const visit = "<?= $_GET['no'] ?>";
   const rm = "<?= $_GET['rm'] ?>";
 
@@ -1048,11 +1061,7 @@ $data = mysqli_fetch_array($check);
 
                   <td>
 
-                    ${
-                      row.pharmacy_name_generic
-                        ? row.pharmacy_name_generic
-                        : (row.pharmacy_name_trade ?? '')
-                    }
+                    ${namaObat(row)}
 
                   </td>
 
