@@ -895,17 +895,10 @@ $data = mysqli_fetch_array($check);
 
                     <!-- TAMBAH ITEM -->
 
-                    ${
-                      tiket.status_permintaan == 3
-                        ? `<button type="button" class="btn btn-sm btn-light text-muted" disabled
-                             title="Tiket sudah selesai, obat tidak dapat ditambah">
-                             <i class="fas fa-lock"></i>
-                           </button>`
-                        : `<button type="button" class="btn btn-sm btn-primary btnTambah"
-                             data-id="${idPermintaanFarmasi}" title="Tambah obat">
-                             <i class="fas fa-plus"></i>
-                           </button>`
-                    }
+                    <button type="button" class="btn btn-sm btn-primary btnTambah"
+                      data-id="${idPermintaanFarmasi}" data-status="${tiket.status_permintaan}" title="Tambah obat">
+                      <i class="fas fa-plus"></i>
+                    </button>
 
                   </div>
 
