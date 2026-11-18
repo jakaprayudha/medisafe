@@ -1,811 +1,930 @@
 <?php
 $title = 'Pemakaian Obat Pasien';
 require '../../controller/view.php';
-require '../../utility/env.php';
-
-$env = loadEnv();
-$apiUrl = getenv('API_URL');
-$selectedIdPharmacy = $_GET['id_pharmacy'] ?? '';
+$selectedIdPharmacy = (int) ($_GET['id_pharmacy'] ?? 0);
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="id">
 
 <head>
   <base href="../../">
-  <?php
-  require '../../assets/template/head.php';
-  ?>
+  <?php require '../../assets/template/head.php'; ?>
   <style>
-    /* Card Info Obat Terpilih */
-    .drug-hero-card {
-      background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 100%);
-      border: 1px solid #d0deff;
+    .min-w-0 {
+      min-width: 0;
+    }
+
+    .pu-stat {
+      border: 1px solid #e5eaef;
       border-radius: 12px;
+      background: #fff;
+      padding: 14px 16px;
+      height: 100%;
     }
 
-    /* Stat Cards */
-    .stat-card-usage {
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      border-radius: 12px;
-      transition: all 0.25s ease;
-      background: #ffffff;
-    }
-
-    .stat-card-usage:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-    }
-
-    .stat-icon-wrap {
-      width: 48px;
-      height: 48px;
+    .pu-icon {
+      width: 40px;
+      height: 40px;
       border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05rem;
+      flex-shrink: 0;
+    }
+
+    .pu-val {
+      font-size: 1.35rem;
+      font-weight: 700;
+      line-height: 1.2;
+      color: #2a3547;
+    }
+
+    .pu-label {
+      font-size: .75rem;
+      color: #6c757d;
+    }
+
+    .pu-period .btn {
+      border-radius: 20px;
+      font-size: .78rem;
+      padding: .28rem .8rem;
+    }
+
+    .pu-dates input {
+      width: 145px;
+    }
+
+    .pu-obat {
+      border: 1px solid #d0deff;
+      border-radius: 14px;
+      background: linear-gradient(120deg, #f0f4ff 0%, #fff 70%);
+      padding: 14px 18px;
+    }
+
+    .pu-obat .ava {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: #5d87ff;
+      color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
+      font-size: 1.2rem;
+      flex-shrink: 0;
     }
 
-    /* Styling Table */
-    #tableUsage thead th {
-      background-color: #f8f9fa;
+    .pu-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: .7rem;
       font-weight: 600;
+      padding: .22em .6em;
+      border-radius: 6px;
       white-space: nowrap;
     }
 
-    .select2-container .select2-selection--single {
-      height: 40px !important;
-      padding: 6px 12px;
-      border-color: #dfe5ef;
-      border-radius: 8px;
+    .pu-tabs {
+      border-bottom: 1px solid #e5eaef;
+      gap: 4px;
     }
 
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
+    .pu-tabs .nav-link {
+      border: 0;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      color: #5a6a85;
+      font-weight: 600;
+      font-size: .875rem;
+      padding: .7rem 1rem;
+      background: none;
+    }
+
+    .pu-tabs .nav-link.active {
+      color: #5d87ff;
+      border-bottom-color: #5d87ff;
+    }
+
+    .pu-table {
+      width: 100% !important;
+    }
+
+    .pu-table thead th {
+      font-size: .72rem;
+      font-weight: 600;
+      color: #5a6a85;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      background: #f6f9fc;
+      border-bottom: 0;
+      white-space: nowrap;
+    }
+
+    .pu-table td {
+      font-size: .84rem;
+      vertical-align: middle;
+      padding-top: .55rem;
+      padding-bottom: .55rem;
+    }
+
+    .pu-sub {
+      font-size: .73rem;
+      color: #7c8fac;
+    }
+
+    .pu-rm {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: .72rem;
+      background: #f2f5f9;
+      color: #2a3547;
+      padding: .05em .4em;
+      border-radius: 5px;
+    }
+
+    .pu-name {
+      font-weight: 600;
+      color: #2a3547;
+      max-width: 240px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pu-qty {
+      font-weight: 700;
+      color: #5d87ff;
+    }
+
+    .pu-bar {
+      height: 6px;
+      border-radius: 6px;
+      background: #eef2f6;
+      overflow: hidden;
+      min-width: 80px;
+    }
+
+    .pu-bar span {
+      display: block;
+      height: 100%;
+      background: #5d87ff;
+      border-radius: 6px;
+    }
+
+    .pu-rank {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .72rem;
+      font-weight: 700;
+      background: #f2f5f9;
+      color: #5a6a85;
+    }
+
+    .pu-rank.top {
+      background: #fff4e5;
+      color: #e08a00;
+    }
+
+    #tblRekap tbody tr {
+      cursor: pointer;
+    }
+
+    #tblRekap tbody tr:hover {
+      background: #f6f9ff;
+    }
+
+    .pu-loading {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, .65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      border-radius: 12px;
+    }
+
+    #selectObat+.select2 .select2-selection--single {
+      height: 40px !important;
+      border-color: #dfe5ef !important;
+      border-radius: 8px !important;
+      display: flex;
+      align-items: center;
+    }
+
+    #selectObat+.select2 .select2-selection__arrow {
       height: 38px !important;
     }
 
-    /* Print styling */
+    .dt-field>span {
+      display: block;
+      font-size: .7rem;
+      color: #7c8fac;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+    }
+
+    .dt-field>div {
+      font-weight: 600;
+      color: #2a3547;
+      font-size: .875rem;
+    }
+
     @media print {
-      body * {
-        visibility: hidden;
-      }
-      #printArea, #printArea * {
-        visibility: visible;
-      }
-      #printArea {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-      }
-      .no-print {
+
+      .left-sidebar,
+      .app-header,
+      .no-print,
+      .dataTables_paginate,
+      .dataTables_length {
         display: none !important;
+      }
+
+      .body-wrapper {
+        margin-left: 0 !important;
+        padding-top: 0 !important;
+      }
+
+      .tab-pane {
+        display: none !important;
+      }
+
+      .tab-pane.active {
+        display: block !important;
+        opacity: 1 !important;
       }
     }
   </style>
 </head>
 
 <body>
-  <!-- Body Wrapper -->
   <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
     data-sidebar-position="fixed" data-header-position="fixed">
-
-    <!-- Sidebar Start -->
     <?php require 'sidebar.php'; ?>
-    <!-- Sidebar End -->
-
-    <!-- Main wrapper -->
     <div class="body-wrapper">
-
-      <!-- Header Start -->
       <?php require 'navbar.php'; ?>
-      <!-- Header End -->
-
       <div class="body-wrapper-inner">
         <div class="container-fluid">
 
-          <!-- Tab Menu Farmasi -->
-          <?php require 'menu_farmasi.php'; ?>
-
-          <!-- Header Judul & Deskripsi Halaman -->
-          <div class="card mb-3 shadow-none border">
-            <div class="card-body p-3">
-              <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <div>
-                  <h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
-                    <iconify-icon icon="solar:users-group-two-rounded-bold-duotone" class="text-primary fs-7"></iconify-icon>
-                    Penelusuran Pemakaian Obat Pasien
-                  </h4>
-                  <p class="text-muted mb-0 fs-3">
-                    Lacak dan pantau pasien siapa saja yang telah memakai atau diresepkan obat tertentu secara lengkap dengan dokter peresep, poli layanan, dosis, serta tanggal pemberian.
-                  </p>
-                </div>
-                <div>
-                  <button type="button" class="btn btn-outline-dark btn-sm" id="btnPrint">
-                    <i class="ti ti-printer me-1"></i>Cetak Laporan
-                  </button>
-                  <button type="button" class="btn btn-primary btn-sm ms-1" id="btnRefresh">
-                    <i class="ti ti-refresh me-1"></i>Refresh
-                  </button>
-                </div>
-              </div>
+          <!-- HEADER -->
+          <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+            <div>
+              <h4 class="fw-semibold mb-1">Pemakaian Obat Pasien</h4>
+              <div class="text-muted small">Lihat obat yang paling banyak diresepkan dan pasien yang menerima obat tertentu.</div>
+            </div>
+            <div class="d-flex gap-2 no-print">
+              <button class="btn btn-light" id="btnRefresh" title="Muat ulang"><i class="fas fa-sync-alt"></i></button>
+              <button class="btn btn-outline-secondary" id="btnPrint"><i class="fas fa-print me-1"></i> Cetak</button>
             </div>
           </div>
 
-          <!-- CARD PILIHAN OBAT (SEARCH & SELECT2) -->
-          <div class="card mb-3 shadow-none border">
+          <!-- FILTER UTAMA -->
+          <div class="card mb-3 no-print">
             <div class="card-body p-3">
-              <div class="row align-items-center g-2">
-                <div class="col-lg-7 col-md-12">
-                  <label for="selectObat" class="form-label fw-semibold fs-3 mb-1">
-                    <i class="ti ti-search me-1 text-primary"></i>Pilih / Cari Obat:
-                  </label>
-                  <select id="selectObat" class="form-select select2 w-100">
-                    <option value="all">-- Tampilkan Pemakaian Semua Obat --</option>
+              <div class="row g-3 align-items-end">
+                <div class="col-lg-5">
+                  <label class="form-label small fw-semibold mb-1" for="selectObat">Obat</label>
+                  <select id="selectObat" class="form-select">
+                    <option value="0">Semua obat</option>
                   </select>
-                  <div class="form-text fs-2">
-                    Ketik nama generik, nama dagang/merk, atau kode obat untuk memfilter pasien yang menggunakan obat tersebut.
-                  </div>
                 </div>
-
-                <div class="col-lg-5 col-md-12 text-lg-end mt-2 mt-lg-0">
-                  <div class="d-flex justify-content-lg-end gap-2 flex-wrap">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btnResetObat">
-                      <i class="ti ti-x me-1"></i>Lihat Semua Obat
-                    </button>
-                    <a href="module/admin/pharmacy" class="btn btn-light btn-sm border">
-                      <i class="ti ti-drugs me-1"></i>Master Obat
-                    </a>
-                    <a href="module/admin/pharmacy_expired" class="btn btn-light btn-sm border">
-                      <i class="ti ti-calendar me-1"></i>Expired Obat
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              <!-- BANNER INFO OBAT TERPILIH (JIKA SPESIFIK DIPILIH) -->
-              <div class="drug-hero-card p-3 mt-3 d-none" id="selectedDrugCard">
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-                  <div class="d-flex align-items-center gap-3">
-                    <div class="bg-primary text-white rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
-                      <iconify-icon icon="mdi:pill" class="fs-7"></iconify-icon>
+                <div class="col-lg-7">
+                  <label class="form-label small fw-semibold mb-1">Periode resep</label>
+                  <div class="d-flex flex-wrap align-items-center gap-2">
+                    <div class="pu-period d-flex flex-wrap gap-1" id="puPeriod">
+                      <button class="btn btn-light" data-p="hari">Hari ini</button>
+                      <button class="btn btn-light" data-p="7">7 hari</button>
+                      <button class="btn btn-primary" data-p="bulan">Bulan ini</button>
+                      <button class="btn btn-light" data-p="bulanlalu">Bulan lalu</button>
+                      <button class="btn btn-light" data-p="90">3 bulan</button>
                     </div>
-                    <div>
-                      <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-primary" id="drugCodeBadge">-</span>
-                        <span class="badge bg-secondary-subtle text-secondary" id="drugCategoryBadge">-</span>
-                        <span class="badge bg-info-subtle text-info" id="drugGolonganBadge">-</span>
-                      </div>
-                      <h5 class="fw-bold my-1" id="drugGenericName">-</h5>
-                      <div class="text-muted fs-3">
-                        Nama Dagang / Pabrikan: <strong id="drugTradeName" class="text-dark">-</strong> | Satuan: <strong id="drugUnit" class="text-dark">-</strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="d-flex align-items-center gap-4 text-end">
-                    <div>
-                      <div class="fs-2 text-muted">Sisa Stok Obat Saat Ini</div>
-                      <h4 class="fw-bold text-success my-0" id="drugCurrentStock">0</h4>
+                    <div class="pu-dates d-flex align-items-center gap-1">
+                      <input type="date" id="fromDate" class="form-control form-control-sm">
+                      <span class="text-muted small">s.d.</span>
+                      <input type="date" id="toDate" class="form-control form-control-sm">
                     </div>
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
 
-          <!-- 4 KARTU STATISTIK PEMAKAIAN -->
+          <!-- OBAT TERPILIH -->
+          <div class="pu-obat mb-3 d-none" id="puObat">
+            <div class="d-flex flex-wrap align-items-center gap-3">
+              <div class="ava"><i class="fas fa-pills"></i></div>
+              <div class="flex-grow-1 min-w-0">
+                <div class="d-flex flex-wrap gap-1 mb-1" id="puObatBadges"></div>
+                <div class="fw-bold fs-5 text-dark" id="puObatNama"></div>
+                <div class="pu-sub" id="puObatSub"></div>
+              </div>
+              <div class="d-flex gap-2 no-print">
+                <a class="btn btn-sm btn-light" id="puObatDetail" href="#"><i class="fas fa-pen me-1"></i>Detail obat</a>
+                <button class="btn btn-sm btn-outline-secondary" id="btnSemuaObat"><i class="fas fa-times me-1"></i>Semua obat</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- STAT -->
           <div class="row g-3 mb-3">
-            <!-- TOTAL PASIEN -->
-            <div class="col-xl-3 col-sm-6">
-              <div class="card stat-card-usage h-100 mb-0">
-                <div class="card-body p-3 d-flex align-items-center justify-content-between">
-                  <div>
-                    <span class="text-muted text-uppercase fs-2 fw-semibold">Pasien Pengguna</span>
-                    <h3 class="fw-bold my-1 text-primary" id="statTotalPasien">0</h3>
-                    <span class="fs-2 text-muted">Jumlah pasien unik</span>
-                  </div>
-                  <div class="stat-icon-wrap bg-primary-subtle text-primary">
-                    <iconify-icon icon="solar:users-group-rounded-bold-duotone"></iconify-icon>
-                  </div>
+            <div class="col-6 col-xl-3">
+              <div class="pu-stat d-flex gap-3 align-items-center">
+                <span class="pu-icon bg-primary-subtle text-primary"><i class="fas fa-user-injured"></i></span>
+                <div class="min-w-0">
+                  <div class="pu-val" id="stKunjungan">-</div>
+                  <div class="pu-label">Kunjungan pasien</div>
                 </div>
               </div>
             </div>
-
-            <!-- TOTAL QTY DIGUNAKAN -->
-            <div class="col-xl-3 col-sm-6">
-              <div class="card stat-card-usage h-100 mb-0">
-                <div class="card-body p-3 d-flex align-items-center justify-content-between">
-                  <div>
-                    <span class="text-muted text-uppercase fs-2 fw-semibold">Total Qty Terpakai</span>
-                    <h3 class="fw-bold my-1 text-info" id="statTotalQty">0</h3>
-                    <span class="fs-2 text-muted">Satuan / Butir obat keluar</span>
-                  </div>
-                  <div class="stat-icon-wrap bg-info-subtle text-info">
-                    <iconify-icon icon="solar:box-minimalistic-bold-duotone"></iconify-icon>
-                  </div>
+            <div class="col-6 col-xl-3">
+              <div class="pu-stat d-flex gap-3 align-items-center">
+                <span class="pu-icon bg-warning-subtle text-warning"><i class="fas fa-file-prescription"></i></span>
+                <div class="min-w-0">
+                  <div class="pu-val" id="stResep">-</div>
+                  <div class="pu-label" id="stResepLbl">Resep</div>
                 </div>
               </div>
             </div>
-
-            <!-- TOTAL RESEP / KUNJUNGAN -->
-            <div class="col-xl-3 col-sm-6">
-              <div class="card stat-card-usage h-100 mb-0">
-                <div class="card-body p-3 d-flex align-items-center justify-content-between">
-                  <div>
-                    <span class="text-muted text-uppercase fs-2 fw-semibold">Frekuensi Resep</span>
-                    <h3 class="fw-bold my-1 text-warning" id="statTotalResep">0</h3>
-                    <span class="fs-2 text-muted">Total transaksi resep</span>
-                  </div>
-                  <div class="stat-icon-wrap bg-warning-subtle text-warning">
-                    <iconify-icon icon="solar:document-medicine-bold-duotone"></iconify-icon>
-                  </div>
+            <div class="col-6 col-xl-3">
+              <div class="pu-stat d-flex gap-3 align-items-center">
+                <span class="pu-icon bg-info-subtle text-info"><i class="fas fa-box-open"></i></span>
+                <div class="min-w-0">
+                  <div class="pu-val" id="stQty">-</div>
+                  <div class="pu-label" id="stQtyLbl">Jumlah obat keluar</div>
                 </div>
               </div>
             </div>
-
-            <!-- TOTAL NOMINAL -->
-            <div class="col-xl-3 col-sm-6">
-              <div class="card stat-card-usage h-100 mb-0">
-                <div class="card-body p-3 d-flex align-items-center justify-content-between">
-                  <div>
-                    <span class="text-muted text-uppercase fs-2 fw-semibold">Estimasi Nilai Obat</span>
-                    <h4 class="fw-bold my-1 text-success" id="statTotalNominal">Rp 0</h4>
-                    <span class="fs-2 text-muted">Total nominal resep</span>
-                  </div>
-                  <div class="stat-icon-wrap bg-success-subtle text-success">
-                    <iconify-icon icon="solar:wallet-money-bold-duotone"></iconify-icon>
-                  </div>
+            <div class="col-6 col-xl-3">
+              <div class="pu-stat d-flex gap-3 align-items-center">
+                <span class="pu-icon bg-success-subtle text-success"><i class="fas fa-wallet"></i></span>
+                <div class="min-w-0">
+                  <div class="pu-val" id="stNominal" style="font-size:1.15rem">-</div>
+                  <div class="pu-label">Estimasi nilai obat</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- FILTER BAR (TANGGAL, STATUS, LAYANAN) -->
-          <div class="card mb-3 shadow-none border">
-            <div class="card-body p-3">
-              <div class="row g-2 align-items-end">
-                <div class="col-md-3 col-sm-6">
-                  <label class="form-label fs-2 mb-1">Dari Tanggal</label>
-                  <input type="date" class="form-control form-control-sm" id="fromDate">
+          <!-- KONTEN -->
+          <div class="card position-relative">
+            <div class="pu-loading" id="puLoading"><div class="spinner-border text-primary"></div></div>
+            <div class="card-body p-0">
+              <ul class="nav pu-tabs px-3 no-print" role="tablist">
+                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabRekap" type="button" id="tabRekapBtn"><i class="fas fa-chart-bar me-1"></i>Rekap per Obat</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabDaftar" type="button" id="tabDaftarBtn"><i class="fas fa-list me-1"></i>Daftar Pemakaian</button></li>
+              </ul>
+              <div class="tab-content p-3 p-md-4">
+                <!-- REKAP -->
+                <div class="tab-pane fade show active" id="tabRekap" role="tabpanel">
+                  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <div class="small text-muted" id="rekapInfo">Klik obat untuk melihat daftar pasien penerimanya.</div>
+                    <div class="input-group input-group-sm no-print" style="width:240px">
+                      <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                      <input type="search" id="rekapCari" class="form-control" placeholder="Cari obat di rekap">
+                    </div>
+                  </div>
+                  <div class="table-responsive">
+                    <table class="table align-middle mb-0 pu-table" id="tblRekap">
+                      <thead>
+                        <tr>
+                          <th style="width:44px">#</th>
+                          <th>Obat</th>
+                          <th>Golongan</th>
+                          <th class="text-end">Kunjungan</th>
+                          <th style="min-width:180px">Jumlah keluar</th>
+                          <th class="text-end">Estimasi nilai</th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
                 </div>
-                <div class="col-md-3 col-sm-6">
-                  <label class="form-label fs-2 mb-1">Sampai Tanggal</label>
-                  <input type="date" class="form-control form-control-sm" id="toDate">
-                </div>
-                <div class="col-md-2 col-sm-6">
-                  <label class="form-label fs-2 mb-1">Status Resep</label>
-                  <select class="form-select form-select-sm" id="filterStatus">
-                    <option value="all">Semua Status</option>
-                    <option value="3">Selesai</option>
-                    <option value="2">Diproses</option>
-                    <option value="1">Persiapan</option>
-                    <option value="0">Menunggu</option>
-                  </select>
-                </div>
-                <div class="col-md-2 col-sm-6">
-                  <label class="form-label fs-2 mb-1">Layanan / Poli</label>
-                  <select class="form-select form-select-sm" id="filterLayanan">
-                    <option value="">Semua Layanan</option>
-                    <option value="Poliklinik">Poliklinik</option>
-                    <option value="Rawat Inap">Rawat Inap</option>
-                    <option value="IGD">IGD</option>
-                  </select>
-                </div>
-                <div class="col-md-2 col-sm-12 d-flex gap-1">
-                  <button type="button" class="btn btn-primary btn-sm w-100" id="btnApplyFilter">
-                    <i class="ti ti-filter me-1"></i>Terapkan
-                  </button>
-                  <button type="button" class="btn btn-outline-secondary btn-sm" id="btnResetDate" title="Reset Periode">
-                    <i class="ti ti-rotate-clockwise"></i>
-                  </button>
+
+                <!-- DAFTAR -->
+                <div class="tab-pane fade" id="tabDaftar" role="tabpanel">
+                  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 no-print">
+                    <div class="d-flex flex-wrap gap-2">
+                      <select id="fStatus" class="form-select form-select-sm" style="width:auto">
+                        <option value="">Semua status</option>
+                        <option value="3">Selesai</option>
+                        <option value="2">Persiapan</option>
+                        <option value="1">Sudah dikirim</option>
+                        <option value="0">Belum dikirim</option>
+                      </select>
+                      <select id="fLayanan" class="form-select form-select-sm" style="width:auto">
+                        <option value="">Semua layanan</option>
+                        <option value="Poliklinik">Poliklinik</option>
+                        <option value="Rawat Inap">Rawat Inap</option>
+                        <option value="UGD">UGD</option>
+                      </select>
+                    </div>
+                    <div class="input-group input-group-sm" style="width:300px;max-width:100%">
+                      <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                      <input type="search" id="fCari" class="form-control" placeholder="Nama pasien, No. RM, dokter, no. resep">
+                    </div>
+                  </div>
+                  <div class="table-responsive">
+                    <table class="table align-middle mb-0 pu-table" id="tblDaftar">
+                      <thead>
+                        <tr>
+                          <th>Tanggal</th>
+                          <th>Pasien</th>
+                          <th class="col-obat">Obat</th>
+                          <th>Jumlah &amp; signa</th>
+                          <th>Dokter / poli</th>
+                          <th class="text-center">Status</th>
+                          <th class="text-center no-print" style="width:56px"></th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <!-- TABEL DAFTAR PASIEN PENGGUNA OBAT -->
-          <div class="card w-100 shadow-none border" id="printArea">
-            <div class="card-body p-4">
-              
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
-                  <iconify-icon icon="solar:clipboard-list-bold-duotone" class="text-primary fs-6"></iconify-icon>
-                  Daftar Pasien Penerima Obat
-                </h5>
-                <span class="badge bg-light text-dark border fs-2" id="badgeResultCount">
-                  Menampilkan 0 data
-                </span>
-              </div>
-
-              <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0 w-100" id="tableUsage">
-                  <thead>
-                    <tr>
-                      <th width="40" class="text-center">No</th>
-                      <th width="120">Tgl Resep</th>
-                      <th>Pasien</th>
-                      <th>Obat Diberikan</th>
-                      <th width="90" class="text-center">Jumlah</th>
-                      <th>Signa / Aturan Minum</th>
-                      <th>Dokter Peresep</th>
-                      <th>Poli / Unit</th>
-                      <th width="100" class="text-center">Status</th>
-                      <th width="70" class="text-center no-print">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody></tbody>
-                </table>
-              </div>
-
             </div>
           </div>
 
         </div>
       </div>
-
     </div>
   </div>
 
-  <!-- MODAL DETAIL PEMAKAIAN & RESEP PASIEN -->
-  <div class="modal fade" id="modalUsageDetail" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+  <!-- MODAL DETAIL -->
+  <div class="modal fade" id="modalDetail" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title d-flex align-items-center gap-2">
-            <iconify-icon icon="solar:document-medicine-bold-duotone" class="text-primary fs-6"></iconify-icon>
-            Detail Pemakaian Obat & Resep Pasien
-          </h5>
+          <h5 class="modal-title"><i class="fas fa-file-prescription text-primary me-2"></i>Detail Resep</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body" id="modalUsageContent">
-          <div class="text-center py-4">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-2 text-muted">Memuat rincian resep...</p>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
-        </div>
+        <div class="modal-body" id="modalDetailBody"></div>
       </div>
     </div>
   </div>
 
   <?php require 'library.php'; ?>
-
   <script>
-    const usageApiUrl = 'controller/pharmacy/pharmacyUsageController.php';
-    let tableUsage = null;
-    let selectedIdPharmacy = '<?= htmlspecialchars($selectedIdPharmacy, ENT_QUOTES, 'UTF-8') ?>';
+    (function() {
+      const api = 'controller/pharmacy/pharmacyUsageController.php';
+      const STATUS = {
+        0: ['Belum dikirim', 'bg-secondary-subtle text-secondary'],
+        1: ['Sudah dikirim', 'bg-info-subtle text-info'],
+        2: ['Persiapan', 'bg-warning-subtle text-warning'],
+        3: ['Selesai', 'bg-success-subtle text-success'],
+      };
+      const GOL = {
+        'Bebas': ['#13a67a', '#e6fffa'],
+        'Bebas Terbatas': ['#2e7dd7', '#e8f2ff'],
+        'Keras': ['#e0473b', '#fdede8'],
+        'Psikotropika': ['#7460ee', '#efecfd'],
+        'Narkotika': ['#2a3547', '#e5eaef'],
+      };
+      let obatMap = {},
+        idObat = <?= $selectedIdPharmacy ?>,
+        rekap = [],
+        totalDaftar = null,
+        kunciDaftar = '';
 
-    // Format Tanggal Indo
-    function formatTanggalIndo(dateStr) {
-      if (!dateStr || dateStr === '0000-00-00') return '-';
-      try {
-        const parts = dateStr.split(' ')[0].split('-');
-        if (parts.length !== 3) return dateStr;
-        const bulan = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-        const day = parseInt(parts[2], 10);
-        const month = parseInt(parts[1], 10);
-        const year = parts[0];
-        const time = dateStr.includes(' ') ? ' ' + dateStr.split(' ')[1].substring(0, 5) : '';
-        return `${day} ${bulan[month] || parts[1]} ${year}${time}`;
-      } catch (e) {
-        return dateStr;
+      const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      } [c]));
+      const isi = v => {
+        const s = String(v ?? '').trim();
+        return /^(-+|null)$/i.test(s) ? '' : s;
+      };
+      const fmt = n => (Number(n) || 0).toLocaleString('id-ID');
+      const rupiah = n => 'Rp ' + fmt(n);
+      const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      const tgl = s => {
+        if (!s) return '-';
+        const [d, t] = String(s).split(' ');
+        const p = d.split('-');
+        return p.length === 3 ? `${+p[2]} ${BLN[+p[1] - 1]} ${p[0]}` : s;
+      };
+      const jam = s => (String(s || '').split(' ')[1] || '').slice(0, 5);
+      const umur = (lahir, ref) => {
+        if (!/^\d{4}-\d{2}-\d{2}/.test(lahir || '')) return '';
+        const b = new Date(lahir.slice(0, 10) + 'T00:00:00'),
+          r = ref ? new Date(String(ref).replace(' ', 'T')) : new Date();
+        let th = r.getFullYear() - b.getFullYear();
+        if (r.getMonth() < b.getMonth() || (r.getMonth() === b.getMonth() && r.getDate() < b.getDate())) th--;
+        return th >= 0 && th < 130 ? `${th} th` : '';
+      };
+      const namaObat = r => isi(r.pharmacy_name_generic) || isi(r.item_name) || '-';
+      const golBadge = g => GOL[g] ? `<span class="pu-badge" style="background:${GOL[g][1]};color:${GOL[g][0]}">${esc(g)}</span>` : '<span class="pu-sub">-</span>';
+      const loading = on => $('#puLoading').css('display', on ? 'flex' : 'none');
+      const getJson = params => fetch(`${api}?${new URLSearchParams(params)}`).then(r => r.json());
+
+      // ---------- periode ----------
+      function setPeriode(p) {
+        const n = new Date();
+        let a = new Date(n),
+          b = new Date(n);
+        if (p === '7') a.setDate(n.getDate() - 6);
+        else if (p === 'bulan') a = new Date(n.getFullYear(), n.getMonth(), 1);
+        else if (p === 'bulanlalu') {
+          a = new Date(n.getFullYear(), n.getMonth() - 1, 1);
+          b = new Date(n.getFullYear(), n.getMonth(), 0);
+        } else if (p === '90') a.setDate(n.getDate() - 89);
+        $('#fromDate').val(ymd(a));
+        $('#toDate').val(ymd(b));
+        $('#puPeriod .btn').each(function() {
+          $(this).toggleClass('btn-primary', this.dataset.p === p).toggleClass('btn-light', this.dataset.p !== p);
+        });
       }
-    }
+      const periode = () => ({
+        from: $('#fromDate').val(),
+        to: $('#toDate').val()
+      });
+      const labelPeriode = () => {
+        const {
+          from,
+          to
+        } = periode();
+        return from === to ? tgl(from) : `${tgl(from)} – ${tgl(to)}`;
+      };
 
-    // Load Medicines into Select2 Dropdown
-    function loadMedicinesDropdown(preselectedId) {
-      $.ajax({
-        url: usageApiUrl,
-        type: 'GET',
-        data: { action: 'get_medicines' },
-        success: function(res) {
-          if (res.status === 'success' && Array.isArray(res.data)) {
-            let select = $('#selectObat');
-            select.empty();
-            select.append('<option value="all">-- Tampilkan Pemakaian Semua Obat --</option>');
-
-            res.data.forEach(function(item) {
-              const code = item.pharmacy_code ? `[${item.pharmacy_code}] ` : '';
-              const generic = item.pharmacy_name_generic || '';
-              const trade = item.pharmacy_name_trade ? ` (${item.pharmacy_name_trade})` : '';
-              const unit = item.pharmacy_unit ? ` - Satuan: ${item.pharmacy_unit}` : '';
-              const pasienCount = item.total_pasien_terlayani > 0 ? ` [${item.total_pasien_terlayani} Pasien]` : '';
-              const isSelected = (preselectedId && String(item.id_pharmacy) === String(preselectedId)) ? 'selected' : '';
-
-              select.append(`<option value="${item.id_pharmacy}" ${isSelected}>${code}${generic}${trade}${unit}${pasienCount}</option>`);
-            });
-
-            if (preselectedId && preselectedId !== 'all') {
-              select.val(preselectedId).trigger('change');
-            }
-          }
+      // ---------- master obat ----------
+      $('#selectObat').select2({
+        width: '100%',
+        placeholder: 'Semua obat',
+        language: {
+          noResults: () => 'Obat tidak ditemukan'
         }
       });
-    }
 
-    // Update Summary UI
-    function updateSummaryUI(summary) {
-      if (!summary) return;
-
-      $('#statTotalPasien').text(Number(summary.total_patients || 0).toLocaleString('id-ID'));
-      $('#statTotalQty').text(Number(summary.total_qty || 0).toLocaleString('id-ID'));
-      $('#statTotalResep').text(Number(summary.total_records || 0).toLocaleString('id-ID'));
-      $('#statTotalNominal').text(summary.total_nominal_format || 'Rp 0');
-      $('#badgeResultCount').text(`Menampilkan ${Number(summary.total_records || 0).toLocaleString('id-ID')} data pemakaian`);
-
-      // Selected Drug Hero Card
-      if (summary.selected_pharmacy) {
-        const p = summary.selected_pharmacy;
-        $('#selectedDrugCard').removeClass('d-none');
-        $('#drugCodeBadge').text(p.pharmacy_code || 'OBAT');
-        $('#drugCategoryBadge').text(p.pharmacy_category || 'Obat');
-        $('#drugGolonganBadge').text(p.pharmcy_golongan || '-');
-        $('#drugGenericName').text(p.pharmacy_name_generic || '-');
-        $('#drugTradeName').text(p.pharmacy_name_trade || '-');
-        $('#drugUnit').text(p.pharmacy_unit || '-');
-        $('#drugCurrentStock').text(`${Number(p.pharmacy_stock || 0).toLocaleString('id-ID')} ${p.pharmacy_unit || ''}`);
-      } else {
-        $('#selectedDrugCard').addClass('d-none');
-      }
-    }
-
-    $(document).ready(function() {
-
-      // Initialize Select2
-      if ($.fn.select2) {
-        $('#selectObat').select2({
-          placeholder: 'Pilih atau cari obat...',
-          allowClear: false,
-          width: '100%'
+      function muatObat() {
+        return getJson({
+          action: 'get_medicines'
+        }).then(r => {
+          if (r.status !== 'success') return;
+          const opsi = ['<option value="0">Semua obat</option>'];
+          (r.data || []).forEach(o => {
+            obatMap[o.id_pharmacy] = o;
+            const trade = isi(o.pharmacy_name_trade);
+            opsi.push(`<option value="${o.id_pharmacy}">${esc(isi(o.pharmacy_name_generic))}${trade ? ' — ' + esc(trade) : ''}</option>`);
+          });
+          $('#selectObat').html(opsi.join(''));
+          if (idObat && !obatMap[idObat]) $('#selectObat').append(new Option(`Obat #${idObat}`, idObat));
+          $('#selectObat').val(String(idObat || 0)).trigger('change.select2');
         });
       }
 
-      // Load medicines
-      loadMedicinesDropdown(selectedIdPharmacy);
-
-      // Datatable init
-      tableUsage = $('#tableUsage').DataTable({
-        processing: true,
-        serverSide: false,
-        ajax: {
-          url: usageApiUrl,
-          type: 'GET',
-          data: function(d) {
-            d.action = 'list';
-            d.id_pharmacy = $('#selectObat').val() || selectedIdPharmacy || 'all';
-            d.fromDate = $('#fromDate').val();
-            d.toDate = $('#toDate').val();
-            d.status_permintaan = $('#filterStatus').val();
-            d.layanan = $('#filterLayanan').val();
-          },
-          dataSrc: function(json) {
-            if (json.status !== 'success') {
-              Swal.fire('Perhatian', json.message || 'Gagal mengambil data', 'warning');
-              return [];
-            }
-            updateSummaryUI(json.summary);
-            return json.data || [];
+      // ---------- rekap per obat ----------
+      const tblRekap = $('#tblRekap').DataTable({
+        data: [],
+        autoWidth: false,
+        pageLength: 25,
+        order: [
+          [4, 'desc']
+        ],
+        dom: 'rt<"d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2"ip>',
+        language: {
+          info: '_TOTAL_ obat dipakai',
+          infoEmpty: 'Tidak ada pemakaian obat',
+          infoFiltered: '(dari _MAX_)',
+          emptyTable: '<div class="py-4 text-muted"><i class="fas fa-pills fa-2x mb-2 d-block"></i>Tidak ada pemakaian obat pada periode ini.</div>',
+          zeroRecords: '<div class="py-4 text-muted">Obat tidak ditemukan.</div>',
+          paginate: {
+            previous: '‹',
+            next: '›'
           }
         },
-        columns: [
-          {
-            data: null,
-            className: 'text-center text-muted fs-2',
-            render: function(data, type, row, meta) {
-              return meta.row + 1;
-            }
-          },
-          {
-            data: 'tgl_resep',
-            render: function(data, type, row) {
-              const tgl = formatTanggalIndo(data || row.visit_date);
-              const noPermintaan = row.permintaan_number ? `<div class="fs-1 text-muted">No: ${row.permintaan_number}</div>` : '';
-              return `<div><span class="fw-semibold">${tgl}</span>${noPermintaan}</div>`;
-            }
-          },
-          {
-            data: 'patient_name',
-            render: function(data, type, row) {
-              const rm = row.nomor_rm ? `<span class="badge bg-light text-dark border me-1">RM: ${row.nomor_rm}</span>` : '';
-              const genderBadge = row.patient_gender ? `<span class="badge ${row.patient_gender === 'L' || row.patient_gender === 'Laki-laki' ? 'bg-primary-subtle text-primary' : 'bg-danger-subtle text-danger'} fs-1">${row.patient_gender}</span>` : '';
-              const age = row.patient_age && row.patient_age !== '-' ? `<span class="text-muted fs-2 ms-1">(${row.patient_age})</span>` : '';
-              return `
-                <div>
-                  <div class="fw-bold text-dark">${data || '-'}</div>
-                  <div class="mt-1">${rm} ${genderBadge} ${age}</div>
-                </div>
-              `;
-            }
-          },
-          {
-            data: 'pharmacy_name_generic',
-            render: function(data, type, row) {
-              const code = row.pharmacy_code ? `<span class="badge bg-secondary-subtle text-secondary fs-1 me-1">${row.pharmacy_code}</span>` : '';
-              const generic = data || row.item_name || '-';
-              const trade = row.pharmacy_name_trade ? `<div class="fs-2 text-muted">Merk: ${row.pharmacy_name_trade}</div>` : '';
-              return `<div><div class="fw-semibold">${code}${generic}</div>${trade}</div>`;
-            }
-          },
-          {
-            data: 'qty',
-            className: 'text-center',
-            render: function(data, type, row) {
-              const unit = row.pharmacy_unit || '';
-              return `<span class="badge bg-primary-subtle text-primary fw-bold fs-3">${Number(data || 0).toLocaleString('id-ID')} ${unit}</span>`;
-            }
-          },
-          {
-            data: 'signa',
-            render: function(data, type, row) {
-              const signaText = data ? `<div class="fw-semibold text-dark"><i class="ti ti-clock-check me-1 text-primary"></i>${data}</div>` : '<div class="text-muted fs-2 fst-italic">Aturan tidak tercantum</div>';
-              const catatan = row.catatan ? `<div class="fs-1 text-muted mt-1"><i class="ti ti-notes me-1"></i>${row.catatan}</div>` : '';
-              return `<div>${signaText}${catatan}</div>`;
-            }
-          },
-          {
-            data: 'doctor_name',
-            render: function(data) {
-              return `<div><i class="ti ti-stethoscope me-1 text-info"></i><span class="fs-2 fw-semibold">${data || '-'}</span></div>`;
-            }
-          },
-          {
-            data: 'poli_name',
-            render: function(data, type, row) {
-              const source = row.source_hub ? `<div class="fs-1 text-muted">${row.source_hub}</div>` : '';
-              return `<div><span class="fs-2 fw-semibold text-dark">${data || '-'}</span>${source}</div>`;
-            }
-          },
-          {
-            data: 'status_badge',
-            className: 'text-center',
-            render: function(data) {
-              return data || '<span class="badge bg-secondary">-</span>';
-            }
-          },
-          {
-            data: null,
-            className: 'text-center no-print',
-            orderable: false,
-            render: function(data, type, row) {
-              return `
-                <button type="button" class="btn btn-sm btn-outline-primary btn-view-usage"
-                        data-id="${row.id_pharmacy_details}"
-                        title="Lihat Detail Resep">
-                  <i class="ti ti-eye"></i>
-                </button>
-              `;
-            }
+        columns: [{
+          data: null,
+          orderable: false,
+          render: (d, t, r, m) => {
+            const i = m.settings._iDisplayStart + m.row + 1;
+            return `<span class="pu-rank ${i <= 3 ? 'top' : ''}">${i}</span>`;
           }
-        ],
-        order: [[1, 'desc']],
+        }, {
+          data: 'pharmacy_name_generic',
+          render: (d, t, r) => {
+            if (t !== 'display') return `${d} ${r.pharmacy_name_trade || ''} ${r.pharmacy_code || ''}`;
+            const trade = isi(r.pharmacy_name_trade);
+            return `<div class="pu-name" title="${esc(d)}">${esc(isi(d) || '-')}</div><div class="pu-sub">${[trade, isi(r.pharmacy_category)].filter(Boolean).map(esc).join(' · ')}</div>`;
+          }
+        }, {
+          data: 'pharmcy_golongan',
+          render: (d, t) => t === 'display' ? golBadge(d) : (d || '')
+        }, {
+          data: 'jml_kunjungan',
+          className: 'text-end',
+          render: (d, t) => t === 'display' ? fmt(d) : d
+        }, {
+          data: 'total_qty',
+          render: (d, t, r) => {
+            if (t !== 'display') return d;
+            const max = rekap.length ? rekap[0].total_qty : 1;
+            return `<div class="d-flex align-items-center gap-2"><span class="pu-qty" style="min-width:56px">${fmt(d)}</span><div class="pu-bar flex-grow-1"><span style="width:${Math.max(2, d / max * 100)}%"></span></div><span class="pu-sub">${esc(isi(r.pharmacy_unit))}</span></div>`;
+          }
+        }, {
+          data: 'nominal',
+          className: 'text-end',
+          render: (d, t) => t === 'display' ? (+d ? rupiah(d) : '<span class="pu-sub">-</span>') : d
+        }]
+      });
+      $('#tblRekap tbody').on('click', 'tr', function() {
+        const r = tblRekap.row(this).data();
+        if (r) pilihObat(r.id_pharmacy, true);
+      });
+      let tRekap;
+      $('#rekapCari').on('input', function() {
+        clearTimeout(tRekap);
+        tRekap = setTimeout(() => tblRekap.search(this.value.trim()).draw(), 200);
+      });
+
+      function muatRekap(refresh = false) {
+        loading(true);
+        return getJson({
+            action: 'ranking',
+            ...periode(),
+            ...(refresh ? {
+              refresh: 1
+            } : {})
+          })
+          .then(r => {
+            if (r.status !== 'success') return Swal.fire('Gagal', r.message || 'Gagal memuat rekap.', 'error');
+            rekap = (r.data || []).slice().sort((a, b) => b.total_qty - a.total_qty);
+            tblRekap.clear().rows.add(rekap).draw();
+            $('#rekapInfo').html(`<b>${fmt(rekap.length)}</b> obat dipakai · ${esc(labelPeriode())}. Klik obat untuk melihat pasien penerimanya.`);
+            if (!idObat) tampilStat({
+              kunjungan: r.summary.jml_kunjungan,
+              resep: r.summary.jml_resep,
+              qty: r.summary.total_qty,
+              nominal: r.summary.nominal
+            });
+          })
+          .catch(() => Swal.fire('Gagal', 'Tidak dapat terhubung ke server.', 'error'))
+          .finally(() => loading(false));
+      }
+
+      function tampilStat(s) {
+        $('#stKunjungan').text(fmt(s.kunjungan));
+        $('#stResep').text(fmt(s.resep));
+        $('#stQty').text(fmt(s.qty));
+        $('#stNominal').text(+s.nominal ? rupiah(s.nominal) : '-');
+        const unit = idObat && obatMap[idObat] ? isi(obatMap[idObat].pharmacy_unit) : '';
+        $('#stQtyLbl').text('Jumlah obat keluar' + (unit ? ` (${unit})` : ''));
+        $('#stResepLbl').text(idObat ? 'Resep berisi obat ini' : 'Resep');
+      }
+
+      // ---------- daftar pemakaian (server-side) ----------
+      const tblDaftar = $('#tblDaftar').DataTable({
+        serverSide: true,
+        processing: false,
+        ordering: false,
+        searching: false,
+        autoWidth: false,
+        deferLoading: 0,
         pageLength: 25,
+        lengthMenu: [10, 25, 50, 100],
+        dom: 'rt<"d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2"<"d-flex align-items-center gap-2"li>p>',
         language: {
-          search: "Cari Cepat:",
-          searchPlaceholder: "Nama pasien, RM, dokter, obat...",
-          lengthMenu: "Tampilkan _MENU_ data",
-          info: "Menampilkan _START_ - _END_ dari _TOTAL_ data pemakaian",
-          infoEmpty: "Tidak ada data pemakaian ditemukan",
-          zeroRecords: "Tidak ada riwayat pemakaian obat yang cocok",
+          info: 'Menampilkan _START_-_END_ dari _TOTAL_ pemakaian',
+          infoEmpty: 'Tidak ada pemakaian',
+          lengthMenu: '_MENU_',
+          emptyTable: '<div class="py-4 text-muted"><i class="fas fa-user-injured fa-2x mb-2 d-block"></i>Tidak ada pemakaian pada periode / filter ini.</div>',
           paginate: {
-            first: "Awal",
-            last: "Akhir",
-            next: "»",
-            previous: "«"
+            previous: '‹',
+            next: '›'
           }
-        }
+        },
+        ajax: (d, cb) => {
+          const filter = {
+            action: 'list',
+            ...periode(),
+            id_pharmacy: idObat || 0,
+            status: $('#fStatus').val(),
+            layanan: $('#fLayanan').val(),
+            q: $('#fCari').val().trim()
+          };
+          const kunci = JSON.stringify(filter);
+          const params = {
+            ...filter,
+            draw: d.draw,
+            start: d.start,
+            length: d.length
+          };
+          if (kunci !== kunciDaftar || totalDaftar === null) params.summary = 1;
+          else params.total = totalDaftar;
+          loading(true);
+          getJson(params).then(r => {
+            if (r.status !== 'success') {
+              Swal.fire('Gagal', r.message || 'Gagal memuat daftar.', 'error');
+              return cb({
+                draw: d.draw,
+                recordsTotal: 0,
+                recordsFiltered: 0,
+                data: []
+              });
+            }
+            kunciDaftar = kunci;
+            totalDaftar = r.recordsTotal;
+            if (r.summary && idObat) tampilStat(r.summary);
+            cb({
+              draw: d.draw,
+              recordsTotal: r.recordsTotal,
+              recordsFiltered: r.recordsFiltered,
+              data: r.data || []
+            });
+          }).catch(() => {
+            Swal.fire('Gagal', 'Tidak dapat terhubung ke server.', 'error');
+            cb({
+              draw: d.draw,
+              recordsTotal: 0,
+              recordsFiltered: 0,
+              data: []
+            });
+          }).finally(() => loading(false));
+        },
+        columns: [{
+          data: null,
+          render: (d, t, r) => `<div class="fw-semibold" style="white-space:nowrap">${esc(tgl(r.tgl_resep || r.visit_date))}</div><div class="pu-sub">${esc(jam(r.tgl_resep))}${r.permintaan_number ? ' · ' + esc(r.permintaan_number) : ''}</div>`
+        }, {
+          data: null,
+          render: (d, t, r) => {
+            const g = /^l/i.test(r.patient_gender || '') ? '<i class="fas fa-mars text-primary"></i>' : /^p/i.test(r.patient_gender || '') ? '<i class="fas fa-venus" style="color:#e0569b"></i>' : '';
+            const u = umur(r.patient_datebirth, r.tgl_resep);
+            const nama = esc(isi(r.patient_name) || '-');
+            return `<div class="pu-name" title="${nama}">${r.id_patient ? `<a class="text-reset" href="module/admin/patient_details?pt=${r.id_patient}">${nama}</a>` : nama}</div>
+              <div class="pu-sub d-flex gap-2 align-items-center">${r.nomor_rm ? `<span class="pu-rm">${esc(String(r.nomor_rm).trim())}</span>` : ''}${g}${u ? `<span>${u}</span>` : ''}</div>`;
+          }
+        }, {
+          data: null,
+          className: 'col-obat',
+          render: (d, t, r) => {
+            const trade = isi(r.pharmacy_name_trade);
+            return `<div class="pu-name" style="max-width:220px" title="${esc(namaObat(r))}">${esc(namaObat(r))}</div>${trade ? `<div class="pu-sub">${esc(trade)}</div>` : ''}`;
+          }
+        }, {
+          data: null,
+          render: (d, t, r) => `<div><span class="pu-qty">${fmt(r.qty)}</span> <span class="pu-sub">${esc(isi(r.pharmacy_unit))}</span>${String(r.tipe_obat || '').toLowerCase() === 'racikan' ? ' <span class="pu-badge bg-warning-subtle text-warning">Racikan</span>' : ''}</div>
+            <div class="pu-sub">${isi(r.signa) ? esc(r.signa) : '<i>signa tidak diisi</i>'}${isi(r.catatan) ? ' · ' + esc(r.catatan) : ''}</div>`
+        }, {
+          data: null,
+          render: (d, t, r) => `<div style="font-size:.82rem">${esc(isi(r.doctor_name) || '-')}</div><div class="pu-sub">${esc(isi(r.poli_name) || isi(r.source_hub) || '-')}${String(r.status_rawatinap) === '1' ? ' · Rawat Inap' : ''}</div>`
+        }, {
+          data: 'status_permintaan',
+          className: 'text-center',
+          render: d => {
+            const s = STATUS[d] || ['-', 'bg-light text-muted'];
+            return `<span class="pu-badge ${s[1]}">${s[0]}</span>`;
+          }
+        }, {
+          data: null,
+          className: 'text-center no-print',
+          render: (d, t, r) => `<button class="btn btn-sm btn-light text-primary btn-detail" data-id="${r.id_pharmacy_details}" title="Detail resep"><i class="fas fa-eye"></i></button>`
+        }]
       });
 
-      // Change on Select2 Obat
-      $('#selectObat').on('change', function() {
-        selectedIdPharmacy = $(this).val();
-        tableUsage.ajax.reload();
+      function muatDaftar() {
+        tblDaftar.column(2).visible(!idObat);
+        tblDaftar.page(0);
+        tblDaftar.ajax.reload();
+      }
+
+      let tCari;
+      $('#fCari').on('input', () => {
+        clearTimeout(tCari);
+        tCari = setTimeout(muatDaftar, 450);
+      });
+      $('#fStatus, #fLayanan').on('change', muatDaftar);
+
+      // ---------- obat terpilih ----------
+      function tampilObat() {
+        const o = obatMap[idObat];
+        $('#puObat').toggleClass('d-none', !idObat);
+        if (!idObat) return;
+        $('#puObatNama').text(o ? isi(o.pharmacy_name_generic) : `Obat #${idObat}`);
+        $('#puObatSub').text(o ? [isi(o.pharmacy_name_trade), isi(o.pharmacy_unit) && 'Satuan ' + o.pharmacy_unit].filter(Boolean).join(' · ') : '');
+        $('#puObatBadges').html(o ? [
+          isi(o.pharmacy_code) ? `<span class="pu-badge bg-primary text-white">BPJS ${esc(o.pharmacy_code)}</span>` : '',
+          isi(o.pharmacy_category) ? `<span class="pu-badge bg-light text-dark">${esc(o.pharmacy_category)}</span>` : '',
+          golBadge(o.pharmcy_golongan)
+        ].join('') : '');
+        $('#puObatDetail').attr('href', `module/admin/pharmacy_details?no=${idObat}`);
+      }
+
+      function pilihObat(id, keDaftar) {
+        idObat = +id || 0;
+        $('#selectObat').val(String(idObat)).trigger('change.select2');
+        const u = new URL(location.href);
+        idObat ? u.searchParams.set('id_pharmacy', idObat) : u.searchParams.delete('id_pharmacy');
+        history.replaceState(null, '', u);
+        tampilObat();
+        totalDaftar = null;
+        if (!idObat) muatRekap();
+        if (keDaftar || idObat) bootstrap.Tab.getOrCreateInstance(document.getElementById('tabDaftarBtn')).show();
+        if (isTabDaftar() || idObat) muatDaftar();
+      }
+      const isTabDaftar = () => $('#tabDaftar').hasClass('active');
+      $('#selectObat').on('select2:select', e => pilihObat(e.params.data.id, true));
+      $('#btnSemuaObat').on('click', () => {
+        pilihObat(0);
+        bootstrap.Tab.getOrCreateInstance(document.getElementById('tabRekapBtn')).show();
+      });
+      document.getElementById('tabDaftarBtn').addEventListener('shown.bs.tab', () => {
+        if (totalDaftar === null) muatDaftar();
+        tblDaftar.columns.adjust();
       });
 
-      // Reset Pilihan Obat
-      $('#btnResetObat').on('click', function() {
-        $('#selectObat').val('all').trigger('change');
+      // ---------- periode berubah ----------
+      function periodeBerubah() {
+        totalDaftar = null;
+        muatRekap();
+        if (isTabDaftar() || idObat) muatDaftar();
+      }
+      $('#puPeriod').on('click', '.btn', function() {
+        setPeriode(this.dataset.p);
+        periodeBerubah();
       });
-
-      // Terapkan Filter Tanggal / Status / Layanan
-      $('#btnApplyFilter').on('click', function() {
-        tableUsage.ajax.reload();
+      $('#fromDate, #toDate').on('change', () => {
+        $('#puPeriod .btn').removeClass('btn-primary').addClass('btn-light');
+        if ($('#fromDate').val() && $('#toDate').val()) periodeBerubah();
       });
-
-      // Reset Periode Tanggal
-      $('#btnResetDate').on('click', function() {
-        $('#fromDate').val('');
-        $('#toDate').val('');
-        $('#filterStatus').val('all');
-        $('#filterLayanan').val('');
-        tableUsage.ajax.reload();
+      $('#btnRefresh').on('click', () => {
+        totalDaftar = null;
+        muatRekap(true);
+        if (isTabDaftar()) muatDaftar();
       });
+      $('#btnPrint').on('click', () => window.print());
 
-      // Refresh Table
-      $('#btnRefresh').on('click', function() {
-        tableUsage.ajax.reload(null, false);
-      });
-
-      // Print Button
-      $('#btnPrint').on('click', function() {
-        window.print();
-      });
-
-      // View Detail Modal
-      $(document).on('click', '.btn-view-usage', function() {
+      // ---------- detail ----------
+      $(document).on('click', '.btn-detail', function() {
         const id = $(this).data('id');
-        $('#modalUsageContent').html(`
-          <div class="text-center py-4">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-2 text-muted">Memuat rincian resep...</p>
-          </div>
-        `);
-        $('#modalUsageDetail').modal('show');
-
-        $.ajax({
-          url: usageApiUrl,
-          type: 'GET',
-          data: { action: 'detail', id_pharmacy_details: id },
-          success: function(res) {
-            if (res.status !== 'success' || !res.data) {
-              $('#modalUsageContent').html(`
-                <div class="alert alert-danger mb-0">
-                  <i class="ti ti-alert-triangle me-1"></i>${res.message || 'Data resep tidak ditemukan.'}
+        $('#modalDetailBody').html('<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>');
+        bootstrap.Modal.getOrCreateInstance('#modalDetail').show();
+        getJson({
+          action: 'detail',
+          id_pharmacy_details: id
+        }).then(r => {
+          if (r.status !== 'success') return $('#modalDetailBody').html(`<div class="alert alert-danger mb-0">${esc(r.message || 'Data tidak ditemukan.')}</div>`);
+          const d = r.data;
+          const s = STATUS[d.status_permintaan] || ['-', 'bg-light'];
+          const u = umur(d.patient_datebirth, d.tgl_resep);
+          const obat = (d.other_medicines || []).map(m => `
+            <tr class="${+m.id_pharmacy_details === +d.id_pharmacy_details ? 'table-primary' : ''}">
+              <td><div class="fw-semibold">${esc(isi(m.nama_obat) || '-')}</div>${isi(m.pharmacy_name_trade) ? `<div class="pu-sub">${esc(m.pharmacy_name_trade)}</div>` : ''}</td>
+              <td class="text-end"><b>${fmt(m.qty)}</b> <span class="pu-sub">${esc(isi(m.pharmacy_unit))}</span></td>
+              <td>${esc(isi(m.signa) || '-')}</td>
+              <td class="pu-sub">${esc(isi(m.catatan) || '-')}</td>
+            </tr>`).join('');
+          $('#modalDetailBody').html(`
+            <div class="d-flex flex-wrap justify-content-between gap-3 p-3 rounded-3 mb-3" style="background:#f6f9fc">
+              <div class="min-w-0">
+                <div class="fw-bold fs-5 text-dark">${esc(isi(d.patient_name) || '-')}</div>
+                <div class="d-flex flex-wrap gap-2 mt-1 small">
+                  ${d.nomor_rm ? `<span class="pu-rm">${esc(String(d.nomor_rm).trim())}</span>` : ''}
+                  ${d.patient_gender ? `<span>${esc(d.patient_gender)}${u ? ' · ' + u : ''}</span>` : ''}
+                  ${d.provider_name ? `<span class="pu-badge bg-info-subtle text-info">${esc(d.provider_name)}</span>` : ''}
                 </div>
-              `);
-              return;
-            }
-
-            const d = res.data;
-            const tgl = formatTanggalIndo(d.tgl_resep || d.visit_date);
-
-            // Other medicines list in the same prescription
-            let otherMedsHtml = '';
-            if (Array.isArray(d.other_medicines) && d.other_medicines.length > 0) {
-              otherMedsHtml = `
-                <div class="table-responsive mt-2">
-                  <table class="table table-sm table-bordered mb-0 fs-2">
-                    <thead class="table-light">
-                      <tr>
-                        <th>Obat dalam Resep</th>
-                        <th width="70" class="text-center">Qty</th>
-                        <th>Signa / Dosis</th>
-                        <th>Catatan</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${d.other_medicines.map(m => `
-                        <tr class="${String(m.id_pharmacy_details) === String(d.id_pharmacy_details) ? 'table-primary fw-bold' : ''}">
-                          <td>${m.nama_obat || '-'} ${String(m.id_pharmacy_details) === String(d.id_pharmacy_details) ? '<span class="badge bg-primary ms-1">Item Ini</span>' : ''}</td>
-                          <td class="text-center">${Number(m.qty || 0).toLocaleString('id-ID')} ${m.pharmacy_unit || ''}</td>
-                          <td>${m.signa || '-'}</td>
-                          <td>${m.catatan || '-'}</td>
-                        </tr>
-                      `).join('')}
-                    </tbody>
-                  </table>
-                </div>
-              `;
-            }
-
-            const html = `
-              <!-- INFORMASI PASIEN -->
-              <div class="card bg-light border mb-3">
-                <div class="card-body p-3">
-                  <div class="row align-items-center">
-                    <div class="col-md-7">
-                      <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="badge bg-primary">RM: ${d.nomor_rm || '-'}</span>
-                        <span class="badge bg-secondary-subtle text-secondary">${d.patient_gender || '-'}</span>
-                        <span class="badge bg-info-subtle text-info">${d.provider_name || 'Umum'}</span>
-                      </div>
-                      <h5 class="fw-bold mb-1">${d.patient_name || '-'}</h5>
-                      <div class="text-muted fs-3">
-                        <i class="ti ti-map-pin me-1"></i>Alamat: ${d.patient_address || '-'}
-                      </div>
-                    </div>
-                    <div class="col-md-5 text-md-end mt-2 mt-md-0">
-                      <div class="fs-2 text-muted">Tanggal Pemberian Resep</div>
-                      <h6 class="fw-bold my-1 text-dark">${tgl}</h6>
-                      <div class="fs-2 text-muted">No. Tiket: <strong>${d.permintaan_number || '-'}</strong></div>
-                    </div>
-                  </div>
-                </div>
+                ${isi(d.patient_allergy) ? `<div class="small text-danger mt-1"><i class="fas fa-exclamation-triangle me-1"></i>Alergi: ${esc(d.patient_allergy)}</div>` : ''}
               </div>
-
-              <!-- DETAIL OBAT YANG DIPERIKSA -->
-              <div class="row g-3 mb-3">
-                <div class="col-md-6">
-                  <div class="border rounded p-3 h-100">
-                    <h6 class="fw-bold border-bottom pb-2 mb-2 text-primary">
-                      <i class="ti ti-pill me-1"></i>Rincian Obat Terpilih
-                    </h6>
-                    <table class="table table-sm table-borderless mb-0 fs-3">
-                      <tr>
-                        <td width="130" class="text-muted">Kode Obat</td>
-                        <td class="fw-bold"><code>${d.pharmacy_code || '-'}</code></td>
-                      </tr>
-                      <tr>
-                        <td class="text-muted">Nama Generik</td>
-                        <td class="fw-semibold">${d.pharmacy_name_generic || d.item_name || '-'}</td>
-                      </tr>
-                      <tr>
-                        <td class="text-muted">Nama Pabrik/Dagang</td>
-                        <td>${d.pharmacy_name_trade || '-'}</td>
-                      </tr>
-                      <tr>
-                        <td class="text-muted">Jumlah Diberikan</td>
-                        <td class="fw-bold text-primary fs-4">${Number(d.qty || 0).toLocaleString('id-ID')} ${d.pharmacy_unit || ''}</td>
-                      </tr>
-                      <tr>
-                        <td class="text-muted">Signa / Aturan</td>
-                        <td class="fw-bold text-success">${d.signa || '-'}</td>
-                      </tr>
-                      <tr>
-                        <td class="text-muted">Catatan Resep</td>
-                        <td>${d.catatan || '-'}</td>
-                      </tr>
-                    </table>
-                  </div>
-                </div>
-
-                <div class="col-md-6">
-                  <div class="border rounded p-3 h-100">
-                    <h6 class="fw-bold border-bottom pb-2 mb-2 text-info">
-                      <i class="ti ti-stethoscope me-1"></i>Layanan & Dokter
-                    </h6>
-                    <table class="table table-sm table-borderless mb-0 fs-3">
-                      <tr>
-                        <td width="130" class="text-muted">Dokter Peresep</td>
-                        <td class="fw-bold">${d.doctor_name || '-'}</td>
-                      </tr>
-                      <tr>
-                        <td class="text-muted">Poli / Unit</td>
-                        <td class="fw-semibold">${d.poli_name || '-'} (${d.source_hub || 'Rawat Jalan'})</td>
-                      </tr>
-                      <tr>
-                        <td class="text-muted">Visit ID</td>
-                        <td><code>${d.visit_ID || '-'}</code></td>
-                      </tr>
-                      <tr>
-                        <td class="text-muted">Jenis Resep</td>
-                        <td><span class="badge bg-light text-dark border">${d.tipe_obat || 'Non Racikan'}</span></td>
-                      </tr>
-                      <tr>
-                        <td class="text-muted">Catatan Dokter</td>
-                        <td class="text-muted">${d.catatan_permintaan || '-'}</td>
-                      </tr>
-                    </table>
-                  </div>
-                </div>
+              <div class="text-end">
+                <span class="pu-badge ${s[1]}">${s[0]}</span>
+                <div class="fw-semibold mt-1">${esc(tgl(d.tgl_resep))} ${esc(jam(d.tgl_resep))}</div>
+                <div class="pu-sub">${esc(d.permintaan_number || '')}</div>
               </div>
+            </div>
+            <div class="row g-3 mb-3">
+              <div class="col-6 col-md-3 dt-field"><span>Dokter</span><div>${esc(isi(d.doctor_name) || '-')}</div></div>
+              <div class="col-6 col-md-3 dt-field"><span>Poli / layanan</span><div>${esc(isi(d.poli_name) || isi(d.source_hub) || '-')}</div></div>
+              <div class="col-6 col-md-3 dt-field"><span>Jenis resep</span><div>${esc(isi(d.tipe_obat) || '-')}</div></div>
+              <div class="col-6 col-md-3 dt-field"><span>Kunjungan</span><div class="small">${esc(d.visit_ID || '-')}</div></div>
+              ${String(d.tipe_obat || '').toLowerCase() === 'racikan' ? `<div class="col-12 dt-field"><span>Racikan</span><div>${esc(isi(d.rck_jumlah))} ${esc(isi(d.rck_satuan))} · Signa ${esc(isi(d.rck_signa) || '-')}</div></div>` : ''}
+              ${isi(d.catatan_permintaan) ? `<div class="col-12 dt-field"><span>Catatan dokter</span><div class="fw-normal">${esc(d.catatan_permintaan)}</div></div>` : ''}
+            </div>
+            <div class="fw-semibold mb-2">Isi resep</div>
+            <div class="table-responsive">
+              <table class="table table-sm align-middle mb-0">
+                <thead class="table-light"><tr><th>Obat</th><th class="text-end">Jumlah</th><th>Signa</th><th>Catatan</th></tr></thead>
+                <tbody>${obat || '<tr><td colspan="4" class="text-center text-muted">Tidak ada obat</td></tr>'}</tbody>
+              </table>
+            </div>
+            ${d.id_patient ? `<div class="text-end mt-3"><a href="module/admin/patient_details?pt=${d.id_patient}" class="btn btn-sm btn-light"><i class="fas fa-history me-1"></i>Riwayat pasien</a></div>` : ''}`);
+        }).catch(() => $('#modalDetailBody').html('<div class="alert alert-danger mb-0">Gagal memuat detail resep.</div>'));
+      });
 
-              <!-- DAFTAR LENGKAP OBAT DALAM RESEP -->
-              <div class="border rounded p-3">
-                <h6 class="fw-bold mb-2 d-flex align-items-center gap-1">
-                  <iconify-icon icon="solar:folder-medicine-bold" class="text-primary fs-5"></iconify-icon>
-                  Seluruh Obat dalam Kunjungan / Resep Ini
-                </h6>
-                ${otherMedsHtml}
-              </div>
-            `;
-
-            $('#modalUsageContent').html(html);
-          },
-          error: function() {
-            $('#modalUsageContent').html(`
-              <div class="alert alert-danger mb-0">
-                <i class="ti ti-alert-triangle me-1"></i>Gagal memuat detail resep dari server.
-              </div>
-            `);
-          }
+      // ---------- mulai ----------
+      setPeriode('bulan');
+      muatObat().then(() => {
+        tampilObat();
+        muatRekap().then(() => {
+          if (idObat) pilihObat(idObat, true);
         });
       });
-
-    });
+    })();
   </script>
 </body>
 

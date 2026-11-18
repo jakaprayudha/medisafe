@@ -65,6 +65,34 @@ function createData($id_customer)
       'pharmcy_jenis_drugs'
    ];
 
+   $_POST = array_map(fn($v) => is_string($v) ? trim($v) : $v, $_POST);
+   if (($_POST['pharmacy_name_generic'] ?? '') === '') {
+      echo json_encode(['status' => 'error', 'message' => 'Nama generik wajib diisi']);
+      exit;
+   }
+   if (($_POST['pharmacy_category'] ?? '') === '') {
+      echo json_encode(['status' => 'error', 'message' => 'Kategori wajib dipilih']);
+      exit;
+   }
+   // obat dengan nama generik & dagang yang sama sudah ada di daftar faskes
+   $dup = $koneksi->prepare("SELECT p.id_pharmacy FROM ms_pharmacy p
+      LEFT JOIN ms_pharmacy_parrent log ON log.parent_id = p.id_pharmacy AND log.id_customer_real = ?
+      WHERE LOWER(TRIM(p.pharmacy_name_generic)) = LOWER(?) AND LOWER(TRIM(IFNULL(p.pharmacy_name_trade, ''))) = LOWER(?)
+        AND (p.id_customer = ? OR (p.id_customer = 0 AND log.id IS NULL))
+        AND (log.status_log IS NULL OR log.status_log != 'DELETE')
+      LIMIT 1");
+   $gen = $_POST['pharmacy_name_generic'];
+   $trade = $_POST['pharmacy_name_trade'] ?? '';
+   $idcInt = (int) $id_customer;
+   $dup->bind_param('issi', $idcInt, $gen, $trade, $idcInt);
+   $dup->execute();
+   $sudahAda = $dup->get_result()->fetch_assoc();
+   $dup->close();
+   if ($sudahAda) {
+      echo json_encode(['status' => 'error', 'message' => "Obat \"$gen\" dengan nama dagang tersebut sudah ada di daftar."]);
+      exit;
+   }
+
    if (!empty($_POST['pharmacy_code'])) {
       $pharmacy_number = $_POST['pharmacy_code'];
    } else {
@@ -92,9 +120,10 @@ function createData($id_customer)
    $stmt->bind_param($types, ...$values);
 
    if ($stmt->execute()) {
-      echo json_encode(['status' => 'success']);
+      echo json_encode(['status' => 'success', 'message' => 'Obat berhasil ditambahkan.']);
    } else {
-      echo json_encode(['status' => 'error', 'message' => $stmt->error]);
+      error_log('[pharmacyController] ' . $stmt->error);
+      echo json_encode(['status' => 'error', 'message' => 'Gagal menyimpan obat.']);
    }
 
    $stmt->close();
@@ -124,7 +153,12 @@ function getData($id_customer)
 {
    global $koneksi;
 
-   $stmt = $koneksi->prepare("SELECT p.*
+   // hanya kolom yang dipakai daftar (tanpa kolom teks besar)
+   $stmt = $koneksi->prepare("SELECT p.id_pharmacy, p.pharmacy_number, p.pharmacy_code, p.kfa_code,
+         p.pharmacy_name_generic, p.pharmacy_name_trade, p.pharmacy_category, p.pharmacy_sub_category,
+         p.pharmcy_golongan, p.pharmcy_jenis_drugs, p.pharmacy_bentuk_sediaan, p.pharmacy_unit,
+         p.pharmacy_status, p.id_customer,
+         IF(p.id_customer = 0, 'global', 'faskes') AS sumber
       FROM ms_pharmacy p
 
       LEFT JOIN ms_pharmacy_parrent log 
@@ -356,7 +390,7 @@ function deleteData($id_customer)
    $cek->close();
 
    if (!$exist) {
-      $user = $_SESSION['fullname'];
+      $user = (string) ($_SESSION['fullname'] ?? ($_SESSION['username'] ?? ''));
       $stmt = $koneksi->prepare("
          INSERT INTO ms_pharmacy_parrent 
          (id_customer_real, parent_id, status_log, user)
@@ -364,14 +398,15 @@ function deleteData($id_customer)
       ");
       $stmt->bind_param("iis", $id_customer, $id, $user);
    } else {
-      echo json_encode(['status' => 'success']);
+      echo json_encode(['status' => 'success', 'message' => 'Obat sudah dihapus dari daftar.']);
       return;
    }
 
    if ($stmt->execute()) {
-      echo json_encode(['status' => 'success']);
+      echo json_encode(['status' => 'success', 'message' => 'Obat dihapus dari daftar faskes.']);
    } else {
-      echo json_encode(['status' => 'error', 'message' => $stmt->error]);
+      error_log('[pharmacyController] ' . $stmt->error);
+      echo json_encode(['status' => 'error', 'message' => 'Gagal menghapus obat.']);
    }
 
    $stmt->close();
