@@ -188,6 +188,7 @@ function createData($id_customer)
 
       // ================== COMMIT ==================
       $koneksi->commit();
+      unset($_SESSION['pasien_total']);
 
       echo json_encode([
          'status' => 'success',
@@ -207,81 +208,158 @@ function createData($id_customer)
 }
 
 // ================= READ =================
+// Server-side DataTables (module/admin/patient = module/admisi/registrasi-new).
+// Parameter: draw, start, length, q (cari), filter (bpjs|umum|wajah|tanpa_wajah), sort (baru|lama|nama|rm)
+// ?stats=1 -> ringkasan jumlah pasien faskes.
 function getData($id_customer)
 {
    global $koneksi;
+   mysqli_report(MYSQLI_REPORT_OFF);
+   $idc = (int) $id_customer;
 
-   // SERVER-SIDE DATATABLE PARAMETERS
-   $draw = isset($_GET['draw']) ? intval($_GET['draw']) : 1;
-   $start = isset($_GET['start']) ? intval($_GET['start']) : 0;
-   $length = isset($_GET['length']) ? intval($_GET['length']) : 10;
-   $searchValue = isset($_GET['search']['value']) ? $_GET['search']['value'] : '';
+   $ambil = function (string $sql, string $types, array $params) use ($koneksi): array {
+      $stmt = $koneksi->prepare($sql);
+      if (!$stmt) {
+         error_log('[patientContrroller] ' . $koneksi->error);
+         http_response_code(500);
+         echo json_encode(['status' => 'error', 'message' => 'Gagal mengambil data pasien.']);
+         exit;
+      }
+      $stmt->bind_param($types, ...$params);
+      $stmt->execute();
+      $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+      $stmt->close();
+      return $rows;
+   };
 
-   // ORDERING
-   $orderColumn = 0;
-   $orderDir = 'ASC';
-
-   if (isset($_GET['order'][0]['column'])) {
-      $orderColumn = intval($_GET['order'][0]['column']);
-      $orderDir = strtoupper($_GET['order'][0]['dir']) === 'DESC' ? 'DESC' : 'ASC';
+   if (isset($_GET['stats'])) {
+      $r = $ambil(
+         "SELECT COUNT(*) total,
+                 SUM(patient_bpjs IS NOT NULL AND patient_bpjs <> '') bpjs,
+                 SUM(face_image IS NOT NULL AND face_image <> '') wajah,
+                 SUM(idsh IS NOT NULL AND idsh <> '') ihs,
+                 SUM(patient_nik IS NOT NULL AND patient_nik <> '') nik
+          FROM ms_patient WHERE id_customer = ?",
+         'i',
+         [$idc]
+      )[0];
+      $_SESSION['pasien_total'] = ['idc' => $idc, 'n' => (int) $r['total'], 't' => time()];
+      echo json_encode(['status' => 'success', 'data' => array_map('intval', $r)]);
+      return;
    }
 
-   // MAP COLUMN INDEX TO FIELD NAME
-   $columns = ['nomor_rm', 'patient_name', 'patient_datebirth', 'patient_gender', 'patient_religion', 'patient_phone', 'face_image', 'face_image'];
-   $orderByField = isset($columns[$orderColumn]) ? $columns[$orderColumn] : 'patient_name';
+   $draw = (int) ($_GET['draw'] ?? 1);
+   $start = max(0, (int) ($_GET['start'] ?? 0));
+   $length = (int) ($_GET['length'] ?? 10);
+   $length = $length < 1 ? 10 : min($length, 100);
 
-   // BUILD WHERE CLAUSE
-   $whereClause = "id_customer=?";
-   $bindType = "i";
-   $bindParams = [$id_customer];
+   // ---------- filter ----------
+   $where = ['id_customer = ?'];
+   $types = 'i';
+   $params = [$idc];
 
-   if (!empty($searchValue)) {
-      $searchValue = "%{$searchValue}%";
-      $whereClause .= " AND (patient_nik LIKE ? OR patient_name LIKE ? OR patient_bpjs LIKE ?)";
-      $bindType .= "sss";
-      $bindParams[] = $searchValue;
-      $bindParams[] = $searchValue;
-      $bindParams[] = $searchValue;
+   switch ($_GET['filter'] ?? '') {
+      case 'bpjs':
+         $where[] = "patient_bpjs IS NOT NULL AND patient_bpjs <> ''";
+         break;
+      case 'umum':
+         $where[] = "(patient_bpjs IS NULL OR patient_bpjs = '')";
+         break;
+      case 'wajah':
+         $where[] = "face_image IS NOT NULL AND face_image <> ''";
+         break;
+      case 'tanpa_wajah':
+         $where[] = "(face_image IS NULL OR face_image = '')";
+         break;
    }
 
-   // GET TOTAL RECORDS (all records for this customer)
-   $totalStmt = $koneksi->prepare(
-      "SELECT COUNT(*) as total FROM ms_patient WHERE id_customer=?"
+   // ---------- pencarian ----------
+   $q = trim((string) ($_GET['q'] ?? ($_GET['search']['value'] ?? '')));
+   $q = mb_substr(preg_replace('/\s+/', ' ', $q), 0, 60);
+   if ($q !== '') {
+      $esc = fn($v) => addcslashes($v, '%_\\');
+      $digit = preg_replace('/[\s.\-]/', '', $q);
+      if ($digit !== '' && ctype_digit($digit)) {
+         // angka: NIK / BPJS dari depan, RM & HP mengandung
+         $where[] = '(patient_nik LIKE ? OR patient_bpjs LIKE ? OR nomor_rm LIKE ? OR patient_phone LIKE ?)';
+         $types .= 'ssss';
+         array_push($params, $esc($digit) . '%', $esc($digit) . '%', '%' . $esc($q) . '%', '%' . $esc($digit) . '%');
+      } else {
+         // teks: setiap kata harus ada di nama (atau cocok dengan No. RM)
+         $kata = [];
+         foreach (explode(' ', $q) as $w) {
+            $kata[] = 'patient_name LIKE ?';
+            $types .= 's';
+            $params[] = '%' . $esc($w) . '%';
+         }
+         $where[] = '((' . implode(' AND ', $kata) . ') OR nomor_rm LIKE ?)';
+         $types .= 's';
+         $params[] = '%' . $esc($q) . '%';
+      }
+   }
+   $whereSql = implode(' AND ', $where);
+   $adaFilter = count($where) > 1;
+
+   // ---------- urutan (whitelist) ----------
+   $urut = [
+      'baru' => 'id_patient DESC',
+      'lama' => 'id_patient ASC',
+      'nama' => 'patient_name ASC, id_patient DESC',
+      'rm' => 'nomor_rm ASC, id_patient DESC',
+   ];
+   $sort = $urut[$_GET['sort'] ?? 'baru'] ?? $urut['baru'];
+
+   // ---------- hitung ----------
+   // total pasien faskes di-cache 60 detik di sesi (dibuang saat tambah/hapus pasien)
+   $cache = $_SESSION['pasien_total'] ?? null;
+   if (is_array($cache) && $cache['idc'] === $idc && $cache['t'] > time() - 60) {
+      $recordsTotal = $cache['n'];
+   } else {
+      $recordsTotal = (int) $ambil("SELECT COUNT(*) n FROM ms_patient WHERE id_customer = ?", 'i', [$idc])[0]['n'];
+      $_SESSION['pasien_total'] = ['idc' => $idc, 'n' => $recordsTotal, 't' => time()];
+   }
+   $recordsFiltered = $adaFilter
+      ? (int) $ambil("SELECT COUNT(*) n FROM ms_patient WHERE $whereSql", $types, $params)[0]['n']
+      : $recordsTotal;
+
+   // ---------- data (deferred join: urut & potong di id saja, baru ambil kolom) ----------
+   $sortP = preg_replace('/\b(id_patient|patient_name|nomor_rm)\b/', 'p.$1', $sort);
+   $data = $recordsFiltered === 0 ? [] : $ambil(
+      "SELECT p.id_patient, p.nomor_rm, p.patient_name, p.patient_nik, p.patient_bpjs, p.patient_gender,
+              p.patient_datebirth, p.patient_phone, p.face_image, p.idsh, p.patient_address, p.patient_kabupaten
+       FROM (SELECT id_patient FROM ms_patient WHERE $whereSql ORDER BY $sort LIMIT ?, ?) x
+       JOIN ms_patient p ON p.id_patient = x.id_patient
+       ORDER BY $sortP",
+      $types . 'ii',
+      array_merge($params, [$start, $length])
    );
-   $totalStmt->bind_param("i", $id_customer);
-   $totalStmt->execute();
-   $totalResult = $totalStmt->get_result()->fetch_assoc();
-   $recordsTotal = $totalResult['total'];
-   $totalStmt->close();
 
-   // GET FILTERED RECORDS COUNT
-   $filteredStmt = $koneksi->prepare(
-      "SELECT COUNT(*) as total FROM ms_patient WHERE {$whereClause}"
-   );
-   $filteredStmt->bind_param($bindType, ...$bindParams);
-   $filteredStmt->execute();
-   $filteredResult = $filteredStmt->get_result()->fetch_assoc();
-   $recordsFiltered = $filteredResult['total'];
-   $filteredStmt->close();
+   // ---------- kunjungan per pasien di halaman ini ----------
+   if ($data) {
+      $ids = array_map(fn($r) => (string) $r['id_patient'], $data);
+      $ph = implode(',', array_fill(0, count($ids), '?'));
+      $kunj = [];
+      foreach ($ambil(
+         "SELECT id_patient, COUNT(*) n, MAX(visit_date) terakhir FROM pasien_visit
+          WHERE id_customer = ? AND id_patient IN ($ph) GROUP BY id_patient",
+         'i' . str_repeat('s', count($ids)),
+         array_merge([$idc], $ids)
+      ) as $k) {
+         $kunj[(string) $k['id_patient']] = $k;
+      }
+      foreach ($data as &$r) {
+         $k = $kunj[(string) $r['id_patient']] ?? null;
+         $r['jml_kunjungan'] = $k ? (int) $k['n'] : 0;
+         $r['kunjungan_terakhir'] = $k['terakhir'] ?? null;
+      }
+      unset($r);
+   }
 
-   // GET DATA WITH PAGINATION
-   $query = "SELECT * FROM ms_patient WHERE {$whereClause} ORDER BY {$orderByField} {$orderDir} LIMIT ?, ?";
-
-   $dataStmt = $koneksi->prepare($query);
-   $bindParams[] = $start;
-   $bindParams[] = $length;
-   $dataStmt->bind_param($bindType . "ii", ...$bindParams);
-   $dataStmt->execute();
-
-   $data = $dataStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-   $dataStmt->close();
-
-   // RETURN DATATABLE FORMAT
    echo json_encode([
       'draw' => $draw,
       'recordsTotal' => $recordsTotal,
       'recordsFiltered' => $recordsFiltered,
-      'data' => $data
+      'data' => $data,
    ]);
 }
 
@@ -377,109 +455,51 @@ function updateData($id_customer)
    $stmt->close();
 }
 // ================= DELETE =================
+// Pasien yang sudah punya kunjungan TIDAK boleh dihapus: kunjungan, resep, billing dan
+// rekam medis wajib tersimpan. (Sebelumnya ada mode force yang ikut menghapus semuanya.)
 function deleteData($id_customer)
 {
    global $koneksi;
 
-   $id = $_GET['id'] ?? '';
-   $force = $_GET['force'] ?? false;
-
-   if (!$id) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'ID kosong'
-      ]);
+   $id = (int) ($_GET['id'] ?? 0);
+   $idc = (int) $id_customer;
+   if ($id <= 0) {
+      echo json_encode(['status' => 'error', 'message' => 'ID kosong']);
       return;
    }
 
-   // 🔍 CEK & AMBIL SEMUA VISIT
-   $visits = [];
-   $getVisit = $koneksi->prepare(
-      "SELECT visit_ID FROM pasien_visit WHERE id_patient=? AND id_customer=?"
-   );
-
-   $getVisit->bind_param("ii", $id, $id_customer);
-   $getVisit->execute();
-   $result = $getVisit->get_result();
-
-   while ($row = $result->fetch_assoc()) {
-      $visits[] = $row['visit_ID'];
-   }
-
-   $getVisit->close();
-
-   // ❗ CEK RELASI
-   if (count($visits) > 0 && !$force) {
-      echo json_encode([
-         'status' => 'has_relation',
-         'message' => 'Ada data relasi'
-      ]);
-      return;
-   }
-
-   // 🚀 FORCE DELETE
-   if (count($visits) > 0 && $force) {
-
-      $koneksi->begin_transaction();
-
-      try {
-
-         // ubah array jadi string: 1,2,3
-         $visitList = "'" . implode("','", $visits) . "'";
-
-         // 🔥 hapus semua relasi berdasarkan visit
-         $koneksi->query("DELETE FROM permintaan_ranap WHERE visit_ID_inpatient IN ($visitList)");
-         $koneksi->query("DELETE FROM permintaan_pharmacy WHERE id_visit IN ($visitList)");
-         $koneksi->query("DELETE FROM pasien_billing WHERE id_visit IN ($visitList)");
-
-         // 🔥 hapus pasien_visit
-         $koneksi->query("DELETE FROM pasien_visit WHERE id_patient='$id' AND id_customer='$id_customer'");
-
-         // 🔥 hapus patient
-         $stmt = $koneksi->prepare(
-            "DELETE FROM ms_patient WHERE id_patient=? AND id_customer=?"
-         );
-         $stmt->bind_param("ii", $id, $id_customer);
-         $stmt->execute();
-         $stmt->close();
-
-         $koneksi->commit();
-
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Semua data berhasil dihapus'
-         ]);
-      } catch (Exception $e) {
-
-         $koneksi->rollback();
-
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Rollback: ' . $e->getMessage()
-         ]);
-      }
-
-      return;
-   }
-
-   // 🧹 kalau tidak ada relasi → langsung hapus
-   $stmt = $koneksi->prepare(
-      "DELETE FROM ms_patient WHERE id_patient=? AND id_customer=?"
-   );
-
-   $stmt->bind_param("ii", $id, $id_customer);
-
-   if ($stmt->execute()) {
-      echo json_encode([
-         'status' => 'success',
-         'message' => 'Data berhasil dihapus'
-      ]);
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menghapus data'
-      ]);
-   }
-
+   $stmt = $koneksi->prepare("SELECT patient_name FROM ms_patient WHERE id_patient = ? AND id_customer = ?");
+   $stmt->bind_param('ii', $id, $idc);
+   $stmt->execute();
+   $pasien = $stmt->get_result()->fetch_assoc();
    $stmt->close();
+   if (!$pasien) {
+      http_response_code(404);
+      echo json_encode(['status' => 'error', 'message' => 'Data pasien tidak ditemukan']);
+      return;
+   }
+
+   $idStr = (string) $id;
+   $stmt = $koneksi->prepare("SELECT COUNT(*) n FROM pasien_visit WHERE id_patient = ? AND id_customer = ?");
+   $stmt->bind_param('si', $idStr, $idc);
+   $stmt->execute();
+   $jml = (int) $stmt->get_result()->fetch_assoc()['n'];
+   $stmt->close();
+   if ($jml > 0) {
+      http_response_code(409);
+      echo json_encode([
+         'status' => 'error',
+         'message' => "Pasien {$pasien['patient_name']} sudah memiliki $jml kunjungan. Data rekam medis wajib disimpan sehingga pasien tidak dapat dihapus.",
+      ]);
+      return;
+   }
+
+   $stmt = $koneksi->prepare("DELETE FROM ms_patient WHERE id_patient = ? AND id_customer = ?");
+   $stmt->bind_param('ii', $id, $idc);
+   $ok = $stmt->execute();
+   $stmt->close();
+   if ($ok) unset($_SESSION['pasien_total']);
+   echo json_encode($ok
+      ? ['status' => 'success', 'message' => 'Data pasien berhasil dihapus']
+      : ['status' => 'error', 'message' => 'Gagal menghapus data']);
 }

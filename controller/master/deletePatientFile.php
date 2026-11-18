@@ -32,15 +32,14 @@ if (!isset($dbMap[$field])) {
 
 $dbField = $dbMap[$field];
 
-$q = mysqli_query(
-   $koneksi,
-   "SELECT $dbField AS filename
-     FROM ms_patient
-     WHERE id_patient='$id_patient'
-     LIMIT 1"
-);
-
-$data = mysqli_fetch_assoc($q);
+// 🔐 prepared + hanya pasien milik faskes sesi
+$id_customer = (int) ($_SESSION['id_customer'] ?? 0);
+$id_patient = (string) (int) $id_patient;
+$q = $koneksi->prepare("SELECT $dbField AS filename FROM ms_patient WHERE id_patient = ? AND id_customer = ? LIMIT 1");
+$q->bind_param("si", $id_patient, $id_customer);
+$q->execute();
+$data = $q->get_result()->fetch_assoc();
+$q->close();
 
 if (!$data) {
    echo json_encode([
@@ -54,7 +53,7 @@ $filename = $data['filename'];
 
 if (!empty($filename)) {
 
-   $filepath = "../../uploads/patient/" . $filename;
+   $filepath = "../../uploads/patient/" . basename($filename);
 
    if (file_exists($filepath)) {
       unlink($filepath);
@@ -64,10 +63,10 @@ if (!empty($filename)) {
 $stmt = $koneksi->prepare(
    "UPDATE ms_patient
      SET $dbField=NULL
-     WHERE id_patient=?"
+     WHERE id_patient=? AND id_customer=?"
 );
 
-$stmt->bind_param("s", $id_patient);
+$stmt->bind_param("si", $id_patient, $id_customer);
 
 if ($stmt->execute()) {
 
