@@ -895,15 +895,17 @@ $data = mysqli_fetch_array($check);
 
                     <!-- TAMBAH ITEM -->
 
-                    <button
-                      type="button"
-                      class="btn btn-sm btn-primary btnTambah"
-                      data-id="${idPermintaanFarmasi}"
-                    >
-
-                      <i class="fas fa-plus"></i>
-
-                    </button>
+                    ${
+                      tiket.status_permintaan == 3
+                        ? `<button type="button" class="btn btn-sm btn-light text-muted" disabled
+                             title="Tiket sudah selesai, obat tidak dapat ditambah">
+                             <i class="fas fa-lock"></i>
+                           </button>`
+                        : `<button type="button" class="btn btn-sm btn-primary btnTambah"
+                             data-id="${idPermintaanFarmasi}" title="Tambah obat">
+                             <i class="fas fa-plus"></i>
+                           </button>`
+                    }
 
                   </div>
 
@@ -1089,6 +1091,7 @@ $data = mysqli_fetch_array($check);
 
                   <td class="col-1">
 
+                    ${t.status_permintaan == 3 ? `<span class="text-muted small text-nowrap" title="Tiket sudah selesai"><i class="fas fa-lock me-1"></i>Terkunci</span>` : `
                     <div class="btn-group btn-group-sm">
 
 
@@ -1118,7 +1121,7 @@ $data = mysqli_fetch_array($check);
                       </button>
 
 
-                    </div>
+                    </div>`}
 
                   </td>
 
@@ -1620,15 +1623,10 @@ $data = mysqli_fetch_array($check);
 
       .then(res => {
 
-        if (!res.ok) {
-
-          throw new Error(
-            `HTTP Error ${res.status}`
-          );
-
-        }
-
-        return res.json();
+        // pesan dari server (mis. 403 tiket selesai) tetap ditampilkan
+        return res.json().catch(() => {
+          throw new Error(`HTTP Error ${res.status}`);
+        });
 
       })
 
@@ -1986,15 +1984,10 @@ $data = mysqli_fetch_array($check);
 
         .then(res => {
 
-          if (!res.ok) {
-
-            throw new Error(
-              `HTTP Error ${res.status}`
-            );
-
-          }
-
-          return res.json();
+          // pesan dari server (mis. 403 tiket selesai) tetap ditampilkan
+          return res.json().catch(() => {
+            throw new Error(`HTTP Error ${res.status}`);
+          });
 
         })
 
