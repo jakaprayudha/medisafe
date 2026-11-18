@@ -1,79 +1,88 @@
 <?php
-error_reporting(0);
 session_start();
 require 'database/connect.php';
+require_once __DIR__ . '/../utility/security.php';
+
+const MSG_LOGIN_GAGAL = 'Username atau Password salah';
+
 if (isset($_POST['login'])) {
 
-   $username = $_POST['username'];
-   $password = md5($_POST['password']);
+   $username = trim($_POST['username'] ?? '');
+   $password = $_POST['password'] ?? '';
+   $_SESSION['redirectlogin'] = '';
 
-   $param = "SELECT * FROM ms_users WHERE username = '$username'";
-   $sql = mysqli_query($koneksi, $param);
-   $datauser = mysqli_fetch_array($sql);
-
-   // ❌ USER TIDAK ADA
-   if (!$datauser) {
-      $_SESSION["error"] = 'Username Tidak Ada';
-      $_SESSION['redirectlogin'] = '';
+   if (loginLockRemaining($koneksi, $username) > 0) {
+      // 🔒 Terkunci: ditolak walau password benar
+      $_SESSION["error"] = 'Akun terkunci sementara karena terlalu banyak percobaan gagal. Coba lagi dalam ' . LOGIN_LOCK_MINUTES . ' menit.';
       return;
    }
 
-   // ❌ USER NONAKTIF
+   $st = $koneksi->prepare("SELECT * FROM ms_users WHERE username = ?");
+   $st->bind_param('s', $username);
+   $st->execute();
+   $datauser = $st->get_result()->fetch_assoc();
+   $st->close();
+
+   // Pesan sama untuk username tidak ada / password salah (anti user enumeration)
+   if (!$datauser || !verifyPassword($password, (string) $datauser['password'])) {
+      loginRecordFailure($koneksi, $username);
+      $_SESSION["error"] = MSG_LOGIN_GAGAL;
+      return;
+   }
+
+   // Status akun hanya dibuka ke pemilik kredensial yang valid
    if ($datauser['status'] == '0') {
       $_SESSION["error"] = 'Akun anda dinonaktifkan, silakan hubungi admin.';
-      $_SESSION['redirectlogin'] = '';
       return;
    }
-   $iddokter = '';
-   if ($datauser['roles'] == 'dokter'){
+
+   loginClearFailures($koneksi, $username);
+
+   // Upgrade hash md5 lama ke bcrypt
+   if (passwordNeedsRehash((string) $datauser['password'])) {
+      $newHash = hashPassword($password);
+      $up = $koneksi->prepare("UPDATE ms_users SET password = ? WHERE uid_user = ?");
+      $up->bind_param('ss', $newHash, $datauser['uid_user']);
+      $up->execute();
+      $up->close();
+   }
+
+   session_regenerate_id(true);
+
+   if ($datauser['roles'] == 'dokter') {
       $fullname = $datauser['fullname'];
       $kdDokter = $datauser['kdDokter'];
-      $sql = mysqli_fetch_array(mysqli_query($koneksi, "SELECT doctor_code FROM ms_doctor WHERE doctor_name = '$fullname' || doctor_code = '$kdDokter'"));
-      $_SESSION['kode_dokter'] = $sql['doctor_code'];
+      $dq = $koneksi->prepare("SELECT doctor_code FROM ms_doctor WHERE doctor_name = ? OR doctor_code = ?");
+      $dq->bind_param('ss', $fullname, $kdDokter);
+      $dq->execute();
+      $dok = $dq->get_result()->fetch_assoc();
+      $dq->close();
+      $_SESSION['kode_dokter'] = $dok['doctor_code'] ?? null;
    }
 
-   // 🔐 CEK PASSWORD
-   if ($datauser['password'] == $password) {
-      $_SESSION['uid_user'] = $datauser['uid_user'];
-      $_SESSION['username'] = $datauser['username'];
-      $_SESSION['roles'] = $datauser['roles'];
-      $_SESSION['id_customer'] = $datauser['id_customer'];
-      $_SESSION['status'] = $datauser['status'];
-      $_SESSION['fullname'] = $datauser['fullname'];
+   $_SESSION['uid_user'] = $datauser['uid_user'];
+   $_SESSION['username'] = $datauser['username'];
+   $_SESSION['roles'] = $datauser['roles'];
+   $_SESSION['id_customer'] = $datauser['id_customer'];
+   $_SESSION['status'] = $datauser['status'];
+   $_SESSION['fullname'] = $datauser['fullname'];
 
-      $_SESSION["sukses"] = 'Selamat Anda Berhasil Login Sebagai ' . $datauser['roles'];
-      $_SESSION['redirectlogin'] = 'module/admin';
+   $_SESSION["sukses"] = 'Selamat Anda Berhasil Login Sebagai ' . $datauser['roles'];
+   $_SESSION['redirectlogin'] = 'module/admin';
 ?>
-      <script>
-         const configData = {
-            id_customer: "<?php echo $datauser['id_customer'] ?>",
-            id_user: "<?php echo $datauser['uid_user'] ?>"
-         };
-         localStorage.setItem("rs_config", JSON.stringify(configData));
-      </script>
+   <script>
+      const configData = {
+         id_customer: <?= json_encode($datauser['id_customer']) ?>,
+         id_user: <?= json_encode($datauser['uid_user']) ?>
+      };
+      localStorage.setItem("rs_config", JSON.stringify(configData));
+   </script>
 <?php
-   } else {
-      $_SESSION["error"] = 'Password Salah';
-      $_SESSION['redirectlogin'] = '';
-   }
 }
 
+// Reset password mandiri dinonaktifkan: tanpa verifikasi identitas = pengambilalihan akun.
+// Reset dilakukan admin lewat menu User (password wajib memenuhi policy).
 if (isset($_POST['reset'])) {
-   $username = $_POST['username'];
-   $param = "SELECT * FROM ms_users WHERE username = '$username'";
-   $sql = mysqli_query($koneksi, $param);
-   $datauser = mysqli_fetch_array($sql);
-   if ($datauser['username'] == $username) {
-      $passwordNew = rand(1111, 9999);
-      $password = md5($passwordNew);
-      $param = "UPDATE ms_users SET password = '$password' WHERE username = '$username'";
-      $sql = mysqli_query($koneksi, $param);
-      if ($sql) {
-         $_SESSION["sukses"] = 'Password Baru : ' . $passwordNew;
-         $_SESSION['redirectlogin'] = 'index';
-      }
-   } else {
-      $_SESSION["error"] = 'Username Tidak Ada';
-      $_SESSION['redirectlogin'] = 'reset';
-   }
+   $_SESSION["error"] = 'Reset password mandiri dinonaktifkan. Silakan hubungi admin klinik Anda.';
+   $_SESSION['redirectlogin'] = 'index';
 }
