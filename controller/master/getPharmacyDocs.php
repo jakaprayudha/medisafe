@@ -1,33 +1,17 @@
 <?php
+// Gambar & dokumen obat (module/admin/pharmacy_details).  GET ?id_pharmacy=ID
 include "../../database/connect.php";
+require_once __DIR__ . '/pharmacyAkses.php';
+header("Content-Type: application/json; charset=utf-8");
 
-$patient_number = $_GET['patient_number'] ?? null;
-
-if (!$patient_number) {
-   echo json_encode([
-      "status" => "error",
-      "message" => "Nomor pasien tidak ditemukan."
-   ]);
+$idc = (int) ($_SESSION['id_customer'] ?? 0);
+$row = $idc > 0 ? obatFaskes($koneksi, (int) ($_GET['id_pharmacy'] ?? ($_GET['pharmacy_number'] ?? 0)), $idc) : null;
+if (!$row) {
+   http_response_code(404);
+   echo json_encode(["status" => "error", "message" => "Obat tidak ditemukan."]);
    exit;
 }
-
-$stmt = $koneksi->prepare("SELECT patient_ktp, patient_kk, patient_bpjs, patient_foto 
-                           FROM ms_patient 
-                           WHERE patient_number=? LIMIT 1");
-$stmt->bind_param("s", $patient_number);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($row = $result->fetch_assoc()) {
-   echo json_encode([
-      "status" => "success",
-      "files" => $row
-   ]);
-} else {
-   echo json_encode([
-      "status" => "error",
-      "message" => "Data pasien tidak ditemukan."
-   ]);
-}
-
-$stmt->close();
+echo json_encode([
+   "status" => "success",
+   "files" => ["pharmacy_image" => $row['pharmacy_image'], "pharmacy_docs" => $row['pharmacy_docs']],
+]);
