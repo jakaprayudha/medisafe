@@ -177,7 +177,7 @@
   </div>
 
   <!-- ===== REALTIME DATE & TIME SCRIPT ===== -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha384-1H217gwSVyLSIfaLxHbE7dRb3v4mYCKbpQvzx0cegeju1MVsGrX5xXxAvs/HgeFs" crossorigin="anonymous"></script>
   <script src="../../controller/socket/socket.js"></script>
   <script>
     APP.window = APP.window || {};

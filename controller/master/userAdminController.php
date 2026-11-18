@@ -1,10 +1,12 @@
 <?php
 require '../../database/connect.php';
+require_once __DIR__ . '/../../utility/security.php';
 header('Content-Type: application/json');
+requireRole(['administrator', 'superadmin']);
 
 $input = $_POST;
 
-$id_customer = $input['id_customer'] ?? null;
+$id_customer = isset($input['id_customer']) ? (int) $input['id_customer'] : null;
 $nama = $input['nama'] ?? '';
 $username = $input['username'] ?? '';
 $password = $input['password'] ?? '';
@@ -48,7 +50,11 @@ if ($existing) {
 
    // kalau password diisi → update
    if (!empty($password)) {
-      $password_hash = md5($password);
+      if ($err = passwordPolicyError($password)) {
+         echo json_encode(['status' => 'error', 'message' => $err]);
+         exit;
+      }
+      $password_hash = hashPassword($password);
 
       $stmt = $koneksi->prepare("
          UPDATE ms_users 
@@ -92,7 +98,11 @@ if (empty($password)) {
    exit;
 }
 
-$password_hash = md5($password);
+if ($err = passwordPolicyError($password)) {
+   echo json_encode(['status' => 'error', 'message' => $err]);
+   exit;
+}
+$password_hash = hashPassword($password);
 $uid_user = generateUID($koneksi, $username);
 
 $stmt = $koneksi->prepare("

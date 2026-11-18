@@ -1,10 +1,14 @@
 <?php
 require '../../database/connect.php';
+require_once __DIR__ . '/../../utility/security.php';
 header("Content-Type: application/json");
+
+// Hanya boleh mengubah profil milik sendiri (anti IDOR)
+requireRole(array_filter([$_SESSION['roles'] ?? null]));
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-   $id = $_POST['id_user'] ?? null;
+   $id = $_SESSION['uid_user'];
    $fullname = $_POST['fullname'] ?? '';
    $username = $_POST['username'] ?? '';
    $password = $_POST['password'] ?? '';
@@ -27,7 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
    // 🔥 password optional
    if (!empty($password)) {
-      $hash = md5($password);
+      if ($err = passwordPolicyError($password)) {
+         echo json_encode(["success" => false, "message" => $err]);
+         exit;
+      }
+      $hash = hashPassword($password);
       $updates[] = "password='$hash'";
    }
 

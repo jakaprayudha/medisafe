@@ -1,8 +1,10 @@
 <?php
 
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/security.php';
 
 header('Content-Type: application/json; charset=utf-8');
+requireRole(['administrator', 'superadmin']);
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -292,7 +294,12 @@ function createData()
 
    $uid_user = generateUserUID($koneksi);
 
-   $password_md5 = md5($password);
+   if ($err = passwordPolicyError((string) $password)) {
+      echo json_encode(['status' => 'error', 'message' => $err]);
+      return;
+   }
+
+   $password_md5 = hashPassword($password);
 
 
    /*
@@ -904,7 +911,11 @@ function updateData()
    ) {
 
       $fields[] = "password = ?";
-      $values[] = md5(trim($_PUT['password']));
+      if ($err = passwordPolicyError(trim($_PUT['password']))) {
+         echo json_encode(['status' => 'error', 'message' => $err]);
+         return;
+      }
+      $values[] = hashPassword(trim($_PUT['password']));
       $types .= "s";
    }
 

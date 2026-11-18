@@ -377,7 +377,7 @@
       <marquee scrollamount="6">Silakan duduk di ruang tunggu. Harap bersabar menunggu panggilan dari dokter pada poliklinik tujuan Anda. Terima kasih.</marquee>
     </div>
   </div>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha384-1H217gwSVyLSIfaLxHbE7dRb3v4mYCKbpQvzx0cegeju1MVsGrX5xXxAvs/HgeFs" crossorigin="anonymous"></script>
   <script src="../../controller/socket/socket.js"></script>
   <script>
     APP.window = APP.window || {};
