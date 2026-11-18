@@ -613,6 +613,46 @@ $data = mysqli_fetch_array($check);
     return label.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
+  // status tiket per id (diisi saat render tiket) untuk menentukan perlu kirim ulang ke PCare
+  const tiketStatus = {};
+
+  // Kirim ulang terapi obat kunjungan ke PCare bila tiket sudah pernah dikirim (status >= 1)
+  function sinkronPcare(idTiket, pesanSimpan) {
+    if ((tiketStatus[idTiket] || 0) < 1) {
+      Swal.fire({ icon: 'success', title: 'Berhasil!', text: pesanSimpan, timer: 1500, showConfirmButton: false, timerProgressBar: true });
+      return Promise.resolve();
+    }
+    Swal.fire({
+      title: 'Mengirim ke PCare...',
+      html: `${pesanSimpan}<br><small class="text-muted">Memperbarui obat kunjungan di PCare BPJS</small>`,
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+    return fetch('controller/farmasi/sinkronObatPcare.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_permintaan_farmasi: idTiket })
+      })
+      .then(r => r.json().catch(() => ({ status: 'error', message: `Respon server tidak valid (HTTP ${r.status}).` })))
+      .then(r => {
+        if (r.status === 'success') {
+          Swal.fire({ icon: 'success', title: 'Berhasil!', html: `${pesanSimpan}<br><b>Obat di PCare sudah diperbarui.</b>`, timer: 2200, showConfirmButton: false, timerProgressBar: true });
+        } else if (r.status === 'skip') {
+          Swal.fire({ icon: 'success', title: 'Berhasil!', html: `${pesanSimpan}<br><small class="text-muted">${r.message}</small>`, timer: 2200, showConfirmButton: false, timerProgressBar: true });
+        } else {
+          Swal.fire({
+            icon: 'warning',
+            title: 'PCare belum diperbarui',
+            html: `${r.message || 'Gagal mengirim ke PCare.'}<br><small class="text-muted">Data obat sudah tersimpan. Coba lagi nanti atau kirim ulang dari Monitoring Antrean.</small>`,
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-redo"></i> Coba lagi',
+            cancelButtonText: 'Tutup'
+          }).then(x => x.isConfirmed && sinkronPcare(idTiket, 'Mengulang pengiriman obat.'));
+        }
+      })
+      .catch(() => Swal.fire('PCare belum diperbarui', 'Koneksi ke server gagal. Data obat sudah tersimpan.', 'warning'));
+  }
+
   const visit = "<?= $_GET['no'] ?>";
   const rm = "<?= $_GET['rm'] ?>";
 
@@ -714,6 +754,7 @@ $data = mysqli_fetch_array($check);
            */
 
           const idPermintaanFarmasi = tiket.id_permintaan_farmasi;
+          tiketStatus[idPermintaanFarmasi] = +tiket.status_permintaan;
 
           const collapseId =
             `collapse${idPermintaanFarmasi}`;
@@ -1107,6 +1148,7 @@ $data = mysqli_fetch_array($check);
                         type="button"
                         class="btn btn-danger delete-btn"
                         data-id="${row.id_pharmacy_details}"
+                        data-tiket="${idPermintaanFarmasi}"
                       >
 
                         <i class="fas fa-trash"></i>
@@ -1649,19 +1691,11 @@ $data = mysqli_fetch_array($check);
           // SWEET ALERT
           // ====================================================
 
-          Swal.fire({
-            icon: 'success',
-            title: 'Berhasil!',
-            text: res.message ||
-              (
-                isEdit ?
-                'Item farmasi berhasil diperbarui.' :
-                'Item farmasi berhasil ditambahkan.'
-              ),
-            timer: 1500,
-            showConfirmButton: false,
-            timerProgressBar: true
-          });
+          // tiket sudah terkirim -> obat di PCare ikut diperbarui
+          sinkronPcare(
+            String(res.id_permintaan_farmasi || idPermintaanFarmasi),
+            isEdit ? 'Item farmasi berhasil diperbarui.' : 'Item farmasi berhasil ditambahkan.'
+          );
 
           // ====================================================
           // RELOAD DETAIL TIKET
@@ -1669,7 +1703,8 @@ $data = mysqli_fetch_array($check);
 
           loadAllDetail([{
             id_permintaan_farmasi: res.id_permintaan_farmasi ||
-              idPermintaanFarmasi
+              idPermintaanFarmasi,
+            status_permintaan: tiketStatus[res.id_permintaan_farmasi || idPermintaanFarmasi]
           }]);
 
           // ====================================================
@@ -1903,6 +1938,7 @@ $data = mysqli_fetch_array($check);
 
   $(document).on('click', '.delete-btn', function() {
     const id = $(this).data('id');
+    const idTiket = String($(this).data('tiket') || '');
 
     if (!confirm('Yakin mau hapus data ini?')) return;
 
@@ -1912,8 +1948,11 @@ $data = mysqli_fetch_array($check);
       .then(res => res.json())
       .then(res => {
         if (res.status === 'success') {
-          alert('Data berhasil dihapus');
           loadTiket(); // reload
+          if (idTiket) sinkronPcare(idTiket, 'Data berhasil dihapus.');
+          else alert('Data berhasil dihapus');
+        } else {
+          Swal.fire('Gagal!', res.message || 'Gagal menghapus data.', 'error');
         }
       });
   });

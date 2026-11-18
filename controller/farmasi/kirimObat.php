@@ -3,6 +3,7 @@ require_once __DIR__ . '/../admisi/services/view.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../admisi/services/servicebpjs.php';
 require_once __DIR__ . '/../doctor/rmeCycleService.php';
+require_once __DIR__ . '/pcareTerapiService.php';
 
 header('Content-Type: application/json');
 
@@ -110,141 +111,25 @@ try {
       exit;
    }
 
-   // ================== GABUNGKAN TIKET & DETAIL OBAT ==================
-   // Ambil seluruh header tiket yang terlibat (tiket baru + tiket sudah terkirim)
-   // agar rmeCycleTherapy() memiliki referensi header yang lengkap.
-   $stmtTickets = $koneksi->prepare("
-      SELECT id_permintaan_farmasi, id_visit, status_permintaan, rck_signa
-      FROM permintaan_pharmacy
-      WHERE id_customer = ? AND id_visit = ?
-        AND (id_permintaan_farmasi IN ($placeholders) OR status_permintaan >= 1)
-      ORDER BY id_permintaan_farmasi ASC
-   ");
-   $valsTickets = array_merge([$id_customer, $nomor_visit], $ids);
-   $stmtTickets->bind_param(str_repeat('s', count($valsTickets)), ...$valsTickets);
-   $stmtTickets->execute();
-   $allTickets = $stmtTickets->get_result()->fetch_all(MYSQLI_ASSOC);
-   $stmtTickets->close();
+   // ================== KIRIM TERAPI KE PCARE ==================
+   // Gabungkan tiket baru + tiket yang sudah terkirim, lalu PUT /kunjungan/v1
+   // (lihat pcareTerapiService.php, juga dipakai sinkronObatPcare.php).
+   $kirim = pcareKirimTerapiVisit($koneksi, (string)$id_customer, (string)$nomor_visit, $ids);
 
-   $stmt2 = $koneksi->prepare("
-      SELECT pd.*, p.pharmacy_category, p.pharmacy_name_generic, pp.rck_signa 
-      FROM permintaan_pharmacy_details AS pd 
-      INNER JOIN permintaan_pharmacy AS pp ON pp.id_permintaan_farmasi = pd.id_permintaan_farmasi 
-      LEFT JOIN ms_pharmacy AS p ON p.id_pharmacy = pd.id_pharmacy 
-      WHERE pp.id_customer = ? AND pp.id_visit = ? 
-        AND (pp.id_permintaan_farmasi IN ($placeholders) OR pp.status_permintaan >= 1) 
-      ORDER BY pp.id_permintaan_farmasi ASC, pd.id_pharmacy_details ASC
-   ");
-   $stmt2->bind_param(str_repeat('s', count($valsTickets)), ...$valsTickets);
-   $stmt2->execute();
-   $data_detailobat = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
-   $stmt2->close();
-
-   $hasilTerapi = rmeCycleTherapy($allTickets, $data_detailobat);
-   $terapiObat = $hasilTerapi['terapiObat'];
-   $bmhp       = $hasilTerapi['bmhp'];
-
-   if ($terapiObat === '' && $bmhp === '') {
-      throw new RuntimeException('Data terapi obat dan BMHP kosong setelah diproses. Periksa kelengkapan item.');
-   }
-
-   // Gunakan INNER JOIN id_patient agar tidak gagal jika format noKartu berbeda
-   $stmt1 = $koneksi->prepare("
-      SELECT pv.visit_ID, pv.id_patient, pk.* 
-      FROM pasien_visit AS pv 
-      INNER JOIN pcare_kunjungan AS pk ON pv.noKunjung = pk.noKunjungan 
-      INNER JOIN ms_patient AS p ON p.id_patient = pv.id_patient 
-      WHERE pv.visit_ID = ? AND pv.id_customer = ?
-   ");
-   $stmt1->bind_param('ss', $nomor_visit, $id_customer);
-   $stmt1->execute();
-   $data = $stmt1->get_result()->fetch_assoc();
-   $stmt1->close();
-
-   $noKunjungan = $data['noKunjungan'] ?? null;
-   if (!$noKunjungan) {
-      throw new RuntimeException('Kunjungan BPJS (PCare) belum tersedia untuk pasien ini. Simpan pemeriksaan terlebih dahulu.');
-   }
-
-   $rujukLanjut = null;
-   if (!empty($data['rujukLanjut'])) {
-      $decodedRujuk = is_string($data['rujukLanjut']) ? json_decode($data['rujukLanjut'], true) : $data['rujukLanjut'];
-      $rujukLanjut = is_array($decodedRujuk) ? $decodedRujuk : null;
-   }
-   
-   $payload = [
-      "noKunjungan" => $noKunjungan,
-      "noKartu" => $data['noKartu'] ?? null,
-      "tglDaftar" => !empty($data['tglDaftar']) ? date("d-m-Y", strtotime($data['tglDaftar'])) : null,
-      "kdPoli" => $data['kdPoli'] ?? null,
-      "keluhan" => $data['keluhan'] ?? null,
-      "kdSadar" => $data['kdSadar'] ?? null,
-      "sistole" => $data['sistole'] ?? null,
-      "diastole" => $data['diastole'] ?? null,
-      "beratBadan" => isset($data['beratBadan']) ? (float)$data['beratBadan'] : 0,
-      "tinggiBadan" => isset($data['tinggiBadan']) ? (float)$data['tinggiBadan'] : 0,
-      "respRate" => $data['respRate'] ?? null,
-      "heartRate" => $data['heartRate'] ?? null,
-      "lingkarPerut" => $data['lingkarPerut'] ?? null,
-      "kdStatusPulang" => $data['kdStatusPulang'] ?? null,
-      "tglPulang" => !empty($data['tglPulang']) ? date("d-m-Y", strtotime($data['tglPulang'])) : null,
-      "kdDokter" => $data['kdDokter'] ?? null,
-      "kdDiag1" => $data['kdDiag1'] ?? null,
-      "kdDiag2" => $data['kdDiag2'] ?? null,
-      "kdDiag3" => $data['kdDiag3'] ?? null,
-      "kdPoliRujukInternal" => $data['kdPoliRujukInternal'] ?? null,
-      "rujukLanjut" => $rujukLanjut,
-      "kdTacc" => (string)($data['kdTacc'] ?? ''),
-      "alasanTacc" => $data['alasanTacc'] ?? null,
-      "anamnesa" => $data['anamnesa'] ?? null,
-      "alergiMakan" => $data['alergiMakan'] ?? null,
-      "alergiUdara" => $data['alergiUdara'] ?? null,
-      "alergiObat" => $data['alergiObat'] ?? null,
-      "kdPrognosa" => $data['kdPrognosa'] ?? null,
-      "terapiObat" => $terapiObat !== '' ? $terapiObat : "Tidak Ada Obat",
-      "terapiNonObat" => $data['terapiNonObat'] ?? null,
-      "bmhp" => $bmhp !== '' ? $bmhp : "Tidak Ada Bmhp",
-      "suhu" => $data['suhu'] ?? null
-   ];
-
-   $resultBpjs = bpjsPost("/kunjungan/v1", $payload, 'PUT');
-
-   // ================== VALIDASI KETAT RESPONSE BPJS ==================
-   $bpjsCode = null;
-   $bpjsMsg = null;
-   if (is_array($resultBpjs)) {
-      $bpjsCode = $resultBpjs['code'] ?? ($resultBpjs['metaData']['code'] ?? null);
-      $bpjsMsg = $resultBpjs['message'] ?? ($resultBpjs['metaData']['message'] ?? null);
-   }
-
-   $isSuccessBpjs = is_scalar($bpjsCode) && in_array((string)$bpjsCode, ['200', '201'], true);
-
-   if (!$isSuccessBpjs) {
+   if (!$kirim['ok']) {
       $koneksi->rollback();
       echo json_encode([
          'status' => 'error',
-         'message' => $bpjsMsg ?: 'Layanan BPJS sedang tidak dapat diakses atau menolak data. Status farmasi tidak diubah.',
-         'result' => $resultBpjs
+         'message' => $kirim['message'] . ' Status farmasi tidak diubah.',
+         'result' => $kirim['result']
       ]);
       exit;
    }
 
-   // Update status tiket & pcare_kunjungan dalam 1 transaksi atomik
+   // Update status tiket (pcare_kunjungan sudah diperbarui oleh service) dalam 1 transaksi
    [$okUpdate, $errUpdate] = updateStatusTiket($koneksi, $ids, $id_customer);
    if (!$okUpdate) {
       throw new RuntimeException($errUpdate ?: 'Gagal update status permintaan farmasi');
-   }
-
-   $terapiObatDb = $terapiObat !== '' ? $terapiObat : 'Tidak Ada';
-   $bmhpDb       = $bmhp !== '' ? $bmhp : null;
-   $stmt4 = $koneksi->prepare("UPDATE pcare_kunjungan SET terapiObat = ?, bmhp = ? WHERE noKunjungan = ?");
-   $stmt4->bind_param('sss', $terapiObatDb, $bmhpDb, $noKunjungan);
-   $okKunjungan = $stmt4->execute();
-   $errKunjungan = $stmt4->error;
-   $stmt4->close();
-
-   if (!$okKunjungan) {
-      throw new RuntimeException($errKunjungan ?: 'Gagal memperbarui data kunjungan lokal');
    }
 
    $koneksi->commit();
