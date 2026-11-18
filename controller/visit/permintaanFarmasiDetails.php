@@ -35,9 +35,10 @@ switch ($method) {
       break;
 }
 
-// 🔒 Tiket yang sudah Selesai (approved) tidak boleh diubah/dihapus itemnya.
+// 🔒 Item pada tiket yang sudah Selesai (approved) tidak boleh diubah/dihapus.
+// Menambah obat ke tiket Selesai tetap diizinkan ($bolehSelesai = true).
 // Kembalikan pesan error, atau null kalau boleh diubah.
-function cekTiketTerkunci($idPermintaan = null, $idDetail = null)
+function cekTiketTerkunci($idPermintaan = null, $idDetail = null, $bolehSelesai = false)
 {
    global $koneksi;
 
@@ -64,15 +65,15 @@ function cekTiketTerkunci($idPermintaan = null, $idDetail = null)
    if (!$tiket) {
       return 'Data permintaan tidak ditemukan.';
    }
-   if ((int)$tiket['status_permintaan'] === 3) {
-      return 'Tiket sudah selesai (approved), obat tidak dapat ditambah, diubah, atau dihapus.';
+   if ((int)$tiket['status_permintaan'] === 3 && !$bolehSelesai) {
+      return 'Tiket sudah selesai (approved), obat yang sudah ada tidak dapat diubah atau dihapus.';
    }
    return null;
 }
 
-function tolakJikaTerkunci($idPermintaan = null, $idDetail = null)
+function tolakJikaTerkunci($idPermintaan = null, $idDetail = null, $bolehSelesai = false)
 {
-   $error = cekTiketTerkunci($idPermintaan, $idDetail);
+   $error = cekTiketTerkunci($idPermintaan, $idDetail, $bolehSelesai);
    if ($error !== null) {
       http_response_code(403);
       header('Content-Type: application/json');
@@ -104,7 +105,8 @@ function createData()
       exit;
    }
 
-   tolakJikaTerkunci((string)($_POST['id_permintaan_farmasi'] ?? ''));
+   // tiket Selesai tetap boleh ditambah obat (cek tiket ada & milik faskes tetap jalan)
+   tolakJikaTerkunci((string)($_POST['id_permintaan_farmasi'] ?? ''), null, true);
 
    // ================== AMBIL HARGA DARI DB ==================
    $id_pharmacy = $_POST['id_pharmacy'] ?? null;
