@@ -2,6 +2,7 @@
 // Penelusuran pemakaian obat pasien (module/admin/pharmacy_usage, module/pharmacy/pemakaian-obat).
 //   GET action=get_medicines                         -> master obat faskes (untuk pilihan obat)
 //   GET action=ranking&from=&to=                     -> rekap pemakaian per obat + dashboard (tren, dokter, poli, layanan, golongan)
+//   GET action=kelompok&from=&to=                    -> pemakaian per dokter, poli, layanan
 //   GET action=excel&from=&to=                       -> XLSX (Ringkasan, Rekap per Obat, Per Dokter, Per Poli)
 //   GET action=list&from=&to=&id_pharmacy=&status=&layanan=&q=&start=&length=&draw=[&summary=1]
 //                                                    -> daftar pemakaian (server-side, per halaman)
@@ -110,7 +111,7 @@ function hitungRekap(mysqli $koneksi, string $idc, string $dari, string $sampai,
    $resepVisit = [];   // id resep -> id kunjungan
    $resepWaktu = [];   // id resep -> kunci tren
    $tren = [];         // kunci -> [qty, nilai]
-   $perVisit = [];     // id kunjungan -> [qty, nilai]
+   $perVisit = [];     // set id kunjungan
    $totalQty = 0;
    $baris = 0;
    while ($r = $hasil->fetch_row()) {
@@ -127,54 +128,23 @@ function hitungRekap(mysqli $koneksi, string $idc, string $dari, string $sampai,
       $p['nominal'] += $nilai;
       unset($p);
       $kunci = $perHari ? substr($waktu, 0, 10) : substr($waktu, 0, 7);
-      $resepVisit[$idResep] = (string) $idVisit;
+      $resepVisit[$idResep] = true;
       $resepWaktu[$idResep] ??= $kunci;
       $t = &$tren[$kunci];
       $t ??= [0, 0];
       $t[0] += $qty;
       $t[1] += $nilai;
       unset($t);
-      $v = &$perVisit[$idVisit];
-      $v ??= [0, 0];
-      $v[0] += $qty;
-      $v[1] += $nilai;
-      unset($v);
+      $perVisit[$idVisit] = true;
       $totalQty += $qty;
       $baris++;
    }
    $stmt->close();
 
-   // info kunjungan (dokter, poli, rawat inap) hanya untuk ID yang muncul — index visit_ID, per 1000
-   $visit = [];
-   foreach (array_chunk(array_map('strval', array_keys($perVisit)), 1000) as $blok) {
-      $ph = implode(',', array_fill(0, count($blok), '?'));
-      $st = $koneksi->prepare("SELECT visit_ID, id_doctor, id_poli, status_rawatinap FROM pasien_visit WHERE visit_ID IN ($ph)");
-      $st->bind_param(str_repeat('s', count($blok)), ...$blok);
-      $st->execute();
-      $res = $st->get_result();
-      while ($v = $res->fetch_row()) {
-         $visit[$v[0]] = [trim((string) $v[1]) ?: '-', trim((string) $v[2]) ?: '-', (int) $v[3] === 1 ? 'Rawat inap' : 'Rawat jalan'];
-      }
-      $st->close();
-   }
-   $resepPerVisit = array_count_values($resepVisit);
-   $ember = ['dokter' => [], 'poli' => [], 'layanan' => []];
-   foreach ($perVisit as $idVisit => [$q, $n]) {
-      $v = $visit[$idVisit] ?? ['-', '-', 'Tanpa kunjungan'];
-      $jr = $resepPerVisit[(string) $idVisit] ?? 0;
-      foreach (['dokter' => $v[0], 'poli' => $v[1], 'layanan' => $v[2]] as $jenis => $k) {
-         $t = &$ember[$jenis][$k];
-         $t ??= ['qty' => 0, 'nominal' => 0, 'resep' => 0];
-         $t['qty'] += $q;
-         $t['nominal'] += $n;
-         $t['resep'] += $jr;
-         unset($t);
-      }
-   }
    $resepPerTgl = array_count_values($resepWaktu);
    $jmlResep = count($resepVisit);
    $jmlVisit = count($perVisit);
-   unset($resepVisit, $resepWaktu, $perVisit, $visit);
+   unset($resepVisit, $resepWaktu, $perVisit);
 
    $info = [];
    if ($per) {
@@ -228,11 +198,6 @@ function hitungRekap(mysqli $koneksi, string $idc, string $dari, string $sampai,
    }
    foreach ($tren as $k => [$q, $n]) $trenOut[$k] = ['nama' => (string) $k, 'qty' => $q, 'nominal' => $n, 'resep' => $resepPerTgl[$k] ?? 0];
    ksort($trenOut);
-   $daftar = function (array $e) {
-      $o = array_map(fn($k, $v) => ['nama' => (string) $k] + $v, array_keys($e), $e);
-      usort($o, fn($x, $y) => $y['resep'] <=> $x['resep']);
-      return $o;
-   };
    uasort($golongan, fn($x, $y) => $y['qty'] <=> $x['qty']);
 
    return [
@@ -251,13 +216,64 @@ function hitungRekap(mysqli $koneksi, string $idc, string $dari, string $sampai,
       'dashboard' => [
          'periode' => $perHari ? 'hari' : 'bulan',
          'tren' => array_values($trenOut),
-         'dokter' => $daftar($ember['dokter']),
-         'poli' => $daftar($ember['poli']),
-         'layanan' => $daftar($ember['layanan']),
          'golongan' => array_map(fn($k, $v) => ['nama' => (string) $k] + $v, array_keys($golongan), $golongan),
       ],
       'data' => $data,
    ];
+}
+
+
+/**
+ * Pemakaian per dokter, poli & layanan (rawat jalan/inap). Digabung di server DB (join pasien_visit lewat
+ * index visit_ID + GROUP BY) karena menarik puluhan ribu baris kunjungan ke PHP jauh lebih lambat.
+ * Dimuat terpisah (action=kelompok) agar rekap per obat tampil lebih dulu.
+ */
+function hitungKelompok(mysqli $koneksi, string $idc, string $dari, string $sampai): array
+{
+   $st = $koneksi->prepare(
+      "SELECT pv.id_doctor, pv.id_poli, pv.status_rawatinap, pp.id_visit IS NOT NULL AND pv.visit_ID IS NOT NULL AS ada,
+              COUNT(DISTINCT pp.id_permintaan_farmasi) r, SUM(ppd.qty) q,
+              SUM(ppd.qty * IF(ppd.harga > 0, ppd.harga, COALESCE(mp.pharmacy_price_item, 0))) n
+       FROM permintaan_pharmacy pp
+       JOIN permintaan_pharmacy_details ppd ON ppd.id_permintaan_farmasi = pp.id_permintaan_farmasi
+       LEFT JOIN ms_pharmacy mp ON mp.id_pharmacy = ppd.id_pharmacy
+       LEFT JOIN pasien_visit pv ON pv.visit_ID = pp.id_visit
+       WHERE pp.id_customer = ? AND pp.created_at >= ? AND pp.created_at < ?
+       GROUP BY pv.id_doctor, pv.id_poli, pv.status_rawatinap, ada"
+   );
+   if (!$st) jawab(['status' => 'error', 'message' => 'Gagal mengambil pemakaian per dokter.'], 500);
+   $st->bind_param('sss', $idc, $dari, $sampai);
+   $st->execute();
+   $ember = ['dokter' => [], 'poli' => [], 'layanan' => []];
+   foreach ($st->get_result()->fetch_all(MYSQLI_NUM) as [$dok, $poli, $ranap, $ada, $r, $q, $n]) {
+      $lay = !$ada ? 'Tanpa kunjungan' : ((int) $ranap === 1 ? 'Rawat inap' : 'Rawat jalan');
+      foreach (['dokter' => trim((string) $dok) ?: '-', 'poli' => trim((string) $poli) ?: '-', 'layanan' => $lay] as $jenis => $k) {
+         $t = &$ember[$jenis][$k];
+         $t ??= ['qty' => 0, 'nominal' => 0, 'resep' => 0];
+         $t['qty'] += (int) $q;
+         $t['nominal'] += (float) $n;
+         $t['resep'] += (int) $r;
+         unset($t);
+      }
+   }
+   $st->close();
+   $out = [];
+   foreach ($ember as $jenis => $e) {
+      $o = array_map(fn($k, $v) => ['nama' => (string) $k] + $v, array_keys($e), $e);
+      usort($o, fn($x, $y) => $y['resep'] <=> $x['resep']);
+      $out[$jenis] = $o;
+   }
+   return $out;
+}
+
+if ($action === 'kelompok') {
+   [$dari, $sampai, $dariTgl, $sampaiTgl] = periode();
+   $kunci = "usage_kel_{$idc}_{$dariTgl}_{$sampaiTgl}";
+   $c = $_SESSION[$kunci] ?? null;
+   if (is_array($c) && $c['t'] > time() - 300 && empty($_GET['refresh'])) jawab(['status' => 'success', 'cached' => true] + $c['data']);
+   $data = hitungKelompok($koneksi, $idc, $dari, $sampai);
+   $_SESSION[$kunci] = ['t' => time(), 'data' => $data];
+   jawab(['status' => 'success'] + $data);
 }
 
 if ($action === 'ranking' || $action === 'excel') {
@@ -277,7 +293,7 @@ if ($action === 'ranking' || $action === 'excel') {
    require_once __DIR__ . '/../report/appointmentService.php';
    $klinik = apKlinik($koneksi, (int) $idc);
    $s = $out['summary'];
-   $db = $out['dashboard'];
+   $db = $out['dashboard'] + hitungKelompok($koneksi, $idc, $dari, $sampai);
    $rp = fn($v) => ['v' => (float) $v, 's' => 6];
    $x = new XlsxRingan();
    $x->sheet('Ringkasan', [34, 16, 12, 16]);
