@@ -11,6 +11,7 @@
 
 include '../../database/connect.php';
 require_once __DIR__ . '/../report/farmasiStokService.php';
+require_once __DIR__ . '/../master/marginHarga.php';
 mysqli_report(MYSQLI_REPORT_OFF);
 
 header('Content-Type: application/json; charset=utf-8');
@@ -287,7 +288,36 @@ function savePenerimaan(mysqli $koneksi, string $idCustomer, string $username): 
    }
    $id = $stmt->insert_id;
    $stmt->close();
-   jawab(true, ['message' => 'Penerimaan stok berhasil disimpan.', 'id' => $id]);
+
+   // Margin aktif (Setting Margin): harga beli penerimaan ini menjadi harga beli terbaru
+   // dan harga jual obat dihitung ulang dari margin.
+   $hargaJual = null;
+   if ($hargaBeli > 0) {
+      $idcInt = (int) $idCustomer;
+      $st = $koneksi->prepare("SELECT pharmacy_category FROM ms_pharmacy WHERE id_pharmacy = ? AND id_customer = ?");
+      $st->bind_param('ii', $idObat, $idcInt);
+      $st->execute();
+      $kat = ($st->get_result()->fetch_assoc() ?: [])['pharmacy_category'] ?? null;
+      $st->close();
+      $pct = marginKategori(marginFaskes($koneksi, $idcInt), $kat);
+      if ($pct !== null) {
+         $hargaJual = hargaJualMargin($hargaBeli, $pct);
+         $beliBulat = (int) round($hargaBeli);
+         $st = $koneksi->prepare("UPDATE ms_pharmacy SET pharmacy_buy = ?, pharmacy_price_buy = ?, pharmacy_sale = ? WHERE id_pharmacy = ? AND id_customer = ?");
+         $st->bind_param('iiiii', $beliBulat, $beliBulat, $hargaJual, $idObat, $idcInt);
+         if (!$st->execute()) {
+            error_log('[pharmacyStock] harga margin: ' . $st->error);
+            $hargaJual = null;
+         }
+         $st->close();
+      }
+   }
+
+   jawab(true, [
+      'message' => 'Penerimaan stok berhasil disimpan.' . ($hargaJual !== null ? ' Harga jual diperbarui otomatis menjadi Rp ' . number_format($hargaJual, 0, ',', '.') . ' (margin).' : ''),
+      'id' => $id,
+      'harga_jual' => $hargaJual,
+   ]);
 }
 
 // ============================================================

@@ -2,19 +2,15 @@
 $title = 'Detail Obat';
 require '../../controller/view.php';
 require_once '../../controller/master/pharmacyAkses.php';
+require_once '../../controller/master/marginHarga.php';
 
 $idObat = (int) ($_GET['no'] ?? 0);
 $idcSesi = (int) ($_SESSION['id_customer'] ?? 0);
 $obat = ($idObat > 0 && $idcSesi > 0) ? obatFaskes($koneksi, $idObat, $idcSesi) : null;
 
-$margin = ['margin_obat' => null, 'margin_bmhp' => null];
-if ($idcSesi > 0) {
-  $stmt = $koneksi->prepare("SELECT margin_obat, margin_bmhp FROM setting_clinic WHERE id_customer = ? LIMIT 1");
-  $stmt->bind_param('i', $idcSesi);
-  $stmt->execute();
-  $margin = $stmt->get_result()->fetch_assoc() ?: $margin;
-  $stmt->close();
-}
+// margin aktif (> 0) => harga jual dihitung otomatis dari harga beli, juga ditegakkan di server
+$mAktif = $idcSesi > 0 ? marginFaskes($koneksi, $idcSesi) : ['obat' => null, 'bmhp' => null];
+$margin = ['margin_obat' => $mAktif['obat'], 'margin_bmhp' => $mAktif['bmhp']];
 $h = fn($v, $k = '-') => trim((string) ($v ?? '')) === '' ? $k : htmlspecialchars(trim((string) $v), ENT_QUOTES, 'UTF-8');
 ?>
 <!doctype html>
@@ -415,7 +411,7 @@ $h = fn($v, $k = '-') => trim((string) ($v ?? '')) === '' ? $k : htmlspecialchar
                                 <span class="input-group-text">Rp</span>
                                 <input type="number" id="f_sale" name="pharmacy_sale" class="form-control" min="0" step="1">
                               </div>
-                              <div class="form-text">Terisi otomatis dari harga beli + margin, bisa diubah manual.</div>
+                              <div class="form-text" id="saleHint">Diisi manual.</div>
                             </div>
                           </div>
                           <div class="od-sec">Persediaan</div>
@@ -461,15 +457,15 @@ $h = fn($v, $k = '-') => trim((string) ($v ?? '')) === '' ? $k : htmlspecialchar
                           <div class="od-sec">Perhitungan harga jual</div>
                           <?php if ($margin['margin_obat'] === null && $margin['margin_bmhp'] === null): ?>
                             <div class="alert alert-warning small mb-3">
-                              Margin farmasi belum diatur, harga jual tidak dihitung otomatis.
+                              Margin farmasi belum diatur, harga jual diisi manual.
                               <a href="module/admin/setting_margin" class="alert-link">Atur margin</a>
                             </div>
                           <?php endif; ?>
                           <div class="od-calc">
                             <div class="row-c"><span class="text-muted">Harga beli</span><span id="cBeli">-</span></div>
                             <div class="row-c"><span class="text-muted">Margin <span id="cMarginLbl"></span></span><span id="cMargin">-</span></div>
-                            <div class="row-c"><span class="text-muted">Pembulatan ke Rp 100</span><span id="cBulat">-</span></div>
-                            <div class="row-c tot"><span>Harga jual disarankan</span><span id="cJual">-</span></div>
+                            <div class="row-c"><span class="text-muted">Pembulatan ke atas</span><span id="cBulat">-</span></div>
+                            <div class="row-c tot"><span id="cJualLbl">Harga jual disarankan</span><span id="cJual">-</span></div>
                             <button type="button" class="btn btn-sm btn-light w-100 mt-3" id="btnPakaiSaran"><i class="fas fa-magic me-1"></i>Pakai harga disarankan</button>
                           </div>
                         </div>
@@ -578,20 +574,29 @@ $h = fn($v, $k = '-') => trim((string) ($v ?? '')) === '' ? $k : htmlspecialchar
           const pm = m === null || m === '' ? null : parseFloat(m);
           $('#cBeli').text(rp(beli));
           $('#cMarginLbl').text(pm === null ? '(belum diatur)' : `${isBmhp() ? 'BMHP' : 'obat'} ${pm}%`);
+          // margin aktif + ada harga beli: harga jual dikunci (server juga menghitung ulang saat simpan)
+          const otomatis = pm !== null && beli > 0;
+          $('#f_sale').prop('readonly', otomatis).toggleClass('bg-light', otomatis);
+          $('#btnPakaiSaran').toggle(!otomatis);
+          $('#cJualLbl').text(otomatis ? 'Harga jual (otomatis)' : 'Harga jual disarankan');
+          $('#saleHint').html(otomatis ?
+            `<i class="fas fa-lock me-1"></i>Otomatis dari harga beli + margin ${isBmhp() ? 'BMHP' : 'obat'} ${pm}%. <a href="module/admin/setting_margin">Ubah margin</a>` :
+            (pm !== null ? 'Isi harga beli agar harga jual dihitung otomatis dari margin.' : 'Diisi manual (margin belum diatur).'));
           if (pm === null || !beli) {
             $('#cMargin, #cBulat, #cJual').text('-');
             $('#btnPakaiSaran').prop('disabled', true);
             return null;
           }
-          const mentah = beli * (1 + pm / 100);
-          const jual = Math.round(mentah / 100) * 100;
+          const mentah = Math.round(beli * (1 + pm / 100) * 1e6) / 1e6;
+          const kel = mentah < 1000 ? 10 : 100;
+          const jual = Math.ceil(mentah / kel) * kel;
           $('#cMargin').text('+ ' + rp(mentah - beli));
           $('#cBulat').text((jual - mentah >= 0 ? '+ ' : '- ') + 'Rp ' + Math.abs(Math.round(jual - mentah)).toLocaleString('id-ID'));
           $('#cJual').text(rp(jual));
           $('#btnPakaiSaran').prop('disabled', false);
           return jual;
         }
-        $('#f_buy').on('input', () => {
+        $('#f_buy, #f_kat').on('input change', () => {
           const j = saranJual();
           if (j !== null) $('#f_sale').val(j);
         });
@@ -599,7 +604,10 @@ $h = fn($v, $k = '-') => trim((string) ($v ?? '')) === '' ? $k : htmlspecialchar
           const j = saranJual();
           if (j !== null) $('#f_sale').val(j);
         });
-        saranJual();
+        {
+          const j = saranJual();
+          if (j !== null) $('#f_sale').val(j);
+        }
 
         // ---------- simpan ----------
         function pasang(id, cek) {
@@ -641,6 +649,10 @@ $h = fn($v, $k = '-') => trim((string) ($v ?? '')) === '' ? $k : htmlspecialchar
                   fd.forEach((v, k) => {
                     if (k in OBAT) OBAT[k] = v;
                   });
+                  if (r.harga_jual !== null && r.harga_jual !== undefined) {
+                    OBAT.pharmacy_sale = r.harga_jual;
+                    $('#f_sale').val(r.harga_jual);
+                  }
                   $('#odNama').text(OBAT.pharmacy_name_generic || '-');
                   $('#odTrade').text(OBAT.pharmacy_name_trade || '');
                   $('#kpiJual').text(rp(OBAT.pharmacy_sale));

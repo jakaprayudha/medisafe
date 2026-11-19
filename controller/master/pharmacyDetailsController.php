@@ -6,6 +6,7 @@
 // khusus faskes (respon new_id) dan master bawaan disembunyikan untuk faskes tsb.
 include '../../database/connect.php';
 require_once __DIR__ . '/pharmacyAkses.php';
+require_once __DIR__ . '/marginHarga.php';
 mysqli_report(MYSQLI_REPORT_OFF);
 header("Content-Type: application/json; charset=utf-8");
 
@@ -68,6 +69,17 @@ if ($min !== null && $max !== null && $max !== '' && (float) $max > 0 && (float)
    jawab(["success" => false, "message" => "Stok minimum tidak boleh lebih besar dari stok maksimum"], 422);
 }
 
+// ---------- margin aktif: harga jual dihitung dari harga beli (lihat Setting Margin) ----------
+$hargaOtomatis = null;
+if (array_key_exists('pharmacy_buy', $data) || array_key_exists('pharmacy_sale', $data) || array_key_exists('pharmacy_category', $data)) {
+   $pct = marginKategori(marginFaskes($koneksi, $idc), $data['pharmacy_category'] ?? $row['pharmacy_category']);
+   $beli = (float) (array_key_exists('pharmacy_buy', $data) ? $data['pharmacy_buy'] : $row['pharmacy_buy']);
+   if ($pct !== null && $beli > 0) {
+      $hargaOtomatis = hargaJualMargin($beli, $pct);
+      $data['pharmacy_sale'] = (string) $hargaOtomatis;
+   }
+}
+
 // ---------- obat milik faskes: update langsung ----------
 if ($row['sumber'] === 'faskes') {
    $set = implode(', ', array_map(fn($f) => "$f = ?", array_keys($data)));
@@ -81,7 +93,7 @@ if ($row['sumber'] === 'faskes') {
       error_log('[pharmacyDetailsController] ' . $err);
       jawab(["success" => false, "message" => "Gagal menyimpan data obat"], 500);
    }
-   jawab(["success" => true, "message" => "Data obat berhasil diperbarui"]);
+   jawab(["success" => true, "message" => "Data obat berhasil diperbarui", "harga_jual" => $hargaOtomatis]);
 }
 
 // ---------- master bawaan: salin ke faskes + sembunyikan bawaan ----------
@@ -105,7 +117,7 @@ try {
    $newId = $koneksi->insert_id;
    $stmt->close();
    $koneksi->commit();
-   jawab(["success" => true, "message" => "Data obat disimpan sebagai salinan khusus faskes Anda", "new_id" => $newId]);
+   jawab(["success" => true, "message" => "Data obat disimpan sebagai salinan khusus faskes Anda", "new_id" => $newId, "harga_jual" => $hargaOtomatis]);
 } catch (Throwable $e) {
    $koneksi->rollback();
    error_log('[pharmacyDetailsController] ' . $e->getMessage());
