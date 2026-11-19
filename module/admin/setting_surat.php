@@ -193,10 +193,6 @@ require '../../controller/view.php';
       white-space: nowrap;
     }
 
-    #nsConfig.locked {
-      position: relative;
-    }
-
     /* ---------- bar aksi ---------- */
     .ns-bar {
       position: sticky;
@@ -295,58 +291,45 @@ require '../../controller/view.php';
             </div>
           </div>
 
-          <div class="row g-3 mb-3">
-            <!-- KONFIGURASI -->
-            <div class="col-xl-8">
-              <div class="card border-0 shadow-sm h-100 mb-0" id="nsConfig">
-                <div class="card-body">
-                  <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
-                    <div>
-                      <h6 class="fw-semibold mb-1">Format &amp; nomor terakhir</h6>
-                      <div class="small text-muted">Nomor berikutnya = nomor terakhir + 1. Klik penanda untuk
-                        menyisipkannya ke format.</div>
-                    </div>
-                  </div>
-                  <div class="alert alert-success-subtle bg-success-subtle text-success small py-2 px-3 d-none"
-                    id="nsManualNote">
-                    <i class="fas fa-pen me-1"></i><strong>Mode manual aktif.</strong> Format &amp; nomor di bawah baru
-                    dipakai bila beralih ke Otomatis, tetapi tetap bisa disiapkan dan disimpan sekarang.
-                  </div>
-                  <div id="nsRows">
-                    <div class="py-4">
-                      <div class="ns-skel mb-3" style="width:60%"></div>
-                      <div class="ns-skel mb-3" style="width:85%"></div>
-                      <div class="ns-skel" style="width:40%"></div>
-                    </div>
-                  </div>
+          <div class="card border-0 shadow-sm mb-3" id="nsConfig">
+            <div class="card-body">
+              <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
+                <div>
+                  <h6 class="fw-semibold mb-1">Format &amp; nomor terakhir</h6>
+                  <div class="small text-muted">Nomor berikutnya = nomor terakhir + 1. Klik penanda untuk
+                    menyisipkannya ke format.</div>
+                </div>
+              </div>
+              <div class="alert alert-success-subtle bg-success-subtle text-success small py-2 px-3 d-none"
+                id="nsManualNote">
+                <i class="fas fa-pen me-1"></i><strong>Mode manual aktif.</strong> Format &amp; nomor di bawah baru
+                dipakai bila beralih ke Otomatis, tetapi tetap bisa disiapkan dan disimpan sekarang.
+              </div>
+              <div id="nsRows">
+                <div class="py-4">
+                  <div class="ns-skel mb-3" style="width:60%"></div>
+                  <div class="ns-skel mb-3" style="width:85%"></div>
+                  <div class="ns-skel" style="width:40%"></div>
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- PANDUAN -->
-            <div class="col-xl-4">
-              <div class="card border-0 shadow-sm h-100 mb-0">
-                <div class="card-body ns-legend">
-                  <h6 class="fw-semibold mb-3">Penanda format</h6>
-                  <div class="d-flex gap-2 mb-2"><code>{NO}</code><span class="small">Nomor urut. Wajib ada agar nomor
-                      tiap surat berbeda.</span></div>
-                  <div class="d-flex gap-2 mb-2"><code>{NO:5}</code><span class="small">Nomor urut dengan panjang tetap
-                      (00012). Hanya Surat Berobat &amp; Kematian.</span></div>
-                  <div class="d-flex gap-2 mb-2"><code>{DD}</code><span class="small">Tanggal 2 digit (01–31).</span>
-                  </div>
-                  <div class="d-flex gap-2 mb-2"><code>{MM}</code><span class="small">Bulan 2 digit (01–12).</span></div>
-                  <div class="d-flex gap-2 mb-2"><code>{YYYY}</code><span class="small">Tahun 4 digit.</span></div>
-                  <div class="d-flex gap-2 mb-2"><code>{YY}</code><span class="small">Tahun 2 digit.</span></div>
-                  <div class="d-flex gap-2 mb-3"><code>{ROMAN}</code><span class="small">Bulan romawi (I–XII). Hanya
-                      Surat Pemeriksaan Mata.</span></div>
-                  <div class="small text-muted border-top pt-3">
-                    <div class="mb-2"><i class="fas fa-exclamation-triangle text-warning me-1"></i>Nomor urut
-                      <strong>tidak</strong> kembali ke 1 otomatis tiap bulan/tahun. Untuk memulai dari awal, ubah nomor
-                      terakhir menjadi 0.</div>
-                    <div><i class="fas fa-info-circle me-1"></i>Penanda yang tidak tersedia untuk suatu jenis surat
-                      tidak ditampilkan di tombol sisipnya.</div>
-                  </div>
-                </div>
+          <!-- PANDUAN -->
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body ns-legend">
+              <h6 class="fw-semibold mb-3">Penanda format</h6>
+              <div class="row g-2 mb-3">
+                <div class="col-md-6 col-xl-4 d-flex gap-2"><code>{NO}</code><span class="small">Nomor urut. Wajib ada agar nomor tiap surat berbeda.</span></div>
+                <div class="col-md-6 col-xl-4 d-flex gap-2"><code>{NO:5}</code><span class="small">Nomor urut panjang tetap (00012). Hanya Surat Berobat &amp; Kematian.</span></div>
+                <div class="col-md-6 col-xl-4 d-flex gap-2"><code>{ROMAN}</code><span class="small">Bulan romawi (I–XII). Hanya Surat Pemeriksaan Mata.</span></div>
+                <div class="col-md-6 col-xl-4 d-flex gap-2"><code>{DD}</code><span class="small">Tanggal 2 digit (01–31).</span></div>
+                <div class="col-md-6 col-xl-4 d-flex gap-2"><code>{MM}</code><span class="small">Bulan 2 digit (01–12).</span></div>
+                <div class="col-md-6 col-xl-4 d-flex gap-2"><code>{YYYY}</code> <code>{YY}</code><span class="small">Tahun 4 / 2 digit.</span></div>
+              </div>
+              <div class="small text-muted border-top pt-3 d-flex flex-column flex-lg-row gap-2 gap-lg-4">
+                <div><i class="fas fa-exclamation-triangle text-warning me-1"></i>Nomor urut <strong>tidak</strong> kembali ke 1 otomatis tiap bulan/tahun. Untuk memulai dari awal, ubah nomor terakhir menjadi 0.</div>
+                <div><i class="fas fa-info-circle me-1"></i>Tombol sisip di tiap baris hanya menampilkan penanda yang didukung jenis surat tersebut.</div>
               </div>
             </div>
           </div>
@@ -630,7 +613,7 @@ require '../../controller/view.php';
             w.textContent = eN && n !== null ? eN : '';
           }
 
-          row.querySelector('[data-info]').textContent = nAsli ? angka(nAsli) + ' surat bernomor' : 'Belum ada nomor';
+          row.querySelector('[data-info]').textContent = nAsli ? 'Tersimpan: no. ' + angka(nAsli) : 'Belum ada nomor terpakai';
           row.querySelector('[data-bawaan]').disabled = f === j.bawaan;
 
           const dirty = f !== fAsli || n !== nAsli;
