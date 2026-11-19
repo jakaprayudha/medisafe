@@ -1,72 +1,44 @@
 <?php
-include '../../database/connect.php';
-header("Content-Type: application/json");
-if (session_status() === PHP_SESSION_NONE) session_start();
+/**
+ * GET fromDate, toDate[, doctor, poli, provider, gender, status]
+ *   -> { status, data: [baris], ringkasan: {...}, opsi: {dokter, poli, provider}, filter: {...} }
+ */
+require_once __DIR__ . '/../../database/connect.php';
+require_once __DIR__ . '/appointmentService.php';
 
-$id_customer = $_SESSION['id_customer'] ?? null;
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
 
-$fromDate = $_GET['fromDate'] ?? null;
-$toDate   = $_GET['toDate'] ?? null;
-$doctor   = $_GET['doctor'] ?? null;
-$provider = $_GET['provider'] ?? null;
-$poli     = $_GET['poli'] ?? null;
-$gender   = $_GET['gender'] ?? '';
-
-$sql = "
-SELECT pv.*, mp.provider_name,  ms.patient_nik AS nik
-FROM pasien_visit pv
-LEFT JOIN ms_provider mp ON mp.id_provider = pv.id_provider
-LEFT JOIN ms_patient ms ON ms.id_patient = pv.id_patient
-WHERE pv.id_customer = '$id_customer'
-";
-
-
-// =============================
-// FILTER TANGGAL
-// =============================
-if ($fromDate && $toDate) {
-   $sql .= " AND DATE(pv.visit_date) BETWEEN '$fromDate' AND '$toDate' ";
+$idc = (int) ($_SESSION['id_customer'] ?? 0);
+if (!$idc) {
+   http_response_code(401);
+   echo json_encode(['status' => 'error', 'message' => 'Session tidak ditemukan', 'data' => []]);
+   exit;
 }
 
-// =============================
-// FILTER PROVIDER (FIX 1x SAJA)
-// =============================
-if (!empty($provider)) {
-   $sql .= " AND pv.id_provider = '$provider' ";
+try {
+   $p = apParams($_GET);
+} catch (InvalidArgumentException $e) {
+   http_response_code(422);
+   echo json_encode(['status' => 'error', 'message' => $e->getMessage(), 'data' => []]);
+   exit;
 }
 
-// =============================
-// FILTER DOKTER
-// =============================
-if (!empty($doctor)) {
-   $sql .= " AND pv.id_doctor = '$doctor' ";
+$rows = apRows($koneksi, $idc, $p);
+$ringkasan = apRingkasan($rows, $p);
+
+// baris dikirim sebagai array (tanpa nama kolom berulang) + gzip: respons setahun ±18 MB -> ±1–2 MB
+$kolom = ['tanggal', 'jam', 'status', 'grup', 'status_label', 'noKartu', 'nik', 'nama', 'gender', 'dokter', 'poli', 'bayar'];
+$baris = array_map(fn($r) => array_map(fn($c) => $r[$c], $kolom), $rows);
+unset($rows);
+if (!ini_get('zlib.output_compression') && extension_loaded('zlib')) {
+   ob_start('ob_gzhandler');
 }
-
-// =============================
-// FILTER POLI
-// =============================
-if (!empty($poli)) {
-   $sql .= " AND pv.id_poli = '$poli' ";
-}
-
-if ($gender === 'pria') {
-   $sql .= " AND LOWER(TRIM(ms.patient_gender)) IN ('l', 'pria', 'laki-laki', 'laki laki') ";
-} elseif ($gender === 'wanita') {
-   $sql .= " AND LOWER(TRIM(ms.patient_gender)) IN ('p', 'wanita', 'perempuan') ";
-}
-
-// =============================
-$sql .= " ORDER BY pv.visit_date DESC, pv.visit_time DESC ";
-
-$query = mysqli_query($koneksi, $sql);
-
-$data = [];
-
-while ($row = mysqli_fetch_assoc($query)) {
-   $data[] = $row;
-}
-
 echo json_encode([
-   "status" => "success",
-   "data" => $data
-]);
+   'status' => 'success',
+   'kolom' => $kolom,
+   'data' => $baris,
+   'ringkasan' => $ringkasan,
+   'opsi' => empty($_GET['tanpa_opsi']) ? apOpsi($koneksi, $idc, $p) : null,
+   'filter' => $p + ['label' => apLabelFilter($p)],
+], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
