@@ -13,18 +13,25 @@ if (!isset($_SESSION['id_customer'])) {
    exit;
 }
 
-$id_customer = $_SESSION['id_customer'];
+$id_customer = (int) $_SESSION['id_customer'];
 
-$method = $_SERVER['REQUEST_METHOD'];
+const TARIF_LAYANAN = ['Poliklinik', 'UGD', 'Rawat Inap', '99'];
 
-switch ($method) {
+function jawab(array $data, int $code = 200): void
+{
+   http_response_code($code);
+   echo json_encode($data);
+   exit;
+}
+
+switch ($_SERVER['REQUEST_METHOD']) {
    case 'POST':
       createData($id_customer);
       break;
 
    case 'GET':
       if (isset($_GET['id'])) {
-         getID($_GET['id'], $id_customer);
+         getID((int) $_GET['id'], $id_customer);
       } else {
          getData($id_customer);
       }
@@ -37,6 +44,103 @@ switch ($method) {
    case 'DELETE':
       deleteData($id_customer);
       break;
+
+   default:
+      jawab(['status' => 'error', 'message' => 'Metode tidak didukung'], 405);
+}
+
+// ================= VALIDASI INPUT =================
+/**
+ * Ambil & validasi field form tarif. Mengembalikan [data, pesanError].
+ */
+function bacaForm(array $in): array
+{
+   $nama = trim((string) ($in['tarif_name'] ?? ''));
+   if ($nama === '') {
+      return [null, 'Nama tarif wajib diisi.'];
+   }
+   if (mb_strlen($nama) > 255) {
+      return [null, 'Nama tarif terlalu panjang.'];
+   }
+
+   $layanan = (string) ($in['tarif_services'] ?? '99');
+   if (!in_array($layanan, TARIF_LAYANAN, true)) {
+      return [null, 'Layanan tidak valid.'];
+   }
+
+   $provider = (string) ($in['tarif_provider'] ?? '99');
+   if ($provider !== '99' && !ctype_digit($provider)) {
+      return [null, 'Jenis bayar tidak valid.'];
+   }
+
+   $angka = [];
+   $label = [
+      'tarif_amount'       => 'Tarif',
+      'tarif_share_doctor' => 'Fee dokter',
+      'tarif_share_nurse'  => 'Fee perawat',
+      'tarif_share_admin'  => 'Fee admin',
+   ];
+   foreach ($label as $f => $lbl) {
+      $v = trim((string) ($in[$f] ?? '0'));
+      if ($v === '') {
+         $v = '0';
+      }
+      if (!preg_match('/^\d{1,10}$/', $v) || (int) $v > 2000000000) {
+         return [null, "$lbl harus berupa angka bulat ≥ 0."];
+      }
+      $angka[$f] = (int) $v;
+   }
+
+   $data = [
+      'tarif_name'     => $nama,
+      'tarif_services' => $layanan,
+      'tarif_provider' => $provider,
+   ] + $angka;
+
+   if (array_key_exists('tarif_description', $in)) {
+      $data['tarif_description'] = trim((string) $in['tarif_description']) ?: null;
+   }
+
+   return [$data, null];
+}
+
+function namaDipakai(mysqli $k, int $idc, string $nama, int $kecualiId = 0): bool
+{
+   $stmt = $k->prepare(
+      "SELECT 1 FROM ms_tarif
+       WHERE id_customer=? AND LOWER(TRIM(tarif_name))=LOWER(TRIM(?)) AND id_tarif<>?
+       LIMIT 1"
+   );
+   $stmt->bind_param("isi", $idc, $nama, $kecualiId);
+   $stmt->execute();
+   $ada = (bool) $stmt->get_result()->fetch_row();
+   $stmt->close();
+   return $ada;
+}
+
+/** Jumlah baris billing yang memakai nama tarif ini (billing menyimpan nama, bukan id). */
+function jumlahPemakaian(mysqli $k, int $idc, string $nama): int
+{
+   $idcStr = (string) $idc;
+   $stmt = $k->prepare(
+      "SELECT COUNT(*) FROM pasien_billing
+       WHERE id_customer=? AND LOWER(TRIM(billing_item))=LOWER(TRIM(?))"
+   );
+   $stmt->bind_param("ss", $idcStr, $nama);
+   $stmt->execute();
+   $n = (int) $stmt->get_result()->fetch_row()[0];
+   $stmt->close();
+   return $n;
+}
+
+function ambilTarif(mysqli $k, int $id, int $idc): ?array
+{
+   $stmt = $k->prepare("SELECT * FROM ms_tarif WHERE id_tarif=? AND id_customer=?");
+   $stmt->bind_param("ii", $id, $idc);
+   $stmt->execute();
+   $row = $stmt->get_result()->fetch_assoc();
+   $stmt->close();
+   return $row ?: null;
 }
 
 // ================= CREATE =================
@@ -44,47 +148,29 @@ function createData($id_customer)
 {
    global $koneksi;
 
-   if (empty($_POST)) {
-      echo json_encode(['status' => 'error', 'message' => 'Data kosong']);
-      exit;
+   [$d, $err] = bacaForm($_POST);
+   if ($err) {
+      jawab(['status' => 'error', 'message' => $err], 422);
    }
-
-   $allowedFields = [
-      'tarif_services',
-      'tarif_name',
-      'tarif_amount',
-      'tarif_provider',
-      'tarif_share_doctor',
-      'tarif_share_nurse',
-      'tarif_share_admin'
-
-   ];
+   if (namaDipakai($koneksi, $id_customer, $d['tarif_name'])) {
+      jawab(['status' => 'error', 'message' => 'Nama tarif "' . $d['tarif_name'] . '" sudah ada. Billing mencocokkan tarif berdasarkan nama, jadi nama harus unik.'], 409);
+   }
 
    $fields = ['tarif_number', 'id_customer'];
    $values = [generateTarifNumber($koneksi), $id_customer];
-   $types  = "si";
-
-   foreach ($allowedFields as $f) {
-      if (isset($_POST[$f])) {
-         $fields[] = $f;
-         $values[] = $_POST[$f];
-         $types .= "s";
-      }
+   foreach ($d as $f => $v) {
+      $fields[] = $f;
+      $values[] = $v;
    }
 
-   $placeholders = implode(',', array_fill(0, count($fields), '?'));
-   $columns = implode(',', $fields);
-
-   $stmt = $koneksi->prepare("INSERT INTO ms_tarif ($columns) VALUES ($placeholders)");
-   $stmt->bind_param($types, ...$values);
+   $sql = "INSERT INTO ms_tarif (" . implode(',', $fields) . ") VALUES (" . implode(',', array_fill(0, count($fields), '?')) . ")";
+   $stmt = $koneksi->prepare($sql);
+   $stmt->bind_param(str_repeat('s', count($values)), ...$values);
 
    if ($stmt->execute()) {
-      echo json_encode(['status' => 'success']);
-   } else {
-      echo json_encode(['status' => 'error', 'message' => $stmt->error]);
+      jawab(['status' => 'success', 'message' => 'Tarif berhasil ditambahkan.', 'id' => $stmt->insert_id]);
    }
-
-   $stmt->close();
+   jawab(['status' => 'error', 'message' => 'Gagal menyimpan tarif.'], 500);
 }
 
 // ================= GENERATE NUMBER =================
@@ -93,8 +179,7 @@ function generateTarifNumber($koneksi)
    $count = 0;
 
    do {
-      $random = mt_rand(100000, 999999);
-      $number = "TRX-" . $random;
+      $number = "TRX-" . mt_rand(100000, 999999);
 
       $check = $koneksi->prepare("SELECT COUNT(*) FROM ms_tarif WHERE tarif_number=?");
       $check->bind_param("s", $number);
@@ -113,19 +198,48 @@ function getData($id_customer)
    global $koneksi;
 
    $stmt = $koneksi->prepare(
-      "SELECT ms_tarif.*, ms_provider.provider_name FROM ms_tarif LEFT JOIN ms_provider ON ms_tarif.tarif_provider = ms_provider.id_provider
-       WHERE ms_tarif.id_customer=? 
-       ORDER BY ms_tarif.tarif_name DESC"
+      "SELECT t.id_tarif, t.tarif_number, t.tarif_code, t.tarif_services, t.tarif_name,
+              t.tarif_amount, t.tarif_status, t.tarif_provider, t.created_at,
+              COALESCE(t.tarif_share_doctor,0) AS tarif_share_doctor,
+              COALESCE(t.tarif_share_nurse,0)  AS tarif_share_nurse,
+              COALESCE(t.tarif_share_admin,0)  AS tarif_share_admin,
+              p.provider_name
+       FROM ms_tarif t
+       LEFT JOIN ms_provider p ON p.id_provider = t.tarif_provider
+       WHERE t.id_customer=?
+       ORDER BY t.tarif_name ASC"
    );
-
    $stmt->bind_param("i", $id_customer);
    $stmt->execute();
-
    $data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-   echo json_encode(['status' => 'success', 'data' => $data]);
-
    $stmt->close();
+
+   // Pemakaian di billing (dicocokkan lewat nama, sama seperti tindakan & laporan prosedur)
+   $idcStr = (string) $id_customer;
+   $stmt = $koneksi->prepare(
+      "SELECT LOWER(TRIM(billing_item)) AS k, COUNT(*) AS n,
+              SUM(COALESCE(billing_qty,1)) AS qty, MAX(created_at) AS terakhir
+       FROM pasien_billing
+       WHERE id_customer=?
+       GROUP BY k"
+   );
+   $stmt->bind_param("s", $idcStr);
+   $stmt->execute();
+   $pakai = [];
+   foreach ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) as $r) {
+      $pakai[$r['k']] = $r;
+   }
+   $stmt->close();
+
+   foreach ($data as &$row) {
+      $u = $pakai[mb_strtolower(trim((string) $row['tarif_name']))] ?? null;
+      $row['jml_pakai'] = $u ? (int) $u['n'] : 0;
+      $row['qty_pakai'] = $u ? (int) $u['qty'] : 0;
+      $row['terakhir_dipakai'] = $u['terakhir'] ?? null;
+   }
+   unset($row);
+
+   jawab(['status' => 'success', 'data' => $data]);
 }
 
 // ================= READ BY ID =================
@@ -133,26 +247,12 @@ function getID($id, $id_customer)
 {
    global $koneksi;
 
-   $stmt = $koneksi->prepare(
-      "SELECT * FROM ms_tarif 
-       WHERE id_tarif=? AND id_customer=?"
-   );
-
-   $stmt->bind_param("ii", $id, $id_customer);
-   $stmt->execute();
-
-   $res = $stmt->get_result();
-
-   if ($res->num_rows > 0) {
-      echo json_encode([
-         'status' => 'success',
-         'data' => $res->fetch_assoc()
-      ]);
-   } else {
-      echo json_encode(['status' => 'error', 'message' => 'Tidak ditemukan']);
+   $row = ambilTarif($koneksi, $id, $id_customer);
+   if (!$row) {
+      jawab(['status' => 'error', 'message' => 'Tidak ditemukan'], 404);
    }
-
-   $stmt->close();
+   $row['jml_pakai'] = jumlahPemakaian($koneksi, $id_customer, (string) $row['tarif_name']);
+   jawab(['status' => 'success', 'data' => $row]);
 }
 
 // ================= UPDATE =================
@@ -162,96 +262,60 @@ function updateData($id_customer)
 
    parse_str(file_get_contents("php://input"), $_PUT);
 
-   if (empty($_PUT['id_tarif'])) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'ID tidak ditemukan'
-      ]);
-      return;
+   $id = (int) ($_PUT['id_tarif'] ?? 0);
+   if ($id <= 0) {
+      jawab(['status' => 'error', 'message' => 'ID tidak ditemukan'], 422);
    }
 
-   $id = $_PUT['id_tarif'];
+   $lama = ambilTarif($koneksi, $id, $id_customer);
+   if (!$lama) {
+      jawab(['status' => 'error', 'message' => 'Tarif tidak ditemukan'], 404);
+   }
 
-   // ================= 🔥 TOGGLE STATUS =================
-   if (isset($_GET['toggle_status']) && isset($_PUT['tarif_status'])) {
+   // ================= TOGGLE STATUS =================
+   if (isset($_GET['toggle_status'])) {
+      $status = (string) ($_PUT['tarif_status'] ?? '');
+      if ($status !== '0' && $status !== '1') {
+         jawab(['status' => 'error', 'message' => 'Status tidak valid.'], 422);
+      }
+      $status = (int) $status;
 
-      $status = $_PUT['tarif_status'];
-
-      $stmt = $koneksi->prepare(
-         "UPDATE ms_tarif 
-          SET tarif_status=? 
-          WHERE id_tarif=? AND id_customer=?"
-      );
-
+      $stmt = $koneksi->prepare("UPDATE ms_tarif SET tarif_status=? WHERE id_tarif=? AND id_customer=?");
       $stmt->bind_param("iii", $status, $id, $id_customer);
-
       if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Status berhasil diupdate.'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal update status.'
-         ]);
+         jawab(['status' => 'success', 'message' => $status ? 'Tarif diaktifkan.' : 'Tarif dinonaktifkan.']);
       }
-
-      $stmt->close();
-      return; // ⛔ penting (stop di sini)
+      jawab(['status' => 'error', 'message' => 'Gagal update status.'], 500);
    }
 
-   // ================= 🔥 UPDATE NORMAL =================
-   $allowedFields = [
-      'tarif_code',
-      'tarif_services',
-      'tarif_name',
-      'tarif_amount',
-      'tarif_provider'
-   ];
+   // ================= UPDATE NORMAL =================
+   [$d, $err] = bacaForm($_PUT);
+   if ($err) {
+      jawab(['status' => 'error', 'message' => $err], 422);
+   }
 
-   $fields = [];
+   // cek duplikat hanya bila nama berubah (data lama mungkin sudah ada duplikat)
+   $namaBerubah = mb_strtolower(trim((string) $lama['tarif_name'])) !== mb_strtolower($d['tarif_name']);
+   if ($namaBerubah && namaDipakai($koneksi, $id_customer, $d['tarif_name'], $id)) {
+      jawab(['status' => 'error', 'message' => 'Nama tarif "' . $d['tarif_name'] . '" sudah dipakai tarif lain.'], 409);
+   }
+
+   $set = [];
    $values = [];
-
-   foreach ($allowedFields as $f) {
-      if (isset($_PUT[$f])) {
-         $fields[] = "$f=?";
-         $values[] = $_PUT[$f];
-      }
+   foreach ($d as $f => $v) {
+      $set[] = "$f=?";
+      $values[] = $v;
    }
-
-   if (empty($fields)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Tidak ada data diupdate'
-      ]);
-      return;
-   }
-
    $values[] = $id;
    $values[] = $id_customer;
 
-   $types = str_repeat('s', count($values) - 2) . "ii";
-
-   $query = "UPDATE ms_tarif SET " . implode(',', $fields) . " 
-             WHERE id_tarif=? AND id_customer=?";
-
-   $stmt = $koneksi->prepare($query);
-   $stmt->bind_param($types, ...$values);
+   $stmt = $koneksi->prepare("UPDATE ms_tarif SET " . implode(',', $set) . " WHERE id_tarif=? AND id_customer=?");
+   $stmt->bind_param(str_repeat('s', count($values) - 2) . "ii", ...$values);
 
    if ($stmt->execute()) {
-      echo json_encode([
-         'status' => 'success',
-         'message' => 'Data berhasil diperbarui.'
-      ]);
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => $stmt->error
-      ]);
+      jawab(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
    }
-
-   $stmt->close();
+   jawab(['status' => 'error', 'message' => 'Gagal memperbarui tarif.'], 500);
 }
 
 // ================= DELETE =================
@@ -259,25 +323,28 @@ function deleteData($id_customer)
 {
    global $koneksi;
 
-   $id = $_GET['id'] ?? '';
-
-   if (!$id) {
-      echo json_encode(['status' => 'error', 'message' => 'ID kosong']);
-      return;
+   $id = (int) ($_GET['id'] ?? 0);
+   if ($id <= 0) {
+      jawab(['status' => 'error', 'message' => 'ID kosong'], 422);
    }
 
-   $stmt = $koneksi->prepare(
-      "DELETE FROM ms_tarif 
-       WHERE id_tarif=? AND id_customer=?"
-   );
+   $row = ambilTarif($koneksi, $id, $id_customer);
+   if (!$row) {
+      jawab(['status' => 'error', 'message' => 'Tarif tidak ditemukan'], 404);
+   }
 
+   $n = jumlahPemakaian($koneksi, $id_customer, (string) $row['tarif_name']);
+   if ($n > 0) {
+      jawab([
+         'status' => 'error',
+         'message' => "Tarif ini sudah dipakai di $n tagihan pasien sehingga tidak bisa dihapus. Nonaktifkan saja agar tidak muncul lagi di billing."
+      ], 409);
+   }
+
+   $stmt = $koneksi->prepare("DELETE FROM ms_tarif WHERE id_tarif=? AND id_customer=?");
    $stmt->bind_param("ii", $id, $id_customer);
-
    if ($stmt->execute()) {
-      echo json_encode(['status' => 'success']);
-   } else {
-      echo json_encode(['status' => 'error']);
+      jawab(['status' => 'success', 'message' => 'Tarif dihapus.']);
    }
-
-   $stmt->close();
+   jawab(['status' => 'error', 'message' => 'Gagal menghapus tarif.'], 500);
 }
