@@ -49,7 +49,7 @@ $apiUrl = getenv('API_URL');
                       <button class="btn btn-light" onclick="history.back()">
                         <i class="fas fa-arrow-left"></i> Kembali
                       </button>
-                      <a href="module/print/struk_order?no=<?= $_GET['no'] ?>" target="_blank">
+                      <a href="module/print/struk_order?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>" target="_blank">
                         <button class="btn btn-info"><i class="fas fa-print"></i> Cetak</button>
                       </a>
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
@@ -150,7 +150,7 @@ $apiUrl = getenv('API_URL');
 </div>
 
 <script>
-  const apiUrl = 'controller/farmasi/pembelianDetails?no=<?= $_GET['no'] ?>';
+  const apiUrl = 'controller/farmasi/pembelianDetails?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>';
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({

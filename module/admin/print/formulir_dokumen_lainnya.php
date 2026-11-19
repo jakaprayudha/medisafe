@@ -99,7 +99,7 @@
          // =========================
          const api =
             base +
-            `controller/ranap/dokumenKlaimLainnya?no=${no}`;
+            `controller/ranap/dokumenKlaimLainnya?no=${encodeURIComponent(no)}`;
 
          console.log("API:", api);
 

@@ -64,7 +64,7 @@ if ($data) {
                     <h5 class="card-title fw-semibold">Resep Luar</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
-                      <a href="module/print/struk_obat_luar?no=<?= $no ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
+                      <a href="module/print/struk_obat_luar?no=<?= urlencode((string) ($no ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>" target="_blank">
                         <button class="btn btn-info"><i class="fas fa-print"></i> Cetak</button>
                       </a>
                     </div>
@@ -99,7 +99,7 @@ if ($data) {
 </html>
 
 <script>
-  const apiUrl = 'controller/visit/resepLuar?no=<?= $_GET['no'] ?>';
+  const apiUrl = 'controller/visit/resepLuar?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>';
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({

@@ -53,7 +53,7 @@ require '../../controller/view.php';
                     <h5 class="card-title fw-semibold">Data Biaya Transaksi</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
-                      <a href="module/print/struk_billing?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
+                      <a href="module/print/struk_billing?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>" target="_blank">
                         <button class="btn btn-light" id=""><i class="fas fa-print"></i> Print</button>
                       </a>
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
@@ -190,7 +190,7 @@ require '../../controller/view.php';
   });
 </script>
 <script>
-  const apiUrl = 'controller/visit/billingController?no=<?= $_GET['no'] ?>';
+  const apiUrl = 'controller/visit/billingController?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>';
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({

@@ -180,7 +180,7 @@ try {
                                   <?php
                                   $statusranap = $row['status_rawatinap'] ?? '';
                                   if ($statusranap == '1') { ?>
-                                    <a href="module/admin/print/formulir_resume_v2?no=<?= $row['visit_ID'] ?>&rm=<?= $row['nomor_rm'] ?>&download=1&ranap=<?= $row['status_rawatinap'] ?>"
+                                    <a href="module/admin/print/formulir_resume_v2?no=<?= urlencode((string) ($row['visit_ID'] ?? '')) ?>&rm=<?= urlencode((string) ($row['nomor_rm'] ?? '')) ?>&download=1&ranap=<?= $row['status_rawatinap'] ?>"
                                       target="_blank"
                                       class="btn btn-sm btn-danger btn-download-resume">
 
@@ -188,7 +188,7 @@ try {
                                       Download Resume Rawat Inap
                                     </a>
                                   <?php   } else { ?>
-                                    <a href="module/admin/print/formulir_resume_poli?no=<?= $row['visit_ID'] ?>&rm=<?= $row['nomor_rm'] ?>&download=1&ranap=<?= $row['status_rawatinap'] ?>"
+                                    <a href="module/admin/print/formulir_resume_poli?no=<?= urlencode((string) ($row['visit_ID'] ?? '')) ?>&rm=<?= urlencode((string) ($row['nomor_rm'] ?? '')) ?>&download=1&ranap=<?= $row['status_rawatinap'] ?>"
                                       target="_blank"
                                       class="btn btn-sm btn-danger btn-download-resume">
 

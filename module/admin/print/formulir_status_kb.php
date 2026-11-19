@@ -162,7 +162,7 @@
       const no = url.get("no");
       const rm = url.get("rm");
 
-      fetch(`getkb.php?no=${no}&rm=${rm}`)
+      fetch(`getkb.php?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}`)
          .then(res => res.json())
          .then(resp => {
 

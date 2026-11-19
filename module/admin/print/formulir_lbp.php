@@ -160,7 +160,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   if (!visit || !rm) return;
 
-  fetch(`getlbp.php?visit=${visit}&rm=${rm}`)
+  fetch(`getlbp.php?visit=${encodeURIComponent(visit)}&rm=${encodeURIComponent(rm)}`)
     .then(res => res.json())
     .then(resp => {
       if (!resp || resp.status !== "success") return;

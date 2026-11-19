@@ -319,7 +319,7 @@ if ($data) {
 
     console.log("RM:", rm);
     console.log("Visit:", visit);
-    $.get("controller/visit/getFotoKIA.php?rm=" + rm + "&visit=" + visit, function(res) {
+    $.get("controller/visit/getFotoKIA.php?rm=" + encodeURIComponent(rm) + "&visit=" + encodeURIComponent(visit), function(res) {
       let json = JSON.parse(res);
       console.log(json);
 

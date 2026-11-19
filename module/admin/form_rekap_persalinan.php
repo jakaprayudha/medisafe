@@ -100,7 +100,7 @@ require '../../controller/view.php';
                   </div>
 
                   <div class="text-end mt-3">
-                    <a href="module/admin/print/formulir_persalinan?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                    <a href="module/admin/print/formulir_persalinan?no=<?= urlencode((string) ($no ?? '')) ?>&rm=<?= urlencode((string) ($rm ?? '')) ?>" target="_blank">
                       <button class="btn btn-outline-primary">
                         <iconify-icon icon="mdi:printer-outline"></iconify-icon> Cetak
                       </button>
@@ -132,7 +132,7 @@ require '../../controller/view.php';
     if (!no || !rm) return;
 
     // ===== GET DATA PASIEN + INAP =====
-    fetch(`controller/ranap/getFormRekapPersalinan.php?no=${no}&rm=${rm}`)
+    fetch(`controller/ranap/getFormRekapPersalinan.php?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}`)
       .then(r => r.json())
       .then(res => {
 

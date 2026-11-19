@@ -139,7 +139,7 @@
       /* =============================
          LOAD IDENTITAS PASIEN
       ==============================*/
-      fetch(`getpasien.php?no=${visit}&rm=${rm}`)
+      fetch(`getpasien.php?no=${encodeURIComponent(visit)}&rm=${encodeURIComponent(rm)}`)
          .then(res => res.json())
          .then(data => {
 
@@ -163,7 +163,7 @@
       /* =============================
          LOAD PERJALANAN PENYAKIT
       ==============================*/
-      fetch(`getperjalanan.php?visit=${visit}&rm=${rm}`)
+      fetch(`getperjalanan.php?visit=${encodeURIComponent(visit)}&rm=${encodeURIComponent(rm)}`)
          .then(res => res.json())
          .then(resp => {
 

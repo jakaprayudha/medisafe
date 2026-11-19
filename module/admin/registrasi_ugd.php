@@ -618,7 +618,7 @@ require '../../controller/view.php';
                       </li>
 
                         <li>
-                        <a class="dropdown-item" href="module/admin/triase?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                        <a class="dropdown-item" href="module/admin/triase?no=${encodeURIComponent(row.visit_ID)}&rm=${encodeURIComponent(row.nomor_rm)}">
                           <i class="fas fa-clipboard me-2 text-dark"></i> Triase
                         </a>
                       </li>

@@ -78,7 +78,7 @@
                     </div>
                     <div id="ttdSection" class="text-end mt-2"></div>
                     <div class="text-end mt-2">
-                      <a href="module/admin/print/formulir_pernyataan?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
+                      <a href="module/admin/print/formulir_pernyataan?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>" target="_blank">
                         <button class="btn btn-outline-primary">
                           <iconify-icon icon="mdi:printer-outline"></iconify-icon>
                           Cetak
@@ -128,7 +128,7 @@
   </div>
 
   <script>
-    fetch(`controller/visit/getTTD?no=<?= $no ?>`)
+    fetch(`controller/visit/getTTD?no=<?= urlencode((string) ($no ?? '')) ?>`)
       .then(res => res.json())
       .then(resp => {
 
@@ -302,7 +302,7 @@
               modalInstance.hide();
 
               // update UI tanpa reload
-              fetch(`controller/visit/getTTD?no=<?= $no ?>`)
+              fetch(`controller/visit/getTTD?no=<?= urlencode((string) ($no ?? '')) ?>`)
                 .then(res => res.json())
                 .then(r => {
                   let d = r.data;

@@ -176,7 +176,7 @@ $dataresume =  mysqli_fetch_array($checkvisit);
                   </div>
 
                   <div class="text-end mt-3">
-                    <a href="module/admin/print/formulir_resume_v2?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                    <a href="module/admin/print/formulir_resume_v2?no=<?= urlencode((string) ($no ?? '')) ?>&rm=<?= urlencode((string) ($rm ?? '')) ?>" target="_blank">
                       <button class="btn btn-outline-primary">
                         <iconify-icon icon="mdi:printer-outline"></iconify-icon> Cetak
                       </button>
@@ -241,7 +241,7 @@ $dataresume =  mysqli_fetch_array($checkvisit);
     if (!no || !rm) return;
 
     // ===== GET DATA PASIEN + RESUME =====
-    fetch(`controller/ranap/getResume?no=${no}&rm=${rm}`)
+    fetch(`controller/ranap/getResume?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}`)
       .then(r => r.json())
       .then(res => {
 

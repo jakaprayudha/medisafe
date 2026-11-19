@@ -324,7 +324,7 @@ $no = $_GET['no'];
 
     // Auto fill form
     if (doctorNo) {
-      fetch("controller/master/dokterDetailsController.php?no=" + doctorNo)
+      fetch("controller/master/dokterDetailsController.php?no=" + encodeURIComponent(doctorNo))
         .then(res => res.json())
         .then(data => {
           if (data.success) {

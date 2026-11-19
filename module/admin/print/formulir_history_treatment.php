@@ -145,7 +145,7 @@
 
       if (!no || !rm) return;
 
-      fetch("getcppttindakan.php?no=" + no + "&rm=" + rm)
+      fetch("getcppttindakan.php?no=" + encodeURIComponent(no) + "&rm=" + encodeURIComponent(rm))
          .then(r => r.json())
          .then(res => {
             if (res.status !== "success") return;

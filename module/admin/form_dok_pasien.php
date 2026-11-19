@@ -60,7 +60,7 @@ $id_patient = $data['id_patient'];
                     <h5 class="card-title fw-semibold">Dokumen Pasien</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
-                      <a href="module/admin/print/formulir_pasien?id_patient=<?= $id_patient ?>&no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                      <a href="module/admin/print/formulir_pasien?id_patient=<?= $id_patient ?>&no=<?= urlencode((string) ($no ?? '')) ?>&rm=<?= urlencode((string) ($rm ?? '')) ?>" target="_blank">
                         <button class="btn btn-outline-primary"><i class="fas fa-print"></i> Cetak</button>
                       </a>
                     </div>
@@ -90,7 +90,7 @@ $id_patient = $data['id_patient'];
                     </div>
 
                     <div class="col-md-4 mt-3">
-                      <a href="module/admin/print/formulir_pengantar_ranap?no=<?= $no ?>&rm=<?= $rm ?>&rme=c" target="_blank">
+                      <a href="module/admin/print/formulir_pengantar_ranap?no=<?= urlencode((string) ($no ?? '')) ?>&rm=<?= urlencode((string) ($rm ?? '')) ?>&rme=c" target="_blank">
                         <div class="border rounded bg-outline-primary p-3 text-center">
                           <h6>Surat Pengantar Rawat Inap</h6>
                           <span class="text-primary">

@@ -55,7 +55,7 @@ $rm = $_GET['rm'];
                     <h5 class="card-title fw-semibold">Data Resep Luar</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
-                      <a href="module/admin/print_resep_luar?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                      <a href="module/admin/print_resep_luar?no=<?= urlencode((string) ($no ?? '')) ?>&rm=<?= urlencode((string) ($rm ?? '')) ?>" target="_blank">
                         <button class="btn btn-info"><i class="fas fa-print"></i> Cetak</button>
                       </a>
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
@@ -161,7 +161,7 @@ $rm = $_GET['rm'];
   </div>
 </div>
 <script>
-  const apiUrl = 'controller/visit/resepLuar?no=<?= $_GET['no'] ?>';
+  const apiUrl = 'controller/visit/resepLuar?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>';
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({

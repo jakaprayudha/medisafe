@@ -167,7 +167,7 @@
 
       if (!no || !rm) return;
 
-      fetch("get_sp_gigi.php?no=" + no + "&rm=" + rm)
+      fetch("get_sp_gigi.php?no=" + encodeURIComponent(no) + "&rm=" + encodeURIComponent(rm))
          .then(r => r.json())
          .then(res => {
 

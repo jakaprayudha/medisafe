@@ -58,7 +58,7 @@ $datapatient = mysqli_fetch_array($patient);
                     <h5 class="card-title fw-semibold">Dokumentasi Perawatan</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
-                      <a href="module/admin/print/formulir_dokumen?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                      <a href="module/admin/print/formulir_dokumen?no=<?= urlencode((string) ($no ?? '')) ?>&rm=<?= urlencode((string) ($rm ?? '')) ?>" target="_blank">
                         <button class="btn btn-outline-primary"><i class="fas fa-print"></i> Cetak</button>
                       </a>
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
@@ -136,7 +136,7 @@ $datapatient = mysqli_fetch_array($patient);
 $id_patient = $datapatient['id_patient'];
 ?>
 <script>
-  const apiUrl = 'controller/ranap/dokumentasiPerawatan?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>';
+  const apiUrl = 'controller/ranap/dokumentasiPerawatan?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>';
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({

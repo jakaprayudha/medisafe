@@ -68,7 +68,7 @@
 
       const base = window.location.origin + window.location.pathname.split('/module')[0] + "/";
 
-      fetch(`getfkpp.php?no=${no}&rm=${rm}`)
+      fetch(`getfkpp.php?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}`)
          .then(r => r.json())
          .then(res => {
 

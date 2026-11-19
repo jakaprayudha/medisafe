@@ -343,7 +343,7 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
                             <iconify-icon icon="mdi:arrow-left"></iconify-icon>
                             Kembail
                           </button>
-                          <a href="module/admin/print/formulir_triase?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                          <a href="module/admin/print/formulir_triase?no=<?= urlencode((string) ($no ?? '')) ?>&rm=<?= urlencode((string) ($rm ?? '')) ?>" target="_blank">
                             <button class="btn btn-outline-primary">
                               <iconify-icon icon="mdi:printer-outline"></iconify-icon> Cetak
                             </button>
@@ -582,7 +582,7 @@ $datarawapinap = mysqli_fetch_array($checkrawatinap);
 
     const no = "<?= $_GET['no'] ?>";
 
-    fetch(`controller/ranap/getTriase.php?no=${no}`)
+    fetch(`controller/ranap/getTriase.php?no=${encodeURIComponent(no)}`)
       .then(res => res.json())
       .then(res => {
 

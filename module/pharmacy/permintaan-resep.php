@@ -172,7 +172,7 @@ $apiUrl = getenv('API_URL');
             return {
               actions: `
               <div class="text-center">
-                <a href="module/admin/farmasi_order_detail?no=${row.visit_ID}&rm=${row.nomor_rm}&id=${row.id_permintaan_farmasi}">
+                <a href="module/admin/farmasi_order_detail?no=${encodeURIComponent(row.visit_ID)}&rm=${encodeURIComponent(row.nomor_rm)}&id=${row.id_permintaan_farmasi}">
                   <button class="btn btn-sm btn-primary">
                     <i class="fas fa-file"></i> Lihat Resep
                   </button>

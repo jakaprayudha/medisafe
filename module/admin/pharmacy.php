@@ -509,7 +509,7 @@ require '../../controller/view.php';
             return `<div class="d-flex align-items-center gap-3">
               <span class="ph-ava ${cls}"><i class="fas ${ic}"></i></span>
               <div class="min-w-0">
-                <a href="module/admin/pharmacy_details?no=${r.id_pharmacy}" class="ph-name d-block text-reset" title="${esc(gen)}">${esc(gen)}</a>
+                <a href="module/admin/pharmacy_details?no=${encodeURIComponent(r.id_pharmacy)}" class="ph-name d-block text-reset" title="${esc(gen)}">${esc(gen)}</a>
                 <div class="ph-sub" title="${esc(trade)}">${trade ? esc(trade) + ' · ' : ''}${kode}</div>
               </div>
             </div>`;
@@ -543,9 +543,9 @@ require '../../controller/view.php';
           orderable: false,
           className: 'text-center',
           render: (d, t, r) => `<div class="ph-act d-flex gap-1 justify-content-center">
-              <a class="btn btn-light text-warning" href="module/admin/pharmacy_stock?no=${r.id_pharmacy}" title="Stok"><i class="fas fa-boxes-stacked"></i></a>
+              <a class="btn btn-light text-warning" href="module/admin/pharmacy_stock?no=${encodeURIComponent(r.id_pharmacy)}" title="Stok"><i class="fas fa-boxes-stacked"></i></a>
               <a class="btn btn-light text-primary" href="module/admin/pharmacy_usage?id_pharmacy=${r.id_pharmacy}" title="Pasien pengguna obat"><i class="fas fa-users"></i></a>
-              <a class="btn btn-light text-info" href="module/admin/pharmacy_details?no=${r.id_pharmacy}" title="Detail & ubah"><i class="fas fa-pen"></i></a>
+              <a class="btn btn-light text-info" href="module/admin/pharmacy_details?no=${encodeURIComponent(r.id_pharmacy)}" title="Detail & ubah"><i class="fas fa-pen"></i></a>
               <button class="btn btn-light text-danger delete-btn" data-id="${r.id_pharmacy}" data-nama="${esc(isi(r.pharmacy_name_generic))}" data-sumber="${r.sumber}" title="Hapus dari daftar"><i class="fas fa-trash"></i></button>
             </div>`
         }]

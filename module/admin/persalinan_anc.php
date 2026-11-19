@@ -230,7 +230,7 @@ $rm = $_GET['rm'];
 </div>
 
 <script>
-  const apiUrl = 'controller/visit/persalinanAncController?no=<?= $no ?>';
+  const apiUrl = 'controller/visit/persalinanAncController?no=<?= urlencode((string) ($no ?? '')) ?>';
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({

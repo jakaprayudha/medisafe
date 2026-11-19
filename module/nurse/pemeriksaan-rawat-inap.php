@@ -203,19 +203,19 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                   <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="z-index:1055; min-width: 180px;">
                     <li>
                      <a class="dropdown-item" target="_blank"
-                        href="module/admin/print/bundle_klaim?id_patient=${row.id_patient}&no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
+                        href="module/admin/print/bundle_klaim?id_patient=${row.id_patient}&no=${encodeURIComponent(row.visit_ID)}&rm=${encodeURIComponent(row.nomor_rm)}&rme=c">
                         <i class="bi bi-clipboard2-pulse me-2"></i>Preview RME Klaim
                       </a>
                     </li>
                         <li>
-                        <a class="dropdown-item" href="module/admin/rme_inap?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
+                        <a class="dropdown-item" href="module/admin/rme_inap?no=${encodeURIComponent(row.visit_ID)}&rm=${encodeURIComponent(row.nomor_rm)}&rme=c">
                           <i class="bi bi-file-earmark-text me-2"></i>Pemeriksaan Rawat Inap
                         </a>
                       </li>
                        </li>
                         ${row.patient_gender === 'Perempuan' ? `
                         <li>
-                          <a class="dropdown-item" href="module/admin/rme_persalinan?no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c">
+                          <a class="dropdown-item" href="module/admin/rme_persalinan?no=${encodeURIComponent(row.visit_ID)}&rm=${encodeURIComponent(row.nomor_rm)}&rme=c">
                             <i class="bi bi-file-earmark-text me-2"></i>Persalinan
                           </a>
                         </li>
@@ -227,7 +227,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
                         <!-- 🔥 DOWNLOAD -->
                         <li>
                          <a class="dropdown-item text-success"
-                            href="module/admin/print/bundle_klaim?id_patient=${row.id_patient}&no=${row.visit_ID}&rm=${row.nomor_rm}&rme=c&download=1">
+                            href="module/admin/print/bundle_klaim?id_patient=${row.id_patient}&no=${encodeURIComponent(row.visit_ID)}&rm=${encodeURIComponent(row.nomor_rm)}&rme=c&download=1">
                             <i class="bi bi-download me-2"></i>Download PDF Klaim
                           </a>
                         </li>

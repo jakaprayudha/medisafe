@@ -208,7 +208,7 @@
 
       const base = window.location.origin + "/medisafe/";
 
-      fetch("get_usg.php?no=" + no + "&rm=" + rm)
+      fetch("get_usg.php?no=" + encodeURIComponent(no) + "&rm=" + encodeURIComponent(rm))
          .then(r => r.json())
          .then(res => {
 

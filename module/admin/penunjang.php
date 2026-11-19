@@ -59,7 +59,7 @@ $id_patient = $datacheck['id_patient'];
                     <h5 class="card-title fw-semibold">Data Penunjang</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
-                      <a href="module/admin/print/formulir_lab?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                      <a href="module/admin/print/formulir_lab?no=<?= urlencode((string) ($no ?? '')) ?>&rm=<?= urlencode((string) ($rm ?? '')) ?>" target="_blank">
                         <button class="btn btn-light"><i class="fas fa-print"></i> Cetak</button>
                       </a>
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
@@ -180,7 +180,7 @@ $id_patient = $datacheck['id_patient'];
   </div>
 </div>
 <script>
-  const apiUrl = 'controller/visit/penunjang?no=<?= $_GET['no'] ?>&id_patient=<?= $id_patient ?>';
+  const apiUrl = 'controller/visit/penunjang?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&id_patient=<?= $id_patient ?>';
 
   $(document).ready(function() {
 
@@ -475,7 +475,7 @@ $id_patient = $datacheck['id_patient'];
       // set source iframe
       $('#previewFrame').attr(
         'src',
-        `module/admin/print/formulir_lab_id?no=${no}&rm=${rm}&id_inspection=${id}`
+        `module/admin/print/formulir_lab_id?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}&id_inspection=${id}`
       );
 
       $('#hasilModal').modal('show');

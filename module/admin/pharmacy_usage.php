@@ -813,7 +813,7 @@ $selectedIdPharmacy = (int) ($_GET['id_pharmacy'] ?? 0);
           isi(o.pharmacy_category) ? `<span class="pu-badge bg-light text-dark">${esc(o.pharmacy_category)}</span>` : '',
           golBadge(o.pharmcy_golongan)
         ].join('') : '');
-        $('#puObatDetail').attr('href', `module/admin/pharmacy_details?no=${idObat}`);
+        $('#puObatDetail').attr('href', `module/admin/pharmacy_details?no=${encodeURIComponent(idObat)}`);
       }
 
       function pilihObat(id, keDaftar) {

@@ -223,7 +223,7 @@
       const rm = p.get("rm");
       if (!no || !rm) return;
       const id = p.get("id_inspection");
-      fetch(`getlabID.php?no=${no}&rm=${rm}&id_inspection=${id}`)
+      fetch(`getlabID.php?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}&id_inspection=${id}`)
         .then(r => r.json())
         .then(res => {
           if (res.status !== "success") return;
@@ -289,7 +289,7 @@
           }
 
           // ================= QR =================
-          const url = `${location.origin}/verify_lab.php?no=${no}&rm=${rm}`;
+          const url = `${location.origin}/verify_lab.php?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}`;
           document.getElementById("lab_qr").innerHTML =
             `<img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(url)}">`;
 
