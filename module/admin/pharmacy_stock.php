@@ -2,6 +2,8 @@
 $title = 'Farmasi Stock';
 require '../../controller/view.php';
 $no = (int) ($_GET['no'] ?? 0);
+require_once '../../controller/master/marginHarga.php';
+$marginFaskes = marginFaskes($koneksi, (int) ($_SESSION['id_customer'] ?? 0));
 ?>
 <!doctype html>
 <html lang="id">
@@ -316,6 +318,7 @@ $no = (int) ($_GET['no'] ?? 0);
                 <span class="input-group-text">Rp</span>
                 <input type="number" name="harga_beli" id="harga_beli" class="form-control" min="0" step="any">
               </div>
+              <div class="form-text" id="hintMargin"></div>
             </div>
             <div class="col-md-6">
               <label class="form-label small">Total Harga</label>
@@ -636,8 +639,24 @@ $no = (int) ($_GET['no'] ?? 0);
       });
 
       // ---------- penerimaan ----------
+      const MARGIN = <?= json_encode($marginFaskes) ?>;
+
       function hitungTotal() {
         $('#totalHarga').val(rp((+$('#jumlah').val() || 0) * (+$('#harga_beli').val() || 0)));
+        // margin aktif: harga jual ikut diperbarui saat penerimaan disimpan (lihat Setting Margin)
+        const bmhp = /^\s*(bmhp|alkes|alat)/i.test((obat && obat.pharmacy_category) || '');
+        const pct = bmhp ? MARGIN.bmhp : MARGIN.obat;
+        const beli = +$('#harga_beli').val() || 0;
+        if (pct === null) {
+          $('#hintMargin').html('Margin belum diatur, harga jual obat tidak berubah. <a href="module/admin/setting_margin">Atur margin</a>');
+        } else if (beli > 0) {
+          const mentah = Math.round(beli * (1 + pct / 100) * 1e6) / 1e6;
+          const kel = mentah < 1000 ? 10 : 100;
+          const jual = Math.ceil(mentah / kel) * kel;
+          $('#hintMargin').html(`<i class="fas fa-calculator me-1 text-primary"></i>Harga jual akan diperbarui menjadi <b>${rp(jual)}</b> (margin ${bmhp ? 'BMHP' : 'obat'} ${pct}%).`);
+        } else {
+          $('#hintMargin').text(`Isi harga beli agar harga jual dihitung otomatis (margin ${bmhp ? 'BMHP' : 'obat'} ${pct}%).`);
+        }
       }
       $('#jumlah, #harga_beli').on('input', hitungTotal);
 
