@@ -1,7 +1,8 @@
 <?php
 // Penelusuran pemakaian obat pasien (module/admin/pharmacy_usage, module/pharmacy/pemakaian-obat).
 //   GET action=get_medicines                         -> master obat faskes (untuk pilihan obat)
-//   GET action=ranking&from=&to=                     -> rekap pemakaian per obat pada periode
+//   GET action=ranking&from=&to=                     -> rekap pemakaian per obat + dashboard (tren, dokter, poli, layanan, golongan)
+//   GET action=excel&from=&to=                       -> XLSX (Ringkasan, Rekap per Obat, Per Dokter, Per Poli)
 //   GET action=list&from=&to=&id_pharmacy=&status=&layanan=&q=&start=&length=&draw=[&summary=1]
 //                                                    -> daftar pemakaian (server-side, per halaman)
 //   GET action=detail&id_pharmacy_details=           -> detail satu pemakaian + isi resep
@@ -73,18 +74,29 @@ if ($action === 'get_medicines') {
    jawab(['status' => 'success', 'data' => $rows]);
 }
 
-// ================= REKAP PER OBAT =================
-if ($action === 'ranking') {
-   [$dari, $sampai, $dariTgl, $sampaiTgl] = periode();
-   $kunciCache = "usage_rank_{$idc}_{$dariTgl}_{$sampaiTgl}";
-   $cache = $_SESSION[$kunciCache] ?? null;
-   if (is_array($cache) && $cache['t'] > time() - 300 && empty($_GET['refresh'])) {
-      jawab($cache['data'] + ['cached' => true]);
-   }
+// ================= REKAP PER OBAT + DASHBOARD =================
+/**
+ * Rekap pemakaian pada periode: per obat (ranking) + tren, per dokter, per poli, layanan, golongan.
+ * 1 query baris resep (tanpa join), info kunjungan diambil untuk ID yang muncul saja (index visit_ID),
+ * lalu semua agregasi di PHP. Qty tanpa harga di resep diestimasi dengan harga master obat.
+ */
+function hitungRekap(mysqli $koneksi, string $idc, string $dari, string $sampai, string $dariTgl, string $sampaiTgl): array
+{
+   $hari = (new DateTime($dariTgl))->diff(new DateTime($sampaiTgl))->days + 1;
+   $perHari = $hari <= 92;
+   $idcInt = (int) $idc;
 
-   // 1 query baris mentah, agregasi di PHP (lebih cepat dari COUNT DISTINCT per grup di tabel tanpa index)
+   // harga master dimuat lebih dulu: qty tanpa harga di resep langsung diestimasi per baris (hemat memori)
+   $hargaM = [];
+   $st = $koneksi->prepare("SELECT id_pharmacy, pharmacy_price_item FROM ms_pharmacy WHERE id_customer IN (?, 0)");
+   $st->bind_param('i', $idcInt);
+   $st->execute();
+   $res = $st->get_result();
+   while ($m = $res->fetch_row()) $hargaM[(int) $m[0]] = (int) $m[1];
+   $st->close();
+
    $stmt = $koneksi->prepare(
-      "SELECT ppd.id_pharmacy, pp.id_permintaan_farmasi, pp.id_visit, ppd.qty, ppd.harga
+      "SELECT ppd.id_pharmacy, pp.id_permintaan_farmasi, pp.id_visit, ppd.qty, ppd.harga, pp.created_at
        FROM permintaan_pharmacy pp
        JOIN permintaan_pharmacy_details ppd ON ppd.id_permintaan_farmasi = pp.id_permintaan_farmasi
        WHERE pp.id_customer = ? AND pp.created_at >= ? AND pp.created_at < ?"
@@ -95,26 +107,75 @@ if ($action === 'ranking') {
    $hasil = $stmt->get_result();
 
    $per = [];
-   $resepAll = $visitAll = [];
+   $resepVisit = [];   // id resep -> id kunjungan
+   $resepWaktu = [];   // id resep -> kunci tren
+   $tren = [];         // kunci -> [qty, nilai]
+   $perVisit = [];     // id kunjungan -> [qty, nilai]
    $totalQty = 0;
+   $baris = 0;
    while ($r = $hasil->fetch_row()) {
-      [$idPh, $idResep, $idVisit, $qty, $harga] = $r;
+      [$idPh, $idResep, $idVisit, $qty, $harga, $waktu] = $r;
       $idPh = (int) $idPh;
+      $qty = (int) $qty;
+      $harga = (int) $harga;
+      $nilai = $qty * ($harga > 0 ? $harga : ($hargaM[$idPh] ?? 0));
       $p = &$per[$idPh];
-      $p ??= ['n' => 0, 'qty' => 0, 'visit' => [], 'nominal' => 0, 'tanpa_harga' => 0];
+      $p ??= ['n' => 0, 'qty' => 0, 'visit' => [], 'nominal' => 0];
       $p['n']++;
-      $p['qty'] += (int) $qty;
+      $p['qty'] += $qty;
       $p['visit'][$idVisit] = true;
-      if ((int) $harga > 0) $p['nominal'] += (int) $qty * (int) $harga;
-      else $p['tanpa_harga'] += (int) $qty;
+      $p['nominal'] += $nilai;
       unset($p);
-      $resepAll[$idResep] = true;
-      $visitAll[$idVisit] = true;
-      $totalQty += (int) $qty;
+      $kunci = $perHari ? substr($waktu, 0, 10) : substr($waktu, 0, 7);
+      $resepVisit[$idResep] = (string) $idVisit;
+      $resepWaktu[$idResep] ??= $kunci;
+      $t = &$tren[$kunci];
+      $t ??= [0, 0];
+      $t[0] += $qty;
+      $t[1] += $nilai;
+      unset($t);
+      $v = &$perVisit[$idVisit];
+      $v ??= [0, 0];
+      $v[0] += $qty;
+      $v[1] += $nilai;
+      unset($v);
+      $totalQty += $qty;
+      $baris++;
    }
    $stmt->close();
 
-   // nama & harga master untuk obat yang muncul (termasuk yang sudah dihapus dari daftar)
+   // info kunjungan (dokter, poli, rawat inap) hanya untuk ID yang muncul — index visit_ID, per 1000
+   $visit = [];
+   foreach (array_chunk(array_map('strval', array_keys($perVisit)), 1000) as $blok) {
+      $ph = implode(',', array_fill(0, count($blok), '?'));
+      $st = $koneksi->prepare("SELECT visit_ID, id_doctor, id_poli, status_rawatinap FROM pasien_visit WHERE visit_ID IN ($ph)");
+      $st->bind_param(str_repeat('s', count($blok)), ...$blok);
+      $st->execute();
+      $res = $st->get_result();
+      while ($v = $res->fetch_row()) {
+         $visit[$v[0]] = [trim((string) $v[1]) ?: '-', trim((string) $v[2]) ?: '-', (int) $v[3] === 1 ? 'Rawat inap' : 'Rawat jalan'];
+      }
+      $st->close();
+   }
+   $resepPerVisit = array_count_values($resepVisit);
+   $ember = ['dokter' => [], 'poli' => [], 'layanan' => []];
+   foreach ($perVisit as $idVisit => [$q, $n]) {
+      $v = $visit[$idVisit] ?? ['-', '-', 'Tanpa kunjungan'];
+      $jr = $resepPerVisit[(string) $idVisit] ?? 0;
+      foreach (['dokter' => $v[0], 'poli' => $v[1], 'layanan' => $v[2]] as $jenis => $k) {
+         $t = &$ember[$jenis][$k];
+         $t ??= ['qty' => 0, 'nominal' => 0, 'resep' => 0];
+         $t['qty'] += $q;
+         $t['nominal'] += $n;
+         $t['resep'] += $jr;
+         unset($t);
+      }
+   }
+   $resepPerTgl = array_count_values($resepWaktu);
+   $jmlResep = count($resepVisit);
+   $jmlVisit = count($perVisit);
+   unset($resepVisit, $resepWaktu, $perVisit, $visit);
+
    $info = [];
    if ($per) {
       $ids = array_keys($per);
@@ -122,7 +183,7 @@ if ($action === 'ranking') {
       foreach (semua(
          $koneksi,
          "SELECT id_pharmacy, pharmacy_code, pharmacy_name_generic, pharmacy_name_trade, pharmacy_category,
-                 pharmcy_golongan, pharmacy_unit, pharmacy_price_item
+                 pharmcy_golongan, pharmacy_unit
           FROM ms_pharmacy WHERE id_pharmacy IN ($ph)",
          str_repeat('i', count($ids)),
          $ids
@@ -133,11 +194,16 @@ if ($action === 'ranking') {
 
    $data = [];
    $totalNominal = 0;
+   $golongan = [];
    foreach ($per as $idPh => $p) {
       $m = $info[$idPh] ?? [];
-      // qty tanpa harga di resep diestimasi dengan harga master
-      $nominal = $p['nominal'] + $p['tanpa_harga'] * (int) ($m['pharmacy_price_item'] ?? 0);
-      $totalNominal += $nominal;
+      $totalNominal += $p['nominal'];
+      $g = trim((string) ($m['pharmcy_golongan'] ?? ''));
+      $g = preg_match('/[\p{L}\p{N}]/u', $g) ? ucwords(mb_strtolower($g)) : 'Tidak diisi';
+      $golongan[$g] ??= ['qty' => 0, 'nominal' => 0, 'obat' => 0];
+      $golongan[$g]['qty'] += $p['qty'];
+      $golongan[$g]['nominal'] += $p['nominal'];
+      $golongan[$g]['obat']++;
       $data[] = [
          'id_pharmacy' => $idPh,
          'pharmacy_code' => $m['pharmacy_code'] ?? null,
@@ -149,25 +215,109 @@ if ($action === 'ranking') {
          'jml_item' => $p['n'],
          'jml_kunjungan' => count($p['visit']),
          'total_qty' => $p['qty'],
-         'nominal' => $nominal,
+         'nominal' => $p['nominal'],
       ];
    }
    usort($data, fn($a, $b) => $b['total_qty'] <=> $a['total_qty'] ?: $b['jml_kunjungan'] <=> $a['jml_kunjungan']);
+   foreach ($data as $i => &$d) $d['rank'] = $i + 1;
+   unset($d);
 
-   $out = [
+   $trenOut = [];
+   if ($perHari) {
+      for ($d = new DateTime($dariTgl); $d->format('Y-m-d') <= $sampaiTgl; $d->modify('+1 day')) $trenOut[$d->format('Y-m-d')] = ['nama' => $d->format('Y-m-d'), 'qty' => 0, 'nominal' => 0, 'resep' => 0];
+   }
+   foreach ($tren as $k => [$q, $n]) $trenOut[$k] = ['nama' => (string) $k, 'qty' => $q, 'nominal' => $n, 'resep' => $resepPerTgl[$k] ?? 0];
+   ksort($trenOut);
+   $daftar = function (array $e) {
+      $o = array_map(fn($k, $v) => ['nama' => (string) $k] + $v, array_keys($e), $e);
+      usort($o, fn($x, $y) => $y['resep'] <=> $x['resep']);
+      return $o;
+   };
+   uasort($golongan, fn($x, $y) => $y['qty'] <=> $x['qty']);
+
+   return [
       'status' => 'success',
       'periode' => [$dariTgl, $sampaiTgl],
       'summary' => [
          'jml_obat' => count($data),
-         'jml_resep' => count($resepAll),
-         'jml_kunjungan' => count($visitAll),
+         'jml_resep' => $jmlResep,
+         'jml_kunjungan' => $jmlVisit,
          'total_qty' => $totalQty,
          'nominal' => $totalNominal,
+         'item_per_resep' => $jmlResep ? round($baris / $jmlResep, 1) : 0,
+         'nilai_per_resep' => $jmlResep ? round($totalNominal / $jmlResep) : 0,
+         'resep_per_hari' => round($jmlResep / max(1, $hari), 1),
+      ],
+      'dashboard' => [
+         'periode' => $perHari ? 'hari' : 'bulan',
+         'tren' => array_values($trenOut),
+         'dokter' => $daftar($ember['dokter']),
+         'poli' => $daftar($ember['poli']),
+         'layanan' => $daftar($ember['layanan']),
+         'golongan' => array_map(fn($k, $v) => ['nama' => (string) $k] + $v, array_keys($golongan), $golongan),
       ],
       'data' => $data,
    ];
-   $_SESSION[$kunciCache] = ['t' => time(), 'data' => $out];
-   jawab($out);
+}
+
+if ($action === 'ranking' || $action === 'excel') {
+   [$dari, $sampai, $dariTgl, $sampaiTgl] = periode();
+   $kunciCache = "usage_rank2_{$idc}_{$dariTgl}_{$sampaiTgl}";
+   $cache = $_SESSION[$kunciCache] ?? null;
+   if (is_array($cache) && $cache['t'] > time() - 300 && empty($_GET['refresh'])) {
+      $out = $cache['data'] + ['cached' => true];
+   } else {
+      $out = hitungRekap($koneksi, $idc, $dari, $sampai, $dariTgl, $sampaiTgl);
+      $_SESSION[$kunciCache] = ['t' => time(), 'data' => $out];
+   }
+   if ($action === 'ranking') jawab($out);
+
+   // ---------- Excel ----------
+   require_once __DIR__ . '/../report/xlsxRingan.php';
+   require_once __DIR__ . '/../report/appointmentService.php';
+   $klinik = apKlinik($koneksi, (int) $idc);
+   $s = $out['summary'];
+   $db = $out['dashboard'];
+   $rp = fn($v) => ['v' => (float) $v, 's' => 6];
+   $x = new XlsxRingan();
+   $x->sheet('Ringkasan', [34, 16, 12, 16]);
+   $x->row([['v' => 'LAPORAN PEMAKAIAN OBAT PASIEN — ' . mb_strtoupper($klinik['nama']), 's' => 3]]);
+   $x->row([['v' => 'Periode ' . apTglIndo($dariTgl) . ' s/d ' . apTglIndo($sampaiTgl) . ' · nilai = qty × harga resep (harga master bila kosong) · dibuat ' . date('d-m-Y H:i'), 's' => 4]]);
+   $x->kosong();
+   $x->row(['Indikator', 'Nilai'], 1);
+   foreach ([
+      ['Jenis obat dipakai', $s['jml_obat']], ['Resep', $s['jml_resep']], ['Kunjungan pasien', $s['jml_kunjungan']],
+      ['Jumlah obat keluar', $s['total_qty']], ['Estimasi nilai obat', $s['nominal']], ['Rata-rata nilai per resep', $s['nilai_per_resep']],
+   ] as [$k, $v]) $x->row([$k, $rp($v)]);
+   $x->row(['Rata-rata item per resep', (float) $s['item_per_resep']]);
+   $x->row(['Rata-rata resep per hari', (float) $s['resep_per_hari']]);
+   foreach (['Layanan' => $db['layanan'], 'Golongan obat' => $db['golongan']] as $judul => $isi) {
+      $x->kosong();
+      $x->row([$judul, 'Jumlah keluar', $judul === 'Golongan obat' ? 'Jenis obat' : 'Resep', 'Nilai'], 1);
+      foreach ($isi as $v) $x->row([$v['nama'], $rp($v['qty']), $v['resep'] ?? $v['obat'], $rp($v['nominal'])]);
+   }
+   $x->kosong();
+   $x->row([$db['periode'] === 'hari' ? 'Tanggal' : 'Bulan', 'Jumlah keluar', 'Resep', 'Nilai'], 1);
+   foreach ($db['tren'] as $t) $x->row([$t['nama'], $rp($t['qty']), $t['resep'], $rp($t['nominal'])]);
+
+   $x->sheet('Rekap per Obat', [8, 36, 22, 16, 16, 10, 12, 12, 14, 16]);
+   $x->freezeHeader();
+   $x->autoFilter(10);
+   $x->row(['Peringkat', 'Obat', 'Nama dagang', 'Kategori', 'Golongan', 'Satuan', 'Kunjungan', 'Baris resep', 'Jumlah keluar', 'Estimasi nilai'], 1);
+   foreach ($out['data'] as $d) {
+      $x->row([$d['rank'], $d['pharmacy_name_generic'], (string) $d['pharmacy_name_trade'], (string) $d['pharmacy_category'], (string) $d['pharmcy_golongan'], (string) $d['pharmacy_unit'],
+         $d['jml_kunjungan'], $d['jml_item'], $rp($d['total_qty']), $rp($d['nominal'])], 5);
+   }
+   foreach (['Per Dokter' => $db['dokter'], 'Per Poli' => $db['poli']] as $judul => $isi) {
+      $x->sheet($judul, [34, 10, 14, 16, 16]);
+      $x->freezeHeader();
+      $x->row([$judul === 'Per Dokter' ? 'Dokter' : 'Poli', 'Resep', 'Jumlah keluar', 'Estimasi nilai', 'Nilai per resep'], 1);
+      foreach ($isi as $v) $x->row([$v['nama'], $v['resep'], $rp($v['qty']), $rp($v['nominal']), $rp($v['resep'] ? $v['nominal'] / $v['resep'] : 0)], 5);
+   }
+   setcookie('pu_unduh', preg_replace('/[^a-z0-9]/', '', (string) ($_GET['token'] ?? '')), ['path' => '/', 'samesite' => 'Lax']);
+   header_remove('Content-Type');
+   $x->kirim('pemakaian_obat_' . $dariTgl . '_' . $sampaiTgl . '.xlsx');
+   exit;
 }
 
 // ================= DAFTAR PEMAKAIAN =================
