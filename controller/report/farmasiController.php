@@ -29,6 +29,7 @@ if ($error !== null) {
 
 try {
    $hasil = farmasiStokReport($koneksi, (string) $id_customer, $fromDate, $toDate);
+   $dashboard = farmasiStokDashboard($koneksi, (string) $id_customer, $fromDate, $toDate, $hasil['data']);
 } catch (Throwable $e) {
    error_log('[rpt_farmasi] ' . $e->getMessage());
    echo json_encode(["status" => "error", "message" => "Gagal mengambil data laporan farmasi"]);
@@ -40,5 +41,6 @@ echo json_encode([
    "filter" => ["fromDate" => $fromDate, "toDate" => $toDate],
    "total" => count($hasil['data']),
    "ringkasan" => $hasil['ringkasan'],
+   "dashboard" => $dashboard,
    "data" => $hasil['data'],
-], JSON_UNESCAPED_UNICODE);
+], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);

@@ -202,6 +202,73 @@ $sheet->getPageSetup()->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageS
     ->setFitToWidth(1)->setFitToHeight(0);
 $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd($barisHeader, $barisHeader);
 
+// ================== SHEET ANALISIS ==================
+try {
+    $dash = farmasiStokDashboard($koneksi, (string) $id_customer, $fromDate, $toDate, $hasil['data']);
+} catch (Throwable $e) {
+    error_log('[export farmasi] analisis: ' . $e->getMessage());
+    $dash = null;
+}
+if ($dash) {
+    $an = $spreadsheet->createSheet();
+    $an->setTitle('Analisis');
+    $judulBlok = function (int $b, array $kolom) use ($an) {
+        $an->fromArray($kolom, null, 'A' . $b);
+        $akhir = chr(64 + count($kolom));
+        $an->getStyle("A{$b}:{$akhir}{$b}")->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '2563EB']],
+        ]);
+    };
+    $an->setCellValue('A1', 'ANALISIS FARMASI' . ($namaKlinik ? ' — ' . mb_strtoupper($namaKlinik) : ''));
+    $an->getStyle('A1')->getFont()->setBold(true)->setSize(13);
+    $an->setCellValue('A2', 'Periode ' . $tgl($fromDate) . ' s/d ' . $tgl($toDate) . ' (semua obat, tanpa filter tampilan)');
+    $b = 4;
+    $judulBlok($b, ['Indikator', 'Nilai']);
+    foreach ([
+        ['Nilai obat keluar (harga jual saat diserahkan)', $hasil['ringkasan']['nilai_keluar'], true],
+        ['Resep dilayani', $dash['resep'], false],
+        ['Jenis obat keluar', $dash['obat_keluar'], false],
+        ['Obat berstok yang tidak keluar', $dash['mati'], false],
+        ['Nilai stok tidak bergerak (harga beli)', $dash['mati_nilai'], true],
+        ['Batch kedaluwarsa / ED ≤ 90 hari', $dash['ed_lewat'] + $dash['ed_dekat'], false],
+        ['Obat dengan stok akhir minus', $dash['negatif'], false],
+    ] as [$k, $v, $uang]) {
+        $b++;
+        $an->setCellValue("A{$b}", $k)->setCellValue("B{$b}", $v);
+        $an->getStyle("B{$b}")->getNumberFormat()->setFormatCode($uang ? $fmtRupiah : $fmtAngka);
+    }
+    $blok = function (string $judul, array $kolom, array $data, array $format) use ($an, &$b, $judulBlok) {
+        $b += 2;
+        $an->setCellValue("A{$b}", $judul);
+        $an->getStyle("A{$b}")->getFont()->setBold(true);
+        $judulBlok(++$b, $kolom);
+        if (!$data) {
+            $an->setCellValue('A' . (++$b), 'Tidak ada data');
+            return;
+        }
+        foreach ($data as $baris) {
+            $b++;
+            $an->fromArray(array_values($baris), null, "A{$b}", true);
+            foreach ($format as $kol => $f) $an->getStyle("{$kol}{$b}")->getNumberFormat()->setFormatCode($f);
+        }
+    };
+    $blok('10 obat paling banyak keluar', ['Obat', 'Satuan', 'Jumlah keluar', 'Nilai keluar', 'Stok akhir'],
+        array_map(fn($x) => [$x['nama'], $x['satuan'], $x['keluar'], $x['nilai'], $x['stok_akhir']], $dash['top_keluar']), ['C' => $fmtAngka, 'D' => $fmtRupiah, 'E' => $fmtAngka]);
+    $blok('10 obat dengan nilai keluar terbesar', ['Obat', 'Satuan', 'Jumlah keluar', 'Nilai keluar', 'Stok akhir'],
+        array_map(fn($x) => [$x['nama'], $x['satuan'], $x['keluar'], $x['nilai'], $x['stok_akhir']], $dash['top_nilai']), ['C' => $fmtAngka, 'D' => $fmtRupiah, 'E' => $fmtAngka]);
+    $blok('Kedaluwarsa (ED lewat / ≤ 90 hari, obat masih berstok)', ['Obat', 'Batch', 'Tanggal ED', 'Sisa hari', 'Diterima', 'Stok saat ini'],
+        array_map(fn($x) => [$x['obat'], $x['batch'], $tgl($x['expired']), $x['sisa_hari'], $x['diterima'], $x['stok_saat_ini']], $dash['ed']), ['E' => $fmtAngka, 'F' => $fmtAngka]);
+    $blok('Stok diperkirakan habis < 7 hari', ['Obat', 'Satuan', 'Keluar periode', 'Stok akhir', 'Perkiraan hari'],
+        array_map(fn($x) => [$x['nama'], $x['satuan'], $x['keluar'], $x['stok_akhir'], $x['hari_stok']], $dash['kritis']), ['C' => $fmtAngka, 'D' => $fmtAngka]);
+    $blok('Stok tidak bergerak (nilai terbesar)', ['Obat', 'Stok akhir', 'Nilai stok'],
+        array_map(fn($x) => [$x['nama'], $x['stok_akhir'], $x['nilai_stok']], $dash['mati_top']), ['B' => $fmtAngka, 'C' => $fmtRupiah]);
+    $blok('Nilai keluar per kategori', ['Kategori', 'Nilai keluar'],
+        array_map(fn($x) => [$x['nama'], $x['jumlah']], $dash['kategori']), ['B' => $fmtRupiah]);
+    foreach (['A' => 44, 'B' => 18, 'C' => 16, 'D' => 16, 'E' => 14, 'F' => 14] as $kol => $lebar) $an->getColumnDimension($kol)->setWidth($lebar);
+    $spreadsheet->setActiveSheetIndex(0);
+}
+
 // ================== DOWNLOAD ==================
 $filename = 'laporan_stok_farmasi_' . $fromDate . '_' . $toDate . '.xlsx';
 header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

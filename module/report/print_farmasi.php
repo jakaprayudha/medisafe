@@ -28,6 +28,12 @@ try {
 }
 $rows = farmasiStokFilter($hasil['data'], $filter);
 $ringkasan = farmasiStokRingkasan($rows);
+try {
+   $dash = farmasiStokDashboard($koneksi, (string) $id_customer, $fromDate, $toDate, $hasil['data']);
+} catch (Throwable $e) {
+   error_log('[print farmasi] analisis: ' . $e->getMessage());
+   $dash = null;
+}
 
 // klinik yang sedang login
 $stmt = $koneksi->prepare("SELECT * FROM setting_clinic WHERE id_customer = ? LIMIT 1");
@@ -259,6 +265,11 @@ $badge = ['habis' => 'b-danger', 'minimum' => 'b-warning', 'maximum' => 'b-info'
             display: none;
          }
       }
+         .analisis { width: 100%; border-collapse: separate; border-spacing: 6px 0; margin: 0 -6px 10px; }
+      .analisis > tbody > tr > td, .analisis > tr > td { width: 50%; vertical-align: top; border: 1px solid #d0d7e2; border-radius: 6px; padding: 6px 8px; }
+      .analisis table { width: 100%; border-collapse: collapse; font-size: 9.5px; }
+      .analisis table td { padding: 1.5px 2px; }
+      .analisis .aj { font-weight: bold; font-size: 10px; text-transform: uppercase; color: #475569; margin-bottom: 3px; }
    </style>
 </head>
 
@@ -310,6 +321,33 @@ $badge = ['habis' => 'b-danger', 'minimum' => 'b-warning', 'maximum' => 'b-info'
             </td>
          </tr>
       </table>
+
+      <?php if ($dash): ?>
+         <table class="analisis">
+            <tr>
+               <td>
+                  <div class="aj">10 obat paling banyak keluar</div>
+                  <table>
+                     <?php foreach ($dash['top_keluar'] as $i => $x): ?>
+                        <tr><td><?= $i + 1 ?>. <?= $e($x['nama']) ?></td><td class="r"><?= farmasiStokAngka($x['keluar']) ?> <?= $e($x['satuan']) ?></td><td class="r"><?= farmasiStokRupiah($x['nilai']) ?></td></tr>
+                     <?php endforeach; ?>
+                     <?php if (!$dash['top_keluar']): ?><tr><td class="muted">Tidak ada obat keluar.</td></tr><?php endif; ?>
+                  </table>
+                  <div class="muted" style="margin-top:3px">Nilai obat keluar: <b><?= farmasiStokRupiah($hasil['ringkasan']['nilai_keluar']) ?></b> · <?= farmasiStokAngka($dash['resep']) ?> resep</div>
+               </td>
+               <td>
+                  <div class="aj">Kedaluwarsa (ED lewat / ≤ 90 hari)</div>
+                  <table>
+                     <?php foreach (array_slice($dash['ed'], 0, 10) as $x): ?>
+                        <tr><td><?= $e($x['obat']) ?> <span class="muted"><?= $e($x['batch']) ?></span></td><td class="r"><?= $e($tgl($x['expired'])) ?></td><td class="r <?= $x['sisa_hari'] < 0 ? 'neg' : '' ?>"><?= $x['sisa_hari'] < 0 ? 'lewat' : $x['sisa_hari'] . ' hr' ?></td></tr>
+                     <?php endforeach; ?>
+                     <?php if (!$dash['ed']): ?><tr><td class="muted">Tidak ada.</td></tr><?php endif; ?>
+                  </table>
+                  <div class="aj" style="margin-top:6px">Stok tidak bergerak: <?= farmasiStokAngka($dash['mati']) ?> obat · <?= farmasiStokRupiah($dash['mati_nilai']) ?></div>
+               </td>
+            </tr>
+         </table>
+      <?php endif; ?>
 
       <table class="data">
          <thead>
