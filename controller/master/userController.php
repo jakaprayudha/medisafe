@@ -4,9 +4,7 @@ require_once __DIR__ . '/../../utility/security.php';
 
 header('Content-Type: application/json');
 
-session_start();
-
-$id_customer = $_SESSION['id_customer'] ?? null;
+$id_customer = (int) ($_SESSION['id_customer'] ?? 0);
 
 // 🔐 VALIDASI SESSION
 if (!$id_customer) {
@@ -20,15 +18,27 @@ if (!$id_customer) {
 
 requireRole(['admin', 'superadmin', 'administrator']);
 
-$method = $_SERVER['REQUEST_METHOD'];
+/** Role yang boleh dibuat dari halaman ini (selain dokter lewat form akses dokter). */
+const ROLE_STAF = ['bidan', 'perawat', 'receptionis', 'kasir', 'apoteker', 'analislab'];
+/** Akun role ini hanya boleh diubah oleh pemiliknya sendiri. */
+const ROLE_TERKUNCI = ['admin', 'superadmin', 'administrator'];
 
-switch ($method) {
+function jawab(array $data, int $code = 200): void
+{
+   http_response_code($code);
+   echo json_encode($data);
+   exit;
+}
+
+switch ($_SERVER['REQUEST_METHOD']) {
    case 'POST':
       createData($id_customer);
       break;
    case 'GET':
-      if (isset($_GET['id'])) {
-         getID($_GET['id'], $id_customer);
+      if (isset($_GET['dokter'])) {
+         getDokter($id_customer);
+      } elseif (isset($_GET['id'])) {
+         getID((int) $_GET['id'], $id_customer);
       } else {
          getData($id_customer);
       }
@@ -39,78 +49,172 @@ switch ($method) {
    case 'DELETE':
       deleteData($id_customer);
       break;
+   default:
+      jawab(['status' => 'error', 'message' => 'Metode tidak didukung'], 405);
+}
+
+// ================= HELPER =================
+function kunciNamaDokter(?string $nama): string
+{
+   $s = strtoupper(trim((string) $nama));
+   $s = preg_replace('/,.*$/', '', $s);
+   $s = preg_replace('/^(DRG|DR)\b\.?\s*/', '', $s);
+   return preg_replace('/[^A-Z0-9]/', '', $s);
+}
+
+function validUsername(string $u): ?string
+{
+   if ($u === '') {
+      return 'Username wajib diisi.';
+   }
+   if (!preg_match('/^[A-Za-z0-9._@-]{3,50}$/', $u)) {
+      return 'Username 3–50 karakter, hanya huruf, angka, titik, garis bawah, @ atau tanda minus (tanpa spasi).';
+   }
+   return null;
+}
+
+/** Username dipakai untuk login di semua faskes, jadi harus unik secara global. */
+function usernameDipakai(mysqli $k, string $u, int $kecualiId = 0): bool
+{
+   $st = $k->prepare("SELECT 1 FROM ms_users WHERE LOWER(username)=LOWER(?) AND id_user<>? LIMIT 1");
+   $st->bind_param("si", $u, $kecualiId);
+   $st->execute();
+   $ada = (bool) $st->get_result()->fetch_row();
+   $st->close();
+   return $ada;
+}
+
+function ambilUser(mysqli $k, int $id, int $idc): ?array
+{
+   $st = $k->prepare("SELECT id_user, uid_user, fullname, username, roles, status, kdDokter FROM ms_users WHERE id_user=? AND id_customer=?");
+   $st->bind_param("ii", $id, $idc);
+   $st->execute();
+   $r = $st->get_result()->fetch_assoc();
+   $st->close();
+   return $r ?: null;
+}
+
+function dokterFaskes(mysqli $k, int $idc, bool $aktifSaja = false): array
+{
+   $sql = "SELECT id_doctor, doctor_name, doctor_code, doctor_status FROM ms_doctor WHERE id_customer=?"
+      . ($aktifSaja ? " AND doctor_status='1'" : "") . " ORDER BY doctor_status DESC, doctor_name ASC, id_doctor ASC";
+   $st = $k->prepare($sql);
+   $st->bind_param("i", $idc);
+   $st->execute();
+   $r = $st->get_result()->fetch_all(MYSQLI_ASSOC);
+   $st->close();
+   return $r;
+}
+
+function ambilDokter(mysqli $k, int $idDoctor, int $idc): ?array
+{
+   $st = $k->prepare("SELECT id_doctor, doctor_name, doctor_code FROM ms_doctor WHERE id_doctor=? AND id_customer=? AND doctor_status='1'");
+   $st->bind_param("ii", $idDoctor, $idc);
+   $st->execute();
+   $r = $st->get_result()->fetch_assoc();
+   $st->close();
+   return $r ?: null;
+}
+
+/** Status keterhubungan akun dokter dengan master dokter faskes. */
+function linkDokter(array $u, array $byCode, array $byName): array
+{
+   $kode = trim((string) ($u['kdDokter'] ?? ''));
+   $dc = $kode !== '' ? ($byCode[$kode] ?? null) : null;
+   $dn = $byName[kunciNamaDokter($u['fullname'])] ?? null;
+
+   if ($dc && $dn && $dc['doctor_code'] !== $dn['doctor_code']) {
+      return ['status' => 'beda', 'nama' => $dc['doctor_name'], 'kode' => $dc['doctor_code'], 'id_doctor' => $dn['id_doctor']];
+   }
+   if ($dc) {
+      return ['status' => 'ok', 'nama' => $dc['doctor_name'], 'kode' => $dc['doctor_code'], 'id_doctor' => $dc['id_doctor']];
+   }
+   if ($dn) {
+      return ['status' => $kode === '' ? 'nama' : 'kode', 'nama' => $dn['doctor_name'], 'kode' => $dn['doctor_code'], 'id_doctor' => $dn['id_doctor']];
+   }
+   return ['status' => 'putus', 'nama' => null, 'kode' => $kode ?: null, 'id_doctor' => null];
+}
+
+function petaDokter(array $dokter): array
+{
+   $byCode = [];
+   $byName = [];
+   foreach ($dokter as $d) {
+      $c = trim((string) $d['doctor_code']);
+      if ($c !== '' && !isset($byCode[$c])) {
+         $byCode[$c] = $d;
+      }
+      $n = kunciNamaDokter($d['doctor_name']);
+      if ($n !== '' && !isset($byName[$n])) {
+         $byName[$n] = $d;
+      }
+   }
+   return [$byCode, $byName];
+}
+
+function bolehUbah(array $u): bool
+{
+   return !in_array($u['roles'], ROLE_TERKUNCI, true) || $u['uid_user'] === ($_SESSION['uid_user'] ?? null);
 }
 
 // ================= CREATE =================
 function createData($id_customer)
 {
-
    global $koneksi;
-   $count = 0; // 🔥 TAMBAH INI
-   if (empty($_POST)) {
-      echo json_encode(['status' => 'error', 'message' => 'Data kosong']);
-      return;
-   }
 
-   // 🔥 CEK USERNAME DUPLIKAT
-   $check = $koneksi->prepare(
-      "SELECT COUNT(*) FROM ms_users WHERE username=? AND id_customer=?"
-   );
-   $check->bind_param("si", $_POST['username'], $id_customer);
-   $check->execute();
-   $check->bind_result($count);
-   $check->fetch();
-   $check->close();
+   $roles = (string) ($_POST['roles'] ?? '');
+   $username = trim((string) ($_POST['username'] ?? ''));
+   $password = (string) ($_POST['password'] ?? '');
+   $kdDokter = null;
 
-   if ($count > 0) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Username sudah digunakan!'
-      ]);
-      return;
-   }
-
-   if ($err = passwordPolicyError((string) ($_POST['password'] ?? ''))) {
-      echo json_encode(['status' => 'error', 'message' => $err]);
-      return;
-   }
-
-   $fields = ['uid_user', 'id_customer', 'fullname', 'username', 'password', 'roles', 'path', 'kdDokter'];
-   $values = [
-      generateUserUID($koneksi),
-      $id_customer,
-      $_POST['fullname'],
-      $_POST['username'],
-      hashPassword($_POST['password']),
-      $_POST['roles'],
-      $_POST['path'],
-      $_POST['kdDokter']
-   ];
-
-   $types = "sissssss";
-
-   $placeholders = implode(',', array_fill(0, count($fields), '?'));
-   $columns = implode(',', $fields);
-
-   $stmt = $koneksi->prepare("INSERT INTO ms_users ($columns) VALUES ($placeholders)");
-   $stmt->bind_param($types, ...$values);
-
-   if ($stmt->execute()) {
-      echo json_encode(['status' => 'success', 'message' => 'User berhasil ditambahkan']);
+   if ($roles === 'dokter') {
+      $dok = ambilDokter($koneksi, (int) ($_POST['id_doctor'] ?? 0), $id_customer);
+      if (!$dok) {
+         jawab(['status' => 'error', 'message' => 'Pilih dokter aktif dari master dokter faskes.'], 422);
+      }
+      $fullname = $dok['doctor_name'];
+      $kdDokter = $dok['doctor_code'] !== null && $dok['doctor_code'] !== '' ? mb_substr($dok['doctor_code'], 0, 10) : null;
+   } elseif (in_array($roles, ROLE_STAF, true)) {
+      $fullname = trim((string) ($_POST['fullname'] ?? ''));
+      if ($fullname === '' || mb_strlen($fullname) > 100) {
+         jawab(['status' => 'error', 'message' => 'Nama lengkap wajib diisi (maks. 100 karakter).'], 422);
+      }
    } else {
-      echo json_encode(['status' => 'error', 'message' => $stmt->error]);
+      jawab(['status' => 'error', 'message' => 'Role tidak valid.'], 422);
    }
 
-   $stmt->close();
+   if ($err = validUsername($username)) {
+      jawab(['status' => 'error', 'message' => $err], 422);
+   }
+   if (usernameDipakai($koneksi, $username)) {
+      jawab(['status' => 'error', 'message' => 'Username sudah digunakan (username berlaku untuk login di semua faskes).'], 409);
+   }
+   if ($err = passwordPolicyError($password)) {
+      jawab(['status' => 'error', 'message' => $err], 422);
+   }
+
+   $uid = generateUserUID($koneksi);
+   $hash = hashPassword($password);
+   $path = 'admin';
+   $by = (string) ($_SESSION['username'] ?? '');
+   $st = $koneksi->prepare(
+      "INSERT INTO ms_users (uid_user, id_customer, fullname, username, password, roles, path, kdDokter, created_by)
+       VALUES (?,?,?,?,?,?,?,?,?)"
+   );
+   $st->bind_param("sisssssss", $uid, $id_customer, $fullname, $username, $hash, $roles, $path, $kdDokter, $by);
+
+   if ($st->execute()) {
+      jawab(['status' => 'success', 'message' => 'User berhasil ditambahkan']);
+   }
+   jawab(['status' => 'error', 'message' => 'Gagal menyimpan user.'], 500);
 }
 
 // ================= GENERATE UID =================
 function generateUserUID($koneksi)
 {
    do {
-      $random = mt_rand(100000, 999999);
-      $uid = "USR-" . md5($random);
-      $count = 0; // 🔥 TAMBAH INI
+      $uid = "USR-" . md5(random_bytes(16));
+      $count = 0;
       $check = $koneksi->prepare("SELECT COUNT(*) FROM ms_users WHERE uid_user=?");
       $check->bind_param("s", $uid);
       $check->execute();
@@ -127,20 +231,90 @@ function getData($id_customer)
 {
    global $koneksi;
 
-   $stmt = $koneksi->prepare(
-      "SELECT * FROM ms_users 
-       WHERE id_customer=? 
-       ORDER BY username DESC"
+   // password & uid sengaja TIDAK dikirim ke browser
+   $st = $koneksi->prepare(
+      "SELECT id_user, uid_user, fullname, username, roles, status, created_at, signature_user, kdDokter
+       FROM ms_users
+       WHERE id_customer=?
+       ORDER BY fullname ASC"
    );
+   $st->bind_param("i", $id_customer);
+   $st->execute();
+   $data = $st->get_result()->fetch_all(MYSQLI_ASSOC);
+   $st->close();
 
-   $stmt->bind_param("i", $id_customer);
-   $stmt->execute();
+   // username yang juga dipakai akun lain (login hanya mengambil salah satunya)
+   $dobel = [];
+   if ($data) {
+      $st = $koneksi->prepare(
+         "SELECT LOWER(b.username) AS u, COUNT(*) AS n
+          FROM ms_users a JOIN ms_users b ON LOWER(b.username)=LOWER(a.username) AND b.id_user<>a.id_user
+          WHERE a.id_customer=?
+          GROUP BY LOWER(b.username)"
+      );
+      $st->bind_param("i", $id_customer);
+      $st->execute();
+      foreach ($st->get_result()->fetch_all(MYSQLI_ASSOC) as $r) {
+         $dobel[$r['u']] = (int) $r['n'];
+      }
+      $st->close();
+   }
 
-   $data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+   [$byCode, $byName] = petaDokter(dokterFaskes($koneksi, $id_customer));
+   $self = $_SESSION['uid_user'] ?? null;
 
-   echo json_encode(['status' => 'success', 'data' => $data]);
+   foreach ($data as &$r) {
+      $r['is_self'] = $r['uid_user'] === $self;
+      $r['terkunci'] = !bolehUbah($r);
+      $r['ttd'] = !empty($r['signature_user']);
+      $r['username_dobel'] = $dobel[mb_strtolower((string) $r['username'])] ?? 0;
+      $r['dokter'] = $r['roles'] === 'dokter' ? linkDokter($r, $byCode, $byName) : null;
+      unset($r['uid_user']);
+   }
+   unset($r);
 
-   $stmt->close();
+   jawab(['status' => 'success', 'data' => $data]);
+}
+
+// ================= DAFTAR DOKTER (untuk form akses dokter) =================
+function getDokter($id_customer)
+{
+   global $koneksi;
+
+   $dokter = dokterFaskes($koneksi, $id_customer, true);
+
+   $st = $koneksi->prepare("SELECT fullname, kdDokter FROM ms_users WHERE id_customer=? AND roles='dokter'");
+   $st->bind_param("i", $id_customer);
+   $st->execute();
+   $akun = $st->get_result()->fetch_all(MYSQLI_ASSOC);
+   $st->close();
+
+   $punyaKode = [];
+   $punyaNama = [];
+   foreach ($akun as $a) {
+      if (trim((string) $a['kdDokter']) !== '') {
+         $punyaKode[trim($a['kdDokter'])] = true;
+      }
+      $punyaNama[kunciNamaDokter($a['fullname'])] = true;
+   }
+
+   $out = [];
+   $seen = [];
+   foreach ($dokter as $d) {
+      $key = trim((string) $d['doctor_code']) . '|' . kunciNamaDokter($d['doctor_name']);
+      if (isset($seen[$key])) {
+         continue; // baris dokter dobel di master
+      }
+      $seen[$key] = true;
+      $out[] = [
+         'id_doctor' => (int) $d['id_doctor'],
+         'doctor_name' => $d['doctor_name'],
+         'doctor_code' => $d['doctor_code'],
+         'punya_akun' => isset($punyaKode[trim((string) $d['doctor_code'])]) || isset($punyaNama[kunciNamaDokter($d['doctor_name'])]),
+      ];
+   }
+
+   jawab(['status' => 'success', 'data' => $out]);
 }
 
 // ================= READ BY ID =================
@@ -148,26 +322,20 @@ function getID($id, $id_customer)
 {
    global $koneksi;
 
-   $stmt = $koneksi->prepare(
-      "SELECT * FROM ms_users 
-       WHERE id_user=? AND id_customer=?"
-   );
-
-   $stmt->bind_param("ii", $id, $id_customer);
-   $stmt->execute();
-
-   $res = $stmt->get_result();
-
-   if ($res->num_rows > 0) {
-      echo json_encode([
-         'status' => 'success',
-         'data' => $res->fetch_assoc()
-      ]);
-   } else {
-      echo json_encode(['status' => 'error', 'message' => 'Tidak ditemukan']);
+   $u = ambilUser($koneksi, $id, $id_customer);
+   if (!$u) {
+      jawab(['status' => 'error', 'message' => 'Tidak ditemukan'], 404);
    }
-
-   $stmt->close();
+   if (!bolehUbah($u)) {
+      jawab(['status' => 'error', 'message' => 'Akun admin hanya bisa diubah oleh pemiliknya.'], 403);
+   }
+   if ($u['roles'] === 'dokter') {
+      [$byCode, $byName] = petaDokter(dokterFaskes($koneksi, $id_customer));
+      $u['dokter'] = linkDokter($u, $byCode, $byName);
+   }
+   $u['is_self'] = $u['uid_user'] === ($_SESSION['uid_user'] ?? null);
+   unset($u['uid_user']);
+   jawab(['status' => 'success', 'data' => $u]);
 }
 
 // ================= UPDATE =================
@@ -177,137 +345,105 @@ function updateData($id_customer)
 
    parse_str(file_get_contents("php://input"), $_PUT);
 
-   if (empty($_PUT['id_user'])) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'ID tidak ditemukan'
-      ]);
-      return;
+   $id = (int) ($_PUT['id_user'] ?? 0);
+   if ($id <= 0) {
+      jawab(['status' => 'error', 'message' => 'ID tidak ditemukan'], 422);
    }
 
-   $id = $_PUT['id_user'];
+   $lama = ambilUser($koneksi, $id, $id_customer);
+   if (!$lama) {
+      jawab(['status' => 'error', 'message' => 'User tidak ditemukan'], 404);
+   }
+   if (!bolehUbah($lama)) {
+      jawab(['status' => 'error', 'message' => 'Akun admin hanya bisa diubah oleh pemiliknya.'], 403);
+   }
+   $isSelf = $lama['uid_user'] === ($_SESSION['uid_user'] ?? null);
 
-   // ================= 🔥 TOGGLE STATUS =================
-   if (isset($_GET['toggle_status']) && isset($_PUT['status'])) {
-
-      $stmt = $koneksi->prepare(
-         "UPDATE ms_users 
-          SET status=? 
-          WHERE id_user=? AND id_customer=?"
-      );
-
-      $stmt->bind_param("iii", $_PUT['status'], $id, $id_customer);
-
-      if ($stmt->execute()) {
-         echo json_encode(['status' => 'success']);
-      } else {
-         echo json_encode(['status' => 'error']);
+   // ================= TOGGLE STATUS =================
+   if (isset($_GET['toggle_status'])) {
+      $status = (string) ($_PUT['status'] ?? '');
+      if ($status !== '0' && $status !== '1') {
+         jawab(['status' => 'error', 'message' => 'Status tidak valid.'], 422);
       }
-
-      $stmt->close();
-      return;
-   }
-
-   // ================= 🔥 CEK USERNAME DUPLIKAT =================
-   if (isset($_PUT['username'])) {
-      $count = 0; // 🔥 TAMBAH INI
-      $check = $koneksi->prepare(
-         "SELECT COUNT(*) FROM ms_users 
-          WHERE username=? AND id_user!=? AND id_customer=?"
-      );
-      $check->bind_param("sii", $_PUT['username'], $id, $id_customer);
-      $check->execute();
-      $check->bind_result($count);
-      $check->fetch();
-      $check->close();
-
-      if ($count > 0) {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Username sudah digunakan!'
-         ]);
-         return;
+      if ($isSelf && $status === '0') {
+         jawab(['status' => 'error', 'message' => 'Anda tidak bisa menonaktifkan akun sendiri.'], 409);
       }
+      $s = (int) $status;
+      $st = $koneksi->prepare("UPDATE ms_users SET status=? WHERE id_user=? AND id_customer=?");
+      $st->bind_param("iii", $s, $id, $id_customer);
+      if ($st->execute()) {
+         jawab(['status' => 'success', 'message' => $s ? 'User diaktifkan.' : 'User dinonaktifkan, tidak bisa login lagi.']);
+      }
+      jawab(['status' => 'error', 'message' => 'Gagal update status.'], 500);
    }
 
-   // ================= 🔥 AMBIL PASSWORD LAMA =================
-   $stmtOld = $koneksi->prepare(
-      "SELECT password FROM ms_users 
-       WHERE id_user=? AND id_customer=?"
-   );
-   $oldPassword = '';
-   $stmtOld->bind_param("ii", $id, $id_customer);
-   $stmtOld->execute();
-   $stmtOld->bind_result($oldPassword);
-   $stmtOld->fetch();
-   $stmtOld->close();
+   $set = [];
+   $vals = [];
 
-   // ================= 🔥 UPDATE FIELD =================
-   $fields = [];
-   $values = [];
-
-   // fullname
-   if (isset($_PUT['fullname'])) {
-      $fields[] = "fullname=?";
-      $values[] = $_PUT['fullname'];
+   // nama / tautan dokter
+   if ($lama['roles'] === 'dokter' && !empty($_PUT['id_doctor'])) {
+      $dok = ambilDokter($koneksi, (int) $_PUT['id_doctor'], $id_customer);
+      if (!$dok) {
+         jawab(['status' => 'error', 'message' => 'Dokter tidak ditemukan / tidak aktif.'], 422);
+      }
+      $set[] = 'fullname=?';
+      $vals[] = $dok['doctor_name'];
+      $set[] = 'kdDokter=?';
+      $vals[] = $dok['doctor_code'] !== null && $dok['doctor_code'] !== '' ? mb_substr($dok['doctor_code'], 0, 10) : null;
+   } elseif (isset($_PUT['fullname'])) {
+      $fullname = trim((string) $_PUT['fullname']);
+      if ($fullname === '' || mb_strlen($fullname) > 100) {
+         jawab(['status' => 'error', 'message' => 'Nama lengkap wajib diisi (maks. 100 karakter).'], 422);
+      }
+      $set[] = 'fullname=?';
+      $vals[] = $fullname;
    }
 
-   // username
+   // username: validasi hanya bila berubah (data lama bisa tidak sesuai format)
    if (isset($_PUT['username'])) {
-      $fields[] = "username=?";
-      $values[] = $_PUT['username'];
+      $username = trim((string) $_PUT['username']);
+      if (mb_strtolower($username) !== mb_strtolower((string) $lama['username'])) {
+         if ($err = validUsername($username)) {
+            jawab(['status' => 'error', 'message' => $err], 422);
+         }
+         if (usernameDipakai($koneksi, $username, $id)) {
+            jawab(['status' => 'error', 'message' => 'Username sudah digunakan (username berlaku untuk login di semua faskes).'], 409);
+         }
+      }
+      if ($username !== $lama['username']) {
+         $set[] = 'username=?';
+         $vals[] = $username;
+      }
    }
 
    // password (opsional)
-   if (isset($_PUT['password']) && trim($_PUT['password']) != '') {
-      if ($err = passwordPolicyError((string) $_PUT['password'])) {
-         echo json_encode(['status' => 'error', 'message' => $err]);
-         return;
+   $pw = (string) ($_PUT['password'] ?? '');
+   if (trim($pw) !== '') {
+      if ($err = passwordPolicyError($pw)) {
+         jawab(['status' => 'error', 'message' => $err], 422);
       }
-      $fields[] = "password=?";
-      $values[] = hashPassword($_PUT['password']);
+      $set[] = 'password=?';
+      $vals[] = hashPassword($pw);
    }
 
-   // path
-   if (isset($_PUT['path'])) {
-      $fields[] = "path=?";
-      $values[] = $_PUT['path'];
+   // role & path sengaja tidak bisa diubah dari halaman ini
+
+   if (!$set) {
+      jawab(['status' => 'error', 'message' => 'Tidak ada perubahan'], 422);
    }
 
-   // ❌ roles TIDAK DIUPDATE (sengaja di skip)
+   $set[] = 'udpated_at=?';
+   $vals[] = date('Y-m-d H:i:s');
+   $vals[] = $id;
+   $vals[] = $id_customer;
 
-   if (empty($fields)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Tidak ada perubahan'
-      ]);
-      return;
+   $st = $koneksi->prepare("UPDATE ms_users SET " . implode(',', $set) . " WHERE id_user=? AND id_customer=?");
+   $st->bind_param(str_repeat('s', count($vals) - 2) . "ii", ...$vals);
+
+   if ($st->execute()) {
+      jawab(['status' => 'success', 'message' => 'Data berhasil diupdate']);
    }
-
-   $values[] = $id;
-   $values[] = $id_customer;
-
-   $types = str_repeat('s', count($values) - 2) . "ii";
-
-   $query = "UPDATE ms_users SET " . implode(',', $fields) . " 
-             WHERE id_user=? AND id_customer=?";
-
-   $stmt = $koneksi->prepare($query);
-   $stmt->bind_param($types, ...$values);
-
-   if ($stmt->execute()) {
-      echo json_encode([
-         'status' => 'success',
-         'message' => 'Data berhasil diupdate'
-      ]);
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => $stmt->error
-      ]);
-   }
-
-   $stmt->close();
+   jawab(['status' => 'error', 'message' => 'Gagal memperbarui user.'], 500);
 }
 
 // ================= DELETE =================
@@ -315,25 +451,26 @@ function deleteData($id_customer)
 {
    global $koneksi;
 
-   $id = $_GET['id'] ?? '';
-
-   if (!$id) {
-      echo json_encode(['status' => 'error', 'message' => 'ID kosong']);
-      return;
+   $id = (int) ($_GET['id'] ?? 0);
+   if ($id <= 0) {
+      jawab(['status' => 'error', 'message' => 'ID kosong'], 422);
    }
 
-   $stmt = $koneksi->prepare(
-      "DELETE FROM ms_users 
-       WHERE id_user=? AND id_customer=?"
-   );
-
-   $stmt->bind_param("ii", $id, $id_customer);
-
-   if ($stmt->execute()) {
-      echo json_encode(['status' => 'success']);
-   } else {
-      echo json_encode(['status' => 'error']);
+   $u = ambilUser($koneksi, $id, $id_customer);
+   if (!$u) {
+      jawab(['status' => 'error', 'message' => 'User tidak ditemukan'], 404);
+   }
+   if ($u['uid_user'] === ($_SESSION['uid_user'] ?? null)) {
+      jawab(['status' => 'error', 'message' => 'Anda tidak bisa menghapus akun sendiri.'], 409);
+   }
+   if (!bolehUbah($u)) {
+      jawab(['status' => 'error', 'message' => 'Akun admin tidak bisa dihapus dari halaman ini.'], 403);
    }
 
-   $stmt->close();
+   $st = $koneksi->prepare("DELETE FROM ms_users WHERE id_user=? AND id_customer=?");
+   $st->bind_param("ii", $id, $id_customer);
+   if ($st->execute()) {
+      jawab(['status' => 'success', 'message' => 'User dihapus.']);
+   }
+   jawab(['status' => 'error', 'message' => 'Gagal menghapus user.'], 500);
 }
