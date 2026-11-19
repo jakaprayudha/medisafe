@@ -259,6 +259,13 @@ $selectedIdPharmacy = (int) ($_GET['id_pharmacy'] ?? 0);
         opacity: 1 !important;
       }
     }
+    .pu-sec { font-size: .72rem; font-weight: 700; color: #5a6a85; text-transform: uppercase; letter-spacing: .4px; }
+    .pu-mini { border: 1px solid #e5eaef; border-radius: 12px; background: #fff; padding: 10px 14px; height: 100%; }
+    .pu-mini .v { font-size: 1.05rem; font-weight: 700; color: #2a3547; white-space: nowrap; }
+    .pu-mini .l { font-size: .72rem; color: #6c757d; }
+    .pu-dload { position: relative; }
+    .pu-dload::after { content: ''; position: absolute; inset: 0; background: rgba(255, 255, 255, .6); border-radius: inherit; }
+    @media print { #puDash .card { break-inside: avoid; } }
   </style>
 </head>
 
@@ -279,6 +286,7 @@ $selectedIdPharmacy = (int) ($_GET['id_pharmacy'] ?? 0);
             </div>
             <div class="d-flex gap-2 no-print">
               <button class="btn btn-light" id="btnRefresh" title="Muat ulang"><i class="fas fa-sync-alt"></i></button>
+              <button class="btn btn-success" id="btnExcel"><i class="fas fa-file-excel me-1"></i> Excel</button>
               <button class="btn btn-outline-secondary" id="btnPrint"><i class="fas fa-print me-1"></i> Cetak</button>
             </div>
           </div>
@@ -302,6 +310,7 @@ $selectedIdPharmacy = (int) ($_GET['id_pharmacy'] ?? 0);
                       <button class="btn btn-primary" data-p="bulan">Bulan ini</button>
                       <button class="btn btn-light" data-p="bulanlalu">Bulan lalu</button>
                       <button class="btn btn-light" data-p="90">3 bulan</button>
+                      <button class="btn btn-light" data-p="tahun">Tahun ini</button>
                     </div>
                     <div class="pu-dates d-flex align-items-center gap-1">
                       <input type="date" id="fromDate" class="form-control form-control-sm">
@@ -367,6 +376,32 @@ $selectedIdPharmacy = (int) ($_GET['id_pharmacy'] ?? 0);
                   <div class="pu-label">Estimasi nilai obat</div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- DASHBOARD (semua obat) -->
+          <div id="puDash">
+            <div class="row g-2 mb-3">
+              <div class="col-6 col-xl-3"><div class="pu-mini"><div class="l">Jenis obat dipakai</div><div class="v" id="dJenis">-</div></div></div>
+              <div class="col-6 col-xl-3"><div class="pu-mini"><div class="l">Rata-rata resep / hari</div><div class="v" id="dResepHari">-</div></div></div>
+              <div class="col-6 col-xl-3"><div class="pu-mini"><div class="l">Rata-rata item / resep</div><div class="v" id="dItem">-</div></div></div>
+              <div class="col-6 col-xl-3"><div class="pu-mini"><div class="l">Rata-rata nilai / resep</div><div class="v" id="dNilaiResep">-</div></div></div>
+            </div>
+            <div class="row g-3 mb-3">
+              <div class="col-xl-7"><div class="card mb-0 h-100"><div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-1"><div class="pu-sec" id="dTrenJudul">Tren pemakaian</div><div class="small text-muted" id="dTrenInfo"></div></div>
+                <div id="chTren" style="min-height:290px"></div></div></div></div>
+              <div class="col-xl-5"><div class="card mb-0 h-100"><div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-1"><div class="pu-sec">10 obat terbanyak</div>
+                  <div class="btn-group btn-group-sm no-print"><button type="button" class="btn btn-outline-primary active" data-top="qty">Jumlah</button><button type="button" class="btn btn-outline-primary" data-top="nominal">Nilai</button></div></div>
+                <div id="chTop" style="min-height:290px"></div></div></div></div>
+              <div class="col-md-6 col-xl-4"><div class="card mb-0 h-100"><div class="card-body">
+                <div class="pu-sec mb-1">Resep per dokter</div><div id="chDokter" style="min-height:250px"></div></div></div></div>
+              <div class="col-md-6 col-xl-4"><div class="card mb-0 h-100"><div class="card-body">
+                <div class="pu-sec mb-1">Golongan obat</div><div id="chGol" style="min-height:250px"></div></div></div></div>
+              <div class="col-md-6 col-xl-4"><div class="card mb-0 h-100"><div class="card-body">
+                <div class="pu-sec mb-1">Layanan &amp; poli</div><div id="chLayanan" style="min-height:250px"></div>
+                <div class="small text-muted mt-1" id="dPoli"></div></div></div></div>
             </div>
           </div>
 
@@ -499,7 +534,8 @@ $selectedIdPharmacy = (int) ($_GET['id_pharmacy'] ?? 0);
       } [c]));
       const isi = v => {
         const s = String(v ?? '').trim();
-        return /^(-+|null)$/i.test(s) ? '' : s;
+        // isian tanpa huruf/angka (mis. "'", '"', "-", ".") dianggap kosong
+        return /^null$/i.test(s) || !/[\p{L}\p{N}]/u.test(s) ? '' : s;
       };
       const fmt = n => (Number(n) || 0).toLocaleString('id-ID');
       const rupiah = n => 'Rp ' + fmt(n);
@@ -536,6 +572,7 @@ $selectedIdPharmacy = (int) ($_GET['id_pharmacy'] ?? 0);
           a = new Date(n.getFullYear(), n.getMonth() - 1, 1);
           b = new Date(n.getFullYear(), n.getMonth(), 0);
         } else if (p === '90') a.setDate(n.getDate() - 89);
+        else if (p === 'tahun') a = new Date(n.getFullYear(), 0, 1);
         $('#fromDate').val(ymd(a));
         $('#toDate').val(ymd(b));
         $('#puPeriod .btn').each(function() {
@@ -664,10 +701,115 @@ $selectedIdPharmacy = (int) ($_GET['id_pharmacy'] ?? 0);
               qty: r.summary.total_qty,
               nominal: r.summary.nominal
             });
+            dashboard(r);
           })
           .catch(() => Swal.fire('Gagal', 'Tidak dapat terhubung ke server.', 'error'))
           .finally(() => loading(false));
       }
+
+      // ---------- dashboard ----------
+      const BLN_P = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      const tglP = t => t.length === 10 ? (+t.slice(8)) + ' ' + BLN_P[+t.slice(5, 7) - 1] : BLN_P[+t.slice(5, 7) - 1] + ' ' + t.slice(0, 4);
+      const rpS = n => { n = Math.round(+n || 0); return n >= 1e9 ? 'Rp ' + (n / 1e9).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' M' : n >= 1e6 ? 'Rp ' + (n / 1e6).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' jt' : n >= 1e4 ? 'Rp ' + Math.round(n / 1e3).toLocaleString('id-ID') + ' rb' : rupiah(n); };
+      const PAL = ['#5d87ff', '#13deb9', '#ffae1f', '#fa896b', '#a855f7', '#539bff', '#14b8a6', '#f472b6', '#94a3b8', '#64748b'];
+      const charts = {};
+      let modeTop = 'qty', kelSeq = 0;
+      function chart(id, opt) {
+        const el = document.getElementById(id);
+        if (typeof ApexCharts === 'undefined') { el.innerHTML = '<div class="text-center text-muted small py-5">Grafik tidak tersedia.</div>'; return; }
+        if (charts[id]) { charts[id].updateOptions(opt, true, false); return; }
+        charts[id] = new ApexCharts(el, Object.assign({}, opt, { chart: Object.assign({ fontFamily: 'inherit', toolbar: { show: false }, animations: { enabled: false }, parentHeightOffset: 0 }, opt.chart) }));
+        charts[id].render();
+      }
+      const kosongC = { noData: { text: 'Tidak ada data', style: { color: '#98a2b3' } } };
+      const gridC = { borderColor: '#eef1f4', strokeDashArray: 3 };
+      const barH = (id, data, nilai, warna, h) => chart(id, Object.assign({}, kosongC, {
+        chart: { type: 'bar', height: h || 250 },
+        series: data.length ? [{ name: nilai === 'nominal' ? 'Nilai' : nilai === 'resep' ? 'Resep' : 'Jumlah', data: data.map(x => Math.round(x[nilai])) }] : [],
+        xaxis: { categories: data.map(x => x.nama.length > 26 ? x.nama.slice(0, 25) + '…' : x.nama), tickAmount: 4, labels: { formatter: v => nilai === 'nominal' ? rpS(v) : fmt(Math.round(v)) } },
+        yaxis: { labels: { maxWidth: 180, style: { fontSize: '11px' } } },
+        plotOptions: { bar: { horizontal: true, barHeight: '62%', borderRadius: 3, distributed: !warna } }, colors: warna ? [warna] : PAL, legend: { show: false },
+        dataLabels: { enabled: true, formatter: v => nilai === 'nominal' ? rpS(v) : fmt(v), style: { fontSize: '10px' } }, grid: gridC,
+        tooltip: { y: { formatter: (v, o) => { const x = data[o.dataPointIndex]; return fmt(x.qty) + ' unit · ' + rupiah(Math.round(x.nominal)) + (x.resep !== undefined ? ' · ' + fmt(x.resep) + ' resep' : ''); } } }
+      }));
+      function grafikTop() {
+        const d = rekap.slice().sort((a, b) => b[modeTop === 'qty' ? 'total_qty' : 'nominal'] - a[modeTop === 'qty' ? 'total_qty' : 'nominal']).slice(0, 10)
+          .map(x => ({ nama: isi(x.pharmacy_name_generic) || '-', qty: x.total_qty, nominal: x.nominal }));
+        barH('chTop', d, modeTop, null, 290);
+      }
+      $('[data-top]').on('click', function() {
+        modeTop = $(this).data('top');
+        $('[data-top]').removeClass('active');
+        $(this).addClass('active');
+        grafikTop();
+      });
+      function dashboard(r) {
+        const s = r.summary, d = r.dashboard;
+        if (!d) return;
+        $('#dJenis').text(fmt(s.jml_obat));
+        $('#dResepHari').text(String(s.resep_per_hari).replace('.', ','));
+        $('#dItem').text(String(s.item_per_resep).replace('.', ','));
+        $('#dNilaiResep').text(+s.nilai_per_resep ? rupiah(s.nilai_per_resep) : '-');
+        const t = d.tren;
+        $('#dTrenJudul').text('Tren pemakaian (' + (d.periode === 'hari' ? 'harian' : 'bulanan') + ')');
+        const puncak = t.reduce((m, x) => x.resep > m.n ? { n: x.resep, t: x.nama } : m, { n: 0, t: null });
+        $('#dTrenInfo').text(puncak.t ? 'Resep terbanyak ' + fmt(puncak.n) + ' · ' + tglP(puncak.t) : '');
+        chart('chTren', Object.assign({}, kosongC, {
+          chart: { type: 'line', height: 290 },
+          series: t.some(x => x.resep) ? [{ name: 'Resep', type: 'column', data: t.map(x => x.resep) }, { name: 'Nilai obat', type: 'line', data: t.map(x => Math.round(x.nominal)) }] : [],
+          colors: ['#5d87ff', '#13deb9'], stroke: { width: [0, 2], curve: 'smooth' },
+          xaxis: { categories: t.map(x => tglP(x.nama)), labels: { rotate: -45, hideOverlappingLabels: true, style: { fontSize: '10px' } }, tickAmount: Math.min(t.length, 16) },
+          yaxis: [{ labels: { formatter: v => fmt(Math.round(v)) } }, { opposite: true, labels: { formatter: v => rpS(v) } }],
+          plotOptions: { bar: { columnWidth: t.length > 40 ? '85%' : '55%', borderRadius: 2 } },
+          dataLabels: { enabled: false }, legend: { position: 'top', horizontalAlign: 'left', fontSize: '11px' }, grid: gridC,
+          tooltip: { shared: true, intersect: false, y: { formatter: (v, o) => o.seriesIndex === 1 ? rupiah(v) : fmt(v) + ' resep · ' + fmt(t[o.dataPointIndex].qty) + ' unit' } }
+        }));
+        grafikTop();
+        chart('chGol', Object.assign({}, kosongC, {
+          chart: { type: 'donut', height: 250 }, series: d.golongan.map(x => x.qty), labels: d.golongan.map(x => x.nama), colors: PAL,
+          legend: { position: 'bottom', fontSize: '11px' }, dataLabels: { formatter: v => Math.round(v) + '%' },
+          plotOptions: { pie: { donut: { size: '62%', labels: { show: true, total: { show: true, label: 'Unit', formatter: w => fmt(w.globals.seriesTotals.reduce((a, b) => a + b, 0)) } } } } },
+          tooltip: { y: { formatter: (v, o) => fmt(v) + ' unit · ' + fmt(d.golongan[o.seriesIndex].obat) + ' jenis obat' } }
+        }));
+        muatKelompok();
+      }
+      // per dokter / poli / layanan dimuat terpisah (lebih berat) agar rekap tampil lebih dulu
+      function muatKelompok() {
+        const ini = ++kelSeq;
+        $('#chDokter, #chLayanan').addClass('pu-dload');
+        getJson({ action: 'kelompok', ...periode() }).then(k => {
+          if (ini !== kelSeq || k.status !== 'success') return;
+          barH('chDokter', k.dokter.slice(0, 8), 'resep', '#5d87ff', Math.max(250, Math.min(8, k.dokter.length) * 30 + 40));
+          chart('chLayanan', Object.assign({}, kosongC, {
+            chart: { type: 'donut', height: 230 }, series: k.layanan.map(x => x.resep), labels: k.layanan.map(x => x.nama), colors: ['#5d87ff', '#13deb9', '#94a3b8'],
+            legend: { position: 'bottom', fontSize: '11px' }, dataLabels: { formatter: v => Math.round(v) + '%' },
+            plotOptions: { pie: { donut: { size: '62%', labels: { show: true, total: { show: true, label: 'Resep', formatter: w => fmt(w.globals.seriesTotals.reduce((a, b) => a + b, 0)) } } } } },
+            tooltip: { y: { formatter: (v, o) => fmt(v) + ' resep · ' + rupiah(Math.round(k.layanan[o.seriesIndex].nominal)) } }
+          }));
+          $('#dPoli').html(k.poli.slice(0, 4).map(p => `<span class="me-2"><i class="fas fa-clinic-medical me-1"></i>${esc(p.nama)} <b>${fmt(p.resep)}</b></span>`).join(''));
+        }).catch(() => {}).finally(() => { if (ini === kelSeq) $('#chDokter, #chLayanan').removeClass('pu-dload'); });
+      }
+      $('#btnExcel').on('click', function() {
+        const btn = this, label = btn.innerHTML, token = Date.now().toString(36);
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Menyiapkan…';
+        const selesai = () => { clearInterval(cek); btn.innerHTML = label; btn.disabled = false; };
+        const cek = setInterval(() => { if (document.cookie.includes('pu_unduh=' + token)) selesai(); }, 500);
+        setTimeout(selesai, 120000);
+        const ifr = document.createElement('iframe');
+        ifr.hidden = true;
+        ifr.addEventListener('load', () => {
+          if (document.cookie.includes('pu_unduh=' + token)) return;
+          let pesan = '';
+          try { pesan = (ifr.contentDocument.body.innerText || '').trim().slice(0, 300); } catch (e) {}
+          try { pesan = JSON.parse(pesan).message || pesan; } catch (e) {}
+          selesai();
+          Swal.fire('Export gagal', pesan || 'Server tidak mengirim file Excel.', 'error');
+        });
+        ifr.src = `${api}?${new URLSearchParams({ action: 'excel', ...periode(), token })}`;
+        document.body.appendChild(ifr);
+        setTimeout(() => ifr.remove(), 130000);
+      });
 
       function tampilStat(s) {
         $('#stKunjungan').text(fmt(s.kunjungan));
@@ -805,6 +947,7 @@ $selectedIdPharmacy = (int) ($_GET['id_pharmacy'] ?? 0);
       function tampilObat() {
         const o = obatMap[idObat];
         $('#puObat').toggleClass('d-none', !idObat);
+        $('#puDash').toggleClass('d-none', !!idObat);
         if (!idObat) return;
         $('#puObatNama').text(o ? isi(o.pharmacy_name_generic) : `Obat #${idObat}`);
         $('#puObatSub').text(o ? [isi(o.pharmacy_name_trade), isi(o.pharmacy_unit) && 'Satuan ' + o.pharmacy_unit].filter(Boolean).join(' · ') : '');
