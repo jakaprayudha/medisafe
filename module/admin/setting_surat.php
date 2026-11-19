@@ -1,3229 +1,900 @@
 <?php
-
-$title = 'Setting Bisnis';
-
+$title = 'Penomoran Surat';
 require '../../controller/view.php';
-
 ?>
-
 <!doctype html>
-
 <html lang="en">
 
 <head>
+  <base href="../../">
+  <?php require '../../assets/template/head.php'; ?>
+  <style>
+    .min-w-0 {
+      min-width: 0;
+    }
 
-   <base href="../../">
+    .ns-sec {
+      font-size: .72rem;
+      font-weight: 700;
+      color: #5a6a85;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      margin-bottom: .75rem;
+    }
 
-   <?php
-   require '../../assets/template/head.php';
-   ?>
+    .ns-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05rem;
+      flex-shrink: 0;
+    }
 
+    .ns-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: .7rem;
+      font-weight: 600;
+      padding: .25em .65em;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
 
-   <style>
-      /* =========================================================
-         GENERAL
-      ========================================================= */
+    /* ---------- mode ---------- */
+    .ns-mode {
+      border: 1.5px solid #e5eaef;
+      border-radius: 14px;
+      padding: 16px;
+      height: 100%;
+      cursor: pointer;
+      background: #fff;
+      transition: border-color .15s, background .15s, box-shadow .15s;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      text-align: left;
+      width: 100%;
+    }
 
-      .setting-section {
+    .ns-mode:hover:not(:disabled) {
+      box-shadow: 0 4px 14px rgba(0, 0, 0, .05);
+      border-color: #c9d2dc;
+    }
 
-         margin-top: 20px;
+    .ns-mode.on {
+      border-color: var(--c);
+      background: var(--bg);
+    }
 
+    .ns-mode:disabled {
+      cursor: wait;
+      opacity: .7;
+    }
+
+    .ns-mode .ns-radio {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #c9d2dc;
+      flex-shrink: 0;
+      margin-top: 2px;
+      position: relative;
+    }
+
+    .ns-mode.on .ns-radio {
+      border-color: var(--c);
+    }
+
+    .ns-mode.on .ns-radio::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border-radius: 50%;
+      background: var(--c);
+    }
+
+    /* ---------- baris jenis surat ---------- */
+    .ns-row {
+      border-top: 1px solid #eef1f4;
+      padding: 16px 0;
+    }
+
+    .ns-row:first-child {
+      border-top: 0;
+      padding-top: 4px;
+    }
+
+    .ns-row.dirty .ns-name::after {
+      content: '';
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ffae1f;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .ns-name {
+      font-weight: 600;
+      color: #2a3547;
+      font-size: .92rem;
+    }
+
+    .ns-format {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .88rem;
+    }
+
+    .ns-tokens .btn {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .68rem;
+      padding: .1rem .45rem;
+      border-radius: 6px;
+      background: #f6f8fb;
+      border: 1px solid #e5eaef;
+      color: #5a6a85;
+    }
+
+    .ns-tokens .btn:hover {
+      background: #ecf2ff;
+      border-color: #5d87ff;
+      color: #5d87ff;
+    }
+
+    .ns-next {
+      background: #f6f8fb;
+      border: 1px dashed #d3dbe4;
+      border-radius: 10px;
+      padding: 8px 12px;
+      min-height: 58px;
+    }
+
+    .ns-next-val {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-weight: 700;
+      color: #2a3547;
+      font-size: .95rem;
+      word-break: break-all;
+    }
+
+    .ns-next.err {
+      border-color: #fa896b;
+      background: #fff5f2;
+    }
+
+    .ns-next.err .ns-next-val {
+      color: #fa896b;
+      font-family: inherit;
+      font-size: .8rem;
+      font-weight: 600;
+    }
+
+    .ns-num .btn {
+      width: 38px;
+    }
+
+    .ns-num .form-control {
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .ns-legend code {
+      background: #f6f8fb;
+      border: 1px solid #e5eaef;
+      border-radius: 6px;
+      padding: .05rem .4rem;
+      color: #5d87ff;
+      font-size: .78rem;
+      white-space: nowrap;
+    }
+
+    #nsConfig.locked {
+      position: relative;
+    }
+
+    /* ---------- bar aksi ---------- */
+    .ns-bar {
+      position: sticky;
+      bottom: 0;
+      z-index: 5;
+      background: rgba(255, 255, 255, .96);
+      backdrop-filter: blur(4px);
+      border: 1px solid #e5eaef;
+      border-radius: 14px;
+      box-shadow: 0 -4px 18px rgba(0, 0, 0, .06);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+    }
+
+    .ns-skel {
+      height: 14px;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #eef1f4 25%, #f6f8fb 50%, #eef1f4 75%);
+      background-size: 200% 100%;
+      animation: nsSk 1.2s infinite;
+    }
+
+    @keyframes nsSk {
+      to {
+        background-position: -200% 0;
       }
+    }
 
-
-      /* =========================================================
-         HEADER SETTING
-      ========================================================= */
-
-      .setting-header {
-
-         display: flex;
-
-         align-items: center;
-
-         gap: 15px;
-
+    @media (max-width: 575.98px) {
+      .ns-bar .btn {
+        flex: 1;
       }
-
-
-      .setting-header-icon {
-
-         width: 50px;
-
-         height: 50px;
-
-         border-radius: 12px;
-
-         display: flex;
-
-         align-items: center;
-
-         justify-content: center;
-
-         background: #e7f1ff;
-
-         color: #0d6efd;
-
-         flex-shrink: 0;
-
-      }
-
-
-      /* =========================================================
-         MODE PENOMORAN
-      ========================================================= */
-
-      .mode-card {
-
-         border: 1px solid #e5e7eb;
-
-         border-radius: 12px;
-
-         padding: 18px;
-
-         cursor: pointer;
-
-         transition: all .2s ease;
-
-         height: 100%;
-
-         background: #fff;
-
-      }
-
-
-      .mode-card:hover {
-
-         border-color: #adb5bd;
-
-         box-shadow:
-            0 5px 18px rgba(0, 0, 0, .05);
-
-      }
-
-
-      .mode-card input {
-
-         display: none;
-
-      }
-
-
-      /* =========================================================
-         AUTO ACTIVE
-      ========================================================= */
-
-      .mode-card.auto input:checked+.mode-content {
-
-         border-color: #0d6efd;
-
-         background: #f0f6ff;
-
-      }
-
-
-      /* =========================================================
-         MANUAL ACTIVE
-      ========================================================= */
-
-      .mode-card.manual input:checked+.mode-content {
-
-         border-color: #198754;
-
-         background: #f0fff7;
-
-      }
-
-
-      .mode-content {
-
-         border: 2px solid transparent;
-
-         border-radius: 10px;
-
-         padding: 15px;
-
-         display: flex;
-
-         align-items: center;
-
-         gap: 15px;
-
-         transition: all .2s ease;
-
-      }
-
-
-      .mode-icon {
-
-         width: 48px;
-
-         height: 48px;
-
-         border-radius: 10px;
-
-         display: flex;
-
-         align-items: center;
-
-         justify-content: center;
-
-         flex-shrink: 0;
-
-      }
-
-
-      .mode-icon.auto {
-
-         background: #e7f1ff;
-
-         color: #0d6efd;
-
-      }
-
-
-      .mode-icon.manual {
-
-         background: #e8f7ef;
-
-         color: #198754;
-
-      }
-
-
-      .mode-title {
-
-         font-size: 15px;
-
-         font-weight: 600;
-
-         margin-bottom: 3px;
-
-      }
-
-
-      .mode-description {
-
-         font-size: 12px;
-
-         color: #6c757d;
-
-         line-height: 1.4;
-
-      }
-
-
-      .mode-check {
-
-         margin-left: auto;
-
-         opacity: 0;
-
-      }
-
-
-      .mode-card input:checked+.mode-content .mode-check {
-
-         opacity: 1;
-
-      }
-
-
-      .mode-card.auto input:checked+.mode-content .mode-check {
-
-         color: #0d6efd;
-
-      }
-
-
-      .mode-card.manual input:checked+.mode-content .mode-check {
-
-         color: #198754;
-
-      }
-
-
-      /* =========================================================
-         INFO MODE
-      ========================================================= */
-
-      .mode-info {
-
-         border-radius: 10px;
-
-         padding: 12px 15px;
-
-         font-size: 13px;
-
-      }
-
-
-      /* =========================================================
-         MANUAL SETTING AREA
-      ========================================================= */
-
-      #manualSetting {
-
-         display: none;
-
-      }
-
-
-      #manualSetting.active {
-
-         display: block;
-
-      }
-
-
-      /* =========================================================
-         SURAT CARD
-      ========================================================= */
-
-      .surat-card {
-
-         border: 1px solid #e5e7eb;
-
-         border-radius: 12px;
-
-         transition: all .2s ease;
-
-         height: 100%;
-
-      }
-
-
-      .surat-card:hover {
-
-         transform: translateY(-2px);
-
-         box-shadow:
-            0 8px 25px rgba(0, 0, 0, .06);
-
-      }
-
-
-      .surat-icon {
-
-         width: 46px;
-
-         height: 46px;
-
-         border-radius: 10px;
-
-         display: flex;
-
-         align-items: center;
-
-         justify-content: center;
-
-         background: #e7f1ff;
-
-         color: #0d6efd;
-
-         flex-shrink: 0;
-
-      }
-
-
-      .surat-title {
-
-         font-size: 15px;
-
-         font-weight: 600;
-
-      }
-
-
-      .surat-description {
-
-         font-size: 12px;
-
-         color: #6c757d;
-
-      }
-
-
-      /* =========================================================
-         FORMAT PREVIEW
-      ========================================================= */
-
-      .format-preview {
-
-         background: #f8f9fa;
-
-         border: 1px dashed #ced4da;
-
-         border-radius: 8px;
-
-         padding: 10px 12px;
-
-         margin-top: 10px;
-
-      }
-
-
-      .format-preview-label {
-
-         font-size: 10px;
-
-         color: #6c757d;
-
-         margin-bottom: 3px;
-
-      }
-
-
-      .format-preview-value {
-
-         font-family: monospace;
-
-         font-size: 12px;
-
-         font-weight: 600;
-
-         color: #212529;
-
-         word-break: break-word;
-
-      }
-
-
-      /* =========================================================
-         FORM
-      ========================================================= */
-
-      .form-label {
-
-         font-size: 12px;
-
-         font-weight: 500;
-
-         margin-bottom: 5px;
-
-      }
-
-
-      .form-control {
-
-         font-size: 13px;
-
-      }
-
-
-      .form-text {
-
-         font-size: 10px;
-
-      }
-
-
-      /* =========================================================
-         BUTTON
-      ========================================================= */
-
-      .save-button {
-
-         min-width: 140px;
-
-      }
-
-
-      /* =========================================================
-         HIDDEN
-      ========================================================= */
-
-      .d-none-setting {
-
-         display: none !important;
-
-      }
-   </style>
-
+    }
+  </style>
 </head>
 
-
 <body>
+  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
+    data-sidebar-position="fixed" data-header-position="fixed">
+    <?php require 'sidebar.php'; ?>
+    <div class="body-wrapper">
+      <?php require 'navbar.php'; ?>
+      <div class="body-wrapper-inner">
+        <div class="container-fluid">
 
+          <!-- HEADER -->
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body py-3">
+              <div class="d-flex flex-wrap align-items-center gap-3">
+                <span class="ns-icon bg-primary-subtle text-primary"><i class="fas fa-hashtag"></i></span>
+                <div class="min-w-0 flex-grow-1">
+                  <h5 class="fw-semibold mb-0">Penomoran Surat</h5>
+                  <div class="text-muted small">Atur cara nomor surat dibuat untuk tiap jenis surat di faskes ini.</div>
+                </div>
+                <div class="text-md-end small" id="nsMeta">
+                  <div class="ns-skel" style="width:160px"></div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-   <!-- =========================================================
-        BODY WRAPPER
-   ========================================================= -->
+          <!-- MODE -->
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+              <div class="ns-sec">Metode penomoran</div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <button type="button" class="ns-mode" data-mode="AUTO" style="--c:#5d87ff;--bg:#f3f6ff" disabled>
+                    <span class="ns-radio"></span>
+                    <span class="min-w-0">
+                      <span class="d-flex align-items-center gap-2 mb-1">
+                        <span class="fw-semibold text-dark">Otomatis</span>
+                        <span class="ns-pill bg-primary-subtle text-primary d-none" data-aktif>Aktif</span>
+                      </span>
+                      <span class="d-block small text-muted">Nomor dibuat sistem dari format di bawah dan naik satu
+                        setiap surat baru. Petugas tidak perlu mengetik nomor.</span>
+                    </span>
+                  </button>
+                </div>
+                <div class="col-md-6">
+                  <button type="button" class="ns-mode" data-mode="MANUAL" style="--c:#13deb9;--bg:#effdfa" disabled>
+                    <span class="ns-radio"></span>
+                    <span class="min-w-0">
+                      <span class="d-flex align-items-center gap-2 mb-1">
+                        <span class="fw-semibold text-dark">Manual</span>
+                        <span class="ns-pill bg-success-subtle text-success d-none" data-aktif>Aktif</span>
+                      </span>
+                      <span class="d-block small text-muted">Petugas mengetik nomor surat sendiri di setiap form surat.
+                        Cocok bila faskes memakai buku register terpisah.</span>
+                    </span>
+                  </button>
+                </div>
+              </div>
+              <div class="small text-muted mt-2"><i class="fas fa-info-circle me-1"></i>Perubahan metode langsung
+                disimpan dan berlaku untuk surat yang dibuat setelahnya.</div>
+            </div>
+          </div>
 
-   <div
-      class="page-wrapper"
-      id="main-wrapper"
-      data-layout="vertical"
-      data-navbarbg="skin6"
-      data-sidebartype="full"
-      data-sidebar-position="fixed"
-      data-header-position="fixed">
-
-
-      <!-- ======================================================
-           SIDEBAR
-      ======================================================= -->
-
-      <?php
-
-      require 'sidebar.php';
-
-      ?>
-
-
-      <!-- ======================================================
-           MAIN BODY
-      ======================================================= -->
-
-      <div class="body-wrapper">
-
-
-         <!-- ====================================================
-              NAVBAR
-         ===================================================== -->
-
-         <?php
-
-         require 'navbar.php';
-
-         ?>
-
-
-         <!-- ====================================================
-              CONTENT
-         ===================================================== -->
-
-         <div class="body-wrapper-inner">
-
-            <div class="container-fluid">
-
-
-               <!-- =================================================
-                    PAGE HEADER
-               ================================================== -->
-
-               <div class="row">
-
-                  <div class="col-12">
-
-                     <div class="card border-0 shadow-sm">
-
-                        <div class="card-body">
-
-                           <div class="setting-header">
-
-
-                              <div class="setting-header-icon">
-
-                                 <iconify-icon
-                                    icon="material-symbols:settings-outline"
-                                    width="27">
-                                 </iconify-icon>
-
-                              </div>
-
-
-                              <div>
-
-                                 <h5 class="fw-semibold mb-1">
-
-                                    Pengaturan Nomor Surat
-
-                                 </h5>
-
-
-                                 <div class="text-muted small">
-
-                                    Atur metode penomoran surat
-                                    dan konfigurasi nomor surat
-                                    fasilitas kesehatan.
-
-                                 </div>
-
-                              </div>
-
-
-                           </div>
-
-                        </div>
-
-                     </div>
-
+          <div class="row g-3 mb-3">
+            <!-- KONFIGURASI -->
+            <div class="col-xl-8">
+              <div class="card border-0 shadow-sm h-100 mb-0" id="nsConfig">
+                <div class="card-body">
+                  <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
+                    <div>
+                      <h6 class="fw-semibold mb-1">Format &amp; nomor terakhir</h6>
+                      <div class="small text-muted">Nomor berikutnya = nomor terakhir + 1. Klik penanda untuk
+                        menyisipkannya ke format.</div>
+                    </div>
                   </div>
-
-               </div>
-
-
-               <!-- =================================================
-                    MODE PENOMORAN
-               ================================================== -->
-
-               <div class="row setting-section">
-
-
-                  <!-- =================================================
-                       OTOMATIS
-                  ================================================== -->
-
-                  <div class="col-md-6 mb-3">
-
-                     <label class="mode-card auto w-100">
-
-
-                        <input
-                           type="radio"
-                           name="mode_nomor"
-                           id="mode_auto"
-                           value="AUTO"
-                           checked>
-
-
-                        <div class="mode-content">
-
-
-                           <div class="mode-icon auto">
-
-                              <iconify-icon
-                                 icon="material-symbols:auto-awesome"
-                                 width="26">
-                              </iconify-icon>
-
-                           </div>
-
-
-                           <div>
-
-                              <div class="mode-title">
-
-                                 Nomor Otomatis
-
-                              </div>
-
-
-                              <div class="mode-description">
-
-                                 Sistem akan membuat nomor surat
-                                 secara otomatis berdasarkan format
-                                 dan nomor terakhir yang telah
-                                 dikonfigurasi.
-
-                              </div>
-
-                           </div>
-
-
-                           <div class="mode-check">
-
-                              <iconify-icon
-                                 icon="material-symbols:check-circle"
-                                 width="23">
-                              </iconify-icon>
-
-                           </div>
-
-
-                        </div>
-
-
-                     </label>
-
+                  <div class="alert alert-success-subtle bg-success-subtle text-success small py-2 px-3 d-none"
+                    id="nsManualNote">
+                    <i class="fas fa-pen me-1"></i><strong>Mode manual aktif.</strong> Format &amp; nomor di bawah baru
+                    dipakai bila beralih ke Otomatis, tetapi tetap bisa disiapkan dan disimpan sekarang.
                   </div>
-
-
-                  <!-- =================================================
-                       MANUAL
-                  ================================================== -->
-
-                  <div class="col-md-6 mb-3">
-
-                     <label class="mode-card manual w-100">
-
-
-                        <input
-                           type="radio"
-                           name="mode_nomor"
-                           id="mode_manual"
-                           value="MANUAL">
-
-
-                        <div class="mode-content">
-
-
-                           <div class="mode-icon manual">
-
-                              <iconify-icon
-                                 icon="material-symbols:edit-document"
-                                 width="26">
-                              </iconify-icon>
-
-                           </div>
-
-
-                           <div>
-
-                              <div class="mode-title">
-
-                                 Nomor Manual
-
-                              </div>
-
-
-                              <div class="mode-description">
-
-                                 Nomor surat akan dimasukkan
-                                 secara manual saat membuat
-                                 masing-masing surat.
-
-                              </div>
-
-                           </div>
-
-
-                           <div class="mode-check">
-
-                              <iconify-icon
-                                 icon="material-symbols:check-circle"
-                                 width="23">
-                              </iconify-icon>
-
-                           </div>
-
-
-                        </div>
-
-
-                     </label>
-
+                  <div id="nsRows">
+                    <div class="py-4">
+                      <div class="ns-skel mb-3" style="width:60%"></div>
+                      <div class="ns-skel mb-3" style="width:85%"></div>
+                      <div class="ns-skel" style="width:40%"></div>
+                    </div>
                   </div>
-
-
-               </div>
-
-
-               <!-- =================================================
-                    INFO
-               ================================================== -->
-
-               <div class="row">
-
-                  <div class="col-12">
-
-                     <div
-                        class="mode-info bg-primary-subtle text-primary"
-                        id="modeInfo">
-
-                        <iconify-icon
-                           icon="material-symbols:info-outline"
-                           style="vertical-align:middle;">
-                        </iconify-icon>
-
-
-                        <strong>Mode Otomatis</strong>
-
-                        aktif.
-
-                        Sistem akan menggunakan format nomor
-                        dan nomor terakhir dari masing-masing
-                        jenis surat.
-
-                     </div>
-
-                  </div>
-
-               </div>
-
-
-               <!-- =================================================
-                    MANUAL SETTING
-               ================================================== -->
-
-               <div
-                  id="manualSetting"
-                  class="setting-section">
-
-
-                  <!-- =================================================
-                       HEADER MANUAL
-                  ================================================== -->
-
-                  <div class="row mb-3">
-
-                     <div class="col-12">
-
-                        <div class="d-flex align-items-center">
-
-
-                           <div
-                              class="surat-icon me-3"
-                              style="
-                                 background:#e8f7ef;
-                                 color:#198754;
-                              ">
-
-                              <iconify-icon
-                                 icon="material-symbols:edit-document"
-                                 width="25">
-                              </iconify-icon>
-
-                           </div>
-
-
-                           <div>
-
-                              <h5 class="fw-semibold mb-1">
-
-                                 Konfigurasi Nomor Surat
-
-                              </h5>
-
-
-                              <div class="text-muted small">
-
-                                 Atur format nomor dan nomor
-                                 tertinggi untuk masing-masing
-                                 jenis surat.
-
-                              </div>
-
-                           </div>
-
-
-                        </div>
-
-                     </div>
-
-                  </div>
-
-
-                  <!-- =================================================
-                       SURAT CARDS
-                  ================================================== -->
-
-                  <div class="row g-3">
-
-
-                     <!-- =================================================
-                          SURAT SAKIT
-                     ================================================== -->
-
-                     <div class="col-xl-4 col-md-6">
-
-                        <div class="card surat-card">
-
-                           <div class="card-body">
-
-
-                              <div
-                                 class="d-flex align-items-center mb-3">
-
-                                 <div class="surat-icon">
-
-                                    <iconify-icon
-                                       icon="material-symbols:sick-outline"
-                                       width="25">
-                                    </iconify-icon>
-
-                                 </div>
-
-
-                                 <div class="ms-3">
-
-                                    <div class="surat-title">
-
-                                       Surat Keterangan Sakit
-
-                                    </div>
-
-
-                                    <div class="surat-description">
-
-                                       Pengaturan nomor surat sakit
-
-                                    </div>
-
-                                 </div>
-
-                              </div>
-
-
-                              <!-- FORMAT -->
-
-                              <div class="mb-3">
-
-                                 <label class="form-label">
-
-                                    Format Nomor Surat
-
-                                 </label>
-
-
-                                 <input
-                                    type="text"
-                                    class="form-control"
-                                    id="format_sakit"
-                                    placeholder="Contoh: SKS/{NO}/{MM}/{YYYY}"
-                                    value="SKS/{NO}/{MM}/{YYYY}">
-
-
-                                 <div class="form-text">
-
-                                    Gunakan
-                                    <strong>{NO}</strong>
-                                    untuk nomor urut.
-
-                                 </div>
-
-                              </div>
-
-
-                              <!-- NOMOR -->
-
-                              <div class="mb-3">
-
-                                 <label class="form-label">
-
-                                    Nomor Tertinggi / Terakhir
-
-                                 </label>
-
-
-                                 <input
-                                    type="number"
-                                    class="form-control"
-                                    id="nomor_sakit"
-                                    min="0"
-                                    value="0">
-
-                              </div>
-
-
-                              <!-- PREVIEW -->
-
-                              <div class="format-preview">
-
-                                 <div class="format-preview-label">
-
-                                    Contoh nomor berikutnya
-
-                                 </div>
-
-
-                                 <div
-                                    class="format-preview-value"
-                                    id="preview_sakit">
-
-                                    SKS/001/08/2026
-
-                                 </div>
-
-                              </div>
-
-
-                           </div>
-
-                        </div>
-
-                     </div>
-
-
-                     <!-- =================================================
-                          SURAT BEROBAT
-                     ================================================== -->
-
-                     <div class="col-xl-4 col-md-6">
-
-                        <div class="card surat-card">
-
-                           <div class="card-body">
-
-
-                              <div
-                                 class="d-flex align-items-center mb-3">
-
-                                 <div
-                                    class="surat-icon"
-                                    style="
-                                       background:#fff3cd;
-                                       color:#d39e00;
-                                    ">
-
-                                    <iconify-icon
-                                       icon="material-symbols:medical-services-outline"
-                                       width="25">
-                                    </iconify-icon>
-
-                                 </div>
-
-
-                                 <div class="ms-3">
-
-                                    <div class="surat-title">
-
-                                       Surat Keterangan Berobat
-
-                                    </div>
-
-
-                                    <div class="surat-description">
-
-                                       Pengaturan nomor surat berobat
-
-                                    </div>
-
-                                 </div>
-
-                              </div>
-
-
-                              <div class="mb-3">
-
-                                 <label class="form-label">
-
-                                    Format Nomor Surat
-
-                                 </label>
-
-
-                                 <input
-                                    type="text"
-                                    class="form-control"
-                                    id="format_berobat"
-                                    placeholder="Contoh: SKB/{NO}/{MM}/{YYYY}"
-                                    value="SKB/{NO}/{MM}/{YYYY}">
-
-                                 <div class="form-text">
-
-                                    Gunakan
-                                    <strong>{NO}</strong>
-                                    untuk nomor urut.
-
-                                 </div>
-
-                              </div>
-
-
-                              <div class="mb-3">
-
-                                 <label class="form-label">
-
-                                    Nomor Tertinggi / Terakhir
-
-                                 </label>
-
-
-                                 <input
-                                    type="number"
-                                    class="form-control"
-                                    id="nomor_berobat"
-                                    min="0"
-                                    value="0">
-
-                              </div>
-
-
-                              <div class="format-preview">
-
-                                 <div class="format-preview-label">
-
-                                    Contoh nomor berikutnya
-
-                                 </div>
-
-
-                                 <div
-                                    class="format-preview-value"
-                                    id="preview_berobat">
-
-                                    SKB/001/08/2026
-
-                                 </div>
-
-                              </div>
-
-
-                           </div>
-
-                        </div>
-
-                     </div>
-
-
-                     <!-- =================================================
-                          SURAT SEHAT
-                     ================================================== -->
-
-                     <div class="col-xl-4 col-md-6">
-
-                        <div class="card surat-card">
-
-                           <div class="card-body">
-
-
-                              <div
-                                 class="d-flex align-items-center mb-3">
-
-                                 <div
-                                    class="surat-icon"
-                                    style="
-                                       background:#e7f1ff;
-                                       color:#0d6efd;
-                                    ">
-
-                                    <iconify-icon
-                                       icon="material-symbols:health-and-safety-outline"
-                                       width="25">
-                                    </iconify-icon>
-
-                                 </div>
-
-
-                                 <div class="ms-3">
-
-                                    <div class="surat-title">
-
-                                       Surat Keterangan Sehat
-
-                                    </div>
-
-
-                                    <div class="surat-description">
-
-                                       Pengaturan nomor surat sehat
-
-                                    </div>
-
-                                 </div>
-
-                              </div>
-
-
-                              <div class="mb-3">
-
-                                 <label class="form-label">
-
-                                    Format Nomor Surat
-
-                                 </label>
-
-
-                                 <input
-                                    type="text"
-                                    class="form-control"
-                                    id="format_sehat"
-                                    placeholder="Contoh: SKH/{NO}/{MM}/{YYYY}"
-                                    value="SKH/{NO}/{MM}/{YYYY}">
-
-                              </div>
-
-
-                              <div class="mb-3">
-
-                                 <label class="form-label">
-
-                                    Nomor Tertinggi / Terakhir
-
-                                 </label>
-
-
-                                 <input
-                                    type="number"
-                                    class="form-control"
-                                    id="nomor_sehat"
-                                    min="0"
-                                    value="0">
-
-                              </div>
-
-
-                              <div class="format-preview">
-
-                                 <div class="format-preview-label">
-
-                                    Contoh nomor berikutnya
-
-                                 </div>
-
-
-                                 <div
-                                    class="format-preview-value"
-                                    id="preview_sehat">
-
-                                    SKH/001/08/2026
-
-                                 </div>
-
-                              </div>
-
-
-                           </div>
-
-                        </div>
-
-                     </div>
-
-
-                     <!-- =================================================
-                          RAWAT INAP
-                     ================================================== -->
-
-                     <div class="col-xl-4 col-md-6">
-
-                        <div class="card surat-card">
-
-                           <div class="card-body">
-
-
-                              <div
-                                 class="d-flex align-items-center mb-3">
-
-                                 <div
-                                    class="surat-icon"
-                                    style="
-                                       background:#f3e8ff;
-                                       color:#7c3aed;
-                                    ">
-
-                                    <iconify-icon
-                                       icon="material-symbols:bed-outline"
-                                       width="25">
-                                    </iconify-icon>
-
-                                 </div>
-
-
-                                 <div class="ms-3">
-
-                                    <div class="surat-title">
-
-                                       Surat Keterangan Rawat Inap
-
-                                    </div>
-
-
-                                    <div class="surat-description">
-
-                                       Pengaturan nomor surat rawat inap
-
-                                    </div>
-
-                                 </div>
-
-                              </div>
-
-
-                              <div class="mb-3">
-
-                                 <label class="form-label">
-
-                                    Format Nomor Surat
-
-                                 </label>
-
-
-                                 <input
-                                    type="text"
-                                    class="form-control"
-                                    id="format_rawat_inap"
-                                    placeholder="Contoh: SRI/{NO}/{MM}/{YYYY}"
-                                    value="SRI/{NO}/{MM}/{YYYY}">
-
-                              </div>
-
-
-                              <div class="mb-3">
-
-                                 <label class="form-label">
-
-                                    Nomor Tertinggi / Terakhir
-
-                                 </label>
-
-
-                                 <input
-                                    type="number"
-                                    class="form-control"
-                                    id="nomor_rawat_inap"
-                                    min="0"
-                                    value="0">
-
-                              </div>
-
-
-                              <div class="format-preview">
-
-                                 <div class="format-preview-label">
-
-                                    Contoh nomor berikutnya
-
-                                 </div>
-
-
-                                 <div
-                                    class="format-preview-value"
-                                    id="preview_rawat_inap">
-
-                                    SRI/001/08/2026
-
-                                 </div>
-
-                              </div>
-
-
-                           </div>
-
-                        </div>
-
-                     </div>
-
-
-                     <!-- =================================================
-                          SURAT KEMATIAN
-                     ================================================== -->
-
-                     <div class="col-xl-4 col-md-6">
-
-                        <div class="card surat-card">
-
-                           <div class="card-body">
-
-
-                              <div
-                                 class="d-flex align-items-center mb-3">
-
-                                 <div
-                                    class="surat-icon"
-                                    style="
-                                       background:#f8d7da;
-                                       color:#dc3545;
-                                    ">
-
-                                    <iconify-icon
-                                       icon="material-symbols:deceased-outline"
-                                       width="25">
-                                    </iconify-icon>
-
-                                 </div>
-
-
-                                 <div class="ms-3">
-
-                                    <div class="surat-title">
-
-                                       Surat Keterangan Kematian
-
-                                    </div>
-
-
-                                    <div class="surat-description">
-
-                                       Pengaturan nomor surat kematian
-
-                                    </div>
-
-                                 </div>
-
-                              </div>
-
-
-                              <div class="mb-3">
-
-                                 <label class="form-label">
-
-                                    Format Nomor Surat
-
-                                 </label>
-
-
-                                 <input
-                                    type="text"
-                                    class="form-control"
-                                    id="format_kematian"
-                                    placeholder="Contoh: SKM/{NO}/{MM}/{YYYY}"
-                                    value="SKM/{NO}/{MM}/{YYYY}">
-
-                              </div>
-
-
-                              <div class="mb-3">
-
-                                 <label class="form-label">
-
-                                    Nomor Tertinggi / Terakhir
-
-                                 </label>
-
-
-                                 <input
-                                    type="number"
-                                    class="form-control"
-                                    id="nomor_kematian"
-                                    min="0"
-                                    value="0">
-
-                              </div>
-
-
-                              <div class="format-preview">
-
-                                 <div class="format-preview-label">
-
-                                    Contoh nomor berikutnya
-
-                                 </div>
-
-
-                                 <div
-                                    class="format-preview-value"
-                                    id="preview_kematian">
-
-                                    SKM/001/08/2026
-
-                                 </div>
-
-                              </div>
-
-
-                           </div>
-
-                        </div>
-
-                     </div>
-
-
-                     <!-- =================================================
-                          PEMERIKSAAN MATA
-                     ================================================== -->
-
-                     <div class="col-xl-4 col-md-6">
-
-                        <div class="card surat-card">
-
-                           <div class="card-body">
-
-
-                              <div
-                                 class="d-flex align-items-center mb-3">
-
-                                 <div
-                                    class="surat-icon"
-                                    style="
-                                       background:#fff3cd;
-                                       color:#fd7e14;
-                                    ">
-
-                                    <iconify-icon
-                                       icon="material-symbols:visibility-outline"
-                                       width="25">
-                                    </iconify-icon>
-
-                                 </div>
-
-
-                                 <div class="ms-3">
-
-                                    <div class="surat-title">
-
-                                       Surat Hasil Pemeriksaan Mata
-
-                                    </div>
-
-
-                                    <div class="surat-description">
-
-                                       Pengaturan nomor pemeriksaan mata
-
-                                    </div>
-
-                                 </div>
-
-                              </div>
-
-
-                              <div class="mb-3">
-
-                                 <label class="form-label">
-
-                                    Format Nomor Surat
-
-                                 </label>
-
-
-                                 <input
-                                    type="text"
-                                    class="form-control"
-                                    id="format_mata"
-                                    placeholder="Contoh: SPM/{NO}/{MM}/{YYYY}"
-                                    value="SPM/{NO}/{MM}/{YYYY}">
-
-                              </div>
-
-
-                              <div class="mb-3">
-
-                                 <label class="form-label">
-
-                                    Nomor Tertinggi / Terakhir
-
-                                 </label>
-
-
-                                 <input
-                                    type="number"
-                                    class="form-control"
-                                    id="nomor_mata"
-                                    min="0"
-                                    value="0">
-
-                              </div>
-
-
-                              <div class="format-preview">
-
-                                 <div class="format-preview-label">
-
-                                    Contoh nomor berikutnya
-
-                                 </div>
-
-
-                                 <div
-                                    class="format-preview-value"
-                                    id="preview_mata">
-
-                                    SPM/001/08/2026
-
-                                 </div>
-
-                              </div>
-
-
-                           </div>
-
-                        </div>
-
-                     </div>
-
-
-                  </div>
-
-
-                  <!-- =================================================
-                       SAVE BUTTON
-                  ================================================== -->
-
-                  <div class="row mt-4 mb-4">
-
-                     <div class="col-12 text-end">
-
-                        <button
-                           type="button"
-                           class="btn btn-primary save-button"
-                           id="btnSaveSetting">
-
-                           <iconify-icon
-                              icon="material-symbols:save-outline"
-                              class="me-1">
-                           </iconify-icon>
-
-                           Simpan Pengaturan
-
-                        </button>
-
-                     </div>
-
-                  </div>
-
-
-               </div>
-
-
+                </div>
+              </div>
             </div>
 
-         </div>
+            <!-- PANDUAN -->
+            <div class="col-xl-4">
+              <div class="card border-0 shadow-sm h-100 mb-0">
+                <div class="card-body ns-legend">
+                  <h6 class="fw-semibold mb-3">Penanda format</h6>
+                  <div class="d-flex gap-2 mb-2"><code>{NO}</code><span class="small">Nomor urut. Wajib ada agar nomor
+                      tiap surat berbeda.</span></div>
+                  <div class="d-flex gap-2 mb-2"><code>{NO:5}</code><span class="small">Nomor urut dengan panjang tetap
+                      (00012). Hanya Surat Berobat &amp; Kematian.</span></div>
+                  <div class="d-flex gap-2 mb-2"><code>{DD}</code><span class="small">Tanggal 2 digit (01–31).</span>
+                  </div>
+                  <div class="d-flex gap-2 mb-2"><code>{MM}</code><span class="small">Bulan 2 digit (01–12).</span></div>
+                  <div class="d-flex gap-2 mb-2"><code>{YYYY}</code><span class="small">Tahun 4 digit.</span></div>
+                  <div class="d-flex gap-2 mb-2"><code>{YY}</code><span class="small">Tahun 2 digit.</span></div>
+                  <div class="d-flex gap-2 mb-3"><code>{ROMAN}</code><span class="small">Bulan romawi (I–XII). Hanya
+                      Surat Pemeriksaan Mata.</span></div>
+                  <div class="small text-muted border-top pt-3">
+                    <div class="mb-2"><i class="fas fa-exclamation-triangle text-warning me-1"></i>Nomor urut
+                      <strong>tidak</strong> kembali ke 1 otomatis tiap bulan/tahun. Untuk memulai dari awal, ubah nomor
+                      terakhir menjadi 0.</div>
+                    <div><i class="fas fa-info-circle me-1"></i>Penanda yang tidak tersedia untuk suatu jenis surat
+                      tidak ditampilkan di tombol sisipnya.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
+          <!-- BAR AKSI -->
+          <div class="ns-bar d-flex flex-wrap align-items-center gap-2">
+            <div class="small me-auto" id="nsBarInfo"><span class="text-muted">Memuat pengaturan…</span></div>
+            <button type="button" class="btn btn-light btn-sm" id="nsBtnBatal" disabled>
+              <i class="fas fa-undo me-1"></i>Batalkan
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" id="nsBtnSimpan" disabled>
+              <i class="fas fa-save me-1"></i>Simpan Format &amp; Nomor
+            </button>
+          </div>
+
+        </div>
       </div>
+    </div>
+  </div>
+  <?php require 'library.php'; ?>
+  <script>
+    (function() {
+      const API = 'controller/letter/settingSuratController.php';
 
-   </div>
-
-
-   <?php
-
-   require 'library.php';
-
-   ?>
-   <script>
-      /* =========================================================
-   CONFIG
-========================================================= */
-
-      const settingSuratApi =
-         'controller/letter/settingSuratController.php';
-
-
-      /* =========================================================
-         ELEMENT
-      ========================================================= */
-
-      const manualSetting =
-         document.getElementById(
-            'manualSetting'
-         );
-
-
-      const modeInfo =
-         document.getElementById(
-            'modeInfo'
-         );
-
-
-      /* =========================================================
-         PREVIEW CONFIGURATION
-      ========================================================= */
-
-      const previewConfig = [
-
-         [
-            'format_sakit',
-            'nomor_sakit',
-            'preview_sakit'
-         ],
-
-         [
-            'format_berobat',
-            'nomor_berobat',
-            'preview_berobat'
-         ],
-
-         [
-            'format_sehat',
-            'nomor_sehat',
-            'preview_sehat'
-         ],
-
-         [
-            'format_rawat_inap',
-            'nomor_rawat_inap',
-            'preview_rawat_inap'
-         ],
-
-         [
-            'format_kematian',
-            'nomor_kematian',
-            'preview_kematian'
-         ],
-
-         [
-            'format_mata',
-            'nomor_mata',
-            'preview_mata'
-         ]
-
+      /* harus sama dengan generator nomor di controller surat masing-masing */
+      const JENIS = [{
+          k: 'sakit',
+          nama: 'Surat Keterangan Sakit',
+          ikon: 'fa-procedures',
+          warna: 'danger',
+          bawaan: 'SKS/{NO}/{MM}/{YYYY}',
+          pad: 3,
+          token: ['NO', 'DD', 'MM', 'YY', 'YYYY']
+        },
+        {
+          k: 'berobat',
+          nama: 'Surat Keterangan Berobat',
+          ikon: 'fa-stethoscope',
+          warna: 'warning',
+          bawaan: 'SKB/{NO}/{MM}/{YYYY}',
+          pad: 4,
+          token: ['NO', 'NO:n', 'DD', 'MM', 'YY', 'YYYY']
+        },
+        {
+          k: 'sehat',
+          nama: 'Surat Keterangan Sehat',
+          ikon: 'fa-heartbeat',
+          warna: 'success',
+          bawaan: 'SKH/{NO}/{MM}/{YYYY}',
+          pad: 4,
+          token: ['NO', 'DD', 'MM', 'YYYY']
+        },
+        {
+          k: 'rawat_inap',
+          nama: 'Surat Rawat Inap',
+          ikon: 'fa-bed',
+          warna: 'primary',
+          bawaan: 'SRI/{NO}/{MM}/{YYYY}',
+          pad: 3,
+          token: ['NO', 'DD', 'MM', 'YY', 'YYYY']
+        },
+        {
+          k: 'kematian',
+          nama: 'Surat Keterangan Kematian',
+          ikon: 'fa-file-medical',
+          warna: 'secondary',
+          bawaan: 'SKM/{NO}/{MM}/{YYYY}',
+          pad: 0,
+          token: ['NO', 'NO:n', 'DD', 'MM', 'YYYY']
+        },
+        {
+          k: 'mata',
+          nama: 'Surat Pemeriksaan Mata',
+          ikon: 'fa-eye',
+          warna: 'info',
+          bawaan: 'SPM/{NO}/{MM}/{YYYY}',
+          pad: 3,
+          token: ['NO', 'MM', 'YYYY', 'ROMAN']
+        }
       ];
+      const ROMAWI = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
 
+      let asli = null; // data dari server
+      let mode = null;
+      let sibuk = false;
 
-      /* =========================================================
-         MODE UI
-      ========================================================= */
+      const $ = (s, r = document) => r.querySelector(s);
+      const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      } [c]));
+      const angka = n => Number(n || 0).toLocaleString('id-ID');
 
-      function updateModeUI(mode) {
-
-         mode =
-            String(mode || 'AUTO')
-            .toUpperCase();
-
-
-         /*
-         |--------------------------------------------------------------------------
-         | RADIO
-         |--------------------------------------------------------------------------
-         */
-
-         const radio =
-            document.querySelector(
-               'input[name="mode_nomor"][value="' +
-               mode +
-               '"]'
-            );
-
-
-         if (radio) {
-
-            radio.checked = true;
-
-         }
-
-
-         /*
-         |--------------------------------------------------------------------------
-         | AUTO
-         |--------------------------------------------------------------------------
-         */
-
-         if (mode === 'AUTO') {
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | TAMPILKAN SETTING AUTO
-            |--------------------------------------------------------------------------
-            */
-
-            manualSetting
-               .classList
-               .add('active');
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | INFO
-            |--------------------------------------------------------------------------
-            */
-
-            modeInfo
-               .classList
-               .remove(
-                  'bg-success-subtle',
-                  'text-success'
-               );
-
-
-            modeInfo
-               .classList
-               .add(
-                  'bg-primary-subtle',
-                  'text-primary'
-               );
-
-
-            modeInfo.innerHTML = `
-
-         <iconify-icon
-            icon="material-symbols:info-outline"
-            style="vertical-align:middle;">
-         </iconify-icon>
-
-         <strong>Mode Otomatis</strong>
-         aktif.
-
-         Sistem akan membuat nomor surat
-         berdasarkan format dan nomor terakhir
-         masing-masing jenis surat.
-
-      `;
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | ENABLE INPUT
-            |--------------------------------------------------------------------------
-            */
-
-            setAutoSettingDisabled(
-               false
-            );
-
-
-         }
-
-
-         /*
-         |--------------------------------------------------------------------------
-         | MANUAL
-         |--------------------------------------------------------------------------
-         */
-         else {
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | HILANGKAN SETTING AUTO
-            |--------------------------------------------------------------------------
-            */
-
-            manualSetting
-               .classList
-               .remove('active');
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | INFO
-            |--------------------------------------------------------------------------
-            */
-
-            modeInfo
-               .classList
-               .remove(
-                  'bg-primary-subtle',
-                  'text-primary'
-               );
-
-
-            modeInfo
-               .classList
-               .add(
-                  'bg-success-subtle',
-                  'text-success'
-               );
-
-
-            modeInfo.innerHTML = `
-
-         <iconify-icon
-            icon="material-symbols:info-outline"
-            style="vertical-align:middle;">
-         </iconify-icon>
-
-         <strong>Mode Manual</strong>
-         aktif.
-
-         Nomor surat akan diisi langsung
-         oleh pengguna pada masing-masing
-         form surat.
-
-      `;
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | DISABLE INPUT AUTO
-            |--------------------------------------------------------------------------
-            */
-
-            setAutoSettingDisabled(
-               true
-            );
-
-         }
-
+      function tglIndo(s) {
+        if (!s) return '';
+        const d = new Date(String(s).replace(' ', 'T'));
+        if (isNaN(d)) return s;
+        return d.toLocaleDateString('id-ID', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric'
+        }) + ' ' + d.toLocaleTimeString('id-ID', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
       }
 
-
-      /* =========================================================
-         DISABLE / ENABLE AUTO SETTING
-      ========================================================= */
-
-      function setAutoSettingDisabled(
-         disabled
-      ) {
-
-         previewConfig.forEach(
-            function(config) {
-
-               const formatInput =
-                  document.getElementById(
-                     config[0]
-                  );
-
-
-               const numberInput =
-                  document.getElementById(
-                     config[1]
-                  );
-
-
-               if (formatInput) {
-
-                  formatInput.disabled =
-                     disabled;
-
-               }
-
-
-               if (numberInput) {
-
-                  numberInput.disabled =
-                     disabled;
-
-               }
-
-            }
-         );
-
+      async function api(opts) {
+        const r = await fetch(API, Object.assign({
+          credentials: 'same-origin',
+          cache: 'no-store'
+        }, opts || {}));
+        let j = null;
+        try {
+          j = await r.json();
+        } catch (e) {}
+        if (!r.ok || !j || j.status !== 'success') {
+          const e = new Error((j && j.message) || ('Server error (HTTP ' + r.status + ')'));
+          e.code = r.status;
+          throw e;
+        }
+        return j.data || {};
       }
 
-
-      /* =========================================================
-         MODE CHANGE
-         KLIK AUTO / MANUAL
-         LANGSUNG SIMPAN
-      ========================================================= */
-
-      document
-         .querySelectorAll(
-            'input[name="mode_nomor"]'
-         )
-         .forEach(function(input) {
-
-            input.addEventListener(
-               'change',
-               function() {
-
-                  const selectedMode =
-                     this.value;
-
-
-                  /*
-                  |--------------------------------------------------------------------------
-                  | AMBIL MODE DATABASE SAAT INI
-                  |--------------------------------------------------------------------------
-                  */
-
-                  const currentRadio =
-                     document.querySelector(
-                        'input[name="mode_nomor"][data-current="true"]'
-                     );
-
-
-                  const oldMode =
-                     currentRadio ?
-                     currentRadio.value :
-                     null;
-
-
-                  /*
-                  |--------------------------------------------------------------------------
-                  | TANYA USER
-                  |--------------------------------------------------------------------------
-                  */
-
-                  Swal.fire({
-
-                        icon: 'question',
-
-                        title: selectedMode === 'MANUAL' ?
-                           'Gunakan Nomor Manual?' :
-                           'Gunakan Nomor Otomatis?',
-
-                        html: selectedMode === 'MANUAL' ?
-                           `
-                     Nomor surat akan
-                     <strong>diisi manual</strong>
-                     pada masing-masing form surat.
-                     ` :
-                           `
-                     Nomor surat akan
-                     <strong>dibuat otomatis</strong>
-                     menggunakan format dan nomor
-                     terakhir yang telah dikonfigurasi.
-                     `,
-
-                        showCancelButton: true,
-
-                        confirmButtonText: 'Ya, Simpan',
-
-                        cancelButtonText: 'Batal',
-
-                        reverseButtons: true
-
-                     })
-
-                     .then(function(result) {
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | USER SETUJU
-                        |--------------------------------------------------------------------------
-                        */
-
-                        if (
-                           result.isConfirmed
-                        ) {
-
-                           saveModeOnly(
-                              selectedMode
-                           );
-
-                        }
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | USER BATAL
-                        |--------------------------------------------------------------------------
-                        */
-                        else {
-
-                           loadSettingSurat();
-
-                        }
-
-                     });
-
-               }
-            );
-
-         });
-
-
-      /* =========================================================
-         SAVE MODE ONLY
-      ========================================================= */
-
-      function saveModeOnly(
-         mode
-      ) {
-
-         const formData =
-            new FormData();
-
-
-         formData.append(
-            'action',
-            'update_mode'
-         );
-
-
-         formData.append(
-            'mode_nomor',
-            mode
-         );
-
-
-         /*
-         |--------------------------------------------------------------------------
-         | LOADING
-         |--------------------------------------------------------------------------
-         */
-
-         Swal.fire({
-
-            title: 'Menyimpan Mode...',
-
-            text: 'Mohon tunggu.',
-
-            allowOutsideClick: false,
-
-            allowEscapeKey: false,
-
-            didOpen: function() {
-
-               Swal.showLoading();
-
-            }
-
-         });
-
-
-         /*
-         |--------------------------------------------------------------------------
-         | POST
-         |--------------------------------------------------------------------------
-         */
-
-         fetch(
-               settingSuratApi, {
-
-                  method: 'POST',
-
-                  body: formData
-
-               }
-            )
-
-            .then(function(response) {
-
-               if (!response.ok) {
-
-                  throw new Error(
-                     'HTTP Error ' +
-                     response.status
-                  );
-
-               }
-
-               return response.json();
-
-            })
-
-            .then(function(response) {
-
-
-               console.log(
-                  'SAVE MODE RESPONSE:',
-                  response
-               );
-
-
-               if (
-                  response.status !==
-                  'success'
-               ) {
-
-                  throw new Error(
-                     response.message ||
-                     'Mode gagal disimpan.'
-                  );
-
-               }
-
-
-               /*
-               |--------------------------------------------------------------------------
-               | UPDATE UI
-               |--------------------------------------------------------------------------
-               */
-
-               updateModeUI(
-                  mode
-               );
-
-
-               /*
-               |--------------------------------------------------------------------------
-               | MARK CURRENT MODE
-               |--------------------------------------------------------------------------
-               */
-
-               document
-                  .querySelectorAll(
-                     'input[name="mode_nomor"]'
-                  )
-                  .forEach(
-                     function(item) {
-
-                        item.removeAttribute(
-                           'data-current'
-                        );
-
-                     }
-                  );
-
-
-               const selectedRadio =
-                  document.querySelector(
-                     'input[name="mode_nomor"][value="' +
-                     mode +
-                     '"]'
-                  );
-
-
-               if (selectedRadio) {
-
-                  selectedRadio.setAttribute(
-                     'data-current',
-                     'true'
-                  );
-
-               }
-
-
-               /*
-               |--------------------------------------------------------------------------
-               | SUCCESS
-               |--------------------------------------------------------------------------
-               */
-
-               Swal.fire({
-
-                  icon: 'success',
-
-                  title: 'Berhasil',
-
-                  text: mode === 'MANUAL' ?
-                     'Mode manual berhasil diaktifkan.' :
-                     'Mode otomatis berhasil diaktifkan.',
-
-                  timer: 1600,
-
-                  showConfirmButton: false
-
-               });
-
-
-               /*
-               |--------------------------------------------------------------------------
-               | LOAD DATABASE
-               |--------------------------------------------------------------------------
-               */
-
-               setTimeout(
-                  function() {
-
-                     loadSettingSurat();
-
-                  },
-                  300
-               );
-
-
-            })
-
-            .catch(function(error) {
-
-
-               console.error(
-                  'SAVE MODE ERROR:',
-                  error
-               );
-
-
-               /*
-               |--------------------------------------------------------------------------
-               | KEMBALIKAN DATABASE
-               |--------------------------------------------------------------------------
-               */
-
-               loadSettingSurat();
-
-
-               Swal.fire({
-
-                  icon: 'error',
-
-                  title: 'Gagal',
-
-                  text: error.message ||
-                     'Mode penomoran gagal disimpan.'
-
-               });
-
+      /* ---------- validasi & pratinjau (meniru generator server) ---------- */
+      function cekFormat(f, j) {
+        if (!f) return 'Format tidak boleh kosong.';
+        if (f.length > 100) return 'Maksimal 100 karakter.';
+        let adaNo = false;
+        for (const m of f.matchAll(/\{([^{}]*)\}/g)) {
+          const t = /^NO:\d{1,2}$/.test(m[1]) ? 'NO:n' : m[1];
+          if (!j.token.includes(t)) {
+            return m[1].toUpperCase() !== m[1] && j.token.includes(m[1].toUpperCase()) ?
+              'Tulis penanda dengan huruf besar: {' + m[1].toUpperCase() + '}.' :
+              'Penanda {' + m[1] + '} tidak dikenali untuk surat ini.';
+          }
+          adaNo = adaNo || t === 'NO' || t === 'NO:n';
+        }
+        if (!adaNo) return 'Wajib memuat {NO} agar setiap surat bernomor unik.';
+        if (/[{}]/.test(f.replace(/\{[^{}]*\}/g, ''))) return 'Kurung kurawal tidak berpasangan.';
+        return null;
+      }
+
+      function buatNomor(f, j, n) {
+        const d = new Date();
+        const p2 = x => String(x).padStart(2, '0');
+        const no = j.pad ? String(n).padStart(j.pad, '0') : String(n);
+        return f
+          .replace(/\{NO:(\d{1,2})\}/g, (_, w) => String(n).padStart(+w, '0'))
+          .replace(/\{NO\}/g, no)
+          .replace(/\{YYYY\}/g, d.getFullYear())
+          .replace(/\{YY\}/g, String(d.getFullYear()).slice(-2))
+          .replace(/\{MM\}/g, p2(d.getMonth() + 1))
+          .replace(/\{DD\}/g, p2(d.getDate()))
+          .replace(/\{ROMAN\}/g, ROMAWI[d.getMonth()]);
+      }
+
+      function bacaNomor(v) {
+        v = String(v ?? '').trim().replace(/\./g, '');
+        if (v === '') return null;
+        if (!/^\d+$/.test(v)) return NaN;
+        const n = parseInt(v, 10);
+        return n > 99999999 ? NaN : n;
+      }
+
+      /* ---------- render ---------- */
+      function renderBaris() {
+        $('#nsRows').innerHTML = JENIS.map(j => {
+          const chips = j.token.map(t => {
+            const ins = t === 'NO:n' ? '{NO:4}' : '{' + t + '}';
+            return `<button type="button" class="btn" data-ins="${ins}" tabindex="-1">${ins}</button>`;
+          }).join('');
+          return `
+          <div class="ns-row" data-k="${j.k}">
+            <div class="row g-3 align-items-start">
+              <div class="col-lg-3 col-md-12">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="ns-icon bg-${j.warna}-subtle text-${j.warna}"><i class="fas ${j.ikon}"></i></span>
+                  <div class="min-w-0">
+                    <div class="ns-name">${esc(j.nama)}</div>
+                    <div class="small text-muted" data-info></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 col-md-6">
+                <label class="form-label small text-muted mb-1" for="f_${j.k}">Format nomor</label>
+                <div class="input-group input-group-sm">
+                  <input type="text" class="form-control ns-format" id="f_${j.k}" maxlength="100"
+                    autocomplete="off" spellcheck="false" placeholder="${esc(j.bawaan)}">
+                  <button type="button" class="btn btn-outline-secondary" data-bawaan title="Kembalikan ke format bawaan (${esc(j.bawaan)})">
+                    <i class="fas fa-undo-alt"></i>
+                  </button>
+                </div>
+                <div class="ns-tokens d-flex flex-wrap gap-1 mt-1">${chips}</div>
+              </div>
+              <div class="col-lg-2 col-md-6 col-sm-5">
+                <label class="form-label small text-muted mb-1" for="n_${j.k}">Nomor terakhir</label>
+                <div class="input-group input-group-sm ns-num">
+                  <button type="button" class="btn btn-outline-secondary" data-step="-1" aria-label="Kurangi">−</button>
+                  <input type="text" inputmode="numeric" class="form-control" id="n_${j.k}" autocomplete="off">
+                  <button type="button" class="btn btn-outline-secondary" data-step="1" aria-label="Tambah">+</button>
+                </div>
+                <div class="small mt-1" data-nwarn></div>
+              </div>
+              <div class="col-lg-3 col-md-12 col-sm-7">
+                <div class="form-label small text-muted mb-1">Nomor berikutnya</div>
+                <div class="ns-next"><div class="ns-next-val" data-next>-</div><div class="small text-muted" data-nextnote></div></div>
+              </div>
+            </div>
+          </div>`;
+        }).join('');
+      }
+
+      function isi(d) {
+        asli = d;
+        JENIS.forEach(j => {
+          $('#f_' + j.k).value = d['format_' + j.k] || j.bawaan;
+          $('#n_' + j.k).value = String(parseInt(d['nomor_' + j.k] || 0, 10));
+        });
+        setMode(d.mode_nomor || 'AUTO');
+        meta();
+        segarkan();
+      }
+
+      function meta() {
+        const d = asli || {};
+        const w = d.updated_at || d.created_at;
+        $('#nsMeta').innerHTML = !d.id ?
+          '<span class="ns-pill bg-warning-subtle text-warning"><i class="fas fa-circle" style="font-size:.45rem"></i>Belum pernah disimpan, memakai bawaan</span>' :
+          (w ? '<span class="text-muted">Terakhir diubah</span><div class="fw-semibold">' + esc(tglIndo(w)) + '</div>' : '');
+      }
+
+      function setMode(m) {
+        mode = m;
+        document.querySelectorAll('.ns-mode').forEach(b => {
+          const on = b.dataset.mode === m;
+          b.classList.toggle('on', on);
+          b.setAttribute('aria-pressed', on);
+          b.querySelector('[data-aktif]').classList.toggle('d-none', !on);
+          b.disabled = sibuk;
+        });
+        $('#nsManualNote').classList.toggle('d-none', m !== 'MANUAL');
+      }
+
+      /** Hitung status semua baris, perbarui pratinjau dan bar aksi. */
+      function segarkan() {
+        if (!asli) return;
+        let ubah = 0,
+          salah = 0;
+        JENIS.forEach(j => {
+          const row = $('.ns-row[data-k="' + j.k + '"]');
+          const fEl = $('#f_' + j.k),
+            nEl = $('#n_' + j.k);
+          const f = fEl.value.trim();
+          const n = bacaNomor(nEl.value);
+          const nAsli = parseInt(asli['nomor_' + j.k] || 0, 10);
+          const fAsli = asli['format_' + j.k] || j.bawaan;
+
+          const eF = cekFormat(f, j);
+          const eN = n === null ? 'Wajib diisi.' : (isNaN(n) ? 'Angka bulat 0 – 99.999.999.' : null);
+          fEl.classList.toggle('is-invalid', !!eF);
+          nEl.classList.toggle('is-invalid', !!eN);
+
+          const next = row.querySelector('.ns-next');
+          next.classList.toggle('err', !!(eF || eN));
+          row.querySelector('[data-next]').textContent = eF || eN || buatNomor(f, j, n + 1);
+          row.querySelector('[data-nextnote]').textContent = eF || eN ? '' : 'urutan ke-' + angka(n + 1);
+
+          const w = row.querySelector('[data-nwarn]');
+          if (!eN && n < nAsli) {
+            w.className = 'small mt-1 text-warning';
+            w.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Turun dari ' + angka(nAsli);
+          } else if (!eN && n !== nAsli) {
+            w.className = 'small mt-1 text-muted';
+            w.textContent = 'Sebelumnya ' + angka(nAsli);
+          } else {
+            w.className = 'small mt-1 text-danger';
+            w.textContent = eN && n !== null ? eN : '';
+          }
+
+          row.querySelector('[data-info]').textContent = nAsli ? angka(nAsli) + ' surat bernomor' : 'Belum ada nomor';
+          row.querySelector('[data-bawaan]').disabled = f === j.bawaan;
+
+          const dirty = f !== fAsli || n !== nAsli;
+          row.classList.toggle('dirty', dirty);
+          ubah += dirty ? 1 : 0;
+          salah += eF || eN ? 1 : 0;
+        });
+
+        const info = $('#nsBarInfo');
+        if (salah) {
+          info.innerHTML = '<span class="text-danger fw-semibold"><i class="fas fa-times-circle me-1"></i>' + salah + ' jenis surat belum valid</span>';
+        } else if (ubah) {
+          info.innerHTML = '<span class="text-warning fw-semibold"><i class="fas fa-circle me-1" style="font-size:.5rem;vertical-align:middle"></i>' + ubah + ' jenis surat belum disimpan</span>';
+        } else {
+          info.innerHTML = '<span class="text-success"><i class="fas fa-check-circle me-1"></i>Semua perubahan tersimpan</span>';
+        }
+        $('#nsBtnSimpan').disabled = sibuk || !ubah || !!salah;
+        $('#nsBtnBatal').disabled = sibuk || !ubah;
+        return {
+          ubah,
+          salah
+        };
+      }
+
+      function adaPerubahan() {
+        return !!asli && JENIS.some(j => $('#f_' + j.k).value.trim() !== (asli['format_' + j.k] || j.bawaan) ||
+          bacaNomor($('#n_' + j.k).value) !== parseInt(asli['nomor_' + j.k] || 0, 10));
+      }
+
+      function gagalMuat(msg) {
+        $('#nsRows').innerHTML = `<div class="text-center py-5">
+          <div class="text-danger mb-2"><i class="fas fa-exclamation-circle fa-2x"></i></div>
+          <div class="fw-semibold">Pengaturan gagal dimuat</div>
+          <div class="small text-muted mb-3">${esc(msg)}</div>
+          <button type="button" class="btn btn-sm btn-primary" id="nsRetry"><i class="fas fa-redo me-1"></i>Coba lagi</button></div>`;
+        $('#nsMeta').innerHTML = '';
+        $('#nsBarInfo').innerHTML = '<span class="text-danger">Tidak dapat menyimpan sebelum pengaturan dimuat.</span>';
+        $('#nsRetry').onclick = muat;
+      }
+
+      async function muat() {
+        sibuk = true;
+        asli = null;
+        $('#nsBtnSimpan').disabled = $('#nsBtnBatal').disabled = true;
+        document.querySelectorAll('.ns-mode').forEach(b => b.disabled = true);
+        try {
+          const d = await api();
+          renderBaris();
+          sibuk = false;
+          isi(d);
+        } catch (e) {
+          sibuk = false;
+          gagalMuat(e.message);
+        }
+      }
+
+      /* ---------- mode (langsung disimpan) ---------- */
+      document.querySelectorAll('.ns-mode').forEach(b => b.addEventListener('click', async () => {
+        const m = b.dataset.mode;
+        if (!asli || sibuk || m === mode) return;
+        const r = await Swal.fire({
+          icon: 'question',
+          title: m === 'MANUAL' ? 'Beralih ke nomor manual?' : 'Beralih ke nomor otomatis?',
+          html: m === 'MANUAL' ?
+            'Petugas harus <b>mengetik nomor surat sendiri</b> di setiap form surat mulai sekarang.' :
+            'Nomor surat akan <b>dibuat otomatis</b> dari format tersimpan, mulai dari nomor terakhir + 1.' +
+            (adaPerubahan() ? '<div class="small text-warning mt-2">Perubahan format/nomor yang belum disimpan tidak ikut terpakai sampai Anda menyimpannya.</div>' : ''),
+          showCancelButton: true,
+          confirmButtonText: 'Ya, ubah metode',
+          cancelButtonText: 'Batal',
+          reverseButtons: true
+        });
+        if (!r.isConfirmed) return;
+        sibuk = true;
+        setMode(mode);
+        segarkan();
+        const fd = new FormData();
+        fd.append('action', 'update_mode');
+        fd.append('mode_nomor', m);
+        try {
+          const d = await api({
+            method: 'POST',
+            body: fd
+          });
+          // hanya mode & waktu yang diperbarui; isian format/nomor yang sedang diedit tidak ditimpa
+          asli.mode_nomor = m;
+          asli.id = d.id ?? asli.id ?? 1;
+          asli.updated_at = d.updated_at || asli.updated_at;
+          asli.created_at = d.created_at || asli.created_at;
+          sibuk = false;
+          setMode(m);
+          meta();
+          segarkan();
+          Swal.fire({
+            icon: 'success',
+            title: m === 'MANUAL' ? 'Mode manual aktif' : 'Mode otomatis aktif',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        } catch (e) {
+          sibuk = false;
+          setMode(mode);
+          segarkan();
+          Swal.fire('Gagal', e.message, 'error');
+        }
+      }));
+
+      /* ---------- interaksi baris ---------- */
+      let fokusFormat = null;
+      $('#nsRows').addEventListener('focusin', e => {
+        if (e.target.classList.contains('ns-format')) fokusFormat = e.target;
+      });
+      $('#nsRows').addEventListener('input', e => {
+        if (e.target.matches('input')) segarkan();
+      });
+      $('#nsRows').addEventListener('keydown', e => {
+        if (e.target.matches('[id^="n_"]') && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+          e.preventDefault();
+          langkah(e.target, e.key === 'ArrowUp' ? 1 : -1);
+        }
+        if (e.key === 'Enter' && e.target.matches('input')) {
+          e.preventDefault();
+          if (!$('#nsBtnSimpan').disabled) simpan();
+        }
+      });
+
+      function langkah(inp, d) {
+        const n = bacaNomor(inp.value);
+        inp.value = String(Math.max(0, (isNaN(n) || n === null ? 0 : n) + d));
+        segarkan();
+      }
+
+      $('#nsRows').addEventListener('click', e => {
+        const row = e.target.closest('.ns-row');
+        if (!row) return;
+        const k = row.dataset.k;
+        const j = JENIS.find(x => x.k === k);
+        const fEl = $('#f_' + k);
+        const ins = e.target.closest('[data-ins]');
+        const st = e.target.closest('[data-step]');
+        if (ins) {
+          const s = fokusFormat === fEl ? fEl.selectionStart : fEl.value.length;
+          const t = fokusFormat === fEl ? fEl.selectionEnd : fEl.value.length;
+          fEl.value = fEl.value.slice(0, s) + ins.dataset.ins + fEl.value.slice(t);
+          fEl.focus();
+          const pos = s + ins.dataset.ins.length;
+          fEl.setSelectionRange(pos, pos);
+          segarkan();
+        } else if (st) {
+          langkah($('#n_' + k), +st.dataset.step);
+        } else if (e.target.closest('[data-bawaan]')) {
+          fEl.value = j.bawaan;
+          segarkan();
+        }
+      });
+
+      /* ---------- simpan ---------- */
+      async function simpan() {
+        const s = segarkan();
+        if (!s || !s.ubah || s.salah || sibuk) return;
+
+        const turun = [],
+          ubahFormat = [];
+        JENIS.forEach(j => {
+          const n = bacaNomor($('#n_' + j.k).value);
+          const nAsli = parseInt(asli['nomor_' + j.k] || 0, 10);
+          if (n < nAsli) turun.push(`<li><b>${esc(j.nama)}</b>: ${angka(nAsli)} → ${angka(n)}</li>`);
+          const f = $('#f_' + j.k).value.trim();
+          if (f !== (asli['format_' + j.k] || j.bawaan)) {
+            ubahFormat.push(`<li><b>${esc(j.nama)}</b>: <code>${esc(buatNomor(f, j, n + 1))}</code></li>`);
+          }
+        });
+
+        let html = '';
+        if (ubahFormat.length) html += '<div class="text-start small mb-2">Nomor berikutnya dengan format baru:<ul class="mb-0 ps-3">' + ubahFormat.join('') + '</ul></div>';
+        if (turun.length) {
+          html += '<div class="text-start small alert alert-warning py-2 mb-0"><b>Nomor terakhir diturunkan:</b><ul class="mb-1 ps-3">' +
+            turun.join('') + '</ul>Nomor yang pernah terbit bisa terpakai lagi. Pastikan formatnya berbeda (mis. tahun/bulan sudah berganti) agar tidak bentrok.</div>';
+        }
+        const r = await Swal.fire({
+          icon: turun.length ? 'warning' : 'question',
+          title: 'Simpan ' + s.ubah + ' perubahan?',
+          html: html || 'Perubahan nomor terakhir akan disimpan.',
+          showCancelButton: true,
+          confirmButtonText: 'Simpan',
+          cancelButtonText: 'Periksa lagi',
+          reverseButtons: true,
+          width: 520
+        });
+        if (!r.isConfirmed) return;
+
+        const fd = new FormData();
+        fd.append('action', 'save_setting');
+        fd.append('mode_nomor', asli.mode_nomor || mode || 'AUTO');
+        JENIS.forEach(j => {
+          fd.append('format_' + j.k, $('#f_' + j.k).value.trim());
+          fd.append('nomor_' + j.k, String(bacaNomor($('#n_' + j.k).value)));
+          if (asli.id) fd.append('nomor_' + j.k + '_awal', String(parseInt(asli['nomor_' + j.k] || 0, 10)));
+        });
+
+        sibuk = true;
+        segarkan();
+        const btn = $('#nsBtnSimpan');
+        const label = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan…';
+        try {
+          const d = await api({
+            method: 'POST',
+            body: fd
+          });
+          sibuk = false;
+          isi(d);
+          Swal.fire({
+            icon: 'success',
+            title: 'Tersimpan',
+            text: 'Format & nomor surat diperbarui.',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        } catch (e) {
+          sibuk = false;
+          segarkan();
+          if (e.code === 409) {
+            const rr = await Swal.fire({
+              icon: 'warning',
+              title: 'Nomor sudah berubah',
+              text: e.message,
+              showCancelButton: true,
+              confirmButtonText: 'Muat ulang data',
+              cancelButtonText: 'Tutup'
             });
-
+            if (rr.isConfirmed) muat();
+          } else {
+            Swal.fire('Gagal', e.message, 'error');
+          }
+        } finally {
+          btn.innerHTML = label;
+        }
       }
 
-
-      /* =========================================================
-         FORMAT PREVIEW
-      ========================================================= */
-
-      function generatePreview(
-         formatId,
-         numberId,
-         previewId
-      ) {
-
-         const formatElement =
-            document.getElementById(
-               formatId
-            );
-
-
-         const numberElement =
-            document.getElementById(
-               numberId
-            );
-
-
-         const previewElement =
-            document.getElementById(
-               previewId
-            );
-
-
-         if (
-            !formatElement ||
-            !numberElement ||
-            !previewElement
-         ) {
-
-            return;
-
-         }
-
-
-         const format =
-            formatElement.value || '';
-
-
-         let number =
-            parseInt(
-               numberElement.value || 0,
-               10
-            );
-
-
-         if (
-            isNaN(number) ||
-            number < 0
-         ) {
-
-            number = 0;
-
-         }
-
-
-         /*
-         |--------------------------------------------------------------------------
-         | NOMOR BERIKUTNYA
-         |--------------------------------------------------------------------------
-         */
-
-         const nextNumber =
-            String(
-               number + 1
-            ).padStart(
-               3,
-               '0'
-            );
-
-
-         /*
-         |--------------------------------------------------------------------------
-         | DATE
-         |--------------------------------------------------------------------------
-         */
-
-         const now =
-            new Date();
-
-
-         const yyyy =
-            now.getFullYear();
-
-
-         const yy =
-            String(
-               yyyy
-            ).slice(-2);
-
-
-         const mm =
-            String(
-               now.getMonth() + 1
-            ).padStart(
-               2,
-               '0'
-            );
-
-
-         const dd =
-            String(
-               now.getDate()
-            ).padStart(
-               2,
-               '0'
-            );
-
-
-         /*
-         |--------------------------------------------------------------------------
-         | REPLACE
-         |--------------------------------------------------------------------------
-         */
-
-         let result =
-            format;
-
-
-         result =
-            result.replace(
-               /\{NO\}/gi,
-               nextNumber
-            );
-
-
-         result =
-            result.replace(
-               /\{YYYY\}/gi,
-               yyyy
-            );
-
-
-         result =
-            result.replace(
-               /\{YY\}/gi,
-               yy
-            );
-
-
-         result =
-            result.replace(
-               /\{MM\}/gi,
-               mm
-            );
-
-
-         result =
-            result.replace(
-               /\{DD\}/gi,
-               dd
-            );
-
-
-         previewElement.innerText =
-            result;
-
-      }
-
-
-      /* =========================================================
-         UPDATE ALL PREVIEW
-      ========================================================= */
-
-      function updateAllPreview() {
-
-         previewConfig.forEach(
-            function(config) {
-
-               generatePreview(
-                  config[0],
-                  config[1],
-                  config[2]
-               );
-
-            }
-         );
-
-      }
-
-
-      /* =========================================================
-         BIND PREVIEW
-      ========================================================= */
-
-      previewConfig.forEach(
-         function(config) {
-
-            const formatInput =
-               document.getElementById(
-                  config[0]
-               );
-
-
-            const numberInput =
-               document.getElementById(
-                  config[1]
-               );
-
-
-            if (formatInput) {
-
-               formatInput.addEventListener(
-                  'input',
-                  function() {
-
-                     generatePreview(
-                        config[0],
-                        config[1],
-                        config[2]
-                     );
-
-                  }
-               );
-
-            }
-
-
-            if (numberInput) {
-
-               numberInput.addEventListener(
-                  'input',
-                  function() {
-
-                     generatePreview(
-                        config[0],
-                        config[1],
-                        config[2]
-                     );
-
-                  }
-               );
-
-            }
-
-         }
-      );
-
-
-      /* =========================================================
-         GET SETTING
-      ========================================================= */
-
-      function loadSettingSurat() {
-
-         fetch(
-               settingSuratApi, {
-
-                  method: 'GET',
-
-                  cache: 'no-store'
-
-               }
-            )
-
-            .then(function(response) {
-
-               if (!response.ok) {
-
-                  throw new Error(
-                     'HTTP Error ' +
-                     response.status
-                  );
-
-               }
-
-               return response.json();
-
-            })
-
-            .then(function(response) {
-
-
-               console.log(
-                  'GET SETTING:',
-                  response
-               );
-
-
-               if (
-                  response.status !==
-                  'success'
-               ) {
-
-                  throw new Error(
-                     response.message ||
-                     'Gagal mengambil setting.'
-                  );
-
-               }
-
-
-               const d =
-                  response.data || {};
-
-
-               /*
-               |--------------------------------------------------------------------------
-               | MODE
-               |--------------------------------------------------------------------------
-               */
-
-               updateModeUI(
-                  d.mode_nomor ||
-                  'AUTO'
-               );
-
-
-               /*
-               |--------------------------------------------------------------------------
-               | MARK CURRENT MODE
-               |--------------------------------------------------------------------------
-               */
-
-               document
-                  .querySelectorAll(
-                     'input[name="mode_nomor"]'
-                  )
-                  .forEach(
-                     function(item) {
-
-                        item.removeAttribute(
-                           'data-current'
-                        );
-
-                     }
-                  );
-
-
-               const currentRadio =
-                  document.querySelector(
-                     'input[name="mode_nomor"][value="' +
-                     (
-                        d.mode_nomor ||
-                        'AUTO'
-                     ) +
-                     '"]'
-                  );
-
-
-               if (currentRadio) {
-
-                  currentRadio.setAttribute(
-                     'data-current',
-                     'true'
-                  );
-
-               }
-
-
-               /*
-               |--------------------------------------------------------------------------
-               | SURAT SAKIT
-               |--------------------------------------------------------------------------
-               */
-
-               setValue(
-                  'format_sakit',
-                  d.format_sakit
-               );
-
-
-               setValue(
-                  'nomor_sakit',
-                  d.nomor_sakit
-               );
-
-
-               /*
-               |--------------------------------------------------------------------------
-               | BEROBAT
-               |--------------------------------------------------------------------------
-               */
-
-               setValue(
-                  'format_berobat',
-                  d.format_berobat
-               );
-
-
-               setValue(
-                  'nomor_berobat',
-                  d.nomor_berobat
-               );
-
-
-               /*
-               |--------------------------------------------------------------------------
-               | SEHAT
-               |--------------------------------------------------------------------------
-               */
-
-               setValue(
-                  'format_sehat',
-                  d.format_sehat
-               );
-
-
-               setValue(
-                  'nomor_sehat',
-                  d.nomor_sehat
-               );
-
-
-               /*
-               |--------------------------------------------------------------------------
-               | RAWAT INAP
-               |--------------------------------------------------------------------------
-               */
-
-               setValue(
-                  'format_rawat_inap',
-                  d.format_rawat_inap
-               );
-
-
-               setValue(
-                  'nomor_rawat_inap',
-                  d.nomor_rawat_inap
-               );
-
-
-               /*
-               |--------------------------------------------------------------------------
-               | KEMATIAN
-               |--------------------------------------------------------------------------
-               */
-
-               setValue(
-                  'format_kematian',
-                  d.format_kematian
-               );
-
-
-               setValue(
-                  'nomor_kematian',
-                  d.nomor_kematian
-               );
-
-
-               /*
-               |--------------------------------------------------------------------------
-               | MATA
-               |--------------------------------------------------------------------------
-               */
-
-               setValue(
-                  'format_mata',
-                  d.format_mata
-               );
-
-
-               setValue(
-                  'nomor_mata',
-                  d.nomor_mata
-               );
-
-
-               /*
-               |--------------------------------------------------------------------------
-               | PREVIEW
-               |--------------------------------------------------------------------------
-               */
-
-               updateAllPreview();
-
-            })
-
-            .catch(function(error) {
-
-               console.error(
-                  'GET SETTING ERROR:',
-                  error
-               );
-
-
-               Swal.fire({
-
-                  icon: 'error',
-
-                  title: 'Gagal',
-
-                  text: error.message ||
-                     'Gagal mengambil pengaturan nomor surat.'
-
-               });
-
-            });
-
-      }
-
-
-      /* =========================================================
-         SET VALUE
-      ========================================================= */
-
-      function setValue(
-         elementId,
-         value
-      ) {
-
-         const element =
-            document.getElementById(
-               elementId
-            );
-
-
-         if (!element) {
-
-            return;
-
-         }
-
-
-         if (
-            value === null ||
-            value === undefined
-         ) {
-
-            return;
-
-         }
-
-
-         element.value =
-            value;
-
-      }
-
-
-      /* =========================================================
-         GET INPUT VALUE
-      ========================================================= */
-
-      function getInputValue(
-         elementId
-      ) {
-
-         const element =
-            document.getElementById(
-               elementId
-            );
-
-
-         if (!element) {
-
-            return '';
-
-         }
-
-
-         return element.value.trim();
-
-      }
-
-
-      /* =========================================================
-         COLLECT DATA
-      ========================================================= */
-
-      function collectSettingData() {
-
-         const modeElement =
-            document.querySelector(
-               'input[name="mode_nomor"]:checked'
-            );
-
-
-         const mode =
-            modeElement ?
-            modeElement.value :
-            'AUTO';
-
-
-         const formData =
-            new FormData();
-
-
-         formData.append(
-            'action',
-            'save_setting'
-         );
-
-
-         formData.append(
-            'mode_nomor',
-            mode
-         );
-
-
-         formData.append(
-            'format_sakit',
-            getInputValue(
-               'format_sakit'
-            )
-         );
-
-
-         formData.append(
-            'nomor_sakit',
-            getInputValue(
-               'nomor_sakit'
-            )
-         );
-
-
-         formData.append(
-            'format_berobat',
-            getInputValue(
-               'format_berobat'
-            )
-         );
-
-
-         formData.append(
-            'nomor_berobat',
-            getInputValue(
-               'nomor_berobat'
-            )
-         );
-
-
-         formData.append(
-            'format_sehat',
-            getInputValue(
-               'format_sehat'
-            )
-         );
-
-
-         formData.append(
-            'nomor_sehat',
-            getInputValue(
-               'nomor_sehat'
-            )
-         );
-
-
-         formData.append(
-            'format_rawat_inap',
-            getInputValue(
-               'format_rawat_inap'
-            )
-         );
-
-
-         formData.append(
-            'nomor_rawat_inap',
-            getInputValue(
-               'nomor_rawat_inap'
-            )
-         );
-
-
-         formData.append(
-            'format_kematian',
-            getInputValue(
-               'format_kematian'
-            )
-         );
-
-
-         formData.append(
-            'nomor_kematian',
-            getInputValue(
-               'nomor_kematian'
-            )
-         );
-
-
-         formData.append(
-            'format_mata',
-            getInputValue(
-               'format_mata'
-            )
-         );
-
-
-         formData.append(
-            'nomor_mata',
-            getInputValue(
-               'nomor_mata'
-            )
-         );
-
-
-         return formData;
-
-      }
-
-
-      /* =========================================================
-         SAVE FULL SETTING
-      ========================================================= */
-
-      function saveSettingSurat() {
-
-         /*
-         |--------------------------------------------------------------------------
-         | HANYA AUTO
-         |--------------------------------------------------------------------------
-         */
-
-         const mode =
-            document.querySelector(
-               'input[name="mode_nomor"]:checked'
-            );
-
-
-         if (!mode) {
-
-            Swal.fire(
-               'Perhatian',
-               'Pilih mode penomoran terlebih dahulu.',
-               'warning'
-            );
-
-            return;
-
-         }
-
-
-         if (
-            mode.value !== 'AUTO'
-         ) {
-
-            Swal.fire({
-
-               icon: 'info',
-
-               title: 'Mode Manual',
-
-               text: 'Pada mode manual tidak perlu mengatur format dan nomor terakhir.'
-
-            });
-
-            return;
-
-         }
-
-
-         /*
-         |--------------------------------------------------------------------------
-         | BUTTON
-         |--------------------------------------------------------------------------
-         */
-
-         const button =
-            document.getElementById(
-               'btnSaveSetting'
-            );
-
-
-         const oldButtonHtml =
-            button ?
-            button.innerHTML :
-            '';
-
-
-         if (button) {
-
-            button.disabled =
-               true;
-
-
-            button.innerHTML = `
-
-         <span
-            class="spinner-border spinner-border-sm me-1">
-         </span>
-
-         Menyimpan...
-
-      `;
-
-         }
-
-
-         /*
-         |--------------------------------------------------------------------------
-         | DATA
-         |--------------------------------------------------------------------------
-         */
-
-         const formData =
-            collectSettingData();
-
-
-         /*
-         |--------------------------------------------------------------------------
-         | POST
-         |--------------------------------------------------------------------------
-         */
-
-         fetch(
-               settingSuratApi, {
-
-                  method: 'POST',
-
-                  body: formData
-
-               }
-            )
-
-            .then(function(response) {
-
-               if (!response.ok) {
-
-                  throw new Error(
-                     'HTTP Error ' +
-                     response.status
-                  );
-
-               }
-
-               return response.json();
-
-            })
-
-            .then(function(response) {
-
-
-               console.log(
-                  'SAVE SETTING:',
-                  response
-               );
-
-
-               if (
-                  response.status !==
-                  'success'
-               ) {
-
-                  throw new Error(
-                     response.message ||
-                     'Gagal menyimpan setting.'
-                  );
-
-               }
-
-
-               /*
-               |--------------------------------------------------------------------------
-               | UPDATE FORM
-               |--------------------------------------------------------------------------
-               */
-
-               updateFormFromResponse(
-                  response.data || {}
-               );
-
-
-               /*
-               |--------------------------------------------------------------------------
-               | PREVIEW
-               |--------------------------------------------------------------------------
-               */
-
-               updateAllPreview();
-
-
-               /*
-               |--------------------------------------------------------------------------
-               | SUCCESS
-               |--------------------------------------------------------------------------
-               */
-
-               Swal.fire({
-
-                  icon: 'success',
-
-                  title: 'Berhasil',
-
-                  text: 'Konfigurasi nomor surat berhasil disimpan.',
-
-                  timer: 1600,
-
-                  showConfirmButton: false
-
-               });
-
-
-               /*
-               |--------------------------------------------------------------------------
-               | LOAD ULANG
-               |--------------------------------------------------------------------------
-               */
-
-               setTimeout(
-                  function() {
-
-                     loadSettingSurat();
-
-                  },
-                  300
-               );
-
-            })
-
-            .catch(function(error) {
-
-               console.error(
-                  'SAVE SETTING ERROR:',
-                  error
-               );
-
-
-               Swal.fire({
-
-                  icon: 'error',
-
-                  title: 'Gagal',
-
-                  text: error.message ||
-                     'Gagal menyimpan konfigurasi nomor surat.'
-
-               });
-
-            })
-
-            .finally(function() {
-
-               if (button) {
-
-                  button.disabled =
-                     false;
-
-
-                  button.innerHTML =
-                     oldButtonHtml;
-
-               }
-
-            });
-
-      }
-
-
-      /* =========================================================
-         UPDATE FORM FROM RESPONSE
-      ========================================================= */
-
-      function updateFormFromResponse(
-         d
-      ) {
-
-         updateModeUI(
-            d.mode_nomor ||
-            'AUTO'
-         );
-
-
-         const fields = [
-
-            'format_sakit',
-            'nomor_sakit',
-
-            'format_berobat',
-            'nomor_berobat',
-
-            'format_sehat',
-            'nomor_sehat',
-
-            'format_rawat_inap',
-            'nomor_rawat_inap',
-
-            'format_kematian',
-            'nomor_kematian',
-
-            'format_mata',
-            'nomor_mata'
-
-         ];
-
-
-         fields.forEach(
-            function(field) {
-
-               if (
-                  d[field] !==
-                  undefined
-               ) {
-
-                  setValue(
-                     field,
-                     d[field]
-                  );
-
-               }
-
-            }
-         );
-
-      }
-
-
-      /* =========================================================
-         SAVE BUTTON
-      ========================================================= */
-
-      const saveButton =
-         document.getElementById(
-            'btnSaveSetting'
-         );
-
-
-      if (saveButton) {
-
-         saveButton.addEventListener(
-            'click',
-            function() {
-
-               saveSettingSurat();
-
-            }
-         );
-
-      }
-
-
-      /* =========================================================
-         INITIAL LOAD
-      ========================================================= */
-
-      document.addEventListener(
-         'DOMContentLoaded',
-         function() {
-
-            updateAllPreview();
-
-            loadSettingSurat();
-
-         }
-      );
-   </script>
-
+      $('#nsBtnSimpan').addEventListener('click', simpan);
+      $('#nsBtnBatal').addEventListener('click', async () => {
+        const r = await Swal.fire({
+          icon: 'question',
+          title: 'Batalkan perubahan?',
+          text: 'Isian dikembalikan ke pengaturan tersimpan.',
+          showCancelButton: true,
+          confirmButtonText: 'Ya, batalkan',
+          cancelButtonText: 'Tidak',
+          reverseButtons: true
+        });
+        if (r.isConfirmed && asli) isi(asli);
+      });
+
+      window.addEventListener('beforeunload', e => {
+        if (adaPerubahan()) {
+          e.preventDefault();
+          e.returnValue = '';
+        }
+      });
+
+      muat();
+    })();
+  </script>
 </body>
 
 </html>

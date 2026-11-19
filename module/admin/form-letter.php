@@ -1069,7 +1069,7 @@ require '../../controller/view.php';
     */
 
     const settingSuratPage =
-      'module/letter/setting-surat';
+      'module/admin/setting_surat';
 
 
     /*

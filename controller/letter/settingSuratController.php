@@ -1,1210 +1,202 @@
 <?php
-
+/**
+ * Pengaturan penomoran surat (module/admin/setting_surat).
+ *
+ * GET                               -> setting faskes (atau bawaan bila belum ada). Dipakai juga oleh form surat.
+ * POST action=update_mode           -> simpan mode AUTO / MANUAL saja
+ * POST (save_setting)               -> simpan format + nomor terakhir tiap jenis surat
+ *      nomor_<jenis>_awal (opsional) -> nilai nomor saat halaman dimuat. Bila nomor tidak diubah, nilai di database
+ *                                       dipertahankan (bisa sudah naik karena ada surat baru); bila diubah padahal
+ *                                       database sudah berubah sejak dimuat -> 409 agar tidak menimpa nomor terbaru.
+ */
 date_default_timezone_set('Asia/Jakarta');
-
-if (session_status() === PHP_SESSION_NONE) {
-   session_start();
-}
-
-require_once '../../database/connect.php';
+require_once __DIR__ . '/../../database/connect.php';
+require_once __DIR__ . '/../../utility/security.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-
-/*
-|--------------------------------------------------------------------------
-| RESPONSE HELPER
-|--------------------------------------------------------------------------
-*/
-
-function responseJson(
-   string $status,
-   string $message = '',
-   array $data = []
-) {
-   echo json_encode([
-      'status'  => $status,
-      'message' => $message,
-      'data'    => $data
-   ]);
-
+function responseJson(string $status, string $message = '', array $data = [], int $code = 200): void
+{
+   http_response_code($code);
+   echo json_encode(['status' => $status, 'message' => $message, 'data' => $data], JSON_UNESCAPED_UNICODE);
    exit;
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| DATABASE
-|--------------------------------------------------------------------------
-*/
-
 if (!$koneksi) {
-
-   responseJson(
-      'error',
-      'Koneksi database gagal.'
-   );
+   responseJson('error', 'Koneksi database gagal.', [], 500);
+}
+if (!isset($_SESSION['id_customer']) || $_SESSION['id_customer'] === '') {
+   responseJson('error', 'Session faskes/customer tidak ditemukan.', [], 401);
 }
 
+$id_customer = (string) $_SESSION['id_customer'];
+$user = (string) ($_SESSION['id_user'] ?? $_SESSION['username'] ?? 'system');
 
-/*
-|--------------------------------------------------------------------------
-| SESSION CUSTOMER
-|--------------------------------------------------------------------------
-*/
+/**
+ * Jenis surat => [nama, format bawaan, penanda yang dikenali generator nomor di controller surat tsb].
+ * Harus sama dengan generator di masing-masing controller (suratSakitController, dst.).
+ */
+const JENIS_SURAT = [
+   'sakit'      => ['Surat Keterangan Sakit', 'SKS/{NO}/{MM}/{YYYY}', ['NO', 'DD', 'MM', 'YY', 'YYYY']],
+   'berobat'    => ['Surat Keterangan Berobat', 'SKB/{NO}/{MM}/{YYYY}', ['NO', 'NO:n', 'DD', 'MM', 'YY', 'YYYY']],
+   'sehat'      => ['Surat Keterangan Sehat', 'SKH/{NO}/{MM}/{YYYY}', ['NO', 'DD', 'MM', 'YYYY']],
+   'rawat_inap' => ['Surat Rawat Inap', 'SRI/{NO}/{MM}/{YYYY}', ['NO', 'DD', 'MM', 'YY', 'YYYY']],
+   'kematian'   => ['Surat Keterangan Kematian', 'SKM/{NO}/{MM}/{YYYY}', ['NO', 'NO:n', 'DD', 'MM', 'YYYY']],
+   'mata'       => ['Surat Pemeriksaan Mata', 'SPM/{NO}/{MM}/{YYYY}', ['NO', 'MM', 'YYYY', 'ROMAN']],
+];
 
-if (
-   !isset($_SESSION['id_customer']) ||
-   $_SESSION['id_customer'] === ''
-) {
-
-   responseJson(
-      'error',
-      'Session faskes/customer tidak ditemukan.'
-   );
-}
-
-
-$id_customer =
-   (string) $_SESSION['id_customer'];
-
-
-/*
-|--------------------------------------------------------------------------
-| USER
-|--------------------------------------------------------------------------
-*/
-
-$created_by =
-   $_SESSION['id_user']
-   ?? $_SESSION['username']
-   ?? 'system';
-
-
-$updated_by =
-   $_SESSION['id_user']
-   ?? $_SESSION['username']
-   ?? 'system';
-
-
-/*
-|--------------------------------------------------------------------------
-| METHOD
-|--------------------------------------------------------------------------
-*/
-
-$method =
-   $_SERVER['REQUEST_METHOD'];
-
-
-/*
-|--------------------------------------------------------------------------
-| ROUTING
-|--------------------------------------------------------------------------
-*/
-
-switch ($method) {
-
-   case 'GET':
-
-      getSetting();
-
-      break;
-
-
-   case 'POST':
-
-      $action =
-         $_POST['action'] ?? 'save_setting';
-
-
-      /*
-        |--------------------------------------------------------------------------
-        | UPDATE MODE ONLY
-        |--------------------------------------------------------------------------
-        */
-
-      if ($action === 'update_mode') {
-
-         updateMode();
-      }
-
-
-      /*
-        |--------------------------------------------------------------------------
-        | SAVE FULL SETTING
-        |--------------------------------------------------------------------------
-        */
-
-      saveSetting();
-
-      break;
-
-
-   default:
-
-      responseJson(
-         'error',
-         'Method tidak diizinkan.'
-      );
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| GET SETTING
-|--------------------------------------------------------------------------
-*/
-
-function getSetting()
+function ambilSetting(mysqli $k, string $idc): ?array
 {
+   $st = $k->prepare("SELECT * FROM setting_surat WHERE id_customer = ? LIMIT 1");
+   $st->bind_param('s', $idc);
+   $st->execute();
+   $r = $st->get_result()->fetch_assoc() ?: null;
+   $st->close();
+   return $r;
+}
 
-   global $koneksi;
-   global $id_customer;
-
-
-   $sql = "
-
-        SELECT
-
-            id,
-            id_customer,
-
-            mode_nomor,
-
-            format_sakit,
-            nomor_sakit,
-
-            format_berobat,
-            nomor_berobat,
-
-            format_sehat,
-            nomor_sehat,
-
-            format_rawat_inap,
-            nomor_rawat_inap,
-
-            format_kematian,
-            nomor_kematian,
-
-            format_mata,
-            nomor_mata,
-
-            created_at,
-            updated_at,
-            created_by,
-            updated_by
-
-        FROM setting_surat
-
-        WHERE id_customer = ?
-
-        LIMIT 1
-
-    ";
-
-
-   $stmt =
-      $koneksi->prepare($sql);
-
-
-   if (!$stmt) {
-
-      responseJson(
-         'error',
-         'Prepare query gagal: ' .
-            $koneksi->error
-      );
+/** Pesan error bila format tidak valid untuk jenis surat ini, null bila valid. */
+function cekFormat(string $format, array $penanda): ?string
+{
+   if ($format === '') {
+      return 'tidak boleh kosong';
    }
-
-
-   $stmt->bind_param(
-      's',
-      $id_customer
-   );
-
-
-   if (!$stmt->execute()) {
-
-      responseJson(
-         'error',
-         'Gagal mengambil setting: ' .
-            $stmt->error
-      );
+   if (mb_strlen($format) > 100) {
+      return 'maksimal 100 karakter';
    }
+   preg_match_all('/\{([^{}]*)\}/', $format, $m);
+   $adaNo = false;
+   foreach ($m[1] as $t) {
+      $kunci = preg_match('/^NO:\d{1,2}$/', $t) ? 'NO:n' : $t;
+      if (!in_array($kunci, $penanda, true)) {
+         return 'penanda {' . $t . '} tidak dikenali';
+      }
+      $adaNo = $adaNo || $kunci === 'NO' || $kunci === 'NO:n';
+   }
+   if (!$adaNo) {
+      return 'wajib memuat {NO} agar setiap surat bernomor unik';
+   }
+   if (preg_match('/[{}]/', preg_replace('/\{[^{}]*\}/', '', $format))) {
+      return 'kurung kurawal tidak berpasangan';
+   }
+   return null;
+}
 
+$method = $_SERVER['REQUEST_METHOD'];
 
-   $result =
-      $stmt->get_result();
-
-
-   $data =
-      $result->fetch_assoc();
-
-
-   $stmt->close();
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | DEFAULT JIKA BELUM ADA
-    |--------------------------------------------------------------------------
-    */
-
+if ($method === 'GET') {
+   $data = ambilSetting($koneksi, $id_customer);
    if (!$data) {
+      $data = ['id' => null, 'id_customer' => $id_customer, 'mode_nomor' => 'AUTO'];
+      foreach (JENIS_SURAT as $j => $def) {
+         $data["format_$j"] = $def[1];
+         $data["nomor_$j"] = 0;
+      }
+   }
+   responseJson('success', 'Setting nomor surat berhasil diambil.', $data);
+}
 
-      $data = [
+if ($method !== 'POST') {
+   responseJson('error', 'Method tidak diizinkan.', [], 405);
+}
 
-         'id' => null,
+requireRole(['admin', 'superadmin', 'administrator']);
 
-         'id_customer' =>
-         $id_customer,
+$action = $_POST['action'] ?? 'save_setting';
+$mode = strtoupper(trim((string) ($_POST['mode_nomor'] ?? '')));
+if (!in_array($mode, ['AUTO', 'MANUAL'], true)) {
+   responseJson('error', 'Mode penomoran tidak valid.', [], 422);
+}
 
-         'mode_nomor' =>
-         'AUTO',
+$ada = ambilSetting($koneksi, $id_customer);
 
-         'format_sakit' =>
-         'SKS/{NO}/{MM}/{YYYY}',
+if ($action === 'update_mode') {
+   if ($ada) {
+      $st = $koneksi->prepare("UPDATE setting_surat SET mode_nomor = ?, updated_at = NOW(), updated_by = ? WHERE id_customer = ?");
+      $st->bind_param('sss', $mode, $user, $id_customer);
+   } else {
+      $st = $koneksi->prepare("INSERT INTO setting_surat (id_customer, mode_nomor, created_at, created_by) VALUES (?, ?, NOW(), ?)");
+      $st->bind_param('sss', $id_customer, $mode, $user);
+   }
+   if (!$st->execute()) {
+      error_log('[settingSuratController] ' . $st->error);
+      responseJson('error', 'Mode penomoran gagal disimpan.', [], 500);
+   }
+   $st->close();
+   responseJson('success', 'Mode penomoran berhasil disimpan.', ambilSetting($koneksi, $id_customer) ?? []);
+}
 
-         'nomor_sakit' =>
-         0,
-
-         'format_berobat' =>
-         'SKB/{NO}/{MM}/{YYYY}',
-
-         'nomor_berobat' =>
-         0,
-
-         'format_sehat' =>
-         'SKH/{NO}/{MM}/{YYYY}',
-
-         'nomor_sehat' =>
-         0,
-
-         'format_rawat_inap' =>
-         'SRI/{NO}/{MM}/{YYYY}',
-
-         'nomor_rawat_inap' =>
-         0,
-
-         'format_kematian' =>
-         'SKM/{NO}/{MM}/{YYYY}',
-
-         'nomor_kematian' =>
-         0,
-
-         'format_mata' =>
-         'SPM/{NO}/{MM}/{YYYY}',
-
-         'nomor_mata' =>
-         0
-
-      ];
+/* ---------- simpan format + nomor ---------- */
+$nilai = [];
+$salah = [];
+$bentrok = [];
+foreach (JENIS_SURAT as $j => [$nama, $bawaan, $penanda]) {
+   $format = trim((string) ($_POST["format_$j"] ?? ($ada["format_$j"] ?? $bawaan)));
+   if ($e = cekFormat($format, $penanda)) {
+      $salah[] = "Format $nama: $e.";
    }
 
+   $raw = trim((string) ($_POST["nomor_$j"] ?? ''));
+   $nomor = $raw === '' ? (int) ($ada["nomor_$j"] ?? 0) : filter_var($raw, FILTER_VALIDATE_INT);
+   if ($nomor === false || $nomor < 0 || $nomor > 99999999) {
+      $salah[] = "Nomor terakhir $nama harus angka bulat 0 – 99.999.999.";
+      $nomor = 0;
+   }
 
+   // jaga nomor yang sudah naik karena surat baru dibuat selama halaman setting terbuka
+   $db = (int) ($ada["nomor_$j"] ?? 0);
+   if ($ada && isset($_POST["nomor_{$j}_awal"]) && $_POST["nomor_{$j}_awal"] !== '') {
+      $awal = (int) $_POST["nomor_{$j}_awal"];
+      if ($nomor === $awal) {
+         $nomor = $db;
+      } elseif ($db !== $awal) {
+         $bentrok[] = "$nama (sekarang $db)";
+      }
+   }
+   $nilai[$j] = [$format, (int) $nomor];
+}
+
+if ($salah) {
+   responseJson('error', implode(' ', $salah), ['errors' => $salah], 422);
+}
+if ($bentrok) {
    responseJson(
-      'success',
-      'Setting nomor surat berhasil diambil.',
-      $data
+      'error',
+      'Nomor terakhir sudah berubah sejak halaman dibuka karena ada surat baru: ' . implode(', ', $bentrok)
+         . '. Muat ulang halaman lalu ubah lagi.',
+      ['conflict' => true],
+      409
    );
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| UPDATE MODE ONLY
-|--------------------------------------------------------------------------
-|
-| AUTO / MANUAL langsung disimpan ketika radio diklik.
-|
-*/
-
-function updateMode()
-{
-
-   global $koneksi;
-   global $id_customer;
-   global $created_by;
-   global $updated_by;
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | MODE
-    |--------------------------------------------------------------------------
-    */
-
-   $mode_nomor =
-      strtoupper(
-         trim(
-            $_POST['mode_nomor']
-               ?? ''
-         )
-      );
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | VALIDASI
-    |--------------------------------------------------------------------------
-    */
-
-   if (
-      !in_array(
-         $mode_nomor,
-         [
-            'AUTO',
-            'MANUAL'
-         ],
-         true
-      )
-   ) {
-
-      responseJson(
-         'error',
-         'Mode penomoran tidak valid.'
-      );
-   }
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | CEK EXISTING
-    |--------------------------------------------------------------------------
-    */
-
-   $sqlCheck = "
-
-        SELECT id
-
-        FROM setting_surat
-
-        WHERE id_customer = ?
-
-        LIMIT 1
-
-    ";
-
-
-   $stmtCheck =
-      $koneksi->prepare(
-         $sqlCheck
-      );
-
-
-   if (!$stmtCheck) {
-
-      responseJson(
-         'error',
-         'Prepare check gagal: ' .
-            $koneksi->error
-      );
-   }
-
-
-   $stmtCheck->bind_param(
-      's',
-      $id_customer
-   );
-
-
-   if (!$stmtCheck->execute()) {
-
-      responseJson(
-         'error',
-         'Check setting gagal: ' .
-            $stmtCheck->error
-      );
-   }
-
-
-   $result =
-      $stmtCheck->get_result();
-
-
-   $existing =
-      $result->fetch_assoc();
-
-
-   $stmtCheck->close();
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | UPDATE
-    |--------------------------------------------------------------------------
-    */
-
-   if ($existing) {
-
-      $id =
-         (int) $existing['id'];
-
-
-      $sql = "
-
-            UPDATE setting_surat
-
-            SET
-
-                mode_nomor = ?,
-
-                updated_at = NOW(),
-
-                updated_by = ?
-
-            WHERE id = ?
-
-              AND id_customer = ?
-
-        ";
-
-
-      $stmt =
-         $koneksi->prepare(
-            $sql
-         );
-
-
-      if (!$stmt) {
-
-         responseJson(
-            'error',
-            'Prepare update mode gagal: ' .
-               $koneksi->error
-         );
-      }
-
-
-      /*
-        |--------------------------------------------------------------------------
-        | s = mode
-        | s = user
-        | i = id
-        | s = customer
-        |--------------------------------------------------------------------------
-        */
-
-      $stmt->bind_param(
-         'ssis',
-         $mode_nomor,
-         $updated_by,
-         $id,
-         $id_customer
-      );
-
-
-      if (!$stmt->execute()) {
-
-         responseJson(
-            'error',
-            'Gagal menyimpan mode: ' .
-               $stmt->error
-         );
-      }
-
-
-      $stmt->close();
-   }
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | INSERT
-    |--------------------------------------------------------------------------
-    */ else {
-
-      $sql = "
-
-            INSERT INTO setting_surat
-            (
-                id_customer,
-                mode_nomor,
-                created_at,
-                created_by
-            )
-
-            VALUES
-            (
-                ?,
-                ?,
-                NOW(),
-                ?
-            )
-
-        ";
-
-
-      $stmt =
-         $koneksi->prepare(
-            $sql
-         );
-
-
-      if (!$stmt) {
-
-         responseJson(
-            'error',
-            'Prepare insert mode gagal: ' .
-               $koneksi->error
-         );
-      }
-
-
-      $stmt->bind_param(
-         'sss',
-         $id_customer,
-         $mode_nomor,
-         $created_by
-      );
-
-
-      if (!$stmt->execute()) {
-
-         responseJson(
-            'error',
-            'Gagal membuat setting mode: ' .
-               $stmt->error
-         );
-      }
-
-
-      $stmt->close();
-   }
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | RESPONSE
-    |--------------------------------------------------------------------------
-    */
-
-   responseJson(
-
-      'success',
-
-      'Mode penomoran berhasil disimpan.',
-
-      [
-
-         'id_customer' =>
-         $id_customer,
-
-         'mode_nomor' =>
-         $mode_nomor
-
-      ]
-
-   );
+$kolom = [];
+$tipe = 's';
+$param = [$mode];
+foreach ($nilai as $j => [$f, $n]) {
+   $kolom[] = "format_$j";
+   $kolom[] = "nomor_$j";
+   $tipe .= 'si';
+   array_push($param, $f, $n);
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| SAVE FULL SETTING
-|--------------------------------------------------------------------------
-|
-| Digunakan untuk AUTO:
-|
-| format + nomor terakhir
-|
-*/
-
-function saveSetting()
-{
-
-   global $koneksi;
-   global $id_customer;
-   global $created_by;
-   global $updated_by;
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | MODE
-    |--------------------------------------------------------------------------
-    */
-
-   $mode_nomor =
-      strtoupper(
-         trim(
-            $_POST['mode_nomor']
-               ?? ''
-         )
-      );
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | VALIDASI MODE
-    |--------------------------------------------------------------------------
-    */
-
-   if (
-      !in_array(
-         $mode_nomor,
-         [
-            'AUTO',
-            'MANUAL'
-         ],
-         true
-      )
-   ) {
-
-      responseJson(
-         'error',
-         'Mode penomoran tidak valid.'
-      );
-   }
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | FORMAT
-    |--------------------------------------------------------------------------
-    */
-
-   $format_sakit =
-      trim(
-         $_POST['format_sakit']
-            ?? 'SKS/{NO}/{MM}/{YYYY}'
-      );
-
-
-   $format_berobat =
-      trim(
-         $_POST['format_berobat']
-            ?? 'SKB/{NO}/{MM}/{YYYY}'
-      );
-
-
-   $format_sehat =
-      trim(
-         $_POST['format_sehat']
-            ?? 'SKH/{NO}/{MM}/{YYYY}'
-      );
-
-
-   $format_rawat_inap =
-      trim(
-         $_POST['format_rawat_inap']
-            ?? 'SRI/{NO}/{MM}/{YYYY}'
-      );
-
-
-   $format_kematian =
-      trim(
-         $_POST['format_kematian']
-            ?? 'SKM/{NO}/{MM}/{YYYY}'
-      );
-
-
-   $format_mata =
-      trim(
-         $_POST['format_mata']
-            ?? 'SPM/{NO}/{MM}/{YYYY}'
-      );
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | VALIDASI FORMAT
-    |--------------------------------------------------------------------------
-    */
-
-   $formatList = [
-
-      'Surat Sakit' =>
-      $format_sakit,
-
-      'Surat Berobat' =>
-      $format_berobat,
-
-      'Surat Sehat' =>
-      $format_sehat,
-
-      'Surat Rawat Inap' =>
-      $format_rawat_inap,
-
-      'Surat Kematian' =>
-      $format_kematian,
-
-      'Pemeriksaan Mata' =>
-      $format_mata
-
-   ];
-
-
-   foreach (
-      $formatList as $nama => $format
-   ) {
-
-      if ($format === '') {
-
-         responseJson(
-            'error',
-            'Format nomor untuk ' .
-               $nama .
-               ' tidak boleh kosong.'
-         );
-      }
-   }
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | NOMOR
-    |--------------------------------------------------------------------------
-    */
-
-   $nomor_sakit =
-      getNomor(
-         $_POST['nomor_sakit']
-            ?? 0
-      );
-
-
-   $nomor_berobat =
-      getNomor(
-         $_POST['nomor_berobat']
-            ?? 0
-      );
-
-
-   $nomor_sehat =
-      getNomor(
-         $_POST['nomor_sehat']
-            ?? 0
-      );
-
-
-   $nomor_rawat_inap =
-      getNomor(
-         $_POST['nomor_rawat_inap']
-            ?? 0
-      );
-
-
-   $nomor_kematian =
-      getNomor(
-         $_POST['nomor_kematian']
-            ?? 0
-      );
-
-
-   $nomor_mata =
-      getNomor(
-         $_POST['nomor_mata']
-            ?? 0
-      );
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | CEK EXISTING
-    |--------------------------------------------------------------------------
-    */
-
-   $sqlCheck = "
-
-        SELECT id
-
-        FROM setting_surat
-
-        WHERE id_customer = ?
-
-        LIMIT 1
-
-    ";
-
-
-   $stmtCheck =
-      $koneksi->prepare(
-         $sqlCheck
-      );
-
-
-   if (!$stmtCheck) {
-
-      responseJson(
-         'error',
-         'Prepare check gagal: ' .
-            $koneksi->error
-      );
-   }
-
-
-   $stmtCheck->bind_param(
-      's',
-      $id_customer
-   );
-
-
-   $stmtCheck->execute();
-
-
-   $result =
-      $stmtCheck->get_result();
-
-
-   $existing =
-      $result->fetch_assoc();
-
-
-   $stmtCheck->close();
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | UPDATE
-    |--------------------------------------------------------------------------
-    */
-
-   if ($existing) {
-
-      $id =
-         (int) $existing['id'];
-
-
-      $sql = "
-
-            UPDATE setting_surat
-
-            SET
-
-                mode_nomor = ?,
-
-                format_sakit = ?,
-                nomor_sakit = ?,
-
-                format_berobat = ?,
-                nomor_berobat = ?,
-
-                format_sehat = ?,
-                nomor_sehat = ?,
-
-                format_rawat_inap = ?,
-                nomor_rawat_inap = ?,
-
-                format_kematian = ?,
-                nomor_kematian = ?,
-
-                format_mata = ?,
-                nomor_mata = ?,
-
-                updated_at = NOW(),
-
-                updated_by = ?
-
-            WHERE id = ?
-
-              AND id_customer = ?
-
-        ";
-
-
-      $stmt =
-         $koneksi->prepare(
-            $sql
-         );
-
-
-      if (!$stmt) {
-
-         responseJson(
-            'error',
-            'Prepare update gagal: ' .
-               $koneksi->error
-         );
-      }
-
-
-      /*
-        |--------------------------------------------------------------------------
-        | 17 PARAMETER
-        |--------------------------------------------------------------------------
-        */
-
-      $stmt->bind_param(
-
-         'ssisisisisisisiis',
-
-         $mode_nomor,
-
-         $format_sakit,
-         $nomor_sakit,
-
-         $format_berobat,
-         $nomor_berobat,
-
-         $format_sehat,
-         $nomor_sehat,
-
-         $format_rawat_inap,
-         $nomor_rawat_inap,
-
-         $format_kematian,
-         $nomor_kematian,
-
-         $format_mata,
-         $nomor_mata,
-
-         $updated_by,
-
-         $id,
-
-         $id_customer
-
-      );
-
-
-      if (!$stmt->execute()) {
-
-         responseJson(
-            'error',
-            'Gagal update setting: ' .
-               $stmt->error
-         );
-      }
-
-
-      $stmt->close();
-   }
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | INSERT
-    |--------------------------------------------------------------------------
-    */ else {
-
-      $sql = "
-
-            INSERT INTO setting_surat
-            (
-
-                id_customer,
-
-                mode_nomor,
-
-                format_sakit,
-                nomor_sakit,
-
-                format_berobat,
-                nomor_berobat,
-
-                format_sehat,
-                nomor_sehat,
-
-                format_rawat_inap,
-                nomor_rawat_inap,
-
-                format_kematian,
-                nomor_kematian,
-
-                format_mata,
-                nomor_mata,
-
-                created_at,
-                created_by
-
-            )
-
-            VALUES
-            (
-
-                ?,
-                ?,
-
-                ?,
-                ?,
-
-                ?,
-                ?,
-
-                ?,
-                ?,
-
-                ?,
-                ?,
-
-                ?,
-                ?,
-
-                ?,
-                ?,
-
-                NOW(),
-                ?
-
-            )
-
-        ";
-
-
-      $stmt =
-         $koneksi->prepare(
-            $sql
-         );
-
-
-      if (!$stmt) {
-
-         responseJson(
-            'error',
-            'Prepare insert gagal: ' .
-               $koneksi->error
-         );
-      }
-
-
-      /*
-        |--------------------------------------------------------------------------
-        | 15 PARAMETER
-        |--------------------------------------------------------------------------
-        */
-
-      $stmt->bind_param(
-
-         'ssisisisisisisis',
-
-         $id_customer,
-
-         $mode_nomor,
-
-         $format_sakit,
-         $nomor_sakit,
-
-         $format_berobat,
-         $nomor_berobat,
-
-         $format_sehat,
-         $nomor_sehat,
-
-         $format_rawat_inap,
-         $nomor_rawat_inap,
-
-         $format_kematian,
-         $nomor_kematian,
-
-         $format_mata,
-         $nomor_mata,
-
-         $created_by
-
-      );
-
-
-      if (!$stmt->execute()) {
-
-         responseJson(
-            'error',
-            'Gagal insert setting: ' .
-               $stmt->error
-         );
-      }
-
-
-      $stmt->close();
-   }
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | RESPONSE
-    |--------------------------------------------------------------------------
-    */
-
-   responseJson(
-
-      'success',
-
-      'Pengaturan nomor surat berhasil disimpan.',
-
-      [
-
-         'id_customer' =>
-         $id_customer,
-
-         'mode_nomor' =>
-         $mode_nomor,
-
-         'format_sakit' =>
-         $format_sakit,
-
-         'nomor_sakit' =>
-         $nomor_sakit,
-
-         'format_berobat' =>
-         $format_berobat,
-
-         'nomor_berobat' =>
-         $nomor_berobat,
-
-         'format_sehat' =>
-         $format_sehat,
-
-         'nomor_sehat' =>
-         $nomor_sehat,
-
-         'format_rawat_inap' =>
-         $format_rawat_inap,
-
-         'nomor_rawat_inap' =>
-         $nomor_rawat_inap,
-
-         'format_kematian' =>
-         $format_kematian,
-
-         'nomor_kematian' =>
-         $nomor_kematian,
-
-         'format_mata' =>
-         $format_mata,
-
-         'nomor_mata' =>
-         $nomor_mata
-
-      ]
-
-   );
+if ($ada) {
+   $set = implode(', ', array_map(fn($c) => "$c = ?", $kolom));
+   $sql = "UPDATE setting_surat SET mode_nomor = ?, $set, updated_at = NOW(), updated_by = ? WHERE id_customer = ?";
+   $tipe .= 'ss';
+   array_push($param, $user, $id_customer);
+} else {
+   $sql = "INSERT INTO setting_surat (mode_nomor, " . implode(', ', $kolom) . ", created_at, created_by, id_customer)
+           VALUES (?, " . implode(', ', array_fill(0, count($kolom), '?')) . ", NOW(), ?, ?)";
+   $tipe .= 'ss';
+   array_push($param, $user, $id_customer);
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| NORMALIZE NOMOR
-|--------------------------------------------------------------------------
-*/
-
-function getNomor($value): int
-{
-
-   if (
-      $value === null ||
-      $value === ''
-   ) {
-
-      return 0;
-   }
-
-
-   $value =
-      filter_var(
-         $value,
-         FILTER_VALIDATE_INT
-      );
-
-
-   if (
-      $value === false ||
-      $value < 0
-   ) {
-
-      return 0;
-   }
-
-
-   return (int) $value;
+$st = $koneksi->prepare($sql);
+$st->bind_param($tipe, ...$param);
+if (!$st->execute()) {
+   error_log('[settingSuratController] ' . $st->error);
+   responseJson('error', 'Pengaturan nomor surat gagal disimpan.', [], 500);
 }
+$st->close();
+
+responseJson('success', 'Pengaturan nomor surat berhasil disimpan.', ambilSetting($koneksi, $id_customer) ?? []);
