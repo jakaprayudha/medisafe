@@ -1,1578 +1,1251 @@
 <?php
-session_start();
-$id_customer = $_SESSION['id_customer'];
-$title = 'Setting Bridging BPJS';
+$title = 'Integrasi BPJS Kesehatan';
 require '../../controller/view.php';
-
-$antrol = mysqli_fetch_assoc(mysqli_query(
-  $koneksi,
-  "SELECT * FROM setting_antrol WHERE id_customer = '" . mysqli_real_escape_string($koneksi, $id_customer) . "' LIMIT 1"
-));
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="id">
 
 <head>
   <base href="../../">
-  <?php
-  require '../../assets/template/head.php';
-  ?>
+  <?php require '../../assets/template/head.php'; ?>
+  <style>
+    .min-w-0 {
+      min-width: 0;
+    }
+
+    .bs-stat {
+      border: 1px solid #e5eaef;
+      border-radius: 12px;
+      background: #fff;
+      padding: 14px 16px;
+      height: 100%;
+    }
+
+    .bs-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05rem;
+      flex-shrink: 0;
+    }
+
+    .bs-val {
+      font-size: 1.1rem;
+      font-weight: 700;
+      line-height: 1.25;
+      color: #2a3547;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bs-label {
+      font-size: .75rem;
+      color: #6c757d;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bs-tabs {
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .bs-tabs .nav-link {
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: .85rem;
+      color: #5a6a85;
+      background: #f2f5f9;
+      padding: .5rem .9rem;
+    }
+
+    .bs-tabs .nav-link.active {
+      background: #5d87ff;
+      color: #fff;
+    }
+
+    .bs-tabs .nav-link .badge {
+      font-weight: 600;
+    }
+
+    .bs-card {
+      border: 1px solid #e5eaef;
+      border-radius: 12px;
+      padding: 18px;
+      height: 100%;
+      background: #fff;
+    }
+
+    .bs-sec {
+      font-size: .72rem;
+      font-weight: 700;
+      color: #5a6a85;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      margin-bottom: .75rem;
+    }
+
+    .kv {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px dashed #e5eaef;
+      font-size: .85rem;
+    }
+
+    .kv:last-child {
+      border-bottom: 0;
+    }
+
+    .kv .k {
+      color: #7c8fac;
+      white-space: nowrap;
+    }
+
+    .kv .v {
+      font-weight: 600;
+      color: #2a3547;
+      text-align: right;
+      word-break: break-all;
+    }
+
+    .kv .v code {
+      color: #2a3547;
+      background: #f6f9fc;
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-size: .8rem;
+    }
+
+    .bs-table {
+      width: 100% !important;
+    }
+
+    .bs-table thead th {
+      font-size: .74rem;
+      font-weight: 600;
+      color: #5a6a85;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      background: #f6f9fc;
+      border-bottom: 0;
+      white-space: nowrap;
+    }
+
+    .bs-table td {
+      font-size: .85rem;
+      vertical-align: middle;
+    }
+
+    .bs-table tr.off td:not(.keep) {
+      opacity: .5;
+    }
+
+    .bs-ava {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .75rem;
+      font-weight: 700;
+    }
+
+    .bs-name {
+      font-weight: 600;
+      color: #2a3547;
+      max-width: 260px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bs-sub {
+      font-size: .74rem;
+      color: #7c8fac;
+      white-space: nowrap;
+    }
+
+    .bs-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: .7rem;
+      font-weight: 600;
+      padding: .25em .6em;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+
+    .b-ok {
+      color: #13a89e;
+      background: #e6fffa;
+    }
+
+    .b-warn {
+      color: #c2410c;
+      background: #fff4e5;
+    }
+
+    .b-err {
+      color: #fa5a5a;
+      background: #fdede8;
+    }
+
+    .b-mute {
+      color: #7c8fac;
+      background: #f2f5f9;
+    }
+
+    .b-info {
+      color: #5d87ff;
+      background: #ecf2ff;
+    }
+
+    .bs-act {
+      white-space: nowrap;
+    }
+
+    .bs-act .btn {
+      height: 32px;
+      min-width: 32px;
+      padding: 0 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      border-radius: 8px;
+      font-size: .78rem;
+    }
+
+    .bs-chips .btn {
+      border-radius: 20px;
+      font-size: .78rem;
+      padding: .28rem .8rem;
+    }
+
+    .bs-search {
+      width: 230px;
+    }
+
+    @media (max-width: 767.98px) {
+
+      .bs-tools,
+      .bs-search {
+        width: 100%;
+      }
+
+      .bs-search {
+        flex: 1;
+      }
+    }
+
+    .bs-empty {
+      text-align: center;
+      color: #7c8fac;
+      padding: 40px 10px;
+    }
+
+    .bs-empty i {
+      font-size: 1.8rem;
+      display: block;
+      margin-bottom: 8px;
+      opacity: .6;
+    }
+
+    .pw-cell {
+      font-family: monospace;
+      font-size: .8rem;
+    }
+
+    .jd-form {
+      background: #f6f9fc;
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+
+    .jd-day {
+      display: inline-block;
+      min-width: 64px;
+      text-align: center;
+      font-weight: 700;
+      font-size: .72rem;
+      padding: .3em .5em;
+      border-radius: 6px;
+      background: #ecf2ff;
+      color: #5d87ff;
+    }
+
+    .jd-kuota {
+      width: 80px;
+      margin: auto;
+    }
+
+    .jd-kuota.saving {
+      background: #fff8e1;
+    }
+
+    .jd-kuota.saved {
+      background: #e6fffa;
+    }
+  </style>
 </head>
 
 <body>
-  <!--  Body Wrapper -->
   <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
     data-sidebar-position="fixed" data-header-position="fixed">
-    <!-- Sidebar Start -->
-    <?php
-    require 'sidebar.php';
-    ?>
-    <!--  Sidebar End -->
-    <!--  Main wrapper -->
+    <?php require 'sidebar.php'; ?>
     <div class="body-wrapper">
-      <!--  Header Start -->
-      <?php
-      require 'navbar.php';
-      ?>
-      <!--  Header End -->
+      <?php require 'navbar.php'; ?>
       <div class="body-wrapper-inner">
         <div class="container-fluid">
-          <div class="row">
-            <div class="col-lg-12 d-flex align-items-stretch">
-              <div class="card w-100">
-                <div class="card-body p-4">
-                  <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Bridging BPJS Kesehatan</h5>
-                    <!-- Grup tombol di sisi kanan -->
-                    <div class="d-flex ms-auto gap-2">
-                    </div>
-                  </div>
-                  <nav>
-                    <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                      <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">Login Akun P-Care</button>
-                      <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">Antrean Online</button>
-                      <button class="nav-link" id="nav-contact-tab" data-bs-toggle="tab" data-bs-target="#nav-contact" type="button" role="tab" aria-controls="nav-contact" aria-selected="false">I Care</button>
-                      <button class="nav-link" id="nav-dokter-tab" data-bs-toggle="tab" data-bs-target="#nav-dokter" type="button" role="tab" aria-controls="nav-contact" aria-selected="false">Dokter BPJS</button>
-                      <button class="nav-link" id="nav-dokterinternal-tab" data-bs-toggle="tab" data-bs-target="#nav-dokterinternal" type="button" role="tab" aria-controls="nav-contact" aria-selected="false">Dokter Internal</button>
-                    </div>
-                  </nav>
-                  <div class="tab-content" id="nav-tabContent">
-                    <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
-                      <div class="alert mt-4 alert-warning" role="alert">
-                        Untuk username dan password pcare apabila anda telah melakukan perubahan di aplikasi pcare, silakan update juga di halaman ini agar aplikasi dapat terhubung dengan pcare dengan baik karena apabila tidak diperbarui maka aplikasi tidak dapat terhubung dengan pcare dan fitur yang terhubung dengan pcare tidak dapat digunakan dengan baik. Terima kasih.
-                      </div>
-                      <div class="row mt-4">
-                        <div class="col-12">
-                          <div class="mb-3">
-                            <label for="username_pcare" class="form-label">Username Pcare</label>
-                            <input type="text" class="form-control" id="username_pcare" name="username_pcare" required>
-                          </div>
-                        </div>
-                        <div class="col-12">
-                          <div class="mb-3">
-                            <label for="password_pcare" class="form-label">Password Pcare</label>
-                            <input type="text" class="form-control" id="password_pcare" name="password_pcare" required>
-                          </div>
-                        </div>
-                        <div class="col-12">
-                          <div class="mb-3">
-                            <label for="consumer_id" class="form-label">Kode PPK</label>
-                            <input type="text" class="form-control bg-light" id="kodePPK" name="kodePPK" readonly>
-                          </div>
-                        </div>
-                        <div class="col-12">
-                          <div class="mb-3">
-                            <label for="consumer_id" class="form-label">Consumer ID</label>
-                            <input type="text" class="form-control bg-light" id="consumer_id" name="consumer_id" readonly>
-                          </div>
-                        </div>
-                        <div class="col-12">
-                          <div class="mb-3">
-                            <label for="secret_key" class="form-label">Secret Key</label>
-                            <input type="text" class="form-control bg-light" id="secret_key" name="secret_key" readonly>
-                          </div>
-                        </div>
-                        <div class="col-12">
-                          <div class="mb-3">
-                            <label for="apps_code" class="form-label">Kode Aplikasi (Services)</label>
-                            <input type="text" class="form-control bg-light" id="apps_code" name="apps_code" readonly>
-                          </div>
-                        </div>
-                        <div class="col-12">
-                          <div class="mb-3">
-                            <label for="user_key" class="form-label">User Key</label>
-                            <input type="text" class="form-control bg-light" id="user_key" name="user_key" readonly>
-                          </div>
-                        </div>
-                        <div class="col-12">
-                          <div class="mb-3">
-                            <label for="kode_provider" class="form-label">Kode Provider</label>
-                            <input type="text" class="form-control bg-light" id="kode_provider" name="kode_provider" readonly>
-                          </div>
-                        </div>
-                      </div>
-                      <button class="btn btn-primary col-12" id="btnsimpanPcare">Simpan</button>
-                    </div>
-                    <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" tabindex="0">
-                      <?php if ($antrol) { ?>
-                        <div class="alert alert-success d-flex align-items-center mt-4" role="alert">
-                          <i class="fas fa-check-circle me-2"></i>
-                          <div>
-                            Klinik Anda <strong>telah terhubung</strong> dengan layanan Antrean Online BPJS. Konfigurasi di bawah dikelola oleh tim IT dan bersifat hanya-baca.
-                          </div>
-                        </div>
-                        <div class="row mt-4">
-                          <div class="col-12">
-                            <div class="mb-3">
-                              <label for="antrol_username" class="form-label">Username Antrean Online</label>
-                              <input type="text" class="form-control bg-light" id="antrol_username" value="<?= htmlspecialchars($antrol['username'] ?? '') ?>" readonly>
-                            </div>
-                          </div>
-                          <div class="col-12">
-                            <div class="mb-3">
-                              <label for="antrol_base_url" class="form-label">Base URL</label>
-                              <input type="text" class="form-control bg-light" id="antrol_base_url" value="<?= htmlspecialchars($antrol['base_url'] ?? '') ?>" readonly>
-                            </div>
-                          </div>
-                          <div class="col-12">
-                            <div class="mb-3">
-                              <label for="antrol_service" class="form-label">Service</label>
-                              <input type="text" class="form-control bg-light" id="antrol_service" value="<?= htmlspecialchars($antrol['service'] ?? '') ?>" readonly>
-                            </div>
-                          </div>
-                          <div class="col-12">
-                            <div class="mb-3">
-                              <label for="antrol_kodePPK" class="form-label">Kode PPK</label>
-                              <input type="text" class="form-control bg-light" id="antrol_kodePPK" value="<?= htmlspecialchars($antrol['kodePPK'] ?? '') ?>" readonly>
-                            </div>
-                          </div>
-                          <div class="col-12">
-                            <div class="mb-3">
-                              <label for="antrol_constid" class="form-label">Consumer ID</label>
-                              <input type="text" class="form-control bg-light" id="antrol_constid" value="<?= htmlspecialchars($antrol['constid'] ?? '') ?>" readonly>
-                            </div>
-                          </div>
-                          <div class="col-12">
-                            <div class="mb-3">
-                              <label for="antrol_secretkey" class="form-label">Secret Key</label>
-                              <input type="text" class="form-control bg-light" id="antrol_secretkey" value="<?= htmlspecialchars($antrol['secretkey'] ?? '') ?>" readonly>
-                            </div>
-                          </div>
-                          <div class="col-12">
-                            <div class="mb-3">
-                              <label for="antrol_userkey" class="form-label">User Key</label>
-                              <input type="text" class="form-control bg-light" id="antrol_userkey" value="<?= htmlspecialchars($antrol['userkey'] ?? '') ?>" readonly>
-                            </div>
-                          </div>
-                        </div>
-                      <?php } else { ?>
-                        <div class="alert alert-danger" role="alert">
-                          Proses Integrasi (Bridging) Antrean Online sedang dalam tahap koordinasi menunggu jadwal UAT, untuk informasi lebih lanjut silakan hubungi tim IT kami. Terima kasih atas pengertiannya.
-                        </div>
-                      <?php } ?>
-                    </div>
-                    <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab" tabindex="0">
-                      <div class="p-3">
-                        <!-- Header Tabel -->
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                          <h6 class="mb-0 fw-semibold">
-                            <i class="fas fa-user-md me-2 text-primary"></i>Data Dokter ICare
-                          </h6>
-                        </div>
-                        <div class="table-responsive" data-simplebar>
-                          <table class="table table-hover align-middle table-bordered mb-0" id="dokterTable">
-                            <thead class="table-light">
-                              <tr>
-                                <th>Nama Dokter</th>
-                                <th class="text-center" width="120">Username</th>
-                                <th class="text-center" width="120">Password</th>
-                                <th class="text-center" width="120">Aksi</th>
-                              </tr>
-                            </thead>
-                            <tbody id="dokterTableBody">
-                              <tr>
-                                <td colspan="4" class="text-center text-muted">Memuat data...</td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="tab-pane fade" id="nav-dokter" role="tabpanel" aria-labelledby="nav-dokter-tab" tabindex="0">
-                      <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="mb-0 fw-semibold">
-                          <i class="fas fa-user-md me-2 text-primary"></i>Data Dokter
-                        </h6>
-                        <button class="btn btn-primary btn-sm" id="btnTambah">
-                          <i class="fas fa-sync-alt me-1"></i>
-                          Sinkron Dokter
-                        </button>
-                      </div>
-                      <div class="table-responsive" data-simplebar>
-                        <table class="table table-hover align-middle table-bordered mb-0" id="dokterTable">
-                          <thead class="table-light">
-                            <tr>
-                              <th>Nama Dokter</th>
-                              <th class="text-center" width="120">Kode</th>
-                              <th class="text-center" width="120">Status</th>
-                              <th class="text-center" width="120">Aksi</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <?php
-                            $query = mysqli_query($koneksi, "SELECT id, kdDokter, nmDokter, status FROM master_doctor_bpjs WHERE id_customer = '$id_customer' ORDER BY nmDokter ASC");
-                            if (mysqli_num_rows($query) > 0) {
-                              while ($row = mysqli_fetch_assoc($query)) {
-                            ?>
-                                <tr>
-                                  <td><?= htmlspecialchars($row['nmDokter']) ?></td>
-                                  <td class="text-center">
-                                    <?= htmlspecialchars($row['kdDokter']) ?>
-                                  </td>
-                                  <td class="text-center">
-                                    <?php if ($row['status'] == 1) { ?>
-                                      <span class="badge bg-success">
-                                        <i class="fas fa-check-circle me-1"></i>Aktif
-                                      </span>
-                                    <?php } else { ?>
-                                      <span class="badge bg-danger">
-                                        <i class="fas fa-times-circle me-1"></i>Nonaktif
-                                      </span>
-                                    <?php } ?>
-                                  </td>
-                                  <td class="text-center">
-                                    <button
-                                      class="btn btn-info btn-sm btn-jadwal"
-                                      data-kode="<?= $row['kdDokter'] ?>"
-                                      data-nama="<?= htmlspecialchars($row['nmDokter']) ?>"
-                                      title="Lihat Jadwal">
 
-                                      <i class="fas fa-calendar-alt"></i>
-                                    </button>
-                                  </td>
-                                </tr>
-                              <?php
-                              }
-                            } else {
-                              ?>
-                              <tr>
-                                <td colspan="4" class="text-center py-5 text-muted">
-                                  <i class="fas fa-folder-open fa-2x mb-2 d-block"></i>
-                                  Belum ada data dokter.
-                                </td>
-                              </tr>
-                            <?php } ?>
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                    <div class="tab-pane fade" id="nav-dokterinternal" role="tabpanel" aria-labelledby="nav-dokterinternal-tab" tabindex="0">
-                      <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="mb-0 fw-semibold">
-                          <i class="fas fa-user-md me-2 text-primary"></i>
-                          Data Dokter Internal
-                        </h6>
-                        <button class="btn btn-primary btn-sm" id="btnTambahDokterInternal">
-                          <i class="fas fa-plus me-1"></i>
-                          Tambah Dokter
-                        </button>
-                      </div>
-                      <div class="table-responsive" data-simplebar>
-                        <table class="table table-hover align-middle table-bordered mb-0" id="dokterInternalTable">
-                          <thead class="table-light">
-                            <tr>
-                              <th>Nama Dokter</th>
-                              <th class="text-center" width="300">Dokter BPJS</th>
-                              <th class="text-center" width="200">Poliklinik</th>
-                              <th class="text-center" width="120">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody id="listDokterInternal">
-                            <tr>
-                              <td colspan="5" class="text-center py-5 text-muted">
-                                <i class="fas fa-spinner fa-spin fa-2x mb-2 d-block"></i>
-                                Memuat data...
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <?php
-    require 'library.php';
-    ?>
-
-    <div class="modal fade" id="modalDokterInternal" tabindex="-1">
-      <div class="modal-dialog">
-        <form id="formDokterInternal" class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">
-              Tambah Dokter Internal
-            </h5>
-            <button type="button"
-              class="btn-close"
-              data-bs-dismiss="modal">
-            </button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" id="id_doctor_internal" name="id_doctor_internal">
-            <div class="mb-3">
-              <label class="form-label required">
-                Nama Dokter
-              </label>
-              <input type="text"
-                class="form-control"
-                id="doctor_name_internal"
-                name="doctor_name"
-                required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label required">
-                Dokter BPJS
-              </label>
-              <select
-                class="form-select"
-                id="doctor_bpjs_internal"
-                name="doctor_bpjs"
-                required>
-              </select>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal">
-              Tutup
-            </button>
-            <button type="button"
-              class="btn btn-primary"
-              id="btnSimpanDokterInternal">
-              Simpan
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-    <!-- Modal Jadwal Dokter -->
-    <div class="modal fade" id="modalJadwalDokter" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-          <div class="modal-header">
+          <!-- HEADER -->
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
             <div>
-              <h5 class="modal-title mb-1">
-                <i class="fas fa-calendar-alt me-2 text-primary"></i>
-                Jadwal Dokter
-              </h5>
-              <small class="text-muted">
-                <strong id="namaDokterJadwal">-</strong>
-              </small>
+              <h4 class="fw-semibold mb-1">Integrasi BPJS Kesehatan</h4>
+              <div class="text-muted small">Akun PCare, Antrean Online, data dokter BPJS beserta jadwal &amp; iCare, dan pemetaan dokter internal.</div>
             </div>
-            <button type="button"
-              class="btn-close"
-              data-bs-dismiss="modal">
-            </button>
+            <button class="btn btn-outline-primary" id="btnTes"><i class="fas fa-plug me-1"></i> Tes Koneksi PCare</button>
           </div>
-          <div class="modal-body">
-            <input type="hidden" id="doctorCodeJadwal">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <button
-                class="btn btn-primary btn-sm"
-                id="btnTambahJadwal">
-                <i class="fas fa-plus me-1"></i>
-                Tambah Jadwal
-              </button>
+
+          <!-- STATUS -->
+          <div class="row g-3 mb-3">
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="bs-stat d-flex gap-3 align-items-center">
+                <span class="bs-icon bg-primary-subtle text-primary" id="icPcare"><i class="fas fa-hospital"></i></span>
+                <div class="min-w-0">
+                  <div class="bs-val" id="stPcare">-</div>
+                  <div class="bs-label" id="stPcareSub">PCare</div>
+                </div>
+              </div>
             </div>
-            <div class="table-responsive">
-              <table class="table table-hover table-bordered align-middle mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th width="90">Hari</th>
-                    <th>Poliklinik</th>
-                    <th width="110" class="text-center">
-                      Jam Mulai
-                    </th>
-                    <th width="110" class="text-center">
-                      Jam Selesai
-                    </th>
-                    <th width="90" class="text-center">
-                      Kuota
-                    </th>
-                    <th width="90" class="text-center">
-                      Status
-                    </th>
-                    <th width="70" class="text-center">
-                      Aksi
-                    </th>
-                  </tr>
-                </thead>
-                <tbody id="listJadwalDokter">
-                  <tr>
-                    <td colspan="7"
-                      class="text-center py-5 text-muted">
-                      <i class="fas fa-spinner fa-spin fa-2x mb-3 d-block"></i>
-                      Memuat jadwal...
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="bs-stat d-flex gap-3 align-items-center">
+                <span class="bs-icon bg-success-subtle text-success" id="icAntrol"><i class="fas fa-ticket-alt"></i></span>
+                <div class="min-w-0">
+                  <div class="bs-val" id="stAntrol">-</div>
+                  <div class="bs-label">Antrean Online (Mobile JKN)</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="bs-stat d-flex gap-3 align-items-center">
+                <span class="bs-icon bg-info-subtle text-info"><i class="fas fa-user-md"></i></span>
+                <div class="min-w-0">
+                  <div class="bs-val" id="stDokter">-</div>
+                  <div class="bs-label" id="stDokterSub">Dokter BPJS aktif</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="bs-stat d-flex gap-3 align-items-center">
+                <span class="bs-icon bg-warning-subtle text-warning"><i class="fas fa-link"></i></span>
+                <div class="min-w-0">
+                  <div class="bs-val" id="stMap">-</div>
+                  <div class="bs-label" id="stMapSub">Dokter internal terpetakan</div>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal">
-              Tutup
-            </button>
+
+          <div class="card">
+            <div class="card-body p-4">
+              <ul class="nav bs-tabs mb-4" role="tablist">
+                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-pcare" type="button"><i class="fas fa-key me-1"></i> Akun PCare</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-antrol" type="button"><i class="fas fa-ticket-alt me-1"></i> Antrean Online</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-dokter" type="button"><i class="fas fa-user-md me-1"></i> Dokter BPJS, Jadwal &amp; iCare <span class="badge bg-white text-dark ms-1" id="nDokter">0</span></button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-internal" type="button"><i class="fas fa-random me-1"></i> Pemetaan Dokter Internal <span class="badge bg-white text-dark ms-1" id="nInternal">0</span></button></li>
+              </ul>
+
+              <div class="tab-content">
+                <!-- ===== PCARE ===== -->
+                <div class="tab-pane fade show active" id="tab-pcare">
+                  <div class="row g-3">
+                    <div class="col-lg-6">
+                      <form class="bs-card" id="formPcare" autocomplete="off" novalidate>
+                        <div class="bs-sec">Akun Login PCare</div>
+                        <p class="small text-muted">Bila username / password diganti di aplikasi PCare, perbarui juga di sini. Bila tidak, semua fitur yang terhubung ke PCare (pendaftaran, kunjungan, obat) akan gagal.</p>
+                        <div class="mb-3">
+                          <label class="form-label required" for="pc_user">Username PCare</label>
+                          <input type="text" class="form-control" id="pc_user" maxlength="100" autocomplete="off" spellcheck="false">
+                        </div>
+                        <div class="mb-3">
+                          <label class="form-label" for="pc_pass">Password PCare</label>
+                          <div class="input-group">
+                            <input type="password" class="form-control" id="pc_pass" autocomplete="new-password">
+                            <button class="btn btn-light border" type="button" data-eye="#pc_pass" title="Tampilkan"><i class="fas fa-eye"></i></button>
+                          </div>
+                          <div class="form-text" id="pc_passHint">Kosongkan bila password tidak diganti.</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" id="btnPcare"><i class="fas fa-save me-1"></i> Simpan Akun PCare</button>
+                      </form>
+                    </div>
+                    <div class="col-lg-6">
+                      <div class="bs-card">
+                        <div class="bs-sec d-flex justify-content-between">Kredensial API <span class="bs-badge b-mute"><i class="fas fa-lock"></i>Dikelola tim IT</span></div>
+                        <div id="pcareKred">
+                          <div class="bs-empty"><span class="spinner-border spinner-border-sm"></span></div>
+                        </div>
+                        <div class="small text-muted mt-2"><i class="fas fa-info-circle me-1"></i>Secret key &amp; user key disamarkan. Hubungi tim IT bila perlu diubah.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ===== ANTROL ===== -->
+                <div class="tab-pane fade" id="tab-antrol">
+                  <div id="antrolBox">
+                    <div class="bs-empty"><span class="spinner-border spinner-border-sm"></span></div>
+                  </div>
+                </div>
+
+                <!-- ===== DOKTER BPJS ===== -->
+                <div class="tab-pane fade" id="tab-dokter">
+                  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <div class="bs-chips d-flex flex-wrap gap-2" id="dkChips">
+                      <button class="btn btn-primary" data-f="">Semua</button>
+                      <button class="btn btn-light" data-f="dokter">Dokter (dr/drg)</button>
+                      <button class="btn btn-light" data-f="jadwal">Punya jadwal</button>
+                      <button class="btn btn-light" data-f="noicare">Belum iCare</button>
+                      <button class="btn btn-light" data-f="off">Nonaktif</button>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 align-items-center bs-tools">
+                      <div class="input-group input-group-sm bs-search">
+                        <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                        <input type="search" class="form-control" id="dkSearch" placeholder="Cari nama / kode" autocomplete="off">
+                      </div>
+                      <button class="btn btn-primary btn-sm" id="btnSinkron"><i class="fas fa-sync-alt me-1"></i> Sinkron dari PCare</button>
+                    </div>
+                  </div>
+                  <div class="table-responsive">
+                    <table class="table align-middle mb-0 bs-table">
+                      <thead>
+                        <tr>
+                          <th>Dokter / Tenaga Medis BPJS</th>
+                          <th>Dokter Internal</th>
+                          <th class="text-center">Jadwal</th>
+                          <th>Akun iCare</th>
+                          <th class="text-end">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody id="dkBody">
+                        <tr>
+                          <td colspan="5" class="bs-empty"><span class="spinner-border spinner-border-sm"></span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="small text-muted mt-3"><i class="fas fa-info-circle me-1"></i>Daftar diambil dari PCare. Yang sudah tidak ada di PCare dinonaktifkan saat sinkron (tidak dihapus), sehingga jadwal &amp; akun iCare-nya tetap tersimpan.</div>
+                </div>
+
+                <!-- ===== DOKTER INTERNAL ===== -->
+                <div class="tab-pane fade" id="tab-internal">
+                  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <div class="bs-chips d-flex flex-wrap gap-2" id="inChips">
+                      <button class="btn btn-primary" data-f="">Semua</button>
+                      <button class="btn btn-light" data-f="masalah">Perlu dicek</button>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 align-items-center bs-tools">
+                      <div class="input-group input-group-sm bs-search">
+                        <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                        <input type="search" class="form-control" id="inSearch" placeholder="Cari nama dokter" autocomplete="off">
+                      </div>
+                      <button class="btn btn-primary btn-sm" id="btnTambahInternal"><i class="fas fa-plus me-1"></i> Tambah Dokter</button>
+                    </div>
+                  </div>
+                  <div class="table-responsive">
+                    <table class="table align-middle mb-0 bs-table">
+                      <thead>
+                        <tr>
+                          <th>Dokter Internal</th>
+                          <th>Dipetakan ke Dokter BPJS</th>
+                          <th>Poliklinik</th>
+                          <th class="text-end">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody id="inBody">
+                        <tr>
+                          <td colspan="4" class="bs-empty"><span class="spinner-border spinner-border-sm"></span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="small text-muted mt-3"><i class="fas fa-info-circle me-1"></i>Pemetaan menentukan kode dokter yang dikirim ke PCare saat kunjungan pasien BPJS. Pastikan nama dokter internal dan dokter BPJS adalah orang yang sama.</div>
+                </div>
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Modal Tambah Jadwal -->
-    <div class="modal fade" id="modalTambahJadwal" tabindex="-1">
-      <div class="modal-dialog">
-        <form id="formJadwal" class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">
-              Tambah Jadwal
-            </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal">
-            </button>
+  <!-- MODAL JADWAL -->
+  <div class="modal fade" id="mdJadwal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title mb-0"><i class="fas fa-calendar-alt me-2 text-primary"></i>Jadwal Praktik</h5>
+            <div class="small text-muted"><b id="jdNama">-</b> · <span id="jdKode">-</span></div>
           </div>
-          <div class="modal-body">
-            <input type="hidden"
-              id="schedule_id">
-            <input type="hidden"
-              id="doctor_code_schedule">
-            <div class="mb-3">
-              <label class="form-label required">
-                Hari
-              </label>
-              <select
-                class="form-select"
-                id="day_of_week"
-                required>
-                <option value="">Pilih Hari</option>
-                <option value="Senin">Senin</option>
-                <option value="Selasa">Selasa</option>
-                <option value="Rabu">Rabu</option>
-                <option value="Kamis">Kamis</option>
-                <option value="Jumat">Jumat</option>
-                <option value="Sabtu">Sabtu</option>
-                <option value="Minggu">Minggu</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label class="form-label required">
-                Poliklinik
-              </label>
-              <select
-                class="form-select"
-                id="id_poli"
-                required>
-              </select>
-            </div>
-            <div class="row">
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label class="form-label required">
-                    Jam Mulai
-                  </label>
-                  <input
-                    type="text"
-                    class="form-control timepicker"
-                    id="start_time"
-                    required>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label class="form-label required">
-                    Jam Selesai
-                  </label>
-                  <input
-                    type="text"
-                    class="form-control timepicker"
-                    id="end_time"
-                    required>
-                </div>
-              </div>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">
-                Kuota JKN
-              </label>
-              <input
-                type="number"
-                class="form-control"
-                id="kuota"
-                min="1"
-                value="30">
-            </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="small text-muted" id="jdInfo"></div>
+            <button class="btn btn-primary btn-sm" id="btnJdTambah"><i class="fas fa-plus me-1"></i> Tambah Jadwal</button>
           </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal">
-              Batal
-            </button>
-            <button
-              type="button"
-              class="btn btn-primary"
-              id="btnSimpanJadwal">
-              <i class="fas fa-save me-1"></i>
-              Simpan
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
 
-    <div class="modal fade" id="modalEditDokter" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header bg-warning text-white">
-            <h5 class="modal-title">
-              <i class="fas fa-user-edit me-2"></i>
-              Edit iCare
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <form id="formEditDokter">
-            <div class="modal-body">
-              <input type="hidden" id="editId" name="id">
-              <div class="mb-3">
-                <label class="form-label fw-bold">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="editUsername"
-                  name="username"
-                  required>
+          <form class="jd-form mb-3 d-none" id="jdForm" novalidate>
+            <input type="hidden" id="jd_id">
+            <div class="row g-2 align-items-end">
+              <div class="col-6 col-md-2">
+                <label class="form-label small required" for="jd_hari">Hari</label>
+                <select class="form-select form-select-sm" id="jd_hari">
+                  <option value="">Pilih</option>
+                  <option>Senin</option>
+                  <option>Selasa</option>
+                  <option>Rabu</option>
+                  <option>Kamis</option>
+                  <option>Jumat</option>
+                  <option>Sabtu</option>
+                  <option>Minggu</option>
+                </select>
               </div>
-              <div class="mb-3">
-                <label class="form-label fw-bold">
-                  Password
-                </label>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="editPassword"
-                  name="password"
-                  required>
+              <div class="col-6 col-md-3">
+                <label class="form-label small required" for="jd_poli">Poliklinik</label>
+                <select class="form-select form-select-sm" id="jd_poli"></select>
               </div>
-            </div>
-            <div class="modal-footer">
-              <button
-                type="button"
-                class="btn btn-secondary"
-                data-bs-dismiss="modal">
-                Batal
-              </button>
-              <button
-                type="submit"
-                class="btn btn-warning">
-                <i class="fas fa-save me-1"></i>
-                Simpan
-              </button>
+              <div class="col-4 col-md-2">
+                <label class="form-label small required" for="jd_mulai">Mulai</label>
+                <input type="time" class="form-control form-control-sm" id="jd_mulai">
+              </div>
+              <div class="col-4 col-md-2">
+                <label class="form-label small required" for="jd_selesai">Selesai</label>
+                <input type="time" class="form-control form-control-sm" id="jd_selesai">
+              </div>
+              <div class="col-4 col-md-1">
+                <label class="form-label small required" for="jd_kuota">Kuota</label>
+                <input type="number" class="form-control form-control-sm" id="jd_kuota" min="1" max="9999" value="30">
+              </div>
+              <div class="col-12 col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-primary btn-sm flex-fill" id="btnJdSimpan"><i class="fas fa-save me-1"></i>Simpan</button>
+                <button type="button" class="btn btn-light btn-sm" id="btnJdBatal" title="Batal"><i class="fas fa-times"></i></button>
+              </div>
             </div>
           </form>
+
+          <div class="table-responsive">
+            <table class="table align-middle mb-0 bs-table">
+              <thead>
+                <tr>
+                  <th>Hari</th>
+                  <th>Poliklinik</th>
+                  <th class="text-center">Jam</th>
+                  <th class="text-center">Kuota JKN</th>
+                  <th class="text-center">Aktif</th>
+                  <th class="text-end">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="jdBody"></tbody>
+            </table>
+          </div>
+          <div class="small text-muted mt-2"><i class="fas fa-info-circle me-1"></i>Kuota bisa langsung diubah di tabel, tersimpan otomatis saat kolom ditinggalkan.</div>
         </div>
       </div>
     </div>
-    <script>
-      flatpickr(".timepicker", {
-        enableTime: true,
-        noCalendar: true,
-        time_24hr: true,
-        dateFormat: "H:i",
-        minuteIncrement: 1,
-        allowInput: true,
-        onClose: function(selectedDates, dateStr, instance) {
-          if (dateStr && !/^([01]\d|2[0-3]):([0-5]\d)$/.test(dateStr)) {
-            alert("Format jam harus HH:mm");
-            instance.clear();
-          }
-        }
+  </div>
+
+  <!-- MODAL iCARE -->
+  <div class="modal fade" id="mdIcare" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <form class="modal-content" id="icForm" autocomplete="off" novalidate>
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title mb-0">Akun iCare</h5>
+            <div class="small text-muted" id="icNama">-</div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="ic_id">
+          <p class="small text-muted">Akun iCare dipakai dokter untuk membuka riwayat pelayanan peserta JKN dari halaman pemeriksaan.</p>
+          <div class="mb-3">
+            <label class="form-label required" for="ic_user">Username iCare</label>
+            <input type="text" class="form-control" id="ic_user" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="mb-1">
+            <label class="form-label required" for="ic_pass">Password iCare</label>
+            <div class="input-group">
+              <input type="password" class="form-control" id="ic_pass" autocomplete="new-password">
+              <button class="btn btn-light border" type="button" data-eye="#ic_pass" title="Tampilkan"><i class="fas fa-eye"></i></button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary" id="btnIcSimpan"><i class="fas fa-save me-1"></i> Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL DOKTER INTERNAL -->
+  <div class="modal fade" id="mdInternal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <form class="modal-content" id="inForm" autocomplete="off" novalidate>
+        <div class="modal-header">
+          <h5 class="modal-title" id="inTitle">Tambah Dokter Internal</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="in_id">
+          <div class="mb-3">
+            <label class="form-label required" for="in_nama">Nama Dokter</label>
+            <input type="text" class="form-control" id="in_nama" maxlength="255" placeholder="mis. dr. Andi Pratama">
+            <div class="form-text">Nama yang tampil di aplikasi (pendaftaran, resep, cetakan).</div>
+          </div>
+          <div class="mb-1">
+            <label class="form-label required" for="in_kode">Dokter BPJS</label>
+            <select class="form-select" id="in_kode"></select>
+            <div class="form-text">Dokter BPJS yang sudah dipetakan ke dokter lain tidak bisa dipilih.</div>
+          </div>
+          <div class="alert alert-warning small py-2 mt-2 mb-0 d-none" id="inWarn"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary" id="btnInSimpan"><i class="fas fa-save me-1"></i> Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <?php require 'library.php'; ?>
+
+  <script>
+    (function() {
+      const API = 'controller/master/bpjsSetting.php';
+      let DOKTER = [];
+      let INTERNAL = [];
+      let POLI = null;
+      let fDok = '';
+      let fIn = '';
+      let JD = null; // dokter yang jadwalnya sedang dibuka
+
+      const modal = id => bootstrap.Modal.getOrCreateInstance(document.getElementById(id));
+      const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      } [c]));
+      const inisial = n => {
+        const w = String(n || '?').replace(/^(drg|dr|bd|ns)\.?\s*/i, '').replace(/,.*$/, '').replace(/[^A-Za-z\s]/g, ' ').trim().split(/\s+/);
+        return ((w[0] || '?')[0] + (w[1] ? w[1][0] : '')).toUpperCase();
+      };
+      const kunci = n => String(n || '').toUpperCase().replace(/,.*$/, '').replace(/^(DRG|DR)\b\.?\s*/, '').replace(/[^A-Z0-9]/g, '');
+      const namaSama = (a, b) => {
+        const x = kunci(a),
+          y = kunci(b);
+        return !!x && !!y && (x === y || x.includes(y) || y.includes(x));
+      };
+      const isDokter = n => /^\s*(drg|dr)\b/i.test(n || '');
+      const hari = h => {
+        const s = String(h || '').toLowerCase();
+        return s ? s[0].toUpperCase() + s.slice(1) : '';
+      };
+
+      function api(aksi, data, method) {
+        const opt = method === 'GET' || !data ? {
+          url: API + '?aksi=' + encodeURIComponent(aksi) + (data ? '&' + $.param(data) : ''),
+          type: 'GET'
+        } : {
+          url: API,
+          type: 'POST',
+          data: Object.assign({
+            aksi
+          }, data)
+        };
+        return $.ajax(Object.assign(opt, {
+          dataType: 'json'
+        })).then(res => {
+          if (!res || !res.success) return $.Deferred().reject(res && res.message ? res.message : 'Gagal');
+          return res;
+        }, xhr => $.Deferred().reject((xhr.responseJSON && xhr.responseJSON.message) || 'Gagal terhubung ke server.'));
+      }
+      const gagal = m => Swal.fire('Gagal', typeof m === 'string' ? m : 'Terjadi kesalahan.', 'error');
+      const sukses = m => Swal.fire({
+        icon: 'success',
+        title: 'Berhasil',
+        text: m,
+        timer: 1400,
+        showConfirmButton: false
       });
-    </script>
-    <script src="controller/admisi/helper.js"></script>
-    <script>
-      $('#btnTambah').on('click', async function() {
 
-        let btn = $(this);
-        let text = btn.html();
+      $(document).on('click', '[data-eye]', function() {
+        const i = $(this.dataset.eye);
+        const show = i.attr('type') === 'password';
+        i.attr('type', show ? 'text' : 'password');
+        $(this).find('i').attr('class', show ? 'fas fa-eye-slash' : 'fas fa-eye');
+      });
 
-        btn.prop('disabled', true);
-        btn.html(`
-        <span class="spinner-border spinner-border-sm me-2"></span>
-        Sinkron Data...
-    `);
-        try {
-          let response = await $.ajax({
-            url: 'controller/admisi/services/getApi.php',
-            type: 'POST',
-            data: {
-              url: 'dokter/0/100'
-            },
-            dataType: 'json'
-          });
-          if (!response.list || response.list.length == 0) {
-            Swal.fire({
-              icon: 'warning',
-              title: 'Data Kosong',
-              text: 'Data dokter tidak ditemukan.'
-            });
+      // tab diingat lewat hash
+      $('.bs-tabs [data-bs-toggle="tab"]').on('shown.bs.tab', e => history.replaceState(null, '', location.pathname + location.search + e.target.dataset.bsTarget.replace('tab-', '')));
+      const h = location.hash && document.querySelector(`.bs-tabs [data-bs-target="${location.hash.replace('#', '#tab-')}"]`);
+      if (h) bootstrap.Tab.getOrCreateInstance(h).show();
+
+      // ================= STATUS / PCARE / ANTROL =================
+      function kv(k, v, code) {
+        return `<div class="kv"><span class="k">${k}</span><span class="v">${v ? (code ? `<code>${esc(v)}</code>` : esc(v)) : '<span class="text-muted fw-normal">-</span>'}</span></div>`;
+      }
+
+      function muatStatus() {
+        return api('status', null, 'GET').then(res => {
+          const p = res.pcare,
+            a = res.antrol;
+          if (p) {
+            $('#pc_user').val(p.username || '');
+            $('#pc_passHint').text(p.ada_password ? 'Kosongkan bila password tidak diganti.' : 'Password belum diisi.');
+            $('#stPcare').text(p.kode_ppk || 'Terkonfigurasi');
+            $('#stPcareSub').text('PCare · ' + (p.username ? 'akun ' + p.username : 'username belum diisi'));
+            $('#pcareKred').html(kv('Kode PPK', p.kode_ppk, 1) + kv('Consumer ID', p.cons_id, 1) + kv('Service', p.service, 1) + kv('Server', p.server) + kv('Secret Key', p.secret_key, 1) + kv('User Key', p.user_key, 1));
+          } else {
+            $('#stPcare').text('Belum diatur');
+            $('#stPcareSub').text('Hubungi tim IT');
+            $('#icPcare').attr('class', 'bs-icon bg-danger-subtle text-danger');
+            $('#pcareKred').html('<div class="bs-empty"><i class="fas fa-exclamation-circle"></i>Kredensial PCare faskes ini belum dibuat. Hubungi tim IT.</div>');
+            $('#formPcare :input').prop('disabled', true);
+            $('#btnTes').prop('disabled', true);
+          }
+          if (a) {
+            $('#stAntrol').text('Terhubung');
+            $('#antrolBox').html(`<div class="row g-3">
+              <div class="col-lg-5"><div class="bs-card d-flex flex-column justify-content-center text-center">
+                <span class="bs-icon bg-success-subtle text-success mx-auto mb-2" style="width:56px;height:56px;font-size:1.4rem"><i class="fas fa-check"></i></span>
+                <div class="fw-semibold mb-1">Terhubung ke Antrean Online BPJS</div>
+                <div class="small text-muted">Pasien dapat mengambil antrean lewat Mobile JKN. Konfigurasi dikelola tim IT dan hanya bisa dilihat di sini.</div>
+              </div></div>
+              <div class="col-lg-7"><div class="bs-card">
+                <div class="bs-sec d-flex justify-content-between">Konfigurasi <span class="bs-badge b-mute"><i class="fas fa-lock"></i>Hanya baca</span></div>
+                ${kv('Username', a.username)}${kv('Kode PPK', a.kode_ppk, 1)}${kv('Consumer ID', a.cons_id, 1)}${kv('Base URL', a.base_url)}${kv('Service', a.service, 1)}${kv('Secret Key', a.secret_key, 1)}${kv('User Key', a.user_key, 1)}
+              </div></div>
+            </div>`);
+          } else {
+            $('#stAntrol').text('Belum terhubung');
+            $('#icAntrol').attr('class', 'bs-icon bg-secondary-subtle text-secondary');
+            $('#antrolBox').html(`<div class="bs-card text-center py-5">
+              <span class="bs-icon bg-warning-subtle text-warning mx-auto mb-2" style="width:56px;height:56px;font-size:1.4rem"><i class="fas fa-hourglass-half"></i></span>
+              <div class="fw-semibold mb-1">Antrean Online belum terhubung</div>
+              <div class="small text-muted mx-auto" style="max-width:520px">Proses integrasi (bridging) Antrean Online sedang dalam tahap koordinasi menunggu jadwal UAT. Untuk informasi lebih lanjut silakan hubungi tim IT kami.</div>
+            </div>`);
+          }
+        }, m => {
+          $('#pcareKred').html(`<div class="bs-empty text-danger"><i class="fas fa-exclamation-circle"></i>${esc(m)}</div>`);
+          $('#antrolBox').html(`<div class="bs-empty text-danger"><i class="fas fa-exclamation-circle"></i>${esc(m)}</div>`);
+        });
+      }
+
+      $('#formPcare').on('submit', function(e) {
+        e.preventDefault();
+        const user = $('#pc_user').val().trim();
+        if (!user) return $('#pc_user').addClass('is-invalid').trigger('focus');
+        const btn = $('#btnPcare').prop('disabled', true);
+        api('simpan_pcare', {
+            username: user,
+            password: $('#pc_pass').val()
+          })
+          .then(res => {
+            $('#pc_pass').val('').attr('type', 'password');
+            sukses(res.message);
+            muatStatus();
+          }, gagal)
+          .always(() => btn.prop('disabled', false));
+      });
+      $('#pc_user').on('input', function() {
+        $(this).removeClass('is-invalid');
+      });
+
+      $('#btnTes').on('click', function() {
+        const btn = $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Menghubungi PCare…');
+        api('tes', {})
+          .then(res => Swal.fire({
+            icon: 'success',
+            title: 'Terhubung',
+            text: `PCare merespons dalam ${res.ms} ms. Akun dan kredensial valid.`
+          }), m => Swal.fire({
+            icon: 'error',
+            title: 'Tidak terhubung',
+            html: esc(m).replace(/\n/g, '<br>') + '<br><small class="text-muted">Periksa username / password PCare di tab Akun PCare.</small>'
+          }))
+          .always(() => btn.prop('disabled', false).html('<i class="fas fa-plug me-1"></i> Tes Koneksi PCare'));
+      });
+
+      // ================= DOKTER BPJS =================
+      function renderDokter() {
+        const q = $('#dkSearch').val().trim().toLowerCase();
+        const rows = DOKTER.filter(d => {
+          if (fDok === 'dokter' && !isDokter(d.nmDokter)) return false;
+          if (fDok === 'jadwal' && !d.jadwal) return false;
+          if (fDok === 'noicare' && (d.icare_username || d.status != 1)) return false;
+          if (fDok === 'off' && d.status == 1) return false;
+          return !q || (d.nmDokter + ' ' + d.kdDokter + ' ' + d.internal.join(' ')).toLowerCase().includes(q);
+        });
+        if (!rows.length) {
+          $('#dkBody').html(`<tr><td colspan="5" class="bs-empty"><i class="fas fa-user-md"></i>${DOKTER.length ? 'Tidak ada data yang cocok dengan filter.' : 'Belum ada data dokter BPJS. Klik <b>Sinkron dari PCare</b>.'}</td></tr>`);
+          return;
+        }
+        $('#dkBody').html(rows.map(d => {
+          const off = d.status != 1;
+          const intern = d.internal.length ?
+            d.internal.map(n => `<span class="bs-badge ${namaSama(n, d.nmDokter) ? 'b-ok' : 'b-warn'}" title="${namaSama(n, d.nmDokter) ? 'Dipetakan' : 'Nama berbeda dengan dokter BPJS, cek pemetaannya'}"><i class="fas ${namaSama(n, d.nmDokter) ? 'fa-link' : 'fa-exclamation-triangle'}"></i>${esc(n)}</span>`).join(' ') :
+            '<span class="bs-sub">-</span>';
+          const jad = d.jadwal ?
+            `<div class="fw-semibold">${d.jadwal_aktif}<span class="text-muted fw-normal">/${d.jadwal}</span></div><div class="bs-sub">aktif</div>` :
+            '<span class="bs-sub">Belum ada</span>';
+          const ic = d.icare_username ?
+            `<div class="fw-semibold small">${esc(d.icare_username)}</div>
+               <div class="bs-sub pw-cell"><span class="pw" data-pw="${esc(d.icare_password || '')}">••••••••</span>
+               <a href="javascript:;" class="ms-1 text-muted pw-eye" title="Tampilkan password"><i class="fas fa-eye"></i></a></div>` :
+            '<span class="bs-badge b-mute">Belum diisi</span>';
+          return `<tr class="${off ? 'off' : ''}">
+            <td><div class="d-flex align-items-center gap-2">
+              <span class="bs-ava ${isDokter(d.nmDokter) ? 'b-info' : 'b-mute'}">${esc(inisial(d.nmDokter))}</span>
+              <div class="min-w-0"><div class="bs-name" title="${esc(d.nmDokter)}">${esc(d.nmDokter)}</div>
+              <div class="bs-sub">Kode ${esc(d.kdDokter)}${off ? ' · <span class="text-danger">tidak ada lagi di PCare</span>' : ''}</div></div>
+            </div></td>
+            <td><div class="d-flex flex-wrap gap-1">${intern}</div></td>
+            <td class="text-center">${jad}</td>
+            <td>${ic}</td>
+            <td class="text-end keep"><div class="bs-act">
+              <button class="btn btn-light text-primary btn-jadwal" data-kode="${esc(d.kdDokter)}"><i class="fas fa-calendar-alt"></i> Jadwal</button>
+              <button class="btn btn-light text-dark btn-icare" data-id="${d.id}" title="Atur akun iCare"><i class="fas fa-id-card"></i> iCare</button>
+            </div></td>
+          </tr>`;
+        }).join(''));
+      }
+
+      function muatDokter() {
+        return api('dokter', null, 'GET').then(res => {
+          DOKTER = res.data || [];
+          const aktif = DOKTER.filter(d => d.status == 1);
+          const dr = aktif.filter(d => isDokter(d.nmDokter));
+          $('#nDokter').text(aktif.length);
+          $('#stDokter').text(aktif.length + ' tenaga medis');
+          $('#stDokterSub').text(`${dr.length} dokter · ${aktif.filter(d => d.icare_username).length} punya iCare`);
+          renderDokter();
+        }, m => $('#dkBody').html(`<tr><td colspan="5" class="bs-empty text-danger"><i class="fas fa-exclamation-circle"></i>${esc(m)}</td></tr>`));
+      }
+
+      let t1;
+      $('#dkSearch').on('input', () => {
+        clearTimeout(t1);
+        t1 = setTimeout(renderDokter, 150);
+      });
+      $('#dkChips').on('click', '.btn', function() {
+        fDok = this.dataset.f;
+        $('#dkChips .btn').removeClass('btn-primary').addClass('btn-light');
+        $(this).removeClass('btn-light').addClass('btn-primary');
+        renderDokter();
+      });
+      $('#dkBody').on('click', '.pw-eye', function() {
+        const s = $(this).siblings('.pw');
+        const show = s.text().startsWith('•');
+        s.text(show ? s.data('pw') : '••••••••');
+        $(this).find('i').attr('class', show ? 'fas fa-eye-slash' : 'fas fa-eye');
+      });
+
+      $('#btnSinkron').on('click', function() {
+        Swal.fire({
+          icon: 'question',
+          title: 'Sinkron dokter dari PCare?',
+          html: 'Data dokter diambil ulang dari PCare. Dokter baru ditambahkan, nama diperbarui, dan yang sudah tidak ada di PCare akan <b>dinonaktifkan</b>.',
+          showCancelButton: true,
+          confirmButtonText: 'Sinkron',
+          cancelButtonText: 'Batal'
+        }).then(r => {
+          if (!r.isConfirmed) return;
+          const btn = $('#btnSinkron').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Sinkron…');
+          api('sinkron', {})
+            .then(res => {
+              sukses(res.message);
+              muatDokter();
+              muatInternal();
+            }, gagal)
+            .always(() => btn.prop('disabled', false).html('<i class="fas fa-sync-alt me-1"></i> Sinkron dari PCare'));
+        });
+      });
+
+      // ---- iCare ----
+      $('#dkBody').on('click', '.btn-icare', function() {
+        const d = DOKTER.find(x => String(x.id) === String(this.dataset.id));
+        if (!d) return;
+        $('#ic_id').val(d.id);
+        $('#icNama').text(d.nmDokter + ' · ' + d.kdDokter);
+        $('#ic_user').val(d.icare_username || '').removeClass('is-invalid');
+        $('#ic_pass').val(d.icare_password || '').attr('type', 'password').removeClass('is-invalid');
+        $('#icForm [data-eye] i').attr('class', 'fas fa-eye');
+        modal('mdIcare').show();
+      });
+      $('#icForm').on('submit', function(e) {
+        e.preventDefault();
+        const u = $('#ic_user').val().trim(),
+          p = $('#ic_pass').val();
+        if (!u) return $('#ic_user').addClass('is-invalid').trigger('focus');
+        if (!p) return $('#ic_pass').addClass('is-invalid').trigger('focus');
+        const btn = $('#btnIcSimpan').prop('disabled', true);
+        api('simpan_icare', {
+            id: $('#ic_id').val(),
+            username: u,
+            password: p
+          })
+          .then(res => {
+            modal('mdIcare').hide();
+            sukses(res.message);
+            muatDokter();
+          }, gagal)
+          .always(() => btn.prop('disabled', false));
+      });
+      $('#icForm').on('input', '.is-invalid', function() {
+        $(this).removeClass('is-invalid');
+      });
+
+      // ================= JADWAL =================
+      function muatPoli() {
+        if (POLI) return $.Deferred().resolve(POLI);
+        return api('poli', null, 'GET').then(res => {
+          POLI = res.data || [];
+          $('#jd_poli').html('<option value="">Pilih poli</option>' + POLI.map(p => `<option value="${esc(p.kdPoli)}">${esc(p.nmPoli)}</option>`).join(''));
+          return POLI;
+        });
+      }
+
+      function muatJadwal() {
+        $('#jdBody').html('<tr><td colspan="6" class="bs-empty"><span class="spinner-border spinner-border-sm"></span></td></tr>');
+        return api('jadwal', {
+          kode: JD.kdDokter
+        }, 'GET').then(res => {
+          const rows = res.data || [];
+          JD.rows = rows;
+          const aktif = rows.filter(r => r.status == 1);
+          $('#jdInfo').text(rows.length ? `${aktif.length} jadwal aktif dari ${rows.length} · total kuota aktif ${aktif.reduce((a, r) => a + (+r.kuota || 0), 0).toLocaleString('id-ID')}/minggu` : '');
+          if (!rows.length) {
+            $('#jdBody').html('<tr><td colspan="6" class="bs-empty"><i class="fas fa-calendar-times"></i>Belum ada jadwal. Klik <b>Tambah Jadwal</b>.</td></tr>');
             return;
           }
-          let simpan = await $.ajax({
-
-            url: 'module/admin/sinkron_dokter.php',
-            type: 'POST',
-            dataType: 'json',
-
-            data: {
-              dokter: JSON.stringify(response.list)
-            }
-
-          });
-
-
-          if (simpan.success) {
-
-            Swal.fire({
-              icon: 'success',
-              title: 'Berhasil',
-              text: simpan.message,
-              timer: 1500,
-              showConfirmButton: false
-            }).then(() => {
-              location.reload();
-            });
-
-
-          } else {
-
-            Swal.fire({
-              icon: 'error',
-              title: 'Gagal',
-              text: simpan.message
-            });
-
-          }
-
-
-        } catch (error) {
-
-          console.error(error);
-
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Gagal mengambil data dokter.'
-          });
-
-
-        } finally {
-
-          btn.prop('disabled', false);
-          btn.html(text);
-
-        }
-
-      });
-      $("#btnTambahDokterInternal").on("click", function() {
-        $("#formDokterInternal")[0].reset();
-        $("#modalDokterInternal").modal("show");
-        APP.loadDokterBPJSInternal();
-      });
-    </script>
-
-    <script>
-      $(document).ready(function() {
-        const $btn = $('#btnsimpanPcare');
-        const originalText = $btn.html(); // Teks asli "Simpan"
-
-        // ==========================================
-        // 1. PROSES LOAD DATA SAAT HALAMAN DIBUKA
-        // ==========================================
-        $.ajax({
-          url: 'controller/master/pcareSetting.php',
-          type: 'GET',
-          dataType: 'json',
-          beforeSend: function() {
-            // Disable tombol simpan dan beri status Memuat...
-            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Memuat Data...');
-          },
-          success: function(res) {
-            if (res.status === 'success') {
-              const data = res.data;
-
-              $('#username_pcare').val(data.username ?? '');
-              $('#password_pcare').val(data.password ?? '');
-              $('#consumer_id').val(data.KodePPK ?? '');
-              $('#kodePPK').val(data.KodePPK ?? '');
-              $('#secret_key').val(data.secret_key ?? '');
-              $('#user_key').val(data.user_key ?? '');
-              $('#kode_provider').val(data.KodePPK ?? '');
-              $('#apps_code').val(data.service_name ?? '');
-            }
-          },
-          error: function(xhr, status, error) {
-            console.error('Error fetching data:', error);
-          },
-          complete: function() {
-            $btn.prop('disabled', false).html(originalText);
-          }
-        });
-        $btn.on('click', function() {
-          const dataToSend = {
-            username_pcare: $('#username_pcare').val(),
-            password_pcare: $('#password_pcare').val()
-          };
-          if (!dataToSend.username_pcare || !dataToSend.password_pcare) {
-            Swal.fire({
-              icon: 'warning',
-              title: 'Perhatian!',
-              text: 'Username dan Password PCare tidak boleh kosong.'
-            });
-            return; 
-          }
-
-          $.ajax({
-            url: 'controller/master/pcareUpdate.php',
-            type: 'POST',
-            data: dataToSend,
-            dataType: 'json',
-            beforeSend: function() {
-              $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menyimpan...');
-            },
-            success: function(res) {
-              if (res.status === 'success') {
-                Swal.fire({
-                  icon: 'success',
-                  title: 'Berhasil!',
-                  text: 'Data PCare berhasil disimpan.',
-                  showConfirmButton: false,
-                  timer: 1500
-                });
-              } else {
-                Swal.fire({
-                  icon: 'error',
-                  title: 'Gagal!',
-                  text: res.message || 'Gagal menyimpan data.'
-                });
-              }
-            },
-            error: function(xhr, status, error) {
-              console.error('Error saving data:', error);
-              Swal.fire({
-                icon: 'error',
-                title: 'Terjadi Kesalahan!',
-                text: 'Gagal terhubung ke server saat menyimpan data.'
-              });
-            },
-            complete: function() {
-              $btn.prop('disabled', false).html(originalText);
-            }
-          });
-        });
-
-      });
-    </script>
-
-    <script>
-      APP.loadDokterBPJSInternal = function() {
-        $("#doctor_bpjs_internal")
-          .html('<option>Loading...</option>');
-        $.ajax({
-          url: "module/admin/get_dokter_bpjs.php",
-          type: "POST",
-          dataType: "json",
-          success: function(res) {
-            $("#doctor_bpjs_internal").empty();
-            $("#doctor_bpjs_internal")
-              .append('<option value="">- Pilih Dokter BPJS -</option>');
-            if (res.success) {
-              $.each(res.data, function(i, item) {
-                $("#doctor_bpjs_internal")
-                  .append(`
-                        <option value="${item.kdDokter}">
-                            ${item.nmDokter}
-                        </option>
-                    `);
-              });
-            }
-          },
-          error: function() {
-            $("#doctor_bpjs_internal")
-              .html('<option>Gagal mengambil data</option>');
-
-          }
-        });
-      };
-
-      $("#btnSimpanDokterInternal").on("click", function() {
-        let btn = $(this);
-        let text = btn.html();
-        let doctor_name = $("#doctor_name_internal").val();
-        let doctor_bpjs = $("#doctor_bpjs_internal").val();
-        let id_doctor = $('#id_doctor_internal').val();
-        if (doctor_name == "") {
-          Swal.fire(
-            "Perhatian",
-            "Nama dokter harus diisi.",
-            "warning"
-          );
-          return;
-        }
-        if (doctor_bpjs == "") {
-          Swal.fire(
-            "Perhatian",
-            "Dokter BPJS harus dipilih.",
-            "warning"
-          );
-          return;
-        }
-        btn.prop("disabled", true);
-        btn.html(`
-        <span class="spinner-border spinner-border-sm me-2"></span>
-        Menyimpan...
-    `);
-        $.ajax({
-          url: "module/admin/simpan_dokter_internal.php",
-          type: "POST",
-          dataType: "json",
-          data: {
-            doctor_name: doctor_name,
-            doctor_code: doctor_bpjs,
-            id_doctor_internal: id_doctor
-          },
-          success: function(res) {
-            if (res.success) {
-              $("#modalDokterInternal").modal("hide");
-              Swal.fire({
-                icon: "success",
-                title: "Berhasil",
-                text: res.message,
-                timer: 1500,
-                showConfirmButton: false
-              }).then(() => {
-                APP.loadDokterInternal();
-              });
-            } else {
-              Swal.fire(
-                "Gagal",
-                res.message,
-                "error"
-              );
-            }
-          },
-          error: function() {
-            Swal.fire(
-              "Error",
-              "Terjadi kesalahan server.",
-              "error"
-            );
-          },
-          complete: function() {
-            btn.prop("disabled", false);
-            btn.html(text);
-          }
-        });
-      });
-
-      $('button[data-bs-target="#nav-dokterinternal"]').on('click', function() {
-        APP.loadDokterInternal();
-      });
-
-      APP.loadDokterInternal = function() {
-        $("#listDokterInternal").html(`
-        <tr>
-            <td colspan="5" class="text-center py-5 text-muted">
-                <i class="fas fa-spinner fa-spin fa-2x mb-2 d-block"></i>
-                Memuat data...
-            </td>
-        </tr>
-    `);
-        $.ajax({
-          url: "module/admin/get_dokter_internal.php",
-          type: "POST",
-          dataType: "json",
-          success: function(res) {
-            let html = "";
-            if (res.success && res.data.length > 0) {
-              $.each(res.data, function(i, row) {
-                html += `
-                    <tr>
-                        <td>
-                            ${row.doctor_name}
-                        </td>
-                        <td class="text-center">
-                            ${row.nmDokter ?? '-'}
-                        </td>
-                        <td class="text-center">
-                            ${row.nmPoli ?? '-'}
-                        </td>
-                        <td class="text-center">
-                            <button class="btn btn-warning btn-sm edit-dokter-internal"
-                                data-id="${row.id_doctor}">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-danger btn-sm hapus-dokter-internal"
-                                data-id="${row.id_doctor}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    `;
-              });
-            } else {
-              html = `
-                <tr>
-                    <td colspan="5" class="text-center py-5 text-muted">
-                        <i class="fas fa-folder-open fa-2x mb-2 d-block"></i>
-                        Data dokter internal belum tersedia.
-                    </td>
-                </tr>
-                `;
-            }
-            $("#listDokterInternal").html(html);
-          },
-          error: function() {
-            $("#listDokterInternal").html(`
-                <tr>
-                    <td colspan="5" class="text-center text-danger">
-                        Gagal mengambil data.
-                    </td>
-                </tr>
-            `);
-          }
-        });
-      };
-
-      $(document).on("click", ".edit-dokter-internal", function() {
-        let id = $(this).data("id");
-        Swal.fire({
-          title: "Memuat...",
-          text: "Mohon tunggu",
-          allowOutsideClick: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
-        });
-        $.ajax({
-          url: "module/admin/getDokterInternal.php",
-          type: "POST",
-          dataType: "json",
-          data: {
-            id: id
-          },
-          success: function(res) {
-            Swal.close();
-            if (res.success) {
-              $("#formDokterInternal")[0].reset();
-              $("#modalDokterInternal .modal-title").text("Edit Dokter Internal");
-              $("#id_doctor_internal").val(res.data.id_doctor);
-              $("#doctor_name_internal").val(res.data.doctor_name);
-              APP.loadDokterBPJS("#doctor_bpjs_internal", res.data.doctor_bpjs);
-              $("#modalDokterInternal").modal("show");
-            } else {
-              Swal.fire(
-                "Gagal",
-                res.message,
-                "error"
-              );
-            }
-          },
-          error: function() {
-            Swal.fire(
-              "Error",
-              "Terjadi kesalahan server.",
-              "error"
-            );
-          }
-        });
-      });
-
-      APP.loadDokterBPJS = function(target, selected = "") {
-        $.ajax({
-          url: "module/admin/get_dokter_bpjs.php",
-          type: "POST",
-          dataType: "json",
-          success: function(res) {
-            let html = '<option value="">- Pilih Dokter -</option>';
-            $.each(res.data, function(i, row) {
-              html += `<option value="${row.kdDokter}">${row.nmDokter}</option>`;
-            });
-            $(target).html(html);
-            if (selected !== "") {
-              $(target).val(selected).trigger("change");
-            }
-          },
-          error: function() {
-            $(target).html('<option value="">Gagal memuat data</option>');
-          }
-        });
-      };
-
-      $("#btnTambahDokterInternal").click(function() {
-        $("#formDokterInternal")[0].reset();
-        $("#id_doctor_internal").val("");
-        $("#modalDokterInternal .modal-title").text("Tambah Dokter Internal");
-        APP.loadDokterBPJS("#doctor_bpjs_internal");
-        $("#modalDokterInternal").modal("show");
-      });
-
-      $(document).on("click", ".hapus-dokter-internal", function() {
-        let id = $(this).data("id");
-        Swal.fire({
-          title: "Hapus Dokter?",
-          text: "Data dokter internal beserta jadwalnya akan dihapus.",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonText: "Ya, Hapus",
-          cancelButtonText: "Batal"
-        }).then((result) => {
-          if (!result.isConfirmed) return;
-          Swal.fire({
-            title: "Menghapus...",
-            text: "Mohon tunggu",
-            allowOutsideClick: false,
-            didOpen: () => {
-              Swal.showLoading();
-            }
-          });
-          $.ajax({
-            url: "module/admin/hapus_dokter_internal.php",
-            type: "POST",
-            dataType: "json",
-            data: {
-              id_doctor: id
-            },
-            success: function(res) {
-              if (res.success) {
-                Swal.fire({
-                  icon: "success",
-                  title: "Berhasil",
-                  text: res.message,
-                  timer: 1500,
-                  showConfirmButton: false
-                }).then(() => {
-                  APP.loadDokterInternal();
-                });
-              } else {
-                Swal.fire(
-                  "Gagal",
-                  res.message,
-                  "error"
-                );
-              }
-            },
-            error: function() {
-              Swal.fire(
-                "Error",
-                "Terjadi kesalahan server.",
-                "error"
-              );
-            }
-          });
-        });
-      });
-    </script>
-
-    <script>
-      $(document).on("click", ".btn-jadwal", function() {
-        let kode = $(this).data("kode");
-        let nama = $(this).data("nama");
-        $("#namaDokterJadwal").text(nama);
-        $("#btnSinkronJadwal").data("kode", kode);
-        $("#modalJadwalDokter").modal("show");
-        $("#doctorCodeJadwal").val(kode);
-        APP.loadJadwalDokter(kode);
-      });
-
-      APP.loadJadwalDokter = function(kodeDokter) {
-        $("#listJadwalDokter").html(`
-        <tr>
-            <td colspan="7" class="text-center py-5 text-muted">
-                <i class="fas fa-spinner fa-spin fa-2x mb-2 d-block"></i>
-                Memuat jadwal...
-            </td>
-        </tr>
-    `);
-        $.ajax({
-          url: "module/admin/get_jadwal_dokter.php",
-          type: "POST",
-          dataType: "json",
-          data: {
-            doctor_code: kodeDokter
-          },
-          success: function(res) {
-            let html = "";
-            $("#totalJadwal").text(res.data ? res.data.length : 0);
-            if (res.success && res.data.length > 0) {
-              $.each(res.data, function(i, row) {
-                html += `
-                    <tr>
-                        <td>
-                            ${row.nmHari}
-                        </td>
-                        <td>
-                            ${row.nmPoli}
-                        </td>
-                        <td class="text-center">
-                            ${row.jamMulai}
-                        </td>
-                        <td class="text-center">
-                            ${row.jamSelesai}
-                        </td>
-                        <td class="text-center">
-                            <input 
-                                type="number"
-                                class="form-control form-control-sm kuota-input text-center"
-                                data-id="${row.id}"
-                                data-old="${row.kuota}"
-                                value="${row.kuota}"
-                                min="0"
-                                style="width:80px;margin:auto">
-                        </td>
-                        <td class="text-center">
-                            <div class="form-check form-switch d-flex justify-content-center">
-                                <input 
-                                    class="form-check-input"
-                                    type="checkbox"
-                                    ${row.status == 1 ? "checked" : ""}
-                                    onchange="toggleStatus(${row.id},this)">
-                            </div>
-                        </td>
-                        <td class="text-center">
-                            <button 
-                                class="btn btn-danger btn-sm hapus-jadwal"
-                                data-id="${row.id}"
-                                title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    `;
-              });
-            } else {
-              html = `
-                <tr>
-                    <td colspan="7" class="text-center py-5 text-muted">
-                        <i class="fas fa-calendar-times fa-3x mb-3 d-block"></i>
-                        <strong>Tidak ada jadwal dokter.</strong>
-                        <br>
-                        <small>
-                            Silakan klik tombol 
-                            <b>Tambah Jadwal</b>
-                            untuk membuat jadwal.
-                        </small>
-                    </td>
-                </tr>
-                `;
-            }
-            $("#listJadwalDokter").html(html);
-          },
-          error: function() {
-            $("#listJadwalDokter").html(`
-                <tr>
-                    <td colspan="7" class="text-center text-danger py-5">
-                        <i class="fas fa-exclamation-circle fa-2x mb-2 d-block"></i>
-                        Gagal mengambil data jadwal.
-                    </td>
-                </tr>
-            `);
-          }
-        });
+          $('#jdBody').html(rows.map(r => `<tr class="${r.status == 1 ? '' : 'off'}">
+            <td><span class="jd-day">${esc(hari(r.hari))}</span></td>
+            <td>${esc(r.nmPoli || r.kdPoli || '-')}</td>
+            <td class="text-center fw-semibold">${esc(String(r.mulai || '').slice(0, 5))} – ${esc(String(r.selesai || '').slice(0, 5))}</td>
+            <td class="text-center"><input type="number" class="form-control form-control-sm text-center jd-kuota" min="0" max="9999" data-id="${r.id}" data-old="${r.kuota}" value="${r.kuota}"></td>
+            <td class="text-center keep"><div class="form-check form-switch d-inline-block m-0"><input class="form-check-input jd-status" type="checkbox" data-id="${r.id}" ${r.status == 1 ? 'checked' : ''}></div></td>
+            <td class="text-end keep"><div class="bs-act">
+              <button class="btn btn-light text-primary jd-edit" data-id="${r.id}" title="Edit"><i class="fas fa-pen"></i></button>
+              <button class="btn btn-light text-danger jd-hapus" data-id="${r.id}" title="Hapus"><i class="fas fa-trash"></i></button>
+            </div></td>
+          </tr>`).join(''));
+        }, m => $('#jdBody').html(`<tr><td colspan="6" class="bs-empty text-danger"><i class="fas fa-exclamation-circle"></i>${esc(m)}</td></tr>`));
       }
 
-      $(document).on("click", "#btnTambahJadwal", function() {
-        $("#formJadwal")[0].reset();
-        $("#schedule_id").val("");
-        $("#doctor_code_schedule").val($("#doctorCodeJadwal").val());
-        $("#kuota").val(30);
-        APP.loadMasterPoli("#id_poli");
-        $("#modalTambahJadwal").modal("show");
+      $('#dkBody').on('click', '.btn-jadwal', function() {
+        JD = DOKTER.find(x => x.kdDokter === this.dataset.kode);
+        if (!JD) return;
+        $('#jdNama').text(JD.nmDokter);
+        $('#jdKode').text('Kode ' + JD.kdDokter);
+        $('#jdForm').addClass('d-none');
+        $('#jdInfo').text('');
+        modal('mdJadwal').show();
+        muatJadwal();
       });
-      APP.loadMasterPoli = function(target) {
-        $(target).html('<option>Memuat...</option>');
-        $.ajax({
-          url: "module/admin/get_master_poli.php",
-          type: "POST",
-          dataType: "json",
-          success: function(res) {
-            let html = '<option value="">- Pilih Poliklinik -</option>';
-            if (res.success) {
-              $.each(res.data, function(i, row) {
-                if (row.poliSakit == '1') {
-                  html += `<option value="${row.kdPoli}">${row.nmPoli}</option>`;
-                }
-              });
-            }
-            $(target).html(html);
-          },
-          error: function() {
-            $(target).html('<option value="">Gagal memuat data</option>');
-          }
-        });
-      }
+      $('#mdJadwal').on('hidden.bs.modal', () => muatDokter());
 
-      $(document).on("click", "#btnSimpanJadwal", function() {
-        let btn = $(this);
-        let data = {
-          schedule_id: $("#schedule_id").val(),
-          doctor_code: $("#doctor_code_schedule").val(),
-          day_of_week: $("#day_of_week").val(),
-          id_poli: $("#id_poli").val(),
-          start_time: $("#start_time").val(),
-          end_time: $("#end_time").val(),
-          kuota: $("#kuota").val()
+      function bukaFormJadwal(r) {
+        muatPoli().then(() => {
+          $('#jd_id').val(r ? r.id : '');
+          $('#jd_hari').val(r ? hari(r.hari) : '');
+          $('#jd_poli').val(r ? r.kdPoli : (POLI.length === 1 ? POLI[0].kdPoli : ''));
+          $('#jd_mulai').val(r ? String(r.mulai).slice(0, 5) : '');
+          $('#jd_selesai').val(r ? String(r.selesai).slice(0, 5) : '');
+          $('#jd_kuota').val(r ? r.kuota : 30);
+          $('#btnJdSimpan').html(`<i class="fas fa-save me-1"></i>${r ? 'Perbarui' : 'Simpan'}`);
+          $('#jdForm').removeClass('d-none').find('.is-invalid').removeClass('is-invalid');
+          $('#jd_hari').trigger('focus');
+        }, gagal);
+      }
+      $('#btnJdTambah').on('click', () => bukaFormJadwal(null));
+      $('#btnJdBatal').on('click', () => $('#jdForm').addClass('d-none'));
+      $('#jdBody').on('click', '.jd-edit', function() {
+        bukaFormJadwal(JD.rows.find(r => String(r.id) === String(this.dataset.id)));
+      });
+
+      $('#jdForm').on('submit', function(e) {
+        e.preventDefault();
+        const d = {
+          id: $('#jd_id').val(),
+          kode: JD.kdDokter,
+          hari: $('#jd_hari').val(),
+          poli: $('#jd_poli').val(),
+          mulai: $('#jd_mulai').val(),
+          selesai: $('#jd_selesai').val(),
+          kuota: $('#jd_kuota').val()
         };
-        if (data.day_of_week == "") {
-          Swal.fire("Perhatian", "Pilih hari.", "warning");
-          return;
+        const wajib = [
+          ['#jd_hari', d.hari],
+          ['#jd_poli', d.poli],
+          ['#jd_mulai', d.mulai],
+          ['#jd_selesai', d.selesai],
+          ['#jd_kuota', d.kuota]
+        ];
+        for (const [sel, v] of wajib) {
+          if (!v) return $(sel).addClass('is-invalid').trigger('focus');
         }
-        if (data.id_poli == "") {
-          Swal.fire("Perhatian", "Pilih poliklinik.", "warning");
-          return;
+        if (d.mulai >= d.selesai) {
+          $('#jd_selesai').addClass('is-invalid');
+          return Swal.fire('Periksa jam', 'Jam selesai harus lebih besar dari jam mulai.', 'warning');
         }
-        if (data.start_time == "") {
-          Swal.fire("Perhatian", "Jam mulai belum diisi.", "warning");
-          return;
-        }
-        if (data.end_time == "") {
-          Swal.fire("Perhatian", "Jam selesai belum diisi.", "warning");
-          return;
-        }
-        btn.prop("disabled", true);
-        btn.html('<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...');
-        $.ajax({
-          url: "module/admin/simpan_jadwal.php",
-          type: "POST",
-          data: data,
-          dataType: "json",
-          success: function(res) {
-            if (res.success) {
-              $("#modalTambahJadwal").modal("hide");
-              Swal.fire({
-                icon: "success",
-                title: "Berhasil",
-                text: res.message,
-                timer: 1500,
-                showConfirmButton: false
-              });
-              APP.loadJadwalDokter(data.doctor_code);
-            } else {
-              Swal.fire("Gagal", res.message, "error");
-            }
-          },
-          error: function() {
-            Swal.fire("Error", "Terjadi kesalahan server.", "error");
-          },
-          complete: function() {
-            btn.prop("disabled", false);
-            btn.html('<i class="fas fa-save me-1"></i>Simpan');
-          }
-        });
+        const btn = $('#btnJdSimpan').prop('disabled', true);
+        api('simpan_jadwal', d)
+          .then(res => {
+            $('#jdForm').addClass('d-none');
+            sukses(res.message);
+            muatJadwal();
+          }, gagal)
+          .always(() => btn.prop('disabled', false));
+      });
+      $('#jdForm').on('input change', '.is-invalid', function() {
+        $(this).removeClass('is-invalid');
       });
 
-      $(document).on("blur", ".kuota-input", function() {
-        let input = $(this);
-        let id = input.data("id");
-        let kuota = input.val();
-        let old = input.data("old");
-        if (kuota == "" || kuota < 0) {
-          input.val(old);
-          Swal.fire("Perhatian", "Kuota tidak valid", "warning");
-          return;
+      $('#jdBody').on('change', '.jd-kuota', function() {
+        const i = $(this);
+        const v = i.val(),
+          old = String(i.data('old'));
+        if (v === old) return;
+        if (v === '' || !/^\d+$/.test(v) || +v > 9999) {
+          i.val(old);
+          return Swal.fire('Kuota tidak valid', 'Isi angka 0–9999.', 'warning');
         }
-        if (kuota == old) {
-          return;
-        }
-        input.prop("disabled", true);
-        input.css("background", "#fff3cd");
-        $.ajax({
-          url: "module/admin/updateKuotaJKN.php",
-          type: "POST",
-          dataType: "json",
-          data: {
-            id: id,
-            kuota: kuota
-          },
-          success: function(res) {
-            if (res.success) {
-              input.data("old", kuota);
-              input.css("background", "#d4edda");
-            } else {
-              input.val(old);
-              Swal.fire("Gagal", res.message, "error");
-            }
-          },
-          error: function() {
-            input.val(old);
-            Swal.fire("Error", "Gagal mengupdate kuota", "error");
-          },
-          complete: function() {
-            input.prop("disabled", false);
-            setTimeout(function() {
-              input.css("background", "");
-            }, 800);
-          }
-        });
+        i.prop('disabled', true).addClass('saving');
+        api('kuota', {
+            id: i.data('id'),
+            kuota: v
+          })
+          .then(() => {
+            i.data('old', v).removeClass('saving').addClass('saved');
+            const r = JD.rows.find(x => String(x.id) === String(i.data('id')));
+            if (r) r.kuota = +v;
+            setTimeout(() => i.removeClass('saved'), 900);
+          }, m => {
+            i.val(old).removeClass('saving');
+            gagal(m);
+          })
+          .always(() => i.prop('disabled', false));
       });
 
-      function toggleStatus(id, el) {
-        let status = el.checked ? 1 : 0;
-        let text = status == 1 ? "mengaktifkan" : "menonaktifkan";
-        let oldStatus = !el.checked;
+      $('#jdBody').on('change', '.jd-status', function() {
+        const el = this,
+          s = el.checked ? 1 : 0;
+        el.disabled = true;
+        api('status_jadwal', {
+            id: el.dataset.id,
+            status: s
+          })
+          .then(() => {
+            const r = JD.rows.find(x => String(x.id) === String(el.dataset.id));
+            if (r) r.status = String(s);
+            $(el).closest('tr').toggleClass('off', !s);
+          }, m => {
+            el.checked = !el.checked;
+            gagal(m);
+          })
+          .always(() => el.disabled = false);
+      });
 
+      $('#jdBody').on('click', '.jd-hapus', function() {
+        const r = JD.rows.find(x => String(x.id) === String(this.dataset.id));
         Swal.fire({
-          title: "Konfirmasi",
-          text: "Yakin ingin " + text + " jadwal ini?",
-          icon: "warning",
+          icon: 'warning',
+          title: 'Hapus jadwal?',
+          html: r ? `<b>${esc(hari(r.hari))}</b>, ${esc(String(r.mulai).slice(0, 5))}–${esc(String(r.selesai).slice(0, 5))} (${esc(r.nmPoli || '')})<br><small class="text-muted">Bila hanya libur sementara, cukup nonaktifkan.</small>` : '',
           showCancelButton: true,
-          confirmButtonText: "Ya",
-          cancelButtonText: "Batal"
-        }).then((result) => {
-          if (result.isConfirmed) {
-            el.disabled = true;
-            $.ajax({
-              url: "module/admin/updateStatusJadwal.php",
-              type: "POST",
-              dataType: "json",
-              data: {
-                id: id,
-                status: status
-              },
-              success: function(res) {
-                if (res.success) {
-                  Swal.fire({
-                    icon: "success",
-                    title: "Berhasil",
-                    text: res.message,
-                    timer: 1200,
-                    showConfirmButton: false
-                  });
-                } else {
-                  el.checked = oldStatus;
-                  Swal.fire("Gagal", res.message, "error");
-                }
-              },
-              error: function() {
-                el.checked = oldStatus;
-                Swal.fire("Error", "Terjadi kesalahan server", "error");
-              },
-              complete: function() {
-                el.disabled = false;
-              }
-            });
-          } else {
-            el.checked = oldStatus;
-          }
+          confirmButtonColor: '#fa5a5a',
+          confirmButtonText: 'Hapus',
+          cancelButtonText: 'Batal'
+        }).then(x => {
+          if (!x.isConfirmed) return;
+          api('hapus_jadwal', {
+            id: this.dataset.id
+          }).then(res => {
+            sukses(res.message);
+            muatJadwal();
+          }, gagal);
         });
+      });
+
+      // ================= DOKTER INTERNAL =================
+      function masalahInternal(r) {
+        if (!r.doctor_code) return ['b-err', 'fa-unlink', 'Belum dipetakan'];
+        if (!r.nmDokter) return ['b-err', 'fa-exclamation-circle', `Kode ${r.doctor_code} tidak ada di data BPJS`];
+        if (r.bpjs_status != 1) return ['b-warn', 'fa-exclamation-triangle', 'Dokter BPJS nonaktif'];
+        if (!namaSama(r.doctor_name, r.nmDokter)) return ['b-warn', 'fa-exclamation-triangle', 'Nama berbeda, pastikan orang yang sama'];
+        return null;
       }
 
-      $(document).on("click", ".hapus-jadwal", function() {
-        let id = $(this).data("id");
-        Swal.fire({
-          title: "Hapus Jadwal?",
-          text: "Data jadwal yang dihapus tidak dapat dikembalikan.",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonText: "Ya, Hapus",
-          cancelButtonText: "Batal"
-        }).then((result) => {
-          if (result.isConfirmed) {
-            Swal.fire({
-              title: "Menghapus...",
-              text: "Mohon tunggu",
-              allowOutsideClick: false,
-              didOpen: () => {
-                Swal.showLoading();
-              }
-            });
-            $.ajax({
-              url: "module/admin/hapusJadwal.php",
-              type: "POST",
-              dataType: "json",
-              data: {
-                id: id
-              },
-              success: function(res) {
-                if (res.success) {
-                  Swal.fire({
-                    icon: "success",
-                    title: "Berhasil",
-                    text: res.message,
-                    timer: 1500,
-                    showConfirmButton: false
-                  });
-                  APP.loadJadwalDokter($("#doctorCodeJadwal").val());
-                } else {
-                  Swal.fire(
-                    "Gagal",
-                    res.message,
-                    "error"
-                  );
-                }
-              },
-              error: function() {
-                Swal.fire(
-                  "Error",
-                  "Terjadi kesalahan pada server.",
-                  "error"
-                );
-              }
-            });
-          }
+      function renderInternal() {
+        const q = $('#inSearch').val().trim().toLowerCase();
+        const rows = INTERNAL.filter(r => {
+          if (fIn === 'masalah' && !masalahInternal(r)) return false;
+          return !q || ((r.doctor_name || '') + ' ' + (r.nmDokter || '') + ' ' + (r.doctor_code || '')).toLowerCase().includes(q);
         });
-      });
-    </script>
-
-    <script>
-      $(document).ready(function() {
-        const apiUrl = 'module/admin/getDataIcare';
-        const $tableBody = $('#dokterTableBody');
-        const $btnSync = $('#btnTambah');
-
-        function loadDataDokter() {
-          $tableBody.html('<tr><td colspan="4" class="text-center">Memuat data dari server... <i class="fas fa-spinner fa-spin"></i></td></tr>');
-          $.ajax({
-            url: apiUrl,
-            type: 'GET',
-            dataType: 'json',
-            success: function(response) {
-              $tableBody.empty();
-              if (response.success && response.data && response.data.length > 0) {
-                let rows = '';
-                $.each(response.data, function(index, dokter) {
-                  const statusBadge = (dokter.status === "1" || dokter.status === 1) ?
-                    '<span class="badge bg-success">Aktif</span>' :
-                    '<span class="badge bg-danger">Nonaktif</span>';
-                  rows += `
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div>
-                                            <h6 class="mb-0">${dokter.nmDokter}</h6>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="text-center">${dokter.icare_username ?? 'Belum Diisi'}</td>
-                                <td class="text-center">${dokter.icare_password ?? 'Belum Diisi'}</td>
-                                <td class="text-center">
-                                <button 
-                                    type="button"
-                                    class="btn btn-sm btn-warning text-white me-1 btn-edit-dokter"
-                                    title="Edit"
-                                    data-id="${dokter.id}" data-username="${dokter.icare_username}" data-password="${dokter.icare_password}">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                            </td>
-                            </tr>
-                        `;
-                });
-                $tableBody.append(rows);
-              } else {
-                $tableBody.html('<tr><td colspan="4" class="text-center text-muted">Data dokter belum tersedia.</td></tr>');
-              }
-            },
-            error: function(xhr, status, error) {
-              console.error('Terjadi kesalahan Ajax:', error);
-              $tableBody.html('<tr><td colspan="4" class="text-center text-danger"><i class="fas fa-exclamation-triangle"></i> Gagal mengambil data dari server.</td></tr>');
-            }
-          });
+        if (!rows.length) {
+          $('#inBody').html(`<tr><td colspan="4" class="bs-empty"><i class="fas fa-user-md"></i>${INTERNAL.length ? 'Tidak ada data yang cocok.' : 'Belum ada dokter internal.'}</td></tr>`);
+          return;
         }
-        loadDataDokter();
-        $btnSync.on('click', function(e) {
-          e.preventDefault();
-          loadDataDokter();
+        $('#inBody').html(rows.map(r => {
+          const m = masalahInternal(r);
+          return `<tr class="${r.doctor_status == 1 ? '' : 'off'}">
+            <td><div class="d-flex align-items-center gap-2">
+              <span class="bs-ava b-info">${esc(inisial(r.doctor_name))}</span>
+              <div class="min-w-0"><div class="bs-name">${esc(r.doctor_name || '-')}</div>
+              <div class="bs-sub">${r.doctor_status == 1 ? 'Aktif' : 'Nonaktif di Master Dokter'}</div></div>
+            </div></td>
+            <td>${r.nmDokter ? `<div class="fw-semibold">${esc(r.nmDokter)}</div><div class="bs-sub">Kode ${esc(r.doctor_code)}</div>` : ''}
+              ${m ? `<span class="bs-badge ${m[0]} mt-1"><i class="fas ${m[1]}"></i>${esc(m[2])}</span>` : ''}</td>
+            <td>${r.nmPoli ? `<span class="bs-badge b-mute">${esc(r.nmPoli)}</span>` : '<span class="bs-sub">-</span>'}</td>
+            <td class="text-end keep"><div class="bs-act">
+              <button class="btn btn-light text-primary in-edit" data-id="${r.id_doctor}" title="Edit"><i class="fas fa-pen"></i></button>
+              <button class="btn btn-light text-danger in-hapus" data-id="${r.id_doctor}" title="Hapus"><i class="fas fa-trash"></i></button>
+            </div></td>
+          </tr>`;
+        }).join(''));
+      }
+
+      function muatInternal() {
+        return api('internal', null, 'GET').then(res => {
+          INTERNAL = res.data || [];
+          const aktif = INTERNAL.filter(r => r.doctor_status == 1);
+          const ok = aktif.filter(r => !masalahInternal(r)).length;
+          const cek = INTERNAL.filter(masalahInternal).length;
+          $('#nInternal').text(INTERNAL.length);
+          $('#stMap').text(`${ok} / ${aktif.length}`);
+          $('#stMapSub').html(cek ? `<span class="text-warning fw-semibold">${cek} pemetaan perlu dicek</span>` : 'Semua dokter internal terpetakan');
+          $('#inChips [data-f="masalah"]').html(`Perlu dicek${cek ? ` <span class="badge bg-warning text-dark ms-1">${cek}</span>` : ''}`);
+          renderInternal();
+        }, m => $('#inBody').html(`<tr><td colspan="4" class="bs-empty text-danger"><i class="fas fa-exclamation-circle"></i>${esc(m)}</td></tr>`));
+      }
+
+      let t2;
+      $('#inSearch').on('input', () => {
+        clearTimeout(t2);
+        t2 = setTimeout(renderInternal, 150);
+      });
+      $('#inChips').on('click', '.btn', function() {
+        fIn = this.dataset.f;
+        $('#inChips .btn').removeClass('btn-primary').addClass('btn-light');
+        $(this).removeClass('btn-light').addClass('btn-primary');
+        renderInternal();
+      });
+
+      function cekNamaInternal() {
+        const kd = $('#in_kode').val();
+        const d = DOKTER.find(x => x.kdDokter === kd);
+        const nama = $('#in_nama').val().trim();
+        const beda = d && nama && !namaSama(nama, d.nmDokter);
+        $('#inWarn').toggleClass('d-none', !beda).html(beda ? `<i class="fas fa-exclamation-triangle me-1"></i>Nama berbeda dengan dokter BPJS <b>${esc(d.nmDokter)}</b>. Pastikan ini orang yang sama, karena kode dokter ini yang dikirim ke PCare.` : '');
+      }
+
+      function bukaInternal(r) {
+        const kodeSendiri = r ? r.doctor_code : null;
+        const dipakai = {};
+        INTERNAL.forEach(x => {
+          if (x.doctor_code && (!r || x.id_doctor !== r.id_doctor)) dipakai[x.doctor_code] = x.doctor_name;
         });
+        const aktif = DOKTER.filter(d => d.status == 1 || d.kdDokter === kodeSendiri)
+          .sort((a, b) => (isDokter(b.nmDokter) - isDokter(a.nmDokter)) || a.nmDokter.localeCompare(b.nmDokter));
+        $('#in_kode').html('<option value="">Pilih dokter BPJS</option>' + aktif.map(d => {
+          const lock = dipakai[d.kdDokter] && d.kdDokter !== kodeSendiri;
+          return `<option value="${esc(d.kdDokter)}" ${lock ? 'disabled' : ''}>${esc(d.nmDokter)} · ${esc(d.kdDokter)}${lock ? ' (sudah: ' + esc(dipakai[d.kdDokter]) + ')' : ''}</option>`;
+        }).join(''));
+        $('#in_id').val(r ? r.id_doctor : '');
+        $('#in_nama').val(r ? r.doctor_name : '').removeClass('is-invalid');
+        $('#in_kode').val(kodeSendiri || '').removeClass('is-invalid');
+        $('#inTitle').text(r ? 'Edit Pemetaan Dokter' : 'Tambah Dokter Internal');
+        cekNamaInternal();
+        modal('mdInternal').show();
+      }
+      $('#in_nama, #in_kode').on('input change', function() {
+        $(this).removeClass('is-invalid');
+        cekNamaInternal();
+      });
 
-        $(document).on('click', '.btn-edit-dokter', function() {
-          const id = $(this).data('id');
-          const username = $(this).data('username');
-          const password = $(this).data('password');
-          $('#editId').val(id);
-          $('#editUsername').val(username);
-          $('#editPassword').val(password);
-          $('#modalEditDokter').modal('show');
-        });
+      $('#btnTambahInternal').on('click', () => {
+        if (!DOKTER.length) return Swal.fire('Data dokter BPJS kosong', 'Sinkron dokter dari PCare terlebih dahulu di tab Dokter BPJS.', 'info');
+        bukaInternal(null);
+      });
+      $('#inBody').on('click', '.in-edit', function() {
+        bukaInternal(INTERNAL.find(x => String(x.id_doctor) === String(this.dataset.id)));
+      });
 
-        $('#formEditDokter').on('submit', function(e) {
-          e.preventDefault();
-          const id = $('#editId').val();
-          const username = $('#editUsername').val();
-          const password = $('#editPassword').val();
-          $.ajax({
-            url: 'module/admin/updateDataIcare',
-            type: 'POST',
-            dataType: 'json',
-            data: {
-              id: id,
-              username: username,
-              password: password
-            },
-            beforeSend: function() {
-              $('#formEditDokter button[type="submit"]')
-                .prop('disabled', true)
-                .html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
-            },
-            success: function(response) {
-              if (response.success) {
-                $('#modalEditDokter').modal('hide');
-                Swal.fire({
-                  icon: 'success',
-                  title: 'Berhasil!',
-                  text: response.message || 'Data iCare berhasil disimpan.',
-                  timer: 1500,
-                  showConfirmButton: false
-                });
-                loadDataDokter();
-              } else {
-                Swal.fire({
-                  icon: 'error',
-                  title: 'Gagal!',
-                  text: response.message || 'Data gagal disimpan.'
-                });
-              }
-            },
-            error: function(xhr, status, error) {
-              console.error('Error AJAX:', error);
-              console.error('Response:', xhr.responseText);
-              Swal.fire({
-                icon: 'error',
-                title: 'Terjadi Kesalahan!',
-                text: 'Tidak dapat menyimpan data ke server.'
-              });
-            },
-            complete: function() {
-              $('#formEditDokter button[type="submit"]')
-                .prop('disabled', false)
-                .html('<i class="fas fa-save me-1"></i> Simpan');
+      $('#inForm').on('submit', function(e) {
+        e.preventDefault();
+        const nama = $('#in_nama').val().trim(),
+          kode = $('#in_kode').val();
+        if (!nama) return $('#in_nama').addClass('is-invalid').trigger('focus');
+        if (!kode) return $('#in_kode').addClass('is-invalid').trigger('focus');
+        const btn = $('#btnInSimpan').prop('disabled', true);
+        api('simpan_internal', {
+            id: $('#in_id').val(),
+            nama,
+            kode
+          })
+          .then(res => {
+            modal('mdInternal').hide();
+            sukses(res.message);
+            muatInternal();
+            muatDokter();
+          }, gagal)
+          .always(() => btn.prop('disabled', false));
+      });
 
-            }
-          });
+      $('#inBody').on('click', '.in-hapus', function() {
+        const r = INTERNAL.find(x => String(x.id_doctor) === String(this.dataset.id));
+        Swal.fire({
+          icon: 'warning',
+          title: 'Hapus dokter internal?',
+          html: `<b>${esc(r ? r.doctor_name : '')}</b> akan dihapus dari master dokter.<br><small class="text-muted">Dokter yang sudah punya riwayat kunjungan tidak bisa dihapus. Nonaktifkan lewat menu Master Dokter.</small>`,
+          showCancelButton: true,
+          confirmButtonColor: '#fa5a5a',
+          confirmButtonText: 'Hapus',
+          cancelButtonText: 'Batal'
+        }).then(x => {
+          if (!x.isConfirmed) return;
+          api('hapus_internal', {
+            id: this.dataset.id
+          }).then(res => {
+            sukses(res.message);
+            muatInternal();
+            muatDokter();
+          }, gagal);
         });
       });
-    </script>
+
+      // ================= INIT =================
+      muatStatus();
+      muatDokter().always(() => muatInternal());
+    })();
+  </script>
 </body>
 
 </html>
