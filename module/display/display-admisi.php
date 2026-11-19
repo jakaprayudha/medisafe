@@ -1,3 +1,8 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+  session_start();
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 
@@ -330,21 +335,8 @@
         </div>
       </div>
       <?php
-      $admisiVideoDir = dirname(__DIR__, 2) . '/video';
-      $admisiVideoUrl = '../../video/';
-      $admisiVideoFiles = [];
-      if (is_dir($admisiVideoDir) && is_readable($admisiVideoDir)) {
-        foreach (scandir($admisiVideoDir) ?: [] as $file) {
-          $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-          if (is_file($admisiVideoDir . '/' . $file) && in_array($extension, ['mp4'], true)) {
-            $admisiVideoFiles[] = $file;
-          }
-        }
-      }
-      natcasesort($admisiVideoFiles);
-      $admisiVideoPlaylist = array_map(function ($file) use ($admisiVideoUrl) {
-        return $admisiVideoUrl . rawurlencode($file);
-      }, array_values($admisiVideoFiles));
+      require_once dirname(__DIR__, 2) . '/controller/display/videoDisplay.php';
+      $admisiVideoPlaylist = vdPlaylist((int) ($_SESSION['id_customer'] ?? 0), '../../')['urls'];
       ?>
       <div class="admisi-video-panel">
         <video id="admisiVideo" autoplay playsinline preload="auto"></video>
@@ -603,7 +595,7 @@
   </script>
   <script>
     (function() {
-      const playlist = <?= json_encode($admisiVideoPlaylist, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE) ?>;
+      let playlist = <?= json_encode($admisiVideoPlaylist, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE) ?>;
       const video = document.getElementById('admisiVideo');
       const message = document.getElementById('admisiVideoMessage');
       const startButton = document.getElementById('admisiVideoStart');
@@ -640,8 +632,42 @@
         message.hidden = true;
         startButton.hidden = true;
       });
-      video.addEventListener('ended', function() {
-        index = (index + 1) % playlist.length;
+      // Segarkan daftar putar dari server (video baru / dihapus / urutan diubah) tanpa reload layar.
+      const PLAYLIST_API = '../../controller/display/videoPlaylist.php';
+      async function segarkanPlaylist() {
+        try {
+          const r = await fetch(PLAYLIST_API, {
+            cache: 'no-store',
+            credentials: 'same-origin'
+          });
+          const j = await r.json();
+          if (j.status !== 'success' || !Array.isArray(j.urls)) return false;
+          const berubah = JSON.stringify(j.urls) !== JSON.stringify(playlist);
+          playlist = j.urls;
+          return berubah;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      video.addEventListener('ended', async function() {
+        const sekarang = playlist[index];
+        index = index + 1;
+        if (index >= playlist.length) {
+          index = 0;
+          await segarkanPlaylist();
+        } else if (await segarkanPlaylist()) {
+          // lanjut ke video sesudah video yang barusan diputar pada urutan baru
+          const i = playlist.indexOf(sekarang);
+          index = i >= 0 ? i + 1 : 0;
+          if (index >= playlist.length) index = 0;
+        }
+        if (!playlist.length) {
+          video.removeAttribute('src');
+          video.load();
+          showMessage('Belum ada video di folder video.');
+          return;
+        }
         loadVideo();
       });
       video.addEventListener('error', function() {
@@ -658,6 +684,17 @@
 
       if (playlist.length) loadVideo();
       else showMessage('Belum ada video di folder video.');
+
+      // saat kosong, cek tiap 60 detik apakah sudah ada video baru
+      setInterval(async function() {
+        if (playlist.length) return;
+        await segarkanPlaylist();
+        if (playlist.length) {
+          index = 0;
+          failures = 0;
+          loadVideo();
+        }
+      }, 60000);
     })();
   </script>
 

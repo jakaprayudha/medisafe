@@ -3,7 +3,8 @@ $title = 'Display';
 require '../../controller/view.php';
 
 $root = dirname(__DIR__, 2);
-$videoCount = count(glob($root . '/video/*.mp4') ?: []);
+require_once $root . '/controller/display/videoDisplay.php';
+$videoCount = count(vdPlaylist((int) ($_SESSION['id_customer'] ?? 0))['urls']);
 
 // status: siap | contoh (data belum terhubung) | hilang (file display tidak ada)
 $displays = [
