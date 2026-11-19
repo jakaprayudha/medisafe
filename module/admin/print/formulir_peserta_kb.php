@@ -159,7 +159,7 @@
 
       if (!no || !rm) return;
 
-      fetch("getcard.php?no=" + no + "&rm=" + rm)
+      fetch("getcard.php?no=" + encodeURIComponent(no) + "&rm=" + encodeURIComponent(rm))
          .then(r => r.json())
          .then(res => {
             if (res.status !== "success") return;

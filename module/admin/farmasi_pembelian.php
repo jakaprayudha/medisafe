@@ -131,7 +131,7 @@ $apiUrl = getenv('API_URL');
               "actions": `
                       <div class="text-center">
 								<div class="btn-group btn-group-sm" role="group">
-                	<a class="btn btn-primary" href="module/admin/farmasi_pembelian_details?no=${row.order_number}">
+                	<a class="btn btn-primary" href="module/admin/farmasi_pembelian_details?no=${encodeURIComponent(row.order_number)}">
 											<i class="fas fa-plus-circle"></i>
 									</a>
 									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_order_buy}">

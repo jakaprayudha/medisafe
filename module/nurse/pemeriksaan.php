@@ -200,7 +200,7 @@ $rme_type = $setting ? $setting['rme_type'] : 1; // default 1
               return {
                 actions: `
                   <div class="text-center">
-                    <a href="module/admin/${pemeriksaanFile}?no=${row.visit_ID}&rm=${row.nomor_rm}"
+                    <a href="module/admin/${pemeriksaanFile}?no=${encodeURIComponent(row.visit_ID)}&rm=${encodeURIComponent(row.nomor_rm)}"
                       class="btn btn-sm btn-primary"
                       title="Pemeriksaan">
                       <i class="ti ti-stethoscope"></i>

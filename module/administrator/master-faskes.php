@@ -252,7 +252,7 @@ require '../../controller/view.php';
               "actions": `
                       <div class="text-end">
 								<div class="btn-group btn-group-sm" role="group">
-                	<a class="btn btn-info" href="module/administrator/master-faskes-detail?no=${row.id}">
+                	<a class="btn btn-info" href="module/administrator/master-faskes-detail?no=${encodeURIComponent(row.id)}">
 											<i class="fas fa-info-circle"></i>
 									</a>
 									<a class="btn btn-primary user-btn" href="javascript:;" data-id="${row.id_customer}">

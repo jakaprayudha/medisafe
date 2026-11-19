@@ -105,7 +105,7 @@ $apiUrl = getenv('API_URL');
             return {
               "actions": `
                   <div class="text-center">
-                    <a href="module/admin/farmasi_order_luar_detail?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                    <a href="module/admin/farmasi_order_luar_detail?no=${encodeURIComponent(row.visit_ID)}&rm=${encodeURIComponent(row.nomor_rm)}">
                       <button class="btn btn-primary">Lihat Resep</button>
                     </a>
                   </div>

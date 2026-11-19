@@ -105,7 +105,7 @@ $data = mysqli_fetch_array($check);
                               <div class="d-flex justify-content-between align-items-center mb-3">
                                  <h4 class="mb-0">Form CPO</h4>
 
-                                 <a href="module/admin/print/formulir_cpo?no=<?= $no ?>&rm=<?= $rm ?>"
+                                 <a href="module/admin/print/formulir_cpo?no=<?= urlencode((string) ($no ?? '')) ?>&rm=<?= urlencode((string) ($rm ?? '')) ?>"
                                     target="_blank"
                                     class="btn btn-light">
                                     🖨 Cetak

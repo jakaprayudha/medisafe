@@ -3,34 +3,34 @@
    ?>
   <nav>
      <div class="nav nav-tabs" id="nav-tab" role="tablist">
-        <a href="module/admin/pemeriksaan_b?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=b">
+        <a href="module/admin/pemeriksaan_b?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>&rme=b">
            <button class="nav-link <?= ($current == 'pemeriksaan_b.php') ? 'active' : '' ?>">Pemeriksaan Medis</button>
         </a>
-        <a href="module/admin/permintaan_farmasi?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=b">
+        <a href="module/admin/permintaan_farmasi?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>&rme=b">
            <button class="nav-link <?= ($current == 'permintaan_farmasi.php') ? 'active' : '' ?>">Permintaan Farmasi</button>
         </a>
-        <a href="module/admin/resep?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=b">
+        <a href="module/admin/resep?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>&rme=b">
            <button class="nav-link <?= ($current == 'resep.php') ? 'active' : '' ?>">Resep Luar</button>
         </a>
-        <a href="module/admin/penunjang?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=b">
+        <a href="module/admin/penunjang?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>&rme=b">
            <button class="nav-link <?= ($current == 'penunjang.php') ? 'active' : '' ?>">Penunjang Medis</button>
         </a>
-        <a href="module/admin/vaksin?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=b">
+        <a href="module/admin/vaksin?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>&rme=b">
            <button class="nav-link <?= ($current == 'vaksin.php') ? 'active' : '' ?>">Vaksin</button>
         </a>
-        <a href="module/admin/billing?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=b">
+        <a href="module/admin/billing?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>&rme=b">
            <button class="nav-link <?= ($current == 'billing.php') ? 'active' : '' ?>">Biaya</button>
         </a>
-        <a href="module/admin/riwayat?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=b">
+        <a href="module/admin/riwayat?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>&rme=b">
            <button class="nav-link <?= ($current == 'riwayat.php') ? 'active' : '' ?>">Riwayat Pengobatan</button>
         </a>
-        <a href="module/admin/persalinan_anc?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=b">
+        <a href="module/admin/persalinan_anc?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>&rme=b">
            <button class="nav-link <?= ($current == 'persalinan_anc.php') ? 'active' : '' ?>">Persalinan (ANC)</button>
         </a>
-        <a href="module/admin/penanda_operasi?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=b">
+        <a href="module/admin/penanda_operasi?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>&rme=b">
            <button class="nav-link <?= ($current == 'penanda_operasi.php') ? 'active' : '' ?>">Penanda Operasi</button>
         </a>
-        <a href="module/admin/rawat_inap?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>&rme=b">
+        <a href="module/admin/rawat_inap?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>&rme=b">
            <button class="nav-link <?= ($current == 'rawat_inap.php') ? 'active' : '' ?>">Rawat Inap</button>
         </a>
      </div>

@@ -335,7 +335,7 @@
 </script>
 
 <script>
-   const apiUrl = 'controller/visit/permintaanFarmasi?no=<?= $_GET['no'] ?>';
+   const apiUrl = 'controller/visit/permintaanFarmasi?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>';
    const urlParams = new URLSearchParams(window.location.search);
    const rmeParam = urlParams.get('rme') || 'c'; // default kalau kosong
    const nomorm = urlParams.get('rm') || 'c'; // default kalau kosong
@@ -372,7 +372,7 @@
       <div class="btn-group btn-group-sm" role="group">
         
         <a class="btn btn-info" 
-          href="module/admin/permintaan_farmasi_details?no=${urlParams.get('no')}&rm=${nomorm}&rme=${rmeParam}&id=${row.id_permintaan_farmasi}${cycleQuery}" ${cycleTarget}>
+          href="module/admin/permintaan_farmasi_details?no=${encodeURIComponent(urlParams.get('no'))}&rm=${encodeURIComponent(nomorm)}&rme=${rmeParam}&id=${row.id_permintaan_farmasi}${cycleQuery}" ${cycleTarget}>
           <i class="fas fa-pencil"></i>
         </a>
 

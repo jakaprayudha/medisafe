@@ -218,7 +218,7 @@
 
       if (!no || !rm) return;
 
-      fetch("get_trimester3.php?no=" + no + "&rm=" + rm)
+      fetch("get_trimester3.php?no=" + encodeURIComponent(no) + "&rm=" + encodeURIComponent(rm))
          .then(r => r.json())
          .then(res => {
 

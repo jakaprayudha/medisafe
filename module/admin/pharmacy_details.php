@@ -643,7 +643,7 @@ $h = fn($v, $k = '-') => trim((string) ($v ?? '')) === '' ? $k : htmlspecialchar
                         timer: 1800,
                         showConfirmButton: false
                       })
-                      .then(() => location.href = `module/admin/pharmacy_details?no=${r.new_id}`);
+                      .then(() => location.href = `module/admin/pharmacy_details?no=${encodeURIComponent(r.new_id)}`);
                     return;
                   }
                   fd.forEach((v, k) => {

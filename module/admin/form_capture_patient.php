@@ -361,7 +361,7 @@ if ($data) {
     const rm = document.querySelector("input[name='nomor_rm']").value;
     const visit = document.querySelector("input[name='nomor_visit']").value;
 
-    fetch(`controller/visit/getFoto.php?rm=${rm}&no=${visit}`)
+    fetch(`controller/visit/getFoto.php?rm=${encodeURIComponent(rm)}&no=${encodeURIComponent(visit)}`)
       .then(r => r.json())
       .then(res => {
         if (res.foto) {

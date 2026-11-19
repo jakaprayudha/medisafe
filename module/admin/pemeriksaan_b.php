@@ -325,7 +325,7 @@ if ($data) {
   });
 </script>
 <script>
-  const apiUrl = 'controller/visit/permintaanFarmasi?no=<?= $_GET['no'] ?>';
+  const apiUrl = 'controller/visit/permintaanFarmasi?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>';
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({

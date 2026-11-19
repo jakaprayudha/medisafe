@@ -52,7 +52,7 @@ require '../../controller/view.php';
                     <h5 class="card-title fw-semibold">Data Item Farmasi</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
-                      <a href="module/admin/print/print_all_resep?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
+                      <a href="module/admin/print/print_all_resep?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>" target="_blank">
                         <button class="btn btn-light"><i class="fas fa-print"></i> Print</button>
                       </a>
                       <button class="btn btn-success d-none" id="btnKirimObat"><i class="ti ti-send"></i> Kirim Obat <span class="badge bg-light text-dark ms-1" id="btnKirimObatCount">0</span></button>
@@ -846,7 +846,7 @@ require '../../controller/view.php';
   });
 </script>
 <script>
-  const apiUrl = 'controller/visit/permintaanFarmasi?no=<?= $_GET['no'] ?>';
+  const apiUrl = 'controller/visit/permintaanFarmasi?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>';
   const urlParams = new URLSearchParams(window.location.search);
   const rmeParam = urlParams.get('rme') || 'c'; // default kalau kosong
   const nomorm = urlParams.get('rm') || 'c'; // default kalau kosong
@@ -927,7 +927,7 @@ require '../../controller/view.php';
         </a>
 
         <a class="btn btn-info" 
-          href="module/admin/permintaan_farmasi_details?no=${urlParams.get('no')}&rm=${nomorm}&rme=${rmeParam}&id=${row.id_permintaan_farmasi}&type=${encodeURIComponent(row.tipe_obat || '')}">
+          href="module/admin/permintaan_farmasi_details?no=${encodeURIComponent(urlParams.get('no'))}&rm=${encodeURIComponent(nomorm)}&rme=${rmeParam}&id=${row.id_permintaan_farmasi}&type=${encodeURIComponent(row.tipe_obat || '')}">
           <i class="fas fa-pencil"></i>
         </a>
 

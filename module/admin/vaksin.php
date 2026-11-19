@@ -132,7 +132,7 @@ $rm = $_GET['rm'];
   </div>
 </div>
 <script>
-  const apiUrl = 'controller/visit/vaksin?no=<?= $_GET['no'] ?>';
+  const apiUrl = 'controller/visit/vaksin?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>';
 
   $(document).ready(function() {
     var table = $('#periodeTable').DataTable({

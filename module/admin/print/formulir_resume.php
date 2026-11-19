@@ -208,7 +208,7 @@ require_once '../../../database/connect.php';
       if (!no || !rm) return;
 
       // === DATA PASIEN ===
-      fetch(`getpasien.php?no=${no}&rm=${rm}`)
+      fetch(`getpasien.php?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}`)
         .then(r => r.json())
         .then(d => {
           if (!d) return;
@@ -231,7 +231,7 @@ require_once '../../../database/connect.php';
         });
 
       // === DATA RESUME ===
-      fetch(`getresume.php?visit=${no}&rm=${rm}`)
+      fetch(`getresume.php?visit=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}`)
         .then(r => r.json())
         .then(res => {
           if (!res || res.status !== "success") return;

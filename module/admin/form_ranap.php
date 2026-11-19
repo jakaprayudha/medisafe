@@ -136,7 +136,7 @@ $dataresume = $query->fetch_assoc();
                     </div>
                   </div>
                   <div class="text-end mt-2">
-                    <a href="module/admin/print/formulir_keterangan_ranap.php?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
+                    <a href="module/admin/print/formulir_keterangan_ranap.php?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>" target="_blank">
                       <button class="btn btn-outline-primary">
                         <iconify-icon icon="mdi:printer-outline"></iconify-icon>
                         Cetak

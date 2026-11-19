@@ -674,7 +674,7 @@ $data = mysqli_fetch_array($check);
 
   function loadTiket() {
 
-    fetch(`controller/farmasi/getTiketByVisit?no=${visit}`)
+    fetch(`controller/farmasi/getTiketByVisit?no=${encodeURIComponent(visit)}`)
 
       .then(res => res.json())
 
@@ -899,7 +899,7 @@ $data = mysqli_fetch_array($check);
                     <!-- PRINT STRUK -->
 
                     <a
-                      href="module/print/struk_obat?no=${visit}&rm=${rm}&id=${idPermintaanFarmasi}"
+                      href="module/print/struk_obat?no=${encodeURIComponent(visit)}&rm=${encodeURIComponent(rm)}&id=${idPermintaanFarmasi}"
                       target="_blank"
                     >
 
@@ -918,7 +918,7 @@ $data = mysqli_fetch_array($check);
                     <!-- PRINT RESEP -->
 
                     <a
-                      href="module/print/resep?no=${visit}&rm=${rm}&id=${idPermintaanFarmasi}"
+                      href="module/print/resep?no=${encodeURIComponent(visit)}&rm=${encodeURIComponent(rm)}&id=${idPermintaanFarmasi}"
                       target="_blank"
                     >
 
@@ -1055,7 +1055,7 @@ $data = mysqli_fetch_array($check);
 
 
       fetch(
-          `controller/visit/permintaanFarmasiAddOns?no=${idPermintaanFarmasi}`
+          `controller/visit/permintaanFarmasiAddOns?no=${encodeURIComponent(idPermintaanFarmasi)}`
         )
 
         .then(res => res.json())

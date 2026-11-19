@@ -1412,13 +1412,13 @@ date_default_timezone_set('Asia/Jakarta');
 
                       
                       <li>
-                        <a class="dropdown-item" href="module/admin/form_sep?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                        <a class="dropdown-item" href="module/admin/form_sep?no=${encodeURIComponent(row.visit_ID)}&rm=${encodeURIComponent(row.nomor_rm)}">
                           <i class="fas fa-upload me-2 text-info"></i> Upload SEP
                         </a>
                       </li>
 
                       <li>
-                        <a class="dropdown-item" href="module/admin/form_fkpp?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                        <a class="dropdown-item" href="module/admin/form_fkpp?no=${encodeURIComponent(row.visit_ID)}&rm=${encodeURIComponent(row.nomor_rm)}">
                           <i class="fas fa-upload me-2 text-info"></i> Upload FKPP
                         </a>
                       </li>

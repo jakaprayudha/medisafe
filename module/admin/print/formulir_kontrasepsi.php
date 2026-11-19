@@ -322,7 +322,7 @@
 
       if (!no || !rm) return;
 
-      fetch(`getkontrasepsi.php?no=${no}&rm=${rm}`)
+      fetch(`getkontrasepsi.php?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}`)
          .then(res => res.json())
          .then(resp => {
 

@@ -334,14 +334,14 @@ require '../../controller/view.php';
                           <i class="fas fa-check-circle"></i>
                         </button>
 
-                        <a href="module/print/struk_billing?no=${row.visit_ID}&rm=${row.nomor_rm}"
+                        <a href="module/print/struk_billing?no=${encodeURIComponent(row.visit_ID)}&rm=${encodeURIComponent(row.nomor_rm)}"
                           target="_blank"
                           class="btn btn-sm btn-dark">
                           <i class="fas fa-receipt me-1"></i> Invoice
                         </a>
                       </div>
                     `
-                      : `<a href="module/admin/kasir_detail?no=${row.visit_ID}&rm=${row.nomor_rm}" 
+                      : `<a href="module/admin/kasir_detail?no=${encodeURIComponent(row.visit_ID)}&rm=${encodeURIComponent(row.nomor_rm)}" 
                           class="btn btn-sm btn-primary">
                           <i class="fas fa-file me-2"></i> Bayar
                         </a>`

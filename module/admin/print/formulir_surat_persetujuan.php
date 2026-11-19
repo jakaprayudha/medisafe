@@ -211,7 +211,7 @@ $signatureSaksi = $saksi['signature_user'] ?? null;
       if (!no || !rm) return;
 
       // GET DATA PASIEN
-      fetch(`getpasien.php?no=${no}&rm=${rm}`)
+      fetch(`getpasien.php?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}`)
          .then(res => res.json())
          .then(data => {
             if (!data) return;
@@ -251,7 +251,7 @@ $signatureSaksi = $saksi['signature_user'] ?? null;
          });
 
       // ttd pasien
-      fetch(`../../../controller/visit/getTTD.php?no=${no}`)
+      fetch(`../../../controller/visit/getTTD.php?no=${encodeURIComponent(no)}`)
          .then(res => res.json())
          .then(resp => {
             let d = resp.data;

@@ -83,7 +83,7 @@ $datapatient = mysqli_fetch_array($patient);
                     <div class="d-flex ms-auto gap-2">
 
                       <a
-                        href="module/admin/print/formulir_gizi?no=<?= $no ?>&rm=<?= $rm ?>"
+                        href="module/admin/print/formulir_gizi?no=<?= urlencode((string) ($no ?? '')) ?>&rm=<?= urlencode((string) ($rm ?? '')) ?>"
                         target="_blank"
                         class="btn btn-outline-primary">
 

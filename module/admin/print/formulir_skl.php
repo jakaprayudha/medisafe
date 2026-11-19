@@ -193,7 +193,7 @@
       const rm = new URLSearchParams(window.location.search).get("rm");
       if (!no || !rm) return;
 
-      fetch("get_skl.php?no=" + no + "&rm=" + rm)
+      fetch("get_skl.php?no=" + encodeURIComponent(no) + "&rm=" + encodeURIComponent(rm))
          .then(r => r.json())
          .then(res => {
 

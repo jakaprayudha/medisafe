@@ -69,7 +69,7 @@ $datapatient = mysqli_fetch_array($patient);
                     <h5 class="card-title fw-semibold">CPPT</h5>
                     <!-- Grup tombol di sisi kanan -->
                     <div class="d-flex ms-auto gap-2">
-                      <a href="module/admin/print/formulir_cppt?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                      <a href="module/admin/print/formulir_cppt?no=<?= urlencode((string) ($no ?? '')) ?>&rm=<?= urlencode((string) ($rm ?? '')) ?>" target="_blank">
                         <button class="btn btn-outline-primary"><i class="fas fa-print"></i> Cetak</button>
                       </a>
                       <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
@@ -257,7 +257,7 @@ $id_patient = $datapatient['id_patient'];
 ?>
 <script>
   const currentRole = '<?= strtolower($_SESSION['roles'] ?? '') ?>';
-  const apiUrl = 'controller/visit/cpptController?no=<?= $_GET['no'] ?>&id_patient=<?= $id_patient ?>';
+  const apiUrl = 'controller/visit/cpptController?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&id_patient=<?= $id_patient ?>';
 
   // function readMore(text, limit = 30) {
   //   if (!text) return "-";

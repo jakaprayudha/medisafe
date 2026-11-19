@@ -239,7 +239,7 @@ $dataio = mysqli_fetch_array($checkdata);
       const rm = params.get("rm");
       if (!no || !rm) return;
 
-      fetch(`getranap.php?no=${no}&rm=${rm}`)
+      fetch(`getranap.php?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}`)
         .then(res => res.json())
         .then(resp => {
           if (resp?.status !== "success") return;

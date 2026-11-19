@@ -3,10 +3,13 @@ $title = 'Pemeriksaan Rawat Inap';
 require '../../controller/view.php';
 require '../../database/connect.php';
 require '../../controller/visit/assesmen.php';
-$no = $_GET['no'];
-$rm = $_GET['rm'];
-$check = mysqli_query($koneksi, "SELECT * FROM pasien_visit LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient WHERE pasien_visit.visit_ID='$no' AND ms_patient.nomor_rm='$rm'");
-$data = mysqli_fetch_array($check);
+$no = (string) ($_GET['no'] ?? '');
+$rm = (string) ($_GET['rm'] ?? '');
+$check = $koneksi->prepare("SELECT * FROM pasien_visit LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient WHERE pasien_visit.visit_ID = ? AND ms_patient.nomor_rm = ?");
+$check->bind_param('ss', $no, $rm);
+$check->execute();
+$data = $check->get_result()->fetch_array() ?: [];
+$check->close();
 
 // Hitung usia jika data ditemukan
 // if ($data) {
@@ -53,8 +56,8 @@ $data = mysqli_fetch_array($check);
               <div class="card w-100">
                 <div class="card-body p-4">
                   <form id="formPemeriksaan" class="p-4 border rounded shadow-sm" method="POST">
-                    <input type="hidden" name="nomor_rm" value="<?= $rm ?>">
-                    <input type="hidden" name="nomor_visit" value="<?= $no ?>">
+                    <input type="hidden" name="nomor_rm" value="<?= htmlspecialchars($rm) ?>">
+                    <input type="hidden" name="nomor_visit" value="<?= htmlspecialchars($no) ?>">
                     <input type="hidden" name="id_patient" id="id_patient" value="<?= $data['id_patient'] ?>" hidden>
                     <h4 class="mb-3">Form Pemeriksaan Medis</h4>
                     <hr>

@@ -265,7 +265,7 @@
 
       if (!no || !rm) return;
 
-      fetch("get_persalinan.php?no=" + no + "&rm=" + rm)
+      fetch("get_persalinan.php?no=" + encodeURIComponent(no) + "&rm=" + encodeURIComponent(rm))
          .then(r => r.json())
          .then(res => {
             if (res.status !== "success") return;

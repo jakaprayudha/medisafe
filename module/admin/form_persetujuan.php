@@ -130,7 +130,7 @@
                     </div>
                     <div id="ttdSection" class="text-end mt-2"></div>
                     <div class="text-end mt-2">
-                      <a href="module/admin/print/formulir_surat_persetujuan?no=<?= $_GET['no'] ?>&rm=<?= $_GET['rm'] ?>" target="_blank">
+                      <a href="module/admin/print/formulir_surat_persetujuan?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>" target="_blank">
                         <button class="btn btn-outline-primary">
                           <iconify-icon icon="mdi:printer-outline"></iconify-icon>
                           Cetak
@@ -180,7 +180,7 @@
   </div>
 
   <script>
-    fetch(`controller/visit/getTTDKeluarga?no=<?= $no ?>`)
+    fetch(`controller/visit/getTTDKeluarga?no=<?= urlencode((string) ($no ?? '')) ?>`)
       .then(res => res.json())
       .then(resp => {
 
@@ -365,7 +365,7 @@
               const modalInstance = bootstrap.Modal.getInstance(modalEl);
               modalInstance.hide();
 
-              fetch(`controller/visit/getTTDKeluarga?no=<?= $no ?>`)
+              fetch(`controller/visit/getTTDKeluarga?no=<?= urlencode((string) ($no ?? '')) ?>`)
                 .then(res => res.json())
                 .then(r => {
                   let d = r.data;

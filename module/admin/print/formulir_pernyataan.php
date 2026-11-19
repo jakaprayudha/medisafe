@@ -136,7 +136,7 @@ require '../../admin/getdataclinic.php';
 
       if (!no || !rm) return;
 
-      fetch(`getpasien.php?no=${no}&rm=${rm}`)
+      fetch(`getpasien.php?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}`)
          .then(res => res.json())
          .then(data => {
 

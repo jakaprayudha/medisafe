@@ -159,7 +159,7 @@ $totalKeseluruhan = $totalObat + $totalBilling;
                         </button>
                       </a>
 
-                      <a href="module/print/struk_billing?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                      <a href="module/print/struk_billing?no=<?= urlencode((string) ($no ?? '')) ?>&rm=<?= urlencode((string) ($rm ?? '')) ?>" target="_blank">
                         <button class="btn btn-info shadow-sm">
                           <i class="fas fa-print"></i>
                         </button>
@@ -463,7 +463,7 @@ $totalKeseluruhan = $totalObat + $totalBilling;
     document.getElementById("bayarForm").dispatchEvent(new Event('submit'));
   });
   // Mengambil nilai API_URL dari PHP
-  const apiUrl = 'controller/visit/tindakan?no=<?= $_GET['no'] ?>';
+  const apiUrl = 'controller/visit/tindakan?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>';
   $(document).ready(function() {
     // Formatter untuk angka biasa (qty)
     const formatter = new Intl.NumberFormat('id-ID', {

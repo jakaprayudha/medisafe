@@ -688,19 +688,19 @@ require '../../controller/view.php';
                       </li>
 
                        <li>
-                        <a class="dropdown-item" href="module/admin/form_upload_klaim?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                        <a class="dropdown-item" href="module/admin/form_upload_klaim?no=${encodeURIComponent(row.visit_ID)}&rm=${encodeURIComponent(row.nomor_rm)}">
                           <i class="fas fa-upload me-2 text-info"></i> Upload SEP & FKPP
                         </a>
                       </li>
                       
                        <li>
-                        <a class="dropdown-item" href="module/admin/form_pernyataan?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                        <a class="dropdown-item" href="module/admin/form_pernyataan?no=${encodeURIComponent(row.visit_ID)}&rm=${encodeURIComponent(row.nomor_rm)}">
                           <i class="fas fa-file me-2 text-info"></i>Surat Pernyataan Pasien
                         </a>
                       </li>
 
                        <li>
-                        <a class="dropdown-item" href="module/admin/form_persetujuan?no=${row.visit_ID}&rm=${row.nomor_rm}">
+                        <a class="dropdown-item" href="module/admin/form_persetujuan?no=${encodeURIComponent(row.visit_ID)}&rm=${encodeURIComponent(row.nomor_rm)}">
                           <i class="fas fa-file me-2 text-info"></i>Surat Persetujuan Opname
                         </a>
                       </li>

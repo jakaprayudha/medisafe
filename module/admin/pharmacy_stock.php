@@ -118,7 +118,7 @@ $marginFaskes = marginFaskes($koneksi, (int) ($_SESSION['id_customer'] ?? 0));
                 </div>
                 <div class="d-flex gap-2 flex-wrap">
                   <a href="module/admin/pharmacy" class="btn btn-light"><i class="fas fa-arrow-left me-1"></i> Daftar Obat</a>
-                  <a href="module/admin/pharmacy_details?no=<?= $no ?>" class="btn btn-outline-info"><i class="fas fa-info-circle me-1"></i> Detail Farmasi</a>
+                  <a href="module/admin/pharmacy_details?no=<?= urlencode((string) ($no ?? '')) ?>" class="btn btn-outline-info"><i class="fas fa-info-circle me-1"></i> Detail Farmasi</a>
                   <button type="button" class="btn btn-primary btn-tambah-penerimaan"><i class="fas fa-plus me-1"></i> Tambah Penerimaan</button>
                 </div>
               </div>

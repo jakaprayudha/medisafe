@@ -217,7 +217,7 @@ $dataio =  mysqli_fetch_array($checkvisit);
                   </div>
 
                   <div class="text-end mt-3">
-                    <a href="module/admin/print/formulir_inout_ranap?no=<?= $no ?>&rm=<?= $rm ?>" target="_blank">
+                    <a href="module/admin/print/formulir_inout_ranap?no=<?= urlencode((string) ($no ?? '')) ?>&rm=<?= urlencode((string) ($rm ?? '')) ?>" target="_blank">
                       <button class="btn btn-outline-primary">
                         <iconify-icon icon="mdi:printer-outline"></iconify-icon> Cetak
                       </button>
@@ -249,7 +249,7 @@ $dataio =  mysqli_fetch_array($checkvisit);
     if (!no || !rm) return;
 
     // ===== GET DATA PASIEN + INAP =====
-    fetch(`controller/ranap/getFormInap.php?no=${no}&rm=${rm}`)
+    fetch(`controller/ranap/getFormInap.php?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}`)
       .then(r => r.json())
       .then(res => {
 
