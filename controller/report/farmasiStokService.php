@@ -79,7 +79,8 @@ function farmasiStokReport(mysqli $koneksi, string $idCustomer, string $fromDate
    $stmt = $koneksi->prepare("SELECT d.id_pharmacy,
          SUM(d.qty) AS semua,
          SUM(CASE WHEN d.created_at < ? THEN d.qty ELSE 0 END) AS sebelum,
-         SUM(CASE WHEN d.created_at BETWEEN ? AND ? THEN d.qty ELSE 0 END) AS periode
+         SUM(CASE WHEN d.created_at BETWEEN ? AND ? THEN d.qty ELSE 0 END) AS periode,
+         SUM(CASE WHEN d.created_at BETWEEN ? AND ? THEN d.qty * COALESCE(d.harga, 0) ELSE 0 END) AS nilai_periode
       FROM permintaan_pharmacy_details d
       INNER JOIN permintaan_pharmacy pp ON pp.id_permintaan_farmasi = d.id_permintaan_farmasi
       WHERE pp.id_customer = ?" . ($satuObat ? " AND d.id_pharmacy = ?" : "") . "
@@ -87,8 +88,8 @@ function farmasiStokReport(mysqli $koneksi, string $idCustomer, string $fromDate
    if (!$stmt) {
       throw new RuntimeException('Prepare query stok keluar gagal: ' . $koneksi->error);
    }
-   $satuObat ? $stmt->bind_param('ssssi', $awalPeriode, $awalPeriode, $akhirPeriode, $idCustomer, $idPharmacy)
-      : $stmt->bind_param('ssss', $awalPeriode, $awalPeriode, $akhirPeriode, $idCustomer);
+   $satuObat ? $stmt->bind_param('ssssssi', $awalPeriode, $awalPeriode, $akhirPeriode, $awalPeriode, $akhirPeriode, $idCustomer, $idPharmacy)
+      : $stmt->bind_param('ssssss', $awalPeriode, $awalPeriode, $akhirPeriode, $awalPeriode, $akhirPeriode, $idCustomer);
    $stmt->execute();
    foreach ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) as $r) {
       $keluar[(string) $r['id_pharmacy']] = $r;
@@ -99,13 +100,13 @@ function farmasiStokReport(mysqli $koneksi, string $idCustomer, string $fromDate
    $rows = [];
    $ringkasan = [
       'total_item' => 0, 'habis' => 0, 'minimum' => 0, 'maximum' => 0, 'normal' => 0,
-      'stok_masuk' => 0.0, 'stok_keluar' => 0.0, 'nilai_stok' => 0.0,
+      'stok_masuk' => 0.0, 'stok_keluar' => 0.0, 'nilai_stok' => 0.0, 'nilai_keluar' => 0.0,
    ];
 
    foreach ($obat as $row) {
       $id = (string) $row['id_pharmacy'];
       $m = $masuk[$id] ?? ['semua' => 0, 'sebelum' => 0, 'periode' => 0];
-      $k = $keluar[$id] ?? ['semua' => 0, 'sebelum' => 0, 'periode' => 0];
+      $k = $keluar[$id] ?? ['semua' => 0, 'sebelum' => 0, 'periode' => 0, 'nilai_periode' => 0];
 
       $dasar = (float) $row['stok_dasar'];
       $stokAwal = $dasar + (float) $m['sebelum'] - (float) $k['sebelum'];
@@ -144,6 +145,10 @@ function farmasiStokReport(mysqli $koneksi, string $idCustomer, string $fromDate
       $row['stok_max'] = $stokMax;
       $row['pharmacy_price_buy'] = $hargaBeli;
       $row['nilai_stok'] = $nilaiStok;
+      // nilai obat keluar (harga jual saat diserahkan) & perkiraan stok cukup untuk berapa hari
+      $row['nilai_keluar'] = (float) ($k['nilai_periode'] ?? 0);
+      $hariPeriode = (new DateTime($fromDate))->diff(new DateTime($toDate))->days + 1;
+      $row['hari_stok'] = $stokKeluar > 0 && $stokAkhir > 0 ? round($stokAkhir / ($stokKeluar / $hariPeriode), 1) : null;
       $row['status_stock'] = $statusStock;
       $row['status_code'] = $statusCode;
       $rows[] = $row;
@@ -153,6 +158,7 @@ function farmasiStokReport(mysqli $koneksi, string $idCustomer, string $fromDate
       $ringkasan['stok_masuk'] += $stokMasuk;
       $ringkasan['stok_keluar'] += $stokKeluar;
       $ringkasan['nilai_stok'] += $nilaiStok;
+      $ringkasan['nilai_keluar'] += $row['nilai_keluar'];
    }
 
    return ['data' => $rows, 'ringkasan' => $ringkasan];
@@ -169,6 +175,9 @@ function farmasiStokValidasiPeriode(string $fromDate, string $toDate): ?string
    }
    if ($fromDate > $toDate) {
       return 'Tanggal mulai tidak boleh lebih besar dari tanggal akhir';
+   }
+   if ((new DateTime($fromDate))->diff(new DateTime($toDate))->days + 1 > 366) {
+      return 'Rentang tanggal maksimal 366 hari';
    }
    return null;
 }
@@ -211,6 +220,7 @@ const FARMASI_STOK_SORT = [
    'nama' => 'pharmacy_name_generic', 'kategori' => 'pharmacy_category', 'satuan' => 'pharmacy_unit',
    'stok_awal' => 'stok_awal', 'masuk' => 'stok_masuk', 'keluar' => 'stok_keluar',
    'stok_akhir' => 'stok_akhir', 'nilai' => 'nilai_stok', 'status' => 'status_stock',
+   'nilai_keluar' => 'nilai_keluar', 'hari_stok' => 'hari_stok',
 ];
 
 /** Ambil filter tampilan dari query string (sama dengan pilihan di layar). */
@@ -262,8 +272,9 @@ function farmasiStokFilter(array $rows, array $f): array
 function farmasiStokRingkasan(array $rows): array
 {
    $s = ['total_item' => count($rows), 'habis' => 0, 'minimum' => 0, 'maximum' => 0, 'normal' => 0,
-      'stok_masuk' => 0.0, 'stok_keluar' => 0.0, 'nilai_stok' => 0.0];
+      'stok_masuk' => 0.0, 'stok_keluar' => 0.0, 'nilai_stok' => 0.0, 'nilai_keluar' => 0.0];
    foreach ($rows as $r) {
+      $s['nilai_keluar'] += (float) ($r['nilai_keluar'] ?? 0);
       $s[$r['status_code']]++;
       $s['stok_masuk'] += (float) $r['stok_masuk'];
       $s['stok_keluar'] += (float) $r['stok_keluar'];
@@ -294,4 +305,113 @@ function farmasiStokAngka($v): string
 function farmasiStokRupiah($v): string
 {
    return 'Rp ' . number_format(round((float) $v), 0, ',', '.');
+}
+
+
+/**
+ * Analisis untuk dashboard laporan farmasi (rpt_farmasi), Excel (sheet Analisis) & Print.
+ * $rows = hasil farmasiStokReport()['data'] (sebelum filter tampilan).
+ */
+function farmasiStokDashboard(mysqli $koneksi, string $idCustomer, string $fromDate, string $toDate, array $rows): array
+{
+   $hari = (new DateTime($fromDate))->diff(new DateTime($toDate))->days + 1;
+   $perHari = $hari <= 92;
+   $grp = $perHari ? 'DATE(d.created_at)' : "DATE_FORMAT(d.created_at, '%Y-%m')";
+
+   // tren keluar (1 query agregat; tabel detail besar tanpa index id_pharmacy, jadi disaring lewat permintaan klinik)
+   $tren = [];
+   if ($perHari) {
+      for ($d = new DateTime($fromDate); $d->format('Y-m-d') <= $toDate; $d->modify('+1 day')) $tren[$d->format('Y-m-d')] = ['keluar' => 0, 'nilai' => 0, 'resep' => 0, 'masuk' => 0];
+   }
+   $stmt = $koneksi->prepare("SELECT $grp t, SUM(d.qty) q, SUM(d.qty * COALESCE(d.harga, 0)) n, COUNT(DISTINCT d.id_permintaan_farmasi) r
+      FROM permintaan_pharmacy_details d
+      INNER JOIN permintaan_pharmacy pp ON pp.id_permintaan_farmasi = d.id_permintaan_farmasi
+      WHERE pp.id_customer = ? AND d.created_at BETWEEN ? AND ?
+      GROUP BY t");
+   $a = $fromDate . ' 00:00:00';
+   $z = $toDate . ' 23:59:59';
+   $stmt->bind_param('sss', $idCustomer, $a, $z);
+   $stmt->execute();
+   $resep = 0;
+   foreach ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) as $r) {
+      $tren[$r['t']] ??= ['keluar' => 0, 'nilai' => 0, 'resep' => 0, 'masuk' => 0];
+      $tren[$r['t']]['keluar'] = (float) $r['q'];
+      $tren[$r['t']]['nilai'] = (float) $r['n'];
+      $tren[$r['t']]['resep'] = (int) $r['r'];
+      $resep += (int) $r['r'];
+   }
+   $stmt->close();
+   $grpM = $perHari ? 'tanggal' : "DATE_FORMAT(tanggal, '%Y-%m')";
+   $stmt = $koneksi->prepare("SELECT $grpM t, SUM(jumlah) q FROM pharmacy_stock_penerimaan WHERE id_customer = ? AND tanggal BETWEEN ? AND ? GROUP BY t");
+   $stmt->bind_param('sss', $idCustomer, $fromDate, $toDate);
+   $stmt->execute();
+   foreach ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) as $r) {
+      $tren[$r['t']] ??= ['keluar' => 0, 'nilai' => 0, 'resep' => 0, 'masuk' => 0];
+      $tren[$r['t']]['masuk'] = (float) $r['q'];
+   }
+   $stmt->close();
+   ksort($tren);
+
+   // kedaluwarsa: batch penerimaan dengan ED lewat / ≤ 90 hari, hanya obat yang masih ada stoknya
+   $stokIni = [];
+   $namaObat = [];
+   foreach ($rows as $r) {
+      $stokIni[(string) $r['id_pharmacy']] = (float) $r['stok_saat_ini'];
+      $namaObat[(string) $r['id_pharmacy']] = $r['pharmacy_name_generic'];
+   }
+   $ed = [];
+   $stmt = $koneksi->prepare("SELECT id_pharmacy, batch, expired, SUM(jumlah) jumlah FROM pharmacy_stock_penerimaan
+      WHERE id_customer = ? AND expired IS NOT NULL AND expired <= DATE_ADD(CURDATE(), INTERVAL 90 DAY)
+      GROUP BY id_pharmacy, batch, expired ORDER BY expired ASC");
+   $stmt->bind_param('s', $idCustomer);
+   $stmt->execute();
+   $hariIni = new DateTime(date('Y-m-d'));
+   foreach ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) as $r) {
+      $id = (string) $r['id_pharmacy'];
+      if (($stokIni[$id] ?? 0) <= 0) continue;
+      $sisa = (int) $hariIni->diff(new DateTime($r['expired']))->format('%r%a');
+      $ed[] = ['obat' => $namaObat[$id] ?? ('#' . $id), 'batch' => (string) $r['batch'], 'expired' => $r['expired'], 'sisa_hari' => $sisa,
+         'diterima' => (float) $r['jumlah'], 'stok_saat_ini' => $stokIni[$id]];
+   }
+   $stmt->close();
+
+   // analisis per obat
+   $keluar = array_values(array_filter($rows, fn($r) => (float) $r['stok_keluar'] > 0));
+   usort($keluar, fn($x, $y) => (float) $y['stok_keluar'] <=> (float) $x['stok_keluar']);
+   $nilai = $keluar;
+   usort($nilai, fn($x, $y) => (float) $y['nilai_keluar'] <=> (float) $x['nilai_keluar']);
+   $ringkas = fn($r) => ['id' => (int) $r['id_pharmacy'], 'nama' => $r['pharmacy_name_generic'], 'satuan' => farmasiStokIsi($r['pharmacy_unit']) ?: '-',
+      'keluar' => (float) $r['stok_keluar'], 'nilai' => (float) $r['nilai_keluar'], 'stok_akhir' => (float) $r['stok_akhir'], 'hari_stok' => $r['hari_stok']];
+   $mati = array_values(array_filter($rows, fn($r) => (float) $r['stok_akhir'] > 0 && (float) $r['stok_keluar'] <= 0));
+   usort($mati, fn($x, $y) => (float) $y['nilai_stok'] <=> (float) $x['nilai_stok']);
+   $kritis = array_values(array_filter($rows, fn($r) => $r['hari_stok'] !== null && $r['hari_stok'] < 7));
+   usort($kritis, fn($x, $y) => $x['hari_stok'] <=> $y['hari_stok']);
+   $kat = [];
+   foreach ($rows as $r) {
+      if ((float) $r['nilai_keluar'] <= 0) continue;
+      $k = farmasiStokIsi($r['pharmacy_category']) ?: 'Tanpa kategori';
+      $kat[$k] = ($kat[$k] ?? 0) + (float) $r['nilai_keluar'];
+   }
+   arsort($kat);
+   $negatif = count(array_filter($rows, fn($r) => (float) $r['stok_akhir'] < 0));
+
+   return [
+      'hari' => $hari,
+      'periode' => $perHari ? 'hari' : 'bulan',
+      'resep' => $resep,
+      'obat_keluar' => count($keluar),
+      'tren' => array_map(fn($k, $v) => ['t' => $k] + $v, array_keys($tren), $tren),
+      'top_keluar' => array_map($ringkas, array_slice($keluar, 0, 10)),
+      'top_nilai' => array_map($ringkas, array_slice($nilai, 0, 10)),
+      'kategori' => array_map(fn($k, $v) => ['nama' => (string) $k, 'jumlah' => $v], array_keys($kat), $kat),
+      'mati' => count($mati),
+      'mati_nilai' => array_sum(array_column($mati, 'nilai_stok')),
+      'mati_top' => array_map(fn($r) => ['nama' => $r['pharmacy_name_generic'], 'stok_akhir' => (float) $r['stok_akhir'], 'nilai_stok' => (float) $r['nilai_stok']], array_slice($mati, 0, 10)),
+      'kritis' => array_map($ringkas, array_slice($kritis, 0, 15)),
+      'kritis_jumlah' => count($kritis),
+      'negatif' => $negatif,
+      'ed' => array_slice($ed, 0, 50),
+      'ed_lewat' => count(array_filter($ed, fn($x) => $x['sisa_hari'] < 0)),
+      'ed_dekat' => count(array_filter($ed, fn($x) => $x['sisa_hari'] >= 0)),
+   ];
 }
