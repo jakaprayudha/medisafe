@@ -76,6 +76,58 @@ if (!isset($_POST['kunjSakit'])) {
     exit;
 }
 
+// --- validasi tambahan (dulu tidak dicek) ---
+if (empty($kodepoli) || empty($namapoli)) {
+    echo json_encode(['success' => false, 'message' => 'Poli tujuan wajib dipilih.']);
+    exit;
+}
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $tanggalperiksa) || $tanggalperiksa > date('Y-m-d') || $tanggalperiksa < date('Y-m-d', strtotime('-7 days'))) {
+    echo json_encode(['success' => false, 'message' => 'Tanggal kunjungan harus hari ini atau s.d. 7 hari ke belakang.']);
+    exit;
+}
+// pasien wajib milik faskes ini
+$cekPasien = $koneksi->prepare("SELECT id_patient FROM ms_patient WHERE id_patient = ? AND id_customer = ? LIMIT 1");
+$idPasienInt = (int) $id_patient;
+$idcInt = (int) $idcustomer;
+$cekPasien->bind_param("ii", $idPasienInt, $idcInt);
+$cekPasien->execute();
+$adaPasien = (bool) $cekPasien->get_result()->fetch_row();
+$cekPasien->close();
+if (!$adaPasien) {
+    echo json_encode(['success' => false, 'message' => 'Data pasien tidak ditemukan di faskes ini. Pilih ulang pasien.']);
+    exit;
+}
+// cegah daftar dobel (mis. tombol simpan ditekan dua kali): pasien sama, tanggal sama, poli sama, belum batal
+if (($_POST['paksa'] ?? '') !== '1') {
+    $cekDobel = $koneksi->prepare("SELECT visit_ID, visit_antrian, id_doctor FROM pasien_visit WHERE id_patient = ? AND id_customer = ? AND visit_date = ? AND id_poli = ? AND visit_status <> 99 LIMIT 1");
+    $idPasienStr = (string) $idPasienInt;
+    $cekDobel->bind_param("siss", $idPasienStr, $idcInt, $tanggalperiksa, $namapoli);
+    $cekDobel->execute();
+    $dobel = $cekDobel->get_result()->fetch_assoc();
+    $cekDobel->close();
+    if ($dobel) {
+        echo json_encode(['success' => false, 'dobel' => true, 'message' => "Pasien sudah terdaftar di $namapoli pada tanggal ini (antrian " . ($dobel['visit_antrian'] ?: '-') . ", " . ($dobel['id_doctor'] ?: '-') . ")."]);
+        exit;
+    }
+}
+// nilai untuk penyimpanan lokal: kosong / 0 = tidak diisi (dulu tersimpan "0/0" sehingga terbaca sudah diperiksa)
+$lokal = function ($v) {
+    $v = str_replace(',', '.', trim((string) $v));
+    return ($v === '' || !is_numeric($v) || (float) $v <= 0) ? null : (string) (0 + $v);
+};
+$tdLokal = ($sistole > 0 && $diastole > 0) ? $sistole . "/" . $diastole : null;
+$sistoleLokal = $lokal($sistole);
+$diastoleLokal = $lokal($diastole);
+$nadiLokal = $lokal($heartRate);
+$respLokal = $lokal($respRate);
+$tbLokal = $lokal($tinggiBadan);
+$bbLokal = $lokal($beratBadan);
+$lpLokal = $lokal($lingkarPerut);
+$suhuLokal = $lokal($suhu);
+$satLokal = $lokal($saturasi);
+$bmiLokal = $lokal($bmi);
+$bmiKetLokal = $bmiLokal === null ? null : ($bmiKet !== '' ? $bmiKet : null);
+
 $safe_idcustomer = (int)$idcustomer; 
 $safe_kdProv     = (int)$kdProv;
 $safe_kunjSakit  = $kunjSakit ? "1" : "0";
@@ -88,14 +140,14 @@ try {
         $created_user = "Onsite";
         $source_hub = "Poliklinik";
         $status_antrian = 0;
-        $td = $sistole . "/" . $diastole; 
-        $stmt = $koneksi->prepare("INSERT INTO pasien_visit (id_patient, visit_ID, visit_date, id_poli, source_hub, created_user, visit_antrian, status_antrian, id_customer, id_doctor, visit_time, keluhan_penyerta, tekanan_darah, nadi, respirasi, tinggi_badan, berat_badan, patient_name_pcare, suhu, saturasi, bmi, bmi_keterangan, code_doctor, id_provider) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssssssssssssssssssssss", $id_patient, $visit_ID, $tanggalperiksa, $namapoli, $source_hub, $created_user, $nomorantrean, $status_antrian, $safe_idcustomer, $namadokter, $visit_time, $keluhan, $td, $heartRate, $respRate, $tinggiBadan, $beratBadan, $nama, $suhu, $saturasi, $bmi, $bmiKet, $kodedokter, $safe_kdProv);
+        // keluhan -> anamnesa (dulu keluhan_penyerta, sehingga keluhan pasien umum tidak tampil di vital sign / detail)
+        $stmt = $koneksi->prepare("INSERT INTO pasien_visit (id_patient, visit_ID, visit_date, id_poli, source_hub, created_user, visit_antrian, status_antrian, id_customer, id_doctor, visit_time, anamnesa, tekanan_darah, sistole, diastole, nadi, respirasi, tinggi_badan, berat_badan, lingkar_perut, patient_name_pcare, suhu, saturasi, bmi, bmi_keterangan, code_doctor, id_provider) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssssssssssssssssssssssssss", $id_patient, $visit_ID, $tanggalperiksa, $namapoli, $source_hub, $created_user, $nomorantrean, $status_antrian, $safe_idcustomer, $namadokter, $visit_time, $keluhan, $tdLokal, $sistoleLokal, $diastoleLokal, $nadiLokal, $respLokal, $tbLokal, $bbLokal, $lpLokal, $nama, $suhuLokal, $satLokal, $bmiLokal, $bmiKetLokal, $kodedokter, $safe_kdProv);
         if (!$stmt->execute()) {
             throw new Exception("Gagal menyimpan data kunjungan lokal UMUM: " . $stmt->error);
         }
         $koneksi->commit();
-        echo json_encode(['success' => true, 'message' => 'Berhasil Mendaftar Pasien UMUM', 'type' => 'UMUM']);
+        echo json_encode(['success' => true, 'message' => 'Berhasil Mendaftar Pasien UMUM', 'type' => 'UMUM', 'visitID' => $visit_ID, 'antian' => $nomorantrean]);
         exit;
     }
 
@@ -178,12 +230,11 @@ try {
     $stmtPCare->close();
 
     $source_hub = "Poliklinik";
-    $td = $sistole . "/" . $diastole;
     $status_antrian = 0;
     
-    $stmtVisit = $koneksi->prepare("INSERT INTO pasien_visit (id_patient, visit_ID, visit_date, id_poli, source_hub, created_user, visit_antrian, status_antrian, id_customer, id_doctor, noKartu, visit_time, anamnesa, tekanan_darah, nadi, respirasi, tinggi_badan, berat_badan, patient_name_pcare, suhu, saturasi, bmi, bmi_keterangan, code_doctor, id_provider) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmtVisit = $koneksi->prepare("INSERT INTO pasien_visit (id_patient, visit_ID, visit_date, id_poli, source_hub, created_user, visit_antrian, status_antrian, id_customer, id_doctor, noKartu, visit_time, anamnesa, tekanan_darah, sistole, diastole, nadi, respirasi, tinggi_badan, berat_badan, lingkar_perut, patient_name_pcare, suhu, saturasi, bmi, bmi_keterangan, code_doctor, id_provider) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     // $safe_idcustomer dan $safe_kdProv dimasukkan agar kolom INT tidak dimasuki string ""
-    $stmtVisit->bind_param("sssssssssssssssssssssssss", $id_patient, $visit_ID, $tanggalperiksa, $namapoli, $source_hub, $created_user, $antrianBPJS, $status_antrian, $safe_idcustomer, $namadokter, $nomorkartu, $visit_time, $keluhan, $td, $heartRate, $respRate, $tinggiBadan, $beratBadan, $nama, $suhu, $saturasi, $bmi, $bmiKet, $kodedokter, $safe_kdProv);
+    $stmtVisit->bind_param("ssssssssssssssssssssssssssss", $id_patient, $visit_ID, $tanggalperiksa, $namapoli, $source_hub, $created_user, $antrianBPJS, $status_antrian, $safe_idcustomer, $namadokter, $nomorkartu, $visit_time, $keluhan, $tdLokal, $sistoleLokal, $diastoleLokal, $nadiLokal, $respLokal, $tbLokal, $bbLokal, $lpLokal, $nama, $suhuLokal, $satLokal, $bmiLokal, $bmiKetLokal, $kodedokter, $safe_kdProv);
     if (!$stmtVisit->execute()) throw new Exception("Gagal simpan pasien_visit: " . $stmtVisit->error);
     $stmtVisit->close();
 

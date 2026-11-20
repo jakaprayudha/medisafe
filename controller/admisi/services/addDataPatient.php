@@ -1,76 +1,105 @@
 <?php
+/**
+ * Tambah pasien baru dari hasil cek peserta BPJS (modal "Pasien baru" di module/admisi/pendaftaran).
+ * POST noKartu (nomor yang dicari: NIK 16 / BPJS 13), nama, tgl_lahir, jenis_kelamin, no_bpjs, nik (opsional dari BPJS)
+ * -> {success, message, id_patient, nomor_rm}
+ *
+ * Perbaikan:
+ * - Nomor yang dicari selalu disimpan sebagai NIK (padahal bisa no. BPJS 13 digit) -> sekarang NIK hanya bila 16 digit.
+ * - "SELECT ... FOR UPDATE" tanpa transaksi = tanpa kunci -> dua pendaftaran bersamaan bisa mendapat nomor RM sama.
+ *   Sekarang dalam transaksi.
+ * - patient_number dibuat tetapi tidak pernah disimpan.
+ * - Jenis kelamin "Laki - Laki" & tanggal lahir dd-mm-yyyy dari BPJS dinormalkan ("Laki-laki", Y-m-d).
+ * - id_patient dikembalikan agar halaman bisa langsung memilih pasien baru (dulu reload halaman).
+ */
 require_once __DIR__ . '/view.php';
-require_once __DIR__ . '/../../../vendor/autoload.php';
-require_once __DIR__ . '/servicebpjs.php';
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
+session_write_close();
 
-$nik = $_POST['noKartu'];
-$nama = $_POST['nama'];
-$tanggalLahir = $_POST['tgl_lahir'];
-$jenisKelamin = $_POST['jenis_kelamin'];
-$noKartu = $_POST['no_bpjs'];
+function apJawab(array $d): void
+{
+    echo json_encode($d, JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
-$stmt = $koneksi->prepare("SELECT * FROM ms_patient WHERE (patient_bpjs = ? OR patient_nik = ?) AND id_customer = ?");
-$stmt->bind_param('sss', $noKartu, $nik, $idcustomer);
-$stmt->execute();
-$res = $stmt->get_result();
-$data = $res->fetch_assoc();
-if ($data) {
-    $response = [
-        'success'  => false,
-        'message'  => "Data pasien dengan NIK atau nomor BPJS tersebut sudah terdaftar. Silakan periksa kembali.",
-    ];
-} else {
-    $stmt = $koneksi->prepare("SELECT nomor_rm_end FROM setting_clinic WHERE id_customer=? FOR UPDATE");
-    $stmt->bind_param("i", $idcustomer);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if ($row = $result->fetch_assoc()) {
-        $lastRM = (int)$row['nomor_rm_end'];
+$idc = (int) $idcustomer;
+$dicari = preg_replace('/\D/', '', (string) ($_POST['noKartu'] ?? ''));
+$nikInput = preg_replace('/\D/', '', (string) ($_POST['nik'] ?? ''));
+$nik = strlen($nikInput) === 16 ? $nikInput : (strlen($dicari) === 16 ? $dicari : '');
+$noKartu = preg_replace('/\D/', '', (string) ($_POST['no_bpjs'] ?? ''));
+if (strlen($noKartu) !== 13) $noKartu = strlen($dicari) === 13 ? $dicari : '';
+$nama = trim((string) ($_POST['nama'] ?? ''));
+$jkIn = strtoupper(substr(trim((string) ($_POST['jenis_kelamin'] ?? '')), 0, 1));
+$jenisKelamin = $jkIn === 'L' ? 'Laki-laki' : ($jkIn === 'P' ? 'Perempuan' : '');
+$tgl = trim((string) ($_POST['tgl_lahir'] ?? ''));
+if (preg_match('/^(\d{2})-(\d{2})-(\d{4})$/', $tgl, $m)) $tgl = "$m[3]-$m[2]-$m[1]";
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tgl)) $tgl = '';
+
+if ($idc <= 0) apJawab(['success' => false, 'message' => 'Session tidak valid']);
+if ($nama === '' || ($nik === '' && $noKartu === '')) apJawab(['success' => false, 'message' => 'Data peserta tidak lengkap (nama & NIK / no. BPJS).']);
+
+// sudah terdaftar?
+$w = [];
+$t = 'i';
+$p = [$idc];
+if ($noKartu !== '') { $w[] = 'patient_bpjs = ?'; $t .= 's'; $p[] = $noKartu; }
+if ($nik !== '') { $w[] = 'patient_nik = ?'; $t .= 's'; $p[] = $nik; }
+$st = $koneksi->prepare("SELECT id_patient, nomor_rm, patient_name FROM ms_patient WHERE id_customer = ? AND (" . implode(' OR ', $w) . ") LIMIT 1");
+$st->bind_param($t, ...$p);
+$st->execute();
+$ada = $st->get_result()->fetch_assoc();
+$st->close();
+if ($ada) {
+    apJawab(['success' => false, 'sudah_ada' => true, 'id_patient' => (int) $ada['id_patient'], 'nomor_rm' => $ada['nomor_rm'],
+        'message' => "Pasien sudah terdaftar: {$ada['patient_name']} (RM {$ada['nomor_rm']})."]);
+}
+
+$koneksi->begin_transaction();
+try {
+    $st = $koneksi->prepare("SELECT nomor_rm_end FROM setting_clinic WHERE id_customer = ? FOR UPDATE");
+    $st->bind_param("i", $idc);
+    $st->execute();
+    $row = $st->get_result()->fetch_assoc();
+    $st->close();
+    if ($row) {
+        $lastRM = (int) $row['nomor_rm_end'];
     } else {
         $lastRM = 0;
-        $insert = $koneksi->prepare(
-            "INSERT INTO setting_clinic (id_customer, nomor_rm_end) VALUES (?,0)"
-        );
-        $insert->bind_param("i", $idcustomer);
-        $insert->execute();
-        $insert->close();
+        $ins = $koneksi->prepare("INSERT INTO setting_clinic (id_customer, nomor_rm_end) VALUES (?, 0)");
+        $ins->bind_param("i", $idc);
+        $ins->execute();
+        $ins->close();
     }
-    $stmt->close();
-    $newRM   = $lastRM + 1;
-    $nomorRM = str_pad($newRM, 6, "0", STR_PAD_LEFT);
-    $count = 0;
+    $newRM = $lastRM + 1;
+    $nomorRM = str_pad((string) $newRM, 6, "0", STR_PAD_LEFT);
     do {
         $patientNumber = "PCT-" . strtoupper(bin2hex(random_bytes(4)));
-        $check = $koneksi->prepare(
-            "SELECT COUNT(*) FROM ms_patient WHERE patient_number=?"
-        );
-        $check->bind_param("s", $patientNumber);
-        $check->execute();
-        $check->bind_result($count);
-        $check->fetch();
-        $check->close();
+        $cek = $koneksi->prepare("SELECT COUNT(*) FROM ms_patient WHERE patient_number = ?");
+        $cek->bind_param("s", $patientNumber);
+        $cek->execute();
+        $cek->bind_result($count);
+        $cek->fetch();
+        $cek->close();
     } while ($count > 0);
-    $update = $koneksi->prepare("UPDATE setting_clinic SET nomor_rm_end=? WHERE id_customer=?");
-    $update->bind_param("ii", $newRM, $idcustomer);
-    $update->execute();
-    $update->close();
 
+    $up = $koneksi->prepare("UPDATE setting_clinic SET nomor_rm_end = ? WHERE id_customer = ?");
+    $up->bind_param("ii", $newRM, $idc);
+    $up->execute();
+    $up->close();
 
-    $stmt = $koneksi->prepare("INSERT INTO ms_patient (patient_bpjs, patient_nik, patient_name, patient_gender, patient_datebirth, id_customer, nomor_rm) VALUES (?,?,?,?,?,?,?)");
-    $stmt->bind_param('sssssss', $noKartu, $nik, $nama, $jenisKelamin, $tanggalLahir, $idcustomer, $nomorRM);
-    $result = $stmt->execute();
-
-    if ($result) {
-        $response = [
-            'success'  => true,
-            'message'  => "Berhasil Menambahkan Pasien",
-        ];
-    } else {
-        $response = [
-            'success'  => false,
-            'message'  => "Gagal Mendaftarkan Pasien",
-        ];
-    }
+    $nikDb = $nik !== '' ? $nik : null;
+    $bpjsDb = $noKartu !== '' ? $noKartu : null;
+    $st = $koneksi->prepare("INSERT INTO ms_patient (patient_bpjs, patient_nik, patient_name, patient_gender, patient_datebirth, id_customer, nomor_rm, patient_number)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $st->bind_param('sssssiss', $bpjsDb, $nikDb, $nama, $jenisKelamin, $tgl, $idc, $nomorRM, $patientNumber);
+    if (!$st->execute()) throw new RuntimeException($st->error);
+    $idBaru = (int) $st->insert_id;
+    $st->close();
+    $koneksi->commit();
+} catch (Throwable $e) {
+    $koneksi->rollback();
+    error_log('[addDataPatient] ' . $e->getMessage());
+    apJawab(['success' => false, 'message' => 'Gagal mendaftarkan pasien.']);
 }
-echo json_encode($response);
+
+apJawab(['success' => true, 'message' => "Pasien ditambahkan dengan RM $nomorRM.", 'id_patient' => $idBaru, 'nomor_rm' => $nomorRM]);

@@ -1,614 +1,454 @@
-window.APP = window.APP || {};
-let type = 'BPJS';
-$(function () {
-    $('#pasienSelect').select2({
-        placeholder: 'Ketik nama,nik,bpjs pasien (min. 2 karakter)...',
-        minimumInputLength: 2,
-        width: '100%',
-        ajax: {
-            url: 'controller/admisi/services/getPatient.php',
-            dataType: 'json',
-            delay: 300,
-            cache: true,
-            data: function (params) {
-                return {
-                    nama: params.term || ''
-                };
-            },
-            processResults: function (data) {
-                return {
-                    results: (data || []).map(item => ({
-                        id: item.id,
-                        text: item.nama || '-',
-                        rm: item.no_rm || '-',
-                        nik: item.nik || '-',
-                        tgl_lahir: item.tgl_lahir || '-',
-                        bpjs: item.no_bpjs || '-'
-                    }))
-                };
-            }
-        },
-        templateResult: function (data) {
-            if (!data.id) return data.text;
-            return $(`
-            <div class="select2-result-item">
-                <div class="nama">${data.text}</div>
-                <div class="detail">
-                    RM: ${data.rm} • ${data.tgl_lahir} • ${data.nik} • ${data.bpjs} 
-                </div>
-            </div>
-        `);
-        },
-        templateSelection: function (data) {
-            return data.text || 'Pilih pasien';
-        },
-        language: {
-            inputTooShort: function (args) {
-                let sisa = args.minimum - args.input.length;
-                return sisa === 1
-                    ? 'Masukkan 1 karakter lagi'
-                    : `Masukkan ${sisa} karakter lagi`;
-            },
-            noResults: function () {
-                return `
-                    <div class="d-flex justify-content-between align-items-center" style="gap:10px;">
-                        <span>Pasien tidak ditemukan</span>
-                        <button type="button" id="btnCariBPJS" class="btn btn-sm btn-primary">
-                            Pasien Baru
-                        </button>
-                    </div>
-                `;
-            },
-            searching: function () {
-                return 'Sedang mencari data pasien...';
-            },
-            errorLoading: function () {
-                return 'Gagal mengambil data';
-            }
-        },
-        escapeMarkup: function (markup) {
-            return markup;
-        }
-    });
-    $('#pasienSelect').on('select2:select', function (e) {
-        resetSemuaForm();
-        let data = e.params.data;
-        const nokartu = (data.bpjs || "").trim();
-        const nomor = (nokartu === "" || nokartu === "-")
-            ? data.nik
-            : nokartu;
-        loadPasien(nomor, 'BPJS');
-    });
-    function loadPasien(nomor, tipe) {
-        const url = tipe === 'BPJS'
-            ? "controller/admisi/services/getPasien.php"
-            : "controller/admisi/services/getPasienUmum.php";
-        type = tipe === "BPJS" ? "BPJS" : "UMUM";
-        $('#tampilan').html(`
-            <div class="text-center py-5">
-                <div class="spinner-border text-primary"></div>
-                <div class="mt-2 text-muted">Memuat data pasien...</div>
-            </div>
-        `);
-        let pilih = nomor.length === 16 ? 'nik' : 'noka';
-        $.ajax({
-            url: url,
-            type: 'GET',
-            data: {
-                tipe: pilih,
-                nokartu: nomor
-            },
-            dataType: 'json',
-            success: function (response) {
-                if (response.success) {
-                    $('#tampilan').load("controller/admisi/pages/viewpendaftaran.php", function () {
-                        APP.initLoadfunction();
-                        if (response.warning) {
-                            Swal.fire({
-                                title: "Perhatian",
-                                text: response.message,
-                                icon: "warning",
-                                confirmButtonText: "Lanjutkan"
-                            });
-                        }
-                        if (tipe === "BPJS") {
-                            $('.viewBpjs').removeClass('d-none');
-                        }
-                        // APP.cetak('#typePatient', tipe);
-                        console.log(response.data);
-                        const sex = (response.data.sex || '').toLowerCase();
-                        APP.cetakhtml('#noK', response.data.noKartu || '-');
-                        APP.cetakhtml('#nama', response.data.nama || '-');
-                        APP.cetakhtml('#tglLahir', response.data.tglLahir || '-');
-                        APP.cetakhtml('#kelamin', sex === 'p' || sex === 'perempuan' ? "Perempuan" : "Laki - Laki");
-                        APP.cetakhtml('#ppkumum', response.data.nmProvider || '-');
-                        APP.cetak('#nohp', response.data.noHP || '080000000000');
-                        APP.cetakhtml('#noTelp', response.data.noHP || '-');
-                        APP.cetak('#noKartu', response.data.noKartu || '-');
-                        APP.cetak('#namapatient', response.data.nama || '-');
-                        APP.cetak('#Kelamin', sex === 'p' || sex === 'perempuan' ? "Perempuan" : "Laki - Laki");
-                        APP.cetak('#tgllahir', response.data.tglLahir || '-');
-                        APP.cetakhtml('#no_rekammedis', response.data.rm || '-');
+/*
+ * Pendaftaran poliklinik (module/admisi/pendaftaran).
+ * Alur: cari pasien -> data lokal tampil langsung -> cek BPJS berjalan di belakang -> pilih poli, dokter, penjamin -> daftar.
+ * Field POST ke prosesPendaftaranTunggal.php tetap sama dengan versi sebelumnya.
+ */
+(function () {
+    'use strict';
+    const $id = id => document.getElementById(id);
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const tglIndo = s => { const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})/) || String(s || '').match(/^(\d{2})-(\d{2})-(\d{4})/); if (!m) return '-'; const [y, mo, d] = m[1].length === 4 ? [m[1], m[2], m[3]] : [m[3], m[2], m[1]]; return (+d) + ' ' + BLN[mo - 1] + ' ' + y; };
+    const tglJkt = h => new Date(Date.now() + (h || 0) * 86400000).toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
+    const inisial = n => String(n || '?').replace(/^\s*(an|by|ny|tn|nn|sdr|sdri|drg?)\.?\s+/i, '').trim().split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || '?';
+    const API = 'controller/admisi/services/pendaftaranPasien.php';
+    const getJSON = (url, data) => $.ajax({ url, data, dataType: 'json', cache: false });
 
-                        APP.cetakhtml('#jns_peserta', response.data.jnsPeserta || '-');
-                        APP.cetakhtml('#klsPeserta', response.data.jnsKelas.nama || '-');
-                        APP.cetakhtml('#hubunganKeluarga', response.data.hubunganKeluarga || '-');
-                        
-                        APP.cetakhtml('#status_prolanis', response.data.informasi.prolanis ?? '');
-                        APP.cetakhtml('#status_PRB', response.data.informasi.prb ?? '');
-                        APP.cetak('#norm', response.data.rm || '-');
-                        APP.cetak("#typePasien", tipe);
-                        APP.cetak("#SProlanis", response.data.informasi.prolanis);
-                        APP.cetak("#SPRB", response.data.informasi.prb);
-                        APP.cetak("#id_patient", response.data.id_patient);
-                        let nik = response.data.noKTP;
-                        APP.cetak('#noNIK', nik);
-                        APP.cetakhtml('#nonik', nik);
-                        APP.cetakhtml('#ppkumum', response.data.nmProvider || '-');
-                        APP.cetak('#kdProviderPeserta', response.data.kdProvider || '');
-                    });
-                } else {
-                    resetTampilan();
-                    if (tipe === 'BPJS') {
-                        Swal.fire({
-                            title: "Data BPJS Bermasalah",
-                            text: response.message,
-                            icon: "warning",
-                            showDenyButton: true,
-                            confirmButtonText: "Daftar Umum",
-                            denyButtonText: "Tutup"
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                loadPasien(nomor, 'UMUM');
-                            }
-                        });
-                    } else {
-                        Swal.fire({
-                            title: "Tidak Ditemukan",
-                            text: "Data pasien umum juga tidak ditemukan",
-                            icon: "error"
-                        });
-                    }
-                }
-            },
-            error: function () {
-                resetTampilan();
-                Swal.fire({
-                    title: "Opss..",
-                    text: "Terjadi Kesalahan Server",
-                    icon: "error"
-                });
-            }
-        });
+    let P = null;          // pasien terpilih (data lokal)
+    let B = null;          // hasil cek BPJS
+    let bpjsXhr = null, poliCache = null, providerCache = {}, dokterXhr = null;
+
+    /* =============== PENCARIAN =============== */
+    let hasil = [], idx = -1, tCari = null, cariXhr = null, qTerakhir = '';
+    function sorot(teks, q) {
+        const t = esc(teks);
+        if (!q) return t;
+        const i = String(teks).toLowerCase().indexOf(q.toLowerCase());
+        return i < 0 ? t : esc(teks.slice(0, i)) + '<span class="pd-mark">' + esc(teks.slice(i, i + q.length)) + '</span>' + esc(teks.slice(i + q.length));
     }
-    function resetTampilan() {
-        $('#tampilan').html(`
-        <div class="text-muted text-center py-4">
-            <iconify-icon icon="solar:info-circle-linear" width="22"></iconify-icon>
-            <p class="mb-0 mt-2">
-                Data pasien akan ditampilkan di sini
-            </p>
-        </div>
-    `);
+    function renderHasil(q) {
+        const box = $id('pdHasil');
+        if (!hasil.length) {
+            box.innerHTML = `<div class="pd-kosong">Pasien "<b>${esc(q)}</b>" tidak ditemukan.<div class="mt-2 d-flex gap-2 justify-content-center">
+              <button type="button" class="btn btn-sm btn-primary" data-baru="bpjs"><i class="fas fa-id-card me-1"></i>Pasien baru (cek BPJS)</button>
+              <a class="btn btn-sm btn-outline-secondary" href="module/admisi/registrasi-new">Daftar manual</a></div></div>`;
+        } else {
+            box.innerHTML = hasil.map((r, i) => `<div class="pd-item ${i === idx ? 'aktif' : ''}" data-i="${i}">
+              <span class="pd-ava ${r.jk === 'Perempuan' ? 'p' : ''}">${esc(inisial(r.nama))}</span>
+              <div class="min-w-0 flex-grow-1">
+                <div class="fw-semibold text-truncate">${sorot(r.nama, q)}</div>
+                <div class="small text-muted text-truncate"><span class="pd-rm">${sorot(r.rm || '-', q)}</span>
+                  ${r.umur !== null ? ' · ' + r.umur + ' th' : ''}${r.jk ? ' · ' + (r.jk === 'Laki-laki' ? 'L' : 'P') : ''}
+                  ${r.nik ? ' · NIK ' + sorot(r.nik, q) : ''}${r.bpjs ? ' · BPJS ' + sorot(r.bpjs, q) : ''}</div>
+              </div>
+              <span class="small text-muted text-nowrap d-none d-md-inline">${r.terakhir ? 'Terakhir ' + tglIndo(r.terakhir) : 'Belum pernah berkunjung'}</span>
+            </div>`).join('');
+        }
+        box.classList.remove('d-none');
     }
-    $(document).on('click', '#btnCariBPJS', function () {
-        $('#pasienSelect').select2('close');
-        $('#modalCariBPJS').modal('show');
+    function cari(q) {
+        if (cariXhr) cariXhr.abort();
+        $id('pdHasil').innerHTML = '<div class="pd-kosong"><span class="spinner-border spinner-border-sm me-2"></span>Mencari…</div>';
+        $id('pdHasil').classList.remove('d-none');
+        cariXhr = getJSON(API, { aksi: 'cari', q }).done(res => {
+            if (q !== qTerakhir) return;
+            hasil = (res && res.data) || [];
+            idx = hasil.length ? 0 : -1;
+            renderHasil(q);
+        }).fail((x, s) => { if (s !== 'abort') $id('pdHasil').innerHTML = '<div class="pd-kosong text-danger">Gagal mencari. Coba lagi.</div>'; });
+    }
+    $id('pdCari').addEventListener('input', function () {
+        const q = this.value.trim();
+        qTerakhir = q;
+        clearTimeout(tCari);
+        if (q.length < 2) { $id('pdHasil').classList.add('d-none'); return; }
+        tCari = setTimeout(() => cari(q), 250);
     });
-    $(document).on('select2:open', () => {
-        document.querySelector('.select2-container--open .select2-search__field')?.focus();
+    $id('pdCari').addEventListener('keydown', function (e) {
+        if ($id('pdHasil').classList.contains('d-none') || !hasil.length) return;
+        if (e.key === 'ArrowDown') { e.preventDefault(); idx = Math.min(hasil.length - 1, idx + 1); renderHasil(qTerakhir); scrollAktif(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); idx = Math.max(0, idx - 1); renderHasil(qTerakhir); scrollAktif(); }
+        else if (e.key === 'Enter') { e.preventDefault(); if (hasil[idx]) pilihPasien(hasil[idx].id); }
+        else if (e.key === 'Escape') $id('pdHasil').classList.add('d-none');
     });
-    $('#btnSearchBPJS').on('click', function () {
-        let noKartu = $('#inputNIK').val();
-        const btn = $(this);
-        let pilih = noKartu.length === 16 ? 'nik' : 'noka';
-        $.ajax({
-            url: "controller/admisi/services/getPasien.php",
-            type: 'GET',
-            data: {
-                tipe: pilih,
-                nokartu: noKartu
-            },
-            dataType: 'json',
-            beforeSend() {
-                APP.load_btn_aktif(btn);
-                $('#formBPJS')[0].reset();
-                $('#formBPJS').find('input').val('');
-                $('#formBPJS, #btnTambahPasien').addClass('d-none');
-            },
-            success: function (response) {
-                let hasil = null;
-                if (response.success && response.data) {
-                    hasil = response;
-                }
-                else if (response.result && response.result.success && response.result.data) {
-                    hasil = response.result;
-                }
-                if (hasil) {
-                    let d = hasil.data;
-                    if (hasil.warning) {
-                        Swal.fire({
-                            title: "Perhatian",
-                            text: hasil.message,
-                            icon: "warning"
-                        });
-                    }
-                    $('#btnTambahPasien, #formBPJS').removeClass('d-none');
-                    APP.cetak('#regNoBPJS', d.noKartu);
-                    APP.cetak('#regNama', d.nama);
-                    APP.cetak('#regJnsKelamin', d.sex == "P" ? "Perempuan" : "Laki - Laki");
-                    APP.cetak('#regTglLahir', d.tglLahir);
-                    APP.cetak('#noKartuDaftar', noKartu);
-                    APP.cetak("#typePasien", "BPJS");
-                    if (d.aktif === false) {
-                        Swal.fire({
-                            title: "Perhatian",
-                            text: "Peserta tidak aktif: " + d.ketAktif,
-                            icon: "warning"
-                        });
-                    }
-                } else {
-                    $('#formBPJS').addClass('d-none');
-                    Swal.fire({
-                        title: "Warning",
-                        text: response.message || "Peserta tidak ditemukan",
-                        icon: "error",
-                        showDenyButton: true,
-                        confirmButtonText: "Daftar",
-                        denyButtonText: "Kembali"
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = "module/admisi/registrasi-new";
-                        }
-                    });
-                }
-            },
-            complete: function () {
-                APP.load_btn_non(btn, "Cari");
-            },
-            error: function (xhr, status, error) {
-                Swal.fire({
-                    title: "Opss..",
-                    text: "Terjadi Kesalahan",
-                    icon: "error"
-                });
-                APP.load_btn_non(btn, 'Cari');
-            }
-        })
-    })
-    $(document).on('click', '#btnTambahPasien', function () {
-        const btn = $(this);
-        let data = $('#formBPJS').serialize();
-        $.ajax({
-            url: 'controller/admisi/services/addDataPatient.php',
-            type: "POST",
-            data: data,
-            dataType: 'json',
-            beforeSend: function () {
-                APP.load_btn_aktif(btn);
-            },
-            success: function (res) {
-                if (res.success) {
-                    Swal.fire({
-                        title: "Success",
-                        text: "Berhasil Menambahkan Peserta",
-                        icon: "success",
-                        confirmButtonText: "OK",
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        allowEnterKey: false,
-                        showLoaderOnConfirm: true,
-                        preConfirm: () => {
-                            Swal.disableButtons();
-                            return new Promise((resolve) => {
-                                setTimeout(() => {
-                                    resolve();
-                                    location.reload();
-                                }, 800);
-                            });
-                        }
-                    });
-                } else {
-                    APP.load_btn_non(btn, '+ Tambah Pasien');
-                    Swal.fire({
-                        title: "Perhatian",
-                        text: res.message,
-                        icon: "warning"
-                    });
-                }
-            },
-            error: function () {
-                APP.load_btn_non(btn, '+ Tambah Pasien');
-                Swal.fire({
-                    title: "Error",
-                    text: "Terjadi kesalahan server",
-                    icon: "error"
-                });
-            }
-        });
+    const scrollAktif = () => { const el = $id('pdHasil').querySelector('.pd-item.aktif'); if (el) el.scrollIntoView({ block: 'nearest' }); };
+    $id('pdHasil').addEventListener('mousedown', e => {
+        const it = e.target.closest('.pd-item');
+        if (it) { e.preventDefault(); pilihPasien(hasil[+it.dataset.i].id); return; }
+        if (e.target.closest('[data-baru]')) { e.preventDefault(); bukaPasienBaru($id('pdCari').value.trim()); }
     });
-    APP.initLoadfunction = function () {
-        flatpickr("#tanggalKunjung", {
-            dateFormat: "Y-m-d",
-            altFormat: "F j, Y",
-            defaultDate: "today",
-            maxDate: "today"
-        });
-        $.ajax({
-            url: 'controller/admisi/services/get_provider.php?type=' + type,
-            dataType: 'json',
-            success: function (data) {
-                let options = '';
-                $.each(data, function (i, item) {
-                    options += `<option value="${item.id}">${item.text}</option>`;
-                });
-                $('#kodeprov').html(options).trigger('change');
-                setTypePasien();
-            }
-        });
-        APP.updatePoliOptions = function (poliSakit) {
-            poliSakit = (poliSakit === true || poliSakit === 'true');
-            var select = $('#kodepoli');
-            select.empty();
-            select.prop('disabled', true);
-            select.html('<option value="">Mencari data...</option>');
-            select.val('').trigger('change');
-            $.ajax({
-                url: 'controller/admisi/services/getPoli.php',
-                type: 'POST',
-                dataType: 'json',
-                success: function (response) {
-                    if (!response.success) {
-                        console.log('Gagal load poli');
-                        return;
-                    }
-                    select.empty();
-                    $.each(response.data, function (index, item) {
-                        if (item.poliSakit == poliSakit) {
-                            select.append(new Option(item.nmPoli, item.kdPoli, false, false));
-                        }
-                    });
-                    select.prop('disabled', false);
-                    select.trigger('change');
-                },
-                error: function (xhr, status, error) {
-                    console.log(xhr.responseText);
-                }
-            });
+    $id('pdCari').addEventListener('blur', () => setTimeout(() => $id('pdHasil').classList.add('d-none'), 150));
+    $id('pdCari').addEventListener('focus', function () { if (this.value.trim().length >= 2 && hasil.length) renderHasil(qTerakhir); });
+
+    /* =============== PASIEN TERPILIH =============== */
+    function pilihPasien(id) {
+        $id('pdHasil').classList.add('d-none');
+        $id('pdArea').classList.remove('d-none');
+        $id('pdNama').textContent = 'Memuat…';
+        $id('pdBpjsBox').className = 'pd-bpjs info mb-3';
+        $id('pdBpjsBox').innerHTML = '<div class="pd-sk" style="height:56px"></div>';
+        if (bpjsXhr) bpjsXhr.abort();
+        B = null;
+        getJSON(API, { aksi: 'detail', id }).done(res => {
+            if (!res || !res.success) { Swal.fire('Gagal', (res && res.message) || 'Data pasien tidak ditemukan.', 'error'); return; }
+            P = res.data;
+            tampilPasien();
+            resetForm();
+            cekBpjs();
+            window.scrollTo({ top: $id('pdArea').getBoundingClientRect().top + window.scrollY - 90, behavior: 'smooth' });
+        }).fail(x => Swal.fire('Gagal', (x.responseJSON && x.responseJSON.message) || 'Gagal memuat data pasien.', 'error'));
+    }
+    function tampilPasien() {
+        $id('pdAva').textContent = inisial(P.nama);
+        $id('pdAva').classList.toggle('p', P.jk === 'Perempuan');
+        $id('pdNama').textContent = P.nama || '-';
+        $id('pdSub').innerHTML = `<span class="pd-rm">${esc(P.rm || '-')}</span>${P.umur !== null ? ' · ' + P.umur + ' tahun' : ''}`;
+        $id('pdNik').textContent = P.nik || (P.nik_mentah ? P.nik_mentah + ' (tidak valid)' : '-');
+        $id('pdBpjs').textContent = P.bpjs || (P.bpjs_mentah ? P.bpjs_mentah + ' (tidak valid)' : '-');
+        $id('pdLahir').textContent = tglIndo(P.lahir);
+        $id('pdJk').textContent = P.jk || '-';
+        $id('pdHp').value = P.hp || '';
+        // field yang dikirim
+        $id('noNIK').value = P.nik || P.nik_mentah || '';
+        $id('namapatient').value = P.nama || '';
+        $id('Kelamin').value = P.jk === 'Perempuan' ? 'Perempuan' : 'Laki - Laki';
+        $id('tgllahir').value = P.lahir || '';
+        $id('norm').value = P.rm || '';
+        $id('id_patient').value = P.id_patient;
+        $id('noKartu').value = P.bpjs || '';
+        $id('SProlanis').value = P.prolanis || '';
+        $id('SPRB').value = P.prb || '';
+        const k = P.kunjungan_hari_ini || [];
+        $id('pdHariIni').classList.toggle('d-none', !k.length);
+        $id('pdHariIni').innerHTML = k.length ? '<i class="fas fa-triangle-exclamation me-1"></i><b>Sudah terdaftar hari ini:</b><ul class="mb-0 ps-3 mt-1">' +
+            k.map(v => `<li>${esc(v.id_poli)} · ${esc(v.id_doctor || '-')} · antrian ${esc(v.visit_antrian || '-')}</li>`).join('') + '</ul>' : '';
+    }
+    function bpjsBox(cls, html) { $id('pdBpjsBox').className = 'pd-bpjs ' + cls + ' mb-3'; $id('pdBpjsBox').innerHTML = html; }
+    function cekBpjs() {
+        if (!P.bpjs && !P.nik) {
+            bpjsBox('info', '<div class="small"><i class="fas fa-circle-info me-1 text-muted"></i>Pasien tidak memiliki NIK / no. BPJS valid — didaftarkan sebagai <b>pasien umum</b>.</div>');
+            terapkanPenjamin();
+            return;
         }
-        // APP.ambil_data_dokter('#kodedokter', 'dokter/0/100', 'nmDokter', 'kdDokter', true);
-        function loadDokter(status = true) {
-            const $select = $('#kodedokter');
-
-            // Clinics without a setting_antrol row: use raw BPJS PCare doctor list
-            if (typeof window.USE_LOCAL_DOKTER !== 'undefined' && window.USE_LOCAL_DOKTER === false) {
-                $select.html('<option value="">Loading...</option>').trigger('change.select2');
-                $.ajax({
-                    url: 'controller/admisi/services/getApi.php',
-                    type: 'POST',
-                    data: { url: 'dokter/0/100' },
-                    dataType: 'json',
-                    success: function (response) {
-                        $select.empty();
-                        if (status) {
-                            $select.append('<option value="">- Pilih -</option>');
-                        }
-                        (response.list || []).forEach(function (item) {
-                            $select.append(
-                                '<option value="' + item.kdDokter + '" ' +
-                                'data-nama="' + item.nmDokter + '" data-jam="">' +
-                                item.nmDokter +
-                                '</option>'
-                            );
-                        });
-                        $select.trigger('change.select2');
-                    },
-                    error: function (err) {
-                        console.error(err);
-                        $select.html('<option value="">Error loading data</option>').trigger('change.select2');
-                    }
-
-                });
-                return;
-            }
-
-            const tgl = $('#tanggalKunjung').val();
-            const poli = $('#kodepoli').val();
-            $select.html('<option value="">Loading...</option>').trigger('change.select2');
-            $.ajax({
-                url: 'controller/admisi/services/getDokterlocal.php',
-                type: 'GET',
-                data: {
-                    kdpoli: poli,
-                    tanggal: tgl
-                },
-                dataType: 'json',
-                success: function (response) {
-                    $select.empty();
-                    if (status) {
-                        $select.append('<option value="">- Pilih -</option>');
-                    }
-                    response.data.forEach(function (item) {
-                        let disabled = item.exp ? '' : '';
-                        let textExp = item.exp ? '(Sudah Tutup)' : '';
-                        $select.append(
-                            '<option value="' + item.kodedokter + '" ' +
-                            'data-nama="' + item.namadokter + '" ' +
-                            'data-jam="' + item.jampraktek + '" ' +
-                            'data-dokterpcare="' + item.nmDokterBpjs + '" ' +
-                            disabled +
-                            '>' +
-                            item.namadokter + ' (' + item.jampraktek + ')' + textExp +
-                            '</option>'
-                        );
-                    });
-                    $select.trigger('change.select2');
-                },
-                error: function (err) {
-                    console.error(err);
-                    $select.html('<option value="">Error loading data</option>').trigger('change.select2');
-                }
-            });
-        }
-        $('#kodedokter').on('change', function () {
-            let selected = $(this).find('option:selected');
-            $('#namadokter').val(selected.data('nama') || '');
-            $('#namadokterPcare').val(selected.data('dokterpcare') || '');
-            $('#jampraktek').val(selected.data('jam') || '');
-        });
-        $("#kodepoli").on("change", function () {
-            let nmPoli = $("#kodepoli option:selected").text();
-            $("#nmPoli").val(nmPoli);
-            loadDokter();
-        });
-        const knjsakit = [
-            {
-                id: "10",
-                text: "Rawat Jalan",
-            },
-            {
-                id: "50",
-                text: "Promotif Preventif"
-            }
-        ]
-        $("#kunjungan").select2({
-            width: "100%",
-        });
-        $('#kodepoli').select2({
-            width: '100%',
-            language: {
-                noResults: function () {
-                    return "Poli tidak ditemukan";
-                }
-            }
-        });
-        $('#kodedokter').select2({
-            width: '100%',
-            language: {
-                noResults: function () {
-                    return "Dokter tidak ditemukan";
-                }
-            }
-        });
-        $('#kodeprov').select2({
-            width: '100%',
-            language: {
-                noResults: function () {
-                    return "Provider tidak ditemukan";
-                }
-            }
-        });
-        $('#kunjSakit').select2({
-            width: "100%",
-            placeholder: "Jenis Kunjungan",
-            allowClear: false,
-            data: [
-                {
-                    id: "true",
-                    text: "Kunjungan Sakit"
-                },
-                {
-                    id: "false",
-                    text: "Kunjungan Sehat"
-                }
-            ]
-        })
-        APP.jnsKunjungvalue = function () {
-            var selectedValue = $('#kunjSakit').val();
-            APP.resetSelect('#kunjungan');
-            APP.updatePoliOptions(selectedValue);
-            if (selectedValue == 'true') {
-                knjsakit.forEach((item) => {
-                    $('#kunjungan').append(new Option(item.text, item.id, false, false));
-                });
-                $("#kunjungan").val("10").trigger("change");
-                $('#statusKsehat').removeClass('d-none');
-                setTypePasien();
+        bpjsBox('info', '<div class="small text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Mengecek kepesertaan BPJS…</div>');
+        const id = P.id_patient;
+        bpjsXhr = getJSON(API, { aksi: 'bpjs', id }).done(res => {
+            if (!P || P.id_patient !== id) return;
+            if (!res || !res.success) {
+                B = { aktif: false };
+                bpjsBox('no', `<div class="fw-semibold text-danger small"><i class="fas fa-circle-xmark me-1"></i>BPJS tidak dapat diverifikasi</div><div class="small">${esc((res && res.message) || 'Layanan BPJS tidak merespons.')}</div>
+                  <div class="small text-muted mt-1">Pasien bisa didaftarkan sebagai pasien umum. <a href="javascript:;" id="pdCekUlang">Cek ulang</a></div>`);
             } else {
-                APP.addValueSelect('#kunjungan', '10', 'Rawat Jalan');
-                $('#statusKsehat').addClass('d-none');
-                APP.cetak("#typePasien", "BPJS");
+                B = Object.assign({ aktif: res.aktif, peringatan: res.peringatan, message: res.message }, res.data);
+                if (B.aktif) {
+                    $id('noKartu').value = B.noKartu || P.bpjs || '';
+                    if (!P.bpjs && B.noKartu) $id('pdBpjs').innerHTML = esc(B.noKartu) + ' <span class="badge bg-info-subtle text-info">dari BPJS</span>';
+                    $id('kdProviderPeserta').value = B.kdProvider || '';
+                    $id('SProlanis').value = B.prolanis || '';
+                    $id('SPRB').value = B.prb || '';
+                    if (!$id('pdHp').value && B.noHP) $id('pdHp').value = B.noHP;
+                }
+                const chip = (t, c) => `<span class="badge bg-${c}-subtle text-${c} me-1">${esc(t)}</span>`;
+                bpjsBox(B.aktif ? 'ok' : 'no', `
+                  <div class="d-flex align-items-center mb-1"><span class="fw-semibold small ${B.aktif ? 'text-success' : 'text-danger'}"><i class="fas ${B.aktif ? 'fa-circle-check' : 'fa-circle-xmark'} me-1"></i>BPJS ${B.aktif ? 'AKTIF' : 'TIDAK AKTIF'}</span>
+                    <span class="small text-muted ms-auto">${esc(B.noKartu || '')}</span></div>
+                  ${B.aktif ? '' : `<div class="small">${esc(B.message || '')}</div>`}
+                  <div class="small">${[B.jnsPeserta, B.kelas, B.hubunganKeluarga].filter(Boolean).map(esc).join(' · ')}</div>
+                  <div class="small text-muted">FKTP: ${esc(B.nmProvider || '-')}</div>
+                  <div class="mt-1">${B.prolanis ? chip('Prolanis ' + B.prolanis, 'danger') : ''}${B.prb ? chip('PRB ' + B.prb, 'warning') : ''}${+B.tunggakan > 0 ? chip('Tunggakan', 'danger') : ''}</div>
+                  ${B.peringatan ? `<div class="small text-warning-emphasis mt-1"><i class="fas fa-triangle-exclamation me-1"></i>${esc(B.peringatan)}</div>` : ''}`);
             }
-        }
-        APP.jnsKunjungvalue();
-        $('#create').click(function () {
-            APP.load_btn_aktif('#create');
-            APP.createpeserta();
+            terapkanPenjamin();
+        }).fail((x, s) => {
+            if (s === 'abort') return;
+            B = { aktif: false };
+            bpjsBox('no', '<div class="small text-danger"><i class="fas fa-circle-exclamation me-1"></i>Gagal mengecek BPJS. <a href="javascript:;" id="pdCekUlang">Cek ulang</a></div>');
+            terapkanPenjamin();
         });
-        $('#kunjSakit').change(function () {
-            APP.jnsKunjungvalue();
-        });
-        $('#tinggiBadan, #beratBadan').on('input', function () {
-            APP.hitungBMI();
-        });
-        $('#kodeprov').on('change', function () {
-            setTypePasien();
-        });
-
     }
-    APP.createpeserta = function () {
-        var data = $('#isiform').serialize();
-        $.ajax({
-            type: "POST",
-            url: 'controller/admisi/services/prosesPendaftaranTunggal.php',
-            dataType: "json",
-            data: data,
-            success: function (res) {
-                if (!res.success) {
+    $(document).on('click', '#pdCekUlang', () => P && cekBpjs());
+    $id('pdGanti').addEventListener('click', () => { batal(); });
+
+    /* =============== FORM =============== */
+    function sakit() { return $id('kunjSakit').value === 'true'; }
+    function resetForm() {
+        $id('pdForm').reset();
+        penjaminManual = false;
+        $id('paksa').value = '0';
+        $id('jSakit').checked = true;
+        $id('kunjSakit').value = 'true';
+        $id('tanggalKunjung').value = tglJkt(0);
+        $id('tanggalKunjung').max = tglJkt(0);
+        $id('tanggalKunjung').min = tglJkt(-7);
+        $id('kodedokter').value = $id('namadokter').value = $id('namadokterPcare').value = $id('jampraktek').value = '';
+        $id('pdError').classList.add('d-none');
+        $id('pdForm').querySelectorAll('.is-invalid').forEach(e => e.classList.remove('is-invalid'));
+        hitungBmi();
+        aturJenis();
+    }
+    function aturJenis() {
+        const s = sakit();
+        $id('statusKsehat').classList.toggle('d-none', !s);
+        $id('pdTkpWrap').classList.toggle('d-none', !s);
+        $id('kunjungan').value = s ? $id('pdTkp').value : '10';
+        muatPoli();
+        terapkanPenjamin();
+        ringkas();
+    }
+    $id('pdJenis').addEventListener('change', e => { $id('kunjSakit').value = e.target.value; aturJenis(); });
+    $id('pdTkp').addEventListener('change', function () { $id('kunjungan').value = this.value; });
+
+    function muatPoli() {
+        const s = sakit();
+        const isi = list => {
+            const pilihan = list.filter(p => p.poliSakit === s);
+            const lama = $id('kodepoli').value;
+            $id('kodepoli').innerHTML = '<option value="">— Pilih poli —</option>' + pilihan.map(p => `<option value="${esc(p.kdPoli)}">${esc(p.nmPoli)}</option>`).join('');
+            if (pilihan.some(p => p.kdPoli === lama)) $id('kodepoli').value = lama;
+            else if (pilihan.length === 1) $id('kodepoli').value = pilihan[0].kdPoli;
+            gantiPoli();
+        };
+        if (poliCache) return isi(poliCache);
+        $.ajax({ url: 'controller/admisi/services/getPoli.php', type: 'POST', dataType: 'json' })
+            .done(res => { poliCache = (res && res.data) || []; isi(poliCache); })
+            .fail(() => { $id('kodepoli').innerHTML = '<option value="">Gagal memuat poli</option>'; });
+    }
+    function gantiPoli() {
+        $id('nmPoli').value = $id('kodepoli').value ? $id('kodepoli').selectedOptions[0].text : '';
+        $id('kodepoli').classList.remove('is-invalid');
+        pilihDokter(null);
+        if (sakit()) muatDokter();
+        ringkas();
+    }
+    $id('kodepoli').addEventListener('change', gantiPoli);
+    $id('tanggalKunjung').addEventListener('change', () => { if (sakit()) muatDokter(); ringkas(); });
+
+    let dokterList = [];
+    function muatDokter() {
+        const poli = $id('kodepoli').value, tgl = $id('tanggalKunjung').value;
+        if (dokterXhr) dokterXhr.abort();
+        if (!poli) { $id('pdDokter').innerHTML = '<div class="small text-muted">Pilih poli terlebih dahulu.</div>'; $id('pdDokterInfo').textContent = ''; return; }
+        $id('pdDokter').innerHTML = '<div class="pd-sk" style="height:48px"></div><div class="pd-sk" style="height:48px"></div>';
+        const lokal = window.USE_LOCAL_DOKTER !== false;
+        const req = lokal ? $.ajax({ url: 'controller/admisi/services/getDokterlocal.php', data: { kdpoli: poli, tanggal: tgl }, dataType: 'json' })
+            : $.ajax({ url: 'controller/admisi/services/getApi.php', type: 'POST', data: { url: 'dokter/0/100' }, dataType: 'json' });
+        dokterXhr = req.done(res => {
+            dokterList = lokal ? ((res && res.data) || []).map(d => ({ kode: String(d.kodedokter), nama: d.namadokter, jam: d.jampraktek, pcare: d.nmDokterBpjs || d.namadokter, tutup: !!d.exp }))
+                : ((res && res.list) || []).map(d => ({ kode: String(d.kdDokter), nama: d.nmDokter, jam: '', pcare: d.nmDokter, tutup: false }));
+            $id('pdDokterInfo').textContent = lokal && res && res.hari ? 'Jadwal hari ' + res.hari : '';
+            renderDokter();
+        }).fail((x, s) => { if (s !== 'abort') $id('pdDokter').innerHTML = '<div class="small text-danger">Gagal memuat dokter. <a href="javascript:;" id="pdDokterUlang">Coba lagi</a></div>'; });
+    }
+    $(document).on('click', '#pdDokterUlang', muatDokter);
+    function renderDokter() {
+        if (!dokterList.length) { $id('pdDokter').innerHTML = '<div class="small text-warning-emphasis"><i class="fas fa-calendar-xmark me-1"></i>Tidak ada dokter dengan jadwal di poli ini pada tanggal tersebut.</div>'; return; }
+        const buka = dokterList.filter(d => !d.tutup);
+        $id('pdDokter').innerHTML = dokterList.map(d => `<button type="button" class="pd-dk ${d.kode === $id('kodedokter').value ? 'pilih' : ''}" data-kode="${esc(d.kode)}" ${d.tutup ? 'disabled title="Jam praktik sudah selesai"' : ''}>
+            <span class="pd-ava">${esc(inisial(d.nama))}</span>
+            <span class="min-w-0"><span class="d-block fw-semibold small text-truncate">${esc(d.nama)}</span>
+              <span class="d-block small ${d.tutup ? 'text-danger' : 'text-muted'}">${d.jam ? esc(d.jam) : 'Jadwal PCare'}${d.tutup ? ' · sudah tutup' : ''}</span>
+              ${namaBeda(d) ? `<span class="d-block small text-warning-emphasis" title="Kode dokter di master jadwal mengarah ke tenaga lain di BPJS"><i class="fas fa-triangle-exclamation me-1"></i>Di BPJS: ${esc(d.pcare)}</span>` : ''}</span></button>`).join('');
+        if (buka.length === 1 && !$id('kodedokter').value) pilihDokter(buka[0]);
+    }
+    // nama dokter lokal vs nama di master BPJS (kode dokter salah petik -> pendaftaran PCare atas nama orang lain)
+    function namaBeda(d) {
+        const n = x => String(x || '').toLowerCase().replace(/\b(drg?|bd|ns|amd|keb|kep|kes|skeb|skm)\b\.?/g, ' ').replace(/[^a-z]/g, '');
+        const a = n(d.nama), b = n(d.pcare);
+        return a && b && !(a.includes(b) || b.includes(a));
+    }
+    function pilihDokter(d) {
+        $id('kodedokter').value = d ? d.kode : '';
+        $id('namadokter').value = d ? d.nama : '';
+        $id('namadokterPcare').value = d ? d.pcare : '';
+        $id('jampraktek').value = d ? d.jam : '';
+        $id('pdDokter').querySelectorAll('.pd-dk').forEach(b => b.classList.toggle('pilih', !!d && b.dataset.kode === d.kode));
+        $id('pdDokter').classList.remove('border', 'border-danger', 'rounded');
+        ringkas();
+    }
+    $id('pdDokter').addEventListener('click', e => {
+        const b = e.target.closest('.pd-dk');
+        if (b && !b.disabled) pilihDokter(dokterList.find(d => d.kode === b.dataset.kode));
+    });
+
+    /* penjamin: BPJS hanya bila peserta aktif; tipe pasien mengikuti penjamin (seperti sebelumnya) */
+    function terapkanPenjamin() {
+        const bpjsOk = !!(B && B.aktif);
+        const tipe = bpjsOk ? 'BPJS' : 'UMUM';
+        const isi = list => {
+            const lama = $id('kodeprov').value;
+            $id('kodeprov').innerHTML = list.map(p => `<option value="${esc(p.id)}">${esc(p.text)}</option>`).join('');
+            const bp = list.find(p => /bpjs kesehatan/i.test(p.text));
+            // peserta aktif -> BPJS otomatis, kecuali petugas sudah memilih penjamin sendiri
+            if (bpjsOk && bp && !penjaminManual) $id('kodeprov').value = bp.id;
+            else if (list.some(p => String(p.id) === String(lama))) $id('kodeprov').value = lama;
+            else { const tunai = list.find(p => /tunai|umum/i.test(p.text)); if (tunai) $id('kodeprov').value = tunai.id; }
+            setTipe();
+        };
+        if (providerCache[tipe]) return isi(providerCache[tipe]);
+        $.getJSON('controller/admisi/services/get_provider.php', { type: tipe }).done(d => { providerCache[tipe] = d || []; isi(providerCache[tipe]); });
+    }
+    function setTipe() {
+        const nama = ($id('kodeprov').selectedOptions[0] || {}).text || '';
+        const tipe = sakit() ? (/bpjs kesehatan/i.test(nama) ? 'BPJS' : 'UMUM') : 'BPJS';
+        $id('typePasien').value = tipe;
+        $id('pdTipeInfo').innerHTML = tipe === 'BPJS' ? '<i class="fas fa-circle-check text-success me-1"></i>Didaftarkan ke PCare &amp; antrean BPJS' : 'Pasien umum / non-BPJS';
+        ringkas();
+    }
+    let penjaminManual = false;
+    $id('kodeprov').addEventListener('change', e => { if (e.isTrusted) penjaminManual = true; setTipe(); });
+
+    /* BMI */
+    function hitungBmi() {
+        const tb = parseFloat($id('tinggiBadan').value), bb = parseFloat($id('beratBadan').value);
+        if (tb >= 30 && bb > 0) {
+            const bmi = bb / Math.pow(tb / 100, 2), ket = bmi < 18.5 ? 'Kurus' : bmi < 25 ? 'Normal' : bmi < 30 ? 'Gemuk' : 'Obesitas';
+            $id('bmi').value = bmi.toFixed(2); $id('bmiKet').value = ket; $id('pdBmi').textContent = bmi.toFixed(2) + ' · ' + ket;
+        } else { $id('bmi').value = ''; $id('bmiKet').value = ''; $id('pdBmi').textContent = '—'; }
+    }
+    ['tinggiBadan', 'beratBadan'].forEach(i => $id(i).addEventListener('input', hitungBmi));
+
+    function ringkas() {
+        const poli = $id('nmPoli').value, dk = $id('namadokter').value, tipe = $id('typePasien').value;
+        $id('pdRingkas').innerHTML = poli ? `${esc(poli)}${sakit() && dk ? ' · ' + esc(dk) : ''} · <b>${esc(tipe || '-')}</b>` : '';
+    }
+
+    function validasi() {
+        const err = [];
+        const tandai = (el, pesan) => { el.classList.add('is-invalid'); err.push(pesan); };
+        $id('pdForm').querySelectorAll('.is-invalid').forEach(e => e.classList.remove('is-invalid'));
+        $id('pdDokter').classList.remove('border', 'border-danger', 'rounded');
+        if (!P) err.push('pilih pasien');
+        if (!$id('kodepoli').value) tandai($id('kodepoli'), 'poli tujuan');
+        if (sakit() && !$id('kodedokter').value) { err.push('dokter'); $id('pdDokter').classList.add('border', 'border-danger', 'rounded'); }
+        if (!$id('keluhan').value.trim()) tandai($id('keluhan'), 'keluhan');
+        const t = $id('tanggalKunjung').value;
+        if (!t || t > tglJkt(0) || t < tglJkt(-7)) tandai($id('tanggalKunjung'), 'tanggal (hari ini s.d. 7 hari ke belakang)');
+        if ($id('typePasien').value === 'BPJS' && !(B && B.aktif)) err.push('peserta BPJS tidak aktif / belum terverifikasi — pilih penjamin non-BPJS');
+        const hp = $id('pdHp').value.replace(/\D/g, '');
+        if ($id('typePasien').value === 'BPJS' && hp.length < 10) tandai($id('pdHp'), 'no. HP (min. 10 digit) untuk antrean BPJS');
+        // rentang wajar vital (bila diisi)
+        [['sistole', 50, 300], ['diastole', 20, 200], ['heartRate', 20, 250], ['respRate', 4, 80], ['suhu', 30, 45], ['saturasiOksigen', 50, 100], ['tinggiBadan', 30, 250], ['beratBadan', 0.5, 350], ['lingkarPerut', 20, 250]].forEach(([k, a, b]) => {
+            const v = $id(k).value;
+            if (v !== '' && (isNaN(+v) || +v < a || +v > b)) { tandai($id(k), k + ' ' + a + '–' + b); bootstrap.Collapse.getOrCreateInstance($id('pdVitalBox'), { toggle: false }).show(); }
+        });
+        const s = $id('sistole').value, d = $id('diastole').value;
+        if ((s && !d) || (!s && d)) tandai($id(s ? 'diastole' : 'sistole'), 'sistole & diastole diisi berpasangan');
+        $id('pdError').textContent = err.length ? 'Lengkapi: ' + err.join(', ') + '.' : '';
+        $id('pdError').classList.toggle('d-none', !err.length);
+        return !err.length;
+    }
+
+    /* =============== SIMPAN =============== */
+    let menyimpan = false;
+    $id('pdForm').addEventListener('submit', e => { e.preventDefault(); simpan(); });
+    function simpan() {
+        if (menyimpan || !validasi()) return;
+        $id('nohp').value = $id('pdHp').value.replace(/\D/g, '');
+        menyimpan = true;
+        const btn = $id('create'), label = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Mendaftarkan…';
+        $.ajax({ type: 'POST', url: 'controller/admisi/services/prosesPendaftaranTunggal.php', dataType: 'json', data: $('#pdForm').serialize() })
+            .done(res => {
+                if (res && res.success) {
                     Swal.fire({
-                        icon: "error",
-                        title: "Gagal",
-                        text: res.message,
-                    });
-                    APP.load_btn_non('#create', "Simpan Kunjungan");
+                        icon: 'success', title: 'Pasien terdaftar',
+                        html: `<div class="small">${esc(P.nama)} · ${esc($id('nmPoli').value)}${$id('namadokter').value && sakit() ? ' · ' + esc($id('namadokter').value) : ''}</div>` +
+                            (res.antian ? `<div class="mt-2">Nomor antrian</div><div style="font-size:2.2rem;font-weight:800;color:#5d87ff">${esc(res.antian)}</div>` : ''),
+                        showDenyButton: true, confirmButtonText: '<i class="fas fa-user-plus me-1"></i>Daftar pasien lain', denyButtonText: 'Ke daftar registrasi', denyButtonColor: '#6c757d'
+                    }).then(r => { if (r.isDenied) location.assign('module/admisi/registrasi-poliklinik'); else batal(); });
+                } else if (res && res.dobel) {
+                    Swal.fire({ icon: 'warning', title: 'Sudah terdaftar', text: res.message + ' Tetap daftarkan lagi?', showCancelButton: true, confirmButtonText: 'Ya, daftarkan lagi', cancelButtonText: 'Batal', reverseButtons: true })
+                        .then(r => { if (r.isConfirmed) { $id('paksa').value = '1'; simpan(); $id('paksa').value = '0'; } });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Gagal mendaftar', text: (res && res.message) || 'Terjadi kesalahan.' });
+                }
+            })
+            .fail(xhr => Swal.fire({ icon: 'error', title: 'Gagal menghubungi server', text: 'Periksa koneksi lalu coba lagi. Bila pendaftaran BPJS sempat diproses, cek daftar registrasi sebelum mengulang.' }))
+            .always(() => { menyimpan = false; btn.disabled = false; btn.innerHTML = label; });
+    }
+    function batal() {
+        P = null; B = null;
+        if (bpjsXhr) bpjsXhr.abort();
+        $id('pdArea').classList.add('d-none');
+        $id('pdCari').value = '';
+        $id('pdCari').focus();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    $id('pdReset').addEventListener('click', batal);
+
+    /* =============== PASIEN BARU (CEK BPJS) =============== */
+    const nbModal = bootstrap.Modal.getOrCreateInstance($id('modalCariBPJS'));
+    function bukaPasienBaru(nomor) {
+        $id('inputNIK').value = /^\d{13,16}$/.test(nomor || '') ? nomor : '';
+        $id('formBPJS').classList.add('d-none');
+        $id('btnTambahPasien').classList.add('d-none');
+        $id('nbHint').innerHTML = '&nbsp;';
+        nbModal.show();
+        setTimeout(() => $id('inputNIK').focus(), 300);
+    }
+    $id('btnCariBPJS').addEventListener('click', () => bukaPasienBaru(''));
+    $id('inputNIK').addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '');
+        const n = this.value.length;
+        $id('nbHint').textContent = n === 16 ? 'NIK' : n === 13 ? 'No. kartu BPJS' : n ? n + ' digit (butuh 13 atau 16)' : ' ';
+    });
+    $id('inputNIK').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $id('btnSearchBPJS').click(); } });
+    $id('btnSearchBPJS').addEventListener('click', function () {
+        const no = $id('inputNIK').value.trim();
+        if (no.length !== 13 && no.length !== 16) { $id('nbHint').innerHTML = '<span class="text-danger">Masukkan NIK 16 digit atau no. BPJS 13 digit.</span>'; return; }
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        $id('formBPJS').classList.add('d-none');
+        $id('btnTambahPasien').classList.add('d-none');
+        $.ajax({ url: 'controller/admisi/services/getPasien.php', data: { tipe: no.length === 16 ? 'nik' : 'noka', nokartu: no }, dataType: 'json' })
+            .done(res => {
+                const h = (res && res.success && res.data) ? res : (res && res.result && res.result.success ? res.result : null);
+                if (!h) {
+                    Swal.fire({ icon: 'warning', title: 'Peserta tidak ditemukan', text: (res && res.message) || 'Peserta BPJS tidak ditemukan / tidak aktif.', showDenyButton: true, confirmButtonText: 'Daftar manual', denyButtonText: 'Kembali' })
+                        .then(r => { if (r.isConfirmed) location.assign('module/admisi/registrasi-new'); });
                     return;
                 }
+                const d = h.data;
+                if (d.id_patient) {
+                    // sudah ada di sistem -> langsung pilih
+                    nbModal.hide();
+                    pilihPasien(d.id_patient);
+                    return;
+                }
+                $id('noKartuDaftar').value = no;
+                $id('regNik').value = d.noKTP || (no.length === 16 ? no : '');
+                $id('regNama').value = d.nama || '';
+                $id('regTglLahir').value = d.tglLahir || '';
+                $id('regJnsKelamin').value = /^p/i.test(d.sex || '') ? 'Perempuan' : 'Laki-laki';
+                $id('regNoBPJS').value = d.noKartu || (no.length === 13 ? no : '');
+                $id('nbNama').textContent = d.nama || '-';
+                $id('nbDetail').textContent = [d.noKartu ? 'BPJS ' + d.noKartu : '', d.tglLahir ? 'Lahir ' + tglIndo(d.tglLahir) : '', $id('regJnsKelamin').value].filter(Boolean).join(' · ');
+                $id('nbStatus').innerHTML = h.warning ? `<span class="text-warning-emphasis"><i class="fas fa-triangle-exclamation me-1"></i>${esc(h.message)}</span>` : '<span class="text-success"><i class="fas fa-circle-check me-1"></i>Peserta aktif</span>';
+                $id('formBPJS').classList.remove('d-none');
+                $id('btnTambahPasien').classList.remove('d-none');
+            })
+            .fail(() => Swal.fire('Gagal', 'Gagal menghubungi layanan BPJS.', 'error'))
+            .always(() => { btn.disabled = false; btn.textContent = 'Cek'; });
+    });
+    $id('btnTambahPasien').addEventListener('click', function () {
+        const btn = this, label = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan…';
+        $.ajax({ url: 'controller/admisi/services/addDataPatient.php', type: 'POST', data: $('#formBPJS').serialize(), dataType: 'json' })
+            .done(res => {
+                if (res && (res.success || res.sudah_ada) && res.id_patient) {
+                    nbModal.hide();
+                    Swal.fire({ toast: true, position: 'top-end', icon: res.success ? 'success' : 'info', title: res.message, showConfirmButton: false, timer: 2500 });
+                    pilihPasien(res.id_patient);
+                } else Swal.fire('Gagal', (res && res.message) || 'Gagal menambahkan pasien.', 'warning');
+            })
+            .fail(() => Swal.fire('Gagal', 'Terjadi kesalahan server.', 'error'))
+            .always(() => { btn.disabled = false; btn.innerHTML = label; });
+    });
 
-                // Jika sukses
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil',
-                    text: res.message,
-                    confirmButtonText: 'Ok'
-                }).then(() => {
-                    window.location.assign("module/admisi/registrasi-poliklinik");
-                });
-            },
-            error: function (xhr) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Error Jaringan/Server",
-                    text: xhr.responseText || "Gagal menghubungi server"
-                });
-                APP.load_btn_non('#create', "Simpan Kunjungan");
-            },
-        });
-    };
-    function resetSemuaForm() {
-        $('#tampilan').html(`
-            <div class="text-muted text-center py-4">
-                <iconify-icon icon="solar:info-circle-linear" width="22"></iconify-icon>
-                <p class="mb-0 mt-2">
-                    Data pasien akan ditampilkan di sini
-                </p>
-            </div>
-        `);
-        $('#nik').val('');
-        $('#no_bpjs').val('');
-        $('#noKartu').val('');
-        $('#namapatient').val('');
-        $('#Kelamin').val('');
-        $('#tgllahir').val('');
-        $('#typePasien').val('');
-        $('#noNIK').val('');
-        $('#kdProviderPeserta').val('');
-        $('#isiform')[0]?.reset();
-    }
-    function setTypePasien() {
-        let selected = $('#kodeprov').find(':selected');
-        let nama = (selected.text() || '').toLowerCase();
-
-        let tipe = nama.includes('bpjs kesehatan') ? 'BPJS' : 'UMUM';
-        $('#typePasien').val(tipe);
-    }
-})
+    // buka langsung pasien tertentu: ?id_patient=123
+    const awal = new URLSearchParams(location.search).get('id_patient');
+    if (awal) pilihPasien(+awal);
+})();
