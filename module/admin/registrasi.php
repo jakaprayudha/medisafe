@@ -692,6 +692,22 @@ session_write_close();
     .dr-item .dr-cek { color: #d6dde6; }
     .dr-item.pilih .dr-cek { color: #5d87ff; }
     .dr-ava { width: 34px; height: 34px; border-radius: 50%; background: #ecf2ff; color: #5d87ff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: .75rem; flex-shrink: 0; }
+    /* modal tanpa identitas */
+    .tid-seg { display: flex; gap: 6px; }
+    .tid-seg input { display: none; }
+    .tid-seg label { flex: 1; border: 1px solid #e5eaef; border-radius: 10px; padding: 9px 12px; cursor: pointer; background: #fff; font-size: .82rem; }
+    .tid-seg label b { display: block; color: #2a3547; font-size: .86rem; }
+    .tid-seg label small { color: #94a3b8; }
+    .tid-seg input:checked + label { border-color: #dc3545; background: #fff5f5; }
+    .tid-seg input:checked + label b { color: #dc3545; }
+    .tid-box { background: #fafbfc; border: 1px solid #edf0f4; border-radius: 10px; padding: 10px 12px; }
+    .tid-dokter { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; }
+    .tid-dk { border: 1px solid #e5eaef; border-radius: 10px; padding: 7px 10px; background: #fff; display: flex; gap: 8px; align-items: center; width: 100%; }
+    .tid-dk:hover:not(:disabled) { border-color: #b9c8e6; }
+    .tid-dk.pilih { border-color: #5d87ff; background: #ecf2ff; }
+    .tid-dk:disabled { opacity: .5; cursor: not-allowed; }
+    .tid-ava { width: 30px; height: 30px; border-radius: 50%; background: #ecf2ff; color: #5d87ff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: .7rem; flex-shrink: 0; }
+    .tid-sk { height: 44px; border-radius: 10px; background: linear-gradient(90deg, #eef1f4 25%, #f6f8fb 50%, #eef1f4 75%); background-size: 200% 100%; animation: dtsk 1.2s infinite; }
   </style>
 </head>
 
@@ -937,68 +953,94 @@ session_write_close();
     </div>
   </div>
 
-  <div class="modal fade" id="poliModal">
-    <div class="modal-dialog">
+  <div class="modal fade" id="poliModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
       <div class="modal-content">
-
         <div class="modal-header">
-          <h5 class="modal-title">Registrasi Poliklinik</h5>
-          <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
+          <div class="min-w-0">
+            <h5 class="modal-title mb-0"><i class="fas fa-user-secret text-danger me-2"></i>Pendaftaran tanpa identitas</h5>
+            <div class="small text-muted">Untuk pasien yang belum bisa diidentifikasi (tidak sadar, korban, tanpa KTP/BPJS). Didaftarkan sebagai pasien umum.</div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
         </div>
         <div class="modal-body">
-          <form id="formPoli">
-            <!-- Pasien -->
-            <div class="mb-3">
-              <label class="form-label">Nama Pasien</label>
-              <select name="id_patient_select" id="id_patient_select"
-                class="form-select js-example-basic-item" required>
-              </select>
+          <form id="formPoli" novalidate autocomplete="off">
+            <div class="tid-seg mb-3" id="tiMode">
+              <input type="radio" name="ti_mode" id="tiBaru" value="baru" checked><label for="tiBaru"><b><i class="fas fa-user-plus me-1"></i>Pasien baru tanpa identitas</b><small>Buat RM sementara, data dilengkapi kemudian</small></label>
+              <input type="radio" name="ti_mode" id="tiLama" value="lama"><label for="tiLama"><b><i class="fas fa-magnifying-glass me-1"></i>Pasien sudah terdaftar</b><small>Daftar cepat tanpa cek BPJS</small></label>
             </div>
-            <div class="row">
-              <div class="col">
-                <!-- Tanggal -->
-                <div class="mb-3">
-                  <label class="form-label">Tanggal</label>
-                  <input type="date" id="poli_date" class="form-control">
+
+            <!-- pasien baru -->
+            <div id="tiBaruBox" class="tid-box mb-3">
+              <div class="row g-2">
+                <div class="col-md-5">
+                  <label class="form-label small fw-semibold">Jenis kelamin <span class="text-danger">*</span></label>
+                  <div class="btn-group w-100" role="group">
+                    <input type="radio" class="btn-check" name="ti_jk" id="tiJkL" value="L" checked><label class="btn btn-outline-primary btn-sm" for="tiJkL">Laki-laki</label>
+                    <input type="radio" class="btn-check" name="ti_jk" id="tiJkP" value="P"><label class="btn btn-outline-primary btn-sm" for="tiJkP">Perempuan</label>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label small fw-semibold" for="tiUmur">Perkiraan umur</label>
+                  <div class="input-group input-group-sm"><input type="number" id="tiUmur" class="form-control" min="0" max="120" placeholder="±"><span class="input-group-text">th</span></div>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label small fw-semibold" for="tiNama">Nama sementara</label>
+                  <input type="text" id="tiNama" class="form-control form-control-sm" maxlength="150">
+                </div>
+                <div class="col-12">
+                  <label class="form-label small fw-semibold" for="tiCiri">Ciri-ciri / keterangan</label>
+                  <input type="text" id="tiCiri" class="form-control form-control-sm" maxlength="500" placeholder="mis. korban KLL di Jl. ..., diantar warga, baju biru">
                 </div>
               </div>
-              <div class="col">
-                <!-- Jam -->
-                <div class="mb-3">
-                  <label class="form-label">Jam Kunjungan</label>
-                  <input type="time" id="poli_time" class="form-control">
-                </div>
+            </div>
+
+            <!-- pasien lama -->
+            <div id="tiLamaBox" class="mb-3 d-none">
+              <label class="form-label small fw-semibold">Cari pasien <span class="text-danger">*</span></label>
+              <select id="id_patient_select" class="form-select"></select>
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold" for="poli_poli">Poli <span class="text-danger">*</span></label>
+                <select id="poli_poli" class="form-select form-select-sm"></select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold" for="poli_date">Tanggal</label>
+                <input type="date" id="poli_date" class="form-control form-control-sm">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold" for="poli_time">Jam datang</label>
+                <input type="time" id="poli_time" class="form-control form-control-sm">
               </div>
             </div>
 
-            <!-- Poli -->
-            <div class="mb-3">
-              <label class="form-label">Poliklinik</label>
-              <select id="poli_poli" class="form-select"></select>
-              <input type="hidden" id="kdPoli" name="kdPoli">
-            </div>
+            <label class="form-label small fw-semibold mb-1">Dokter <span class="text-danger">*</span> <span class="text-muted fw-normal" id="tiHari"></span></label>
+            <div class="tid-dokter mb-3" id="tiDokter"><div class="small text-muted">Pilih poli terlebih dahulu.</div></div>
 
-            <!-- Dokter -->
-            <div class="mb-3">
-              <label class="form-label">Dokter</label>
-              <select id="poli_doctor" class="form-select"></select>
+            <div class="row g-2">
+              <div class="col-md-5">
+                <label class="form-label small fw-semibold" for="poli_provider">Penjamin <span class="text-danger">*</span></label>
+                <select id="poli_provider" class="form-select form-select-sm"></select>
+              </div>
+              <div class="col-md-7">
+                <label class="form-label small fw-semibold" for="tiKeluhan">Keluhan / kondisi</label>
+                <input type="text" id="tiKeluhan" class="form-control form-control-sm" maxlength="500" placeholder="mis. tidak sadar, luka di kepala">
+              </div>
             </div>
-
-            <!-- Provider -->
-            <div class="mb-3">
-              <label class="form-label">Provider</label>
-              <select id="poli_provider" class="form-select"></select>
-            </div>
+            <div class="small text-danger mt-2 d-none" id="tiError"></div>
           </form>
         </div>
-        <div class="modal-footer">
-          <button class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-          <button class="btn btn-success" id="btnSavePoli">Simpan</button>
+        <div class="modal-footer py-2">
+          <span class="small text-muted me-auto" id="tiRingkas"></span>
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+          <button type="button" class="btn btn-danger" id="btnSavePoli"><i class="fas fa-check me-1"></i>Daftarkan</button>
         </div>
-
       </div>
     </div>
   </div>
+
 
   <div class="modal fade" id="ttdModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -1693,221 +1735,185 @@ session_write_close();
   });
 </script>
 <script>
-  $(document).on('click', '.poli-btn', function() {
-    $('#poliModal').modal('show');
+  /* ================= PENDAFTARAN TANPA IDENTITAS =================
+   * Dulu: hanya bisa memilih pasien yang sudah terdaftar (tidak bisa membuat pasien anonim); dokter pertama terpilih
+   * diam-diam (variabel "status" tidak terdefinisi); jam praktik diambil dari teks dropdown sehingga dokter yang
+   * "(Sudah Tutup)" tersimpan dengan nama & jam salah; halaman di-reload penuh setelah simpan.
+   */
+  (function() {
+    const $id = id => document.getElementById(id);
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const tglJkt = h => new Date(Date.now() + (h || 0) * 86400000).toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
+    const jamJkt = () => new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit' });
+    const inisial = n => String(n || '?').replace(/^\s*(drg?)\.?\s*/i, '').trim().split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || '?';
+    const modal = bootstrap.Modal.getOrCreateInstance($id('poliModal'));
+    let poliList = null, provList = null, dokter = [], dokterPilih = null, simpanJalan = false, dokterXhr = null;
 
-    const now = new Date();
-    // dulu toISOString() (UTC): antara 00.00–07.00 WIB terisi tanggal kemarin
-    $('#poli_date').val(now.toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' }));
-    $('#poli_time').val(now.toTimeString().slice(0, 5));
-    loadPoli('#poli_poli');
-    loadProvider();
-  });
+    const mode = () => (document.querySelector('input[name=ti_mode]:checked') || {}).value || 'baru';
+    function namaDefault() {
+      const u = $id('tiUmur').value, jk = (document.querySelector('input[name=ti_jk]:checked') || {}).value;
+      return (u !== '' && +u < 17 ? 'An. ' : (jk === 'P' ? 'Ny. ' : 'Tn. ')) + 'X (Tanpa Identitas)';
+    }
+    let namaDiubah = false;
+    function segarkanNama() { if (!namaDiubah) $id('tiNama').value = namaDefault(); ringkas(); }
+    $id('tiNama').addEventListener('input', () => { namaDiubah = $id('tiNama').value.trim() !== ''; ringkas(); });
+    ['tiUmur', 'tiJkL', 'tiJkP'].forEach(i => $id(i).addEventListener(i === 'tiUmur' ? 'input' : 'change', segarkanNama));
+    $id('tiMode').addEventListener('change', () => {
+      const b = mode() === 'baru';
+      $id('tiBaruBox').classList.toggle('d-none', !b);
+      $id('tiLamaBox').classList.toggle('d-none', b);
+      if (!b) initCari();
+      ringkas();
+    });
 
-  function loadPoli(poliid) {
-    poliSakit = true;
-    var select = $(poliid);
-    select.empty();
-    select.prop('disabled', true);
-    select.html('<option value="">Mencari data...</option>');
-    select.val('').trigger('change');
+    $(document).on('click', '.poli-btn', function() {
+      $id('formPoli').reset();
+      namaDiubah = false;
+      $id('tiBaru').checked = true;
+      $id('tiBaruBox').classList.remove('d-none');
+      $id('tiLamaBox').classList.add('d-none');
+      $id('poli_date').value = tglJkt(0);
+      $id('poli_date').min = tglJkt(-7);
+      $id('poli_date').max = tglJkt(0);
+      $id('poli_time').value = jamJkt();
+      $id('tiError').classList.add('d-none');
+      dokterPilih = null;
+      segarkanNama();
+      muatPoli();
+      muatProvider();
+      modal.show();
+    });
 
-    $.ajax({
-      url: 'module/admin/get_master_poli.php',
-      type: 'POST',
-      dataType: 'json',
-      success: function(response) {
-        if (!response.success) {
-          console.log('Gagal load poli');
+    function muatPoli() {
+      const isi = () => {
+        const sakit = poliList.filter(p => p.poliSakit == true || p.poliSakit === '1' || p.poliSakit === 1);
+        $id('poli_poli').innerHTML = '<option value="">— Pilih —</option>' + sakit.map(p => `<option value="${esc(p.nmPoli)}" data-kd="${esc(p.kdPoli)}">${esc(p.nmPoli)}</option>`).join('');
+        const ugd = sakit.find(p => /ugd|igd|gawat/i.test(p.nmPoli)) || sakit.find(p => /umum/i.test(p.nmPoli));
+        if (ugd) $id('poli_poli').value = ugd.nmPoli;
+        gantiPoli();
+      };
+      if (poliList) return isi();
+      $id('poli_poli').innerHTML = '<option value="">Memuat…</option>';
+      $.ajax({ url: 'module/admin/get_master_poli.php', type: 'POST', dataType: 'json' })
+        .done(r => { poliList = (r && r.data) || []; isi(); })
+        .fail(() => { $id('poli_poli').innerHTML = '<option value="">Gagal memuat poli</option>'; });
+    }
+    function muatProvider() {
+      const isi = () => {
+        $id('poli_provider').innerHTML = provList.map(p => `<option value="${esc(p.id)}">${esc(p.text)}</option>`).join('');
+        const tunai = provList.find(p => /tunai|umum/i.test(p.text));
+        if (tunai) $id('poli_provider').value = tunai.id;
+      };
+      if (provList) return isi();
+      // pasien tanpa identitas tidak bisa didaftarkan ke BPJS -> daftar penjamin non-BPJS
+      $.getJSON('controller/admisi/services/get_provider.php', { type: 'UMUM' }).done(r => { provList = r || []; isi(); });
+    }
+    function gantiPoli() {
+      dokterPilih = null;
+      const kd = ($id('poli_poli').selectedOptions[0] || {}).dataset ? $id('poli_poli').selectedOptions[0].dataset.kd : '';
+      if (dokterXhr) dokterXhr.abort();
+      if (!kd) { $id('tiDokter').innerHTML = '<div class="small text-muted">Pilih poli terlebih dahulu.</div>'; $id('tiHari').textContent = ''; ringkas(); return; }
+      $id('tiDokter').innerHTML = '<div class="tid-sk"></div><div class="tid-sk"></div>';
+      dokterXhr = $.getJSON('controller/admisi/services/getDokterlocal.php', { kdpoli: kd, tanggal: $id('poli_date').value }).done(r => {
+        dokter = ((r && r.data) || []).map(d => ({ kode: String(d.kodedokter), nama: d.namadokter, jam: d.jampraktek, tutup: !!d.exp }));
+        $id('tiHari').textContent = r && r.hari ? '· jadwal hari ' + r.hari : '';
+        if (!dokter.length) {
+          // kondisi darurat: tidak ada jadwal -> tampilkan semua dokter / tenaga klinik
+          $id('tiHari').innerHTML = '· <span class="text-warning-emphasis">tidak ada jadwal di poli ini, menampilkan semua tenaga</span>';
+          $.ajax({ url: 'module/admin/get_dokter_bpjs.php', type: 'POST', dataType: 'json' }).done(x => {
+            dokter = ((x && x.data) || []).map(d => ({ kode: String(d.kdDokter), nama: d.nmDokter, jam: '', tutup: false }));
+            if (!dokter.length) { $id('tiDokter').innerHTML = '<div class="small text-danger">Belum ada data dokter di master.</div>'; return; }
+            renderDokter();
+          });
           return;
         }
-        select.empty();
-        $.each(response.data, function(index, item) {
-          if (item.poliSakit == poliSakit) {
-            var option = new Option(item.nmPoli, item.nmPoli, false, false);
-            $(option).attr('data-kd', item.kdPoli);
-            select.append(option);
+        const buka = dokter.filter(d => !d.tutup);
+        if (buka.length === 1) dokterPilih = buka[0];
+        renderDokter();
+      }).fail((x, s) => { if (s !== 'abort') $id('tiDokter').innerHTML = '<div class="small text-danger">Gagal memuat dokter.</div>'; });
+    }
+    function renderDokter() {
+      $id('tiDokter').innerHTML = dokter.map(d => `<button type="button" class="tid-dk ${dokterPilih && dokterPilih.kode === d.kode ? 'pilih' : ''}" data-kode="${esc(d.kode)}" ${d.tutup ? 'disabled title="Jam praktik sudah selesai"' : ''}>
+        <span class="tid-ava">${esc(inisial(d.nama))}</span><span class="min-w-0 text-start"><span class="d-block fw-semibold small text-truncate">${esc(d.nama)}</span>
+        <span class="d-block small ${d.tutup ? 'text-danger' : 'text-muted'}">${d.jam ? esc(d.jam) : 'tanpa jadwal'}${d.tutup ? ' · sudah tutup' : ''}</span></span></button>`).join('');
+      ringkas();
+    }
+    $id('tiDokter').addEventListener('click', e => { const b = e.target.closest('.tid-dk'); if (b && !b.disabled) { dokterPilih = dokter.find(d => d.kode === b.dataset.kode); renderDokter(); } });
+    $id('poli_poli').addEventListener('change', gantiPoli);
+    $id('poli_date').addEventListener('change', gantiPoli);
+
+    function initCari() {
+      const $s = $('#id_patient_select');
+      if ($s.hasClass('select2-hidden-accessible')) return;
+      $s.select2({
+        dropdownParent: $('#poliModal'), width: '100%', placeholder: 'Ketik nama, RM, NIK, atau no. BPJS…', minimumInputLength: 2,
+        ajax: {
+          url: 'controller/admisi/patientSearchController', dataType: 'json', delay: 250,
+          data: p => ({ search: p.term }),
+          processResults: d => ({ results: ((d && d.data) || []).map(i => ({ id: i.id_patient, text: `${i.patient_name} (${i.nomor_rm})`, patient_name: i.patient_name, rm: i.nomor_rm, nik: i.patient_nik })) })
+        },
+        templateResult: d => d.loading ? d.text : $(`<div><div class="fw-semibold">${esc(d.patient_name || d.text)}</div><div class="small text-muted">RM ${esc(d.rm || '-')}${d.nik ? ' · NIK ' + esc(d.nik) : ''}</div></div>`),
+        language: { inputTooShort: () => 'Ketik minimal 2 karakter', noResults: () => 'Pasien tidak ditemukan', searching: () => 'Mencari…' }
+      }).on('change', ringkas);
+    }
+
+    function ringkas() {
+      const nama = mode() === 'baru' ? ($id('tiNama').value || namaDefault()) : (($('#id_patient_select').select2 && $('#id_patient_select').hasClass('select2-hidden-accessible') ? ($('#id_patient_select').select2('data')[0] || {}).patient_name : '') || '');
+      $id('tiRingkas').innerHTML = [nama, $id('poli_poli').value, dokterPilih ? dokterPilih.nama : ''].filter(Boolean).map(esc).join(' · ');
+    }
+
+    $id('btnSavePoli').addEventListener('click', function(e) { kirim(false); });
+    function kirim(paksa) {
+      if (simpanJalan) return;
+      const err = [];
+      const baru = mode() === 'baru';
+      const idp = baru ? '' : $('#id_patient_select').val();
+      if (!baru && !idp) err.push('pilih pasien');
+      if (!$id('poli_poli').value) err.push('poli');
+      if (!dokterPilih) err.push('dokter');
+      if (!$id('poli_provider').value) err.push('penjamin');
+      const t = $id('poli_date').value;
+      if (!t || t < tglJkt(-7) || t > tglJkt(0)) err.push('tanggal (hari ini s.d. 7 hari ke belakang)');
+      if (!$id('poli_time').value) err.push('jam datang');
+      const u = $id('tiUmur').value;
+      if (baru && u !== '' && (+u < 0 || +u > 120)) err.push('perkiraan umur 0–120');
+      $id('tiError').textContent = err.length ? 'Lengkapi: ' + err.join(', ') + '.' : '';
+      $id('tiError').classList.toggle('d-none', !err.length);
+      if (err.length) return;
+
+      const sel = baru ? null : $('#id_patient_select').select2('data')[0];
+      const data = {
+        pasien_baru: baru ? '1' : '0', id_patient: idp || '', paksa: paksa ? '1' : '0',
+        nama: baru ? ($id('tiNama').value.trim() || namaDefault()) : '', jk: (document.querySelector('input[name=ti_jk]:checked') || {}).value || 'L',
+        umur: baru ? u : '', ciri: baru ? $id('tiCiri').value.trim() : '',
+        patient_name_pcare: sel ? (sel.patient_name || '') : '',
+        id_doctor: dokterPilih.kode, nama_dokter: dokterPilih.nama, jampraktek: dokterPilih.jam,
+        id_poli: $id('poli_poli').value, poli_name: $id('poli_poli').value, kdPoli: $id('poli_poli').selectedOptions[0].dataset.kd,
+        id_provider: $id('poli_provider').value, visit_date: t, visit_time: $id('poli_time').value, keluhan: $id('tiKeluhan').value.trim()
+      };
+      const btn = $id('btnSavePoli'), label = btn.innerHTML;
+      simpanJalan = true;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Mendaftarkan…';
+      $.ajax({ url: 'controller/visit/visitController', type: 'POST', data, dataType: 'json' })
+        .done(r => {
+          if (r && r.status === 'success') {
+            if (modal._isTransitioning) $id('poliModal').addEventListener('shown.bs.modal', () => modal.hide(), { once: true }); else modal.hide();
+            Swal.fire({ icon: 'success', title: 'Pasien terdaftar', html: `<div class="small">${esc(r.data.nama)}${r.data.nomor_rm ? ' · RM ' + esc(r.data.nomor_rm) : ''}</div>` +
+              `<div class="mt-2">Nomor antrian</div><div style="font-size:2.2rem;font-weight:800;color:#dc3545">${esc(r.data.antrian || '-')}</div>` +
+              (baru ? '<div class="small text-muted">Lengkapi identitas pasien di menu Data Pasien setelah diketahui.</div>' : '') });
+            if (window.table) window.table.ajax.reload(null, false);
+          } else if (r && r.dobel) {
+            Swal.fire({ icon: 'warning', title: 'Sudah terdaftar', text: r.message + ' Tetap daftarkan?', showCancelButton: true, confirmButtonText: 'Ya, daftarkan', cancelButtonText: 'Batal', reverseButtons: true })
+              .then(x => { if (x.isConfirmed) kirim(true); });
+          } else {
+            Swal.fire('Gagal mendaftar', (r && r.message) || 'Terjadi kesalahan.', 'error');
           }
-        });
-        select.prop('disabled', false);
-        select.trigger('change');
-      },
-      error: function(xhr, status, error) {
-        console.log(xhr.responseText);
-      }
-    });
-  }
-  $('#poli_poli').on('change', function() {
-    var kdPoli = $(this).find(':selected').data('kd') || '';
-    $('#kdPoli').val(kdPoli);
-    loadDokter();
-  });
-
-  function loadDokter() {
-    const $select = $('#poli_doctor');
-    const tgl = $('#poli_date').val();
-    const poli = $('#kdPoli').val();
-    $select.html('<option value="">Loading...</option>').trigger('change.select2');
-    $.ajax({
-      url: 'controller/admisi/services/getDokterlocal.php',
-      type: 'GET',
-      data: {
-        kdpoli: poli,
-        tanggal: tgl
-      },
-      dataType: 'json',
-      success: function(response) {
-        $select.empty();
-        if (!response.data || response.data.length === 0) {
-          $select.append('<option value="">Tidak ada dokter</option>');
-          $select.trigger('change.select2');
-          return;
-        }
-
-        if (status) {
-          $select.append('<option value="">- Pilih -</option>');
-        }
-        response.data.forEach(function(item) {
-          let textExp = item.exp ? '(Sudah Tutup)' : '';
-          $select.append(
-            '<option value="' + item.kodedokter + '" ' +
-            'data-nama="' + item.namadokter + '" ' +
-            'data-jam="' + item.jampraktek + '" ' +
-            '>' +
-            item.namadokter + ' (' + item.jampraktek + ')' + textExp +
-            '</option>'
-          );
-        });
-        $select.trigger('change.select2');
-      },
-      error: function(err) {
-        console.error(err);
-        $select.html('<option value="">Error loading data</option>').trigger('change.select2');
-      }
-    });
-  }
-
-  function loadProvider() {
-    fetch('controller/admisi/services/get_provider')
-      .then(res => res.json())
-      .then(res => {
-        let html = '<option value="">Pilih Provider</option>';
-        res.forEach(p => {
-          html += `<option value="${p.id}">${p.text}</option>`;
-        });
-        $('#poli_provider').html(html);
-      });
-  }
-  $('#btnSavePoli').on('click', function() {
-    const $btn = $(this);
-    const selected = $('#id_patient_select').select2('data')[0];
-    const data = {
-      id_patient: $('#id_patient_select').val(),
-      patient_name_pcare: selected?.patient_name || '',
-      id_doctor: $('#poli_doctor').val(),
-      doctor_name: $('#poli_doctor option:selected').text(),
-      id_poli: $('#poli_poli').val(),
-      poli_name: $('#poli_poli option:selected').text(),
-      id_provider: $('#poli_provider').val(),
-      visit_date: $('#poli_date').val(),
-      visit_time: $('#poli_time').val(),
-      kdPoli: $('#kdPoli').val()
-    };
-    if (!data.id_patient || !data.id_doctor || !data.visit_date || !data.visit_time) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Data Belum Lengkap',
-        text: 'Silakan lengkapi semua data yang wajib diisi.'
-      });
-      return;
+        })
+        .fail(x => Swal.fire('Gagal mendaftar', (x.responseJSON && x.responseJSON.message) || 'Terjadi kesalahan pada server.', 'error'))
+        .always(() => { simpanJalan = false; btn.disabled = false; btn.innerHTML = label; });
     }
-    $.ajax({
-      url: 'controller/visit/visitController',
-      type: 'POST',
-      data: data,
-      dataType: 'json',
-      beforeSend: function() {
-        $btn.prop('disabled', true)
-          .html('<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...');
-      },
-      success: function(resp) {
-        if (resp.status === 'success') {
-          Swal.fire({
-            icon: 'success',
-            title: 'Berhasil',
-            text: 'Registrasi berhasil.',
-            timer: 1800,
-            showConfirmButton: false
-          });
-          $('#poliModal').modal('hide');
-          window.location.reload();
-        } else {
-          Swal.fire({
-            icon: 'error',
-            title: 'Gagal',
-            text: resp.message
-          });
-        }
-      },
-      error: function(xhr) {
-        let pesan = 'Terjadi kesalahan pada server.';
-        if (xhr.responseJSON && xhr.responseJSON.message) {
-          pesan = xhr.responseJSON.message;
-        }
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: pesan
-        });
-        console.error(xhr.responseText);
-      },
-      complete: function() {
-        $btn.prop('disabled', false)
-          .html('Simpan');
-      }
-    });
-  });
-
-  $('#poliModal').on('shown.bs.modal', function() {
-
-    const $select = $('#id_patient_select');
-
-    // destroy kalau sudah ada
-    if ($select.hasClass("select2-hidden-accessible")) {
-      $select.select2('destroy');
-    }
-    console.log("INIT SELECT2");
-    $select.select2({
-      dropdownParent: $('#poliModal'),
-      width: '100%',
-      placeholder: 'Cari pasien...',
-      minimumInputLength: 2,
-      ajax: {
-        url: 'controller/admisi/patientSearchController',
-        type: 'GET',
-        dataType: 'json',
-        delay: 300,
-        data: function(params) {
-          return {
-            search: params.term
-          };
-        },
-
-        processResults: function(data) {
-          let items = data.data ? data.data : data;
-
-          return {
-            results: items.map(item => ({
-              id: item.id_patient,
-              text: `${item.patient_name} (${item.nomor_rm})`, // tampil di UI
-              patient_name: item.patient_name // 🔥 simpan asli
-            }))
-          };
-        },
-        cache: true
-      }
-    });
-  });
+  })();
 </script>
 <script>
   /* ================= VITAL SIGN & TANDA TANGAN =================
