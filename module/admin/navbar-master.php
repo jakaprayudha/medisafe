@@ -142,7 +142,7 @@
          <!-- Logo Klinik -->
          <li class="nav-item d-flex align-items-center me-3">
             <img src="assets/images/logos/default.png" width="35" class="rounded-circle me-2">
-            <strong class="text-primary"><?= $_SESSION['fullname'] ?></strong>
+            <strong class="text-primary"><?= htmlspecialchars((string) ($_SESSION['fullname'] ?? '')) ?></strong>
          </li>
 
          <!-- SEARCH PASIEN -->

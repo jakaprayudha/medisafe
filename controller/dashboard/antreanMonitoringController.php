@@ -19,7 +19,7 @@ header('Cache-Control: no-store');
 function out($data, $code = 200)
 {
    http_response_code($code);
-   echo json_encode($data, JSON_UNESCAPED_UNICODE);
+   echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
    exit;
 }
 
@@ -48,6 +48,8 @@ if (!in_array($roles, ['superadmin', 'admin'], true) || (!$isSuper && $sessionId
 }
 // Admin selalu faskes sendiri; superadmin boleh memilih faskes.
 $idc = (string) ($isSuper && !empty($_GET['id_customer']) ? (int) $_GET['id_customer'] : $sessionIdc);
+// lepas kunci sesi: request lain di halaman (mis. daftar faskes) tidak perlu menunggu
+session_write_close();
 
 $action = $_GET['action'] ?? 'data';
 
@@ -336,7 +338,10 @@ function kelompok(array $rows, string $kunci)
    return $hasil;
 }
 
-out([
+// detail dikirim ringkas (nama kolom sekali + baris array) dan di-gzip: 31 hari faskes besar ±4 MB -> ±150 KB
+$kolom = $detail ? array_keys($detail[0]) : [];
+$baris = array_map('array_values', $detail);
+$hasil = [
    'status' => 'success',
    'periode' => ['from' => $from, 'to' => $to],
    'config' => $config + ['bisa_kirim' => $bisaKirim],
@@ -344,5 +349,9 @@ out([
    'harian' => kelompok($detail, 'tanggal'),
    'poli' => kelompok($detail, 'poli'),
    'dokter' => kelompok($detail, 'dokter'),
-   'detail' => $detail,
-]);
+   'kolom' => $kolom,
+   'detail' => $baris,
+];
+unset($detail, $baris);
+if (!ini_get('zlib.output_compression') && extension_loaded('zlib')) ob_start('ob_gzhandler');
+out($hasil);
