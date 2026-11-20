@@ -193,6 +193,13 @@
       border-radius: 10px;
    }
 
+   /* dropdown berisi halaman aktif tapi sedang ditutup: tetap diberi penanda */
+   .sidebar-item.has-active:not(.open)>.sidebar-link {
+      background: #eef2ff;
+      color: #4f46e5;
+      border-radius: 10px;
+   }
+
    .switch {
       position: relative;
       display: inline-block;
