@@ -2,9 +2,70 @@
 require '../../../database/connect.php';
 require '../../admin/getdataclinic.php';
 
-$saksi = mysqli_query($koneksi, "SELECT signature_user FROM ms_users WHERE uid_user = '" . $_SESSION['uid_user'] . "'");
-$saksi = mysqli_fetch_assoc($saksi);
-$signatureSaksi = $saksi['signature_user'] ?? null;
+/*
+ * Tanda tangan dirender langsung di server (dulu lewat fetch):
+ * - "Yang Membuat Pernyataan" = tanda tangan keluarga dari form persetujuan -> pasien_visit.signature_opname.
+ *   Dulu memanggil controller/visit/getTTD.php yang membaca signature_path (tanda tangan registrasi) -> selalu kosong.
+ * - Dokter: dulu fullname LIKE '%nama%' tanpa filter faskes -> bisa mengambil user faskes lain (mis. dokter bernama sama
+ *   di klinik lain yang belum punya tanda tangan). Sekarang dibatasi faskes kunjungan: kdDokter = code_doctor, lalu nama.
+ * - Saksi: user yang mencetak; bila belum punya tanda tangan tidak lagi menampilkan gambar rusak.
+ */
+function spE($v): string
+{
+   return htmlspecialchars((string) ($v ?? ''), ENT_QUOTES, 'UTF-8');
+}
+function spNama($s): string
+{
+   // buang gelar depan/belakang & tanda baca untuk mencocokkan nama dokter
+   $s = strtolower((string) $s);
+   $s = preg_replace('/\b(drg|dr|bd|ns|apt|amd|keb|kep|kes|skm|sked|mkes|spog|spa|sppd|ssi|skep)\b\.?/', ' ', $s);
+   return preg_replace('/[^a-z]/', '', $s);
+}
+function spFileAda(string $folder, ?string $file): ?string
+{
+   $file = basename((string) $file);
+   if ($file === '' || !is_file(__DIR__ . "/../../../uploads/$folder/$file")) return null;
+   return "../../../uploads/$folder/" . rawurlencode($file);
+}
+
+$spIdc = (int) ($_SESSION['id_customer'] ?? 0);
+$spNo = (string) ($_GET['no'] ?? '');
+$spVisit = null;
+if ($spNo !== '' && $spIdc > 0) {
+   $st = $koneksi->prepare("SELECT id_doctor, code_doctor, signature_opname, opname_keluarga_name FROM pasien_visit WHERE visit_ID = ? AND id_customer = ? LIMIT 1");
+   $st->bind_param('si', $spNo, $spIdc);
+   $st->execute();
+   $spVisit = $st->get_result()->fetch_assoc() ?: null;
+   $st->close();
+}
+
+// saksi = user yang sedang login
+$st = $koneksi->prepare("SELECT signature_user FROM ms_users WHERE uid_user = ? LIMIT 1");
+$spUid = (string) ($_SESSION['uid_user'] ?? '');
+$st->bind_param('s', $spUid);
+$st->execute();
+$signatureSaksi = spFileAda('ttd_faskes', ($st->get_result()->fetch_assoc() ?: [])['signature_user'] ?? null);
+$st->close();
+
+// dokter: dalam faskes yang sama, kdDokter dulu lalu nama
+$signatureDokter = null;
+if ($spVisit && trim((string) $spVisit['id_doctor']) !== '') {
+   $st = $koneksi->prepare("SELECT fullname, kdDokter, signature_user FROM ms_users WHERE id_customer = ? AND signature_user IS NOT NULL AND signature_user <> ''");
+   $st->bind_param('i', $spIdc);
+   $st->execute();
+   $kand = $st->get_result()->fetch_all(MYSQLI_ASSOC);
+   $st->close();
+   $kode = trim((string) $spVisit['code_doctor']);
+   $nama = spNama($spVisit['id_doctor']);
+   $pilih = null;
+   foreach ($kand as $u) if ($kode !== '' && trim((string) $u['kdDokter']) === $kode) { $pilih = $u; break; }
+   if (!$pilih) foreach ($kand as $u) if ($nama !== '' && spNama($u['fullname']) === $nama) { $pilih = $u; break; }
+   if (!$pilih) foreach ($kand as $u) { $n = spNama($u['fullname']); if ($nama !== '' && $n !== '' && (str_contains($n, $nama) || str_contains($nama, $n))) { $pilih = $u; break; } }
+   if ($pilih) $signatureDokter = spFileAda('ttd_faskes', $pilih['signature_user']);
+}
+
+// yang membuat pernyataan (keluarga / pasien) dari form persetujuan
+$signaturePenyetuju = $spVisit ? spFileAda('ttd', $spVisit['signature_opname']) : null;
 ?>
 <div class="form-surat-persetujuan">
 
@@ -148,53 +209,39 @@ $signatureSaksi = $saksi['signature_user'] ?? null;
    <div class="ttd-wrapper">
       <div class="kolom-ttd">
          <p>Saksi</p>
-         <img src="../../../uploads/ttd_faskes/<?= $signatureSaksi ?>" style="height:100px;" alt="">
-         <div class="ttd-box"><?= $_SESSION['fullname'] ?></div>
+         <?php if ($signatureSaksi): ?>
+            <img src="<?= spE($signatureSaksi) ?>" style="height:100px;" alt="Tanda tangan saksi">
+         <?php else: ?>
+            <div style="height:100px"></div>
+         <?php endif; ?>
+         <div class="ttd-box"><?= spE($_SESSION['fullname'] ?? '') ?></div>
 
       </div>
 
 
-      <?php
-      // Default signatureDokter
-      $signatureDokter = null;
-      $doctorName = null;
-      // Try to get doctor name from GET param or fallback to JS fill
-      if (isset($_GET['no']) && isset($_GET['rm'])) {
-         // Try to get doctor name from pasien_visit
-         $no = $_GET['no'];
-         $rm = $_GET['rm'];
-         $q = mysqli_query($koneksi, "SELECT id_doctor FROM pasien_visit WHERE visit_ID='" . mysqli_real_escape_string($koneksi, $no) . "' LIMIT 1");
-         if ($row = mysqli_fetch_assoc($q)) {
-            $doctorName = $row['id_doctor'];
-         }
-      }
-      if ($doctorName) {
-         // Remove 'dr.', 'dr', with or without whitespace, and trim leading/trailing whitespace
-         $doctorNameClean = trim(preg_replace('/^dr\.?\s*/i', '', $doctorName));
-         // Find signature by fullname LIKE
-         $dokter = mysqli_query($koneksi, "SELECT signature_user FROM ms_users WHERE fullname LIKE '%" . mysqli_real_escape_string($koneksi, $doctorNameClean) . "%'");
-         $dokter = mysqli_fetch_assoc($dokter);
-         $signatureDokter = $dokter['signature_user'] ?? null;
-      }
-         ?>
+
       <div class="kolom-ttd">
          <p>Dokter yang Merawat</p>
          <?php if ($signatureDokter): ?>
-            <img src="../../../uploads/ttd_faskes/<?= $signatureDokter ?>" style="height:100px;" alt="">
+            <img src="<?= spE($signatureDokter) ?>" style="height:100px;" alt="Tanda tangan dokter">
          <?php else: ?>
-            <span class="text-danger">Belum ada tanda tangan dokter</span>
+            <div style="height:100px"></div>
          <?php endif; ?>
-         <div class="ttd-box"><span id="sp_dokter"></span></div>
+         <div class="ttd-box"><span id="sp_dokter"><?= spE($spVisit['id_doctor'] ?? '') ?></span></div>
       </div>
 
 
       <div class="kolom-ttd ttd-kanan">
          <p>Yang Membuat Pernyataan</p>
          <div id="ttdPersetujuan">
-            <!-- TTD image will be loaded here -->
+            <?php if ($signaturePenyetuju): ?>
+               <img src="<?= spE($signaturePenyetuju) ?>" style="height:100px;" alt="Tanda tangan yang membuat pernyataan">
+            <?php else: ?>
+               <div style="height:100px" class="no-print-hint"></div>
+            <?php endif; ?>
          </div>
          <div class="ttd-box">
-            <span id="sp_nama_penyetuju_ttd"></span>
+            <span id="sp_nama_penyetuju_ttd"><?= spE($spVisit['opname_keluarga_name'] ?? '') ?></span>
          </div>
       </div>
 
@@ -250,22 +297,6 @@ $signatureSaksi = $saksi['signature_user'] ?? null;
             }
          });
 
-      // ttd pasien
-      fetch(`../../../controller/visit/getTTD.php?no=${encodeURIComponent(no)}`)
-         .then(res => res.json())
-         .then(resp => {
-            let d = resp.data;
-            let ttdContainer = document.getElementById('ttdPersetujuan');
-            if (d && d.ttd && d.ttd !== 'null' && d.ttd !== '') {
-               ttdContainer.innerHTML = `<img src="${d.ttd}" style="height:100px; border:1px solid #ccc; border-radius:6px; background:#fff;" alt="TTD">`;
-            } else {
-               ttdContainer.innerHTML = `<span class="text-danger">Belum ada tanda tangan</span>`;
-            }
-         })
-         .catch(err => {
-            let ttdContainer = document.getElementById('ttdPersetujuan');
-            ttdContainer.innerHTML = `<span class="text-danger">Error mengambil tanda tangan</span>`;
-         });
    });
 
    // 🔥 FORMAT TANGGAL INDONESIA
