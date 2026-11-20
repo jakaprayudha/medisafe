@@ -60,7 +60,7 @@ if (!in_array($lengthkartu, [13, 16, 19])) {
                 'code' => $result['data']['aktif'] ?? false,  
                 'message' => $result['data']['ketAktif'] ?? "Layanan BPJS sedang tidak dapat diakses.",
                 'data' => [
-                    'noKartu' => $data['patient_bpjs'],
+                    'noKartu' => $data['patient_bpjs'] ?? null,
                     'nama' => $data['patient_name'] ?? null,
                     'sex' => $data['patient_gender'] ?? null,
                     'tglLahir' => $data['patient_datebirth'] ?? null,
@@ -70,18 +70,19 @@ if (!in_array($lengthkartu, [13, 16, 19])) {
                 ],
             ];
         } else {
+            // pasien belum ada di sistem -> pakai data peserta dari BPJS (dulu null sehingga pasien baru tersimpan tanpa no. BPJS)
             $response = [
                 'success' => true,
                 'code' => $result['data']['aktif'],
                 'message' => $result['data']['ketAktif'],
                 'data' => [
-                    'noKartu' => $data['patient_bpjs'],
-                    'id_patient' => $data['id_patient'],
-                    'nama' => $data['patient_name'] ?? null,
-                    'sex' => $data['patient_gender'] ?? null,
-                    'tglLahir' => $data['patient_datebirth'] ?? null,
-                    'noHP' => $data['patient_phone'] ?? null,
-                    'noKTP' => $data['patient_nik'] ?? null,
+                    'noKartu' => ($data['patient_bpjs'] ?? '') ?: ($result['data']['noKartu'] ?? null),
+                    'id_patient' => $data['id_patient'] ?? null,
+                    'nama' => ($data['patient_name'] ?? '') ?: ($result['data']['nama'] ?? null),
+                    'sex' => ($data['patient_gender'] ?? '') ?: ($result['data']['sex'] ?? null),
+                    'tglLahir' => ($data['patient_datebirth'] ?? '') ?: ($result['data']['tglLahir'] ?? null),
+                    'noHP' => ($data['patient_phone'] ?? '') ?: ($result['data']['noHP'] ?? null),
+                    'noKTP' => ($data['patient_nik'] ?? '') ?: ($result['data']['noKTP'] ?? null),
                     'rm' => $data['nomor_rm'] ?? null,
                     'kdProvider' => $result['data']['kdProviderPst']['kdProvider'] ?? null,
                     'nmProvider' => $result['data']['kdProviderPst']['nmProvider'] ?? null,
