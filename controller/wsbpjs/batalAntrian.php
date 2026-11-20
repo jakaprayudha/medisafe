@@ -2,12 +2,20 @@
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/serviceantrian.php';
 header('Content-Type: application/json');
-$nomor_visit = $_POST['novisit'];
-$sql = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT pv.noKartu, pv.visit_date, p.kdPoli FROM pasien_visit AS pv INNER JOIN master_poli AS p ON p.nmPoli = pv.id_poli WHERE visit_ID = '$nomor_visit'"));
+// dulu: novisit disisipkan langsung ke SQL (SQL injection) & tanpa cek faskes
+require_once __DIR__ . '/../../utility/visitGuard.php';
+$nomor_visit = (string) ($_POST['novisit'] ?? '');
+$kunjBatal = visitGuard($koneksi, 'visit_ID', $nomor_visit);
+$stBatal = $koneksi->prepare("SELECT pv.noKartu, pv.visit_date, p.kdPoli FROM pasien_visit AS pv INNER JOIN master_poli AS p ON p.nmPoli = pv.id_poli WHERE pv.id_visit = ? LIMIT 1");
+$idVisitBatal = (int) $kunjBatal['id_visit'];
+$stBatal->bind_param('i', $idVisitBatal);
+$stBatal->execute();
+$sql = $stBatal->get_result()->fetch_assoc() ?: [];
+$stBatal->close();
 $tanggalperiksa = $sql['visit_date'];
 $kdPoli = $sql['kdPoli'];
 $nomorkartu = $sql['noKartu'];
-$alasan = $_POST['alasan'];
+$alasan = trim((string) ($_POST['alasan'] ?? '')) ?: 'Dibatalkan petugas';
 if ($status_antrol) {
     $payload = [
         "tanggalperiksa"  => $tanggalperiksa,
@@ -33,9 +41,13 @@ if ($status_antrol) {
     //         'message'  => "Berhasil Batal Pasien",
     //     ];
     // }
+    // pembatalan lokal tetap dilanjutkan, tetapi kegagalan BPJS diteruskan sebagai peringatan (dulu dibuang)
+    $kodeBpjs = (string) ($result['code'] ?? ($result['metadata']['code'] ?? ''));
     $response = [
         'success'  => true,
         'message'  => "Berhasil Batal Pasien",
+        'peringatan' => in_array($kodeBpjs, ['200', '1'], true) ? null
+            : 'Antrean di BPJS belum terbatalkan: ' . ($result['message'] ?? ($result['metadata']['message'] ?? 'layanan BPJS tidak merespons')) . '. Batalkan manual bila perlu.',
     ];
 } else {
     // Klinik tidak terdaftar di setting_antrol, maka lewati BPJS,

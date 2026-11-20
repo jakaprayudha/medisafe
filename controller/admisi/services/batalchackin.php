@@ -22,21 +22,28 @@ mysqli_begin_transaction($koneksi);
 try {
 
     $cek = $koneksi->prepare("
-        SELECT visit_ID
+        SELECT visit_ID, visit_status
         FROM pasien_visit
         WHERE visit_ID = ?
         AND id_customer = ?
+        FOR UPDATE
     ");
 
     $cek->bind_param("ss", $visit_id, $idcustomer);
     $cek->execute();
-    $result = $cek->get_result();
+    $rowCek = $cek->get_result()->fetch_assoc();
+    $cek->close();
 
-    if ($result->num_rows == 0) {
+    if (!$rowCek) {
         throw new Exception("Data kunjungan tidak ditemukan.");
     }
-
-    $cek->close();
+    // dulu kunjungan yang sudah dilayani / selesai pun bisa dibatalkan dari halaman ini
+    if (in_array((int) $rowCek['visit_status'], [1, 2, 3, 4], true)) {
+        throw new Exception("Pasien sudah dilayani, antrean tidak dapat dibatalkan.");
+    }
+    if ((int) $rowCek['visit_status'] === 99) {
+        throw new Exception("Antrean sudah berstatus batal.");
+    }
 
     $stmt = $koneksi->prepare("
         UPDATE pasien_visit
@@ -65,6 +72,8 @@ try {
     }
 
     mysqli_commit($koneksi);
+    $alasan = trim((string) ($_POST['alasan'] ?? ''));
+    error_log('[batalchackin] ' . $visit_id . ' dibatalkan oleh ' . ($_SESSION['username'] ?? '-') . ($alasan !== '' ? ' alasan: ' . $alasan : ''));
 
     echo json_encode([
         "success" => true,
