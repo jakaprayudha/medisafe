@@ -8,6 +8,7 @@
  * POST aksi=tes        -> uji token + baca Organization
  * POST aksi=nik        -> simpan NIK dokter (ID IHS direset bila NIK berubah)
  * POST aksi=ihs        -> cari ID IHS dokter dari NIK ke Satu Sehat lalu simpan
+ * POST aksi=ihs_pasien -> cari ID IHS pasien dari NIK ke Satu Sehat lalu simpan (module/admin/patient-idsh)
  */
 require_once __DIR__ . '/../../database/connect.php';
 require_once __DIR__ . '/../../utility/security.php';
@@ -239,6 +240,45 @@ switch ($aksi) {
       $st->execute();
       $st->close();
       ssJawab(['status' => 'success', 'message' => 'ID Satu Sehat ditemukan.', 'idsh' => $ihs, 'nama_satusehat' => $namaSS]);
+
+   case 'ihs_pasien':
+      $id = (int) ($_POST['id_patient'] ?? 0);
+      $st = $koneksi->prepare("SELECT id_patient, patient_nik, idsh FROM ms_patient WHERE id_patient=? AND id_customer=? LIMIT 1");
+      $st->bind_param('ii', $id, $idc);
+      $st->execute();
+      $p = $st->get_result()->fetch_assoc();
+      $st->close();
+      if (!$p) {
+         ssGagal('Pasien tidak ditemukan.', 404);
+      }
+      $nik = preg_replace('/\s+/', '', (string) $p['patient_nik']);
+      if (!preg_match('/^\d{16}$/', $nik)) {
+         ssGagal('NIK pasien belum 16 digit. Perbaiki di Data Pasien terlebih dahulu.');
+      }
+      $cfg = ssSetting($koneksi, $idc);
+      if (!$cfg) {
+         ssGagal('Kredensial Satu Sehat faskes belum dibuat. Hubungi tim IT.', 409);
+      }
+      try {
+         [$code, $res] = ssGet($koneksi, $idc, $cfg, '/Patient?identifier=' . rawurlencode('https://fhir.kemkes.go.id/id/nik|' . $nik));
+      } catch (RuntimeException $e) {
+         ssGagal($e->getMessage(), 502);
+      }
+      if ($code !== 200) {
+         ssGagal('Satu Sehat merespons HTTP ' . $code . '.', 502);
+      }
+      $ihs = $res['entry'][0]['resource']['id'] ?? null;
+      // tandai sudah dicek (sama dengan cron fill-id-pasien-satusehat) agar status "tidak ditemukan" konsisten
+      $st = $ihs
+         ? $koneksi->prepare("UPDATE ms_patient SET idsh=?, is_checked_satusehat='1' WHERE id_patient=? AND id_customer=?")
+         : $koneksi->prepare("UPDATE ms_patient SET is_checked_satusehat='1' WHERE id_patient=? AND id_customer=?");
+      $ihs ? $st->bind_param('sii', $ihs, $id, $idc) : $st->bind_param('ii', $id, $idc);
+      $st->execute();
+      $st->close();
+      if (!$ihs) {
+         ssJawab(['status' => 'error', 'message' => 'NIK ini tidak ditemukan di Satu Sehat (Dukcapil). Pastikan NIK sesuai KTP/KK.'], 404);
+      }
+      ssJawab(['status' => 'success', 'message' => 'ID Satu Sehat pasien ditemukan.', 'idsh' => $ihs, 'nama_satusehat' => $res['entry'][0]['resource']['name'][0]['text'] ?? null]);
 
    case 'tes':
       $cfg = ssSetting($koneksi, $idc);
