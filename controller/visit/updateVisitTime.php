@@ -16,13 +16,36 @@ if (!$id_patient || !$visit_time) {
    exit;
 }
 
+// hanya kunjungan faskes di session, dan id_patient harus cocok
+require_once __DIR__ . '/../../utility/visitGuard.php';
+$kunj = visitGuard($koneksi, 'visit_ID', $visit_ID);
+session_write_close();
+if ((string) $kunj['id_patient'] !== (string) $id_patient) {
+   echo json_encode(["status" => "error", "message" => "Data kunjungan tidak sesuai"]);
+   exit;
+}
+if (in_array((int) $kunj['visit_status'], [3, 4, 99], true)) {
+   echo json_encode(["status" => "error", "message" => "Kunjungan sudah dilayani / batal, waktu tidak dapat diubah"]);
+   exit;
+}
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $visit_date) || !preg_match('/^\d{2}:\d{2}(:\d{2})?$/', (string) $visit_time)) {
+   echo json_encode(["status" => "error", "message" => "Format tanggal / jam tidak valid"]);
+   exit;
+}
+// rentang wajar: koreksi s.d. 7 hari ke belakang, penjadwalan ulang s.d. 90 hari ke depan
+$hariIni = date('Y-m-d');
+if ($visit_date < date('Y-m-d', strtotime('-7 days')) || $visit_date > date('Y-m-d', strtotime('+90 days'))) {
+   echo json_encode(["status" => "error", "message" => "Tanggal harus antara 7 hari ke belakang dan 90 hari ke depan"]);
+   exit;
+}
+
 $query = $koneksi->prepare("
    UPDATE pasien_visit 
    SET visit_date=?, visit_time=? 
-   WHERE id_patient=? AND visit_ID=?
+   WHERE id_patient=? AND visit_ID=? AND id_customer=?
 ");
-
-$query->bind_param("ssis", $visit_date, $visit_time, $id_patient, $visit_ID);
+$idcSesi = (int) $kunj['id_customer'];
+$query->bind_param("ssssi", $visit_date, $visit_time, $id_patient, $visit_ID, $idcSesi);
 
 if ($query->execute()) {
    echo json_encode([

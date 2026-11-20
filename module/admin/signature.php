@@ -288,8 +288,8 @@ require '../../controller/view.php';
       });
       pad.addEventListener('pointermove', e => {
         if (!aktifG) return;
-        const ev = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
-        ev.forEach(x => aktifG.p.push(titik(x)));
+        const ev = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+        (ev.length ? ev : [e]).forEach(x => aktifG.p.push(titik(x)));
         gambarUlang();
       });
       const selesai = () => { aktifG = null; };

@@ -1,309 +1,173 @@
 <?php
+/**
+ * Daftar kunjungan pendaftaran (registrasi poliklinik / UGD) + aksi lama (getID, PUT, DELETE) untuk registrasi_ugd.
+ *
+ * GET  ?v=2&tab=belum|selesai|batal|checkin|sehat|sehatbatal&fromDate&toDate&doctor&provider&poli&tipe_pasien
+ *        -> {status, data:[...kolom ringkas], hitung:{tab: jumlah, ..., tanpa_vital}}   (module/admin/registrasi)
+ * GET  tanpa v=2 -> format lama (pasien_visit.* + join) untuk pemeriksaan / report / registrasi_ugd.
+ * GET  ?id=  PUT  DELETE ?id=  -> hanya kunjungan faskes di session.
+ *
+ * Perbaikan:
+ * - DATE(visit_date) BETWEEN -> visit_date BETWEEN (index idx_date_cust terpakai; 2,3 dtk -> 0,1 dtk untuk ~7rb baris).
+ * - v=2 hanya mengirim kolom yang ditampilkan (dulu pasien_visit.* termasuk anamnesa, catatan, error Satu Sehat, dst.).
+ * - "created_user != 'JKNSehat'" menyingkirkan baris created_user NULL -> sekarang NULL-safe.
+ * - Status 10 (booking Mobile JKN belum check-in) dulu tidak tampil di tab mana pun -> tab "Belum check-in".
+ * - getID / PUT / DELETE dulu tanpa cek faskes: kunjungan faskes mana pun bisa dibaca / diubah / dihapus.
+ */
 include '../../database/connect.php';
-$method = $_SERVER['REQUEST_METHOD'];
 date_default_timezone_set('Asia/Jakarta');
-switch ($method) {
+header('Content-Type: application/json; charset=utf-8');
+
+if (session_status() === PHP_SESSION_NONE) session_start();
+$ID_CUSTOMER = (int) ($_SESSION['id_customer'] ?? 0);
+$ROLE = (string) ($_SESSION['roles'] ?? '');
+session_write_close();
+if ($ID_CUSTOMER <= 0) {
+   http_response_code(401);
+   echo json_encode(['status' => 'error', 'message' => 'Session tidak valid / expired']);
+   exit;
+}
+
+require_once __DIR__ . '/registrasiService.php';
+
+switch ($_SERVER['REQUEST_METHOD']) {
    case 'GET':
-      if (isset($_GET['id'])) {
-         getID($_GET['id']);
-      } else {
-         getData();
-      }
+      if (isset($_GET['id'])) getID($_GET['id']);
+      elseif (($_GET['v'] ?? '') === '2') getDataV2();
+      else getData();
       break;
    case 'PUT':
-      // Update User
       updateData();
       break;
-
    case 'DELETE':
-      // Delete User
       deleteData();
       break;
-
    default:
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Method tidak diizinkan.'
-      ]);
-      break;
+      http_response_code(405);
+      echo json_encode(['status' => 'error', 'message' => 'Method tidak diizinkan.']);
 }
 
+function getDataV2()
+{
+   global $koneksi, $ID_CUSTOMER;
+   try {
+      $hasil = rgDaftar($koneksi, $ID_CUSTOMER, $_GET);
+      if (!ini_get('zlib.output_compression') && extension_loaded('zlib')) ob_start('ob_gzhandler');
+      echo json_encode($hasil, JSON_UNESCAPED_UNICODE);
+   } catch (Throwable $e) {
+      error_log('[registrasiController] ' . $e->getMessage());
+      http_response_code(500);
+      echo json_encode(['status' => 'error', 'message' => 'Gagal memuat data pendaftaran.']);
+   }
+}
+
+/** Format lama (dipakai halaman lain). */
 function getData()
 {
-   global $koneksi;
-
-   if (session_status() === PHP_SESSION_NONE) {
-      session_start();
-   }
-
-   header('Content-Type: application/json');
-
-   $id_customer = $_SESSION['id_customer'] ?? null;
-   if (!$id_customer) {
-      http_response_code(401);
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Session tidak valid / expired'
-      ]);
-      return;
-   }
-
-   $today = date('Y-m-d');
-
-   // ================= PARAMETER =================
-   $fromDate = !empty($_GET['fromDate']) ? $_GET['fromDate'] : $today;
-   $toDate   = !empty($_GET['toDate']) ? $_GET['toDate'] : $today;
-   $doctor   = !empty($_GET['doctor']) ? $_GET['doctor'] : null;
-   $provider = !empty($_GET['provider']) ? $_GET['provider'] : null;
-   $poli     = !empty($_GET['poli']) ? $_GET['poli'] : null;
-   $tipe_pasien = !empty($_GET['tipe_pasien']) ? $_GET['tipe_pasien'] : null;
-
-   $query = "SELECT 
-      pasien_visit.*, 
-      ms_patient.patient_name, ms_patient.nomor_rm, 
-      ms_patient.patient_gender, ms_patient.patient_datebirth,
-      ms_poli.poli_name,
-      ms_provider.provider_name,
-      ms_patient.patient_bpjs,
-      ms_patient.face_image AS patient_face_image
-   FROM pasien_visit
-   LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient
-   LEFT JOIN ms_poli ON ms_poli.id_poli = pasien_visit.id_poli
-   LEFT JOIN ms_provider ON ms_provider.id_provider = pasien_visit.id_provider
-   WHERE 1=1";
-
-   $params = [];
-   $types  = "";
-
-   // 🔹 tenant/clinic
-   $query .= " AND pasien_visit.id_customer = ?";
-   $params[] = $id_customer;
-   $types .= "i";
-
-   // 🔹 tanggal
-   $query .= " AND DATE(pasien_visit.visit_date) BETWEEN ? AND ?";
-   $params[] = $fromDate;
-   $params[] = $toDate;
-   $types .= "ss";
-
-   // 🔹 dokter
-   if (!empty($doctor)) {
-      $query .= " AND pasien_visit.id_doctor = ?";
-      $params[] = $doctor;
-      $types .= "s";
-   }
-
-   // 🔹 provider
-   if (!empty($provider)) {
-      $query .= " AND pasien_visit.id_provider = ?";
-      $params[] = $provider;
-      $types .= "s";
-   }
-
-   // 🔹 poli
-   if (!empty($poli)) {
-      $query .= " AND pasien_visit.id_poli = ?";
-      $params[] = $poli;
-      $types .= "s";
-   }
-
-   // 🔥 🔥 TIPE PASIEN
-   if (!empty($tipe_pasien)) {
-      $query .= " AND pasien_visit.source_hub = ?";
-      $params[] = $tipe_pasien;
-      $types .= "s";
-   }
-
-   // =============================
-   // 🔥 FILTER TAB (INI KUNCI)
-   // =============================
+   global $koneksi, $ID_CUSTOMER;
+   [$w, $t, $p] = rgFilter($ID_CUSTOMER, $_GET);
    $tab = $_GET['tab'] ?? null;
+   $where = implode(' AND ', $w);
+   $tabCond = match ($tab) {
+      'belum' => " AND pv.visit_status NOT IN (3,4,99,10)",
+      'selesai' => " AND pv.visit_status IN (3,4)",
+      'batal' => " AND pv.visit_status IN (99)",
+      default => '',
+   };
+   if ($tab === 'sehat') $tabCond .= " AND pv.created_user = 'JKNSehat' AND pv.visit_status NOT IN (3,4,99,10)";
+   elseif ($tab === 'sehatbatal') $tabCond .= " AND pv.created_user = 'JKNSehat' AND pv.visit_status IN (99)";
+   else $tabCond .= " AND NOT (pv.created_user <=> 'JKNSehat')";
 
-   if ($tab == 'belum') {
-      $query .= " AND pasien_visit.visit_status NOT IN (3,4,99,10)";
-   }
-
-   if ($tab == 'selesai') {
-      $query .= " AND pasien_visit.visit_status IN (3,4)";
-   }
-   if ($tab == 'batal') {
-      $query .= " AND pasien_visit.visit_status IN (99)";
-   }
-   if ($tab == 'sehat') {
-      $query .= " AND pasien_visit.created_user = 'JKNSehat' AND pasien_visit.visit_status NOT IN (3,4,99,10)";
-   }else if ($tab == 'sehatbatal'){
-      $query .= " AND pasien_visit.created_user = 'JKNSehat' AND pasien_visit.visit_status IN (99)";
-   }else{
-      $query .= " AND pasien_visit.created_user != 'JKNSehat'";
-   }
-   $query .= " 
-      ORDER BY 
-         pasien_visit.visit_date ASC,
-         pasien_visit.id_poli ASC,
-         pasien_visit.id_doctor ASC,
-         LEFT(pasien_visit.visit_antrian, 1) ASC,
-         CAST(REGEXP_SUBSTR(pasien_visit.visit_antrian, '[0-9]+$') AS UNSIGNED) ASC
-   ";
-
+   $query = "SELECT pv.*, ms.patient_name, ms.nomor_rm, ms.patient_gender, ms.patient_datebirth, ms_poli.poli_name, pr.provider_name,
+         ms.patient_bpjs, ms.face_image AS patient_face_image
+      FROM pasien_visit pv
+      LEFT JOIN ms_patient ms ON ms.id_patient = pv.id_patient
+      LEFT JOIN ms_poli ON ms_poli.id_poli = pv.id_poli
+      LEFT JOIN ms_provider pr ON pr.id_provider = pv.id_provider
+      WHERE $where $tabCond
+      ORDER BY pv.visit_date ASC, pv.id_poli ASC, pv.id_doctor ASC, LEFT(pv.visit_antrian, 1) ASC,
+         CAST(REGEXP_SUBSTR(pv.visit_antrian, '[0-9]+$') AS UNSIGNED) ASC";
    $stmt = $koneksi->prepare($query);
-
    if (!$stmt) {
       http_response_code(500);
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Prepare failed: ' . $koneksi->error
-      ]);
+      echo json_encode(['status' => 'error', 'message' => 'Gagal memuat data.']);
+      error_log('[registrasiController] ' . $koneksi->error);
       return;
    }
-
-   $stmt->bind_param($types, ...$params);
+   $stmt->bind_param($t, ...$p);
    if (!$stmt->execute()) {
       http_response_code(500);
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Execute failed: ' . $stmt->error
-      ]);
+      echo json_encode(['status' => 'error', 'message' => 'Gagal memuat data.']);
       return;
    }
-
-   $result = $stmt->get_result();
-   $data = $result->fetch_all(MYSQLI_ASSOC);
-
+   $data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
    $stmt->close();
-
-   echo json_encode([
-      'status' => 'success',
-      'data'   => $data
-   ]);
+   echo json_encode(['status' => 'success', 'data' => $data]);
 }
-// Function untuk Read User berdasarkan ID
-function  getID($iduser)
+
+function getID($id)
 {
-   global $koneksi;
-
-   // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM pasien_visit WHERE id_visit = ?";
-
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $iduser); // Bind parameter iduser
-      $stmt->execute();
-      $result = $stmt->get_result();
-
-      if ($result->num_rows > 0) {
-         $data = $result->fetch_assoc();
-         echo json_encode([
-            'status' => 'success',
-            'data' => $data
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Data tidak ditemukan.'
-         ]);
-      }
-
-      $stmt->close();
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
-   }
+   global $koneksi, $ID_CUSTOMER;
+   $id = (int) $id;
+   $stmt = $koneksi->prepare("SELECT * FROM pasien_visit WHERE id_visit = ? AND id_customer = ?");
+   $stmt->bind_param('ii', $id, $ID_CUSTOMER);
+   $stmt->execute();
+   $data = $stmt->get_result()->fetch_assoc();
+   $stmt->close();
+   echo json_encode($data ? ['status' => 'success', 'data' => $data] : ['status' => 'error', 'message' => 'Data tidak ditemukan.']);
 }
-
-
 
 function updateData()
 {
-   global $koneksi;
-   parse_str(file_get_contents("php://input"), $_PUT);
-
-   if (empty($_PUT['id_visit'])) {
+   global $koneksi, $ID_CUSTOMER;
+   parse_str(file_get_contents('php://input'), $put);
+   $id = (int) ($put['id_visit'] ?? 0);
+   if ($id <= 0) {
       echo json_encode(['status' => 'error', 'message' => 'ID tidak ditemukan.']);
       return;
    }
-
-   $id = $_PUT['id_visit'];
-   $allowedFields = [
-      'id_doctor',
-      'id_poli',
-      'visit_notes'
-   ];
    $fields = [];
    $values = [];
-
-   foreach ($allowedFields as $f) {
-      if (isset($_PUT[$f])) {
-         $fields[] = "$f=?";
-         $values[] = $_PUT[$f];
+   foreach (['id_doctor', 'id_poli', 'visit_notes'] as $f) {
+      if (isset($put[$f])) {
+         $fields[] = "$f = ?";
+         $values[] = (string) $put[$f];
       }
    }
-
-   if (empty($fields)) {
+   if (!$fields) {
       echo json_encode(['status' => 'error', 'message' => 'Tidak ada data diupdate.']);
       return;
    }
-
    $values[] = $id;
-   $types = str_repeat('s', count($values) - 1) . "i";
-
-   $query = "UPDATE pasien_visit SET " . implode(',', $fields) . " WHERE id_visit=?";
-   $stmt = $koneksi->prepare($query);
-
-   if ($stmt) {
-      $stmt->bind_param($types, ...$values);
-      if ($stmt->execute()) {
-         echo json_encode(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
-      } else {
-         echo json_encode(['status' => 'error', 'message' => 'Update gagal: ' . $stmt->error]);
-      }
-      $stmt->close();
-   } else {
-      echo json_encode(['status' => 'error', 'message' => 'Query error: ' . $koneksi->error]);
-   }
+   $values[] = $ID_CUSTOMER;
+   $stmt = $koneksi->prepare("UPDATE pasien_visit SET " . implode(', ', $fields) . " WHERE id_visit = ? AND id_customer = ?");
+   $stmt->bind_param(str_repeat('s', count($fields)) . 'ii', ...$values);
+   $ok = $stmt->execute();
+   $n = $stmt->affected_rows;
+   $stmt->close();
+   echo json_encode($ok && $n >= 0 ? ['status' => 'success', 'message' => 'Data berhasil diperbarui.'] : ['status' => 'error', 'message' => 'Update gagal.']);
 }
 
-
-
-// Function untuk Delete User
 function deleteData()
 {
-   global $koneksi;
-
-   // Ambil ID user dari query parameter
-   $id = isset($_GET['id']) ? $_GET['id'] : '';
-
-   if (empty($id)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'ID tidak ditemukan.'
-      ]);
-      exit;
+   global $koneksi, $ID_CUSTOMER, $ROLE;
+   $id = (int) ($_GET['id'] ?? 0);
+   if ($id <= 0) {
+      echo json_encode(['status' => 'error', 'message' => 'ID tidak ditemukan.']);
+      return;
    }
-
-   // Query untuk menghapus data user
-   $query = "DELETE FROM pasien_visit WHERE id_visit = ?";
-
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $id);
-
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil dihapus.'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menghapus.'
-         ]);
-      }
-
-      $stmt->close();
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
+   if (!in_array($ROLE, ['admin', 'receptionis', 'superadmin', 'administrator'], true)) {
+      http_response_code(403);
+      echo json_encode(['status' => 'error', 'message' => 'Akses ditolak.']);
+      return;
    }
+   // kunjungan yang sudah selesai dilayani berisi rekam medis -> tidak boleh dihapus
+   $stmt = $koneksi->prepare("DELETE FROM pasien_visit WHERE id_visit = ? AND id_customer = ? AND visit_status NOT IN (3,4)");
+   $stmt->bind_param('ii', $id, $ID_CUSTOMER);
+   $stmt->execute();
+   $n = $stmt->affected_rows;
+   $stmt->close();
+   if ($n > 0) error_log("[registrasiController] kunjungan #$id dihapus oleh " . ($_SESSION['username'] ?? $ROLE));
+   echo json_encode($n > 0 ? ['status' => 'success', 'message' => 'Data berhasil dihapus.']
+      : ['status' => 'error', 'message' => 'Data tidak ditemukan atau sudah dilayani (tidak dapat dihapus).']);
 }

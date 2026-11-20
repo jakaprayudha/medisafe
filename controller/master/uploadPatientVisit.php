@@ -29,6 +29,10 @@ if (!$no) {
    ]);
    exit;
 }
+// hanya kunjungan faskes di session (dulu: dokumen klaim kunjungan faskes mana pun bisa ditimpa)
+require_once __DIR__ . '/../../utility/visitGuard.php';
+$kunjGuard = visitGuard($koneksi, 'visit_ID', $no);
+session_write_close();
 // 🔥 validasi file
 $allowedExt = ['pdf'];
 $maxSize = 2 * 1024 * 1024; // 2MB
@@ -72,7 +76,7 @@ foreach ($allowedFiles as $field => $prefix) {
       }
 
       // 🔥 nama unik (anti overwrite)
-      $filename = $prefix . "_" . $no . "_" . time() . "." . $ext;
+      $filename = $prefix . "_" . preg_replace('/[^A-Za-z0-9_-]/', '', (string) $no) . "_" . time() . "." . $ext;
       $destination = $uploadDir . $filename;
 
       if (move_uploaded_file($fileTmp, $destination)) {
@@ -112,7 +116,9 @@ foreach ($uploadedFiles as $key => $file) {
 $params[] = $no;
 $types   .= "s";
 
-$sql = "UPDATE pasien_visit SET " . implode(",", $fields) . " WHERE visit_ID=?";
+$params[] = (int) $kunjGuard['id_customer'];
+$types   .= "i";
+$sql = "UPDATE pasien_visit SET " . implode(",", $fields) . " WHERE visit_ID=? AND id_customer=?";
 $stmt = $koneksi->prepare($sql);
 
 if (!$stmt) {
