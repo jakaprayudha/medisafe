@@ -4,17 +4,47 @@
  * kontrak.php
  * Preview / cetak Perjanjian Kerjasama Sistem Informasi Medisafe
  *
- * URL:
- * kontrak.php?no=3
+ * URL: kontrak.php?no={setting_clinic.id}[&embed=1]
+ *   embed=1 -> tanpa toolbar (dipakai iframe module/admin/kontrak).
+ *
+ * Akses: superadmin/administrator semua faskes; admin hanya kontrak faskesnya sendiri.
+ * Dulu halaman ini tanpa cek login sama sekali: siapa pun bisa membuka kontrak faskes mana pun
+ * (nilai kontrak, kontak PIC) cukup dengan mengganti ?no=.
  */
 
 require '../../database/connect.php';
+require_once __DIR__ . '/../admin/print/qr_local.php';
+@session_start();
+$roleSesi = (string) ($_SESSION['roles'] ?? $_SESSION['role'] ?? '');
+$idcSesi = (int) ($_SESSION['id_customer'] ?? 0);
+$loginSesi = isset($_SESSION['uid_user']);
+session_write_close();
+
+function tolak(int $kode, string $pesan): void
+{
+   http_response_code($kode);
+   header('Content-Type: text/html; charset=utf-8');
+   echo '<!doctype html><meta charset="utf-8"><title>Kontrak</title><div style="font-family:Arial,sans-serif;color:#555;text-align:center;padding:60px 20px">'
+      . htmlspecialchars($pesan) . '</div>';
+   exit;
+}
 
 $no = isset($_GET['no']) ? (int) $_GET['no'] : 0;
+$embed = !empty($_GET['embed']);
 
-if ($no <= 0) {
-   die('ID Faskes tidak valid.');
+if (!$loginSesi) tolak(401, 'Sesi berakhir. Silakan login kembali.');
+if ($no <= 0) tolak(400, 'ID Faskes tidak valid.');
+if (!in_array($roleSesi, ['superadmin', 'administrator'], true)) {
+   if ($roleSesi !== 'admin') tolak(403, 'Anda tidak memiliki akses ke dokumen kontrak.');
+   // admin faskes: hanya kontrak faskesnya sendiri
+   $st = mysqli_prepare($koneksi, 'SELECT 1 FROM setting_clinic WHERE id = ? AND id_customer = ? LIMIT 1');
+   mysqli_stmt_bind_param($st, 'ii', $no, $idcSesi);
+   mysqli_stmt_execute($st);
+   $milik = (bool) mysqli_fetch_row(mysqli_stmt_get_result($st));
+   mysqli_stmt_close($st);
+   if (!$milik) tolak(403, 'Anda tidak memiliki akses ke dokumen kontrak ini.');
 }
+header('Cache-Control: private, no-store');
 
 
 /*
@@ -61,7 +91,7 @@ $sql = "
 $stmt = mysqli_prepare($koneksi, $sql);
 
 if (!$stmt) {
-   die('Query database gagal.');
+   tolak(500, 'Query database gagal.');
 }
 
 mysqli_stmt_bind_param($stmt, "i", $no);
@@ -76,7 +106,7 @@ mysqli_stmt_close($stmt);
 
 
 if (!$faskes) {
-   die('Data Faskes tidak ditemukan.');
+   tolak(404, 'Data kontrak faskes belum tersedia. Hubungi tim Medisafe.');
 }
 
 
@@ -104,8 +134,9 @@ function formatTanggalIndonesia($date)
 
    $timestamp = strtotime($date);
 
-   if (!$timestamp) {
-      return $date;
+   // tanggal kosong tersimpan sebagai 1970-01-01 / 0000-00-00 oleh proses lama
+   if (!$timestamp || (int) date('Y', $timestamp) < 2000) {
+      return '-';
    }
 
    $bulan = [
@@ -190,6 +221,12 @@ function terbilang($angka)
          . terbilang($angka % 1000000);
    }
 
+   if ($angka < 1000000000000) {
+      return terbilang((int) ($angka / 1000000000))
+         . ' miliar '
+         . terbilang($angka % 1000000000);
+   }
+
    return (string) $angka;
 }
 
@@ -240,10 +277,9 @@ $contractAmountFormatted = 'Rp. '
       '.'
    );
 
+// rapikan spasi ganda ("dua ratus  ribu"); 0 -> "nol"
 $contractAmountText = ucfirst(
-   trim(
-      terbilang($contractAmount)
-   )
+   trim(preg_replace('/\s+/', ' ', terbilang($contractAmount))) ?: 'nol'
 ) . ' rupiah';
 
 
@@ -268,19 +304,8 @@ $mitraPerusahaan = $namaFaskes;
 |--------------------------------------------------------------------------
 */
 
-$secretKey = 'MEDISAFE-KONTRAK-2026-SECRET';
-
-function generateContractToken(
-   $no,
-   $party,
-   $secretKey
-) {
-   return hash_hmac(
-      'sha256',
-      $no . '|' . $party,
-      $secretKey
-   );
-}
+require_once __DIR__ . '/kontrak_token.php';
+$secretKey = kontrakSecret();
 
 $tokenKates = generateContractToken(
    $no,
@@ -332,14 +357,10 @@ $validationUrlMitra =
 |--------------------------------------------------------------------------
 */
 
-$qrKates =
-   'https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&data='
-   . urlencode($validationUrlKates);
+// dibuat lokal (dulu lewat api.qrserver.com: lambat, gagal tanpa internet, dan URL bertoken bocor ke pihak luar)
+$qrKates = qrDataUri($validationUrlKates, 180);
 
-
-$qrMitra =
-   'https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&data='
-   . urlencode($validationUrlMitra);
+$qrMitra = qrDataUri($validationUrlMitra, 180);
 
 ?>
 <!DOCTYPE html>
@@ -549,10 +570,12 @@ $qrMitra =
 
 <body>
 
+   <?php if (!$embed): ?>
    <div class="toolbar">
       <button class="btn-print" onclick="window.print()">🖨 Cetak Kontrak</button>
       <button class="btn-close" onclick="window.close()">Tutup</button>
    </div>
+   <?php endif; ?>
 
    <div class="document">
 
