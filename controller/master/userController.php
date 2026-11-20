@@ -233,7 +233,7 @@ function getData($id_customer)
 
    // password & uid sengaja TIDAK dikirim ke browser
    $st = $koneksi->prepare(
-      "SELECT id_user, uid_user, fullname, username, roles, status, created_at, signature_user, kdDokter
+      "SELECT id_user, uid_user, fullname, username, roles, status, created_at, signature_user, signature_timestamp, kdDokter
        FROM ms_users
        WHERE id_customer=?
        ORDER BY fullname ASC"
