@@ -106,10 +106,21 @@ $isSuper = $roles === 'superadmin';
     .select2-container--default .ma-faskes-dd .select2-results__option--selected { background: #efeeff; color: #635bff; font-weight: 600; }
     .select2-container--default .ma-faskes-dd .select2-results__option--highlighted .ma-off { color: #e6e4ff; }
     .ma-faskes-dd .ma-off, #maFaskesWrap .ma-off { color: #8a97a3; font-size: 11px; }
+    #maDetailTable td, #maTindakTable td { white-space: nowrap; vertical-align: middle; }
+    #maTindakTable td.ma-masalah { white-space: normal; min-width: 220px; max-width: 320px; }
+    #maDetailTable th, #maTindakTable th, .ma-rekap th { font-size: .75rem; color: #5a6a85; font-weight: 600; white-space: nowrap; }
+    .ma-chips .btn { border-radius: 20px; font-size: .75rem; padding: .2rem .75rem; background: #fff; border: 1px solid #e5eaef; color: #5a6a85; }
+    .ma-chips .btn.active { background: #5d87ff; border-color: #5d87ff; color: #fff; }
+    .ma-chips .btn .badge { font-size: .65rem; }
+    .ma-sec { font-size: .72rem; font-weight: 700; color: #5a6a85; text-transform: uppercase; letter-spacing: .4px; }
+    .ma-bar { position: fixed; top: 0; left: 0; height: 3px; background: #5d87ff; z-index: 9999; transition: width .3s, opacity .3s; }
+    .ma-loading { position: relative; }
+    .ma-loading::after { content: ''; position: absolute; inset: 0; background: rgba(255, 255, 255, .6); border-radius: inherit; z-index: 3; }
   </style>
 </head>
 
 <body>
+  <div class="ma-bar" id="maBar" style="width:0"></div>
   <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="fixed" data-header-position="fixed">
     <?php require 'sidebar.php'; ?>
     <div class="body-wrapper">
@@ -118,35 +129,41 @@ $isSuper = $roles === 'superadmin';
         <div class="container-fluid">
 
           <!-- HEADER + FILTER -->
-          <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
-            <div>
-              <h4 class="fw-semibold mb-1">Monitoring Antrean Online BPJS</h4>
-              <div class="text-muted small">Kepatuhan antrean online FKTP: pemanfaatan, status panggil, batal, dan waktu layanan.</div>
-            </div>
-            <div class="d-flex gap-2 align-items-end flex-wrap">
-              <?php if ($isSuper): ?>
-                <div id="maFaskesWrap" style="min-width:280px">
-                  <label class="form-label small mb-1">Faskes</label>
-                  <select id="maFaskes" class="form-select"></select>
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body py-3">
+              <div class="d-flex flex-wrap align-items-center gap-3 mb-2">
+                <span class="d-inline-flex align-items-center justify-content-center rounded-3 bg-primary-subtle text-primary" style="width:40px;height:40px"><i class="fas fa-ticket-alt"></i></span>
+                <div class="flex-grow-1" style="min-width:0">
+                  <h5 class="fw-semibold mb-0">Monitoring Antrean Online BPJS</h5>
+                  <div class="text-muted small" id="maPeriodeInfo">Kepatuhan antrean online FKTP: pemanfaatan, status panggil, batal, dan waktu layanan</div>
                 </div>
-              <?php endif; ?>
-              <div>
-                <label class="form-label small mb-1">Dari</label>
-                <input type="date" id="maFrom" class="form-control">
+                <button type="button" class="btn btn-light btn-sm" id="maRefresh" title="Muat ulang"><i class="fas fa-sync-alt"></i></button>
               </div>
-              <div>
-                <label class="form-label small mb-1">Sampai</label>
-                <input type="date" id="maTo" class="form-control">
+              <div class="d-flex flex-wrap align-items-end gap-2">
+                <?php if ($isSuper): ?>
+                  <div id="maFaskesWrap" style="min-width:280px">
+                    <label class="form-label small mb-1">Faskes</label>
+                    <select id="maFaskes" class="form-select"></select>
+                  </div>
+                <?php endif; ?>
+                <div>
+                  <label class="form-label small mb-1" for="maFrom">Dari</label>
+                  <input type="date" id="maFrom" class="form-control form-control-sm">
+                </div>
+                <div>
+                  <label class="form-label small mb-1" for="maTo">Sampai</label>
+                  <input type="date" id="maTo" class="form-control form-control-sm">
+                </div>
+                <div class="ma-chips d-flex flex-wrap gap-1 pb-1" id="maRanges">
+                  <button type="button" class="btn ma-range" data-range="today">Hari ini</button>
+                  <button type="button" class="btn ma-range" data-range="yesterday">Kemarin</button>
+                  <button type="button" class="btn ma-range" data-range="7">7 hari</button>
+                  <button type="button" class="btn ma-range" data-range="month">Bulan ini</button>
+                  <button type="button" class="btn ma-range" data-range="lastmonth">Bulan lalu</button>
+                </div>
               </div>
-              <div class="btn-group">
-                <button type="button" class="btn btn-outline-secondary ma-range" data-range="today">Hari ini</button>
-                <button type="button" class="btn btn-outline-secondary ma-range" data-range="7">7 hari</button>
-                <button type="button" class="btn btn-outline-secondary ma-range" data-range="month">Bulan ini</button>
-              </div>
-              <button type="button" class="btn btn-dark" id="maRefresh"><i class="fas fa-sync me-1"></i>Tampilkan</button>
             </div>
           </div>
-
           <div id="maError" class="alert alert-danger d-none" role="alert"></div>
           <div id="maConfig" class="alert d-flex align-items-center gap-2 py-2 mb-3 d-none" role="alert"></div>
 
@@ -256,6 +273,19 @@ $isSuper = $roles === 'superadmin';
             </div>
           </div>
 
+          <!-- GRAFIK TAMBAHAN -->
+          <div class="row g-3 mb-4">
+            <div class="col-md-6 col-xl-4"><div class="card h-100 mb-0"><div class="card-body">
+              <div class="ma-sec mb-2">Status panggil antrean online</div>
+              <div style="height:240px"><canvas id="maChartPanggil"></canvas></div></div></div></div>
+            <div class="col-md-6 col-xl-4"><div class="card h-100 mb-0"><div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2"><div class="ma-sec">Waktu hadir → selesai periksa</div><small class="text-muted" id="maTungguInfo"></small></div>
+              <div style="height:240px"><canvas id="maChartTunggu"></canvas></div></div></div></div>
+            <div class="col-xl-4"><div class="card h-100 mb-0"><div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2"><div class="ma-sec">Kedatangan per jam</div><small class="text-muted" id="maJamInfo"></small></div>
+              <div style="height:240px"><canvas id="maChartJam"></canvas></div></div></div></div>
+          </div>
+
           <!-- PERLU TINDAK LANJUT -->
           <div class="card mb-4 border-danger-subtle">
             <div class="card-body">
@@ -263,6 +293,7 @@ $isSuper = $roles === 'superadmin';
                 <h6 class="mb-0"><i class="fas fa-exclamation-triangle text-danger me-1"></i> Perlu Tindak Lanjut <span class="badge bg-danger ms-1" id="tindakCount">0</span></h6>
                 <small class="text-muted">Antrean belum dilaporkan hadir/tidak hadir, booking Mobile JKN tidak check-in, kunjungan sakit tanpa antrean online, dan obat yang belum dikirim ke PCare.</small>
               </div>
+              <div class="ma-chips d-flex flex-wrap gap-1 mb-2" id="maTindakChips"></div>
               <div class="table-responsive">
                 <table class="table table-sm align-middle w-100" id="maTindakTable">
                   <thead class="table-light">
@@ -477,14 +508,31 @@ $isSuper = $roles === 'superadmin';
       });
       const today = ymd(new Date());
 
-      function setRange(r) {
+      function hitungRange(r) {
+        r = String(r); // jQuery .data() mengubah "7" menjadi angka 7
         const now = new Date(today + 'T00:00:00');
-        let from = new Date(now);
+        let from = new Date(now), to = new Date(now);
+        if (r === 'yesterday') { from.setDate(now.getDate() - 1); to = new Date(from); }
         if (r === '7') from.setDate(now.getDate() - 6);
         if (r === 'month') from = new Date(now.getFullYear(), now.getMonth(), 1);
-        $('#maFrom').val(ymd(from));
-        $('#maTo').val(today);
+        if (r === 'lastmonth') { from = new Date(now.getFullYear(), now.getMonth() - 1, 1); to = new Date(now.getFullYear(), now.getMonth(), 0); }
+        return [ymd(from), ymd(to)];
       }
+      function tandaiRange() {
+        $('.ma-range').each(function() {
+          const [a, b] = hitungRange($(this).data('range'));
+          $(this).toggleClass('active', a === $('#maFrom').val() && b === $('#maTo').val());
+        });
+      }
+      function setRange(r) {
+        const [a, b] = hitungRange(r);
+        $('#maFrom').val(a);
+        $('#maTo').val(b);
+        tandaiRange();
+      }
+      // tanggal diubah manual -> muat otomatis (tanpa tombol Tampilkan)
+      let tundaTgl;
+      $('#maFrom, #maTo').on('change', () => { tandaiRange(); clearTimeout(tundaTgl); tundaTgl = setTimeout(load, 300); });
       $('#maFrom, #maTo').attr('max', today);
       setRange('today');
       $('.ma-range').on('click', function() {
@@ -645,13 +693,14 @@ $isSuper = $roles === 'superadmin';
         tDetail.column(7).search(this.value ? '^' + $.fn.dataTable.util.escapeRegex(this.value) + '$' : '', true, false).draw();
       });
 
+      const JENIS_MASALAH = { lapor: 'Belum dilaporkan', checkin: 'Booking tidak check-in', antrol: 'Tanpa antrean online', nonaktif: 'Antrol nonaktif', obat: 'Obat belum ke PCare' };
       const MASALAH = r => {
         const m = [];
-        if (r.status_panggil === 'belum_lapor') m.push(['Belum dilaporkan hadir / tidak hadir', 'text-danger']);
-        if (r.status_panggil === 'tidak_checkin') m.push(['Booking Mobile JKN tidak check-in, belum dibatalkan', 'text-danger']);
-        if (r.status_add === 'tidak_dikirim' && r.dilayani) m.push(['Kunjungan sakit tidak masuk antrean online', 'text-warning']);
-        if (r.status_add === 'nonaktif' && r.dilayani) m.push(['Antrol belum aktif, antrean tidak dikirim', 'text-warning']);
-        if (['belum', 'belum_pcare', 'tiket_kosong'].includes(r.status_obat)) m.push(['Obat belum dikirim ke PCare', 'text-warning']);
+        if (r.status_panggil === 'belum_lapor') m.push(['Belum dilaporkan hadir / tidak hadir', 'text-danger', 'lapor']);
+        if (r.status_panggil === 'tidak_checkin') m.push(['Booking Mobile JKN tidak check-in, belum dibatalkan', 'text-danger', 'checkin']);
+        if (r.status_add === 'tidak_dikirim' && r.dilayani) m.push(['Kunjungan sakit tidak masuk antrean online', 'text-warning', 'antrol']);
+        if (r.status_add === 'nonaktif' && r.dilayani) m.push(['Antrol belum aktif, antrean tidak dikirim', 'text-warning', 'nonaktif']);
+        if (['belum', 'belum_pcare', 'tiket_kosong'].includes(r.status_obat)) m.push(['Obat belum dikirim ke PCare', 'text-warning', 'obat']);
         return m.length ? m : null;
       };
       const tTindak = $('#maTindakTable').DataTable({
@@ -681,6 +730,7 @@ $isSuper = $roles === 'superadmin';
           },
           {
             data: null,
+            className: 'ma-masalah',
             render: r => (MASALAH(r) || []).map(m => `<div class="${m[1]} fw-semibold">${m[0]}</div>`).join('') || '-'
           },
           {
@@ -819,13 +869,69 @@ $isSuper = $roles === 'superadmin';
         tHari.clear().rows.add(rekap(d.harian)).draw();
 
         tDetail.clear().rows.add(d.detail).draw();
-        const tindak = d.detail.filter(r => MASALAH(r));
-        $('#tindakCount').text(tindak.length);
-        tTindak.clear().rows.add(tindak).draw();
+        tindakSemua = d.detail.filter(r => MASALAH(r));
+        $('#tindakCount').text(tindakSemua.length);
+        const hitung = {};
+        tindakSemua.forEach(r => MASALAH(r).forEach(m => hitung[m[2]] = (hitung[m[2]] || 0) + 1));
+        if (filterTindak && !hitung[filterTindak]) filterTindak = '';
+        $('#maTindakChips').html(`<button type="button" class="btn ${filterTindak ? '' : 'active'}" data-m="">Semua <span class="badge bg-light text-dark ms-1">${n(tindakSemua.length)}</span></button>` +
+          Object.entries(JENIS_MASALAH).filter(([k]) => hitung[k]).map(([k, v]) => `<button type="button" class="btn ${filterTindak === k ? 'active' : ''}" data-m="${k}">${esc(v)} <span class="badge bg-light text-dark ms-1">${n(hitung[k])}</span></button>`).join(''));
+        isiTindak();
+        grafikTambahan(d);
+        const p = d.periode;
+        $('#maPeriodeInfo').html(`<i class="far fa-calendar me-1"></i>${tgl(p.from)}${p.from !== p.to ? ' – ' + tgl(p.to) : ''} · ${n(k.total)} kunjungan BPJS rawat jalan`);
+      }
+      let tindakSemua = [], filterTindak = '';
+      function isiTindak() {
+        tTindak.clear().rows.add(filterTindak ? tindakSemua.filter(r => MASALAH(r).some(m => m[2] === filterTindak)) : tindakSemua).draw();
+      }
+      $(document).on('click', '#maTindakChips .btn', function() {
+        filterTindak = this.dataset.m;
+        $('#maTindakChips .btn').removeClass('active');
+        $(this).addClass('active');
+        isiTindak();
+      });
+
+      // ---------- grafik tambahan ----------
+      const chartBaru = (id, cfg) => new Chart(document.getElementById(id), cfg);
+      const chPanggil = chartBaru('maChartPanggil', { type: 'doughnut', data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
+        options: { maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } } } });
+      const chTunggu = chartBaru('maChartTunggu', { type: 'bar', data: { labels: ['< 15 mnt', '15–30', '30–60', '1–2 jam', '> 2 jam'], datasets: [{ label: 'Pasien', data: [], backgroundColor: ['#13deb9', '#5d87ff', '#ffae1f', '#fa896b', '#ef4444'], borderRadius: 4 }] },
+        options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+      const chJam = chartBaru('maChartJam', { type: 'bar', data: { labels: [], datasets: [{ label: 'Hadir', data: [], backgroundColor: '#5d87ff', borderRadius: 3 }] },
+        options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+      const WARNA_PANGGIL = { hadir: '#13deb9', batal: '#94a3b8', belum_lapor: '#ef4444', tidak_checkin: '#f97316', menunggu: '#ffae1f', belum_checkin: '#fcd34d', tanpa_antrean: '#cbd5e1' };
+      function grafikTambahan(d) {
+        const st = {};
+        d.detail.forEach(r => { if (r.status_panggil) st[r.status_panggil] = (st[r.status_panggil] || 0) + 1; });
+        const kunci = Object.keys(PANGGIL).filter(k => st[k]);
+        chPanggil.data.labels = kunci.map(k => PANGGIL[k][0] + ' (' + n(st[k]) + ')');
+        chPanggil.data.datasets[0].data = kunci.map(k => st[k]);
+        chPanggil.data.datasets[0].backgroundColor = kunci.map(k => WARNA_PANGGIL[k]);
+        chPanggil.update();
+        const bin = [0, 0, 0, 0, 0];
+        d.detail.forEach(r => { const m = r.m_hadir_periksa; if (m == null) return; bin[m < 15 ? 0 : m < 30 ? 1 : m < 60 ? 2 : m < 120 ? 3 : 4]++; });
+        chTunggu.data.datasets[0].data = bin;
+        chTunggu.update();
+        const tot = bin.reduce((a, b) => a + b, 0);
+        $('#maTungguInfo').text(tot ? Math.round((bin[0] + bin[1]) / tot * 100) + '% ≤ 30 menit' : '');
+        const jam = Array(24).fill(0);
+        d.detail.forEach(r => { if (r.hadir_at && r.dilayani) jam[+String(r.hadir_at).slice(11, 13)]++; });
+        let a = jam.findIndex(v => v > 0), z = 23 - [...jam].reverse().findIndex(v => v > 0);
+        if (a < 0) { a = 7; z = 17; }
+        chJam.data.labels = jam.slice(a, z + 1).map((_, i) => String(a + i).padStart(2, '0'));
+        chJam.data.datasets[0].data = jam.slice(a, z + 1);
+        chJam.update();
+        const puncak = jam.indexOf(Math.max(...jam));
+        $('#maJamInfo').text(Math.max(...jam) ? 'Tersibuk ' + String(puncak).padStart(2, '0') + ':00' : '');
       }
 
+      let muatSeq = 0;
       async function load() {
+        const ini = ++muatSeq;
         $('#maError').addClass('d-none');
+        $('#maBar').css({ opacity: 1, width: '70%' });
+        $('.ma-kpi .card, #maChart, #maChartPanggil, #maChartTunggu, #maChartJam').closest('.card').addClass('ma-loading');
         const p = new URLSearchParams({
           action: 'data',
           from: $('#maFrom').val(),
@@ -837,11 +943,19 @@ $isSuper = $roles === 'superadmin';
           const r = await fetch(api + '?' + p);
           const j = await r.json();
           if (!r.ok || j.status !== 'success') throw new Error(j.message || 'Gagal memuat data.');
+          // detail dikirim ringkas: kolom + baris array
+          if (Array.isArray(j.kolom)) j.detail = j.detail.map(a => Object.fromEntries(j.kolom.map((c, i) => [c, a[i]])));
+          if (ini !== muatSeq) return;
           render(j);
         } catch (e) {
           $('#maError').text(e.message || 'Gagal terhubung ke server.').removeClass('d-none');
         } finally {
-          $('#maRefresh').prop('disabled', false).find('i').removeClass('fa-spin');
+          if (ini === muatSeq) {
+            $('#maRefresh').prop('disabled', false).find('i').removeClass('fa-spin');
+            $('#maBar').css('width', '100%');
+            setTimeout(() => $('#maBar').css({ opacity: 0, width: 0 }), 300);
+            $('.ma-loading').removeClass('ma-loading');
+          }
         }
       }
 
