@@ -63,20 +63,24 @@ LEFT JOIN (
         ON mp.id_patient = v.id_patient
     WHERE pr.status = 'aktif'
       AND pr.ranap_booking = 1
-      AND (v.visit_status IS NULL OR v.visit_status NOT IN (4, 99))
+      AND v.id_customer = ?
 ) active_ranap ON active_ranap.id_bed = b.id_bed
 
-WHERE b.id_customer = '$id_customer'
+WHERE b.id_customer = ?
 
 ORDER BY r.service_class ASC, r.room_name ASC, b.bed_name ASC
 ";
 
-      $query = mysqli_query($koneksi, $sql);
+      $idc = (int) $id_customer;
+      $stq = $koneksi->prepare($sql);
+      $stq->bind_param('ii', $idc, $idc);
+      $stq->execute();
+      $query = $stq->get_result();
 
       if (!$query) {
          echo json_encode([
             "status" => "error",
-            "message" => mysqli_error($koneksi),
+            "message" => "Gagal memuat data tempat tidur",
             "data" => []
          ]);
          exit;
@@ -117,14 +121,13 @@ ORDER BY r.service_class ASC, r.room_name ASC, b.bed_name ASC
          }
 
          // 🔥 VALIDASI MILIK CUSTOMER (PENTING!)
-         $check = mysqli_query($koneksi, "
-            SELECT id_bed 
-            FROM ms_room_bed 
-            WHERE id_bed = '$id_bed' 
-            AND id_customer = '$id_customer'
-         ");
-
-         if (mysqli_num_rows($check) == 0) {
+         $id_bed = (int) $id_bed;
+         $idc = (int) $id_customer;
+         $status = $status === 0 ? 0 : 1;
+         $stc = $koneksi->prepare("SELECT id_bed FROM ms_room_bed WHERE id_bed = ? AND id_customer = ?");
+         $stc->bind_param('ii', $id_bed, $idc);
+         $stc->execute();
+         if (!$stc->get_result()->fetch_assoc()) {
             echo json_encode([
                "status" => "error",
                "message" => "Data tidak valid"
@@ -132,22 +135,18 @@ ORDER BY r.service_class ASC, r.room_name ASC, b.bed_name ASC
             exit;
          }
 
-         // Jika status diubah menjadi 1 (kosong), lepaskan/pulangkan pasien aktif yang menggantung di bed ini
+         // Jika status diubah menjadi 1 (kosong), lepaskan/pulangkan pasien aktif (faskes ini) yang menggantung di bed ini
          if ($status == 1) {
-            mysqli_query($koneksi, "
-               UPDATE permintaan_ranap 
-               SET status = 'pulang' 
-               WHERE id_bed = '$id_bed' 
-                 AND status = 'aktif'
-            ");
+            $stp = $koneksi->prepare("UPDATE permintaan_ranap pr JOIN pasien_visit pv ON pv.visit_ID = pr.visit_ID_inpatient
+               SET pr.status = 'pulang' WHERE pr.id_bed = ? AND pr.status = 'aktif' AND pv.id_customer = ?");
+            $sb = (string) $id_bed;
+            $stp->bind_param('si', $sb, $idc);
+            $stp->execute();
          }
 
-         // 🔥 UPDATE STATUS
-         $update = mysqli_query($koneksi, "
-            UPDATE ms_room_bed 
-            SET bed_status = '$status'
-            WHERE id_bed = '$id_bed'
-         ");
+         $stu = $koneksi->prepare("UPDATE ms_room_bed SET bed_status = ? WHERE id_bed = ? AND id_customer = ?");
+         $stu->bind_param('iii', $status, $id_bed, $idc);
+         $update = $stu->execute();
 
          if ($update) {
             echo json_encode([
@@ -157,7 +156,7 @@ ORDER BY r.service_class ASC, r.room_name ASC, b.bed_name ASC
          } else {
             echo json_encode([
                "status" => "error",
-               "message" => mysqli_error($koneksi)
+               "message" => "Gagal mengubah status bed"
             ]);
          }
 

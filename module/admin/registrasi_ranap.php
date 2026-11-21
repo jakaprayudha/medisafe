@@ -1,1200 +1,301 @@
 <?php
 $title = 'Registrasi Rawat Inap';
 require '../../controller/view.php';
+require_once __DIR__ . '/../../controller/visit/registrasiService.php';
+$rrOpsi = ['dokter' => [], 'penjamin' => []];
+try {
+  $rrIdc = (int) ($_SESSION['id_customer'] ?? 0);
+  if ($rrIdc > 0) $rrOpsi = rgOpsi($koneksi, $rrIdc);
+} catch (Throwable $e) {
+  error_log('[registrasi_ranap] ' . $e->getMessage());
+}
+session_write_close();
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="id">
 
 <head>
   <base href="../../">
-  <?php
-  require '../../assets/template/head.php';
-  ?>
-  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-  <style id="fixcss">
-    /* =========================
-   🎯 DROPDOWN (PRIORITAS)
-========================= */
-    .dropdown-menu {
-      z-index: 999999 !important;
-      min-width: 200px;
-      max-width: 250px;
-      width: auto;
-      white-space: normal;
-    }
-
-    /* =========================
-   🎯 DATATABLE FIX (INTI MASALAH)
-========================= */
-
-    /* wrapper utama */
-    .dataTables_wrapper {
-      overflow: visible !important;
-    }
-
-    /* scroll container */
-    .dataTables_scroll {
-      overflow: visible !important;
-    }
-
-    /* responsive table */
-    .table-responsive {
-      overflow: visible !important;
-    }
-
-    /* card container */
-    .card {
-      overflow: visible !important;
-    }
-
-    /* =========================
-   🎯 DROPUP POSITION FIX
-========================= */
-    .dropup .dropdown-menu {
-      top: auto !important;
-      bottom: 100% !important;
-      margin-bottom: 5px;
-      transform: none !important;
-    }
-
-    /* =========================
-   🎯 CAMERA MODAL (JANGAN DIUBAH)
-========================= */
-    #cameraModal .modal-body {
-      position: relative;
-    }
-
-    #cameraModal video {
-      width: 100%;
-    }
-
-    #cameraModal canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-
-    /* 🔥 freeze kolom pertama */
-    #periodeTable th:first-child,
-    #periodeTable td:first-child {
-      position: sticky;
-      left: 0;
-      z-index: 5;
-      background: #fff;
-    }
-
-    /* header lebih tinggi z-index */
-    #periodeTable thead th:first-child {
-      z-index: 6;
-    }
+  <?php require '../../assets/template/head.php'; ?>
+  <style>
+    .min-w-0 { min-width: 0; }
+    .rr-icon { width: 40px; height: 40px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+    .rr-kpi { border: 1px solid #e5eaef; border-radius: 12px; background: #fff; padding: 12px 14px; height: 100%; }
+    .rr-label { font-size: .72rem; color: #6c757d; }
+    .rr-val { font-size: 1.35rem; font-weight: 700; color: #2a3547; line-height: 1.25; }
+    .rr-sub { font-size: .7rem; color: #94a3b8; }
+    .rr-prog { height: 6px; border-radius: 3px; background: #eef1f4; overflow: hidden; margin-top: 6px; }
+    .rr-prog > div { height: 100%; }
+    .rr-tabs .btn { border-radius: 20px; font-size: .8rem; padding: .3rem .8rem; background: #fff; border: 1px solid #e5eaef; color: #5a6a85; }
+    .rr-tabs .btn .badge { background: #eef1f4; color: #5a6a85; margin-left: 4px; }
+    .rr-tabs .btn.active { background: #5d87ff; border-color: #5d87ff; color: #fff; }
+    .rr-tabs .btn.active .badge { background: rgba(255, 255, 255, .25); color: #fff; }
+    .rr-rm { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .72rem; background: #f1f5f9; border-radius: 4px; padding: 0 5px; color: #334155; }
+    .rr-nama { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rr-lama { font-weight: 700; }
+    #rrTable td { vertical-align: middle; white-space: nowrap; }
+    #rrTable th { white-space: nowrap; }
+    #rrTable td.rr-dd-buka { position: relative; z-index: 1060 !important; }
+    #rrTable .dropdown-menu { z-index: 1070 !important; }
+    .rr-sec { border: 1px solid #edf0f4; border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; background: #fff; }
+    .rr-sec-h { font-weight: 600; font-size: .85rem; color: #2a3547; margin-bottom: 8px; }
+    .rr-vital { border-radius: 10px; background: #f8fafc; padding: 8px 10px; height: 100%; }
+    .rr-vital.kosong { opacity: .55; }
+    .rr-vital-l { font-size: .68rem; color: #64748b; }
+    .rr-vital-v { font-weight: 700; color: #2a3547; }
+    #rrDetail .modal-body { background: #fafbfc; }
+    .rr-sk { border-radius: 10px; background: linear-gradient(90deg, #eef1f4 25%, #f6f8fb 50%, #eef1f4 75%); background-size: 200% 100%; animation: rrsk 1.2s infinite; }
+    @keyframes rrsk { to { background-position: -200% 0; } }
   </style>
 </head>
 
 <body>
-  <!--  Body Wrapper -->
   <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
     data-sidebar-position="fixed" data-header-position="fixed">
-    <!-- Sidebar Start -->
-    <?php
-    require 'sidebar.php';
-    ?>
-    <!--  Sidebar End -->
-    <!--  Main wrapper -->
+    <?php require 'sidebar.php'; ?>
     <div class="body-wrapper">
-      <!--  Header Start -->
-      <?php
-      require 'navbar.php';
-      ?>
-      <!--  Header End -->
+      <?php require 'navbar.php'; ?>
       <div class="body-wrapper-inner">
         <div class="container-fluid">
-          <ul class="nav nav-tabs" id="myTab" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-pane" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">Belum Dilayani</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Sudah Dilayani</button>
-            </li>
-          </ul>
-          <div class="tab-content" id="myTabContent">
-            <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0"></div>
-            <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0"></div>
+
+          <!-- HEADER -->
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body py-3">
+              <div class="d-flex flex-wrap align-items-center gap-3">
+                <span class="rr-icon bg-primary-subtle text-primary"><i class="fas fa-procedures"></i></span>
+                <div class="min-w-0 flex-grow-1">
+                  <h5 class="fw-semibold mb-0">Registrasi Rawat Inap</h5>
+                  <div class="text-muted small">Pasien yang sedang dirawat dan riwayat pasien pulang</div>
+                </div>
+                <button type="button" class="btn btn-light btn-sm" id="rrRefresh" title="Muat ulang"><i class="fas fa-sync-alt"></i></button>
+                <a class="btn btn-outline-secondary btn-sm" href="module/admin/status_pulang"><i class="fas fa-bed me-1"></i>Bed &amp; status pulang</a>
+                <a class="btn btn-primary btn-sm" href="module/admin/registrasi_booking_ranap"><i class="fas fa-user-plus me-1"></i>Permintaan rawat inap</a>
+              </div>
+            </div>
           </div>
-          <div class="row">
-            <div class="col-lg-12 d-flex align-items-stretch">
-              <div class="card w-100">
-                <div class="card-body p-4">
-                  <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Data Registrasi Rawat Inap</h5>
-                    <!-- Grup tombol di sisi kanan -->
 
-                    <!-- 🔽 Filter + Tombol Kembali -->
-                    <div class="d-flex align-items-end gap-2 flex-wrap">
-                      <div class="col-auto">
-                        <button type="button" data-bs-toggle="modal" data-bs-target="#filterModal" class="btn btn-dark">
-                          <i class="fas fa-filter"></i> Filter
-                        </button>
-                      </div>
-                      <div class="col-auto">
-                        <button type="button" id="btnReset" class="btn btn-light">
-                          <i class="fas fa-undo"></i> Reset
-                        </button>
-                      </div>
-                      <!-- Tombol kembali -->
-                      <div class="d-flex ms-auto gap-2">
-                        <!-- <div class="dropdown">
-                          <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
-                            <i class="fas fa-plus"></i> Tambah
-                          </button>
-                          <ul class="dropdown-menu dropdown-menu-end shadow">
-                            <li>
-                              <a class="dropdown-item" href="module/admin/patient_new">
-                                <i class="fas fa-user-plus me-2 text-primary"></i> Pasien Baru
-                              </a>
-                            </li>
-                            <li>
-                              <a class="dropdown-item poli-btn" href="javascript:;">
-                                <i class="fas fa-procedures me-2 text-success"></i> Pasien Rawat Inap
-                              </a>
-                            </li>
-                          </ul>
-                        </div> -->
-                        <a href="module/admin/registrasi_booking_ranap">
-                          <button class="btn btn-primary">
-                            <i class="fas fa-user-plus"></i> Permintaan Rawat Inap
-                          </button>
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="table-responsive">
-                    <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
-                      <thead>
-                        <tr>
-                          <th scope="col" class="text-dark fw-normal text-center">Actions</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Status</th>
-                          <th scope="col" class="text-dark fw-normal">Tanggal</th>
-                          <th class="text-dark fw-normal">No.BPJS</th>
-                          <th scope="col" class="text-dark fw-normal">Nama Pasien</th>
-                          <th scope="col" class="text-dark fw-normal">P/L</th>
-                          <th scope="col" class="text-dark fw-normal">Dokter</th>
-                          <th scope="col" class="text-dark fw-normal">Jenis Bayar</th>
+          <!-- KPI -->
+          <div class="row g-3 mb-3">
+            <div class="col-6 col-md-4 col-xl-2"><div class="rr-kpi"><div class="rr-label">Sedang dirawat</div><div class="rr-val text-primary" id="kDirawat">-</div><div class="rr-sub" id="kLama">&nbsp;</div></div></div>
+            <div class="col-6 col-md-4 col-xl-2"><div class="rr-kpi"><div class="rr-label">Masuk hari ini</div><div class="rr-val" id="kMasuk">-</div><div class="rr-sub">&nbsp;</div></div></div>
+            <div class="col-6 col-md-4 col-xl-2"><div class="rr-kpi"><div class="rr-label">Pulang (periode)</div><div class="rr-val text-success" id="kPulang">-</div><div class="rr-sub" id="kPeriode">&nbsp;</div></div></div>
+            <div class="col-6 col-md-6 col-xl-3"><div class="rr-kpi"><div class="rr-label">Bed terisi (data bed)</div><div class="rr-val" id="kBed">-</div><div class="rr-prog"><div id="kBedBar" class="bg-primary" style="width:0"></div></div><div class="rr-sub mt-1" id="kBedInfo">&nbsp;</div></div></div>
+            <div class="col-12 col-md-6 col-xl-3"><div class="rr-kpi"><div class="rr-label">Dirawat &gt; 14 hari</div><div class="rr-val" id="kAlos">-</div><div class="rr-sub">perlu dicek: sudah pulang tetapi belum dipulangkan di sistem?</div></div></div>
+          </div>
+          <div class="alert alert-warning small py-2 d-none" id="rrPeringatan"></div>
 
-                        </tr>
-                      </thead>
-                      <tbody></tbody>
-                    </table>
-                  </div>
+          <div class="card border-0 shadow-sm">
+            <div class="card-body p-3 p-lg-4">
+              <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+                <div class="rr-tabs d-flex flex-wrap gap-1" id="rrTabs">
+                  <button type="button" class="btn active" data-tab="dirawat">Sedang dirawat <span class="badge" data-n="dirawat">0</span></button>
+                  <button type="button" class="btn" data-tab="pulang">Sudah pulang <span class="badge" data-n="pulang">0</span></button>
+                </div>
+                <div class="d-flex align-items-center gap-1 d-none" id="rrRentang">
+                  <input type="date" id="fromDate" class="form-control form-control-sm" style="width:140px" aria-label="Masuk dari">
+                  <span class="text-muted small">–</span>
+                  <input type="date" id="toDate" class="form-control form-control-sm" style="width:140px" aria-label="Masuk sampai">
+                </div>
+                <select id="doctorSelect" class="form-select form-select-sm" style="width:auto;max-width:210px" aria-label="Dokter"><option value="">Semua dokter</option></select>
+                <select id="providerSelect" class="form-select form-select-sm" style="width:auto;max-width:180px" aria-label="Penjamin"><option value="">Semua penjamin</option></select>
+                <button type="button" id="btnReset" class="btn btn-sm btn-light" title="Reset filter"><i class="fas fa-undo"></i></button>
+                <div class="position-relative ms-lg-auto" style="min-width:220px">
+                  <i class="fas fa-search position-absolute text-muted" style="left:10px;top:50%;transform:translateY(-50%);font-size:.75rem"></i>
+                  <input type="search" id="rrCari" class="form-control form-control-sm ps-4" placeholder="Cari nama, RM, no. BPJS, ruang…">
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-
-
-  <?php
-  require 'library.php';
-  ?>
-</body>
-
-
-
-<div class="modal fade" id="detailModal">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <div class="modal-content shadow">
-
-      <!-- HEADER -->
-      <div class="modal-header  text-white">
-        <h5 class="modal-title">
-          🩺 Detail Pemeriksaan
-        </h5>
-        <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-
-        <!-- 👤 INFO PASIEN -->
-        <div class="card border-0 shadow-sm mb-3">
-          <div class="card-body">
-            <h6 class="fw-bold mb-3">👤 Informasi Pasien</h6>
-
-            <div class="row g-3">
-              <div class="col-md-6">
-                <small class="text-muted">Nama Pasien</small>
-                <div class="fw-semibold" id="d_patient_name">-</div>
-              </div>
-
-              <div class="col-md-6">
-                <small class="text-muted">Dokter</small>
-                <div id="d_doctor_name">-</div>
-              </div>
-
-              <div class="col-md-6">
-                <small class="text-muted">Poliklinik</small>
-                <div id="d_poli_name">-</div>
-              </div>
-
-              <div class="col-md-6">
-                <small class="text-muted">Tanggal</small>
-                <div id="d_visit_date">-</div>
-              </div>
-
-              <div class="col-md-6">
-                <small class="text-muted">No. SEP</small>
-                <div id="d_no_sep">-</div>
+              <div class="table-responsive">
+                <table class="table align-middle mb-0 w-100" id="rrTable">
+                  <thead>
+                    <tr>
+                      <th class="text-dark fw-normal text-center" style="width:52px">Aksi</th>
+                      <th class="text-dark fw-normal">Pasien</th>
+                      <th class="text-dark fw-normal">Ruang</th>
+                      <th class="text-dark fw-normal">Masuk</th>
+                      <th class="text-dark fw-normal">Dokter / diagnosa</th>
+                      <th class="text-dark fw-normal">Penjamin</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
               </div>
             </div>
           </div>
+
         </div>
-
-        <!-- ❤️ VITAL SIGN -->
-        <div class="card border-0 shadow-sm mb-3">
-          <div class="card-body">
-            <h6 class="fw-bold mb-3">❤️ Vital Sign</h6>
-
-            <div class="d-flex flex-wrap gap-2">
-
-              <span class="badge bg-light text-dark">
-                🩸 TD: <span id="d_tekanan_darah">-</span>
-              </span>
-
-              <span class="badge bg-light text-dark">
-                🌡️ Suhu: <span id="d_suhu">-</span>
-              </span>
-
-              <span class="badge bg-light text-dark">
-                ❤️ Nadi: <span id="d_nadi">-</span>
-              </span>
-
-              <span class="badge bg-light text-dark">
-                🫁 RR: <span id="d_respirasi">-</span>
-              </span>
-
-              <span class="badge bg-light text-dark">
-                📏 TB: <span id="d_tinggi">-</span>
-              </span>
-
-              <span class="badge bg-light text-dark">
-                ⚖️ BB: <span id="d_berat">-</span>
-              </span>
-
-            </div>
-          </div>
-        </div>
-
-        <!-- 🧠 ANAMNESA -->
-        <div class="card border-0 shadow-sm mb-3">
-          <div class="card-body">
-            <h6 class="fw-bold mb-2">🧠 Keluhan / Anamnesa</h6>
-            <div id="d_anamnesa" class="text-muted">-</div>
-          </div>
-        </div>
-
-        <!-- 🔬 DIAGNOSA -->
-        <div class="card border-0 shadow-sm mb-3">
-          <div class="card-body">
-            <h6 class="fw-bold mb-2">🔬 Diagnosa</h6>
-            <div id="d_diagnosa" class="text-muted">-</div>
-          </div>
-        </div>
-
-        <!-- 💊 TINDAKAN -->
-        <div class="card border-0 shadow-sm">
-          <div class="card-body">
-            <h6 class="fw-bold mb-2">💊 Tindakan</h6>
-            <div id="d_tindakan" class="text-muted">-</div>
-          </div>
-        </div>
-
       </div>
-
     </div>
   </div>
-</div>
-<div class="modal fade" id="cameraModal">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
 
-      <div class="modal-header bg-dark text-white">
-        <h5 class="modal-title">📸 Capture Foto</h5>
-        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body text-center">
-
-        <video id="video" autoplay class="w-100 rounded mb-3"></video>
-
-        <canvas id="canvas" class="d-none"></canvas>
-
-        <img id="preview" class="img-fluid rounded d-none" />
-
-        <div class="mt-3">
-          <button class="btn btn-primary" id="btnCapture">📸 Ambil Foto</button>
-          <button class="btn btn-success d-none" id="btnSave">💾 Simpan</button>
+  <!-- MODAL DETAIL -->
+  <div class="modal fade" id="rrDetail" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="min-w-0"><h5 class="modal-title mb-0 text-truncate" id="rdNama">Hasil pemeriksaan</h5><div class="small text-muted" id="rdSub">&nbsp;</div></div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
         </div>
-
+        <div class="modal-body" id="rdBody"></div>
+        <div class="modal-footer py-2">
+          <a class="btn btn-outline-primary btn-sm me-auto" id="rdRme" href="#"><i class="fas fa-notes-medical me-1"></i>Buka RME rawat inap</a>
+          <button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Tutup</button>
+        </div>
       </div>
-
     </div>
   </div>
-</div>
-<div class="modal fade" id="filterModal">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Filter Data</h5>
-      </div>
-      <div class="modal-body">
-        <div class="row">
-          <div class="col-6 mb-3">
-            <label for="fromDate" class="form-label mb-0">Dari</label>
-            <input type="date" id="fromDate" name="fromDate" max="" class="form-control">
-          </div>
-          <div class="col-6 mb-3">
-            <label for="toDate" class="form-label mb-0">Sampai</label>
-            <input type="date" id="toDate" name="toDate" class="form-control">
-          </div>
-          <div class="col-12 mb-3">
-            <label for="doctorSelect" class="form-label mb-0">Dokter</label>
-            <select name="doctorSelect" class="form-select" id="doctorSelect">
-              <option value="">Semua Dokter</option>
-            </select>
-          </div>
-          <div class="col-12 mb-3">
-            <label for="providerSelect" class="form-label mb-0">Provider</label>
-            <select name="providerSelect" class="form-select" id="providerSelect">
-              <option value="">Semua Metode Pembayaran</option>
-            </select>
-          </div>
-        </div>
-      </div>
 
-      <div class="modal-footer">
-        <button class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
-        <button class="btn btn-primary" id="btnApplyFilter">Terapkan Filter</button>
-      </div>
+  <?php require 'library.php'; ?>
+  <script>
+    (function() {
+      const $id = id => document.getElementById(id);
+      const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const fmt = n => Number(n || 0).toLocaleString('id-ID');
+      const BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      const tglJkt = h => new Date(Date.now() + (h || 0) * 86400000).toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
+      const tglIndo = s => { const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? (+m[3]) + ' ' + BLN[m[2] - 1] + ' ' + m[1] : '-'; };
+      const tglPendek = s => { const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? (+m[3]) + ' ' + BLN[m[2] - 1] + (m[1] !== tglJkt(0).slice(0, 4) ? ' ' + m[1].slice(2) : '') : '-'; };
+      const isi = v => v !== null && v !== undefined && /[0-9A-Za-z]/.test(String(v));
+      const LAMA_CURIGA = 14;
+      let tab = 'dirawat', xhr = null;
 
-    </div>
-  </div>
-</div>
-<div class="modal fade" id="screeningModal">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
+      const OPSI = <?= json_encode($rrOpsi, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;
+      $id('doctorSelect').innerHTML += (OPSI.dokter || []).map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+      $id('providerSelect').innerHTML += (OPSI.penjamin || []).map(p => `<option value="${esc(p.id_provider)}">${esc(p.provider_name)}</option>`).join('');
+      // dulu toISOString() (UTC) -> tanggal salah 00.00-07.00 WIB
+      $id('fromDate').value = tglJkt(-29);
+      $id('toDate').value = tglJkt(0);
 
-      <div class="modal-header text-dark">
-        <h5 class="modal-title">📝 Screening Pasien</h5>
-        <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-
-        <input type="hidden" id="screening_id_visit">
-
-        <div class="mb-3">
-          <label class="form-label">Keluhan</label>
-          <textarea id="sc_keluhan" class="form-control"></textarea>
-        </div>
-
-        <h5>Pemeriksaan Vital Sign (Perawat)</h5>
-        <div class="row g-2">
-          <div class="col-md-4">
-            <label for="kondisi_masuk" class="form-label">Kondisi Masuk <span class="text-danger">*</span></label>
-            <select name="kondisi_masuk" id="kondisi_masuk" class="form-select" required>
-              <option value="Baik">Baik</option>
-              <option value="Lemah">Lemah</option>
-              <option value="Sedang">Sedang</option>
-              <option value="Buruk">Buruk</option>
-              <option value="Gawat Darurat">Gawat Darurat</option>
-              <option value="Tidak Sadar">Tidak Sadar</option>
-            </select>
-          </div>
-          <div class="col-md-4">
-            <label for="tekanan_darah" class="form-label">Tekanan Darah (mmHg) <span class="text-danger">*</span></label>
-            <input
-              type="text"
-              id="tekanan_darah"
-              name="tekanan_darah"
-              class="form-control"
-              maxlength="7"
-              required>
-          </div>
-          <script>
-            document.getElementById("tekanan_darah").addEventListener("input", function() {
-              let value = this.value.replace(/[^\d]/g, ''); // hanya angka
-              if (value.length > 3) {
-                value = value.slice(0, 3) + '/' + value.slice(3, 6); // sisipkan '/'
-              }
-              this.value = value;
-            });
-          </script>
-          <div class="col-md-4">
-            <label for="suhu" class="form-label">Suhu (°C) <span class="text-danger">*</span></label>
-            <input type="number" step="0.1" id="suhu" required name="suhu" class="form-control">
-          </div>
-          <div class="col-md-4">
-            <label for="nadi" class="form-label">Nadi (x/menit) <span class="text-danger">*</span></label>
-            <input type="number" id="nadi" name="nadi" required class="form-control">
-          </div>
-          <div class="col-md-4 mt-2">
-            <label for="respirasi" class="form-label">Respirasi (x/menit) <span class="text-danger">*</span></label>
-            <input type="number" id="respirasi" name="respirasi" required class="form-control">
-          </div>
-          <div class="col-md-4 mt-2">
-            <label for="tinggi" class="form-label">Tinggi Badan (cm) <span class="text-danger">*</span></label>
-            <input type="number" id="tinggi" name="tinggi" required class="form-control">
-          </div>
-          <div class="col-md-4 mt-2">
-            <label for="berat" class="form-label">Berat Badan (kg) <span class="text-danger">*</span></label>
-            <input type="number" id="berat" name="berat" required class="form-control">
-          </div>
-          <div class="col-md-4 mt-2">
-            <label for="bmi" class="form-label">BMI <span class="text-danger">*</span></label>
-            <input type="number" readonly id="bmi" name="bmi" required class="form-control bg-light">
-          </div>
-          <div class="col-md-4 mt-2">
-            <label class="form-label">Keterangan</label>
-            <input type="text" id="bmi_ket" name="bmi_ket" readonly class="form-control bg-light">
-          </div>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Catatan Screening</label>
-          <textarea id="sc_catatan" class="form-control"></textarea>
-        </div>
-
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-        <button class="btn btn-primary" id="btnSaveScreening">💾 Simpan</button>
-      </div>
-
-    </div>
-  </div>
-</div>
-<div class="modal fade" id="poliModal">
-  <div class="modal-dialog">
-    <div class="modal-content">
-
-      <div class="modal-header">
-        <h5 class="modal-title">Registrasi Rawat Inap</h5>
-        <button class="btn-close btn-close-dark" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-
-        <form id="formPoli">
-          <!-- Pasien -->
-          <div class="mb-3">
-            <label class="form-label">Nama Pasien</label>
-            <select name="id_patient_select" id="id_patient_select"
-              class="form-select js-example-basic-item" required>
-            </select>
-          </div>
-          <div class="row">
-            <div class="col">
-              <!-- Tanggal -->
-              <div class="mb-3">
-                <label class="form-label">Tanggal</label>
-                <input type="date" id="poli_date" class="form-control">
-              </div>
-            </div>
-            <div class="col">
-              <!-- Jam -->
-              <div class="mb-3">
-                <label class="form-label">Jam Kunjungan</label>
-                <input type="time" id="poli_time" class="form-control">
-              </div>
-            </div>
-          </div>
-          <!-- Dokter -->
-          <div class="mb-3">
-            <label class="form-label">Dokter</label>
-            <select id="poli_doctor" class="form-select"></select>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Kelas</label>
-            <select id="service_class" class="form-select"></select>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Nama Kamar</label>
-            <select id="room_name" class="form-select"></select>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">No. Tempat Tidur</label>
-            <select id="bed_name" class="form-select"></select>
-          </div>
-
-          <!-- Provider -->
-          <div class="mb-3">
-            <label class="form-label">Provider</label>
-            <select id="poli_provider" class="form-select"></select>
-          </div>
-
-        </form>
-
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-        <button class="btn btn-success" id="btnSavePoli">
-          <i class="fas fa-save me-2"></i>Simpan
-        </button>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<script>
-  let currentTab = 'belum'; // default tab saat halaman pertama kali dimuat
-  $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
-
-    const target = $(e.target).attr("id");
-
-    if (target === 'home-tab') {
-      currentTab = 'belum';
-    } else if (target === 'profile-tab') {
-      currentTab = 'selesai';
-    }
-
-    console.log("TAB AKTIF:", currentTab);
-
-    $('#periodeTable').DataTable().ajax.reload(null, false);
-
-  });
-</script>
-
-<script>
-  $(document).ready(function() {
-    $('#filterModal').on('show.bs.modal', function() {
-      loadDoctors();
-      loadProviders();
-    });
-
-    function loadDoctors() {
-      $.ajax({
-        url: 'controller/visit/getdoctor',
-        method: 'GET',
-        dataType: 'json',
-        success: function(res) {
-          let html = '<option value="">Semua Dokter</option>';
-
-          res.forEach(d => {
-            html += `<option value="${d.id_doctor}">${d.doctor_name}</option>`;
-          });
-
-          $('#doctorSelect').html(html);
-        }
-      });
-    }
-
-    function loadProviders() {
-      $.ajax({
-        url: 'controller/visit/getprovider',
-        method: 'GET',
-        dataType: 'json',
-        success: function(res) {
-          let html = '<option value="">Semua Metode Pembayaran</option>';
-
-          res.forEach(p => {
-            html += `<option value="${p.id_provider}">${p.provider_name}</option>`;
-          });
-
-          $('#providerSelect').html(html);
-        }
-      });
-    }
-
-
-    $('#btnApplyFilter').on('click', function() {
-      table.ajax.reload();
-      $('#filterModal').modal('hide');
-    });
-    var today = new Date().toISOString().split("T")[0];
-    $('#fromDate').val(today);
-    $('#fromDate').attr('max', today);
-    $("#toDate").val(today);
-    const tipePasien = "Rawat Inap";
-    const apiUrl = 'controller/visit/registrasiRanapController';
-    var table = $('#periodeTable').DataTable({
-      processing: true,
-      serverSide: false, // 🔹 ubah jadi false
-      scrollX: true, // ✅ ini wajib
-      scrollCollapse: true,
-
-      ajax: {
-        url: apiUrl,
-        type: "GET",
-        data: function(d) {
-          d.fromDate = $('#fromDate').val();
-          d.toDate = $('#toDate').val();
-          d.doctor = $('#doctorSelect').val();
-          d.provider = $('#providerSelect').val();
-          d.tipe_pasien = tipePasien;
-          d.tab = currentTab;
-        },
-        dataSrc: function(json) {
-          return json.data.map(function(row) {
-
-            function hitungUmur(tglLahir, tglKunjungan) {
-              if (!tglLahir || !tglKunjungan) return "-";
-
-              const birth = new Date(tglLahir);
-              const visit = new Date(tglKunjungan);
-
-              let tahun = visit.getFullYear() - birth.getFullYear();
-              let bulan = visit.getMonth() - birth.getMonth();
-              let hari = visit.getDate() - birth.getDate();
-
-              if (hari < 0) {
-                bulan--;
-                const lastMonth = new Date(visit.getFullYear(), visit.getMonth(), 0);
-                hari += lastMonth.getDate();
-              }
-
-              if (bulan < 0) {
-                tahun--;
-                bulan += 12;
-              }
-
-              return `${tahun} th ${bulan} bln ${hari} hr`;
-            }
-            return {
-              "actions": `
-                <div class="text-center">
-                  <div class="dropdown">
-
-                     <button class="btn btn-sm btn-primary dropdown-toggle"
-                        data-bs-toggle="dropdown"
-                        data-bs-boundary="window">
-                        ⚙️ Aksi
-                      </button>
-
-                      <ul class="dropdown-menu dropdown-menu-end shadow">
-
-                      <li>
-                        <a class="dropdown-item detail-btn" href="javascript:;" data-id="${row.id_visit}">
-                          <i class="fas fa-eye me-2 text-info"></i> Lihat Hasil Pemeriksaan
-                        </a>
-                      </li>
-
-                       <li>
-                        <a class="dropdown-item" href="module/admin/form_upload_klaim?no=${encodeURIComponent(row.visit_ID)}&rm=${encodeURIComponent(row.nomor_rm)}">
-                          <i class="fas fa-upload me-2 text-info"></i> Upload SEP & FKPP
-                        </a>
-                      </li>
-                      
-                       <li>
-                        <a class="dropdown-item" href="module/admin/form_pernyataan?no=${encodeURIComponent(row.visit_ID)}&rm=${encodeURIComponent(row.nomor_rm)}">
-                          <i class="fas fa-file me-2 text-info"></i>Surat Pernyataan Pasien
-                        </a>
-                      </li>
-
-                       <li>
-                        <a class="dropdown-item" href="module/admin/form_persetujuan?no=${encodeURIComponent(row.visit_ID)}&rm=${encodeURIComponent(row.nomor_rm)}">
-                          <i class="fas fa-file me-2 text-info"></i>Surat Persetujuan Opname
-                        </a>
-                      </li>
-
-                      <li>
-                        <a class="dropdown-item edit-btn" href="javascript:;" 
-                          data-id="${row.id_visit}" 
-                          data-patient="${row.id_patient}" 
-                          data-doctor="${row.id_doctor}" 
-                          data-poli="${row.id_poli}" 
-                          data-source="${row.source_hub}" 
-                          data-notes="${row.visit_notes}">
-                          <i class="fas fa-edit me-2 text-warning"></i> Edit Data
-                        </a>
-                      </li>
-
-                      <li><hr class="dropdown-divider"></li>
-
-                      <li>
-                        <a class="dropdown-item delete-btn text-danger" href="javascript:;" data-id="${row.id_visit}">
-                          <i class="fas fa-trash me-2"></i> Hapus
-                        </a>
-                      </li>
-
-                    </ul>
-
-                  </div>
-                </div>
-              `,
-              "registrasi": row.visit_date + ' ' + row.visit_time ?? "-",
-              "nomor_bpjs": row.patient_bpjs ?? "-",
-              "nama": `
-                ${row.patient_name ?? "-"}
-              `,
-              "gender": row.patient_gender ?? "-",
-              "dokter": row.id_doctor ?? "-",
-              "provider": row.provider_name ?? "-",
-              "status": row.status_perawatan_inap === 0 ? '<span class="badge bg-primary text-center d-block">Perawatan</span>' : row.status_perawatan_inap === 1 ? '<span class="badge bg-success text-center d-block">Pulang</span>' : '<span class="badge bg-dark text-center d-block">Unknown</span>'
-            };
-          });
-        }
-      },
-      columns: [{
-          data: "actions",
-          orderable: false,
-          searchable: false
-        }, {
-          data: "status"
-        }, {
-          data: "registrasi"
-        },
-        {
-          data: "nomor_bpjs"
-        },
-        {
-          data: "nama"
-        },
-        {
-          data: "gender"
-        },
-        {
-          data: "dokter"
-        },
-        {
-          data: "provider"
-        },
-
-      ],
-      footerCallback: function(row, data, start, end, display) {
-        var api = this.api();
-
-        // Hitung total bobot
-        let total = api
-          .column(3, {
-            page: 'current'
-          })
-          .data()
-          .reduce((a, b) => {
-            return (parseFloat(a) || 0) + (parseFloat(b) || 0);
-          }, 0);
-
-        // Tampilkan di footer
-        $(api.column(3).footer()).html(total.toFixed(2) + " %");
+      function umur(lahir) { const m = String(lahir || '').match(/^(\d{4})-(\d{2})-(\d{2})/); if (!m || m[1] < '1900') return ''; const d = new Date(), b = new Date(+m[1], m[2] - 1, +m[3]); let u = d.getFullYear() - b.getFullYear(); if (d < new Date(d.getFullYear(), b.getMonth(), b.getDate())) u--; return u >= 0 ? u + ' th' : ''; }
+      function aksiHtml(r) {
+        const q = 'no=' + encodeURIComponent(r.visit_ID) + '&rm=' + encodeURIComponent(r.nomor_rm || '');
+        return `<div class="dropdown">
+          <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}' aria-label="Aksi"><i class="fas fa-ellipsis-h"></i></button>
+          <ul class="dropdown-menu shadow">
+            <li><a class="dropdown-item rr-detail" href="javascript:;" data-id="${r.id_visit}"><i class="fas fa-eye me-2 text-info"></i>Hasil pemeriksaan</a></li>
+            <li><a class="dropdown-item" href="module/admin/rme_inap?${q}&rme=c"><i class="fas fa-notes-medical me-2 text-primary"></i>RME rawat inap</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="module/admin/form_upload_klaim?${q}"><i class="fas fa-file-arrow-up me-2 text-info"></i>Upload SEP &amp; FKPP</a></li>
+            <li><a class="dropdown-item" href="module/admin/form_pernyataan?${q}"><i class="fas fa-file-lines me-2 text-secondary"></i>Surat pernyataan pasien</a></li>
+            <li><a class="dropdown-item" href="module/admin/form_persetujuan?${q}"><i class="fas fa-file-signature me-2 text-danger"></i>Surat persetujuan opname</a></li>
+            ${r.status_ranap !== 'pulang' ? `<li><hr class="dropdown-divider"></li><li><a class="dropdown-item" href="module/admin/status_pulang"><i class="fas fa-bed me-2 text-success"></i>Pindah bed / pulangkan</a></li>` : ''}
+          </ul></div>`;
       }
-    });
 
-    $('#customSearch').on('keyup', function() {
-      table.search(this.value).draw();
-    });
-
-    $('#periodeTable').on('draw.dt', function() {
-      document.querySelectorAll('.dropdown-toggle').forEach(function(el) {
-        new bootstrap.Dropdown(el);
-      });
-    });
-
-    // 🔹 Edit
-    $(document).on('click', '.edit-btn', function() {
-      let id = $(this).data('id');
-      fetch(apiUrl + `?id=${id}`)
-        .then(res => res.json())
-        .then(resp => {
-          if (resp.status === 'success') {
-            let d = resp.data;
-
-            // isi otomatis berdasarkan name field
-            for (let key in d) {
-              $(`[name="${key}"]`).val(d[key]);
-            }
-
-            $('#programModal .modal-title').text('Edit Data');
-            $('#programModal').modal('show');
-          }
-        });
-    });
-
-    // 🔹 Delete
-    $(document).on('click', '.delete-btn', function() {
-      let id = $(this).data('id');
-      Swal.fire({
-        title: 'Hapus Data?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Hapus',
-        cancelButtonText: 'Batal'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          fetch(apiUrl + `?id=${id}`, {
-              method: 'DELETE'
+      const table = $('#rrTable').DataTable({
+        processing: true, serverSide: false, deferRender: true, autoWidth: false, order: [], pageLength: 25, lengthMenu: [10, 25, 50, 100],
+        dom: 't<"d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2 small"lip>',
+        language: { processing: '<div class="spinner-border spinner-border-sm text-primary"></div> Memuat…', emptyTable: 'Tidak ada pasien.', zeroRecords: 'Tidak ada data yang cocok.',
+          info: '_START_–_END_ dari _TOTAL_ pasien', infoEmpty: '0 pasien', infoFiltered: '(disaring dari _MAX_)', lengthMenu: 'Tampil _MENU_', thousands: '.', paginate: { previous: '‹', next: '›' } },
+        ajax: function(_d, cb) {
+          if (xhr && xhr.readyState !== 4) xhr.abort();
+          xhr = $.ajax({ url: 'controller/visit/registrasiRanapController', dataType: 'json', cache: false,
+            data: { v: 2, tab, fromDate: $id('fromDate').value, toDate: $id('toDate').value, doctor: $id('doctorSelect').value, provider: $id('providerSelect').value } })
+            .done(j => {
+              if (!j || j.status !== 'success') { cb({ data: [] }); Swal.fire('Gagal memuat data', (j && j.message) || '', 'error'); return; }
+              ringkas(j);
+              cb({ data: j.data });
             })
-            .then(res => res.json())
-            .then(data => {
-              if (data.status === 'success') {
-                Swal.fire('Berhasil!', 'Data dihapus.', 'success');
-                table.ajax.reload(null, false);
-              }
-            });
-        }
+            .fail((x, s) => { if (s === 'abort') return; cb({ data: [] }); Swal.fire('Gagal memuat data', x.status === 401 ? 'Sesi berakhir, silakan login kembali.' : 'Periksa koneksi lalu coba lagi.', 'error'); });
+        },
+        columns: [
+          { data: null, orderable: false, searchable: false, className: 'text-center', render: (v, t, r) => t === 'display' ? aksiHtml(r) : '' },
+          { data: 'patient_name', render: (v, t, r) => {
+              const nama = v || r.patient_name_pcare || '-';
+              if (t !== 'display') return [nama, r.nomor_rm, r.patient_bpjs, r.room_name, r.bed_name].join(' ');
+              const jk = String(r.patient_gender || '').charAt(0).toUpperCase(), u = umur(r.patient_datebirth);
+              return `<div class="fw-semibold rr-nama" title="${esc(nama)}">${esc(nama)}</div><div class="small text-muted"><span class="rr-rm">${esc(r.nomor_rm || '-')}</span>${jk ? ' · ' + (jk === 'L' ? 'L' : 'P') : ''}${u ? ' · ' + u : ''}${r.patient_bpjs ? ' · <span class="font-monospace">' + esc(r.patient_bpjs) + '</span>' : ''}</div>`;
+            } },
+          { data: 'room_name', render: (v, t, r) => t === 'display' ? (isi(v) || isi(r.bed_name) ? `<div class="small fw-semibold">${esc(v || '-')}</div><div class="small text-muted">${isi(r.bed_name) ? 'Bed ' + esc(r.bed_name) : 'Bed -'}${isi(r.service_class) && r.service_class !== v ? ' · ' + esc(r.service_class) : ''}</div>` : '<span class="small text-muted">Belum ada bed</span>') : (v || '') },
+          { data: 'visit_date', render: (v, t, r) => {
+              if (t !== 'display') return v;
+              const lama = r.lama_hari, curiga = r.status_ranap !== 'pulang' && lama > LAMA_CURIGA;
+              if (r.status_ranap === 'pulang') return `<div class="small">${esc(tglPendek(v))} · ${esc(String(r.visit_time || '').slice(0, 5))}</div><span class="badge bg-success-subtle text-success">${isi(r.cara_keluar) ? esc(r.cara_keluar) : 'Pulang'}</span>`;
+              return `<div class="small">${esc(tglPendek(v))} · ${esc(String(r.visit_time || '').slice(0, 5))}</div>` +
+                (r.status_ranap !== 'pulang' && lama ? `<div class="small ${curiga ? 'text-danger' : 'text-muted'}"><span class="rr-lama">${lama}</span> hari${curiga ? ' <i class="fas fa-triangle-exclamation" title="Lebih dari ' + LAMA_CURIGA + ' hari — cek apakah sudah dipulangkan"></i>' : ''}</div>` : '');
+            } },
+          { data: 'id_doctor', render: (v, t, r) => t === 'display' ? `<div class="small fw-semibold">${esc(v || '-')}</div>${isi(r.diagnosa_awal) ? `<div class="small text-muted text-truncate" style="max-width:220px" title="${esc(r.diagnosa_awal)}" style="max-width:200px">${esc(r.diagnosa_awal)}</div>` : ''}` : (v || '') + ' ' + (r.diagnosa_awal || '') },
+          { data: 'provider_name', render: (v, t) => t === 'display' ? `<span class="small">${esc(v || '-')}</span>` : (v || '') }
+        ]
       });
-    });
 
-    // filter manual
-    $('#btnFilter').on('click', function() {
-      table.ajax.reload();
-    });
-
-    $('#btnReset').on('click', function() {
-      $('#fromDate').val(today);
-      $('#toDate').val(today);
-      $('#doctorSelect').val('');
-      $('#providerSelect').val('');
-      table.ajax.reload();
-    });
-
-    $(document).on('click', '.detail-btn', function() {
-      let id = $(this).data('id');
-
-      $('#detailModal').modal('show');
-
-      fetch(`controller/visit/getDetailPemeriksaan?id=${id}`)
-        .then(res => res.json())
-        .then(resp => {
-          if (resp.status === 'success' || resp.status === true) {
-            fillDetail(resp.data);
-          } else {
-            alert('Gagal load data');
-          }
-        });
-    });
-
-    function fillDetail(d) {
-      $('#d_patient_name').text(d.patient_name ?? '-');
-      $('#d_doctor_name').text(d.doctor_name ?? '-');
-      $('#d_poli_name').text(d.poli_name ?? '-');
-      $('#d_visit_date').text(d.visit_date ?? '-');
-      $('#d_no_sep').text(d.no_sep ?? '-');
-
-      $('#d_tekanan_darah').text(d.tekanan_darah ?? '-');
-      $('#d_suhu').text((d.suhu ?? '-') + ' °C');
-      $('#d_nadi').text((d.nadi ?? '-') + ' bpm');
-      $('#d_respirasi').text((d.respirasi ?? '-') + ' /menit');
-      $('#d_tinggi').text((d.tinggi ?? '-') + ' cm');
-      $('#d_berat').text((d.berat ?? '-') + ' kg');
-
-      $('#d_anamnesa').text(d.anamnesa ?? '-');
-      $('#d_diagnosa').text(d.code + '-' + d.icd10 ?? '-');
-      $('#d_tindakan').text(d.tindakan ?? '-');
-
-      if (d.suhu > 37.5) {
-        $('#d_suhu').addClass('text-danger fw-bold');
+      function ringkas(j) {
+        const h = j.hitung || {}, b = j.bed || {}, rows = j.data || [];
+        document.querySelectorAll('#rrTabs [data-n]').forEach(el => el.textContent = fmt(h[el.dataset.n]));
+        $id('kDirawat').textContent = fmt(h.dirawat);
+        $id('kMasuk').textContent = fmt(h.masuk_hari_ini);
+        $id('kPulang').textContent = fmt(h.pulang);
+        $id('kPeriode').textContent = tglIndo($id('fromDate').value) + ' – ' + tglIndo($id('toDate').value);
+        $id('kBed').textContent = b.total ? fmt(b.terisi) + ' / ' + fmt(b.total) : '-';
+        $id('kBedBar').style.width = (b.total ? b.terisi / b.total * 100 : 0) + '%';
+        const selisih = (b.terisi || 0) - (h.dirawat || 0);
+        $id('kBedInfo').innerHTML = b.total ? (selisih > 0 ? `<span class="text-warning-emphasis">${fmt(selisih)} bed tercatat terisi tanpa pasien dirawat</span>` : fmt(b.total - b.terisi) + ' bed kosong') : '&nbsp;';
+        if (j.tab === 'dirawat') {
+          const lama = rows.filter(r => r.lama_hari > LAMA_CURIGA).length;
+          $id('kLama').innerHTML = lama ? `<span class="text-danger">${fmt(lama)} pasien &gt; ${LAMA_CURIGA} hari</span>` : '&nbsp;';
+          $id('kAlos').textContent = fmt(lama);
+          $id('kAlos').classList.toggle('text-danger', lama > 0);
+          $id('rrPeringatan').classList.toggle('d-none', !lama && selisih <= 0);
+          $id('rrPeringatan').innerHTML = `<i class="fas fa-triangle-exclamation me-1"></i>` + [
+            lama ? `<b>${fmt(lama)} pasien</b> tercatat dirawat lebih dari ${LAMA_CURIGA} hari — kemungkinan sudah pulang tetapi belum dipulangkan di sistem.` : '',
+            selisih > 0 ? `<b>${fmt(selisih)} bed</b> tercatat terisi padahal tidak ada pasien dirawat di sana.` : ''
+          ].filter(Boolean).join(' ') + ' Perbarui di <a href="module/admin/status_pulang">Bed &amp; status pulang</a>.';
+        }
       }
-    }
-  });
-</script>
-<script>
-  let stream;
-  let currentVisitId = null;
 
-  $(document).on('click', '.camera-btn', function() {
-    currentVisitId = $(this).data('id');
-
-    $('#cameraModal').modal('show');
-
-    navigator.mediaDevices.getUserMedia({
-        video: true
-      })
-      .then(s => {
-        stream = s;
-        document.getElementById('video').srcObject = stream;
+      const muat = () => table.ajax.reload(null, false);
+      $id('rrTabs').addEventListener('click', e => {
+        const b = e.target.closest('.btn[data-tab]');
+        if (!b) return;
+        tab = b.dataset.tab;
+        document.querySelectorAll('#rrTabs .btn').forEach(x => x.classList.toggle('active', x === b));
+        // rentang tanggal hanya untuk pasien pulang; "sedang dirawat" selalu tampil semua
+        $id('rrRentang').classList.toggle('d-none', tab !== 'pulang');
+        muat();
       });
-  });
-
-  $('#btnCapture').click(function() {
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0);
-
-    const img = canvas.toDataURL('image/png');
-
-    $('#preview').attr('src', img).removeClass('d-none');
-    $('#btnSave').removeClass('d-none');
-  });
-  $('#btnSave').click(function() {
-    const img = document.getElementById('canvas').toDataURL('image/png');
-
-    fetch('controller/visit/uploadCapture', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          image: img,
-          id_visit: currentVisitId
-        })
-      })
-      .then(res => res.json())
-      .then(resp => {
-        if (resp.status === 'success') {
-          alert('Foto berhasil disimpan');
-          $('#cameraModal').modal('hide');
-        }
+      ['fromDate', 'toDate', 'doctorSelect', 'providerSelect'].forEach(i => $id(i).addEventListener('change', () => {
+        if ($id('fromDate').value > $id('toDate').value) $id('toDate').value = $id('fromDate').value;
+        muat();
+      }));
+      $id('btnReset').addEventListener('click', () => {
+        $id('fromDate').value = tglJkt(-29); $id('toDate').value = tglJkt(0);
+        $id('doctorSelect').value = $id('providerSelect').value = $id('rrCari').value = '';
+        table.search('');
+        muat();
       });
+      $id('rrRefresh').addEventListener('click', muat);
+      let tCari;
+      $id('rrCari').addEventListener('input', function() { clearTimeout(tCari); const v = this.value; tCari = setTimeout(() => table.search(v).draw(), 200); });
+      $('#rrTable').on('show.bs.dropdown', e => $(e.target).closest('td').addClass('rr-dd-buka')).on('hidden.bs.dropdown', e => $(e.target).closest('td').removeClass('rr-dd-buka'));
 
-    $('#cameraModal').on('hidden.bs.modal', function() {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-    });
-  });
-</script>
-<script>
-  $(document).on('click', '.screening-btn', function() {
-    let id = $(this).data('id');
-
-    $('#screening_id_visit').val(id);
-    $('#sc_keluhan').val('');
-    $('#sc_catatan').val('');
-
-    $('#screeningModal').modal('show');
-  });
-
-  $('#btnSaveScreening').on('click', function() {
-    const data = {
-      id_visit: $('#screening_id_visit').val(),
-      keluhan: $('#sc_keluhan').val(),
-      catatan: $('#sc_catatan').val()
-    };
-
-    fetch('controller/visit/saveScreening.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      })
-      .then(res => res.json())
-      .then(resp => {
-        if (resp.status === 'success') {
-          alert('Screening berhasil disimpan');
-          $('#screeningModal').modal('hide');
-        }
+      /* ---------- detail ---------- */
+      const modal = bootstrap.Modal.getOrCreateInstance($id('rrDetail'));
+      let aktif = null;
+      $(document).on('click', '.rr-detail', function() {
+        const id = +this.dataset.id, r = table.rows().data().toArray().find(x => x.id_visit === id) || {};
+        aktif = id;
+        $id('rdNama').textContent = r.patient_name || r.patient_name_pcare || 'Hasil pemeriksaan';
+        $id('rdSub').innerHTML = [r.nomor_rm ? `<span class="rr-rm">${esc(r.nomor_rm)}</span>` : '', esc(r.room_name || ''), r.bed_name ? 'Bed ' + esc(r.bed_name) : '', 'masuk ' + esc(tglIndo(r.visit_date))].filter(Boolean).join(' · ');
+        $id('rdRme').href = 'module/admin/rme_inap?no=' + encodeURIComponent(r.visit_ID || '') + '&rm=' + encodeURIComponent(r.nomor_rm || '') + '&rme=c';
+        $id('rdBody').innerHTML = '<div class="rr-sk mb-3" style="height:70px"></div><div class="rr-sk mb-3" style="height:70px"></div><div class="rr-sk" style="height:110px"></div>';
+        modal.show();
+        $.getJSON('controller/visit/getDetailPemeriksaan', { id }).done(res => {
+          if (aktif !== id) return;
+          if (!res || res.status !== true) { $id('rdBody').innerHTML = `<div class="text-center text-danger py-5">${esc((res && res.message) || 'Data tidak ditemukan.')}</div>`; return; }
+          const d = res.data;
+          const td = isi(d.tekanan_darah) ? d.tekanan_darah : (isi(d.sistole) && isi(d.diastole) ? d.sistole + '/' + d.diastole : '');
+          const V = [['TD', td, 'mmHg'], ['Nadi', d.nadi, 'x/mnt'], ['Suhu', d.suhu, '°C'], ['RR', d.respirasi, 'x/mnt'], ['SpO₂', d.saturasi, '%'], ['TB', d.tinggi_badan, 'cm'], ['BB', d.berat_badan, 'kg'], ['BMI', d.bmi, d.bmi_keterangan || '']];
+          const sec = (judul, html) => `<div class="rr-sec"><div class="rr-sec-h">${judul}</div>${html}</div>`;
+          const diag = [[d.kdDiag1 || d.diagnosa, d.nmDiag1 || (d.diagnosa_keterangan_ind !== 'ICD10_2010' ? d.diagnosa_keterangan_ind : '') || d.diagnosa_keterangan], [d.kdDiag2, d.nmDiag2], [d.kdDiag3, d.nmDiag3]].filter(x => isi(x[0]) || isi(x[1]));
+          $id('rdBody').innerHTML =
+            sec('<i class="fas fa-heart-pulse text-danger me-2"></i>Vital sign', '<div class="row g-2">' + V.map(v => `<div class="col-3"><div class="rr-vital ${isi(v[1]) ? '' : 'kosong'}"><div class="rr-vital-l">${v[0]}</div><div class="rr-vital-v">${isi(v[1]) ? esc(v[1]) : '—'} <small class="text-muted fw-normal">${isi(v[1]) ? esc(v[2]) : ''}</small></div></div></div>`).join('') + '</div>') +
+            sec('<i class="fas fa-comment-medical text-primary me-2"></i>Anamnesa', isi(d.anamnesa) ? esc(d.anamnesa).replace(/\n/g, '<br>') : '<span class="text-muted fst-italic small">Belum diisi</span>') +
+            sec('<i class="fas fa-file-medical text-success me-2"></i>Diagnosa', diag.length ? diag.map((x, i) => `<div class="mb-1"><span class="badge bg-success-subtle text-success me-1">${esc(x[0] || '')}</span>${esc(x[1] || '')}${i ? ' <span class="text-muted small">(sekunder)</span>' : ''}</div>`).join('') : '<span class="text-muted fst-italic small">Belum diisi</span>') +
+            sec('<i class="fas fa-syringe text-warning me-2"></i>Tindakan', isi(d.tindakan_text) ? esc(d.tindakan_text) : '<span class="text-muted fst-italic small">Tidak ada</span>') +
+            sec('<i class="fas fa-pills text-primary me-2"></i>Obat', isi(d.obat_text) ? esc(d.obat_text) : '<span class="text-muted fst-italic small">Tidak ada</span>');
+        }).fail(() => { if (aktif === id) $id('rdBody').innerHTML = '<div class="text-center text-danger py-5">Gagal memuat data.</div>'; });
       });
-  });
-</script>
-<script>
-  $(document).on('click', '.poli-btn', function() {
-    $('#poliModal').modal('show');
-
-    const now = new Date();
-    $('#poli_date').val(now.toISOString().split('T')[0]);
-    $('#poli_time').val(now.toTimeString().slice(0, 5));
-
-    loadDoctors();
-    loadKelas();
-    loadProvider();
-  });
-
-
-  function loadDoctors() {
-    fetch('controller/visit/getdoctor')
-      .then(res => res.json())
-      .then(res => {
-        let html = '<option value="">Pilih Dokter</option>';
-        res.forEach(d => {
-          html += `<option value="${d.id_doctor}">${d.doctor_name}</option>`;
-        });
-        $('#poli_doctor').html(html);
-      });
-  }
-
-  function loadProvider() {
-    fetch('controller/visit/getprovider')
-      .then(res => res.json())
-      .then(res => {
-        let html = '<option value="">Pilih Provider</option>';
-        res.forEach(p => {
-          html += `<option value="${p.id_provider}">${p.provider_name}</option>`;
-        });
-        $('#poli_provider').html(html);
-      });
-  }
-
-  function loadKelas() {
-    $('#service_class').html('<option value="">Loading...</option>');
-    $('#room_name').empty();
-    $('#bed_name').empty();
-
-    fetch('controller/visit/getRoomRanap.php?type=service_class')
-      .then(res => res.json())
-      .then(resp => {
-        if (resp.status === 'success') {
-          let opt = '<option value="">-- Pilih Kelas --</option>';
-          resp.data.forEach(v => opt += `<option value="${v}">${v}</option>`);
-          $('#service_class').html(opt);
-        }
-      });
-  }
-
-  $('#service_class').on('change', function() {
-    let kelas = $(this).val();
-    $('#room_name').html('<option value="">Loading...</option>');
-    $('#bed_name').html('');
-
-    if (kelas) {
-      fetch(`controller/visit/getRoomRanap.php?type=room_name&value=${kelas}`)
-        .then(res => res.json())
-        .then(resp => {
-          if (resp.status === 'success') {
-            let opt = '<option value="">-- Pilih Kamar --</option>';
-            resp.data.forEach(r => opt += `<option value="${r.id_room}">${r.room_name}</option>`);
-            $('#room_name').html(opt);
-          } else {
-            $('#room_name').html('<option value="">Tidak ada data</option>');
-          }
-        });
-    } else {
-      $('#room_name').html('');
-      $('#bed_name').html('');
-    }
-  });
-
-  $('#room_name').on('change', function() {
-    let id_room = $(this).val();
-    $('#bed_name').html('<option value="">Loading...</option>');
-
-    if (id_room) {
-      fetch(`controller/visit/getRoomRanap.php?type=bed_name&value=${id_room}`)
-        .then(res => res.json())
-        .then(resp => {
-          if (resp.status === 'success') {
-            let opt = '<option value="">-- Pilih Tempat Tidur --</option>';
-            resp.data.forEach(b => opt += `<option value="${b.id_bed}">${b.bed_name}-${b.bed_gender}</option>`);
-            $('#bed_name').html(opt);
-          } else {
-            $('#bed_name').html('<option value="">Tidak ada data</option>');
-          }
-        });
-    } else {
-      $('#bed_name').html('');
-    }
-  });
-
-  $('#btnSavePoli').on('click', function() {
-    const data = {
-      id_patient: $('#id_patient_select').val(),
-      id_doctor: $('#poli_doctor').val(),
-      room_name: $('#room_name').val(),
-      bed_name: $('#bed_name').val(),
-      id_provider: $('#poli_provider').val(),
-      visit_date: $('#poli_date').val(),
-      visit_time: $('#poli_time').val(),
-      source_hub: 'Rawat Inap'
-    };
-
-    if (!data.id_patient || !data.id_doctor || !data.visit_date || !data.visit_time || !data.room_name || !data.bed_name) {
-      alert('Data wajib belum lengkap');
-      return;
-    }
-
-    const formData = new URLSearchParams();
-    for (let key in data) {
-      formData.append(key, data[key] ?? '');
-    }
-
-    fetch('controller/visit/autoApproveRanap', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: formData
-      })
-      .then(res => res.json())
-      .then(resp => {
-        if (resp.status === 'success') {
-          Swal.fire('Registrasi Rawat Inap berhasil', '', 'success');
-          $('#poliModal').modal('hide');
-          $('#periodeTable').DataTable().ajax.reload(null, false);
-        } else {
-          Swal.fire('Gagal', resp.message || 'Terjadi kesalahan', 'error');
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        alert('Terjadi error');
-      });
-  });
-
-  $('#poliModal').on('shown.bs.modal', function() {
-    const $select = $('#id_patient_select');
-
-    if ($select.hasClass('select2-hidden-accessible')) {
-      $select.select2('destroy');
-    }
-
-    $select.select2({
-      dropdownParent: $('#poliModal'),
-      width: '100%',
-      placeholder: 'Cari pasien... ',
-      minimumInputLength: 2,
-      ajax: {
-        url: 'controller/admisi/patientSearchController',
-        type: 'GET',
-        dataType: 'json',
-        delay: 300,
-        data: function(params) {
-          return {
-            search: params.term
-          };
-        },
-        processResults: function(data) {
-          let items = data.data ? data.data : data;
-
-          return {
-            results: items.map(item => ({
-              id: item.id_patient,
-              text: `${item.patient_name} (${item.nomor_rm})`
-            }))
-          };
-        },
-        cache: true
-      }
-    });
-  });
-</script>
-<script>
-  $(document).on('show.bs.dropdown', '.dropdown', function() {
-    let $menu = $(this).find('.dropdown-menu');
-
-    // pindahkan ke body
-    $('body').append($menu);
-
-    let offset = $(this).find('.dropdown-toggle')[0].getBoundingClientRect();
-
-    $menu.css({
-      position: 'fixed',
-      top: offset.bottom,
-      left: offset.left,
-      zIndex: 999999
-    });
-  });
-
-  $(document).on('hide.bs.dropdown', '.dropdown', function() {
-    let $menu = $(this).find('.dropdown-menu');
-
-    // balikin ke tempat asal
-    $(this).append($menu);
-
-    $menu.removeAttr('style');
-  });
-</script>
+    })();
+  </script>
+</body>
 
 </html>
