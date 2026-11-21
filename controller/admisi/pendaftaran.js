@@ -334,18 +334,17 @@
         if ($id('typePasien').value === 'BPJS' && !(B && B.aktif)) err.push('peserta BPJS tidak aktif / belum terverifikasi — pilih penjamin non-BPJS');
         const hp = $id('pdHp').value.replace(/\D/g, '');
         if ($id('typePasien').value === 'BPJS' && hp.length < 10) tandai($id('pdHp'), 'no. HP (min. 10 digit) untuk antrean BPJS');
-        // tanda vital wajib diisi semua + rentang wajar
+        // tanda vital opsional; bila diisi harus dalam rentang wajar
         const VITAL = [['sistole', 'sistole', 50, 300], ['diastole', 'diastole', 20, 200], ['heartRate', 'nadi', 20, 250], ['respRate', 'respirasi', 4, 80], ['suhu', 'suhu', 30, 45],
             ['saturasiOksigen', 'SpO₂', 50, 100], ['tinggiBadan', 'tinggi badan', 30, 250], ['beratBadan', 'berat badan', 0.5, 350], ['lingkarPerut', 'lingkar perut', 20, 250]];
-        const kosong = [], salah = [];
+        const salah = [];
         VITAL.forEach(([k, nm, a, b]) => {
             const el = $id(k), v = el.value.trim().replace(',', '.');
-            if (v === '') { el.classList.add('is-invalid'); kosong.push(nm); }
-            else if (isNaN(+v) || +v < a || +v > b) { el.classList.add('is-invalid'); salah.push(nm + ' ' + a + '–' + b); }
+            if (v !== '' && (isNaN(+v) || +v < a || +v > b)) { el.classList.add('is-invalid'); salah.push(nm + ' ' + a + '–' + b); }
         });
-        if (kosong.length) err.push('tanda vital (' + kosong.join(', ') + ')');
-        if (salah.length) err.push('nilai tidak wajar: ' + salah.join(', '));
-        if (kosong.length || salah.length) bootstrap.Collapse.getOrCreateInstance($id('pdVitalBox'), { toggle: false }).show();
+        if (salah.length) { err.push('nilai tidak wajar: ' + salah.join(', ')); bootstrap.Collapse.getOrCreateInstance($id('pdVitalBox'), { toggle: false }).show(); }
+        const s = $id('sistole').value, d = $id('diastole').value;
+        if ((s && !d) || (!s && d)) tandai($id(s ? 'diastole' : 'sistole'), 'sistole & diastole diisi berpasangan');
         $id('pdError').textContent = err.length ? 'Lengkapi: ' + err.join(', ') + '.' : '';
         $id('pdError').classList.toggle('d-none', !err.length);
         return !err.length;

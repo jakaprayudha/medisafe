@@ -85,17 +85,17 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $tanggalperiksa) || $tanggalpe
     echo json_encode(['success' => false, 'message' => 'Tanggal kunjungan harus hari ini atau s.d. 7 hari ke belakang.']);
     exit;
 }
-// tanda vital wajib diisi semua (kosong / 0 / di luar rentang wajar ditolak)
-$vitalWajib = ['sistole' => ['Sistole', 50, 300], 'diastole' => ['Diastole', 20, 200], 'heartRate' => ['Nadi', 20, 250], 'respRate' => ['Respirasi', 4, 80],
+// tanda vital opsional; bila diisi harus dalam rentang wajar
+$vitalRentang = ['sistole' => ['Sistole', 50, 300], 'diastole' => ['Diastole', 20, 200], 'heartRate' => ['Nadi', 20, 250], 'respRate' => ['Respirasi', 4, 80],
     'suhu' => ['Suhu', 30, 45], 'saturasiOksigen' => ['SpO2', 50, 100], 'tinggiBadan' => ['Tinggi badan', 30, 250], 'beratBadan' => ['Berat badan', 0.5, 350],
     'lingkarPerut' => ['Lingkar perut', 20, 250]];
-$vitalKurang = [];
-foreach ($vitalWajib as $k => [$nm, $min, $max]) {
+$vitalSalah = [];
+foreach ($vitalRentang as $k => [$nm, $min, $max]) {
     $v = str_replace(',', '.', trim((string) ($_POST[$k] ?? '')));
-    if ($v === '' || !is_numeric($v) || (float) $v < $min || (float) $v > $max) $vitalKurang[] = $nm;
+    if ($v !== '' && (!is_numeric($v) || (float) $v < $min || (float) $v > $max)) $vitalSalah[] = $nm;
 }
-if ($vitalKurang) {
-    echo json_encode(['success' => false, 'message' => 'Tanda vital wajib diisi dengan nilai wajar: ' . implode(', ', $vitalKurang) . '.']);
+if ($vitalSalah) {
+    echo json_encode(['success' => false, 'message' => 'Nilai tanda vital tidak wajar: ' . implode(', ', $vitalSalah) . '.']);
     exit;
 }
 // pasien wajib milik faskes ini
