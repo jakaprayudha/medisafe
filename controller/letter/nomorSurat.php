@@ -62,9 +62,10 @@ function nsSetting(mysqli $k, string $idc, string $jenis): array
 /**
  * Alokasikan nomor surat. Wajib dalam transaksi.
  * @param callable $dipakai fn(string $nomor): bool  -> nomor sudah dipakai surat lain (jenis & faskes sama)?
+ * @param ?string $tanggalSurat Y-m-d; penanda tanggal di format memakai tanggal ini (bawaan: hari ini)
  * @return array{error:?string, kode:?string, nomor:?string, mode:?string, setting_id:?int, kolom:string, angka:?int}
  */
-function nsAlokasi(mysqli $k, string $idc, string $jenis, string $manual, callable $dipakai): array
+function nsAlokasi(mysqli $k, string $idc, string $jenis, string $manual, callable $dipakai, ?string $tanggalSurat = null): array
 {
    [$kolNo, $kolFmt, $fmtBawaan, $pad] = NS_JENIS[$jenis];
    $hasil = ['error' => null, 'kode' => null, 'nomor' => null, 'mode' => null, 'setting_id' => null, 'kolom' => $kolNo, 'angka' => null];
@@ -90,9 +91,11 @@ function nsAlokasi(mysqli $k, string $idc, string $jenis, string $manual, callab
    }
 
    $format = trim((string) $s['fmt']) !== '' ? (string) $s['fmt'] : $fmtBawaan;
+   // {DD}/{MM}/{YYYY} mengikuti tanggal surat bila dikirim (generator lama surat sehat), selain itu hari ini
+   $tgl = ($tanggalSurat && preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggalSurat)) ? new DateTime($tanggalSurat, new DateTimeZone('Asia/Jakarta')) : null;
    $no = (int) $s['no'] + 1;
    for ($i = 0; $i <= 1000; $i++, $no++) {
-      $nomor = nsFormat($format, $no, $pad);
+      $nomor = nsFormat($format, $no, $pad, $tgl);
       if (!$dipakai($nomor)) {
          $hasil['nomor'] = $nomor;
          $hasil['angka'] = $no;

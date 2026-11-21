@@ -182,7 +182,7 @@
             if (S.mode === 'MANUAL' && !$id('nomor_surat').value.trim()) tandai($id('nomor_surat'), 'nomor surat');
             if (!$id('tanggal_surat').value) tandai($id('tanggal_surat'), 'tanggal surat');
             if (cfg.validasi) cfg.validasi(err, tandai);
-            $id('sfError').textContent = err.length ? 'Lengkapi: ' + err.join(', ') + '.' : '';
+            $id('sfError').textContent = err.length ? 'Periksa: ' + err.join('; ') + '.' : '';
             $id('sfError').classList.toggle('d-none', !err.length);
             return !err.length;
         }

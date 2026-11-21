@@ -30,7 +30,8 @@
 
       <?php
 
-      $id = $_GET['id'] ?? '';
+      // id surat selalu angka (dulu langsung masuk SQL -> SQL injection)
+    $id = (string) (int) ($_GET['id'] ?? 0);
 
       if (empty($id)) {
          die('ID surat tidak ditemukan.');
@@ -63,7 +64,7 @@
 */
 
       $urlVerifikasi =
-         'https://app.medisafe.id/module/letter/verifikasi-surat-kematian?id='
+         'https://app.medisafe.id/module/letter/verifikasi-surat-rawatinap?id='
          . urlencode(md5($id));
 
 
@@ -126,9 +127,12 @@
         ON dc.doctor_name = ss.id_doctor
    LEFT JOIN icd_10 cd ON cd.code = pv.diagnosa
      WHERE ss.id = '$id'
+       AND pv.id_customer = '" . (int) ($_SESSION['id_customer'] ?? 0) . "'
      LIMIT 1"
       );
       $dataSurat = mysqli_fetch_array($checkSurat);
+    // hanya surat milik faskes yang sedang login (dulu surat faskes mana pun bisa dicetak lewat id)
+    if (!$dataSurat) { die('<p style="padding:20px;font-family:sans-serif">Surat tidak ditemukan atau bukan milik faskes ini.</p>'); }
       ?>
 
       <?php

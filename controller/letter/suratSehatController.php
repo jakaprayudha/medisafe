@@ -144,7 +144,7 @@ try {
             responseJson('error', 'Kunjungan pasien tidak valid atau bukan milik faskes ini.', [], 404);
 
          $koneksi->begin_transaction();
-         $n = nsAlokasi($koneksi, $id_customer, 'sehat', (string) ($_POST['nomor_surat'] ?? ''), fn($no) => shNomorDipakai($no));
+         $n = nsAlokasi($koneksi, $id_customer, 'sehat', (string) ($_POST['nomor_surat'] ?? ''), fn($no) => shNomorDipakai($no), $ts);
          if ($n['error']) {
             $koneksi->rollback();
             responseJson($n['kode'] ?? 'error', $n['error'], $n['kode'] ? ['redirect' => 'module/admin/setting_surat'] : [], $n['kode'] ? 409 : 422);

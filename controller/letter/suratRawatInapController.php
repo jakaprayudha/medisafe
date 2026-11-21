@@ -4,7 +4,7 @@
  *
  * GET  ?dari&sampai (tanggal_surat, bawaan 30 hari terakhir) -> {data:[ringkas]}
  * GET  ?id=                                                    -> satu surat (+ data kunjungan terkini untuk saran pembaruan)
- * GET  ?cari=  (min. 2 huruf)                                  -> kunjungan rawat inap faskes ini, maks. 30 (pemilih pasien)
+ * GET  ?cari=1&search= (min. 2 huruf)                                -> kunjungan rawat inap faskes ini, maks. 30 (pemilih pasien)
  * GET  ?check_setting=1                                        -> setting nomor surat (kompatibilitas)
  * POST id_patient, id_visit, tanggal_surat, tanggal_masuk, tanggal_pulang, ruangan, keterangan, nomor_surat (mode manual)
  * PUT  ?id=  tanggal_surat, tanggal_masuk, tanggal_pulang, ruangan, keterangan, nomor_surat (mode manual)
@@ -189,7 +189,8 @@ try {
             responseJson('success', '', ['mode_nomor' => $s['mode'], 'format_rawat_inap' => $s['format'], 'nomor_rawat_inap' => $s['terakhir']]);
          }
          if (isset($_GET['cari'])) {
-            $term = trim((string) $_GET['cari']);
+            // select2 bersama mengirim ?search=term (URL pemilih: ?cari=1&search=...)
+            $term = trim((string) ($_GET['search'] ?? $_GET['cari']));
             if (mb_strlen($term) < 2) responseJson('success', 'Ketik minimal 2 huruf.', []);
             $like = '%' . addcslashes(mb_substr($term, 0, 60), '%_\\') . '%';
             $rows = riKunjungan("(mp.patient_name LIKE ? OR mp.nomor_rm LIKE ? OR mp.patient_nik LIKE ? OR mp.patient_bpjs LIKE ?)", 'ssss', [$like, $like, $like, $like], 30);
@@ -223,7 +224,7 @@ try {
          [$ts, $masuk, $pulang, $lama, $ruangan, $ket] = riValidasi($_POST, ['masuk' => $k['visit_date'], 'pulang' => $k['tanggal_pulang'], 'ruangan' => $k['ruangan']]);
 
          $koneksi->begin_transaction();
-         $n = nsAlokasi($koneksi, $id_customer, 'rawat_inap', (string) ($_POST['nomor_surat'] ?? ''), fn($no) => riNomorDipakai($no));
+         $n = nsAlokasi($koneksi, $id_customer, 'rawat_inap', (string) ($_POST['nomor_surat'] ?? ''), fn($no) => riNomorDipakai($no), $ts);
          if ($n['error']) {
             $koneksi->rollback();
             responseJson($n['kode'] ?? 'error', $n['error'], $n['kode'] ? ['redirect' => 'module/admin/setting_surat'] : [], $n['kode'] ? 409 : 422);

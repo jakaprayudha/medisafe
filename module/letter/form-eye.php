@@ -47,11 +47,11 @@ $smMata = ['od' => 'OD · mata kanan', 'os' => 'OS · mata kiri'];
 
           <div class="sf-sec">Tanda vital</div>
           <div class="row g-3">
-            <?php foreach ([['tekanan_darah', 'Tekanan darah', 'mmHg', '120/80'], ['nadi', 'Nadi', 'x/mnt', '80'], ['suhu', 'Suhu', '°C', '36.5'], ['respirasi', 'Respirasi', 'x/mnt', '20']] as [$k, $l, $u, $ph]): ?>
+            <?php foreach ([["tekanan_darah", "Tekanan darah", "mmHg"], ["nadi", "Nadi", "x/mnt"], ["suhu", "Suhu", "°C"], ["respirasi", "Respirasi", "x/mnt"]] as [$k, $l, $u]): ?>
               <div class="col-6 col-md-3">
                 <label class="form-label small fw-semibold" for="<?= $k ?>"><?= $l ?></label>
                 <div class="input-group">
-                  <input type="text" class="form-control sm-f" name="<?= $k ?>" id="<?= $k ?>" placeholder="<?= $ph ?>" inputmode="decimal">
+                  <input type="text" class="form-control sm-f" name="<?= $k ?>" id="<?= $k ?>" inputmode="decimal">
                   <span class="input-group-text small"><?= $u ?></span>
                 </div>
               </div>
@@ -70,7 +70,7 @@ $smMata = ['od' => 'OD · mata kanan', 'os' => 'OS · mata kiri'];
                       <td class="sm-lbl"><?= $l ?> <small>· <?= $jarak ?></small></td>
                       <?php foreach ($smMata as $m => $_): ?>
                         <td><input type="text" class="form-control form-control-sm sm-f" name="visus_<?= $m ?>_<?= $k ?>" id="visus_<?= $m ?>_<?= $k ?>"
-                          list="<?= $jarak === 'jauh' ? 'dlJauh' : 'dlDekat' ?>" aria-label="Visus <?= strtoupper($m) ?> <?= strtolower($l) ?> <?= $jarak ?>" placeholder="<?= $jarak === 'jauh' ? '6/6' : 'J1' ?>"></td>
+                          list="<?= $jarak === 'jauh' ? 'dlJauh' : 'dlDekat' ?>" aria-label="Visus <?= strtoupper($m) ?> <?= strtolower($l) ?> <?= $jarak ?>"></td>
                       <?php endforeach; ?>
                     </tr>
                   <?php endforeach; ?>
@@ -89,8 +89,8 @@ $smMata = ['od' => 'OD · mata kanan', 'os' => 'OS · mata kiri'];
                     <?php foreach ($smMata as $m => $_): ?>
                       <tr>
                         <td class="sm-lbl"><span class="sm-mata"><?= strtoupper($m) ?></span></td>
-                        <?php foreach (['sph' => '-1.25', 'cyl' => '-0.50', 'axis' => '90', 'add' => '+1.00'] as $u => $ph): ?>
-                          <td><input type="text" class="form-control form-control-sm sm-f" name="refraksi_<?= $m ?>_<?= $u ?>" id="refraksi_<?= $m ?>_<?= $u ?>" placeholder="<?= $ph ?>" aria-label="<?= strtoupper($u . ' ' . $m) ?>" inputmode="decimal"></td>
+                        <?php foreach (["sph", "cyl", "axis", "add"] as $u): ?>
+                          <td><input type="text" class="form-control form-control-sm sm-f" name="refraksi_<?= $m ?>_<?= $u ?>" id="refraksi_<?= $m ?>_<?= $u ?>" aria-label="<?= strtoupper($u . ' ' . $m) ?>" inputmode="decimal"></td>
                         <?php endforeach; ?>
                       </tr>
                     <?php endforeach; ?>
@@ -99,7 +99,7 @@ $smMata = ['od' => 'OD · mata kanan', 'os' => 'OS · mata kiri'];
                 <div class="d-flex align-items-center gap-2 mt-2">
                   <label class="small fw-semibold mb-0" for="pd">PD</label>
                   <div class="input-group input-group-sm" style="max-width:170px">
-                    <input type="text" class="form-control sm-f" name="pd" id="pd" placeholder="62 atau 64/60">
+                    <input type="text" class="form-control sm-f" name="pd" id="pd">
                     <span class="input-group-text">mm</span>
                   </div>
                 </div>
@@ -116,7 +116,7 @@ $smMata = ['od' => 'OD · mata kanan', 'os' => 'OS · mata kiri'];
                   <div class="sm-mata mb-2"><?= $l ?></div>
                   <label class="form-label small fw-semibold" for="tio_<?= $m ?>">TIO</label>
                   <div class="input-group input-group-sm mb-2" style="max-width:170px">
-                    <input type="text" class="form-control sm-f" name="tio_<?= $m ?>" id="tio_<?= $m ?>" placeholder="15" inputmode="decimal">
+                    <input type="text" class="form-control sm-f" name="tio_<?= $m ?>" id="tio_<?= $m ?>" inputmode="decimal">
                     <span class="input-group-text">mmHg</span>
                   </div>
                   <?php foreach (['anterior' => 'Segmen anterior', 'posterior' => 'Segmen posterior'] as $s => $sl): ?>
@@ -145,7 +145,7 @@ $smMata = ['od' => 'OD · mata kanan', 'os' => 'OS · mata kiri'];
                   </div>
                   <div class="col-7">
                     <label class="form-label small text-muted" for="<?= $kk ?>">Keterangan</label>
-                    <input type="text" class="form-control form-control-sm sm-f sm-ket" name="<?= $kk ?>" id="<?= $kk ?>" placeholder="Normal / Tinggi / Rendah">
+                    <input type="text" class="form-control form-control-sm sm-f sm-ket" name="<?= $kk ?>" id="<?= $kk ?>" placeholder="Pilih di bawah atau ketik">
                   </div>
                   <div class="col-12">
                     <div class="sf-opsi sm-opsi" data-ket="<?= $kk ?>">

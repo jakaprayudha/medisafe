@@ -153,6 +153,7 @@ $skRuang = ['IGD', 'Rawat Inap', 'ICU', 'Ruang Bersalin', 'Ruang Tindakan', 'Pol
           sinkronRuang();
           info();
         },
+        data(fd) { fd.delete('_ruang'); },
         validasi(err, tandai) {
           const t = elTgl.value, j = elJam.value, ts = $id('tanggal_surat').value, k = F.kunjungan && F.kunjungan();
           const kunj = k ? tglSaja(k.visit_date) : '', lahir = k ? tglSaja(k.patient_datebirth) : '';
@@ -160,7 +161,8 @@ $skRuang = ['IGD', 'Rawat Inap', 'ICU', 'Ruang Bersalin', 'Ruang Tindakan', 'Pol
           if (!/^\d{2}:\d{2}/.test(j)) tandai(elJam, 'pukul meninggal');
           if (t && /^\d{2}:\d{2}/.test(j) && t + ' ' + j.slice(0, 5) > kini()) tandai(t > kini().slice(0, 10) ? elTgl : elJam, 'waktu meninggal tidak boleh di masa depan');
           if (t && lahir && t < lahir) tandai(elTgl, 'tanggal meninggal tidak boleh sebelum tanggal lahir');
-          if (t && kunj && t < kunj) tandai(elTgl, 'tanggal meninggal tidak boleh sebelum tanggal kunjungan (' + F.tgl(kunj) + ')');
+          // toleransi 1 hari sebelum kunjungan (meninggal sebelum tengah malam, didaftarkan setelahnya)
+          if (t && kunj && t < new Date(new Date(kunj.slice(0, 10) + 'T00:00:00Z').getTime() - 86400000).toISOString().slice(0, 10)) tandai(elTgl, 'tanggal meninggal terlalu jauh sebelum tanggal kunjungan (' + F.tgl(kunj) + ')');
           if (t && ts && ts < t) tandai($id('tanggal_surat'), 'tanggal surat tidak boleh sebelum tanggal meninggal');
           if (!elRuang.value.trim()) tandai(elRuang, 'ruangan / tempat meninggal');
           if (!elDok.value) tandai(elDok, 'dokter yang menyatakan');
