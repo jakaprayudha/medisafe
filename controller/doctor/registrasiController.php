@@ -1,277 +1,143 @@
 <?php
-include '../../database/connect.php';
-header('Content-Type: application/json');
-$method = $_SERVER['REQUEST_METHOD'];
-switch ($method) {
-   case 'GET':
-      if (isset($_GET['id'])) {
-         getID($_GET['id']);
-      } else {
-         getData();
-      }
-      break;
-   case 'PUT':
-      // Update User
-      updateData();
-      break;
+/**
+ * Daftar pasien poliklinik untuk halaman module/doctor/pemeriksaan.
+ *
+ * GET ?fromDate=Y-m-d&toDate=Y-m-d&tab=belum|sudah&provider=<id>
+ *  -> { status, data:[...], hitung:{menunggu, diperiksa, selesai, konfirmasi}, rentang:{dari, sampai} }
+ *
+ * Perbaikan dibanding versi lama:
+ *  - hanya kolom yang dipakai halaman (dulu pasien_visit.* + ms_patient.* -> ~3,4 KB per baris, 24 MB untuk sebulan);
+ *  - join antrian_poli (tanpa index) diganti semi-join yang dibatasi kunjungan di rentang tanggal -> ~4 dtk jadi < 0,5 dtk;
+ *  - status pcare lewat EXISTS (pcare_pendaftaran bisa punya 2 baris per kunjungan -> pasien tampil ganda);
+ *  - filter tab dilakukan di server; rentang tanggal wajib & maksimal 31 hari (dulu Reset mengosongkan "Sampai"
+ *    sehingga seluruh riwayat faskes, puluhan ribu kunjungan, ikut dimuat);
+ *  - filter dokter memakai session, bukan nama/kode yang dikirim browser;
+ *  - getID / PUT / DELETE dihapus: tidak dipakai dan tidak dibatasi faskes (siapa pun bisa menghapus kunjungan).
+ */
+require '../../database/connect.php';
+header('Content-Type: application/json; charset=utf-8');
+if (!ini_get('zlib.output_compression')) @ob_start('ob_gzhandler');
 
-   case 'DELETE':
-      // Delete User
-      deleteData();
-      break;
-
-   default:
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Method tidak diizinkan.'
-      ]);
-      break;
-}
-
-// Function untuk Create
-function getData(){
-   global $koneksi;
-
-   $role = $_SESSION['roles'] ?? null;
-   $id_customer = $_SESSION['id_customer'] ?? null;
-
-   if (!$id_customer) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Session tidak ditemukan'
-      ]);
-      exit;
-   }
-
-   $fromDate   = $_GET['fromDate'] ?? null;
-   $toDate     = $_GET['toDate'] ?? null;
-   $doctorName = $_GET['doctorName'] ?? null;
-   $kdDokter   = $_GET['kdDokter'] ?? null;
-   $provider   = $_GET['provider'] ?? null;
-
-   $query = "SELECT
-                pasien_visit.*,
-                ms_patient.*,
-                ms_provider.provider_name,
-                ap.status AS status_panggil,
-                CASE 
-                    WHEN pasien_visit.id_provider = '1' AND pp.nomor_visit IS NOT NULL THEN 1 
-                    WHEN pasien_visit.id_provider = '1' AND pp.nomor_visit IS NULL THEN 0 
-                    ELSE NULL 
-                END AS status_pcare
-            FROM pasien_visit
-            LEFT JOIN ms_patient
-                ON ms_patient.id_patient = pasien_visit.id_patient
-            LEFT JOIN ms_provider
-                ON ms_provider.id_provider = pasien_visit.id_provider
-            LEFT JOIN antrian_poli ap
-                ON ap.nomor_visit = pasien_visit.visit_ID
-                AND ap.id_customer = pasien_visit.id_customer
-            LEFT JOIN pcare_pendaftaran pp
-                ON pp.nomor_visit = pasien_visit.visit_ID
-            WHERE pasien_visit.source_hub <> 'Rawat Inap'
-            AND pasien_visit.id_customer = ? AND pasien_visit.created_user != 'JKNSehat'";
-
-   $params = [];
-   $types  = "";
-
-   $params[] = $id_customer;
-   $types .= "s";
-
-   // Filter tanggal
-   if (!empty($fromDate) && !empty($toDate)) {
-      $query .= " AND DATE(pasien_visit.visit_date) BETWEEN ? AND ?";
-      $params[] = $fromDate;
-      $params[] = $toDate;
-      $types .= "ss";
-   }
-
-   // FIlter Provider
-   if (!empty($provider)) {
-      $query .= " AND pasien_visit.id_provider = ?";
-      $params[] = $provider;
-      $types .= "s";
-   }
-
-   // Filter dokter
-   if ($role != "admin" && (!empty($doctorName) || !empty($kdDokter))) {
-      $query .= " AND (";
-      $filter = [];
-      if (!empty($doctorName)) {
-         $doctorNameClean = preg_replace('/^dr\.?\s*/i', '', $doctorName);
-         $filter[] = "REPLACE(LOWER(pasien_visit.id_doctor),'dr. ','') LIKE ?";
-         $params[] = "%" . strtolower($doctorNameClean) . "%";
-         $types .= "s";
-      }
-      if (!empty($kdDokter)) {
-         $filter[] = "pasien_visit.code_doctor = ?";
-         $params[] = $kdDokter;
-         $types .= "s";
-      }
-      $query .= implode(" OR ", $filter);
-      $query .= ")";
-   }
-   $query .= "
-        ORDER BY
-            LEFT(pasien_visit.visit_antrian,1) ASC,
-            CAST(REGEXP_SUBSTR(pasien_visit.visit_antrian,'[0-9]+$') AS UNSIGNED) ASC,
-            pasien_visit.visit_time ASC
-    ";
-   $stmt = $koneksi->prepare($query);
-
-   if (!$stmt) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => $koneksi->error
-      ]);
-      return;
-   }
-
-   $stmt->bind_param($types, ...$params);
-
-   $stmt->execute();
-
-   $result = $stmt->get_result();
-
-   $data = $result->fetch_all(MYSQLI_ASSOC);
-
-   $stmt->close();
-
-   echo json_encode([
-      "status" => "success",
-      "data" => $data
-   ]);
-}
-
-
-// Function untuk Read User berdasarkan ID
-function  getID($iduser)
+function balas(int $kode, array $isi): void
 {
-   global $koneksi;
-
-   // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM pasien_visit WHERE id_visit = ?";
-
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $iduser); // Bind parameter iduser
-      $stmt->execute();
-      $result = $stmt->get_result();
-
-      if ($result->num_rows > 0) {
-         $data = $result->fetch_assoc();
-         echo json_encode([
-            'status' => 'success',
-            'data' => $data
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Data tidak ditemukan.'
-         ]);
-      }
-
-      $stmt->close();
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
-   }
+   http_response_code($kode);
+   echo json_encode($isi, JSON_UNESCAPED_UNICODE);
+   exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') balas(405, ['status' => 'error', 'message' => 'Method tidak diizinkan.']);
 
+$idc = (string) ($_SESSION['id_customer'] ?? '');
+$role = (string) ($_SESSION['roles'] ?? '');
+$namaDokter = trim((string) ($_SESSION['fullname'] ?? ''));
+$kodeDokter = trim((string) ($_SESSION['kode_dokter'] ?? ''));
+session_write_close();
+if ($idc === '') balas(401, ['status' => 'error', 'message' => 'Sesi berakhir, silakan login ulang.']);
 
-function updateData()
-{
-   global $koneksi;
-   parse_str(file_get_contents("php://input"), $_PUT);
+$tz = new DateTimeZone('Asia/Jakarta');
+$hariIni = (new DateTime('now', $tz))->format('Y-m-d');
+$tgl = function ($v) use ($hariIni) {
+   $v = (string) $v;
+   $d = DateTime::createFromFormat('!Y-m-d', $v);
+   return ($d && $d->format('Y-m-d') === $v) ? $v : null;
+};
+$dari = $tgl($_GET['fromDate'] ?? '') ?? $hariIni;
+$sampai = $tgl($_GET['toDate'] ?? '') ?? $dari;
+if ($sampai < $dari) [$dari, $sampai] = [$sampai, $dari];
+if ((new DateTime($dari))->diff(new DateTime($sampai))->days > 31) {
+   balas(422, ['status' => 'error', 'message' => 'Rentang tanggal maksimal 31 hari.']);
+}
+$tab = ($_GET['tab'] ?? 'belum') === 'sudah' ? 'sudah' : 'belum';
+$provider = trim((string) ($_GET['provider'] ?? ''));
 
-   if (empty($_PUT['id_visit'])) {
-      echo json_encode(['status' => 'error', 'message' => 'ID tidak ditemukan.']);
-      return;
+// kondisi dasar (dipakai daftar & hitungan)
+$where = "pv.id_customer = ? AND pv.visit_date BETWEEN ? AND ? AND pv.source_hub <> 'Rawat Inap' AND NOT (pv.created_user <=> 'JKNSehat')";
+$tipe = 'sss';
+$par = [$idc, $dari, $sampai];
+if ($provider !== '') {
+   $where .= ' AND pv.id_provider = ?';
+   $tipe .= 's';
+   $par[] = $provider;
+}
+// selain admin hanya melihat pasiennya sendiri (nama dokter atau kode dokter BPJS)
+if (!in_array($role, ['admin', 'superadmin'], true) && ($namaDokter !== '' || $kodeDokter !== '')) {
+   $f = [];
+   if ($namaDokter !== '') {
+      $f[] = "REPLACE(LOWER(pv.id_doctor), 'dr. ', '') LIKE ?";
+      $tipe .= 's';
+      $par[] = '%' . mb_strtolower(preg_replace('/^dr\.?\s*/i', '', $namaDokter)) . '%';
    }
-
-   $id = $_PUT['id_visit'];
-   $allowedFields = [
-      'id_doctor',
-      'id_poli',
-      'visit_notes'
-   ];
-   $fields = [];
-   $values = [];
-
-   foreach ($allowedFields as $f) {
-      if (isset($_PUT[$f])) {
-         $fields[] = "$f=?";
-         $values[] = $_PUT[$f];
-      }
+   if ($kodeDokter !== '') {
+      $f[] = 'pv.code_doctor = ?';
+      $tipe .= 's';
+      $par[] = $kodeDokter;
    }
-
-   if (empty($fields)) {
-      echo json_encode(['status' => 'error', 'message' => 'Tidak ada data diupdate.']);
-      return;
-   }
-
-   $values[] = $id;
-   $types = str_repeat('s', count($values) - 1) . "i";
-
-   $query = "UPDATE pasien_visit SET " . implode(',', $fields) . " WHERE id_visit=?";
-   $stmt = $koneksi->prepare($query);
-
-   if ($stmt) {
-      $stmt->bind_param($types, ...$values);
-      if ($stmt->execute()) {
-         echo json_encode(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
-      } else {
-         echo json_encode(['status' => 'error', 'message' => 'Update gagal: ' . $stmt->error]);
-      }
-      $stmt->close();
-   } else {
-      echo json_encode(['status' => 'error', 'message' => 'Query error: ' . $koneksi->error]);
-   }
+   $where .= ' AND (' . implode(' OR ', $f) . ')';
 }
 
+try {
+   // hitungan per status (untuk KPI & badge tab)
+   $st = $koneksi->prepare("SELECT SUM(pv.visit_status = 0) menunggu, SUM(pv.visit_status = 1) diperiksa, SUM(pv.visit_status = 4) selesai
+      FROM pasien_visit pv WHERE $where");
+   $st->bind_param($tipe, ...$par);
+   $st->execute();
+   $h = $st->get_result()->fetch_assoc();
+   $st->close();
 
-
-// Function untuk Delete User
-function deleteData()
-{
-   global $koneksi;
-
-   // Ambil ID user dari query parameter
-   $id = isset($_GET['id']) ? $_GET['id'] : '';
-
-   if (empty($id)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'ID tidak ditemukan.'
-      ]);
-      exit;
-   }
-
-   // Query untuk menghapus data user
-   $query = "DELETE FROM pasien_visit WHERE id_visit = ?";
-
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $id);
-
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil dihapus.'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menghapus.'
-         ]);
-      }
-
-      $stmt->close();
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
-   }
+   $statusTab = $tab === 'belum' ? 'pv.visit_status IN (0, 1)' : 'pv.visit_status = 4';
+   $sql = "SELECT pv.id_visit, pv.visit_ID, pv.visit_date, pv.visit_time, pv.visit_antrian, pv.visit_status, pv.source_hub,
+         pv.id_poli, pv.id_doctor, pv.id_provider, pv.noKartu,
+         COALESCE(NULLIF(TRIM(pv.patient_name_pcare), ''), mp.patient_name) AS nama,
+         mp.nomor_rm, mp.patient_gender, mp.patient_datebirth, prv.provider_name,
+         ap.status_panggil,
+         CASE WHEN pv.id_provider = '1' THEN EXISTS (SELECT 1 FROM pcare_pendaftaran pp WHERE pp.nomor_visit = pv.visit_ID) END AS status_pcare
+      FROM pasien_visit pv
+      LEFT JOIN ms_patient mp ON mp.id_patient = pv.id_patient
+      LEFT JOIN ms_provider prv ON prv.id_provider = pv.id_provider
+      LEFT JOIN (
+         SELECT a.nomor_visit, MIN(a.status) AS status_panggil
+         FROM antrian_poli a
+         WHERE a.id_customer = ? AND a.nomor_visit IN (SELECT v.visit_ID FROM pasien_visit v WHERE v.id_customer = ? AND v.visit_date BETWEEN ? AND ?)
+         GROUP BY a.nomor_visit
+      ) ap ON ap.nomor_visit = pv.visit_ID
+      WHERE $where AND $statusTab
+      ORDER BY LEFT(pv.visit_antrian, 1), CAST(REGEXP_SUBSTR(pv.visit_antrian, '[0-9]+$') AS UNSIGNED), pv.visit_time";
+   $st = $koneksi->prepare($sql);
+   $st->bind_param('ssss' . $tipe, $idc, $idc, $dari, $sampai, ...$par);
+   $st->execute();
+   $rows = $st->get_result()->fetch_all(MYSQLI_ASSOC);
+   $st->close();
+} catch (Throwable $e) {
+   error_log('[doctor/registrasiController] ' . $e->getMessage());
+   balas(500, ['status' => 'error', 'message' => 'Gagal memuat daftar pasien.']);
 }
+
+$acuan = new DateTime($hariIni);
+$konfirmasi = 0;
+foreach ($rows as &$r) {
+   // umur dihitung di server (tanggal lahir tidak dikirim)
+   $r['umur'] = null;
+   if (!empty($r['patient_datebirth']) && ($lahir = DateTime::createFromFormat('!Y-m-d', substr((string) $r['patient_datebirth'], 0, 10)))) {
+      $r['umur'] = $lahir->diff($acuan)->y;
+   }
+   unset($r['patient_datebirth']);
+   $r['status_panggil'] = $r['status_panggil'] === null ? null : (int) $r['status_panggil'];
+   $r['status_pcare'] = $r['status_pcare'] === null ? null : (int) $r['status_pcare'];
+   $r['visit_status'] = (int) $r['visit_status'];
+   // BPJS yang belum dikonfirmasi hadir / belum terdaftar PCare: tombol Hadir / Tidak hadir (aturan lama)
+   $r['perlu_hadir'] = (string) $r['id_provider'] === '1' && ($r['status_panggil'] === 0 || $r['status_pcare'] === 0);
+   if ($r['perlu_hadir']) $konfirmasi++;
+}
+unset($r);
+
+balas(200, [
+   'status' => 'success',
+   'data' => $rows,
+   'hitung' => [
+      'menunggu' => (int) ($h['menunggu'] ?? 0),
+      'diperiksa' => (int) ($h['diperiksa'] ?? 0),
+      'selesai' => (int) ($h['selesai'] ?? 0),
+      'konfirmasi' => $tab === 'belum' ? $konfirmasi : null,
+   ],
+   'rentang' => ['dari' => $dari, 'sampai' => $sampai],
+]);
