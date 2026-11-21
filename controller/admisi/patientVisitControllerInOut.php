@@ -27,6 +27,11 @@ if (!isset($_SESSION['id_customer'])) {
 $id_customer = $_SESSION['id_customer'];
 
 $search = trim($_GET['search'] ?? '');
+// dipakai pemilih pasien di form surat: hasil dibatasi 30 kunjungan terbaru (dulu tanpa LIMIT -> ketik "an" = 6.000+ baris)
+if (mb_strlen($search) < 2) {
+   echo json_encode(['status' => 'success', 'data' => []]);
+   exit;
+}
 
 
 /*
@@ -83,6 +88,7 @@ $query = "SELECT
     ORDER BY
         pv.visit_date DESC,
         pv.id_visit DESC
+    LIMIT 30
 
 
 ";
