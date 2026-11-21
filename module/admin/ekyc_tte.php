@@ -33,42 +33,61 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
       <!--  Header End -->
       <div class="body-wrapper-inner">
         <div class="container-fluid">
-          <div class="row">
-            <div class="col-lg-12 d-flex align-items-stretch">
-              <div class="card w-100">
-                <div class="card-body p-4">
-                  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-                    <div>
-                      <h5 class="card-title fw-semibold mb-1">eKYC Tanda Tangan Elektronik (TTE)</h5>
-                      <small class="text-muted">Registrasi identitas pemohon TTE: nama, email, nomor HP, dan NIK</small>
-                    </div>
-                    <?php if ($canManageEkyc): ?>
-                      <div class="d-flex ms-auto gap-2">
-                        <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
-                      </div>
-                    <?php endif; ?>
-                  </div>
-                  <div class="table-responsive" data-simplebar>
-                    <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
-                      <thead>
-                        <tr>
-                          <th class="text-dark fw-normal col-1">ID</th>
-                          <th scope="col" class="text-dark fw-normal">Nama</th>
-                          <th scope="col" class="text-dark fw-normal">Email</th>
-                          <th class="text-dark fw-normal">Nomor HP</th>
-                          <th class="text-dark fw-normal">NIK</th>
-                          <th class="text-dark fw-normal">Registrasi</th>
-                          <th scope="col" class="text-dark fw-normal text-center col-1">Status</th>
-                          <th scope="col" class="text-dark fw-normal text-center col-1">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody></tbody>
-                    </table>
-                  </div>
+
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body py-3">
+              <div class="d-flex flex-wrap align-items-center gap-3">
+                <span class="ek-icon bg-primary-subtle text-primary"><i class="fas fa-id-card"></i></span>
+                <div class="flex-grow-1" style="min-width:0">
+                  <h5 class="fw-semibold mb-0">eKYC Tanda Tangan Elektronik</h5>
+                  <div class="text-muted small">Verifikasi identitas pemohon TTE: KTP diverifikasi admin, lalu liveness wajah lewat kamera, lalu verifikasi akhir.</div>
                 </div>
+                <button type="button" class="btn btn-light btn-sm" id="ekRefresh" title="Muat ulang"><i class="fas fa-sync-alt"></i></button>
+                <?php if ($canManageEkyc): ?>
+                  <button class="btn btn-primary" id="btnTambah"><i class="fas fa-user-plus me-1"></i>Tambah pemohon</button>
+                <?php endif; ?>
               </div>
             </div>
           </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-6 col-xl-3"><div class="ek-kpi"><div class="ek-label">Total pemohon</div><div class="ek-val" id="kTotal">-</div><div class="ek-sub" id="kAktif">&nbsp;</div></div></div>
+            <div class="col-6 col-xl-3"><div class="ek-kpi"><div class="ek-label">Perlu tindakan admin</div><div class="ek-val text-warning" id="kTindak">-</div><div class="ek-sub">verifikasi KTP / verifikasi akhir</div></div></div>
+            <div class="col-6 col-xl-3"><div class="ek-kpi"><div class="ek-label">Siap liveness</div><div class="ek-val text-info" id="kLiveness">-</div><div class="ek-sub">KTP terverifikasi, ambil wajah</div></div></div>
+            <div class="col-6 col-xl-3"><div class="ek-kpi"><div class="ek-label">Terverifikasi</div><div class="ek-val text-success" id="kOk">-</div><div class="ek-sub" id="kTolak">&nbsp;</div></div></div>
+          </div>
+
+          <div class="card border-0 shadow-sm">
+            <div class="card-body p-3 p-lg-4">
+              <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                <div class="ek-tabs d-flex flex-wrap gap-1" id="ekTabs">
+                  <button type="button" class="btn active" data-f="">Semua <span class="badge" data-n="semua">0</span></button>
+                  <button type="button" class="btn" data-f="tindak">Perlu tindakan <span class="badge" data-n="tindak">0</span></button>
+                  <button type="button" class="btn" data-f="proses">Dalam proses <span class="badge" data-n="proses">0</span></button>
+                  <button type="button" class="btn" data-f="terverifikasi">Terverifikasi <span class="badge" data-n="terverifikasi">0</span></button>
+                  <button type="button" class="btn" data-f="ditolak">Ditolak <span class="badge" data-n="ditolak">0</span></button>
+                </div>
+                <div class="position-relative ms-auto" style="min-width:220px">
+                  <i class="fas fa-search position-absolute text-muted" style="left:10px;top:50%;transform:translateY(-50%);font-size:.75rem"></i>
+                  <input type="search" id="ekCari" class="form-control form-control-sm ps-4" placeholder="Cari nama, NIK, email, HP…">
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="table align-middle mb-0 w-100" id="periodeTable">
+                  <thead><tr>
+                    <th class="text-dark fw-normal">Pemohon</th>
+                    <th class="text-dark fw-normal">Kontak</th>
+                    <th class="text-dark fw-normal">Tahap verifikasi</th>
+                    <th class="text-dark fw-normal">Registrasi</th>
+                    <th class="text-dark fw-normal text-center">Aktif</th>
+                    <th class="text-dark fw-normal text-end">Aksi</th>
+                  </tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -81,152 +100,211 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
 
 <!-- MODAL TAMBAH EKYC -->
 <div class="modal fade" id="ekycModal" tabindex="-1">
-  <div class="modal-dialog">
-    <form id="ekycForm" class="modal-content">
+  <div class="modal-dialog modal-dialog-centered">
+    <form id="ekycForm" class="modal-content" novalidate autocomplete="off">
       <div class="modal-header">
-        <h5 class="modal-title">Tambah eKYC TTE</h5>
+        <div><h5 class="modal-title mb-0"><i class="fas fa-user-plus text-primary me-2"></i>Tambah pemohon eKYC</h5><div class="small text-muted">Data harus sama persis dengan KTP pemohon.</div></div>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <div class="row">
-          <div class="col-12 mb-3">
-            <label class="form-label required">Nama Lengkap</label>
-            <input type="text" name="nama" id="nama" class="form-control" placeholder="Nama sesuai KTP" required>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" for="nama">Nama lengkap <span class="text-danger">*</span></label>
+          <input type="text" name="nama" id="nama" class="form-control" placeholder="Sesuai KTP" maxlength="150" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" for="nik">NIK <span class="text-danger">*</span></label>
+          <div class="input-group">
+            <input type="text" name="nik" id="nik" class="form-control ek-mono" placeholder="16 digit" maxlength="16" inputmode="numeric" required>
+            <span class="input-group-text small" id="nikHitung">0/16</span>
           </div>
-          <div class="col-12 mb-3">
-            <label class="form-label required">NIK</label>
-            <input type="text" name="nik" id="nik" class="form-control" placeholder="16 digit NIK" maxlength="16" inputmode="numeric" required>
-            <small class="text-muted">NIK harus 16 digit angka.</small>
+        </div>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold" for="email">Email</label>
+            <input type="email" name="email" id="email" class="form-control" placeholder="email@contoh.com" maxlength="150">
           </div>
-          <div class="col-12 mb-3">
-            <label class="form-label">Email</label>
-            <input type="email" name="email" id="email" class="form-control" placeholder="email@contoh.com">
-          </div>
-          <div class="col-12 mb-3">
-            <label class="form-label">Nomor HP</label>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold" for="nomor_hp">Nomor HP</label>
             <input type="text" name="nomor_hp" id="nomor_hp" class="form-control" placeholder="08xxxxxxxxxx" maxlength="15" inputmode="numeric">
           </div>
         </div>
+        <div class="small text-danger mt-3 d-none" id="ekError"></div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
-        <button type="submit" class="btn btn-primary">Simpan</button>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+        <button type="submit" class="btn btn-primary" id="ekSimpan"><i class="fas fa-save me-1"></i>Simpan</button>
       </div>
     </form>
   </div>
 </div>
 
+<style>
+  .ek-icon { width: 40px; height: 40px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+  .ek-kpi { border: 1px solid #e5eaef; border-radius: 12px; background: #fff; padding: 12px 14px; height: 100%; }
+  .ek-label { font-size: .72rem; color: #6c757d; }
+  .ek-val { font-size: 1.35rem; font-weight: 700; color: #2a3547; line-height: 1.25; }
+  .ek-sub { font-size: .7rem; color: #64748b; }
+  .ek-tabs .btn { border-radius: 20px; font-size: .8rem; padding: .3rem .8rem; background: #fff; border: 1px solid #e5eaef; color: #5a6a85; }
+  .ek-tabs .btn .badge { background: #eef1f4; color: #5a6a85; margin-left: 4px; }
+  .ek-tabs .btn.active { background: #5d87ff; border-color: #5d87ff; color: #fff; }
+  .ek-tabs .btn.active .badge { background: rgba(255, 255, 255, .25); color: #fff; }
+  .ek-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .03em; }
+  .ek-nik { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .74rem; background: #f1f5f9; border-radius: 4px; padding: 1px 5px; color: #1e293b; }
+  #periodeTable td { vertical-align: middle; }
+  #periodeTable > tbody > tr > td:last-child, #periodeTable > thead > tr > th:last-child { width: 1%; white-space: nowrap; }
+  .ek-alur { display: flex; align-items: center; gap: 4px; }
+  .ek-alur .t { width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: .66rem; border: 1px solid #e2e8f0; color: #94a3b8; background: #fff; }
+  .ek-alur .t.ok { background: #13deb9; border-color: #13deb9; color: #fff; }
+  .ek-alur .t.now { background: #fff7ed; border-color: #f59e0b; color: #b45309; }
+  .ek-alur .t.no { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+  .ek-alur .g { width: 14px; height: 2px; background: #e2e8f0; }
+  .ek-alur .g.ok { background: #13deb9; }
+  .ek-stat { font-size: .74rem; font-weight: 600; margin-top: 3px; }
+  .badge.bg-warning, .badge.bg-warning-subtle { color: #1f2937 !important; }
+  /* stepper modal detail */
+  .ek-step { display: flex; gap: 6px; margin-bottom: 14px; }
+  .ek-step > div { flex: 1; border: 1px solid #e5eaef; border-radius: 10px; padding: 8px 10px; font-size: .76rem; color: #64748b; background: #fff; }
+  .ek-step > div b { display: block; font-size: .8rem; color: #334155; }
+  .ek-step > div.ok { border-color: #a7f3d0; background: #f0fdf9; }
+  .ek-step > div.ok b { color: #047857; }
+  .ek-step > div.now { border-color: #fcd34d; background: #fffbeb; }
+  .ek-step > div.now b { color: #92400e; }
+  .ek-step > div.no { border-color: #fecaca; background: #fff5f5; }
+  @media (max-width: 767.98px) { .ek-step { flex-direction: column; } }
+  .lv-stage { position: relative; border-radius: 12px; overflow: hidden; background: #0f172a; aspect-ratio: 4 / 3; }
+  .lv-stage video, .lv-stage #lvHasil { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .lv-stage video { transform: scaleX(-1); } /* tampilan cermin agar arah toleh natural */
+  .lv-oval { position: absolute; left: 50%; top: 50%; width: 52%; height: 78%; transform: translate(-50%, -50%); border: 3px dashed rgba(255, 255, 255, .7); border-radius: 50%; pointer-events: none; transition: border-color .2s; }
+  .lv-oval.ok { border-color: #13deb9; border-style: solid; }
+  .lv-pesan { font-size: .9rem; font-weight: 600; color: #111827; text-align: center; min-height: 1.4em; }
+  .lv-langkah { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 6px; }
+  .lv-langkah span { font-size: .75rem; border: 1px solid #e5eaef; border-radius: 20px; padding: 3px 10px; color: #475569; background: #fff; }
+  .lv-langkah span.aktif { border-color: #5d87ff; color: #3554d1; background: #ecf2ff; font-weight: 600; }
+  .lv-langkah span.ok { border-color: #13deb9; color: #047857; background: #f0fdf9; }
+</style>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
   const apiUrl = 'controller/master/ekycController';
   const canManageEkyc = <?= $canManageEkyc ? 'true' : 'false' ?>;
 
   $(document).ready(function() {
+    const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const tgl = v => { const m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? (+m[3]) + ' ' + BLN[m[2] - 1] + ' ' + m[1] : '-'; };
+    // tahap: KTP -> verifikasi KTP -> liveness -> verifikasi akhir
+    const TAHAP = {
+      belum:             { n: 0, label: 'Belum upload KTP',      warna: '#64748b', grup: 'proses', aksi: 'Upload KTP' },
+      ktp_menunggu:      { n: 1, label: 'KTP menunggu verifikasi', warna: '#b45309', grup: 'tindak', aksi: 'Verifikasi KTP' },
+      ktp_terverifikasi: { n: 2, label: 'Siap liveness wajah',   warna: '#0369a1', grup: 'proses', aksi: 'Ambil liveness' },
+      menunggu:          { n: 3, label: 'Menunggu verifikasi akhir', warna: '#b45309', grup: 'tindak', aksi: 'Verifikasi akhir' },
+      terverifikasi:     { n: 4, label: 'Terverifikasi',         warna: '#047857', grup: 'terverifikasi', aksi: 'Lihat' },
+      ditolak:           { n: -1, label: 'Ditolak',              warna: '#b91c1c', grup: 'ditolak', aksi: 'Lihat' }
+    };
+    const tahap = r => TAHAP[r.status_verifikasi] || TAHAP.belum;
+    function alur(r) {
+      const t = tahap(r), n = t.n;
+      // titik: 1 KTP, 2 verifikasi KTP, 3 liveness, 4 verifikasi akhir
+      const sel = i => n === -1 ? (i === 1 ? 'no' : '') : (n >= i ? 'ok' : (n === i - 1 ? 'now' : ''));
+      const ik = ['fa-id-card', 'fa-user-check', 'fa-camera', 'fa-shield-halved'];
+      let h = '<div class="ek-alur">';
+      for (let i = 1; i <= 4; i++) h += (i > 1 ? `<span class="g ${n >= i ? 'ok' : ''}"></span>` : '') + `<span class="t ${sel(i)}" title="${['Upload KTP', 'Verifikasi KTP', 'Liveness wajah', 'Verifikasi akhir'][i - 1]}"><i class="fas ${ik[i - 1]}"></i></span>`;
+      return h + `</div><div class="ek-stat" style="color:${t.warna}">${t.label}${r.status_verifikasi === 'terverifikasi' && r.verified_at ? ' · ' + tgl(r.verified_at) : ''}</div>`;
+    }
+    let filter = '';
+    $.fn.dataTable.ext.search.push((st, _d, i) => {
+      if (st.nTable.id !== 'periodeTable' || !filter) return true;
+      return tahap(st.aoData[i]._aData).grup === filter;
+    });
+    function hitung(rows) {
+      const g = { semua: rows.length, tindak: 0, proses: 0, terverifikasi: 0, ditolak: 0 };
+      rows.forEach(r => g[tahap(r).grup]++);
+      document.querySelectorAll('#ekTabs [data-n]').forEach(x => { x.textContent = g[x.dataset.n]; });
+      $('#kTotal').text(rows.length);
+      $('#kAktif').text(rows.filter(r => r.status == '1').length + ' aktif');
+      $('#kTindak').text(g.tindak);
+      $('#kLiveness').text(rows.filter(r => r.status_verifikasi === 'ktp_terverifikasi').length);
+      $('#kOk').text(g.terverifikasi);
+      $('#kTolak').text(g.ditolak ? g.ditolak + ' ditolak' : ' ');
+    }
+
     var table = $('#periodeTable').DataTable({
-      processing: true,
-      serverSide: false,
-      scrollX: true,
+      processing: true, serverSide: false, deferRender: true, autoWidth: false, order: [], pageLength: 25, lengthMenu: [10, 25, 50, 100],
+      dom: 't<"d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2 small"lip>',
+      language: { processing: '<div class="spinner-border spinner-border-sm text-primary"></div> Memuat…', emptyTable: 'Belum ada pemohon eKYC.', zeroRecords: 'Tidak ada data yang cocok.',
+        info: '_START_–_END_ dari _TOTAL_ pemohon', infoEmpty: '0 pemohon', infoFiltered: '(disaring dari _MAX_)', lengthMenu: 'Tampil _MENU_', paginate: { previous: '‹', next: '›' } },
       ajax: {
-        url: apiUrl,
-        type: "GET",
-        dataSrc: function(json) {
-          return (json.data || []).map(function(row) {
-            return {
-              "id": row.id_ekyc,
-              "nama": row.nama ?? '-',
-              "email": row.email ?? '-',
-              "nomor_hp": row.nomor_hp ?? '-',
-              "nik": row.nik ?? '-',
-              "registrasi": row.created_at ?? '-',
-              "status": canManageEkyc ? `
-                <label class="switch">
-                  <input type="checkbox" class="toggle-status"
-                    data-id="${row.id_ekyc}"
-                    ${row.status == '1' ? 'checked' : ''}>
-                  <span class="slider round"></span>
-                </label>
-              ` : `
-                <span class="badge ${row.status == '1' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}">
-                  ${row.status == '1' ? 'Aktif' : 'Nonaktif'}
-                </span>
-              `,
-              "actions": `
-                <div class="text-center">
-                  <div class="btn-group btn-group-sm" role="group">
-                    <a class="btn btn-outline-primary detail-btn" href="javascript:;" data-id="${row.id_ekyc}" title="Detail & Verifikasi">
-                      <i class="fas fa-id-card"></i>
-                    </a>
-                    ${canManageEkyc ? `
-                    <a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_ekyc}" title="Hapus">
-                      <i class="fas fa-trash"></i>
-                    </a>` : ''}
-                  </div>
-                </div>
-              `
-            };
-          });
-        }
+        url: apiUrl, type: 'GET', cache: false,
+        dataSrc: json => { const rows = (json && json.data) || []; hitung(rows); return rows; },
+        error: x => Swal.fire('Gagal memuat data', x.status === 401 ? 'Sesi berakhir, silakan login ulang.' : 'Tidak dapat terhubung ke server.', 'error')
       },
-      columns: [{
-          data: "id"
-        },
-        {
-          data: "nama"
-        },
-        {
-          data: "email"
-        },
-        {
-          data: "nomor_hp"
-        },
-        {
-          data: "nik"
-        },
-        {
-          data: "registrasi"
-        },
-        {
-          data: "status"
-        },
-        {
-          data: "actions",
-          orderable: false,
-          searchable: false
-        },
+      rowId: r => 'ek' + r.id_ekyc,
+      columns: [
+        { data: 'nama', render: (v, t, r) => t !== 'display' ? (v || '') + ' ' + (r.nik || '') :
+            `<div class="fw-semibold text-dark">${esc(v || '-')}</div><span class="ek-nik">${esc(r.nik || '-')}</span>` },
+        { data: 'email', render: (v, t, r) => t !== 'display' ? (v || '') + ' ' + (r.nomor_hp || '') :
+            `<div class="small">${v ? `<i class="far fa-envelope me-1 text-muted"></i>${esc(v)}` : '<span class="text-muted">-</span>'}</div><div class="small">${r.nomor_hp ? `<i class="fas fa-mobile-alt me-1 text-muted"></i>${esc(r.nomor_hp)}` : ''}</div>` },
+        { data: 'status_verifikasi', render: (v, t, r) => t === 'display' ? alur(r) : tahap(r).n },
+        { data: 'created_at', render: (v, t, r) => t === 'display' ? `<div class="small">${tgl(v)}</div><div class="small text-muted">${esc(r.created_by || '')}</div>` : (v || '') },
+        { data: 'status', className: 'text-center', orderable: false, render: (v, t, r) => t !== 'display' ? v : (canManageEkyc
+            ? `<div class="form-check form-switch d-inline-block m-0"><input class="form-check-input toggle-status" type="checkbox" role="switch" data-id="${r.id_ekyc}" ${v == '1' ? 'checked' : ''} title="Aktif / nonaktif"></div>`
+            : `<span class="badge ${v == '1' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}">${v == '1' ? 'Aktif' : 'Nonaktif'}</span>`) },
+        { data: null, orderable: false, searchable: false, className: 'text-end', render: (v, t, r) => {
+            if (t !== 'display') return '';
+            const tp = tahap(r), utama = canManageEkyc && tp.grup !== 'terverifikasi' && tp.grup !== 'ditolak';
+            return `<div class="btn-group btn-group-sm"><button type="button" class="btn ${utama ? 'btn-primary' : 'btn-light'} detail-btn" data-id="${r.id_ekyc}"><i class="fas ${utama ? 'fa-arrow-right' : 'fa-id-card'} me-1"></i>${canManageEkyc ? tp.aksi : 'Lihat'}</button>` +
+              (canManageEkyc ? `<button type="button" class="btn btn-light text-danger delete-btn" data-id="${r.id_ekyc}" title="Hapus"><i class="fas fa-trash"></i></button>` : '') + '</div>';
+          } }
       ]
     });
+    $('#ekTabs').on('click', '.btn', function() {
+      filter = this.dataset.f;
+      $('#ekTabs .btn').removeClass('active');
+      $(this).addClass('active');
+      table.draw();
+    });
+    let tCari;
+    $('#ekCari').on('input', function() { clearTimeout(tCari); const v = this.value; tCari = setTimeout(() => table.search(v).draw(), 200); });
+    $('#ekRefresh').on('click', () => table.ajax.reload(null, false));
+    $('#nik').on('input', function() { this.value = this.value.replace(/\D/g, '').slice(0, 16); $('#nikHitung').text(this.value.length + '/16').toggleClass('text-success', this.value.length === 16); });
+    $('#nomor_hp').on('input', function() { this.value = this.value.replace(/\D/g, '').slice(0, 15); });
 
     // 🔹 Tambah
     $('#btnTambah').on('click', function() {
       $('#ekycForm')[0].reset();
+      $('#ekycForm .is-invalid').removeClass('is-invalid');
+      $('#ekError').addClass('d-none');
+      $('#nikHitung').text('0/16').removeClass('text-success');
       $('#ekycModal').modal('show');
     });
+    $('#ekycModal').on('shown.bs.modal', () => $('#nama').trigger('focus'));
 
     // 🔹 Submit
     $('#ekycForm').on('submit', function(e) {
       e.preventDefault();
-      let formData = new URLSearchParams(new FormData(this));
-
-      fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: formData
-        })
+      const err = [], tandai = (sel, m) => { $(sel).addClass('is-invalid'); err.push(m); };
+      $('#ekycForm .is-invalid').removeClass('is-invalid');
+      const nama = $('#nama').val().trim(), nik = $('#nik').val(), email = $('#email').val().trim(), hp = $('#nomor_hp').val();
+      if (nama.length < 3) tandai('#nama', 'nama minimal 3 huruf');
+      if (!/^\d{16}$/.test(nik)) tandai('#nik', 'NIK 16 digit');
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) tandai('#email', 'format email');
+      if (hp && !/^\d{10,15}$/.test(hp)) tandai('#nomor_hp', 'nomor HP 10–15 digit');
+      $('#ekError').text(err.length ? 'Periksa: ' + err.join(', ') + '.' : '').toggleClass('d-none', !err.length);
+      if (err.length) return;
+      const btn = $('#ekSimpan'), asli = btn.html();
+      btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan…');
+      fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(new FormData(this)) })
         .then(res => res.json())
         .then(data => {
           if (data.status === 'success') {
-            Swal.fire('Berhasil!', data.message, 'success');
             $('#ekycModal').modal('hide');
+            Swal.fire({ icon: 'success', title: 'Pemohon ditambahkan', text: 'Lanjutkan dengan upload KTP di detail pemohon.', timer: 1800, showConfirmButton: false });
             table.ajax.reload(null, false);
           } else {
-            Swal.fire('Gagal!', data.message || 'Data gagal disimpan.', 'error');
+            $('#ekError').text(data.message || 'Data gagal disimpan.').removeClass('d-none');
           }
         })
-        .catch(() => {
-          Swal.fire('Gagal!', 'Tidak dapat terhubung ke server.', 'error');
-        });
+        .catch(() => $('#ekError').text('Tidak dapat terhubung ke server.').removeClass('d-none'))
+        .finally(() => btn.prop('disabled', false).html(asli));
     });
 
     // 🔹 Toggle Status
@@ -250,6 +328,7 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
               timer: 1200,
               showConfirmButton: false
             });
+            table.ajax.reload(null, false);
           } else {
             Swal.fire('Gagal!', res.message, 'error');
             table.ajax.reload(null, false);
@@ -322,10 +401,80 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
       }
     };
 
+    let currentKtpFile = '';
+    let ocrCocok = null; // null = belum dibaca, true = NIK & nama cocok, false = ada yang tidak cocok
+    const TAHAP_KTP = ['belum', 'ktp_menunggu', 'ditolak'];
+
+    // tombol "lanjut rekam wajah": muncul selama tahap KTP bila KTP sudah tersimpan atau file baru dipilih
+    function aturTombolLanjut() {
+      if (!canManageEkyc) return;
+      const adaFileBaru = !!($('#fileKtp')[0] && $('#fileKtp')[0].files[0]);
+      const bisa = TAHAP_KTP.includes(currentStatusVerifikasi) && (adaFileBaru || (currentKtpFile && currentStatusVerifikasi === 'ktp_menunggu'));
+      $('#btnLanjutLiveness').toggleClass('d-none', !bisa)
+        .html('<i class="fas fa-camera me-1"></i> ' + (adaFileBaru ? 'Simpan KTP, verifikasi &amp; lanjut rekam wajah' : 'Verifikasi KTP &amp; lanjut rekam wajah'));
+      // tombol kecil lama diganti tombol utama ini
+      $('#btnVerifikasiKtp').addClass('d-none');
+      const panel = $('#ocrLanjut');
+      if (bisa && ocrCocok !== null) {
+        panel.removeClass('d-none').html(ocrCocok
+          ? '<button type="button" class="btn btn-success btn-sm w-100 btn-lanjut-liveness"><i class="fas fa-circle-check me-1"></i>KTP cocok — lanjut rekam wajah</button>'
+          : '<div class="small text-warning-emphasis mb-1"><i class="fas fa-triangle-exclamation me-1"></i>Data KTP belum cocok. Periksa manual sebelum melanjutkan.</div><button type="button" class="btn btn-outline-primary btn-sm w-100 btn-lanjut-liveness">Sudah diperiksa — lanjut rekam wajah</button>');
+      } else {
+        panel.addClass('d-none').empty();
+      }
+    }
+
+    function kirimJson(opsi) {
+      return fetch(apiUrl, opsi).then(r => r.json()).then(res => {
+        if (!res || res.status !== 'success') throw new Error((res && res.message) || 'Terjadi kesalahan server.');
+        return res;
+      });
+    }
+
+    // simpan KTP (bila file baru) -> status KTP terverifikasi -> buka ulang detail: kamera liveness langsung aktif
+    async function lanjutRekamWajah(btn) {
+      if (!currentEkycId) return;
+      const file = $('#fileKtp')[0] && $('#fileKtp')[0].files[0];
+      if (!file && !currentKtpFile) { Swal.fire('Perhatian', 'Upload foto KTP terlebih dahulu.', 'warning'); return; }
+      if (file && file.size > 5 * 1024 * 1024) { Swal.fire('Perhatian', 'Ukuran file KTP maksimal 5 MB.', 'warning'); return; }
+      if (ocrCocok !== true) {
+        const ok = await Swal.fire({ icon: 'question', title: 'Verifikasi KTP?',
+          html: (ocrCocok === false ? '<div class="text-warning-emphasis mb-2">NIK / nama hasil baca KTP belum cocok.</div>' : '') + 'Pastikan NIK &amp; nama pada KTP sama dengan data pemohon:<br><b>' + $('<div>').text(registeredNama).html() + '</b> · ' + $('<div>').text(registeredNik).html(),
+          showCancelButton: true, confirmButtonText: 'Ya, KTP sesuai', cancelButtonText: 'Batal', reverseButtons: true });
+        if (!ok.isConfirmed) return;
+      }
+      const tombol = $('.btn-lanjut-liveness').prop('disabled', true);
+      const asli = btn ? btn.html() : '';
+      if (btn) btn.html('<span class="spinner-border spinner-border-sm me-1"></span>Memproses…');
+      try {
+        if (file) {
+          const fd = new FormData();
+          fd.append('action', 'upload'); fd.append('type', 'ktp'); fd.append('id_ekyc', currentEkycId); fd.append('file', file);
+          await kirimJson({ method: 'POST', body: fd });
+        }
+        await kirimJson({ method: 'PUT', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'action=verify&id_ekyc=' + encodeURIComponent(currentEkycId) + '&status_verifikasi=ktp_terverifikasi' });
+        table.ajax.reload(null, false);
+        Swal.fire({ icon: 'success', title: 'KTP terverifikasi', text: 'Kamera dinyalakan — minta pemohon menghadap kamera.', timer: 1800, showConfirmButton: false });
+        openDetail(currentEkycId); // status ktp_terverifikasi -> kamera liveness aktif otomatis
+      } catch (e) {
+        Swal.fire('Gagal', e.message, 'error');
+        if (btn) btn.html(asli);
+      } finally {
+        tombol.prop('disabled', false);
+      }
+    }
+    $(document).on('click', '.btn-lanjut-liveness', function() { lanjutRekamWajah($(this)); });
+
     function renderPreview(file, imgEl, emptyEl) {
       if (file) {
-        $(imgEl).attr('src', 'uploads/ekyc/' + file).removeClass('d-none');
-        $(emptyEl).addClass('d-none');
+        // file tercatat tapi tidak ada di server -> tampilkan pesan, bukan ikon gambar rusak
+        $(imgEl).off('error.ek').one('error.ek', function() {
+          $(this).addClass('d-none');
+          $(emptyEl).removeClass('d-none').html('<i class="fas fa-triangle-exclamation text-warning me-1"></i>File tidak ditemukan di server. Unggah ulang.');
+        });
+        $(emptyEl).addClass('d-none').text('Belum diupload');
+        $(imgEl).attr('src', 'uploads/ekyc/' + encodeURIComponent(file)).removeClass('d-none');
       } else {
         $(imgEl).addClass('d-none').attr('src', '');
         $(emptyEl).removeClass('d-none');
@@ -360,6 +509,24 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
             .addClass('badge ' + sv.cls)
             .text(sv.label);
 
+          // stepper tahapan
+          const urut = ['belum', 'ktp_menunggu', 'ktp_terverifikasi', 'menunggu', 'terverifikasi'];
+          const pos = urut.indexOf(currentStatusVerifikasi), tolak = currentStatusVerifikasi === 'ditolak';
+          const LANGKAH = [
+            ['1. Upload KTP', d.ktp_file ? 'Foto KTP tersimpan' : 'Unggah foto KTP pemohon'],
+            ['2. Verifikasi KTP', 'Admin cocokkan NIK & nama'],
+            ['3. Liveness wajah', 'Kamera: kedip & toleh'],
+            ['4. Verifikasi akhir', 'KTP + wajah sesuai']
+          ];
+          $('#ekStep').html(LANGKAH.map((l, i) => {
+            const cls = tolak ? (i === 0 ? 'no' : '') : (pos > i ? 'ok' : (pos === i ? 'now' : ''));
+            const ikon = cls === 'ok' ? '<i class="fas fa-circle-check me-1"></i>' : (cls === 'now' ? '<i class="fas fa-circle-dot me-1"></i>' : (cls === 'no' ? '<i class="fas fa-circle-xmark me-1"></i>' : ''));
+            return `<div class="${cls}"><b>${ikon}${l[0]}</b>${tolak && i === 0 ? 'Ditolak — unggah ulang KTP untuk memulai lagi' : l[1]}</div>`;
+          }).join(''));
+          $('#btnTolak').toggleClass('d-none', tolak || currentStatusVerifikasi === 'belum');
+
+          currentKtpFile = d.ktp_file || '';
+          ocrCocok = null;
           renderPreview(d.ktp_file, '#prevKtp', '#prevKtpEmpty');
           renderPreview(d.face_file, '#prevFace', '#prevFaceEmpty');
 
@@ -368,12 +535,10 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
           $('#ocrResult').addClass('d-none');
           $('#ocrLoading').removeClass('d-none');
 
-          // 🔒 gating liveness: hanya setelah KTP terverifikasi
-          if (currentStatusVerifikasi === 'ktp_terverifikasi') {
-            $('#livenessLock').addClass('d-none');
-          } else {
-            $('#livenessLock').removeClass('d-none');
-          }
+          // 🔒 gating liveness: hanya setelah KTP terverifikasi -> kamera aktif otomatis (wajib)
+          const bukaLiveness = currentStatusVerifikasi === 'ktp_terverifikasi';
+          $('#livenessLock').toggleClass('d-none', bukaLiveness);
+          lvSiapkan(bukaLiveness && canManageEkyc);
 
           // tombol verifikasi KTP hanya saat ktp_menunggu
           $('#btnVerifikasiKtp').toggleClass('d-none', currentStatusVerifikasi !== 'ktp_menunggu');
@@ -382,8 +547,8 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
           $('#btnVerifikasi').toggleClass('d-none', currentStatusVerifikasi !== 'menunggu');
 
           $('#fileKtp').val('');
-          $('#fileFace').val('');
 
+          aturTombolLanjut();
           $('#ekycDetailModal').modal('show');
         })
         .catch(() => {
@@ -451,8 +616,201 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
       uploadEkyc('ktp', document.getElementById('fileKtp'), $(this));
     });
 
+    /* =====================================================
+       LIVENESS KAMERA (wajib setelah KTP terverifikasi)
+       Tantangan: wajah di tengah -> kedip -> toleh kiri -> toleh kanan, lalu foto wajah lurus diambil otomatis.
+       Deteksi: face-api (tinyFaceDetector + landmark 68) dari folder models/, dimuat hanya saat dibutuhkan.
+    ===================================================== */
+    const LV = { stream: null, jalan: false, timer: null, blob: null, tahap: {}, kedipTutup: false, aktif: false, modelP: null };
+    const lvEl = id => document.getElementById(id);
+
+    function lvMuatModel() {
+      if (!LV.modelP) {
+        const muat = window.faceapi ? Promise.resolve() : new Promise((ok, gagal) => {
+          const sc = document.createElement('script');
+          sc.src = 'assets/js/face-api.min.js';
+          sc.onload = ok;
+          sc.onerror = () => gagal(new Error('face-api gagal dimuat'));
+          document.head.appendChild(sc);
+        });
+        LV.modelP = muat.then(() => Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri('models'),
+          faceapi.nets.faceLandmark68Net.loadFromUri('models')
+        ])).catch(e => { LV.modelP = null; throw e; });
+      }
+      return LV.modelP;
+    }
+    function lvPesan(t, warna) { const el = lvEl('lvPesan'); if (el) { el.textContent = t; el.style.color = warna || ''; } }
+    function lvLangkah() {
+      const urut = ['wajah', 'kedip', 'kiri', 'kanan'];
+      const berikut = urut.find(k => !LV.tahap[k]);
+      document.querySelectorAll('#lvLangkah span').forEach(x => {
+        const k = x.dataset.k, ok = !!LV.tahap[k];
+        x.classList.toggle('ok', ok);
+        x.classList.toggle('aktif', !ok && k === berikut);
+        x.querySelector('i').className = ok ? 'fas fa-circle-check' : 'far fa-circle';
+      });
+      return berikut;
+    }
+    function lvStop() {
+      LV.jalan = false;
+      clearTimeout(LV.timer);
+      if (LV.stream) { LV.stream.getTracks().forEach(t => t.stop()); LV.stream = null; }
+      const v = lvEl('lvVideo'); if (v) v.srcObject = null;
+    }
+    function lvReset() {
+      lvStop();
+      LV.blob = null; LV.tahap = {}; LV.kedipTutup = false;
+      const h = lvEl('lvHasil'); if (h) { if (h.src && h.src.startsWith('blob:')) URL.revokeObjectURL(h.src); h.classList.add('d-none'); h.removeAttribute('src'); }
+      if (lvEl('lvVideo')) lvEl('lvVideo').classList.remove('d-none');
+      if (lvEl('lvOval')) lvEl('lvOval').classList.remove('d-none', 'ok');
+      if (lvEl('btnUploadFace')) lvEl('btnUploadFace').disabled = true;
+      lvLangkah();
+    }
+    // dipanggil openDetail: aktifkan kamera hanya bila KTP sudah terverifikasi
+    function lvSiapkan(aktif) {
+      LV.aktif = aktif;
+      lvReset();
+      if (!lvEl('lvKamera')) return;
+      lvEl('lvKamera').classList.toggle('d-none', !aktif);
+      lvEl('lvFoto').classList.toggle('d-none', aktif);
+      if (!aktif) return;
+      // kamera dinyalakan setelah modal tampil penuh
+      const m = document.getElementById('ekycDetailModal');
+      const gulir = () => { const k = lvEl('lvKamera'); if (k) k.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+      if (m.classList.contains('show')) { lvMulai(); gulir(); } else m.addEventListener('shown.bs.modal', () => { if (LV.aktif) { lvMulai(); gulir(); } }, { once: true });
+    }
+    window.lvSiapkan = lvSiapkan;
+
+    async function lvMulai() {
+      lvReset();
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        lvPesan('Browser tidak mendukung kamera. Buka lewat HTTPS dengan Chrome / Edge terbaru.', '#dc2626');
+        return;
+      }
+      lvPesan('Menyalakan kamera…');
+      try {
+        const [stream] = await Promise.all([
+          navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false }),
+          lvMuatModel()
+        ]);
+        if (!LV.aktif) { stream.getTracks().forEach(t => t.stop()); return; }
+        LV.stream = stream;
+        const v = lvEl('lvVideo');
+        v.srcObject = stream;
+        await v.play().catch(() => {});
+        LV.jalan = true;
+        lvPesan('Posisikan wajah di dalam oval');
+        lvLoop();
+      } catch (e) {
+        lvStop();
+        const n = e && e.name;
+        lvPesan(n === 'NotAllowedError' ? 'Izin kamera ditolak. Izinkan kamera di browser lalu klik Ulangi.'
+          : n === 'NotFoundError' ? 'Kamera tidak ditemukan di perangkat ini.'
+          : n === 'NotReadableError' ? 'Kamera sedang dipakai aplikasi lain.'
+          : 'Gagal menyiapkan kamera / model wajah. Klik Ulangi.', '#dc2626');
+      }
+    }
+
+    // rasio buka mata (EAR) dari 6 titik landmark
+    const lvJarak = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+    const lvEar = p => (lvJarak(p[1], p[5]) + lvJarak(p[2], p[4])) / (2 * lvJarak(p[0], p[3]));
+
+    async function lvLoop() {
+      if (!LV.jalan) return;
+      const v = lvEl('lvVideo');
+      try {
+        const hasil = await faceapi.detectAllFaces(v, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 })).withFaceLandmarks();
+        if (!LV.jalan) return;
+        const oval = lvEl('lvOval');
+        if (hasil.length !== 1) {
+          oval.classList.remove('ok');
+          lvPesan(hasil.length ? 'Hanya satu wajah yang boleh terlihat' : 'Wajah tidak terdeteksi — posisikan di dalam oval', hasil.length ? '#b45309' : '');
+        } else {
+          const d = hasil[0], box = d.detection.box, lm = d.landmarks.positions;
+          const vw = v.videoWidth || 640, vh = v.videoHeight || 480;
+          const cx = (box.x + box.width / 2) / vw, cy = (box.y + box.height / 2) / vh, lebar = box.width / vw;
+          // yaw: posisi hidung di antara tepi rahang (0.5 = lurus). Gambar kamera tidak dicermin:
+          // pemohon menoleh ke KIRI-nya -> hidung bergeser ke kanan gambar -> rasio naik.
+          const yaw = (lm[30].x - lm[0].x) / Math.max(1, lm[16].x - lm[0].x);
+          const ear = (lvEar(lm.slice(36, 42)) + lvEar(lm.slice(42, 48))) / 2;
+          const diTengah = Math.abs(cx - 0.5) < 0.18 && Math.abs(cy - 0.5) < 0.22;
+          const cukupDekat = lebar > 0.22, lurus = yaw > 0.4 && yaw < 0.6;
+          oval.classList.toggle('ok', diTengah && cukupDekat);
+          const berikut = lvLangkah();
+          if (!diTengah || !cukupDekat) {
+            lvPesan(!cukupDekat ? 'Dekatkan wajah ke kamera' : 'Posisikan wajah di tengah oval', '#b45309');
+          } else if (berikut === 'wajah') {
+            if (lurus) LV.tahap.wajah = true; else lvPesan('Hadapkan wajah lurus ke kamera');
+          } else if (berikut === 'kedip') {
+            lvPesan('Kedipkan mata');
+            if (ear < 0.2) LV.kedipTutup = true;
+            else if (LV.kedipTutup && ear > 0.24) { LV.tahap.kedip = true; LV.kedipTutup = false; }
+          } else if (berikut === 'kiri') {
+            lvPesan('Tolehkan kepala perlahan ke KIRI');
+            if (yaw > 0.66) LV.tahap.kiri = true;
+          } else if (berikut === 'kanan') {
+            lvPesan('Tolehkan kepala perlahan ke KANAN');
+            if (yaw < 0.34) LV.tahap.kanan = true;
+          } else {
+            // semua tantangan lolos -> ambil foto saat wajah kembali lurus & mata terbuka
+            lvPesan('Bagus! Hadapkan wajah lurus untuk mengambil foto');
+            if (lurus && ear > 0.22) { lvAmbil(v); return; }
+          }
+          lvLangkah();
+        }
+      } catch (e) { /* frame gagal diproses: lanjut frame berikutnya */ }
+      LV.timer = setTimeout(lvLoop, 120);
+    }
+
+    function lvAmbil(v) {
+      const c = document.createElement('canvas');
+      c.width = v.videoWidth || 640; c.height = v.videoHeight || 480;
+      c.getContext('2d').drawImage(v, 0, 0, c.width, c.height); // tidak dicermin = sesuai wajah asli
+      c.toBlob(b => {
+        if (!b) { lvPesan('Gagal mengambil foto. Klik Ulangi.', '#dc2626'); return; }
+        LV.blob = b;
+        lvStop();
+        const h = lvEl('lvHasil');
+        h.src = URL.createObjectURL(b);
+        h.classList.remove('d-none');
+        lvEl('lvVideo').classList.add('d-none');
+        lvEl('lvOval').classList.add('d-none');
+        lvLangkah();
+        lvPesan('Liveness berhasil ✓ Periksa foto lalu klik Simpan Liveness', '#047857');
+        lvEl('btnUploadFace').disabled = false;
+      }, 'image/jpeg', 0.92);
+    }
+
+    $('#lvUlang').on('click', () => { if (LV.aktif) lvMulai(); });
+    $('#ekycDetailModal').on('hide.bs.modal', () => { LV.aktif = false; lvReset(); }); // matikan kamera begitu modal mulai ditutup
+
     $('#btnUploadFace').on('click', function() {
-      uploadEkyc('liveness', document.getElementById('fileFace'), $(this));
+      if (!currentEkycId) return;
+      if (!LV.blob) { Swal.fire('Perhatian', 'Selesaikan liveness kamera terlebih dahulu.', 'warning'); return; }
+      const btn = $(this), asli = btn.html();
+      const fd = new FormData();
+      fd.append('action', 'upload');
+      fd.append('type', 'liveness');
+      fd.append('id_ekyc', currentEkycId);
+      fd.append('sumber', 'kamera');
+      fd.append('liveness', JSON.stringify({ kedip: !!LV.tahap.kedip, kiri: !!LV.tahap.kiri, kanan: !!LV.tahap.kanan, waktu: new Date().toISOString() }));
+      fd.append('file', LV.blob, 'liveness_' + currentEkycId + '.jpg');
+      btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan…');
+      fetch(apiUrl, { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(res => {
+          if (res.status === 'success') {
+            Swal.fire({ icon: 'success', title: 'Liveness tersimpan', text: 'Status menjadi Menunggu Verifikasi.', timer: 1500, showConfirmButton: false });
+            openDetail(currentEkycId);
+            table.ajax.reload(null, false);
+          } else {
+            Swal.fire('Gagal!', res.message, 'error');
+            btn.prop('disabled', false).html(asli);
+          }
+        })
+        .catch(() => { Swal.fire('Gagal!', 'Gagal menyimpan liveness.', 'error'); btn.prop('disabled', false).html(asli); })
+        .finally(() => { if (!LV.blob) btn.html(asli); });
     });
 
     /* =====================================================
@@ -729,6 +1087,9 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
 
           $('#ocrLoading').addClass('d-none');
           $('#ocrResult').removeClass('d-none');
+          // KTP cocok -> tawarkan lanjut langsung ke rekam wajah
+          ocrCocok = nikCocok && namaCocok;
+          aturTombolLanjut();
         })
         .catch(function() {
           $('#ocrLoading').html('<span class="text-danger fs-2">Gagal membaca gambar KTP.</span>');
@@ -744,6 +1105,8 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
       $('#prevKtp').attr('src', url).removeClass('d-none');
       $('#prevKtpEmpty').addClass('d-none');
 
+      ocrCocok = null;
+      aturTombolLanjut();
       runOcrKtp(file);
     });
 
@@ -777,9 +1140,15 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
         .then(res => res.json())
         .then(res => {
           if (res.status === 'success') {
+            table.ajax.reload(null, false);
+            if (status === 'ktp_terverifikasi') {
+              // jangan tutup modal: lanjut langsung ke rekam wajah (kamera aktif otomatis)
+              Swal.fire({ icon: 'success', title: 'KTP terverifikasi', text: 'Lanjut rekam wajah pemohon.', timer: 1600, showConfirmButton: false });
+              openDetail(currentEkycId);
+              return;
+            }
             Swal.fire('Berhasil!', res.message, 'success');
             $('#ekycDetailModal').modal('hide');
-            table.ajax.reload(null, false);
           } else {
             Swal.fire('Gagal!', res.message, 'error');
           }
@@ -850,6 +1219,9 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
           </div>
         </div>
 
+        <!-- TAHAPAN -->
+        <div class="ek-step" id="ekStep"></div>
+
         <div class="row g-3">
 
           <!-- UPLOAD KTP -->
@@ -901,6 +1273,7 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
                       <span id="ocrNamaBadge"></span>
                     </div>
                   </div>
+                  <div id="ocrLanjut" class="mt-2 d-none"></div>
                 </div>
 
                 <small class="text-muted">JPG/PNG/WEBP, maks 5 MB. NIK & nama pada KTP dibaca otomatis.</small>
@@ -913,20 +1286,35 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
             <div class="card border h-100 position-relative">
               <div class="card-body p-3">
                 <h6 class="fw-bold mb-2"><i class="fas fa-face-smile me-1 text-success"></i> Liveness Wajah</h6>
-                <div class="border rounded bg-light d-flex align-items-center justify-content-center mb-2"
+                <div id="lvFoto" class="border rounded bg-light d-flex align-items-center justify-content-center mb-2"
                   style="min-height:180px; overflow:hidden;">
                   <img id="prevFace" src="" alt="Belum ada liveness" class="img-fluid d-none" style="max-height:220px;">
-                  <span id="prevFaceEmpty" class="text-muted fs-3">Belum diupload</span>
+                  <span id="prevFaceEmpty" class="text-muted fs-3">Belum ada liveness</span>
                 </div>
                 <?php if ($canManageEkyc): ?>
-                  <div class="input-group">
-                    <input type="file" class="form-control" id="fileFace" accept="image/jpeg,image/png,image/webp">
-                    <button class="btn btn-success text-nowrap" type="button" id="btnUploadFace">
-                      <i class="fas fa-upload me-1"></i> Simpan Liveness
-                    </button>
+                  <!-- Liveness wajib lewat kamera (aktif otomatis setelah KTP terverifikasi) -->
+                  <div id="lvKamera" class="d-none">
+                    <div class="lv-stage mb-2">
+                      <video id="lvVideo" autoplay muted playsinline></video>
+                      <div class="lv-oval" id="lvOval"></div>
+                      <img id="lvHasil" class="d-none" alt="Hasil liveness">
+                    </div>
+                    <div class="lv-pesan" id="lvPesan">Menyiapkan kamera…</div>
+                    <div class="lv-langkah" id="lvLangkah">
+                      <span data-k="wajah"><i class="far fa-circle"></i> Wajah di tengah</span>
+                      <span data-k="kedip"><i class="far fa-circle"></i> Kedipkan mata</span>
+                      <span data-k="kiri"><i class="far fa-circle"></i> Toleh ke kiri</span>
+                      <span data-k="kanan"><i class="far fa-circle"></i> Toleh ke kanan</span>
+                    </div>
+                    <div class="d-flex gap-2 mt-2">
+                      <button class="btn btn-light btn-sm" type="button" id="lvUlang"><i class="fas fa-rotate-right me-1"></i>Ulangi</button>
+                      <button class="btn btn-success btn-sm ms-auto" type="button" id="btnUploadFace" disabled>
+                        <i class="fas fa-save me-1"></i> Simpan Liveness
+                      </button>
+                    </div>
                   </div>
                 <?php endif; ?>
-                <small class="text-muted">Foto wajah selfie pemohon, maks 5 MB.</small>
+                <small class="text-muted d-block mt-1" id="lvInfo">Liveness diambil langsung dari kamera: wajah pemohon harus berkedip dan menoleh. Upload foto tidak diterima.</small>
               </div>
               <!-- 🔒 Terkunci sampai KTP diverifikasi -->
               <div id="livenessLock" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-center p-3"
@@ -952,6 +1340,9 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
         <div class="d-flex gap-2">
           <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
           <?php if ($canManageEkyc): ?>
+            <button type="button" class="btn btn-primary d-none btn-lanjut-liveness" id="btnLanjutLiveness">
+              <i class="fas fa-camera me-1"></i> Verifikasi KTP &amp; lanjut rekam wajah
+            </button>
             <button type="button" class="btn btn-success" id="btnVerifikasi">
               <i class="fas fa-check me-1"></i> Verifikasi
             </button>
