@@ -149,14 +149,22 @@
                     if (!$id('pdHp').value && B.noHP) $id('pdHp').value = B.noHP;
                 }
                 const chip = (t, c) => `<span class="badge bg-${c}-subtle text-${c} me-1">${esc(t)}</span>`;
+                // "PEGAWAI SWASTA" -> "Pegawai Swasta", "KELAS I" -> "Kelas 1"
+                const SINGKAT = /^(PBI|APBN|APBD|PPU|PBPU|BP|TNI|POLRI|PNS|BUMN|BUMD|PT|CV|RS|RSU|RSUD|UPT|UPTD|BPJS|KK|DR|DRG|II|III|IV)$/i;
+                const judul = t => String(t || '').toLowerCase().replace(/(^|[\s\/(-])([a-z])/g, (m, a, b) => a + b.toUpperCase())
+                    .replace(/[A-Za-z]+/g, w => SINGKAT.test(w) ? w.toUpperCase() : w);
+                const kelas = t => judul(t).replace(/\b(Kelas\s+)(III|II|I)\b/i, (m, a, r) => a + ({ I: 1, II: 2, III: 3 }[r.toUpperCase()]));
+                const baris = (lbl, v) => `<div class="pd-bpjs-row"><span>${lbl}</span><b>${v ? esc(v) : '-'}</b></div>`;
                 bpjsBox(B.aktif ? 'ok' : 'no', `
-                  <div class="d-flex align-items-center mb-1"><span class="fw-semibold small ${B.aktif ? 'text-success' : 'text-danger'}"><i class="fas ${B.aktif ? 'fa-circle-check' : 'fa-circle-xmark'} me-1"></i>BPJS ${B.aktif ? 'AKTIF' : 'TIDAK AKTIF'}</span>
-                    <span class="small text-muted ms-auto">${esc(B.noKartu || '')}</span></div>
-                  ${B.aktif ? '' : `<div class="small">${esc(B.message || '')}</div>`}
-                  <div class="small">${[B.jnsPeserta, B.kelas, B.hubunganKeluarga].filter(Boolean).map(esc).join(' · ')}</div>
-                  <div class="small text-muted">FKTP: ${esc(B.nmProvider || '-')}</div>
-                  <div class="mt-1">${B.prolanis ? chip('Prolanis ' + B.prolanis, 'danger') : ''}${B.prb ? chip('PRB ' + B.prb, 'warning') : ''}${+B.tunggakan > 0 ? chip('Tunggakan', 'danger') : ''}</div>
-                  ${B.peringatan ? `<div class="small text-warning-emphasis mt-1"><i class="fas fa-triangle-exclamation me-1"></i>${esc(B.peringatan)}</div>` : ''}`);
+                  <div class="d-flex flex-wrap align-items-center gap-2 mb-2"><span class="pd-bpjs-judul ${B.aktif ? 'text-success' : 'text-danger'}"><i class="fas ${B.aktif ? 'fa-circle-check' : 'fa-circle-xmark'} me-1"></i>BPJS ${B.aktif ? 'AKTIF' : 'TIDAK AKTIF'}</span>
+                    <span class="pd-bpjs-noka ms-auto">${esc(B.noKartu || '')}</span></div>
+                  ${B.aktif ? '' : `<div class="mb-2 text-danger">${esc(B.message || '')}</div>`}
+                  ${baris('Segmen Peserta', judul(B.jnsPeserta))}
+                  ${baris('Kelas', kelas(B.kelas))}
+                  ${baris('Status', judul(B.hubunganKeluarga))}
+                  ${baris('FKTP Terdaftar', judul(B.nmProvider))}
+                  <div class="mt-2">${B.prolanis ? chip('Prolanis ' + B.prolanis, 'danger') : ''}${B.prb ? chip('PRB ' + B.prb, 'warning') : ''}${+B.tunggakan > 0 ? chip('Tunggakan', 'danger') : ''}</div>
+                  ${B.peringatan ? `<div class="text-warning-emphasis mt-1"><i class="fas fa-triangle-exclamation me-1"></i>${esc(B.peringatan)}</div>` : ''}`);
             }
             terapkanPenjamin();
         }).fail((x, s) => {
@@ -326,13 +334,18 @@
         if ($id('typePasien').value === 'BPJS' && !(B && B.aktif)) err.push('peserta BPJS tidak aktif / belum terverifikasi — pilih penjamin non-BPJS');
         const hp = $id('pdHp').value.replace(/\D/g, '');
         if ($id('typePasien').value === 'BPJS' && hp.length < 10) tandai($id('pdHp'), 'no. HP (min. 10 digit) untuk antrean BPJS');
-        // rentang wajar vital (bila diisi)
-        [['sistole', 50, 300], ['diastole', 20, 200], ['heartRate', 20, 250], ['respRate', 4, 80], ['suhu', 30, 45], ['saturasiOksigen', 50, 100], ['tinggiBadan', 30, 250], ['beratBadan', 0.5, 350], ['lingkarPerut', 20, 250]].forEach(([k, a, b]) => {
-            const v = $id(k).value;
-            if (v !== '' && (isNaN(+v) || +v < a || +v > b)) { tandai($id(k), k + ' ' + a + '–' + b); bootstrap.Collapse.getOrCreateInstance($id('pdVitalBox'), { toggle: false }).show(); }
+        // tanda vital wajib diisi semua + rentang wajar
+        const VITAL = [['sistole', 'sistole', 50, 300], ['diastole', 'diastole', 20, 200], ['heartRate', 'nadi', 20, 250], ['respRate', 'respirasi', 4, 80], ['suhu', 'suhu', 30, 45],
+            ['saturasiOksigen', 'SpO₂', 50, 100], ['tinggiBadan', 'tinggi badan', 30, 250], ['beratBadan', 'berat badan', 0.5, 350], ['lingkarPerut', 'lingkar perut', 20, 250]];
+        const kosong = [], salah = [];
+        VITAL.forEach(([k, nm, a, b]) => {
+            const el = $id(k), v = el.value.trim().replace(',', '.');
+            if (v === '') { el.classList.add('is-invalid'); kosong.push(nm); }
+            else if (isNaN(+v) || +v < a || +v > b) { el.classList.add('is-invalid'); salah.push(nm + ' ' + a + '–' + b); }
         });
-        const s = $id('sistole').value, d = $id('diastole').value;
-        if ((s && !d) || (!s && d)) tandai($id(s ? 'diastole' : 'sistole'), 'sistole & diastole diisi berpasangan');
+        if (kosong.length) err.push('tanda vital (' + kosong.join(', ') + ')');
+        if (salah.length) err.push('nilai tidak wajar: ' + salah.join(', '));
+        if (kosong.length || salah.length) bootstrap.Collapse.getOrCreateInstance($id('pdVitalBox'), { toggle: false }).show();
         $id('pdError').textContent = err.length ? 'Lengkapi: ' + err.join(', ') + '.' : '';
         $id('pdError').classList.toggle('d-none', !err.length);
         return !err.length;

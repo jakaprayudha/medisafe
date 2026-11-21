@@ -39,6 +39,14 @@ date_default_timezone_set('Asia/Jakarta');
     .pd-bpjs.ok { background: #f0fdf9; border-color: #a7f3d0; }
     .pd-bpjs.no { background: #fff5f5; border-color: #fecaca; }
     .pd-bpjs.info { background: #f8fafc; }
+    #pdBpjsBox.ok, #pdBpjsBox.no { padding: 16px 18px; font-size: .95rem; color: #111827; }
+    .pd-bpjs-judul { font-size: 1.05rem; font-weight: 700; }
+    .pd-bpjs-noka { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .95rem; font-weight: 600; color: #111827; letter-spacing: .02em; }
+    .pd-bpjs-row { display: flex; gap: 12px; padding: 3px 0; line-height: 1.4; }
+    .pd-bpjs-row span { flex: 0 0 130px; color: #111827; }
+    .pd-bpjs-row b { font-weight: 600; color: #111827; min-width: 0; overflow-wrap: anywhere; }
+    .pd-bpjs-row + .pd-bpjs-row { border-top: 1px dashed rgba(17, 24, 39, .1); }
+    .pd-bpjs .badge.bg-warning-subtle { color: #1f2937 !important; }
     .pd-seg { display: flex; gap: 6px; }
     .pd-seg input { display: none; }
     .pd-seg label { flex: 1; border: 1px solid #e5eaef; border-radius: 10px; padding: 10px 12px; cursor: pointer; background: #fff; font-size: .85rem; }
@@ -199,17 +207,17 @@ date_default_timezone_set('Asia/Jakarta');
                       <textarea class="form-control" id="keluhan" name="keluhan" rows="2" placeholder="Keluhan utama pasien"></textarea>
                     </div>
 
-                    <a class="small fw-semibold text-decoration-none" data-bs-toggle="collapse" href="#pdVitalBox" role="button" aria-expanded="true"><i class="fas fa-heart-pulse me-1 text-danger"></i>Tanda vital &amp; antropometri <span class="text-muted fw-normal">(opsional, bisa diisi perawat nanti)</span> <i class="fas fa-chevron-down ms-1 small"></i></a>
+                    <a class="small fw-semibold text-decoration-none" data-bs-toggle="collapse" href="#pdVitalBox" role="button" aria-expanded="true"><i class="fas fa-heart-pulse me-1 text-danger"></i>Tanda vital &amp; antropometri <span class="text-danger fw-normal">(wajib diisi)</span> <i class="fas fa-chevron-down ms-1 small"></i></a>
                     <div class="collapse show mt-2" id="pdVitalBox">
                       <div class="pd-vital">
-                        <div class="vf td"><label>Tekanan darah (mmHg)</label><div class="input-group input-group-sm"><input type="number" class="form-control" name="sistole" id="sistole" placeholder="120" min="50" max="300"><span class="input-group-text">/</span><input type="number" class="form-control" name="diastole" id="diastole" placeholder="80" min="20" max="200"></div></div>
-                        <div class="vf"><label>Nadi (x/mnt)</label><input type="number" class="form-control form-control-sm" name="heartRate" id="heartRate" placeholder="80" min="20" max="250"></div>
-                        <div class="vf"><label>Respirasi (x/mnt)</label><input type="number" class="form-control form-control-sm" name="respRate" id="respRate" placeholder="20" min="4" max="80"></div>
-                        <div class="vf"><label>Suhu (°C)</label><input type="number" step="0.1" class="form-control form-control-sm" name="suhu" id="suhu" placeholder="36.5" min="30" max="45"></div>
-                        <div class="vf"><label>SpO₂ (%)</label><input type="number" class="form-control form-control-sm" name="saturasiOksigen" id="saturasiOksigen" placeholder="98" min="50" max="100"></div>
-                        <div class="vf"><label>Tinggi (cm)</label><input type="number" step="0.1" class="form-control form-control-sm" name="tinggiBadan" id="tinggiBadan" placeholder="160" min="30" max="250"></div>
-                        <div class="vf"><label>Berat (kg)</label><input type="number" step="0.1" class="form-control form-control-sm" name="beratBadan" id="beratBadan" placeholder="60" min="0.5" max="350"></div>
-                        <div class="vf"><label>Lingkar perut (cm)</label><input type="number" class="form-control form-control-sm" name="lingkarPerut" id="lingkarPerut" placeholder="80" min="20" max="250"></div>
+                        <div class="vf td"><label>Tekanan darah (mmHg) <span class="text-danger">*</span></label><div class="input-group input-group-sm"><input type="number" required inputmode="decimal" class="form-control" name="sistole" id="sistole" min="50" max="300"><span class="input-group-text">/</span><input type="number" required inputmode="decimal" class="form-control" name="diastole" id="diastole" min="20" max="200"></div></div>
+                        <div class="vf"><label>Nadi (x/mnt) <span class="text-danger">*</span></label><input type="number" required inputmode="decimal" class="form-control form-control-sm" name="heartRate" id="heartRate" min="20" max="250"></div>
+                        <div class="vf"><label>Respirasi (x/mnt) <span class="text-danger">*</span></label><input type="number" required inputmode="decimal" class="form-control form-control-sm" name="respRate" id="respRate" min="4" max="80"></div>
+                        <div class="vf"><label>Suhu (°C) <span class="text-danger">*</span></label><input type="number" required inputmode="decimal" step="0.1" class="form-control form-control-sm" name="suhu" id="suhu" min="30" max="45"></div>
+                        <div class="vf"><label>SpO₂ (%) <span class="text-danger">*</span></label><input type="number" required inputmode="decimal" class="form-control form-control-sm" name="saturasiOksigen" id="saturasiOksigen" min="50" max="100"></div>
+                        <div class="vf"><label>Tinggi (cm) <span class="text-danger">*</span></label><input type="number" required inputmode="decimal" step="0.1" class="form-control form-control-sm" name="tinggiBadan" id="tinggiBadan" min="30" max="250"></div>
+                        <div class="vf"><label>Berat (kg) <span class="text-danger">*</span></label><input type="number" required inputmode="decimal" step="0.1" class="form-control form-control-sm" name="beratBadan" id="beratBadan" min="0.5" max="350"></div>
+                        <div class="vf"><label>Lingkar perut (cm) <span class="text-danger">*</span></label><input type="number" required inputmode="decimal" class="form-control form-control-sm" name="lingkarPerut" id="lingkarPerut" min="20" max="250"></div>
                         <div class="vf"><label>BMI (otomatis)</label><div class="fw-bold small pt-1" id="pdBmi">—</div><input type="hidden" name="bmi" id="bmi"><input type="hidden" name="bmiKet" id="bmiKet"></div>
                       </div>
                     </div>
