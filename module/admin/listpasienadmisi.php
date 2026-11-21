@@ -36,6 +36,9 @@ session_write_close();
     .lp-nama { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #lpTable td { vertical-align: middle; }
     .lp-aksi { display: flex; gap: 4px; justify-content: center; }
+    /* badge kuning: teks hitam agar terbaca */
+    .badge.bg-warning, .badge.bg-warning-subtle, .badge.text-bg-warning, .badge.text-warning { color: #1f2937 !important; }
+    .badge.bg-warning-subtle { background-color: #fef3c7 !important; }
   </style>
 </head>
 

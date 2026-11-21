@@ -628,6 +628,9 @@ session_write_close();
     .rg-src { font-size: .64rem; font-weight: 600; padding: .1em .5em; border-radius: 10px; }
     .rg-src-mjkn { background: #ecfdf5; color: #059669; }
     .rg-src-onsite { background: #f1f5f9; color: #64748b; }
+    /* badge kuning: teks hitam agar terbaca (kuning di atas kuning muda kurang kontras) */
+    .badge.bg-warning, .badge.bg-warning-subtle, .badge.text-bg-warning, .badge.text-warning { color: #1f2937 !important; }
+    .badge.bg-warning-subtle { background-color: #fef3c7 !important; }
     #periodeTable td { vertical-align: middle; }
     #periodeTable .rg-aksi { padding: .2rem .55rem; }
     .rg-cepat .btn { font-size: .78rem; }
