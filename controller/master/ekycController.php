@@ -444,6 +444,13 @@ function uploadFile()
    if ($type === 'liveness' && $statusSekarang !== 'ktp_terverifikasi') {
       responseJson('error', 'Liveness wajah hanya dapat diupload setelah KTP diverifikasi oleh admin.');
    }
+   // liveness wajib lewat kamera di halaman eKYC (kedip + toleh kiri/kanan), bukan upload foto
+   if ($type === 'liveness') {
+      $lv = json_decode((string) ($_POST['liveness'] ?? ''), true);
+      if (($_POST['sumber'] ?? '') !== 'kamera' || !is_array($lv) || empty($lv['kedip']) || empty($lv['kiri']) || empty($lv['kanan'])) {
+         responseJson('error', 'Liveness wajib diambil langsung dari kamera (kedip & toleh kiri/kanan). Upload foto tidak diterima.');
+      }
+   }
 
    if (!move_uploaded_file($_FILES['file']['tmp_name'], $target)) {
       responseJson('error', 'Gagal menyimpan file ke server.');
