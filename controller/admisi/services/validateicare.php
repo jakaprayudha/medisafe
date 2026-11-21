@@ -2,9 +2,17 @@
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../../../database/connect.php';
 header('Content-Type: application/json');
-$id_visit = $_POST['id'];
-$id_customer = $_SESSION['id_customer'];
-$sql1 = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT pv.id_visit, pv.code_doctor, pv.noKartu, d.icare_password, d.icare_username FROM pasien_visit AS pv INNER JOIN master_doctor_bpjs AS d ON pv.code_doctor = d.kdDokter WHERE pv.id_visit = '$id_visit' AND d.id_customer = '$id_customer'"));
+$id_visit = (int) ($_POST['id'] ?? 0);
+$id_customer = (string) ($_SESSION['id_customer'] ?? '');
+$stIc = $koneksi->prepare("SELECT pv.id_visit, pv.code_doctor, pv.noKartu, d.icare_password, d.icare_username FROM pasien_visit AS pv INNER JOIN master_doctor_bpjs AS d ON pv.code_doctor = d.kdDokter WHERE pv.id_visit = ? AND pv.id_customer = ? AND d.id_customer = ?");
+$stIc->bind_param('iss', $id_visit, $id_customer, $id_customer);
+$stIc->execute();
+$sql1 = $stIc->get_result()->fetch_assoc();
+$stIc->close();
+if (!$sql1) {
+    echo json_encode(['success' => false, 'message' => ['message' => 'Akun iCare dokter untuk kunjungan ini belum diatur.']]);
+    exit;
+}
 $nokartu = $sql1['noKartu'];
 // $nokartu = "0001488733424";
 $sql = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM `setting_pcare` WHERE id_customer = '$id_customer'"));

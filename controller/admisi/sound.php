@@ -14,7 +14,7 @@ if (preg_match('/dokter\s+(.*)$/i', $text, $dokterMatch)) {
 }
 $nama   = $namaMatch[1] ?? '';
 $dokter = $tujuan ?? '';
-$visit_id = $_POST['nomor_visit'];
+$visit_id = (string) ($_POST['nomor_visit'] ?? '');
 $result = pemanggilanAntrian([
     "rs_id" => $kdRumahSakit,
     "target_role" => "pemeriksaan_DOCTOR_" . $uid,
@@ -24,7 +24,11 @@ $result = pemanggilanAntrian([
     "nama" => $nama,
     "dokter" => $dokter
 ]);
-mysqli_query($koneksi, "UPDATE `antrian_poli` SET `status` = '1' WHERE `nomor_visit` = '$visit_id'");
+$up = $koneksi->prepare("UPDATE `antrian_poli` SET `status` = '1' WHERE `nomor_visit` = ? AND `id_customer` = ?");
+$idcAntri = (string) ($_SESSION['id_customer'] ?? '');
+$up->bind_param('ss', $visit_id, $idcAntri);
+$up->execute();
+$up->close();
 
 if (!$result['success']) {
     http_response_code(500);
