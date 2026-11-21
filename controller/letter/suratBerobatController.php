@@ -131,7 +131,7 @@ try {
          [$ts, $ket] = sbValidasi($_POST, $v['visit_date'] ?? null);
 
          $koneksi->begin_transaction();
-         $n = nsAlokasi($koneksi, $id_customer, 'berobat', (string) ($_POST['nomor_surat'] ?? ''), fn($no) => sbNomorDipakai($no));
+         $n = nsAlokasi($koneksi, $id_customer, 'berobat', (string) ($_POST['nomor_surat'] ?? ''), fn($no) => sbNomorDipakai($no), $ts);
          if ($n['error']) {
             $koneksi->rollback();
             responseJson($n['kode'] ?? 'error', $n['error'], $n['kode'] ? ['redirect' => 'module/admin/setting_surat'] : [], $n['kode'] ? 409 : 422);

@@ -109,7 +109,8 @@ function skValidasi(array $in, ?string $tglKunjungan, ?string $tglLahir): array
    $tglLahir = skTgl($tglLahir);
    if ($tglLahir && $tk < $tglLahir) responseJson('error', 'Tanggal kematian tidak boleh sebelum tanggal lahir pasien.', [], 422);
    $tglKunjungan = skTgl($tglKunjungan);
-   if ($tglKunjungan && $tk < $tglKunjungan) responseJson('error', 'Tanggal kematian tidak boleh sebelum tanggal kunjungan (' . $tglKunjungan . ').', [], 422);
+   // toleransi 1 hari: pasien meninggal sebelum tengah malam lalu didaftarkan setelahnya (death on arrival)
+   if ($tglKunjungan && $tk < date('Y-m-d', strtotime($tglKunjungan . ' -1 day'))) responseJson('error', 'Tanggal kematian terlalu jauh sebelum tanggal kunjungan (' . $tglKunjungan . ').', [], 422);
    if ($ts < $tk) responseJson('error', 'Tanggal surat tidak boleh sebelum tanggal kematian.', [], 422);
    if ($ruangan === '') responseJson('error', 'Ruangan / tempat kematian wajib diisi.', [], 422);
    if (mb_strlen($ruangan) > 255) responseJson('error', 'Ruangan maksimal 255 karakter.', [], 422);
@@ -151,7 +152,7 @@ try {
          if ($ada) responseJson('error', 'Pasien ini sudah memiliki surat keterangan kematian (nomor ' . ($ada['nomor_surat'] ?: '-') . '). Ubah surat tersebut bila perlu koreksi.', [], 409);
 
          $koneksi->begin_transaction();
-         $n = nsAlokasi($koneksi, $id_customer, 'kematian', (string) ($_POST['nomor_surat'] ?? ''), fn($no) => skNomorDipakai($no));
+         $n = nsAlokasi($koneksi, $id_customer, 'kematian', (string) ($_POST['nomor_surat'] ?? ''), fn($no) => skNomorDipakai($no), $ts);
          if ($n['error']) {
             $koneksi->rollback();
             responseJson($n['kode'] ?? 'error', $n['error'], $n['kode'] ? ['redirect' => 'module/admin/setting_surat'] : [], $n['kode'] ? 409 : 422);

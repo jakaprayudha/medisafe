@@ -62,6 +62,7 @@ $query = "
         mp.patient_nik,
         mp.patient_bpjs,
         mp.patient_datebirth,
+        mp.patient_gender,
 
         /* TANDA VITAL */
 

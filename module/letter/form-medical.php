@@ -13,7 +13,7 @@ $SF = [
   'judul' => 'Surat Keterangan Berobat',
   'sub' => 'Bukti pasien telah datang dan mendapat pelayanan di faskes.',
   'ikon' => 'fa-stethoscope', 'warna' => 'primary',
-  'kolom' => ['Kunjungan', 'Dokter', 'Keterangan'],
+  'kolom' => ['Kunjungan', 'Keterangan'],
 ];
 require '_kerangka_atas.php';
 ?>
@@ -36,6 +36,7 @@ require '_kerangka_atas.php';
             <button type="button" class="btn btn-sm btn-light d-none" id="sbCatatan"><i class="far fa-note-sticky me-1"></i>Tambahkan catatan kunjungan</button>
             <span class="small text-muted ms-auto" id="sbHitung">0/2000</span>
           </div>
+          <div class="form-text">Catatan: keterangan tersimpan di data surat, tetapi saat ini belum ditampilkan pada cetakan.</div>
 <?php require '_kerangka_bawah.php'; ?>
   <script>
     (function() {
@@ -111,8 +112,7 @@ require '_kerangka_atas.php';
         cari: 'controller/admisi/patientVisitController',
         nama: 'surat keterangan berobat',
         kolom: [
-          { data: 'visit_date', render: (v, t, r) => t === 'display' ? `<div class="small sf-nw">${F.tglPendek(v)}${r.visit_time ? ' · ' + esc(String(r.visit_time).slice(0, 5)) : ''}</div><div class="small text-muted sf-dok" title="${esc(r.id_poli || '')}">${esc(r.id_poli || '-')}</div>` : [v, r.id_poli].join(' ') },
-          { data: 'id_doctor', render: v => `<span class="small sf-dok" title="${esc(v || '')}">${esc(v || '-')}</span>` },
+          { data: 'visit_date', render: (v, t, r) => t === 'display' ? `<div class="small sf-nw">${F.tglPendek(v)}${r.visit_time ? ' · ' + esc(String(r.visit_time).slice(0, 5)) : ''}${r.id_poli ? ' · ' + esc(r.id_poli) : ''}</div><div class="small text-muted sf-dok" title="${esc(r.id_doctor || '')}">${esc(r.id_doctor || '-')}</div>` : [v, r.id_poli, r.id_doctor].join(' ') },
           { data: 'keterangan', render: (v, t) => t === 'display' ? (F.isi(v) ? `<div class="small sf-ket" title="${esc(v)}">${esc(v)}</div>` : '<span class="small text-muted">-</span>') : (v || '') }
         ],
         kosongkan() {

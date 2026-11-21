@@ -50,7 +50,7 @@ if (empty($idHash)) {
             mp.patient_gender,
             mp.patient_address
 
-        FROM surat_sehat ss
+        FROM surat_rawat_inap ss
 
         INNER JOIN pasien_visit pv
             ON pv.id_visit = ss.id_visit
@@ -105,15 +105,12 @@ if ($statusValid) {
 
    $alamat = $dataSurat['patient_address'] ?? '-';
 
-   $keperluan = $dataSurat['keperluan'] ?? '-';
-
-   $tekananDarah = $dataSurat['tekanan_darah'] ?? '-';
-
-   $nadi = $dataSurat['nadi'] ?? '-';
-
-   $beratBadan = $dataSurat['berat_badan'] ?? '-';
-
-   $tinggiBadan = $dataSurat['tinggi_badan'] ?? '-';
+   // dulu halaman ini membaca surat_sehat (salinan verifikasi surat sehat) -> surat rawat inap tidak pernah terverifikasi
+   $keperluan = trim((string) ($dataSurat['diagnosa'] ?? '')) !== '' ? $dataSurat['diagnosa'] : '-';
+   $tekananDarah = $dataSurat['tanggal_masuk'] ?? '-';
+   $nadi = !empty($dataSurat['tanggal_pulang']) ? $dataSurat['tanggal_pulang'] : 'Masih dirawat';
+   $beratBadan = (string) ($dataSurat['lama'] ?? '') !== '' ? $dataSurat['lama'] . ' hari' : '-';
+   $tinggiBadan = trim((string) ($dataSurat['ruangan'] ?? '')) !== '' ? $dataSurat['ruangan'] : '-';
 } else {
 
    $nomorSurat = '-';
@@ -932,7 +929,7 @@ if ($statusValid) {
                      <tr>
 
                         <th>
-                           Pemeriksaan
+                           Perawatan
                         </th>
 
                         <th>
@@ -950,7 +947,7 @@ if ($statusValid) {
                      <tr>
 
                         <td>
-                           Tekanan Darah
+                           Tanggal Masuk
                         </td>
 
                         <td>
@@ -959,7 +956,7 @@ if ($statusValid) {
                               $tekananDarah
                            ) ?>
 
-                           mmHg
+                           
 
                         </td>
 
@@ -969,7 +966,7 @@ if ($statusValid) {
                      <tr>
 
                         <td>
-                           Nadi
+                           Tanggal Pulang
                         </td>
 
                         <td>
@@ -978,7 +975,7 @@ if ($statusValid) {
                               $nadi
                            ) ?>
 
-                           x/menit
+                           
 
                         </td>
 
@@ -988,7 +985,7 @@ if ($statusValid) {
                      <tr>
 
                         <td>
-                           Berat Badan
+                           Lama Rawat
                         </td>
 
                         <td>
@@ -997,7 +994,7 @@ if ($statusValid) {
                               $beratBadan
                            ) ?>
 
-                           Kg
+                           
 
                         </td>
 
@@ -1007,7 +1004,7 @@ if ($statusValid) {
                      <tr>
 
                         <td>
-                           Tinggi Badan
+                           Ruangan
                         </td>
 
                         <td>
@@ -1016,7 +1013,7 @@ if ($statusValid) {
                               $tinggiBadan
                            ) ?>
 
-                           cm
+                           
 
                         </td>
 
@@ -1065,7 +1062,7 @@ if ($statusValid) {
                   <div class="info-item">
 
                      <div class="info-label">
-                        Keperluan
+                        Diagnosa
                      </div>
 
                      <div class="info-value">
