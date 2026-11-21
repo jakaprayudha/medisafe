@@ -1,4 +1,6 @@
 <?php
+// Catatan: bed terpakai = permintaan_ranap aktif yang sudah di-approve. Dulu memakai visit_status NOT IN (4,99),
+// padahal kunjungan ranap aktif umumnya visit_status 4 -> bed terisi tampil kosong dan bisa dipilih lagi.
 require_once '../../database/connect.php'; // sesuaikan path
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -40,6 +42,7 @@ switch ($type) {
       while ($row = $result->fetch_assoc()) {
          $data[] = $row;
       }
+      $stmt->close();
       echo json_encode(['status' => 'success', 'data' => $data]);
       break;
 
@@ -57,7 +60,8 @@ switch ($type) {
                   ON pv.visit_ID = r.visit_ID_inpatient
                WHERE r.id_bed = b.id_bed 
                  AND r.status = 'aktif'
-                 AND (pv.visit_status IS NULL OR pv.visit_status NOT IN (4, 99))
+                 AND r.ranap_booking = 1
+                 AND pv.id_customer = b.id_customer
             ) THEN 1
             ELSE 0
          END as is_used
@@ -73,6 +77,7 @@ switch ($type) {
          exit;
       }
 
+      $value = (int) $value;
       $stmt->bind_param("ii", $value, $id_customer);
       $stmt->execute();
       $result = $stmt->get_result();
