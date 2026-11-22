@@ -873,6 +873,26 @@ function deleteData()
 
    $id = (int) $id;
 
+   // hanya item milik faskes ini dan tiketnya belum selesai (dulu: tanpa cek apa pun)
+   $idc = (string) ($_SESSION['id_customer'] ?? '');
+   $cek = $koneksi->prepare("SELECT pp.status_permintaan FROM permintaan_pharmacy_details pd
+        JOIN permintaan_pharmacy pp ON pp.id_permintaan_farmasi = pd.id_permintaan_farmasi
+        WHERE pd.id_pharmacy_details = ? AND pp.id_customer = ? LIMIT 1");
+   $cek->bind_param('is', $id, $idc);
+   $cek->execute();
+   $tiket = $cek->get_result()->fetch_assoc();
+   $cek->close();
+   if (!$tiket) {
+      http_response_code(404);
+      echo json_encode(['status' => 'error', 'message' => 'Data obat tidak ditemukan.']);
+      return;
+   }
+   if ((int) $tiket['status_permintaan'] === 3) {
+      http_response_code(403);
+      echo json_encode(['status' => 'error', 'message' => 'Tiket sudah selesai (approved), obat tidak dapat dihapus.']);
+      return;
+   }
+
 
    $query = "
         DELETE FROM permintaan_pharmacy_details
