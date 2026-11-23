@@ -7,7 +7,20 @@
 $title = 'Pemeriksaan Rawat Inap';
 require '../../controller/view.php';
 require '../../database/connect.php';
+require_once '../../controller/ranap/generalisTubuhService.php';
 define('ASESMEN_TANPA_ALERT', true);
+// Hasil "Pemeriksaan Generalis Tubuh" disimpan sebagai blok di kolom pemeriksaan_fisik. Textarea di halaman ini
+// hanya menampilkan teks bebasnya, jadi blok yang tersimpan disambung kembali sebelum disimpan (agar tidak terhapus).
+if (isset($_POST['simpan_pemeriksaan'])) {
+  $stBlok = $koneksi->prepare("SELECT pemeriksaan_fisik FROM pasien_visit WHERE visit_ID = ? AND id_customer = ? LIMIT 1");
+  $noPost = (string) ($_POST['nomor_visit'] ?? '');
+  $idcPost = (string) ($_SESSION['id_customer'] ?? '');
+  $stBlok->bind_param('ss', $noPost, $idcPost);
+  $stBlok->execute();
+  $fisikLama = (string) (($stBlok->get_result()->fetch_row() ?: [''])[0] ?? '');
+  $stBlok->close();
+  $_POST['pemeriksaan_fisik'] = replaceGeneralisTubuhSection(generalisTubuhTanpaBlok($_POST['pemeriksaan_fisik'] ?? ''), generalisTubuhValues($fisikLama));
+}
 require '../../controller/visit/assesmen.php';
 
 $no = (string) ($_GET['no'] ?? '');
@@ -206,7 +219,10 @@ $statusSimpan = $_GET['simpan'] ?? '';
                     </div>
                     <div class="col-md-6">
                       <label for="pemeriksaan_fisik" class="form-label">Pemeriksaan fisik</label>
-                      <textarea id="pemeriksaan_fisik" name="pemeriksaan_fisik" rows="3" class="form-control"><?= $v('pemeriksaan_fisik') ?></textarea>
+                      <textarea id="pemeriksaan_fisik" name="pemeriksaan_fisik" rows="3" class="form-control"><?= $h(generalisTubuhTanpaBlok($data['pemeriksaan_fisik'] ?? '')) ?></textarea>
+                      <?php if (strpos((string) ($data['pemeriksaan_fisik'] ?? ''), '[PEMERIKSAAN GENERALIS TUBUH]') !== false): ?>
+                        <div class="form-text"><i class="ti ti-link me-1"></i>Hasil <a href="module/admin/pemeriksaan_generalis_tubuh?<?= $h(http_build_query(['no' => $no, 'rm' => $rm, 'rme' => 'c'])) ?>">Pemeriksaan Generalis Tubuh</a> tersimpan terpisah dan tetap aman.</div>
+                      <?php endif ?>
                     </div>
                     <div class="col-md-6">
                       <label for="pemeriksaan_fungsional" class="form-label">Pemeriksaan fungsional</label>
