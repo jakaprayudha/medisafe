@@ -1,682 +1,11 @@
+<?php
+/**
+ * DASHBOARD ADMIN (dimuat oleh module/admin/index.php untuk role admin)
+ *  - Panel masa kontrak faskes   : controller/dashboard/contractReminderController.php (tidak diubah)
+ *  - Statistik & operasional     : controller/dashboard/adminDashboard.php
+ */
+?>
 <style>
-  /* =========================================================
-       DASHBOARD ADMIN
-    ========================================================= */
-
-  .admin-dashboard {
-    --ad-primary: #635bff;
-    --ad-primary-soft: #eeecff;
-    --ad-text: #273444;
-    --ad-muted: #7b8494;
-    --ad-border: #edf0f5;
-  }
-
-  .admin-dashboard .dash-card {
-    background: #fff;
-    border: 1px solid var(--ad-border);
-    border-radius: 18px;
-    padding: 20px;
-    height: 100%;
-  }
-
-  .admin-dashboard .dash-card:hover {
-    box-shadow: 0 10px 30px rgba(30, 40, 60, .05);
-  }
-
-  /* =========================================================
-       KPI
-    ========================================================= */
-
-  .admin-dashboard .kpi-card {
-    background: #fff;
-    border: 1px solid var(--ad-border);
-    border-radius: 18px;
-    padding: 20px;
-    height: 100%;
-    transition: .2s ease;
-  }
-
-  .admin-dashboard .kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 28px rgba(30, 40, 60, .06);
-  }
-
-  .admin-dashboard .kpi-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-  }
-
-  .admin-dashboard .kpi-icon {
-    width: 46px;
-    height: 46px;
-    border-radius: 14px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    font-size: 23px;
-  }
-
-  .admin-dashboard .kpi-purple {
-    background: #eeecff;
-    color: #635bff;
-  }
-
-  .admin-dashboard .kpi-blue {
-    background: #e8f4ff;
-    color: #2185d0;
-  }
-
-  .admin-dashboard .kpi-green {
-    background: #e8f8ef;
-    color: #1a9b5f;
-  }
-
-  .admin-dashboard .kpi-orange {
-    background: #fff2e3;
-    color: #ed8b22;
-  }
-
-  .admin-dashboard .kpi-title {
-    font-size: 13px;
-    color: var(--ad-muted);
-    margin-bottom: 5px;
-  }
-
-  .admin-dashboard .kpi-value {
-    color: var(--ad-text);
-    font-size: 26px;
-    font-weight: 700;
-    line-height: 1.2;
-  }
-
-  .admin-dashboard .kpi-info {
-    font-size: 11px;
-    margin-top: 7px;
-  }
-
-  .admin-dashboard .kpi-up {
-    color: #16a34a;
-  }
-
-  .admin-dashboard .kpi-down {
-    color: #dc2626;
-  }
-
-  /* =========================================================
-       CARD HEADER
-    ========================================================= */
-
-  .admin-dashboard .dash-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 15px;
-
-    margin-bottom: 18px;
-  }
-
-  .admin-dashboard .dash-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--ad-text);
-    margin: 0;
-  }
-
-  .admin-dashboard .dash-subtitle {
-    color: var(--ad-muted);
-    font-size: 12px;
-    margin-top: 3px;
-  }
-
-  .admin-dashboard .dash-filter {
-    width: auto;
-    min-width: 110px;
-
-    border-radius: 10px;
-    border-color: var(--ad-border);
-
-    font-size: 12px;
-  }
-
-  /* =========================================================
-       QUEUE
-    ========================================================= */
-
-  .admin-dashboard .queue-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    padding: 12px 0;
-
-    border-bottom: 1px solid #f0f1f4;
-  }
-
-  .admin-dashboard .queue-item:last-child {
-    border-bottom: 0;
-  }
-
-  .admin-dashboard .queue-number {
-    width: 38px;
-    height: 38px;
-
-    border-radius: 11px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: #f0efff;
-    color: var(--ad-primary);
-
-    font-size: 12px;
-    font-weight: 700;
-
-    flex-shrink: 0;
-  }
-
-  .admin-dashboard .queue-name {
-    color: var(--ad-text);
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  .admin-dashboard .queue-detail {
-    color: var(--ad-muted);
-    font-size: 11px;
-    margin-top: 2px;
-  }
-
-  .admin-dashboard .queue-status {
-    margin-left: auto;
-
-    padding: 5px 9px;
-
-    border-radius: 8px;
-
-    font-size: 10px;
-    white-space: nowrap;
-  }
-
-  .admin-dashboard .status-waiting {
-    background: #fff3d9;
-    color: #c47a00;
-  }
-
-  .admin-dashboard .status-process {
-    background: #e8f2ff;
-    color: #2377c7;
-  }
-
-  .admin-dashboard .status-done {
-    background: #e7f8ee;
-    color: #168a4e;
-  }
-
-  /* =========================================================
-       ROOM
-    ========================================================= */
-
-  .admin-dashboard .room-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    padding: 12px 0;
-
-    border-bottom: 1px solid #f0f1f4;
-  }
-
-  .admin-dashboard .room-item:last-child {
-    border-bottom: 0;
-  }
-
-  .admin-dashboard .room-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ad-text);
-  }
-
-  .admin-dashboard .room-total {
-    font-size: 11px;
-    color: var(--ad-muted);
-    margin-top: 2px;
-  }
-
-  .admin-dashboard .room-progress {
-    width: 120px;
-    height: 6px;
-
-    background: #edf0f4;
-
-    border-radius: 20px;
-
-    overflow: hidden;
-
-    margin-top: 7px;
-  }
-
-  .admin-dashboard .room-progress span {
-    display: block;
-
-    height: 100%;
-
-    background: var(--ad-primary);
-
-    border-radius: inherit;
-  }
-
-  .admin-dashboard .room-value {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--ad-text);
-  }
-
-  /* =========================================================
-       STOCK
-    ========================================================= */
-
-  .admin-dashboard .stock-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    padding: 12px 0;
-
-    border-bottom: 1px solid #f0f1f4;
-  }
-
-  .admin-dashboard .stock-item:last-child {
-    border-bottom: 0;
-  }
-
-  .admin-dashboard .stock-name {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--ad-text);
-  }
-
-  .admin-dashboard .stock-code {
-    font-size: 10px;
-    color: var(--ad-muted);
-    margin-top: 2px;
-  }
-
-  .admin-dashboard .stock-value {
-    color: #dc2626;
-    font-size: 12px;
-    font-weight: 700;
-  }
-
-  /* =========================================================
-       ACTIVITY
-    ========================================================= */
-
-  .admin-dashboard .activity-item {
-    display: flex;
-    gap: 12px;
-
-    padding: 12px 0;
-
-    border-bottom: 1px solid #f0f1f4;
-  }
-
-  .admin-dashboard .activity-item:last-child {
-    border-bottom: 0;
-  }
-
-  .admin-dashboard .activity-icon {
-    width: 35px;
-    height: 35px;
-
-    border-radius: 10px;
-
-    background: var(--ad-primary-soft);
-    color: var(--ad-primary);
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    flex-shrink: 0;
-  }
-
-  .admin-dashboard .activity-text {
-    font-size: 12px;
-    line-height: 1.5;
-    color: var(--ad-text);
-  }
-
-  .admin-dashboard .activity-time {
-    font-size: 10px;
-    color: var(--ad-muted);
-    margin-top: 2px;
-  }
-
-  /* =========================================================
-       QUICK ACCESS
-    ========================================================= */
-
-  .admin-dashboard .quick-item {
-    display: block;
-
-    background: #f9fafc;
-
-    border: 1px solid #f0f1f4;
-
-    border-radius: 14px;
-
-    padding: 15px;
-
-    text-decoration: none;
-
-    transition: .2s ease;
-  }
-
-  .admin-dashboard .quick-item:hover {
-    background: #f5f4ff;
-    border-color: #e2dfff;
-  }
-
-  .admin-dashboard .quick-icon {
-    width: 36px;
-    height: 36px;
-
-    border-radius: 10px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: #eeecff;
-    color: var(--ad-primary);
-
-    font-size: 19px;
-  }
-
-  .admin-dashboard .quick-title {
-    color: var(--ad-text);
-
-    font-size: 12px;
-    font-weight: 600;
-
-    margin-top: 9px;
-  }
-
-  .admin-dashboard .quick-desc {
-    color: var(--ad-muted);
-
-    font-size: 10px;
-
-    margin-top: 2px;
-  }
-
-  /* =========================================================
-       RESPONSIVE
-    ========================================================= */
-
-  @media (max-width: 767px) {
-
-    .admin-dashboard .dash-header {
-      align-items: flex-start;
-    }
-
-    .admin-dashboard .dash-filter {
-      min-width: 95px;
-    }
-
-    .admin-dashboard .room-progress {
-      width: 90px;
-    }
-
-  }
-
-  /* =========================================================
-   FILTER PERIODE
-========================================================= */
-
-  .admin-dashboard .dash-filter-wrapper {
-
-    background: #fff;
-
-    border: 1px solid var(--ad-border);
-
-    border-radius: 18px;
-
-    padding: 17px 20px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    gap: 20px;
-
-  }
-
-
-  .admin-dashboard .dash-filter-title {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 12px;
-
-    flex-shrink: 0;
-
-  }
-
-
-  .admin-dashboard .dash-filter-icon {
-
-    width: 42px;
-
-    height: 42px;
-
-    border-radius: 12px;
-
-    background: #eeecff;
-
-    color: #635bff;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    font-size: 21px;
-
-  }
-
-
-  .admin-dashboard .dash-filter-heading {
-
-    font-size: 13px;
-
-    font-weight: 700;
-
-    color: var(--ad-text);
-
-  }
-
-
-  .admin-dashboard .dash-filter-description {
-
-    font-size: 11px;
-
-    color: var(--ad-muted);
-
-    margin-top: 2px;
-
-  }
-
-
-  .admin-dashboard .dash-filter-form {
-
-    display: flex;
-
-    align-items: flex-end;
-
-    gap: 10px;
-
-  }
-
-
-  .admin-dashboard .dash-filter-group {
-
-    min-width: 145px;
-
-  }
-
-
-  .admin-dashboard .dash-filter-group label {
-
-    display: block;
-
-    font-size: 10px;
-
-    font-weight: 600;
-
-    color: var(--ad-muted);
-
-    margin-bottom: 5px;
-
-  }
-
-
-  .admin-dashboard .dash-filter-group .form-select,
-  .admin-dashboard .dash-filter-group .form-control {
-
-    height: 38px;
-
-    border-radius: 10px;
-
-    border-color: var(--ad-border);
-
-    font-size: 12px;
-
-    color: var(--ad-text);
-
-    box-shadow: none;
-
-  }
-
-
-  .admin-dashboard .dash-filter-group .form-select:focus,
-  .admin-dashboard .dash-filter-group .form-control:focus {
-
-    border-color: #635bff;
-
-    box-shadow:
-      0 0 0 3px rgba(99, 91, 255, .08);
-
-  }
-
-
-  .admin-dashboard .dash-filter-button {
-
-    height: 38px;
-
-    border-radius: 10px;
-
-    font-size: 12px;
-
-    padding-left: 16px;
-
-    padding-right: 16px;
-
-    white-space: nowrap;
-
-  }
-
-
-  /* CUSTOM DATE */
-
-  .admin-dashboard .custom-date-field {
-
-    display: block;
-
-  }
-
-
-  /* MOBILE */
-
-  @media (max-width: 1100px) {
-
-    .admin-dashboard .dash-filter-wrapper {
-
-      align-items: flex-start;
-
-      flex-direction: column;
-
-    }
-
-    .admin-dashboard .dash-filter-form {
-
-      width: 100%;
-
-      flex-wrap: wrap;
-
-    }
-
-  }
-
-
-  @media (max-width: 767px) {
-
-    .admin-dashboard .dash-filter-form {
-
-      display: grid;
-
-      grid-template-columns: 1fr 1fr;
-
-      width: 100%;
-
-    }
-
-    .admin-dashboard .dash-filter-group {
-
-      min-width: 0;
-
-    }
-
-    .admin-dashboard .dash-filter-group:first-child {
-
-      grid-column: span 2;
-
-    }
-
-    .admin-dashboard .dash-filter-button {
-
-      width: 100%;
-
-    }
-
-  }
-
-
-  @media (max-width: 480px) {
-
-    .admin-dashboard .dash-filter-form {
-
-      grid-template-columns: 1fr;
-
-    }
-
-    .admin-dashboard .dash-filter-group:first-child {
-
-      grid-column: auto;
-
-    }
-
-  }
-
   /* =========================================================
      REMINDER MASA KONTRAK
   ========================================================== */
@@ -860,15 +189,6 @@
     }
   }
 </style>
-<?php
-/**
- * ============================================================
- * DASHBOARD ADMIN
- * Data dinamis dari:
- * controller/dashboard/dashboardController.php?action=dashboard
- * ============================================================
- */
-?>
 
 <!-- =========================================================
      REMINDER MASA KONTRAK FASKES
@@ -992,773 +312,484 @@
 </div>
 
 <!-- =========================================================
-     FILTER PERIODE DASHBOARD
+     DASHBOARD ADMIN — statistik & operasional
+     Data: controller/dashboard/adminDashboard.php (?bagian=statistik | operasional)
 ========================================================== -->
-<div class="admin-dashboard mb-3">
+<style>
+  .adb { --adb-c1: #2a78d6; --adb-c2: #eb6834; --adb-c3: #1baf7a; --adb-c4: #eda100; --adb-muted: #94a3b8; --adb-line: #e7ebf0; --adb-text: #0f172a; --adb-sub: #475569; }
+  .adb .card-x { background: #fff; border: 1px solid var(--adb-line); border-radius: 16px; padding: 16px 18px; height: 100%; }
+  .adb .judul { font-size: .95rem; font-weight: 700; color: var(--adb-text); margin: 0; }
+  .adb .sub { font-size: .76rem; color: var(--adb-sub); }
+  .adb .kepala { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+  .adb-filter { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+  .adb-filter label { font-size: .72rem; color: var(--adb-sub); display: block; margin-bottom: 2px; }
+  .adb-filter .form-control, .adb-filter .form-select { font-size: .84rem; height: 34px; padding-top: 4px; padding-bottom: 4px; }
+  .adb-cepat .btn { font-size: .78rem; padding: 6px 10px; background: #fff; border: 1px solid #cbd5e1; color: #1f2937; font-weight: 600; }
+  .adb-cepat .btn:hover { background: #f1f5f9; }
+  .adb-cepat .btn.active, .adb-cepat .btn.active:hover { background: #1e293b; border-color: #1e293b; color: #fff; }
+  .adb-kpi { background: #fff; border: 1px solid var(--adb-line); border-radius: 14px; padding: 12px 14px; height: 100%; }
+  .adb-kpi .l { font-size: .75rem; color: var(--adb-sub); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .adb-kpi .l i { font-size: 1rem; color: #64748b; }
+  .adb-kpi .n { font-size: 1.45rem; font-weight: 800; color: var(--adb-text); line-height: 1.2; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .adb-kpi .d { font-size: .74rem; color: var(--adb-sub); margin-top: 2px; }
+  .adb-delta { font-weight: 700; border-radius: 6px; padding: 0 5px; }
+  .adb-delta.naik { color: #166534; background: #dcfce7; }
+  .adb-delta.turun { color: #991b1b; background: #fee2e2; }
+  .adb-delta.tetap { color: #475569; background: #f1f5f9; }
+  .adb-insight { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px; }
+  .adb-insight div { background: #f8fafc; border: 1px solid var(--adb-line); border-radius: 12px; padding: 9px 12px; font-size: .82rem; color: #1f2937; display: flex; gap: 8px; align-items: flex-start; }
+  .adb-insight i { color: var(--adb-c1); font-size: 1rem; margin-top: 1px; }
+  .adb-bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; font-size: .82rem; padding: 5px 0; }
+  .adb-bar + .adb-bar { border-top: 1px dashed #eef1f5; }
+  .adb-bar .nm { color: #1f2937; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .adb-bar .vl { color: var(--adb-text); font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+  .adb-bar .tr { grid-column: 1 / -1; height: 6px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
+  .adb-bar .tr span { display: block; height: 100%; background: var(--adb-c1); border-radius: 4px; }
+  .adb-bar .kc { color: var(--adb-sub); font-weight: 400; font-size: .74rem; }
+  .adb-leg { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .78rem; color: var(--adb-sub); }
+  .adb-leg span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; background: var(--w); }
+  .adb-tbl { width: 100%; font-size: .82rem; }
+  .adb-tbl th { font-size: .7rem; text-transform: uppercase; letter-spacing: .03em; color: var(--adb-sub); font-weight: 600; padding: 6px 4px; border-bottom: 1px solid var(--adb-line); }
+  .adb-tbl td { padding: 6px 4px; border-bottom: 1px dashed #eef1f5; vertical-align: middle; }
+  .adb-tbl .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .adb-st { display: inline-flex; align-items: center; gap: 4px; font-size: .72rem; font-weight: 700; border-radius: 6px; padding: 1px 7px; }
+  .adb-st.merah { background: #fee2e2; color: #991b1b; }
+  .adb-st.kuning { background: #fef3c7; color: #78350f; }
+  .adb-st.hijau { background: #dcfce7; color: #166534; }
+  .adb-st.abu { background: #f1f5f9; color: #334155; }
+  .adb-kosong { color: var(--adb-sub); font-size: .82rem; text-align: center; padding: 18px 8px; }
+  .adb-quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+  .adb-quick a { display: flex; align-items: center; gap: 8px; border: 1px solid var(--adb-line); border-radius: 12px; padding: 10px 12px; color: #1f2937; font-weight: 600; font-size: .84rem; text-decoration: none; background: #fff; }
+  .adb-quick a:hover { border-color: #635bff; color: #635bff; }
+  .adb-quick i { font-size: 1.15rem; color: #635bff; }
+  .adb .chart-box { position: relative; height: 260px; }
+  .adb .chart-box.kecil { height: 200px; }
+  .adb-memuat { opacity: .55; transition: opacity .15s; pointer-events: none; }
+  @keyframes adb-spin { to { transform: rotate(360deg); } }
+  .adb .spin { display: inline-block; animation: adb-spin 1s linear infinite; }
+</style>
 
-  <div class="dash-filter-wrapper">
-
-    <div class="dash-filter-title">
-
-      <div class="dash-filter-icon">
-        <iconify-icon icon="solar:calendar-search-bold"></iconify-icon>
-      </div>
-
+<div class="adb" id="adbRoot">
+  <!-- FILTER -->
+  <div class="card-x mb-3" style="height:auto">
+    <div class="adb-filter">
       <div>
-        <div class="dash-filter-heading">
-          Periode Dashboard
+        <label>Periode</label>
+        <div class="btn-group adb-cepat" id="adbCepat">
+          <button type="button" class="btn" data-r="hari">Hari ini</button>
+          <button type="button" class="btn" data-r="7">7 hari</button>
+          <button type="button" class="btn" data-r="30">30 hari</button>
+          <button type="button" class="btn" data-r="bulan">Bulan ini</button>
+          <button type="button" class="btn" data-r="bulanlalu">Bulan lalu</button>
+          <button type="button" class="btn" data-r="tahun">Tahun ini</button>
         </div>
-
-        <div class="dash-filter-description">
-          Pilih periode data yang ingin ditampilkan
-        </div>
       </div>
-
+      <div><label for="adbDari">Dari</label><input type="date" id="adbDari" class="form-control"></div>
+      <div><label for="adbSampai">Sampai</label><input type="date" id="adbSampai" class="form-control"></div>
+      <div><label for="adbPoli">Poli</label><select id="adbPoli" class="form-select" style="min-width:150px"><option value="">Semua poli</option></select></div>
+      <div><label for="adbPenjamin">Penjamin</label><select id="adbPenjamin" class="form-select" style="min-width:160px"><option value="">Semua penjamin</option></select></div>
+      <button type="button" class="btn btn-dark btn-sm" id="adbTerapkan" style="height:34px"><i class="ti ti-filter me-1"></i>Terapkan</button>
+      <button type="button" class="btn btn-light btn-sm" id="adbReset" style="height:34px" title="Kembalikan filter"><i class="ti ti-arrow-back-up"></i></button>
+      <div class="ms-auto text-end sub" style="min-width:180px">
+        <div id="adbRentang">-</div>
+        <div><span id="adbBanding">-</span></div>
+        <div id="adbUpdate">memuat…</div>
+      </div>
     </div>
-
-
-    <div class="dash-filter-form">
-
-      <!-- PERIODE -->
-      <div class="dash-filter-group">
-
-        <label>
-          Periode
-        </label>
-
-        <select
-          id="dashboardPeriod"
-          class="form-select">
-
-          <option value="today">
-            Hari Ini
-          </option>
-
-          <option value="yesterday">
-            Kemarin
-          </option>
-
-          <option value="7days">
-            7 Hari Terakhir
-          </option>
-
-          <option value="30days">
-            30 Hari Terakhir
-          </option>
-
-          <option value="thismonth" selected>
-            Bulan Ini
-          </option>
-
-          <option value="lastmonth">
-            Bulan Lalu
-          </option>
-
-          <option value="custom">
-            Custom Periode
-          </option>
-
-        </select>
-
-      </div>
-
-
-      <!-- TANGGAL MULAI -->
-      <div
-        class="dash-filter-group custom-date-field"
-        id="startDateGroup">
-
-        <label>
-          Dari
-        </label>
-
-        <input
-          type="date"
-          id="dashboardStartDate"
-          class="form-control"
-          value="<?= date('Y-m-01') ?>">
-
-      </div>
-
-
-      <!-- TANGGAL AKHIR -->
-      <div
-        class="dash-filter-group custom-date-field"
-        id="endDateGroup">
-
-        <label>
-          Sampai
-        </label>
-
-        <input
-          type="date"
-          id="dashboardEndDate"
-          class="form-control"
-          value="<?= date('Y-m-d') ?>">
-
-      </div>
-
-
-      <!-- BUTTON -->
-      <button
-        type="button"
-        class="btn btn-primary dash-filter-button"
-        id="applyDashboardFilter">
-
-        <iconify-icon
-          icon="solar:filter-bold"
-          class="me-1">
-        </iconify-icon>
-
-        Terapkan
-
-      </button>
-
-    </div>
-
   </div>
 
+  <div id="adbStat">
+    <!-- KPI -->
+    <div class="row g-3 mb-3">
+      <div class="col-6 col-md-4 col-xxl-2"><div class="adb-kpi"><div class="l"><i class="ti ti-users"></i>Kunjungan</div><div class="n" id="kKunjungan">-</div><div class="d" id="kKunjunganD">&nbsp;</div></div></div>
+      <div class="col-6 col-md-4 col-xxl-2"><div class="adb-kpi"><div class="l"><i class="ti ti-user-check"></i>Pasien unik</div><div class="n" id="kPasien">-</div><div class="d" id="kPasienD">&nbsp;</div></div></div>
+      <div class="col-6 col-md-4 col-xxl-2"><div class="adb-kpi"><div class="l"><i class="ti ti-cash"></i>Pendapatan diterima</div><div class="n" id="kPendapatan">-</div><div class="d" id="kPendapatanD">&nbsp;</div></div></div>
+      <div class="col-6 col-md-4 col-xxl-2"><div class="adb-kpi"><div class="l"><i class="ti ti-calendar-stats"></i>Rata-rata / hari</div><div class="n" id="kRata">-</div><div class="d" id="kRataD">&nbsp;</div></div></div>
+      <div class="col-6 col-md-4 col-xxl-2"><div class="adb-kpi"><div class="l"><i class="ti ti-circle-check"></i>Selesai dilayani</div><div class="n" id="kSelesai">-</div><div class="d" id="kSelesaiD">&nbsp;</div></div></div>
+      <div class="col-6 col-md-4 col-xxl-2"><div class="adb-kpi"><div class="l"><i class="ti ti-circle-x"></i>Kunjungan batal</div><div class="n" id="kBatal">-</div><div class="d" id="kBatalD">&nbsp;</div></div></div>
+    </div>
+
+    <!-- INSIGHT -->
+    <div class="card-x mb-3" style="height:auto">
+      <div class="kepala"><div><h6 class="judul"><i class="ti ti-bulb me-1" style="color:#eda100"></i>Insight periode ini</h6><div class="sub">Dihitung otomatis dari data kunjungan</div></div></div>
+      <div class="adb-insight" id="adbInsight"><div>Memuat…</div></div>
+    </div>
+
+    <!-- TREN + PENJAMIN -->
+    <div class="row g-3 mb-3">
+      <div class="col-xl-8">
+        <div class="card-x">
+          <div class="kepala">
+            <div><h6 class="judul">Tren kunjungan</h6><div class="sub" id="trenSub">Kunjungan per hari</div></div>
+            <div class="adb-leg"><span style="--w:var(--adb-c1)">Periode ini</span><span style="--w:var(--adb-muted)">Periode sebelumnya</span></div>
+          </div>
+          <div class="chart-box"><canvas id="cTren" role="img" aria-label="Grafik tren kunjungan"></canvas></div>
+        </div>
+      </div>
+      <div class="col-xl-4">
+        <div class="card-x">
+          <div class="kepala"><div><h6 class="judul">Penjamin</h6><div class="sub">Kunjungan &amp; pendapatan per penjamin</div></div></div>
+          <div class="chart-box kecil"><canvas id="cPenjamin" role="img" aria-label="Komposisi penjamin"></canvas></div>
+          <div id="lPenjamin" class="mt-2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JAM / HARI / DEMOGRAFI -->
+    <div class="row g-3 mb-3">
+      <div class="col-xl-4 col-md-6">
+        <div class="card-x">
+          <div class="kepala"><div><h6 class="judul">Jam sibuk</h6><div class="sub" id="jamSub">Kunjungan per jam daftar</div></div></div>
+          <div class="chart-box kecil"><canvas id="cJam" role="img" aria-label="Kunjungan per jam"></canvas></div>
+        </div>
+      </div>
+      <div class="col-xl-4 col-md-6">
+        <div class="card-x">
+          <div class="kepala"><div><h6 class="judul">Hari dalam seminggu</h6><div class="sub">Rata-rata kunjungan per hari</div></div></div>
+          <div class="chart-box kecil"><canvas id="cHari" role="img" aria-label="Rata-rata kunjungan per hari"></canvas></div>
+        </div>
+      </div>
+      <div class="col-xl-4">
+        <div class="card-x">
+          <div class="kepala"><div><h6 class="judul">Demografi pasien</h6><div class="sub" id="demoSub">Pasien unik periode ini</div></div></div>
+          <div id="lGender" class="mb-2"></div>
+          <div id="lUmur"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOKTER / DIAGNOSA / POLI+METODE -->
+    <div class="row g-3 mb-3">
+      <div class="col-xl-4">
+        <div class="card-x">
+          <div class="kepala"><div><h6 class="judul">Dokter teratas</h6><div class="sub" id="dokSub">Berdasarkan jumlah kunjungan</div></div></div>
+          <div id="lDokter"></div>
+        </div>
+      </div>
+      <div class="col-xl-4">
+        <div class="card-x">
+          <div class="kepala"><div><h6 class="judul">10 diagnosa terbanyak</h6><div class="sub" id="diagSub">Diagnosa utama (ICD-10)</div></div>
+            <a href="module/admin/rpt_diagnosis" class="small text-decoration-none">Laporan</a></div>
+          <div id="lDiag"></div>
+        </div>
+      </div>
+      <div class="col-xl-4">
+        <div class="card-x">
+          <div class="kepala"><div><h6 class="judul">Poli</h6><div class="sub">Kunjungan per poli</div></div></div>
+          <div id="lPoli" class="mb-3"></div>
+          <div class="kepala mb-1"><div><h6 class="judul">Pembayaran diterima</h6><div class="sub">Per metode bayar</div></div></div>
+          <div id="lMetode"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPERASIONAL HARI INI -->
+  <div class="row g-3 mb-3" id="adbOps">
+    <div class="col-xl-5">
+      <div class="card-x">
+        <div class="kepala"><div><h6 class="judul">Hari ini per poli</h6><div class="sub" id="opsSub">Status kunjungan hari ini</div></div>
+          <a href="module/doctor/pemeriksaan" class="small text-decoration-none">Pemeriksaan</a></div>
+        <div id="lOpsRingkas" class="d-flex flex-wrap gap-1 mb-2"></div>
+        <div id="lOpsPoli"><div class="adb-kosong">Memuat…</div></div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+      <div class="card-x">
+        <div class="kepala"><div><h6 class="judul">Bed rawat inap</h6><div class="sub">Keterisian saat ini</div></div>
+          <a href="module/admin/rawat_inap" class="small text-decoration-none">Rawat inap</a></div>
+        <div id="lBed"><div class="adb-kosong">Memuat…</div></div>
+      </div>
+    </div>
+    <div class="col-xl-4 col-md-6">
+      <div class="card-x">
+        <div class="kepala"><div><h6 class="judul">Stok obat kritis</h6><div class="sub" id="stokSub">Habis / di bawah minimum</div></div>
+          <a href="module/admin/rpt_farmasi" class="small text-decoration-none">Laporan stok</a></div>
+        <div id="lStok"><div class="adb-kosong">Memuat…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AKSES CEPAT -->
+  <div class="card-x mb-3" style="height:auto">
+    <div class="kepala"><div><h6 class="judul">Akses cepat</h6></div></div>
+    <div class="adb-quick">
+      <a href="module/admisi/pendaftaran"><i class="ti ti-user-plus"></i>Pendaftaran</a>
+      <a href="module/doctor/pemeriksaan"><i class="ti ti-stethoscope"></i>Pemeriksaan</a>
+      <a href="module/pharmacy/permintaan-resep"><i class="ti ti-pill"></i>Permintaan resep</a>
+      <a href="module/lab/permintaan-lab"><i class="ti ti-microscope"></i>Permintaan lab</a>
+      <a href="module/admin/kasir"><i class="ti ti-cash"></i>Kasir</a>
+      <a href="module/admin/rawat_inap"><i class="ti ti-bed"></i>Rawat inap</a>
+    </div>
+  </div>
 </div>
 
-
-<div class="admin-dashboard">
-
-  <!-- =====================================================
-         KPI
-    ====================================================== -->
-  <div class="row g-3 mb-3">
-
-    <!-- TOTAL PASIEN -->
-    <div class="col-xl-3 col-md-6">
-
-      <div class="kpi-card">
-
-        <div class="kpi-top">
-
-          <div>
-
-            <div class="kpi-title">
-              Total Pasien
-            </div>
-
-            <div
-              class="kpi-value"
-              id="kpiTotalPasien">
-
-              0
-
-            </div>
-
-            <div
-              class="kpi-info"
-              id="kpiTotalPasienInfo">
-
-              Data berdasarkan periode
-
-            </div>
-
-          </div>
-
-          <div class="kpi-icon kpi-purple">
-
-            <iconify-icon
-              icon="solar:users-group-rounded-bold">
-            </iconify-icon>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- PASIEN BARU -->
-    <div class="col-xl-3 col-md-6">
-
-      <div class="kpi-card">
-
-        <div class="kpi-top">
-
-          <div>
-
-            <div class="kpi-title">
-              Pasien Baru
-            </div>
-
-            <div
-              class="kpi-value"
-              id="kpiPasienBaru">
-
-              0
-
-            </div>
-
-            <div
-              class="kpi-info"
-              id="kpiPasienBaruInfo">
-
-              Pasien dengan kunjungan pertama
-
-            </div>
-
-          </div>
-
-          <div class="kpi-icon kpi-blue">
-
-            <iconify-icon
-              icon="solar:user-plus-bold">
-            </iconify-icon>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- KUNJUNGAN RAWAT JALAN -->
-    <div class="col-xl-3 col-md-6">
-
-      <div class="kpi-card">
-
-        <div class="kpi-top">
-
-          <div>
-
-            <div class="kpi-title">
-              Kunjungan Rawat Jalan
-            </div>
-
-            <div
-              class="kpi-value"
-              id="kpiRawatJalan">
-
-              0
-
-            </div>
-
-            <div
-              class="kpi-info"
-              id="kpiRawatJalanInfo">
-
-              Total kunjungan rawat jalan
-
-            </div>
-
-          </div>
-
-          <div class="kpi-icon kpi-green">
-
-            <iconify-icon
-              icon="solar:stethoscope-bold">
-            </iconify-icon>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- PENDAPATAN -->
-    <div class="col-xl-3 col-md-6">
-
-      <div class="kpi-card">
-
-        <div class="kpi-top">
-
-          <div>
-
-            <div class="kpi-title">
-              Total Pembayaran
-            </div>
-
-            <div
-              class="kpi-value"
-              id="kpiPendapatan"
-              style="font-size:22px">
-
-              Rp 0
-
-            </div>
-
-            <div
-              class="kpi-info"
-              id="kpiPendapatanInfo">
-
-              Berdasarkan periode
-
-            </div>
-
-          </div>
-
-          <div class="kpi-icon kpi-orange">
-
-            <iconify-icon
-              icon="solar:wallet-money-bold">
-            </iconify-icon>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- =====================================================
-         CHART
-    ====================================================== -->
-  <div class="row g-3 mb-3">
-
-    <!-- KUNJUNGAN -->
-    <div class="col-xl-8">
-
-      <div class="dash-card">
-
-        <div class="dash-header">
-
-          <div>
-
-            <h6 class="dash-title">
-              Statistik Kunjungan
-            </h6>
-
-            <div
-              class="dash-subtitle"
-              id="visitChartSubtitle">
-
-              Jumlah kunjungan pasien
-
-            </div>
-
-          </div>
-
-          <select
-            class="form-select dash-filter"
-            id="visitChartMode">
-
-            <option value="period">
-              Periode
-            </option>
-
-          </select>
-
-        </div>
-
-        <div style="height:280px">
-
-          <canvas id="adminVisitChart"></canvas>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- JENIS PEMBAYARAN -->
-    <div class="col-xl-4">
-
-      <div class="dash-card">
-
-        <div class="dash-header">
-
-          <div>
-
-            <h6 class="dash-title">
-              Jenis Pembayaran
-            </h6>
-
-            <div
-              class="dash-subtitle"
-              id="paymentChartSubtitle">
-
-              Distribusi pembayaran
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div style="height:210px">
-
-          <canvas id="adminPaymentChart"></canvas>
-
-        </div>
-
-
-        <div
-          class="row text-center mt-3"
-          id="paymentLegend">
-
-          <div class="col-12">
-
-            <small class="text-muted">
-              Memuat data...
-            </small>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- =====================================================
-         OPERASIONAL
-    ====================================================== -->
-  <div class="row g-3 mb-3">
-
-    <!-- ANTRIAN -->
-    <div class="col-xl-5">
-
-      <div class="dash-card">
-
-        <div class="dash-header">
-
-          <div>
-
-            <h6 class="dash-title">
-              Antrian Pasien
-            </h6>
-
-            <div
-              class="dash-subtitle"
-              id="queueSubtitle">
-
-              Data antrian
-
-            </div>
-
-          </div>
-
-          <span
-            class="badge bg-primary"
-            id="queueWaitingBadge">
-
-            0 Menunggu
-
-          </span>
-
-        </div>
-
-
-        <div id="queueContainer">
-
-          <div class="text-center py-4 text-muted">
-
-            Memuat data antrian...
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- KAMAR -->
-    <div class="col-xl-4">
-
-      <div class="dash-card">
-
-        <div class="dash-header">
-
-          <div>
-
-            <h6 class="dash-title">
-              Ketersediaan Kamar
-            </h6>
-
-            <div class="dash-subtitle">
-              Status rawat inap
-            </div>
-
-          </div>
-
-          <iconify-icon
-            icon="solar:bed-bold"
-            width="23">
-          </iconify-icon>
-
-        </div>
-
-
-        <div id="roomContainer">
-
-          <div class="text-center py-4 text-muted">
-
-            Memuat data kamar...
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- STOK OBAT -->
-    <div class="col-xl-3">
-
-      <div class="dash-card">
-
-        <div class="dash-header">
-
-          <div>
-
-            <h6 class="dash-title">
-              Stok Menipis
-            </h6>
-
-            <div class="dash-subtitle">
-              Perlu diperhatikan
-            </div>
-
-          </div>
-
-          <span
-            class="badge bg-danger"
-            id="lowStockBadge">
-
-            0 Item
-
-          </span>
-
-        </div>
-
-
-        <div id="stockContainer">
-
-          <div class="text-center py-4 text-muted">
-
-            Memuat stok...
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- =====================================================
-         ACTIVITY + QUICK ACCESS
-    ====================================================== -->
-  <div class="row g-3">
-
-    <!-- ACTIVITY -->
-    <div class="col-xl-7">
-
-      <div class="dash-card">
-
-        <div class="dash-header">
-
-          <div>
-
-            <h6 class="dash-title">
-              Aktivitas Terbaru
-            </h6>
-
-            <div class="dash-subtitle">
-              Aktivitas sistem
-            </div>
-
-          </div>
-
-          <a
-            href="#"
-            class="small text-decoration-none">
-
-            Lihat Semua
-
-          </a>
-
-        </div>
-
-
-        <div id="activityContainer">
-
-          <div class="text-center py-4 text-muted">
-
-            Memuat aktivitas...
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- QUICK ACCESS -->
-    <div class="col-xl-5">
-
-      <div class="dash-card">
-
-        <div class="dash-header">
-
-          <div>
-
-            <h6 class="dash-title">
-              Akses Cepat
-            </h6>
-
-            <div class="dash-subtitle">
-              Modul yang sering digunakan
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div class="row g-2">
-
-          <!-- PASIEN -->
-          <div class="col-6">
-
-            <a
-              href="#"
-              class="quick-item">
-
-              <div class="quick-icon">
-
-                <iconify-icon
-                  icon="solar:user-plus-bold">
-                </iconify-icon>
-
-              </div>
-
-              <div class="quick-title">
-                Pasien Baru
-              </div>
-
-              <div class="quick-desc">
-                Registrasi pasien
-              </div>
-
-            </a>
-
-          </div>
-
-
-          <!-- POLIKLINIK -->
-          <div class="col-6">
-
-            <a
-              href="#"
-              class="quick-item">
-
-              <div class="quick-icon">
-
-                <iconify-icon
-                  icon="solar:stethoscope-bold">
-                </iconify-icon>
-
-              </div>
-
-              <div class="quick-title">
-                Poliklinik
-              </div>
-
-              <div class="quick-desc">
-                Pelayanan pasien
-              </div>
-
-            </a>
-
-          </div>
-
-
-          <!-- FARMASI -->
-          <div class="col-6">
-
-            <a
-              href="#"
-              class="quick-item">
-
-              <div class="quick-icon">
-
-                <iconify-icon
-                  icon="solar:pills-3-bold">
-                </iconify-icon>
-
-              </div>
-
-              <div class="quick-title">
-                Farmasi
-              </div>
-
-              <div class="quick-desc">
-                Resep & obat
-              </div>
-
-            </a>
-
-          </div>
-
-
-          <!-- RME -->
-          <div class="col-6">
-
-            <a
-              href="#"
-              class="quick-item">
-
-              <div class="quick-icon">
-
-                <iconify-icon
-                  icon="solar:document-text-bold">
-                </iconify-icon>
-
-              </div>
-
-              <div class="quick-title">
-                Monitoring RME
-              </div>
-
-              <div class="quick-desc">
-                Rekam medis elektronik
-              </div>
-
-            </a>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-
-
+<script>
+  (function() {
+    "use strict";
+    const API = 'controller/dashboard/adminDashboard.php';
+    const KUNCI = 'dashboardAdmin.filter';
+    const BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const HARI = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+    const HARI_PANJANG = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    const WARNA = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100'];   // slot kategorikal tetap (tervalidasi CVD); ke-5+ dilipat ke "Lainnya"
+    const ABU = '#94a3b8';
+    const HARI_INI = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    const ang = n => Number(n || 0).toLocaleString('id-ID');
+    const rp = n => 'Rp' + Number(n || 0).toLocaleString('id-ID');
+    const rpPendek = n => n >= 1e9 ? 'Rp' + (n / 1e9).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' M' : n >= 1e6 ? 'Rp' + (n / 1e6).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + ' jt' : rp(n);
+    const persen = (a, b) => b ? Math.round(a / b * 1000) / 10 : 0;
+    const pct = (a, b) => persen(a, b).toLocaleString('id-ID');
+    const tglID = d => { const [y, m, h] = String(d).split('-'); return `${+h} ${BULAN[+m - 1]} ${y}`; };
+    const geser = (ymd, n) => { const d = new Date(ymd + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+
+    // ---------- filter (tersimpan per peramban; periode kembali ke default saat hari berganti) ----------
+    function rentangCepat(r) {
+      const awalBulan = HARI_INI.slice(0, 8) + '01';
+      if (r === 'hari') return [HARI_INI, HARI_INI];
+      if (r === '7') return [geser(HARI_INI, -6), HARI_INI];
+      if (r === '30') return [geser(HARI_INI, -29), HARI_INI];
+      if (r === 'bulan') return [awalBulan, HARI_INI];
+      if (r === 'bulanlalu') { const akhir = geser(awalBulan, -1); return [akhir.slice(0, 8) + '01', akhir]; }
+      if (r === 'tahun') return [HARI_INI.slice(0, 4) + '-01-01', HARI_INI];
+      return null;
+    }
+    let f = { dari: rentangCepat('bulan')[0], sampai: HARI_INI, poli: '', penjamin: '' };
+    try {
+      const s = JSON.parse(localStorage.getItem(KUNCI) || 'null');
+      if (s && s.f) { f.poli = s.f.poli || ''; f.penjamin = s.f.penjamin || ''; if (s.hari === HARI_INI) { f.dari = s.f.dari || f.dari; f.sampai = s.f.sampai || f.sampai; } }
+    } catch (e) {}
+    const simpan = () => { try { localStorage.setItem(KUNCI, JSON.stringify({ hari: HARI_INI, f })); } catch (e) {} };
+    $('adbDari').value = f.dari; $('adbSampai').value = f.sampai;
+    $('adbDari').max = $('adbSampai').max = HARI_INI;
+    function tandaiCepat() {
+      document.querySelectorAll('#adbCepat .btn').forEach(b => { const r = rentangCepat(b.dataset.r); b.classList.toggle('active', r[0] === f.dari && r[1] === f.sampai); });
+    }
+
+    // ---------- chart ----------
+    const grafik = {};
+    function gambarGrafik(id, cfg) {
+      if (typeof Chart === 'undefined') return;
+      if (grafik[id]) grafik[id].destroy();
+      grafik[id] = new Chart($(id), cfg);
+    }
+    const sumbu = { grid: { color: '#eef1f5' }, ticks: { color: '#64748b', font: { size: 11 } }, border: { display: false } };
+    const tanpaGrid = { grid: { display: false }, ticks: { color: '#64748b', font: { size: 11 } }, border: { display: false } };
+    const dasar = { responsive: true, maintainAspectRatio: false, animation: { duration: 250 }, plugins: { legend: { display: false } } };
+
+    function delta(kini, lalu, balik) {
+      if (!lalu) return kini ? '<span class="adb-delta tetap">baru</span>' : '';
+      const p = Math.round((kini - lalu) / lalu * 1000) / 10;
+      const naik = p > 0, kelas = p === 0 ? 'tetap' : ((naik !== !!balik) ? 'naik' : 'turun');
+      return `<span class="adb-delta ${kelas}" title="dibanding periode sebelumnya">${p > 0 ? '▲' : p < 0 ? '▼' : '='} ${Math.abs(p).toLocaleString('id-ID')}%</span>`;
+    }
+    function bar(nama, nilai, maks, teks, kecil, warna) {
+      const w = maks ? Math.max(2, Math.round(nilai / maks * 100)) : 0;
+      return `<div class="adb-bar"><div class="nm" title="${esc(nama)}">${esc(nama)}${kecil ? ` <span class="kc">${kecil}</span>` : ''}</div><div class="vl">${teks}</div><div class="tr"><span style="width:${w}%;${warna ? 'background:' + warna : ''}"></span></div></div>`;
+    }
+
+    // ---------- statistik ----------
+    let sibuk = false, opsiSiap = false;
+    async function muatStatistik() {
+      const d = $('adbDari').value || HARI_INI, s = $('adbSampai').value || d;
+      if (s < d) return Swal.fire({ icon: 'warning', title: 'Tanggal tidak valid', text: '"Sampai" tidak boleh sebelum "Dari".' });
+      if ((new Date(s) - new Date(d)) / 864e5 > 365) return Swal.fire({ icon: 'warning', title: 'Rentang terlalu panjang', text: 'Maksimal 366 hari.' });
+      if (sibuk) return;
+      sibuk = true;
+      f.dari = d; f.sampai = s;
+      if (opsiSiap) { f.poli = $('adbPoli').value; f.penjamin = $('adbPenjamin').value; }   // muat pertama: pakai filter tersimpan
+      simpan(); tandaiCepat();
+      $('adbStat').classList.add('adb-memuat');
+      $('adbTerapkan').innerHTML = '<i class="ti ti-loader-2 spin me-1"></i>Memuat';
+      try {
+        const q = new URLSearchParams({ bagian: 'statistik', dari: d, sampai: s, poli: f.poli, penjamin: f.penjamin });
+        const r = await fetch(API + '?' + q, { credentials: 'same-origin' });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || j.status !== 'success') throw new Error(j.message || 'Server tidak merespon (' + r.status + ').');
+        render(j);
+        $('adbUpdate').textContent = 'diperbarui ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      } catch (e) {
+        $('adbUpdate').textContent = 'gagal memuat';
+        Swal.fire({ icon: 'error', title: 'Gagal memuat dashboard', text: e.message });
+      } finally {
+        sibuk = false;
+        $('adbStat').classList.remove('adb-memuat');
+        $('adbTerapkan').innerHTML = '<i class="ti ti-filter me-1"></i>Terapkan';
+      }
+    }
+
+    function isiOpsi(sel, daftar, nilai, semua) {
+      const ada = daftar.some(o => String(o.id) === nilai);
+      $(sel).innerHTML = `<option value="">${semua}</option>` + (nilai && !ada ? `<option value="${esc(nilai)}">${esc(nilai)}</option>` : '') +
+        daftar.map(o => `<option value="${esc(o.id)}">${esc(o.nama)}</option>`).join('');
+      $(sel).value = nilai;
+    }
+
+    function render(j) {
+      const k = j.kpi, p = j.sebelum, h = j.rentang.hari;
+      isiOpsi('adbPoli', j.opsi.poli, f.poli, 'Semua poli');
+      isiOpsi('adbPenjamin', j.opsi.penjamin, f.penjamin, 'Semua penjamin');
+      opsiSiap = true;
+      $('adbRentang').textContent = j.rentang.dari === j.rentang.sampai ? tglID(j.rentang.dari) : `${tglID(j.rentang.dari)} – ${tglID(j.rentang.sampai)} (${h} hari)`;
+      $('adbBanding').textContent = 'dibanding ' + (p.dari === p.sampai ? tglID(p.dari) : `${tglID(p.dari)} – ${tglID(p.sampai)}`);
+
+      // KPI
+      $('kKunjungan').textContent = ang(k.kunjungan);
+      $('kKunjunganD').innerHTML = `${delta(k.kunjungan, p.kunjungan)} ${k.rawat_inap ? '· ' + ang(k.rawat_inap) + ' rawat inap' : ''}`;
+      $('kPasien').textContent = ang(k.pasien_unik);
+      $('kPasienD').innerHTML = `${delta(k.pasien_unik, p.pasien_unik)} · ${ang(k.pasien_baru)} pasien baru`;
+      $('kPendapatan').textContent = rpPendek(k.pendapatan);
+      $('kPendapatan').title = rp(k.pendapatan);
+      $('kPendapatanD').innerHTML = `${delta(k.pendapatan, p.pendapatan)} · ${ang(k.transaksi)} transaksi`;
+      $('kRata').textContent = ang(Math.round(k.kunjungan / h * 10) / 10);
+      $('kRataD').innerHTML = `${delta(k.kunjungan / h, p.kunjungan / h)} kunjungan/hari`;
+      $('kSelesai').textContent = pct(k.selesai, k.kunjungan) + '%';
+      $('kSelesaiD').innerHTML = `${ang(k.selesai)} selesai · ${ang(k.dilayani)} dalam layanan` + (k.belum_checkin ? ` · ${ang(k.belum_checkin)} belum check-in` : '');
+      $('kBatal').textContent = ang(k.batal);
+      $('kBatalD').innerHTML = `${delta(k.batal, p.batal, true)} · ${persen(k.batal, k.batal + k.kunjungan).toLocaleString('id-ID')}% dari pendaftaran`;
+
+      // tren
+      const label = j.tren.map(t => { const [, m, d] = t.tgl.split('-'); return h > 62 ? `${+d} ${BULAN[+m - 1]}` : `${+d}/${+m}`; });
+      $('trenSub').textContent = `Kunjungan per hari · total ${ang(k.kunjungan)}, periode sebelumnya ${ang(p.kunjungan)}`;
+      gambarGrafik('cTren', {
+        data: {
+          labels: label,
+          datasets: [
+            { type: 'bar', label: 'Periode ini', data: j.tren.map(t => t.kunjungan), backgroundColor: WARNA[0], borderRadius: 4, maxBarThickness: 28, order: 2 },
+            { type: 'line', label: 'Periode sebelumnya', data: j.tren_lalu, borderColor: ABU, borderWidth: 2, borderDash: [5, 4], pointRadius: 0, pointHoverRadius: 4, tension: .3, order: 1 },
+          ]
+        },
+        options: Object.assign({}, dasar, {
+          interaction: { mode: 'index', intersect: false },
+          scales: { x: Object.assign({}, tanpaGrid, { ticks: { color: '#64748b', font: { size: 11 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 16 } }), y: Object.assign({ beginAtZero: true }, sumbu) },
+          plugins: { legend: { display: false }, tooltip: { callbacks: {
+            title: it => tglID(j.tren[it[0].dataIndex].tgl),
+            afterBody: it => { const t = j.tren[it[0].dataIndex]; return [`Batal: ${ang(t.batal)}`, `Pendapatan: ${rp(t.pendapatan)}`]; }
+          } } }
+        })
+      });
+
+      // penjamin: 4 slot warna tetap, sisanya dilipat ke "Lainnya"
+      let pj = j.penjamin.slice(0, 3);
+      const sisa = j.penjamin.slice(3);
+      if (sisa.length) pj.push({ nama: sisa.length === 1 ? sisa[0].nama : 'Lainnya', n: sisa.reduce((a, x) => a + x.n, 0), pendapatan: sisa.reduce((a, x) => a + x.pendapatan, 0) });
+      gambarGrafik('cPenjamin', {
+        type: 'doughnut',
+        data: { labels: pj.map(x => x.nama), datasets: [{ data: pj.map(x => x.n), backgroundColor: WARNA, borderColor: '#fff', borderWidth: 2 }] },
+        options: Object.assign({}, dasar, { cutout: '62%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.label}: ${ang(c.raw)} (${pct(c.raw, k.kunjungan)}%)` } } } })
+      });
+      $('lPenjamin').innerHTML = pj.length ? pj.map((x, i) => bar(x.nama, x.n, pj[0].n, `${ang(x.n)} <span class="kc">${pct(x.n, k.kunjungan)}%</span>`, x.pendapatan ? rpPendek(x.pendapatan) : '', WARNA[i])).join('') : '<div class="adb-kosong">Tidak ada data.</div>';
+
+      // jam sibuk
+      const jamAda = j.jam.map((n, i) => ({ i, n })).filter(x => x.n > 0);
+      const jMin = jamAda.length ? Math.max(0, Math.min(jamAda[0].i, 6)) : 6, jMax = jamAda.length ? Math.max(jamAda[jamAda.length - 1].i, 18) : 18;
+      const rJam = []; for (let i = jMin; i <= jMax; i++) rJam.push(i);
+      const puncak = jamAda.reduce((a, x) => x.n > a.n ? x : a, { i: null, n: 0 });
+      $('jamSub').textContent = puncak.i !== null ? `Tersibuk pukul ${String(puncak.i).padStart(2, '0')}.00–${String(puncak.i + 1).padStart(2, '0')}.00 (${ang(puncak.n)} kunjungan)` : 'Belum ada data';
+      gambarGrafik('cJam', {
+        type: 'bar',
+        data: { labels: rJam.map(i => String(i).padStart(2, '0')), datasets: [{ data: rJam.map(i => j.jam[i]), backgroundColor: rJam.map(i => i === puncak.i ? WARNA[1] : WARNA[0]), borderRadius: 4, maxBarThickness: 22 }] },
+        options: Object.assign({}, dasar, { scales: { x: tanpaGrid, y: Object.assign({ beginAtZero: true }, sumbu) }, plugins: { legend: { display: false }, tooltip: { callbacks: { title: it => `Pukul ${it[0].label}.00`, label: c => `${ang(c.raw)} kunjungan` } } } })
+      });
+
+      // hari dalam seminggu: rata-rata = total / jumlah hari tsb dalam periode
+      const jumlahHari = Array(7).fill(0);
+      j.tren.forEach(t => { jumlahHari[(new Date(t.tgl + 'T12:00:00').getDay() + 6) % 7]++; });
+      const rataHari = j.hari_minggu.map((n, i) => jumlahHari[i] ? Math.round(n / jumlahHari[i] * 10) / 10 : 0);
+      const hTop = rataHari.indexOf(Math.max(...rataHari));
+      gambarGrafik('cHari', {
+        type: 'bar',
+        data: { labels: HARI, datasets: [{ data: rataHari, backgroundColor: rataHari.map((_, i) => i === hTop && rataHari[i] > 0 ? WARNA[1] : WARNA[0]), borderRadius: 4, maxBarThickness: 34 }] },
+        options: Object.assign({}, dasar, { scales: { x: tanpaGrid, y: Object.assign({ beginAtZero: true }, sumbu) }, plugins: { legend: { display: false }, tooltip: { callbacks: { title: it => HARI_PANJANG[it[0].dataIndex], label: c => `rata-rata ${ang(c.raw)} kunjungan (${jumlahHari[c.dataIndex]} hari)` } } } })
+      });
+
+      // demografi
+      const g = j.gender, totG = g.L + g.P + g['?'];
+      $('demoSub').textContent = `${ang(k.pasien_unik)} pasien unik`;
+      $('lGender').innerHTML = bar('Perempuan', g.P, totG, `${ang(g.P)} <span class="kc">${pct(g.P, totG)}%</span>`, '', WARNA[0]) +
+        bar('Laki-laki', g.L, totG, `${ang(g.L)} <span class="kc">${pct(g.L, totG)}%</span>`, '', WARNA[0]);
+      const um = Object.entries(j.umur).filter(([u, n]) => u !== '?' || n > 0);
+      const maksU = Math.max(...um.map(x => x[1]), 1);
+      $('lUmur').innerHTML = '<div class="sub mb-1 mt-2">Kelompok umur</div>' + um.map(([u, n]) => bar(u === '?' ? 'Tidak diketahui' : u + ' th', n, maksU, `${ang(n)} <span class="kc">${pct(n, totG)}%</span>`)).join('');
+
+      // dokter
+      const dk = j.dokter;
+      $('dokSub').textContent = `${ang(j.dokter_total)} dokter melayani periode ini`;
+      $('lDokter').innerHTML = dk.length ? dk.map(x => bar(x.nama, x.n, dk[0].n, ang(x.n), `${pct(x.n, k.kunjungan)}%`)).join('') : '<div class="adb-kosong">Belum ada data dokter.</div>';
+
+      // diagnosa
+      $('diagSub').textContent = j.diagnosa_terisi ? `Dari ${ang(j.diagnosa_terisi)} kunjungan berkode diagnosa (${pct(j.diagnosa_terisi, k.kunjungan)}%)` : 'Belum ada kunjungan berkode diagnosa';
+      $('lDiag').innerHTML = j.diagnosa.length ? j.diagnosa.map(x => bar(`${x.kode} · ${x.nama || ''}`, x.n, j.diagnosa[0].n, ang(x.n), `${pct(x.n, j.diagnosa_terisi)}%`)).join('') : '<div class="adb-kosong">Tidak ada data diagnosa.</div>';
+
+      // poli & metode
+      $('lPoli').innerHTML = j.poli.length ? j.poli.map(x => bar(x.nama, x.n, j.poli[0].n, `${ang(x.n)} <span class="kc">${pct(x.n, k.kunjungan)}%</span>`)).join('') : '<div class="adb-kosong">Tidak ada data.</div>';
+      const mt = j.metode.filter(x => x.total > 0 || x.n > 0);
+      const maksM = Math.max(...mt.map(x => x.total), 1);
+      $('lMetode').innerHTML = mt.length ? mt.map(x => bar(x.nama, x.total, maksM, rpPendek(x.total), `${ang(x.n)} trx`)).join('') : '<div class="adb-kosong">Belum ada pembayaran.</div>';
+
+      // insight
+      const ins = [];
+      if (p.kunjungan) {
+        const dp = Math.round((k.kunjungan - p.kunjungan) / p.kunjungan * 1000) / 10;
+        ins.push(['trending-' + (dp >= 0 ? 'up' : 'down'), `Kunjungan <b>${dp >= 0 ? 'naik' : 'turun'} ${Math.abs(dp).toLocaleString('id-ID')}%</b> dibanding periode sebelumnya (${ang(p.kunjungan)} → ${ang(k.kunjungan)}).`]);
+      }
+      if (j.penjamin.length) { const t = j.penjamin[0]; ins.push(['shield-check', `<b>${esc(t.nama)}</b> mendominasi dengan ${pct(t.n, k.kunjungan)}% kunjungan.`]); }
+      if (puncak.i !== null && h >= 1) ins.push(['clock', `Jam tersibuk <b>${String(puncak.i).padStart(2, '0')}.00–${String(puncak.i + 1).padStart(2, '0')}.00</b>; pertimbangkan tambahan petugas di jam ini.`]);
+      if (h >= 7 && rataHari[hTop] > 0) ins.push(['calendar-event', `Hari tersibuk <b>${HARI_PANJANG[hTop]}</b>, rata-rata ${ang(rataHari[hTop])} kunjungan.`]);
+      if (j.diagnosa.length && j.diagnosa_terisi >= k.kunjungan * 0.1) ins.push(['virus', `Diagnosa terbanyak <b>${esc(j.diagnosa[0].kode)} ${esc(j.diagnosa[0].nama || '')}</b> (${ang(j.diagnosa[0].n)} kasus).`]);
+      if (k.batal && persen(k.batal, k.batal + k.kunjungan) >= 3) ins.push(['alert-triangle', `<b>${pct(k.batal, k.batal + k.kunjungan)}%</b> pendaftaran batal (${ang(k.batal)}). Periksa penyebab pembatalan.`]);
+      if (k.kunjungan && k.pasien_baru) ins.push(['user-plus', `<b>${ang(k.pasien_baru)}</b> pasien baru (${pct(k.pasien_baru, k.pasien_unik)}% dari pasien unik).`]);
+      $('adbInsight').innerHTML = ins.length ? ins.map(([i, t]) => `<div><i class="ti ti-${i}"></i><span>${t}</span></div>`).join('') : '<div><i class="ti ti-info-circle"></i><span>Belum ada kunjungan pada periode ini.</span></div>';
+    }
+
+    // ---------- operasional hari ini (dimuat terpisah: stok butuh ±1 dtk) ----------
+    async function muatOperasional() {
+      try {
+        const r = await fetch(API + '?bagian=operasional', { credentials: 'same-origin' });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || j.status !== 'success') throw new Error(j.message || 'Gagal (' + r.status + ')');
+        const hi = j.hari_ini;
+        $('opsSub').textContent = 'Status kunjungan ' + tglID(j.tanggal);
+        const chip = (kls, teks, n) => n ? `<span class="adb-st ${kls}">${teks} ${ang(n)}</span>` : '';
+        $('lOpsRingkas').innerHTML = chip('kuning', 'Dalam layanan', hi.layanan) + chip('hijau', 'Selesai', hi.selesai) + chip('abu', 'Belum check-in', hi.checkin) +
+          chip('merah', 'Batal', hi.batal);
+        $('lOpsPoli').innerHTML = j.per_poli.length ? `<table class="adb-tbl"><thead><tr><th>Poli</th><th class="num">Layanan</th><th class="num">Selesai</th><th class="num">Check-in</th><th class="num">Batal</th></tr></thead><tbody>` +
+          j.per_poli.map(x => `<tr><td>${esc(x.poli)}</td><td class="num">${ang(x.layanan)}</td><td class="num">${ang(x.selesai)}</td><td class="num">${ang(x.checkin)}</td><td class="num">${ang(x.batal)}</td></tr>`).join('') + '</tbody></table>'
+          : '<div class="adb-kosong">Belum ada kunjungan hari ini.</div>';
+        $('lBed').innerHTML = j.bed.length ? j.bed.map(b => {
+          const p = persen(b.terisi, b.total), kls = p >= 90 ? 'merah' : p >= 70 ? 'kuning' : 'hijau';
+          return bar(b.kelas, b.terisi, b.total, `${ang(b.terisi)}/${ang(b.total)}`, `<span class="adb-st ${kls}">${p.toLocaleString('id-ID')}%</span>`, p >= 90 ? '#e34948' : WARNA[0]);
+        }).join('') : '<div class="adb-kosong">Belum ada data kamar.</div>';
+        const s = j.stok;
+        $('stokSub').textContent = `${ang(s.habis)} habis · ${ang(s.minimum)} di bawah minimum · dari ${ang(s.total_item)} item`;
+        if (s.total_item && s.habis === s.total_item) {
+          $('lStok').innerHTML = '<div class="adb-kosong"><i class="ti ti-info-circle d-block fs-5 mb-1"></i>Semua item tercatat stok 0 — stok farmasi faskes ini tampaknya belum dikelola lewat penerimaan barang.</div>';
+        } else {
+          $('lStok').innerHTML = s.items.length ? `<table class="adb-tbl"><tbody>` + s.items.map(o => `<tr><td>${esc(o.nama)}${o.keluar_hari_ini ? ' <span class="adb-st kuning">dipakai hari ini</span>' : ''}</td>
+              <td class="num"><span class="adb-st ${o.stok <= 0 ? 'merah' : 'kuning'}">${ang(o.stok)}${o.satuan ? ' ' + esc(o.satuan) : ''}</span>${o.min ? `<div class="sub">min ${ang(o.min)}</div>` : ''}</td></tr>`).join('') + '</tbody></table>'
+            : '<div class="adb-kosong"><i class="ti ti-circle-check d-block fs-5 mb-1" style="color:#1baf7a"></i>Tidak ada stok kritis.</div>';
+        }
+      } catch (e) {
+        ['lOpsPoli', 'lBed', 'lStok'].forEach(i => { $(i).innerHTML = `<div class="adb-kosong text-danger">${esc(e.message)}</div>`; });
+      }
+    }
+
+    // ---------- event ----------
+    document.querySelectorAll('#adbCepat .btn').forEach(b => b.addEventListener('click', () => { const r = rentangCepat(b.dataset.r); $('adbDari').value = r[0]; $('adbSampai').value = r[1]; muatStatistik(); }));
+    $('adbTerapkan').addEventListener('click', muatStatistik);
+    ['adbPoli', 'adbPenjamin'].forEach(i => $(i).addEventListener('change', muatStatistik));
+    ['adbDari', 'adbSampai'].forEach(i => $(i).addEventListener('keydown', e => { if (e.key === 'Enter') muatStatistik(); }));
+    $('adbReset').addEventListener('click', () => { const r = rentangCepat('bulan'); $('adbDari').value = r[0]; $('adbSampai').value = r[1]; $('adbPoli').value = ''; $('adbPenjamin').value = ''; muatStatistik(); });
+    // segarkan otomatis tiap 5 menit selama periode mencakup hari ini & tab terlihat
+    setInterval(() => { if (!document.hidden && f.sampai === HARI_INI) { muatStatistik(); muatOperasional(); } }, 5 * 60 * 1000);
+
+    tandaiCepat();
+    muatStatistik();
+    muatOperasional();
+  })();
+</script>
 
 <!-- =========================================================
      CONTRACT REMINDER JAVASCRIPT
@@ -2171,1465 +1202,6 @@
 
 
     loadContractReminder();
-
-  })();
-</script>
-
-<!-- =========================================================
-     DASHBOARD JAVASCRIPT
-========================================================== -->
-<script>
-  (function() {
-
-    "use strict";
-
-
-    /* =====================================================
-       CONFIG
-    ====================================================== */
-
-    const DASHBOARD_URL =
-      "controller/dashboard/dashboardController.php?action=dashboard";
-
-
-    let visitChart = null;
-    let paymentChart = null;
-
-
-    /* =====================================================
-       ELEMENT
-    ====================================================== */
-
-    const periodSelect =
-      document.getElementById("dashboardPeriod");
-
-    const startDate =
-      document.getElementById("dashboardStartDate");
-
-    const endDate =
-      document.getElementById("dashboardEndDate");
-
-    const startDateGroup =
-      document.getElementById("startDateGroup");
-
-    const endDateGroup =
-      document.getElementById("endDateGroup");
-
-    const applyButton =
-      document.getElementById("applyDashboardFilter");
-
-
-    /* =====================================================
-       ESCAPE HTML
-    ====================================================== */
-
-    function escapeHtml(value) {
-
-      if (value === null || value === undefined) {
-        return "";
-      }
-
-      return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-
-    /* =====================================================
-       NUMBER FORMAT
-    ====================================================== */
-
-    function numberFormat(value) {
-
-      value = Number(value || 0);
-
-      return new Intl.NumberFormat("id-ID")
-        .format(value);
-    }
-
-
-    /* =====================================================
-       RUPIAH FORMAT
-    ====================================================== */
-
-    function rupiah(value) {
-
-      value = Number(value || 0);
-
-      return "Rp " +
-        new Intl.NumberFormat("id-ID")
-        .format(value);
-
-    }
-
-
-    /* =====================================================
-       DATE FORMAT
-    ====================================================== */
-
-    function formatDate(dateString) {
-
-      if (!dateString) {
-        return "-";
-      }
-
-      const date =
-        new Date(dateString + "T00:00:00");
-
-      if (isNaN(date.getTime())) {
-        return dateString;
-      }
-
-      return date.toLocaleDateString(
-        "id-ID", {
-          day: "2-digit",
-          month: "short"
-        }
-      );
-
-    }
-
-
-    /* =====================================================
-       DATETIME RELATIVE
-    ====================================================== */
-
-    function relativeTime(dateString) {
-
-      if (!dateString) {
-        return "";
-      }
-
-      const date =
-        new Date(
-          dateString.replace(" ", "T")
-        );
-
-      if (isNaN(date.getTime())) {
-        return dateString;
-      }
-
-      const now = new Date();
-
-      const diff =
-        Math.floor(
-          (now - date) / 1000
-        );
-
-      if (diff < 60) {
-        return "Baru saja";
-      }
-
-      if (diff < 3600) {
-
-        const minute =
-          Math.floor(diff / 60);
-
-        return minute + " menit yang lalu";
-
-      }
-
-      if (diff < 86400) {
-
-        const hour =
-          Math.floor(diff / 3600);
-
-        return hour + " jam yang lalu";
-
-      }
-
-      const day =
-        Math.floor(diff / 86400);
-
-      return day + " hari yang lalu";
-
-    }
-
-
-    /* =====================================================
-       UPDATE DATE FIELD
-    ====================================================== */
-
-    function updateDateFields() {
-
-      const period =
-        periodSelect.value;
-
-      const isCustom =
-        period === "custom";
-
-      if (startDateGroup) {
-        startDateGroup.style.display =
-          isCustom ? "" : "none";
-      }
-
-      if (endDateGroup) {
-        endDateGroup.style.display =
-          isCustom ? "" : "none";
-      }
-
-    }
-
-
-    /* =====================================================
-       LOADING STATE
-    ====================================================== */
-
-    function setLoading(isLoading) {
-
-      if (!applyButton) {
-        return;
-      }
-
-      if (isLoading) {
-
-        applyButton.disabled = true;
-
-        applyButton.innerHTML = `
-                <span
-                    class="spinner-border spinner-border-sm me-1"
-                    role="status">
-                </span>
-                Memuat...
-            `;
-
-      } else {
-
-        applyButton.disabled = false;
-
-        applyButton.innerHTML = `
-                <iconify-icon
-                    icon="solar:filter-bold"
-                    class="me-1">
-                </iconify-icon>
-                Terapkan
-            `;
-
-      }
-
-    }
-
-
-    /* =====================================================
-       EMPTY STATE
-    ====================================================== */
-
-    function emptyState(message) {
-
-      return `
-            <div class="text-center py-4 text-muted">
-                ${escapeHtml(message)}
-            </div>
-        `;
-
-    }
-
-
-    /* =====================================================
-       KPI
-    ====================================================== */
-
-    function renderKPI(data) {
-
-      const kpi =
-        data.kpi || {};
-
-      document.getElementById(
-          "kpiTotalPasien"
-        ).textContent =
-        numberFormat(kpi.total_pasien);
-
-
-      document.getElementById(
-          "kpiPasienBaru"
-        ).textContent =
-        numberFormat(kpi.pasien_baru);
-
-
-      document.getElementById(
-          "kpiRawatJalan"
-        ).textContent =
-        numberFormat(kpi.kunjungan_rawat_jalan);
-
-
-      document.getElementById(
-          "kpiPendapatan"
-        ).textContent =
-        rupiah(kpi.pendapatan);
-
-
-      /* INFO */
-
-      const period =
-        data.period || {};
-
-      const start =
-        period.start || "";
-
-      const end =
-        period.end || "";
-
-
-      document.getElementById(
-          "kpiTotalPasienInfo"
-        ).textContent =
-        start && end ?
-        `${formatDate(start)} - ${formatDate(end)}` :
-        "Data berdasarkan periode";
-
-
-      document.getElementById(
-          "kpiPasienBaruInfo"
-        ).textContent =
-        "Kunjungan pertama pasien";
-
-
-      document.getElementById(
-          "kpiRawatJalanInfo"
-        ).textContent =
-        "Total kunjungan rawat jalan";
-
-
-      document.getElementById(
-          "kpiPendapatanInfo"
-        ).textContent =
-        "Total pembayaran periode";
-
-    }
-
-
-    /* =====================================================
-       VISIT CHART
-    ====================================================== */
-
-    function renderVisitChart(data) {
-
-      const canvas =
-        document.getElementById(
-          "adminVisitChart"
-        );
-
-      if (!canvas ||
-        typeof Chart === "undefined") {
-
-        return;
-      }
-
-
-      if (visitChart) {
-
-        visitChart.destroy();
-
-        visitChart = null;
-
-      }
-
-
-      const chartData =
-        data.visit_chart || [];
-
-
-      const labels =
-        chartData.map(function(item) {
-
-          return formatDate(item.date);
-
-        });
-
-
-      const values =
-        chartData.map(function(item) {
-
-          return Number(item.total || 0);
-
-        });
-
-
-      visitChart =
-        new Chart(canvas, {
-
-          type: "line",
-
-          data: {
-
-            labels: labels,
-
-            datasets: [
-
-              {
-
-                label: "Kunjungan",
-
-                data: values,
-
-                borderColor: "#635bff",
-
-                backgroundColor: "rgba(99,91,255,.08)",
-
-                fill: true,
-
-                tension: .4,
-
-                borderWidth: 3,
-
-                pointRadius: 3,
-
-                pointHoverRadius: 5
-
-              }
-
-            ]
-
-          },
-
-          options: {
-
-            responsive: true,
-
-            maintainAspectRatio: false,
-
-            interaction: {
-
-              intersect: false,
-
-              mode: "index"
-
-            },
-
-            plugins: {
-
-              legend: {
-
-                display: false
-
-              },
-
-              tooltip: {
-
-                callbacks: {
-
-                  label: function(context) {
-
-                    return " " +
-                      numberFormat(
-                        context.raw
-                      ) +
-                      " kunjungan";
-
-                  }
-
-                }
-
-              }
-
-            },
-
-            scales: {
-
-              x: {
-
-                grid: {
-
-                  display: false
-
-                },
-
-                border: {
-
-                  display: false
-
-                }
-
-              },
-
-              y: {
-
-                beginAtZero: true,
-
-                ticks: {
-
-                  precision: 0
-
-                },
-
-                grid: {
-
-                  color: "#f0f1f5"
-
-                },
-
-                border: {
-
-                  display: false
-
-                }
-
-              }
-
-            }
-
-          }
-
-        });
-
-
-      const subtitle =
-        document.getElementById(
-          "visitChartSubtitle"
-        );
-
-      if (subtitle) {
-
-        subtitle.textContent =
-          "Jumlah kunjungan pasien";
-
-      }
-
-    }
-
-
-    /* =====================================================
-       PAYMENT CHART
-    ====================================================== */
-
-    function renderPaymentChart(data) {
-
-      const canvas =
-        document.getElementById(
-          "adminPaymentChart"
-        );
-
-      if (!canvas ||
-        typeof Chart === "undefined") {
-
-        return;
-      }
-
-
-      if (paymentChart) {
-
-        paymentChart.destroy();
-
-        paymentChart = null;
-
-      }
-
-
-      const chartData =
-        data.payment_chart || [];
-
-
-      const labels =
-        chartData.map(function(item) {
-
-          return item.label || "Tidak Diketahui";
-
-        });
-
-
-      const values =
-        chartData.map(function(item) {
-
-          return Number(item.total || 0);
-
-        });
-
-
-      /* Jika kosong */
-
-      if (labels.length === 0) {
-
-        labels.push("Tidak Ada Data");
-        values.push(1);
-
-      }
-
-
-      paymentChart =
-        new Chart(canvas, {
-
-          type: "doughnut",
-
-          data: {
-
-            labels: labels,
-
-            datasets: [
-
-              {
-
-                data: values,
-
-                backgroundColor: [
-
-                  "#635bff",
-                  "#8fd3ff",
-                  "#9fe2bd",
-                  "#ffb870",
-                  "#ff8fa3",
-                  "#b9b9b9"
-
-                ],
-
-                borderWidth: 0,
-
-                spacing: 4
-
-              }
-
-            ]
-
-          },
-
-          options: {
-
-            responsive: true,
-
-            maintainAspectRatio: false,
-
-            cutout: "72%",
-
-            plugins: {
-
-              legend: {
-
-                display: false
-
-              },
-
-              tooltip: {
-
-                callbacks: {
-
-                  label: function(context) {
-
-                    return " " +
-                      context.label +
-                      ": " +
-                      numberFormat(
-                        context.raw
-                      );
-
-                  }
-
-                }
-
-              }
-
-            }
-
-          }
-
-        });
-
-
-      renderPaymentLegend(
-        chartData
-      );
-
-    }
-
-
-    /* =====================================================
-       PAYMENT LEGEND
-    ====================================================== */
-
-    function renderPaymentLegend(items) {
-
-      const container =
-        document.getElementById(
-          "paymentLegend"
-        );
-
-      if (!container) {
-        return;
-      }
-
-
-      if (!items || items.length === 0) {
-
-        container.innerHTML = `
-                <div class="col-12">
-                    <small class="text-muted">
-                        Tidak ada data pembayaran
-                    </small>
-                </div>
-            `;
-
-        return;
-
-      }
-
-
-      const total =
-        items.reduce(
-          function(sum, item) {
-
-            return sum +
-              Number(item.total || 0);
-
-          },
-          0
-        );
-
-
-      let html = "";
-
-
-      items.slice(0, 3).forEach(
-        function(item) {
-
-          const value =
-            Number(item.total || 0);
-
-          const percentage =
-            total > 0 ?
-            ((value / total) * 100)
-            .toFixed(1) :
-            0;
-
-
-          html += `
-
-                    <div class="col-4">
-
-                        <div class="fw-bold">
-
-                            ${percentage}%
-
-                        </div>
-
-                        <small class="text-muted">
-
-                            ${escapeHtml(
-                                item.label ||
-                                "Tidak Diketahui"
-                            )}
-
-                        </small>
-
-                    </div>
-
-                `;
-
-        }
-      );
-
-
-      container.innerHTML = html;
-
-    }
-
-
-    /* =====================================================
-       QUEUE
-    ====================================================== */
-
-    function renderQueue(data) {
-
-      const container =
-        document.getElementById(
-          "queueContainer"
-        );
-
-      if (!container) {
-        return;
-      }
-
-
-      const queue =
-        data.queue || {};
-
-      const items =
-        queue.items || [];
-
-
-      document.getElementById(
-          "queueWaitingBadge"
-        ).textContent =
-        numberFormat(
-          queue.waiting || 0
-        ) + " Menunggu";
-
-
-      if (items.length === 0) {
-
-        container.innerHTML =
-          emptyState(
-            "Tidak ada antrian pada periode ini."
-          );
-
-        return;
-
-      }
-
-
-      let html = "";
-
-
-      items.forEach(
-        function(item) {
-
-          let statusClass =
-            item.status_class ||
-            "status-waiting";
-
-
-          let status =
-            item.status ||
-            "Menunggu";
-
-
-          html += `
-
-                    <div class="queue-item">
-
-                        <div class="queue-number">
-
-                            ${escapeHtml(
-                                item.nomor || "-"
-                            )}
-
-                        </div>
-
-
-                        <div>
-
-                            <div class="queue-name">
-
-                                ${escapeHtml(
-                                    item.nama || "-"
-                                )}
-
-                            </div>
-
-
-                            <div class="queue-detail">
-
-                                ${escapeHtml(
-                                    item.poli || "-"
-                                )}
-
-                                ·
-
-                                ${escapeHtml(
-                                    item.dokter || "-"
-                                )}
-
-                            </div>
-
-                        </div>
-
-
-                        <span
-                            class="queue-status ${escapeHtml(
-                                statusClass
-                            )}">
-
-                            ${escapeHtml(status)}
-
-                        </span>
-
-                    </div>
-
-                `;
-
-        }
-      );
-
-
-      container.innerHTML = html;
-
-    }
-
-
-    /* =====================================================
-       ROOM
-    ====================================================== */
-
-    function renderRooms(data) {
-
-      const container =
-        document.getElementById(
-          "roomContainer"
-        );
-
-      if (!container) {
-        return;
-      }
-
-
-      const rooms =
-        data.rooms || [];
-
-
-      if (rooms.length === 0) {
-
-        container.innerHTML =
-          emptyState(
-            "Belum ada data kamar."
-          );
-
-        return;
-
-      }
-
-
-      let html = "";
-
-
-      rooms.forEach(
-        function(room) {
-
-          const total =
-            Number(room.total || 0);
-
-          const terisi =
-            Number(room.terisi || 0);
-
-          const kosong =
-            Number(room.kosong || 0);
-
-
-          let occupancy =
-            Number(
-              room.occupancy || 0
-            );
-
-
-          /* Proteksi */
-
-          if (occupancy < 0) {
-            occupancy = 0;
-          }
-
-          if (occupancy > 100) {
-            occupancy = 100;
-          }
-
-
-          html += `
-
-                    <div class="room-item">
-
-                        <div>
-
-                            <div class="room-name">
-
-                                ${escapeHtml(
-                                    room.class || "-"
-                                )}
-
-                            </div>
-
-                            <div class="room-total">
-
-                                ${numberFormat(total)}
-                                tempat tidur
-
-                            </div>
-
-
-                            <div class="room-progress">
-
-                                <span
-                                    style="width:${occupancy}%">
-                                </span>
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="room-value">
-
-                            ${numberFormat(kosong)}
-                            kosong
-
-                        </div>
-
-                    </div>
-
-                `;
-
-        }
-      );
-
-
-      container.innerHTML = html;
-
-    }
-
-
-    /* =====================================================
-       LOW STOCK
-    ====================================================== */
-
-    function renderLowStock(data) {
-
-      const container =
-        document.getElementById(
-          "stockContainer"
-        );
-
-      if (!container) {
-        return;
-      }
-
-
-      const lowStock =
-        data.low_stock || {};
-
-      const items =
-        lowStock.items || [];
-
-
-      document.getElementById(
-          "lowStockBadge"
-        ).textContent =
-        numberFormat(
-          lowStock.total || 0
-        ) + " Item";
-
-
-      if (items.length === 0) {
-
-        container.innerHTML = `
-                <div class="text-center py-4 text-success">
-
-                    <iconify-icon
-                        icon="solar:check-circle-bold"
-                        style="font-size:28px">
-                    </iconify-icon>
-
-                    <div class="mt-2">
-                        Stok dalam kondisi aman
-                    </div>
-
-                </div>
-            `;
-
-        return;
-
-      }
-
-
-      let html = "";
-
-
-      items.forEach(
-        function(item) {
-
-          html += `
-
-                    <div class="stock-item">
-
-                        <div>
-
-                            <div class="stock-name">
-
-                                ${escapeHtml(
-                                    item.name || "-"
-                                )}
-
-                            </div>
-
-                            <div class="stock-code">
-
-                                ${escapeHtml(
-                                    item.code || "-"
-                                )}
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="stock-value">
-
-                            ${numberFormat(
-                                item.stock || 0
-                            )}
-
-                            ${escapeHtml(
-                                item.unit || ""
-                            )}
-
-                        </div>
-
-                    </div>
-
-                `;
-
-        }
-      );
-
-
-      container.innerHTML = html;
-
-    }
-
-
-    /* =====================================================
-       ACTIVITY
-    ====================================================== */
-
-    function renderActivity(data) {
-
-      const container =
-        document.getElementById(
-          "activityContainer"
-        );
-
-      if (!container) {
-        return;
-      }
-
-
-      const activities =
-        data.activities || [];
-
-
-      /*
-       * Jika controller belum mengirim activities,
-       * jangan tampilkan data dummy.
-       */
-
-      if (activities.length === 0) {
-
-        container.innerHTML =
-          emptyState(
-            "Belum ada aktivitas terbaru."
-          );
-
-        return;
-
-      }
-
-
-      let html = "";
-
-
-      activities.forEach(
-        function(item) {
-
-          html += `
-
-                    <div class="activity-item">
-
-                        <div class="activity-icon">
-
-                            <iconify-icon
-                                icon="${escapeHtml(
-                                    item.icon ||
-                                    "solar:activity-bold"
-                                )}">
-                            </iconify-icon>
-
-                        </div>
-
-
-                        <div>
-
-                            <div class="activity-text">
-
-                                ${item.text || ""}
-
-                            </div>
-
-
-                            <div class="activity-time">
-
-                                ${escapeHtml(
-                                    item.time ||
-                                    relativeTime(
-                                        item.created_at
-                                    )
-                                )}
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                `;
-
-        }
-      );
-
-
-      container.innerHTML = html;
-
-    }
-
-
-    /* =====================================================
-       LOAD DASHBOARD
-    ====================================================== */
-
-    async function loadDashboard() {
-
-      const period =
-        periodSelect.value;
-
-
-      let url =
-        DASHBOARD_URL +
-        "&period=" +
-        encodeURIComponent(period);
-
-
-      /* CUSTOM */
-
-      if (period === "custom") {
-
-        const start =
-          startDate.value;
-
-        const end =
-          endDate.value;
-
-
-        if (!start || !end) {
-
-          if (typeof Swal !== "undefined") {
-
-            Swal.fire({
-
-              icon: "warning",
-
-              title: "Periode belum lengkap",
-
-              text: "Silakan pilih tanggal mulai dan tanggal akhir."
-
-            });
-
-          } else {
-
-            alert(
-              "Silakan pilih tanggal mulai dan tanggal akhir."
-            );
-
-          }
-
-          return;
-
-        }
-
-
-        if (start > end) {
-
-          if (typeof Swal !== "undefined") {
-
-            Swal.fire({
-
-              icon: "warning",
-
-              title: "Periode tidak valid",
-
-              text: "Tanggal mulai tidak boleh lebih besar dari tanggal akhir."
-
-            });
-
-          } else {
-
-            alert(
-              "Tanggal mulai tidak boleh lebih besar dari tanggal akhir."
-            );
-
-          }
-
-          return;
-
-        }
-
-
-        url +=
-          "&start_date=" +
-          encodeURIComponent(start) +
-          "&end_date=" +
-          encodeURIComponent(end);
-
-      }
-
-
-      setLoading(true);
-
-
-      try {
-
-        const response =
-          await fetch(url, {
-
-            method: "GET",
-
-            headers: {
-
-              "Accept": "application/json",
-
-              "X-Requested-With": "XMLHttpRequest"
-
-            },
-
-            cache: "no-store"
-
-          });
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            "HTTP Error " +
-            response.status
-          );
-
-        }
-
-
-        const result =
-          await response.json();
-
-
-        console.log(
-          "Dashboard Response:",
-          result
-        );
-
-
-        if (!result.status) {
-
-          throw new Error(
-            result.message ||
-            "Gagal mengambil data dashboard."
-          );
-
-        }
-
-
-        /* RENDER */
-
-        renderKPI(result);
-
-        renderVisitChart(result);
-
-        renderPaymentChart(result);
-
-        renderQueue(result);
-
-        renderRooms(result);
-
-        renderLowStock(result);
-
-        renderActivity(result);
-
-
-      } catch (error) {
-
-        console.error(
-          "Dashboard Error:",
-          error
-        );
-
-
-        if (typeof Swal !== "undefined") {
-
-          Swal.fire({
-
-            icon: "error",
-
-            title: "Gagal memuat dashboard",
-
-            text: error.message ||
-              "Terjadi kesalahan saat mengambil data."
-
-          });
-
-        }
-
-
-      } finally {
-
-        setLoading(false);
-
-      }
-
-    }
-
-
-    /* =====================================================
-       EVENT FILTER
-    ====================================================== */
-
-    if (periodSelect) {
-
-      periodSelect.addEventListener(
-        "change",
-        function() {
-
-          updateDateFields();
-
-        }
-      );
-
-    }
-
-
-    if (applyButton) {
-
-      applyButton.addEventListener(
-        "click",
-        function() {
-
-          loadDashboard();
-
-        }
-      );
-
-    }
-
-
-    /* =====================================================
-       ENTER PADA CUSTOM DATE
-    ====================================================== */
-
-    [startDate, endDate].forEach(
-      function(element) {
-
-        if (!element) {
-          return;
-        }
-
-        element.addEventListener(
-          "keydown",
-          function(event) {
-
-            if (event.key === "Enter") {
-
-              event.preventDefault();
-
-              loadDashboard();
-
-            }
-
-          }
-        );
-
-      }
-    );
-
-
-    /* =====================================================
-       INITIAL LOAD
-    ====================================================== */
-
-    updateDateFields();
-
-    loadDashboard();
-
 
   })();
 </script>
