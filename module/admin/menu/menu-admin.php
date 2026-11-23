@@ -63,7 +63,8 @@
             <li><a href="module/admin/rpt_diagnosis">Diagnosis ICD-10</a></li>
             <li><a href="module/admin/rpt_ranap">Rawat Inap</a></li>
             <li><a href="module/admin/rpt_prosedur">Tindakan (Prosedur)</a></li>
-            <li><a href="module/admin/rpt_farmasi">Farmasi</a></li>
+            <li><a href="module/admin/rpt_farmasi">Farmasi (Stok)</a></li>
+            <li><a href="module/admin/rpt_resep">Pelayanan Resep</a></li>
             <li><a href="module/admin/rpt_kasir">Kasir</a></li>
             <li><a href="module/admin/pharmacy_expired">Expired Obat</a></li>
             <li><a href="module/admin/pharmacy_usage">Pemakaian Obat Pasien</a></li>
