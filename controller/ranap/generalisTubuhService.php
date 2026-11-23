@@ -4,52 +4,59 @@ function generalisTubuhFields()
 {
    return [
       'Mata' => [
-         'konjungtiva' => ['label' => 'Konjungtiva', 'storage_label' => 'Konjungtiva', 'options' => ['Anemis', 'Tidak Anemis']],
-         'sklera' => ['label' => 'Sklera', 'storage_label' => 'Sklera', 'options' => ['Ikterik', 'Tidak Ikterik']],
-         'pupil' => ['label' => 'Pupil', 'storage_label' => 'Pupil', 'options' => ['Isokor', 'Anisokor']],
-         'refleks_cahaya' => ['label' => 'Refleks cahaya', 'storage_label' => 'Refleks cahaya', 'options' => ['Positif', 'Negatif']],
-         'palpebra' => ['label' => 'Palpebra', 'storage_label' => 'Palpebra', 'options' => ['Normal', 'Tidak Normal']],
+         'konjungtiva' => ['label' => 'Konjungtiva', 'storage_label' => 'Konjungtiva', 'options' => ['Anemis', 'Tidak Anemis'], 'normal' => 'Tidak Anemis'],
+         'sklera' => ['label' => 'Sklera', 'storage_label' => 'Sklera', 'options' => ['Ikterik', 'Tidak Ikterik'], 'normal' => 'Tidak Ikterik'],
+         'pupil' => ['label' => 'Pupil', 'storage_label' => 'Pupil', 'options' => ['Isokor', 'Anisokor'], 'normal' => 'Isokor'],
+         'refleks_cahaya' => ['label' => 'Refleks cahaya', 'storage_label' => 'Refleks cahaya', 'options' => ['Positif', 'Negatif'], 'normal' => 'Positif'],
+         'palpebra' => ['label' => 'Palpebra', 'storage_label' => 'Palpebra', 'options' => ['Normal', 'Tidak Normal'], 'normal' => 'Normal'],
       ],
       'Hidung' => [
-         'septum_nasi' => ['label' => 'Septum nasi', 'storage_label' => 'Septum nasi', 'options' => ['Normal', 'Tidak Normal']],
-         'konka' => ['label' => 'Konka', 'storage_label' => 'Konka', 'options' => ['Hiperemis', 'Tidak Hiperemis']],
-         'hidung_massa' => ['label' => 'Massa', 'storage_label' => 'Hidung - Massa', 'options' => ['Positif', 'Negatif']],
-         'discharge' => ['label' => 'Discharge', 'storage_label' => 'Discharge', 'options' => ['Positif', 'Negatif']],
+         'septum_nasi' => ['label' => 'Septum nasi', 'storage_label' => 'Septum nasi', 'options' => ['Normal', 'Tidak Normal'], 'normal' => 'Normal'],
+         'konka' => ['label' => 'Konka', 'storage_label' => 'Konka', 'options' => ['Hiperemis', 'Tidak Hiperemis'], 'normal' => 'Tidak Hiperemis'],
+         'hidung_massa' => ['label' => 'Massa', 'storage_label' => 'Hidung - Massa', 'options' => ['Positif', 'Negatif'], 'normal' => 'Negatif'],
+         'discharge' => ['label' => 'Discharge', 'storage_label' => 'Discharge', 'options' => ['Positif', 'Negatif'], 'normal' => 'Negatif'],
       ],
       'Telinga' => [
-         'kanalis_eksternus' => ['label' => 'Kanalis eksternus', 'storage_label' => 'Kanalis eksternus', 'options' => ['Normal', 'Tidak Normal']],
-         'membran_timpani' => ['label' => 'Membran timpani', 'storage_label' => 'Membran timpani', 'options' => ['Normal', 'Tidak Normal']],
-         'serumen' => ['label' => 'Serumen', 'storage_label' => 'Serumen', 'options' => ['Positif', 'Negatif']],
+         'kanalis_eksternus' => ['label' => 'Kanalis eksternus', 'storage_label' => 'Kanalis eksternus', 'options' => ['Normal', 'Tidak Normal'], 'normal' => 'Normal'],
+         'membran_timpani' => ['label' => 'Membran timpani', 'storage_label' => 'Membran timpani', 'options' => ['Normal', 'Tidak Normal'], 'normal' => 'Normal'],
+         'serumen' => ['label' => 'Serumen', 'storage_label' => 'Serumen', 'options' => ['Positif', 'Negatif'], 'normal' => 'Negatif'],
       ],
       'Orofaring' => [
-         'tonsil' => ['label' => 'Tonsil', 'storage_label' => 'Tonsil', 'options' => ['T0-T0', 'T1-T1', 'T2-T2', 'T3-T3', 'T4-T4']],
-         'mukosa' => ['label' => 'Mukosa', 'storage_label' => 'Mukosa', 'options' => ['Hiperemis', 'Tidak Hiperemis']],
-         'orofaring_massa' => ['label' => 'Massa', 'storage_label' => 'Orofaring - Massa', 'options' => ['Positif', 'Negatif']],
+         'tonsil' => ['label' => 'Tonsil', 'storage_label' => 'Tonsil', 'options' => ['T0-T0', 'T1-T1', 'T2-T2', 'T3-T3', 'T4-T4'], 'normal' => 'T1-T1'],
+         'mukosa' => ['label' => 'Mukosa', 'storage_label' => 'Mukosa', 'options' => ['Hiperemis', 'Tidak Hiperemis'], 'normal' => 'Tidak Hiperemis'],
+         'orofaring_massa' => ['label' => 'Massa', 'storage_label' => 'Orofaring - Massa', 'options' => ['Positif', 'Negatif'], 'normal' => 'Negatif'],
       ],
       'Leher' => [
-         'kgb' => ['label' => 'KGB', 'storage_label' => 'Leher - KGB', 'options' => ['Membesar', 'Tidak Membesar']],
-         'kelenjar_thyroid' => ['label' => 'Kelenjar Thyroid', 'storage_label' => 'Leher - Kelenjar Thyroid', 'options' => ['Membesar', 'Tidak Membesar']],
+         'kgb' => ['label' => 'KGB', 'storage_label' => 'Leher - KGB', 'options' => ['Membesar', 'Tidak Membesar'], 'normal' => 'Tidak Membesar'],
+         'kelenjar_thyroid' => ['label' => 'Kelenjar Thyroid', 'storage_label' => 'Leher - Kelenjar Thyroid', 'options' => ['Membesar', 'Tidak Membesar'], 'normal' => 'Tidak Membesar'],
       ],
       'Paru' => [
-         'ronkhi' => ['label' => 'Ronkhi', 'storage_label' => 'Paru - Ronkhi', 'options' => ['Positif', 'Negatif']],
-         'wheezing' => ['label' => 'Wheezing', 'storage_label' => 'Paru - Wheezing', 'options' => ['Positif', 'Negatif']],
+         'ronkhi' => ['label' => 'Ronkhi', 'storage_label' => 'Paru - Ronkhi', 'options' => ['Positif', 'Negatif'], 'normal' => 'Negatif'],
+         'wheezing' => ['label' => 'Wheezing', 'storage_label' => 'Paru - Wheezing', 'options' => ['Positif', 'Negatif'], 'normal' => 'Negatif'],
       ],
       'Jantung' => [
-         'murmur' => ['label' => 'Murmur', 'storage_label' => 'Jantung - Murmur', 'options' => ['Positif', 'Negatif']],
+         'murmur' => ['label' => 'Murmur', 'storage_label' => 'Jantung - Murmur', 'options' => ['Positif', 'Negatif'], 'normal' => 'Negatif'],
       ],
       'Abdomen' => [
-         'bising_usus' => ['label' => 'Bising Usus', 'storage_label' => 'Abdomen - Bising Usus', 'options' => ['Positif', 'Negatif']],
-         'nyeri_tekan' => ['label' => 'Nyeri Tekan', 'storage_label' => 'Abdomen - Nyeri Tekan', 'options' => ['Positif', 'Negatif']],
+         'bising_usus' => ['label' => 'Bising Usus', 'storage_label' => 'Abdomen - Bising Usus', 'options' => ['Positif', 'Negatif'], 'normal' => 'Positif'],
+         'nyeri_tekan' => ['label' => 'Nyeri Tekan', 'storage_label' => 'Abdomen - Nyeri Tekan', 'options' => ['Positif', 'Negatif'], 'normal' => 'Negatif'],
       ],
       'Ekstremitas Atas' => [
-         'ekstremitas_atas_edema' => ['label' => 'Edema', 'storage_label' => 'Ekstremitas Atas - Edema', 'options' => ['Positif', 'Negatif']],
-         'ekstremitas_atas_parese' => ['label' => 'Parese', 'storage_label' => 'Ekstremitas Atas - Parese', 'options' => ['Positif', 'Negatif']],
+         'ekstremitas_atas_edema' => ['label' => 'Edema', 'storage_label' => 'Ekstremitas Atas - Edema', 'options' => ['Positif', 'Negatif'], 'normal' => 'Negatif'],
+         'ekstremitas_atas_parese' => ['label' => 'Parese', 'storage_label' => 'Ekstremitas Atas - Parese', 'options' => ['Positif', 'Negatif'], 'normal' => 'Negatif'],
       ],
       'Ekstremitas Bawah' => [
-         'ekstremitas_bawah_edema' => ['label' => 'Edema', 'storage_label' => 'Ekstremitas Bawah - Edema', 'options' => ['Positif', 'Negatif']],
-         'ekstremitas_bawah_parese' => ['label' => 'Parese', 'storage_label' => 'Ekstremitas Bawah - Parese', 'options' => ['Positif', 'Negatif']],
+         'ekstremitas_bawah_edema' => ['label' => 'Edema', 'storage_label' => 'Ekstremitas Bawah - Edema', 'options' => ['Positif', 'Negatif'], 'normal' => 'Negatif'],
+         'ekstremitas_bawah_parese' => ['label' => 'Parese', 'storage_label' => 'Ekstremitas Bawah - Parese', 'options' => ['Positif', 'Negatif'], 'normal' => 'Negatif'],
       ],
    ];
+}
+
+/** Teks pemeriksaan fisik tanpa blok generalis (untuk ditampilkan di textarea halaman lain). */
+function generalisTubuhTanpaBlok($examinationText)
+{
+   $pattern = '/\s*' . preg_quote('[PEMERIKSAAN GENERALIS TUBUH]', '/') . '\R.*?\R' . preg_quote('[/PEMERIKSAAN GENERALIS TUBUH]', '/') . '/s';
+   return trim((string) preg_replace($pattern, '', (string) $examinationText));
 }
 
 function generalisTubuhValues($examinationText)
