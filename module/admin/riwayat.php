@@ -25,6 +25,50 @@ $historyStmt = $koneksi->prepare("SELECT pv.*, mp.nomor_rm FROM pasien_visit pv
 $historyStmt->bind_param('si', $pt, $clinic);
 $historyStmt->execute();
 $getquery = $historyStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+// ---- hasil laboratorium per kunjungan (dulu: query hasil memakai $l['id'] yang tidak ada di visit_inspection
+//      -> hasil lab tidak pernah tampil; kini dimuat sekali untuk semua kunjungan & dibatasi klinik) ----
+$labPerVisit = [];
+$visitIds = array_values(array_unique(array_filter(array_column($getquery, 'visit_ID'), fn($v) => $v !== null && $v !== '')));
+if ($visitIds) {
+  $tanda = implode(',', array_fill(0, count($visitIds), '?'));
+  $labStmt = $koneksi->prepare("SELECT id_inspection, id_visit, inspection_name, inspection_date, inspection_source, inspection_note, created_at
+    FROM visit_inspection WHERE id_customer = ? AND id_visit IN ($tanda) ORDER BY created_at DESC, id_inspection DESC");
+  $labStmt->bind_param('i' . str_repeat('s', count($visitIds)), $clinic, ...$visitIds);
+  $labStmt->execute();
+  $labInsp = $labStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+  $labStmt->close();
+  $labHasil = [];
+  if ($labInsp) {
+    $idInsp = array_map(fn($x) => (int) $x['id_inspection'], $labInsp);
+    $labStmt = $koneksi->prepare("SELECT lr.id_inspection, lr.hasil, lr.keterangan, li.assemen, li.satuan, li.minimum, li.maksimum, li.catatan
+      FROM laboratorium_result lr LEFT JOIN laboratorium_item li ON li.id = lr.id_item
+      WHERE lr.id_inspection IN (" . implode(',', array_fill(0, count($idInsp), '?')) . ") AND TRIM(COALESCE(lr.hasil, '')) <> ''
+      ORDER BY lr.id_inspection, li.id");
+    $labStmt->bind_param(str_repeat('i', count($idInsp)), ...$idInsp);
+    $labStmt->execute();
+    foreach ($labStmt->get_result()->fetch_all(MYSQLI_ASSOC) as $h) $labHasil[(int) $h['id_inspection']][] = $h;
+    $labStmt->close();
+  }
+  foreach ($labInsp as $x) {
+    $x['hasil'] = $labHasil[(int) $x['id_inspection']] ?? [];
+    $labPerVisit[$x['id_visit']][] = $x;
+  }
+}
+/** Tandai hasil di luar rentang normal (hanya bila hasil & batas berupa angka biasa). */
+function labFlagRiwayat(array $h): string
+{
+  // "4.000" / "150.000" = format ribuan Indonesia (titik + tepat 3 digit); "4.10" / "27.0" / "36,5" = desimal
+  $angka = function ($v) {
+    $v = trim((string) $v);
+    if (preg_match('/^\d{1,3}(\.\d{3})+$/', $v)) return (float) str_replace('.', '', $v);
+    return preg_match('/^-?\d+(?:[.,]\d+)?$/', $v) ? (float) str_replace(',', '.', $v) : null;
+  };
+  $v = $angka($h['hasil']);
+  $mn = $angka($h['minimum']);
+  $mx = $angka($h['maksimum']);
+  if ($v === null || $mn === null || $mx === null || $mx <= 0 || $mx <= $mn) return '';
+  return $v < $mn ? 'L' : ($v > $mx ? 'H' : '');
+}
 $operationHistory = [];
 $operationHistoryError = '';
 try {
@@ -58,7 +102,21 @@ try {
 
     .vital-label {
       font-size: 11px;
-      color: #6b7280;
+      color: #1f2937;
+    }
+
+    .lab-card { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; background: #fff; }
+    .lab-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; padding: 8px 12px; background: #f8fafc; border-bottom: 1px solid #e5e7eb; font-size: 14px; color: #111827; }
+    .lab-date { font-size: 12px; color: #1f2937; }
+    .lab-card .lab-tabel { margin: 0; }
+    .lab-card .lab-tabel th { font-weight: 600; color: #1f2937; }
+    .lab-abnormal { color: #b91c1c; font-weight: 700; }
+    .lab-flag { display: inline-block; font-size: 11px; font-weight: 700; color: #fff; background: #b91c1c; border-radius: 4px; padding: 0 5px; margin-left: 4px; }
+    .lab-catatan { padding: 8px 12px; font-size: 13px; color: #111827; background: #fffbeb; border-top: 1px solid #fde68a; }
+
+    /* teks abu-abu (text-muted) di isi riwayat sulit dibaca -> gelap */
+    .body-wrapper-inner .text-muted {
+      color: #1f2937 !important;
     }
   </style>
 </head>
@@ -82,7 +140,7 @@ try {
       <div class="body-wrapper-inner">
         <div class="container-fluid">
           <?php
-          $rme = $_GET['rme']; // default a
+          $rme = $_GET['rme'] ?? ''; // a / b / c; tanpa parameter -> tanpa menu (dulu Warning "Undefined array key")
           if ($rme == 'a') {
             include 'menu_rme.php';
           } else if ($rme == 'b') {
@@ -261,7 +319,7 @@ try {
                                         <button type="button" class="nav-link"
                                           data-bs-toggle="tab"
                                           data-bs-target="#lab<?= $index ?>">
-                                          🧪 Lab
+                                          🧪 Lab<?php if (!empty($labPerVisit[$row['visit_ID']])): ?> <span class="badge rounded-pill bg-primary"><?= count($labPerVisit[$row['visit_ID']]) ?></span><?php endif ?>
                                         </button>
                                       </li>
 
@@ -613,96 +671,75 @@ try {
                                       <div class="tab-pane fade" id="lab<?= $index ?>">
 
                                         <?php
-                                        $lab = tampildata("
-                                                SELECT * 
-                                                FROM visit_inspection 
-                                                WHERE id_visit='" . $row['visit_ID'] . "'
-                                                ORDER BY inspection_date DESC
-                                              ");
-
-                                        if ($lab) {
-                                          foreach ($lab as $l) {
-                                            // 🔥 ambil hasil + join item
-                                            $hasil = tampildata("
-                                              SELECT 
-                                                  lr.*, 
-                                                  li.assemen, 
-                                                  li.satuan, 
-                                                  li.minimum, 
-                                                  li.maksimum
-                                              FROM laboratorium_result lr
-                                              LEFT JOIN laboratorium_item li 
-                                                  ON li.id = lr.id_item
-                                              WHERE lr.id_inspection = '" . $l['id'] . "'
-                                              ORDER BY li.urutan ASC
-                                            ");
+                                        $e = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
+                                        $labKunjungan = $labPerVisit[$row['visit_ID']] ?? [];
+                                        if ($labKunjungan) {
+                                          foreach ($labKunjungan as $l) {
+                                            $catatanLab = trim((string) $l['inspection_note']);
                                         ?>
-                                            <!-- 🔹 HEADER LAB -->
                                             <div class="lab-card mb-3">
-
                                               <div class="lab-header">
-                                                🧪 <?= $l['inspection_name'] ?>
+                                                <div>
+                                                  <span class="fw-semibold">🧪 <?= $e($l['inspection_name']) ?></span>
+                                                  <?php if ($l['hasil']): ?>
+                                                    <span class="badge bg-success-subtle text-success ms-1">Ada hasil</span>
+                                                  <?php elseif ($catatanLab === ''): ?>
+                                                    <span class="badge bg-danger-subtle text-danger ms-1">Belum ada hasil</span>
+                                                  <?php endif ?>
+                                                </div>
                                                 <span class="lab-date">
-                                                  <?= date('d M Y H:i', strtotime($l['inspection_date'])) ?>
+                                                  <?= !empty($l['inspection_date']) ? date('d M Y', strtotime($l['inspection_date'])) : '-' ?>
+                                                  <?= !empty($l['inspection_source']) ? ' · ' . $e($l['inspection_source']) : '' ?>
                                                 </span>
                                               </div>
 
-                                              <?php if ($hasil) { ?>
-
+                                              <?php if ($l['hasil']) { ?>
                                                 <div class="table-responsive">
-                                                  <table class="table table-sm table-bordered mb-0 small">
+                                                  <table class="table table-sm table-bordered mb-0 small lab-tabel">
                                                     <thead class="table-light">
                                                       <tr>
                                                         <th>Pemeriksaan</th>
                                                         <th>Hasil</th>
                                                         <th>Satuan</th>
-                                                        <th>Nilai Normal</th>
+                                                        <th>Nilai normal</th>
                                                         <th>Keterangan</th>
                                                       </tr>
                                                     </thead>
-
                                                     <tbody>
-                                                      <?php foreach ($hasil as $h) {
-
-                                                        // 🔥 highlight abnormal
-                                                        $flag = '';
-                                                        if ($h['minimum'] && $h['maksimum'] && is_numeric($h['hasil'])) {
-                                                          if ($h['hasil'] < $h['minimum'] || $h['hasil'] > $h['maksimum']) {
-                                                            $flag = 'text-danger fw-bold';
-                                                          }
-                                                        }
+                                                      <?php foreach ($l['hasil'] as $h) {
+                                                        $flag = labFlagRiwayat($h);
+                                                        $mn = trim((string) $h['minimum']);
+                                                        $mx = trim((string) $h['maksimum']);
+                                                        if ($mx === '0') $mx = '';
+                                                        $normal = $mn !== '' && $mx !== '' ? $mn . ' – ' . $mx : ($mn !== '' ? $mn : ($mx !== '' ? $mx : '-'));
+                                                        $ket = trim((string) ($h['keterangan'] ?: $h['catatan']));
                                                       ?>
                                                         <tr>
-                                                          <td><?= $h['assemen'] ?></td>
-                                                          <td class="<?= $flag ?>"><?= $h['hasil'] ?></td>
-                                                          <td><?= $h['satuan'] ?></td>
-                                                          <td><?= $h['minimum'] ?> - <?= $h['maksimum'] ?></td>
-                                                          <td><?= $h['keterangan'] ?? '-' ?></td>
+                                                          <td><?= $e($h['assemen'] ?: '-') ?></td>
+                                                          <td class="<?= $flag ? 'lab-abnormal' : 'fw-semibold' ?>"><?= $e($h['hasil']) ?><?= $flag ? ' <span class="lab-flag" title="' . ($flag === 'H' ? 'Di atas nilai normal' : 'Di bawah nilai normal') . '">' . $flag . '</span>' : '' ?></td>
+                                                          <td><?= $e(trim((string) $h['satuan']) ?: '-') ?></td>
+                                                          <td><?= $e($normal) ?></td>
+                                                          <td><?= $e($ket !== '' ? $ket : '-') ?></td>
                                                         </tr>
                                                       <?php } ?>
                                                     </tbody>
                                                   </table>
                                                 </div>
-
-                                              <?php } else { ?>
-
-                                                <div class="text-muted small p-2">
-                                                  Tidak ada hasil lab
-                                                </div>
-
                                               <?php } ?>
 
+                                              <?php if ($catatanLab !== '') { ?>
+                                                <div class="lab-catatan"><strong>Catatan / hasil:</strong> <?= nl2br($e($catatanLab)) ?></div>
+                                              <?php } elseif (!$l['hasil']) { ?>
+                                                <div class="text-muted small p-2">Hasil belum diinput.</div>
+                                              <?php } ?>
                                             </div>
-
                                           <?php
                                           }
                                         } else {
                                           ?>
-
                                           <div class="text-center text-muted py-3">
-                                            🧪 Tidak ada data laboratorium
+                                            🧪 Tidak ada pemeriksaan laboratorium pada kunjungan ini
                                           </div>
-
                                         <?php } ?>
 
                                       </div>
