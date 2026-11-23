@@ -100,7 +100,7 @@
 <footer class="app-footer">
   <div class="footer-inner text-center">
     <span class="footer-text">
-      Medisafe © 2026 • Developed by
+      Medisafe © <?php $thnF = (int) (new DateTime('now', new DateTimeZone('Asia/Jakarta')))->format('Y'); echo $thnF > 2024 ? '2024–' . $thnF : '2024'; ?> • Developed by
       <a href="https://imzack.id/" target="_blank">ImZack</a>
     </span>
   </div>
