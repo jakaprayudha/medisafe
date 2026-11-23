@@ -55,6 +55,16 @@
            </a>
         </li>
         <li class="sidebar-item">
+           <a class="sidebar-link <?php if ($title == 'Laporan Pelayanan Resep') {
+                                       echo 'active';
+                                    } ?>"
+              href="module/admin/rpt_resep"
+              aria-expanded="false">
+              <iconify-icon icon="mdi:file-chart-outline"></iconify-icon>
+              <span class="hide-menu">Laporan Resep</span>
+           </a>
+        </li>
+        <li class="sidebar-item">
            <a class="sidebar-link <?php if ($title == 'Expired Obat') {
                                        echo 'active';
                                     } ?>"
