@@ -1,4 +1,13 @@
 <?php
+/**
+ * Riwayat pengobatan pasien (semua kunjungan di faskes ini): pemeriksaan, obat, lab, penanda operasi.
+ * Performa: dulu tiap kunjungan menjalankan query sendiri (ICD-10 utama + tiap kode sekunder, resep 2x, rincian obat
+ * per tiket) ke tabel resep/rincian yang tidak ber-index -> pasien dengan ±40 kunjungan butuh ±30 detik (habis batas
+ * waktu PHP, halaman terpotong). Kini semua dimuat sekaligus: 1 query ICD, 1 query tiket resep, 1 query rincian obat.
+ * Perbaikan lain: isi kunjungan (anamnesa, keluhan, dokter, diagnosa, obat) dicetak tanpa escape (XSS) dan kode
+ * diagnosa dirangkai langsung ke SQL; kolom Harga obat tidak punya judul (header 3 kolom, isi 4) dan memakai harga
+ * master saat ini, bukan harga saat resep; <style> diulang di setiap kunjungan; warning bila kode ICD tidak ditemukan.
+ */
 $title = 'Riwayat';
 require '../../controller/view.php';
 require_once __DIR__ . '/../../controller/visit/historyLabels.php';
@@ -9,6 +18,7 @@ if (!is_string($no) || $no === '') {
   http_response_code(400);
   exit('Nomor kunjungan wajib diisi.');
 }
+$e = fn($v) => htmlspecialchars((string) ($v ?? ''), ENT_QUOTES, 'UTF-8');
 $historyVisitStmt = $koneksi->prepare("SELECT id_patient FROM pasien_visit WHERE visit_ID = ? AND id_customer = ? LIMIT 1");
 $historyVisitStmt->bind_param('si', $no, $clinic);
 $historyVisitStmt->execute();
@@ -21,18 +31,60 @@ $pt = (string) $historyPatient['id_patient'];
 $historyStmt = $koneksi->prepare("SELECT pv.*, mp.nomor_rm FROM pasien_visit pv
   LEFT JOIN ms_patient mp ON mp.id_patient = pv.id_patient
   WHERE pv.id_patient = ? AND pv.id_customer = ?
-  AND (pv.visit_status IS NULL OR pv.visit_status <> 99) ORDER BY visit_date DESC");
+  AND (pv.visit_status IS NULL OR pv.visit_status <> 99) ORDER BY visit_date DESC, visit_time DESC");
 $historyStmt->bind_param('si', $pt, $clinic);
 $historyStmt->execute();
 $getquery = $historyStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-// ---- hasil laboratorium per kunjungan (dulu: query hasil memakai $l['id'] yang tidak ada di visit_inspection
-//      -> hasil lab tidak pernah tampil; kini dimuat sekali untuk semua kunjungan & dibatasi klinik) ----
-$labPerVisit = [];
 $visitIds = array_values(array_unique(array_filter(array_column($getquery, 'visit_ID'), fn($v) => $v !== null && $v !== '')));
+$tandaVisit = implode(',', array_fill(0, count($visitIds), '?'));
+
+// ---- ICD-10: semua kode diagnosa semua kunjungan dalam 1 query ----
+$kodeIcd = [];
+foreach ($getquery as $r) {
+  foreach (array_merge([(string) ($r['diagnosa'] ?? '')], explode(',', (string) ($r['diagnosa_sekunder'] ?? ''))) as $k) {
+    $k = trim($k);
+    if ($k !== '') $kodeIcd[$k] = true;
+  }
+}
+$icdNama = [];
+if ($kodeIcd) {
+  $kode = array_keys($kodeIcd);
+  $st = $koneksi->prepare("SELECT code, icd10 FROM icd_10 WHERE code IN (" . implode(',', array_fill(0, count($kode), '?')) . ")");
+  $st->bind_param(str_repeat('s', count($kode)), ...$kode);
+  $st->execute();
+  foreach ($st->get_result()->fetch_all(MYSQLI_ASSOC) as $x) $icdNama[$x['code']] = $x['icd10'];
+  $st->close();
+}
+$diag = fn($kode) => ($kode = trim((string) $kode)) === '' ? '' : $kode . (isset($icdNama[$kode]) ? ' - ' . $icdNama[$kode] : '');
+
+// ---- resep: semua tiket + rincian obat semua kunjungan (2 query, bukan per kunjungan/per tiket) ----
+$tiketPerVisit = [];
+$obatPerTiket = [];
 if ($visitIds) {
-  $tanda = implode(',', array_fill(0, count($visitIds), '?'));
+  $st = $koneksi->prepare("SELECT id_permintaan_farmasi, id_visit, created_at, tipe_obat, rck_nama, rck_jumlah, rck_satuan, rck_signa, status_permintaan
+    FROM permintaan_pharmacy WHERE id_customer = ? AND id_visit IN ($tandaVisit) ORDER BY id_permintaan_farmasi ASC");
+  $st->bind_param('s' . str_repeat('s', count($visitIds)), ...array_merge([(string) $clinic], $visitIds));
+  $st->execute();
+  $tiket = $st->get_result()->fetch_all(MYSQLI_ASSOC);
+  $st->close();
+  foreach ($tiket as $t) $tiketPerVisit[$t['id_visit']][] = $t;
+  if ($tiket) {
+    // id dari DB (int) -> aman dirangkai; query biasa menghemat 1 round-trip ke DB remote
+    $idTiket = implode(',', array_map(fn($t) => (int) $t['id_permintaan_farmasi'], $tiket));
+    $res = $koneksi->query("SELECT d.id_permintaan_farmasi, d.qty, d.qty_racik, d.signa, d.harga, d.catatan,
+        COALESCE(NULLIF(p.pharmacy_name_generic, ''), d.item_name) AS nama, p.pharmacy_unit AS satuan
+      FROM permintaan_pharmacy_details d LEFT JOIN ms_pharmacy p ON p.id_pharmacy = d.id_pharmacy
+      WHERE d.id_permintaan_farmasi IN ($idTiket) ORDER BY d.id_pharmacy_details");
+    while ($d = $res->fetch_assoc()) $obatPerTiket[(int) $d['id_permintaan_farmasi']][] = $d;
+    $res->free();
+  }
+}
+
+// ---- hasil laboratorium per kunjungan (1 query permintaan + 1 query hasil) ----
+$labPerVisit = [];
+if ($visitIds) {
   $labStmt = $koneksi->prepare("SELECT id_inspection, id_visit, inspection_name, inspection_date, inspection_source, inspection_note, created_at
-    FROM visit_inspection WHERE id_customer = ? AND id_visit IN ($tanda) ORDER BY created_at DESC, id_inspection DESC");
+    FROM visit_inspection WHERE id_customer = ? AND id_visit IN ($tandaVisit) ORDER BY created_at DESC, id_inspection DESC");
   $labStmt->bind_param('i' . str_repeat('s', count($visitIds)), $clinic, ...$visitIds);
   $labStmt->execute();
   $labInsp = $labStmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -77,33 +129,19 @@ try {
   error_log('Operation marker history: ' . $error->getMessage());
   $operationHistoryError = 'Gagal membaca riwayat penanda operasi. Hubungi administrator untuk memeriksa database.';
 }
+$tglId = fn($d, $f = 'd M Y') => $d && strtotime((string) $d) ? date($f, strtotime((string) $d)) : '-';
+$isi = fn($v) => trim((string) ($v ?? '')) !== '' ? nl2br($e(trim((string) $v))) : '-';
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="id">
 
 <head>
   <base href="../../">
-  <?php
-  require '../../assets/template/head.php';
-  ?>
+  <?php require '../../assets/template/head.php'; ?>
   <style>
-    .vital-box {
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 8px;
-      background: #f9fafb;
-    }
-
-    .vital-value {
-      font-size: 16px;
-      font-weight: 600;
-      color: #111827;
-    }
-
-    .vital-label {
-      font-size: 11px;
-      color: #1f2937;
-    }
+    .vital-box { border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px; background: #f9fafb; }
+    .vital-value { font-size: 16px; font-weight: 600; color: #111827; }
+    .vital-label { font-size: 11px; color: #1f2937; }
 
     .lab-card { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; background: #fff; }
     .lab-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px; padding: 8px 12px; background: #f8fafc; border-bottom: 1px solid #e5e7eb; font-size: 14px; color: #111827; }
@@ -115,666 +153,327 @@ try {
     .lab-catatan { padding: 8px 12px; font-size: 13px; color: #111827; background: #fffbeb; border-top: 1px solid #fde68a; }
 
     /* teks abu-abu (text-muted) di isi riwayat sulit dibaca -> gelap */
-    .body-wrapper-inner .text-muted {
-      color: #1f2937 !important;
-    }
+    .body-wrapper-inner .text-muted { color: #1f2937 !important; }
+
+    .rw-scroll { max-height: 72vh; overflow-y: auto; padding-right: 5px; }
+    .rw-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; width: 100%; padding-right: 8px; }
+    .rw-head .tgl { font-weight: 700; color: #0f172a; min-width: 150px; }
+    .rw-head .meta { font-size: .82rem; color: #334155; }
+    .rw-head .dx { font-size: .8rem; color: #1e3a8a; background: #eff6ff; border-radius: 6px; padding: 1px 8px; max-width: 360px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rw-tag { font-size: .7rem; font-weight: 700; border-radius: 6px; padding: 2px 7px; }
+    .rw-kini { background: #0f172a; color: #fff; }
+    .rw-ranap { background: #fef3c7; color: #92400e; }
+    .rw-resume { display: flex; justify-content: flex-end; margin: -4px 0 10px; }
+    .rw-label { font-size: .74rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: .02em; }
+    .rw-racik { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 6px 10px; font-size: .8rem; color: #78350f; }
+    .rw-tiket td { background: #f8fafc; }
   </style>
 </head>
 
 <body>
-  <!--  Body Wrapper -->
   <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
     data-sidebar-position="fixed" data-header-position="fixed">
-    <!-- Sidebar Start -->
-    <?php
-    require 'sidebar.php';
-    ?>
-    <!--  Sidebar End -->
-    <!--  Main wrapper -->
+    <?php require 'sidebar.php'; ?>
     <div class="body-wrapper">
-      <!--  Header Start -->
-      <?php
-      require 'navbar.php';
-      ?>
-      <!--  Header End -->
+      <?php require 'navbar.php'; ?>
       <div class="body-wrapper-inner">
         <div class="container-fluid">
           <?php
-          $rme = $_GET['rme'] ?? ''; // a / b / c; tanpa parameter -> tanpa menu (dulu Warning "Undefined array key")
-          if ($rme == 'a') {
-            include 'menu_rme.php';
-          } else if ($rme == 'b') {
-            include 'menu_rmeb.php';
-          } else if ($rme == 'c') {
-            include 'menu_rme_inap.php';
-          }
+          $rme = $_GET['rme'] ?? '';
+          if ($rme == 'a') include 'menu_rme.php';
+          elseif ($rme == 'b') include 'menu_rmeb.php';
+          elseif ($rme == 'c') include 'menu_rme_inap.php';
           ?>
           <div class="row">
             <div class="col-12">
-              <?php
-              require 'card-pasien.php';
-              ?>
+              <?php require 'card-pasien.php'; ?>
             </div>
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">
-                <div class="card-body p-4">
-                  <div class="alert alert-info d-flex align-items-start justify-content-between">
-
-                    <!-- 🔹 LEFT (icon + text) -->
-                    <div class="d-flex align-items-start gap-2">
-
-                      <i class="fas fa-info-circle mt-1"></i>
-
-                      <div>
-                        <strong>Informasi Riwayat Pengobatan:</strong>
-                        <ul class="mb-0 small">
-                          <li>
-                            Riwayat pengobatan pada daftar ini merupakan data kunjungan pasien yang terdaftar dengan
-                            <strong>MEDISAFE</strong>
-                          </li>
-                        </ul>
-                      </div>
-
-                    </div>
-
-                    <!-- 🔹 RIGHT BUTTON -->
-                    <!-- <div>
-                      <a href="module/admin/icareInternal" target="_blank">
-                        <button type="button" class="btn btn-sm btn-primary d-flex align-items-center gap-1">
-                          <i class="fas fa-print"></i> Review RME
-                        </button>
-                      </a>
-                    </div> -->
-
+                <div class="card-body p-3 p-md-4">
+                  <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <h5 class="mb-0 fw-bold"><i class="ti ti-history me-1"></i>Riwayat Pengobatan</h5>
+                    <span class="badge bg-dark"><?= count($getquery) ?> kunjungan</span>
+                    <small class="text-muted ms-md-2">Data kunjungan pasien yang tercatat di <b>MEDISAFE</b> pada faskes ini, terbaru di atas.</small>
                   </div>
-                  <div class="row">
-                    <div class="col-12">
 
-                      <!-- 🔥 WRAPPER SCROLL -->
-                      <div style="max-height: 500px; overflow-y: auto; padding-right: 5px;">
+                  <div class="rw-scroll">
+                    <?php if ($operationHistoryError !== ''): ?>
+                      <div class="alert alert-danger" role="alert"><?= $e($operationHistoryError) ?></div>
+                    <?php endif; ?>
+                    <?php if (!empty($getquery)): ?>
+                      <div class="accordion" id="accordionExample">
+                        <?php foreach ($getquery as $index => $row):
+                          $vid = (string) $row['visit_ID'];
+                          $collapseId = 'collapse' . $index;
+                          $ranap = (string) ($row['status_rawatinap'] ?? '') === '1';
+                          $dxUtama = !empty($row['kdDiag1']) ? $row['kdDiag1'] . ' - ' . $row['nmDiag1'] : $diag($row['diagnosa'] ?? '');
+                          $tiketKunjungan = $tiketPerVisit[$vid] ?? [];
+                          $labKunjungan = $labPerVisit[$vid] ?? [];
+                        ?>
+                          <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading<?= $index ?>">
+                              <button class="accordion-button <?= $index != 0 ? 'collapsed' : '' ?>" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#<?= $collapseId ?>" aria-expanded="<?= $index == 0 ? 'true' : 'false' ?>" aria-controls="<?= $collapseId ?>">
+                                <span class="rw-head">
+                                  <span class="tgl"><?= $e($tglId($row['visit_date'])) ?><?= !empty($row['visit_time']) ? ' · ' . $e(substr((string) $row['visit_time'], 0, 5)) : '' ?></span>
+                                  <span class="meta"><?= $e($row['id_poli'] ?: '-') ?> · <?= $e($row['id_doctor'] ?: '-') ?></span>
+                                  <?php if ($dxUtama !== ''): ?><span class="dx" title="<?= $e($dxUtama) ?>"><?= $e($dxUtama) ?></span><?php endif ?>
+                                  <?php if ($vid === $no): ?><span class="rw-tag rw-kini">Kunjungan ini</span><?php endif ?>
+                                  <?php if ($ranap): ?><span class="rw-tag rw-ranap">Rawat Inap</span><?php endif ?>
+                                </span>
+                              </button>
+                            </h2>
 
-                        <?php if ($operationHistoryError !== ''): ?>
-                          <div class="alert alert-danger" role="alert"><?= htmlspecialchars($operationHistoryError, ENT_QUOTES, 'UTF-8') ?></div>
-                        <?php endif; ?>
-                        <?php if (!empty($getquery)): ?>
-                          <div class="accordion" id="accordionExample">
-                            <?php foreach ($getquery as $index => $row): ?>
-                              <?php
-                              $collapseId = "collapse" . $index;
-                              $headingId = "heading" . $index;
-                              ?>
-
-                              <div class="accordion-item">
-                                <style>
-                                  .accordion-header-custom {
-                                    position: relative;
-                                  }
-
-                                  .btn-download-resume {
-                                    position: absolute;
-                                    right: 55px;
-                                    top: 50%;
-                                    transform: translateY(-50%);
-                                    z-index: 20;
-                                  }
-                                </style>
-
-                                <h2 class="accordion-header accordion-header-custom"
-                                  id="<?= $headingId ?>">
-
-                                  <button class="accordion-button <?= $index != 0 ? 'collapsed' : '' ?>"
-                                    type="button"
-                                    data-bs-toggle="collapse"
-                                    data-bs-target="#<?= $collapseId ?>"
-                                    aria-expanded="<?= $index == 0 ? 'true' : 'false' ?>">
-
-                                    <?= $row['patient_name'] ?? 'Tanggal : ' ?>
-                                    <?= $row['visit_date'] ?>
-                                    <?= $row['visit_time'] ?>
-
-                                  </button>
-
-                                  <!-- 🔥 BUTTON DOWNLOAD -->
-                                  <?php
-                                  $statusranap = $row['status_rawatinap'] ?? '';
-                                  if ($statusranap == '1') { ?>
-                                    <a href="module/admin/print/formulir_resume_v2?no=<?= urlencode((string) ($row['visit_ID'] ?? '')) ?>&rm=<?= urlencode((string) ($row['nomor_rm'] ?? '')) ?>&download=1&ranap=<?= $row['status_rawatinap'] ?>"
-                                      target="_blank"
-                                      class="btn btn-sm btn-danger btn-download-resume">
-
-                                      <i class="fas fa-file-pdf"></i>
-                                      Download Resume Rawat Inap
+                            <div id="<?= $collapseId ?>" class="accordion-collapse collapse <?= $index == 0 ? 'show' : '' ?>" data-bs-parent="#accordionExample">
+                              <div class="accordion-body p-3">
+                                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                                  <div>
+                                    <div class="fw-semibold">Detail Kunjungan</div>
+                                    <small class="text-muted"><?= $e($tglId($row['visit_date'])) ?> • <?= $e($vid) ?></small>
+                                  </div>
+                                  <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="badge bg-light text-dark border"><?= $e(historyVisitType($row)) ?> | <?= $e($row['id_poli']) ?></span>
+                                    <a href="module/admin/print/<?= $ranap ? 'formulir_resume_v2' : 'formulir_resume_poli' ?>?no=<?= $e(urlencode($vid)) ?>&rm=<?= $e(urlencode((string) ($row['nomor_rm'] ?? ''))) ?>&download=1&ranap=<?= $e(urlencode((string) ($row['status_rawatinap'] ?? ''))) ?>"
+                                      target="_blank" class="btn btn-sm btn-danger">
+                                      <i class="ti ti-file-type-pdf me-1"></i>Resume <?= $ranap ? 'Rawat Inap' : 'Poliklinik' ?>
                                     </a>
-                                  <?php   } else { ?>
-                                    <a href="module/admin/print/formulir_resume_poli?no=<?= urlencode((string) ($row['visit_ID'] ?? '')) ?>&rm=<?= urlencode((string) ($row['nomor_rm'] ?? '')) ?>&download=1&ranap=<?= $row['status_rawatinap'] ?>"
-                                      target="_blank"
-                                      class="btn btn-sm btn-danger btn-download-resume">
+                                  </div>
+                                </div>
 
-                                      <i class="fas fa-file-pdf"></i>
-                                      Download Resume Poliklinik
-                                    </a>
-                                  <?php  }
-                                  ?>
-
-
-                                </h2>
-
-                                <div id="<?= $collapseId ?>"
-                                  class="accordion-collapse collapse <?= $index == 0 ? 'show' : '' ?>"
-                                  data-bs-parent="#accordionExample">
-
-                                  <div class="accordion-body p-3">
-
-                                    <!-- HEADER INFO -->
-                                    <div class="d-flex justify-content-between align-items-start mb-3">
-                                      <div>
-                                        <div class="fw-semibold">Detail Kunjungan</div>
-                                        <small class="text-muted">
-                                          <?= date('d M Y', strtotime($row['visit_date'])) ?> • <?= $row['visit_ID'] ?>
-                                        </small>
-                                      </div>
-                                      <span class="badge bg-light text-dark border">
-                                        <?= htmlspecialchars(historyVisitType($row), ENT_QUOTES, 'UTF-8') ?> |
-                                        <?= $row['id_poli'] ?>
-                                      </span>
+                                <div class="row g-2 mb-3">
+                                  <div class="col-md-6">
+                                    <div class="p-2 border rounded small">
+                                      <div class="text-muted">Dokter</div>
+                                      <div class="fw-semibold"><?= $e($row['id_doctor'] ?: '-') ?></div>
                                     </div>
-
-                                    <!-- INFO GRID -->
-                                    <div class="row g-2 mb-3">
-                                      <div class="col-md-6">
-                                        <div class="p-2 border rounded small">
-                                          <div class="text-muted">Dokter</div>
-                                          <div class="fw-semibold"><?= $row['id_doctor'] ?></div>
-                                        </div>
-                                      </div>
-
-                                      <div class="col-md-6">
-                                        <div class="p-2 border rounded small">
-                                          <div class="text-muted">Poli</div>
-                                          <div class="fw-semibold"><?= $row['id_poli'] ?></div>
-                                        </div>
-                                      </div>
+                                  </div>
+                                  <div class="col-md-6">
+                                    <div class="p-2 border rounded small">
+                                      <div class="text-muted">Poli</div>
+                                      <div class="fw-semibold"><?= $e($row['id_poli'] ?: '-') ?></div>
                                     </div>
-
-                                    <!-- TABS EMR -->
-                                    <ul class="nav nav-tabs mb-3" id="tab<?= $index ?>" role="tablist">
-
-                                      <li class="nav-item">
-                                        <button type="button" class="nav-link active"
-                                          data-bs-toggle="tab"
-                                          data-bs-target="#pemeriksaan<?= $index ?>">
-                                          🩺 Pemeriksaan
-                                        </button>
-                                      </li>
-
-                                      <li class="nav-item">
-                                        <button type="button" class="nav-link"
-                                          data-bs-toggle="tab"
-                                          data-bs-target="#obat<?= $index ?>">
-                                          💊 Obat
-                                        </button>
-                                      </li>
-
-                                      <li class="nav-item">
-                                        <button type="button" class="nav-link"
-                                          data-bs-toggle="tab"
-                                          data-bs-target="#lab<?= $index ?>">
-                                          🧪 Lab<?php if (!empty($labPerVisit[$row['visit_ID']])): ?> <span class="badge rounded-pill bg-primary"><?= count($labPerVisit[$row['visit_ID']]) ?></span><?php endif ?>
-                                        </button>
-                                      </li>
-
-
-                                    </ul>
-
-                                    <div class="tab-content">
-
-                                      <!-- 🩺 PEMERIKSAAN -->
-                                      <div class="tab-pane fade show active" id="pemeriksaan<?= $index ?>">
-
-                                        <!-- 🩺 VITAL SIGN -->
-                                        <div class="border rounded p-3 mb-3">
-                                          <div class="fw-semibold mb-2">🩺 Vital Sign</div>
-
-                                          <div class="row g-2 text-center small">
-
-                                            <div class="col-6 col-md-3">
-                                              <div class="vital-box">
-                                                <div class="vital-value"><?= $row['tekanan_darah'] ?? '-' ?></div>
-                                                <div class="vital-label">Tekanan Darah</div>
-                                              </div>
-                                            </div>
-
-                                            <div class="col-6 col-md-3">
-                                              <div class="vital-box">
-                                                <div class="vital-value"><?= $row['nadi'] ?? '-' ?></div>
-                                                <div class="vital-label">Nadi</div>
-                                              </div>
-                                            </div>
-
-                                            <div class="col-6 col-md-3">
-                                              <div class="vital-box">
-                                                <div class="vital-value"><?= $row['suhu'] ?? '-' ?></div>
-                                                <div class="vital-label">Suhu (°C)</div>
-                                              </div>
-                                            </div>
-
-                                            <div class="col-6 col-md-3">
-                                              <div class="vital-box">
-                                                <div class="vital-value"><?= $row['respirasi'] ?? '-' ?></div>
-                                                <div class="vital-label">Respirasi</div>
-                                              </div>
-                                            </div>
-
-                                            <div class="col-6 col-md-3">
-                                              <div class="vital-box">
-                                                <div class="vital-value"><?= $row['saturasi'] ?? '-' ?></div>
-                                                <div class="vital-label">SpO₂</div>
-                                              </div>
-                                            </div>
-
-                                            <div class="col-6 col-md-3">
-                                              <div class="vital-box">
-                                                <div class="vital-value"><?= $row['berat_badan'] ?? '-' ?></div>
-                                                <div class="vital-label">Berat (kg)</div>
-                                              </div>
-                                            </div>
-
-                                            <div class="col-6 col-md-3">
-                                              <div class="vital-box">
-                                                <div class="vital-value"><?= $row['tinggi_badan'] ?? '-' ?></div>
-                                                <div class="vital-label">Tinggi (cm)</div>
-                                              </div>
-                                            </div>
-
-                                            <div class="col-6 col-md-3">
-                                              <div class="vital-box">
-                                                <div class="vital-value"><?= $row['bmi'] ?? '-' ?></div>
-                                                <div class="vital-label">BMI<?= !empty($row['bmi_keterangan']) ? ' (' . $row['bmi_keterangan'] . ')' : '' ?></div>
-                                              </div>
-                                            </div>
-
-                                          </div>
-                                        </div>
-
-                                        <!-- 📋 PEMERIKSAAN -->
-                                        <div class="border rounded p-3 small">
-
-                                          <div class="mb-2">
-                                            <strong>Keluhan Utama</strong>
-                                            <div class="text-muted"><?= $row['keluhan_penyerta'] ?? '-' ?></div>
-                                          </div>
-
-                                          <div class="mb-2">
-                                            <strong>Anamnesa</strong>
-                                            <div class="text-muted"><?= $row['anamnesa'] ?? '-' ?></div>
-                                          </div>
-
-                                          <?php
-                                          $diagnosa = $row['kdDiag1'] ?? $row['diagnosa'] ?? '';
-                                          $diagnosaData = mysqli_query($koneksi, "SELECT * FROM icd_10 WHERE code='$diagnosa'");
-                                          $icd = mysqli_fetch_array($diagnosaData);
-                                          ?>
-                                          <div class="mb-2">
-                                            <strong>Diagnosa Utama</strong>
-                                            <div class="text-muted">
-                                              <?=
-                                              !empty($row['kdDiag1'])
-                                                ? $row['kdDiag1'] . ' - ' . $row['nmDiag1']
-                                                : (
-                                                  !empty($row['diagnosa'])
-                                                  ? $icd['code'] . ' - ' . $icd['icd10']
-                                                  : '-'
-                                                )
-                                              ?>
-                                            </div>
-                                          </div>
-                                          <?php
-                                          $diagnosaSekunder = $row['kdDiag2'] ?? $row['diagnosa_sekunder'] ?? '';
-                                          $diagnosaDataSekunder = mysqli_query($koneksi, "SELECT * FROM icd_10 WHERE code='$diagnosaSekunder'");
-                                          $icdSekunder = mysqli_fetch_array($diagnosaDataSekunder);
-                                          ?>
-                                          <div class="mb-2">
-                                            <strong>Diagnosa Sekunder</strong>
-                                            <div class="text-muted">
-                                              <?php
-                                              if (!empty($row['kdDiag2'])) {
-
-                                                echo $row['kdDiag2'] . ' - ' . $row['nmDiag2'];
-                                              } elseif (!empty($row['diagnosa_sekunder'])) {
-
-                                                $kodeDiagnosa = array_map('trim', explode(',', $row['diagnosa_sekunder']));
-                                                $hasilDiagnosa = [];
-
-                                                foreach ($kodeDiagnosa as $kode) {
-
-                                                  $query = mysqli_query(
-                                                    $koneksi,
-                                                    "SELECT code, icd10 FROM icd_10 WHERE code='$kode'"
-                                                  );
-
-                                                  if ($data = mysqli_fetch_assoc($query)) {
-                                                    $hasilDiagnosa[] = $data['code'] . ' - ' . $data['icd10'];
-                                                  } else {
-                                                    $hasilDiagnosa[] = $kode;
-                                                  }
-                                                }
-
-                                                echo implode('<br>', $hasilDiagnosa);
-                                              } else {
-
-                                                echo '-';
-                                              }
-                                              ?>
-                                            </div>
-                                            <?php
-                                            if ($row['kdDiag3'] != null) { ?>
-                                              <br>
-                                              <div class="text-muted">
-                                                <?= (!empty($row['kdDiag3']) && !empty($row['nmDiag3']))
-                                                  ? $row['kdDiag3'] . ' - ' . $row['nmDiag3']
-                                                  : '-' ?>
-                                              </div>
-                                            <?php   }
-                                            ?>
-                                          </div>
-
-                                          <div class="mb-2">
-                                            <strong>Tindakan / Terapi</strong>
-                                            <div class="text-muted">
-                                              <?php
-                                              $id_visit = $row['visit_ID'] ?? '';
-
-                                              if (!empty($row['tindakan'])) {
-
-                                                echo nl2br($row['tindakan']);
-                                              } else {
-
-                                                $obatList = [];
-
-                                                $qPermintaan = mysqli_query(
-                                                  $koneksi,
-                                                  "SELECT id_permintaan_farmasi
-                                                      FROM permintaan_pharmacy
-                                                      WHERE id_visit = '$id_visit'
-                                                      ORDER BY id_permintaan_farmasi ASC"
-                                                );
-
-                                                while ($permintaan = mysqli_fetch_assoc($qPermintaan)) {
-
-                                                  $idPermintaan = $permintaan['id_permintaan_farmasi'];
-
-                                                  $qDetail = mysqli_query(
-                                                    $koneksi,
-                                                    "SELECT
-                                                          d.qty,
-                                                          d.signa,
-                                                          d.item_name,
-                                                          p.pharmacy_name_generic,
-                                                          p.pharmacy_name_trade
-                                                      FROM permintaan_pharmacy_details d
-                                                      LEFT JOIN ms_pharmacy p
-                                                          ON p.id_pharmacy = d.id_pharmacy
-                                                      WHERE d.id_permintaan_farmasi = '$idPermintaan'"
-                                                  );
-
-                                                  while ($detail = mysqli_fetch_assoc($qDetail)) {
-                                                    $namaObat =
-                                                      !empty($detail['pharmacy_name_generic'])
-                                                      ? $detail['pharmacy_name_generic']
-                                                      : 'Nama Obat Tidak Ada';
-
-                                                    $obatList[] =
-                                                      $namaObat .
-                                                      ' | Qty: ' . $detail['qty'] .
-                                                      (!empty($detail['signa']) ? ' | Signa: ' . $detail['signa'] : '');
-                                                  }
-                                                }
-
-                                                echo !empty($obatList)
-                                                  ? implode('<br>', array_unique($obatList))
-                                                  : '-';
-                                              }
-                                              ?>
-                                            </div>
-                                          </div>
-
-                                          <div>
-                                            <strong>Status Pulang</strong>
-                                            <div>
-                                              <span class="badge bg-success">
-                                                <?= htmlspecialchars(historyDischargeStatus($row), ENT_QUOTES, 'UTF-8') ?>
-                                              </span>
-                                            </div>
-                                          </div>
-
-                                        </div>
-
-                                      </div>
-
-                                      <!-- 💊 OBAT -->
-                                      <div class="tab-pane fade" id="obat<?= $index ?>">
-                                        <div class="table-responsive small">
-                                          <table class="table table-sm mb-0">
-                                            <thead class="bg-light">
-                                              <tr>
-                                                <th>Nama Obat</th>
-                                                <th>Dosis</th>
-                                                <th>Jumlah</th>
-                                              </tr>
-                                            </thead>
-                                            <tbody>
-
-                                              <?php
-                                              $obat = tampildata("SELECT * 
-                                                  FROM permintaan_pharmacy 
-                                                  WHERE id_visit = '" . $row['visit_ID'] . "'
-                                                  ORDER BY id_permintaan_farmasi ASC
-                                                ");
-
-                                              if ($obat) {
-
-                                                foreach ($obat as $o) {
-
-                                                  // 🔥 ambil detail tiap tiket
-                                                  $detail = tampildata("SELECT * 
-                                                        FROM permintaan_pharmacy_details LEFT JOIN ms_pharmacy ON permintaan_pharmacy_details.id_pharmacy = ms_pharmacy.id_pharmacy 
-                                                        WHERE id_permintaan_farmasi = '" . $o['id_permintaan_farmasi'] . "'
-                                                      ");
-                                              ?>
-
-                                                  <!-- 🔹 HEADER TIKET -->
-                                                  <tr class="ticket-header">
-                                                    <td colspan="4">
-                                                      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                                        <div>
-                                                          <strong>🧾 Resep #<?= $o['id_permintaan_farmasi'] ?></strong>
-                                                          <div class="small text-muted">
-                                                            <?= date('d M Y H:i', strtotime($o['created_at'])) ?>
-                                                          </div>
-                                                        </div>
-
-                                                        <div>
-                                                          <span class="badge bg-primary col-12"><?= $o['tipe_obat'] ?></span>
-                                                        </div>
-                                                      </div>
-                                                    </td>
-                                                  </tr>
-
-                                                  <?php if (strtolower($o['tipe_obat']) == 'racikan') { ?>
-                                                    <!-- 🔥 RACIKAN INFO -->
-                                                    <tr class="racikan-box">
-                                                      <td colspan="4">
-                                                        <div class="racikan-content">
-
-                                                          <div class="racikan-title">🧪 Racikan</div>
-
-                                                          <div class="racikan-grid">
-                                                            <div>
-                                                              <span class="label">Jumlah:</span>
-                                                              <span><?= $o['rck_jumlah'] ?? '-' ?></span>
-                                                            </div>
-
-                                                            <div>
-                                                              <span class="label">Satuan:</span>
-                                                              <span><?= $o['rck_satuan'] ?? '-' ?></span>
-                                                            </div>
-
-                                                            <div>
-                                                              <span class="label">Signa:</span>
-                                                              <span><?= $o['rck_signa'] ?? '-' ?></span>
-                                                            </div>
-                                                          </div>
-
-                                                        </div>
-                                                      </td>
-                                                    </tr>
-                                                  <?php } ?>
-
-                                                  <?php if ($detail) { ?>
-
-                                                    <?php foreach ($detail as $d) { ?>
-                                                      <tr>
-                                                        <td><?= $d['pharmacy_name_generic'] ?></td>
-                                                        <td><?= $d['signa'] ?></td>
-                                                        <td><?= $d['qty'] ?></td>
-                                                        <td>Rp <?= number_format($d['pharmacy_price_item'] * $d['qty'], 0, ',', '.') ?></td>
-                                                      </tr>
-                                                    <?php } ?>
-
-                                                  <?php } else { ?>
-                                                    <tr>
-                                                      <td colspan="4" class="text-center text-muted">
-                                                        Tidak ada detail obat
-                                                      </td>
-                                                    </tr>
-                                                  <?php } ?>
-
-                                                <?php
-                                                }
-                                              } else {
-                                                ?>
-
-                                                <tr>
-                                                  <td colspan="4" class="text-center text-muted">
-                                                    Tidak ada data obat
-                                                  </td>
-                                                </tr>
-
-                                              <?php } ?>
-
-                                            </tbody>
-                                          </table>
-                                        </div>
-                                      </div>
-
-                                      <!-- 🧪 LAB -->
-                                      <div class="tab-pane fade" id="lab<?= $index ?>">
-
-                                        <?php
-                                        $e = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
-                                        $labKunjungan = $labPerVisit[$row['visit_ID']] ?? [];
-                                        if ($labKunjungan) {
-                                          foreach ($labKunjungan as $l) {
-                                            $catatanLab = trim((string) $l['inspection_note']);
+                                  </div>
+                                </div>
+
+                                <ul class="nav nav-tabs mb-3" role="tablist">
+                                  <li class="nav-item">
+                                    <button type="button" class="nav-link active" data-bs-toggle="tab" data-bs-target="#pemeriksaan<?= $index ?>">🩺 Pemeriksaan</button>
+                                  </li>
+                                  <li class="nav-item">
+                                    <button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#obat<?= $index ?>">💊 Obat<?php if ($tiketKunjungan): ?> <span class="badge rounded-pill bg-primary"><?= count($tiketKunjungan) ?></span><?php endif ?></button>
+                                  </li>
+                                  <li class="nav-item">
+                                    <button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#lab<?= $index ?>">🧪 Lab<?php if ($labKunjungan): ?> <span class="badge rounded-pill bg-primary"><?= count($labKunjungan) ?></span><?php endif ?></button>
+                                  </li>
+                                </ul>
+
+                                <div class="tab-content">
+                                  <!-- 🩺 PEMERIKSAAN -->
+                                  <div class="tab-pane fade show active" id="pemeriksaan<?= $index ?>">
+                                    <div class="border rounded p-3 mb-3">
+                                      <div class="fw-semibold mb-2">🩺 Vital Sign</div>
+                                      <div class="row g-2 text-center small">
+                                        <?php foreach ([
+                                          ['tekanan_darah', 'Tekanan Darah'], ['nadi', 'Nadi'], ['suhu', 'Suhu (°C)'], ['respirasi', 'Respirasi'],
+                                          ['saturasi', 'SpO₂'], ['berat_badan', 'Berat (kg)'], ['tinggi_badan', 'Tinggi (cm)'], ['bmi', 'BMI'],
+                                        ] as [$k, $label]):
+                                          $nilai = trim((string) ($row[$k] ?? ''));
+                                          if ($k === 'bmi' && !empty($row['bmi_keterangan'])) $label .= ' (' . $row['bmi_keterangan'] . ')';
                                         ?>
-                                            <div class="lab-card mb-3">
-                                              <div class="lab-header">
-                                                <div>
-                                                  <span class="fw-semibold">🧪 <?= $e($l['inspection_name']) ?></span>
-                                                  <?php if ($l['hasil']): ?>
-                                                    <span class="badge bg-success-subtle text-success ms-1">Ada hasil</span>
-                                                  <?php elseif ($catatanLab === ''): ?>
-                                                    <span class="badge bg-danger-subtle text-danger ms-1">Belum ada hasil</span>
-                                                  <?php endif ?>
-                                                </div>
-                                                <span class="lab-date">
-                                                  <?= !empty($l['inspection_date']) ? date('d M Y', strtotime($l['inspection_date'])) : '-' ?>
-                                                  <?= !empty($l['inspection_source']) ? ' · ' . $e($l['inspection_source']) : '' ?>
-                                                </span>
-                                              </div>
-
-                                              <?php if ($l['hasil']) { ?>
-                                                <div class="table-responsive">
-                                                  <table class="table table-sm table-bordered mb-0 small lab-tabel">
-                                                    <thead class="table-light">
-                                                      <tr>
-                                                        <th>Pemeriksaan</th>
-                                                        <th>Hasil</th>
-                                                        <th>Satuan</th>
-                                                        <th>Nilai normal</th>
-                                                        <th>Keterangan</th>
-                                                      </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                      <?php foreach ($l['hasil'] as $h) {
-                                                        $flag = labFlagRiwayat($h);
-                                                        $mn = trim((string) $h['minimum']);
-                                                        $mx = trim((string) $h['maksimum']);
-                                                        if ($mx === '0') $mx = '';
-                                                        $normal = $mn !== '' && $mx !== '' ? $mn . ' – ' . $mx : ($mn !== '' ? $mn : ($mx !== '' ? $mx : '-'));
-                                                        $ket = trim((string) ($h['keterangan'] ?: $h['catatan']));
-                                                      ?>
-                                                        <tr>
-                                                          <td><?= $e($h['assemen'] ?: '-') ?></td>
-                                                          <td class="<?= $flag ? 'lab-abnormal' : 'fw-semibold' ?>"><?= $e($h['hasil']) ?><?= $flag ? ' <span class="lab-flag" title="' . ($flag === 'H' ? 'Di atas nilai normal' : 'Di bawah nilai normal') . '">' . $flag . '</span>' : '' ?></td>
-                                                          <td><?= $e(trim((string) $h['satuan']) ?: '-') ?></td>
-                                                          <td><?= $e($normal) ?></td>
-                                                          <td><?= $e($ket !== '' ? $ket : '-') ?></td>
-                                                        </tr>
-                                                      <?php } ?>
-                                                    </tbody>
-                                                  </table>
-                                                </div>
-                                              <?php } ?>
-
-                                              <?php if ($catatanLab !== '') { ?>
-                                                <div class="lab-catatan"><strong>Catatan / hasil:</strong> <?= nl2br($e($catatanLab)) ?></div>
-                                              <?php } elseif (!$l['hasil']) { ?>
-                                                <div class="text-muted small p-2">Hasil belum diinput.</div>
-                                              <?php } ?>
+                                          <div class="col-6 col-md-3">
+                                            <div class="vital-box">
+                                              <div class="vital-value"><?= $e($nilai !== '' ? $nilai : '-') ?></div>
+                                              <div class="vital-label"><?= $e($label) ?></div>
                                             </div>
-                                          <?php
-                                          }
-                                        } else {
-                                          ?>
-                                          <div class="text-center text-muted py-3">
-                                            🧪 Tidak ada pemeriksaan laboratorium pada kunjungan ini
                                           </div>
-                                        <?php } ?>
-
+                                        <?php endforeach ?>
                                       </div>
-
                                     </div>
-                                    <?= operationMarkerHistoryHtml($operationHistory[$row['visit_ID']] ?? [], (string) $row['nomor_rm']) ?>
 
+                                    <div class="border rounded p-3 small">
+                                      <div class="mb-2">
+                                        <strong>Keluhan Utama</strong>
+                                        <div class="text-muted"><?= $isi($row['keluhan_penyerta'] ?? '') ?></div>
+                                      </div>
+                                      <div class="mb-2">
+                                        <strong>Anamnesa</strong>
+                                        <div class="text-muted"><?= $isi($row['anamnesa'] ?? '') ?></div>
+                                      </div>
+                                      <div class="mb-2">
+                                        <strong>Diagnosa Utama</strong>
+                                        <div class="text-muted"><?= $e($dxUtama !== '' ? $dxUtama : '-') ?></div>
+                                      </div>
+                                      <div class="mb-2">
+                                        <strong>Diagnosa Sekunder</strong>
+                                        <div class="text-muted">
+                                          <?php
+                                          $sekunder = [];
+                                          if (!empty($row['kdDiag2'])) $sekunder[] = $row['kdDiag2'] . ' - ' . $row['nmDiag2'];
+                                          elseif (!empty($row['diagnosa_sekunder'])) foreach (explode(',', (string) $row['diagnosa_sekunder']) as $k) if (trim($k) !== '') $sekunder[] = $diag($k);
+                                          if (!empty($row['kdDiag3'])) $sekunder[] = $row['kdDiag3'] . (!empty($row['nmDiag3']) ? ' - ' . $row['nmDiag3'] : '');
+                                          echo $sekunder ? implode('<br>', array_map($e, $sekunder)) : '-';
+                                          ?>
+                                        </div>
+                                      </div>
+                                      <div class="mb-2">
+                                        <strong>Tindakan / Terapi</strong>
+                                        <div class="text-muted">
+                                          <?php
+                                          if (trim((string) ($row['tindakan'] ?? '')) !== '') {
+                                            echo $isi($row['tindakan']);
+                                          } else {
+                                            $obatList = [];
+                                            foreach ($tiketKunjungan as $t) foreach ($obatPerTiket[(int) $t['id_permintaan_farmasi']] ?? [] as $d) {
+                                              $obatList[] = ($d['nama'] ?: 'Nama obat tidak ada') . ' | Qty: ' . $d['qty'] . (trim((string) $d['signa']) !== '' ? ' | Signa: ' . $d['signa'] : '');
+                                            }
+                                            echo $obatList ? implode('<br>', array_map($e, array_unique($obatList))) : '-';
+                                          }
+                                          ?>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <strong>Status Pulang</strong>
+                                        <div><span class="badge bg-success"><?= $e(historyDischargeStatus($row)) ?></span></div>
+                                      </div>
+                                    </div>
                                   </div>
 
+                                  <!-- 💊 OBAT -->
+                                  <div class="tab-pane fade" id="obat<?= $index ?>">
+                                    <div class="table-responsive small">
+                                      <table class="table table-sm mb-0">
+                                        <thead class="bg-light">
+                                          <tr>
+                                            <th>Nama Obat</th>
+                                            <th>Signa</th>
+                                            <th class="text-end">Jumlah</th>
+                                            <th class="text-end">Harga</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          <?php if (!$tiketKunjungan): ?>
+                                            <tr><td colspan="4" class="text-center text-muted">Tidak ada data obat</td></tr>
+                                          <?php endif ?>
+                                          <?php foreach ($tiketKunjungan as $t):
+                                            $rincian = $obatPerTiket[(int) $t['id_permintaan_farmasi']] ?? [];
+                                            $racik = strtolower(trim((string) $t['tipe_obat'])) === 'racikan';
+                                          ?>
+                                            <tr class="rw-tiket">
+                                              <td colspan="4">
+                                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                                  <div>
+                                                    <strong>🧾 Resep #<?= (int) $t['id_permintaan_farmasi'] ?></strong>
+                                                    <span class="small text-muted ms-1"><?= $e($tglId($t['created_at'], 'd M Y H:i')) ?></span>
+                                                  </div>
+                                                  <span class="badge bg-primary"><?= $e($t['tipe_obat'] ?: '-') ?></span>
+                                                </div>
+                                                <?php if ($racik): ?>
+                                                  <div class="rw-racik mt-1">🧪 <b><?= $e($t['rck_nama'] ?: 'Racikan') ?></b>
+                                                    · Jumlah: <?= $e($t['rck_jumlah'] ?: '-') ?> <?= $e($t['rck_satuan'] ?: '') ?>
+                                                    · Signa: <?= $e($t['rck_signa'] ?: '-') ?></div>
+                                                <?php endif ?>
+                                              </td>
+                                            </tr>
+                                            <?php if (!$rincian): ?>
+                                              <tr><td colspan="4" class="text-center text-muted">Tidak ada detail obat</td></tr>
+                                            <?php endif ?>
+                                            <?php foreach ($rincian as $d): ?>
+                                              <tr>
+                                                <td><?= $e($d['nama'] ?: '-') ?></td>
+                                                <td><?= $e(trim((string) $d['signa']) !== '' ? $d['signa'] : '-') ?></td>
+                                                <td class="text-end text-nowrap"><?= $e($racik && $d['qty_racik'] !== null ? (float) $d['qty_racik'] : $d['qty']) ?> <?= $e($d['satuan'] ?: '') ?></td>
+                                                <td class="text-end text-nowrap">Rp <?= number_format((float) $d['harga'] * (float) $d['qty'], 0, ',', '.') ?></td>
+                                              </tr>
+                                            <?php endforeach ?>
+                                          <?php endforeach ?>
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  </div>
+
+                                  <!-- 🧪 LAB -->
+                                  <div class="tab-pane fade" id="lab<?= $index ?>">
+                                    <?php if ($labKunjungan) {
+                                      foreach ($labKunjungan as $l) {
+                                        $catatanLab = trim((string) $l['inspection_note']);
+                                    ?>
+                                        <div class="lab-card mb-3">
+                                          <div class="lab-header">
+                                            <div>
+                                              <span class="fw-semibold">🧪 <?= $e($l['inspection_name']) ?></span>
+                                              <?php if ($l['hasil']): ?>
+                                                <span class="badge bg-success-subtle text-success ms-1">Ada hasil</span>
+                                              <?php elseif ($catatanLab === ''): ?>
+                                                <span class="badge bg-danger-subtle text-danger ms-1">Belum ada hasil</span>
+                                              <?php endif ?>
+                                            </div>
+                                            <span class="lab-date">
+                                              <?= $e($tglId($l['inspection_date'])) ?>
+                                              <?= !empty($l['inspection_source']) ? ' · ' . $e($l['inspection_source']) : '' ?>
+                                            </span>
+                                          </div>
+                                          <?php if ($l['hasil']) { ?>
+                                            <div class="table-responsive">
+                                              <table class="table table-sm table-bordered mb-0 small lab-tabel">
+                                                <thead class="table-light">
+                                                  <tr>
+                                                    <th>Pemeriksaan</th>
+                                                    <th>Hasil</th>
+                                                    <th>Satuan</th>
+                                                    <th>Nilai normal</th>
+                                                    <th>Keterangan</th>
+                                                  </tr>
+                                                </thead>
+                                                <tbody>
+                                                  <?php foreach ($l['hasil'] as $h) {
+                                                    $flag = labFlagRiwayat($h);
+                                                    $mn = trim((string) $h['minimum']);
+                                                    $mx = trim((string) $h['maksimum']);
+                                                    if ($mx === '0') $mx = '';
+                                                    $normal = $mn !== '' && $mx !== '' ? $mn . ' – ' . $mx : ($mn !== '' ? $mn : ($mx !== '' ? $mx : '-'));
+                                                    $ket = trim((string) ($h['keterangan'] ?: $h['catatan']));
+                                                  ?>
+                                                    <tr>
+                                                      <td><?= $e($h['assemen'] ?: '-') ?></td>
+                                                      <td class="<?= $flag ? 'lab-abnormal' : 'fw-semibold' ?>"><?= $e($h['hasil']) ?><?= $flag ? ' <span class="lab-flag" title="' . ($flag === 'H' ? 'Di atas nilai normal' : 'Di bawah nilai normal') . '">' . $flag . '</span>' : '' ?></td>
+                                                      <td><?= $e(trim((string) $h['satuan']) ?: '-') ?></td>
+                                                      <td><?= $e($normal) ?></td>
+                                                      <td><?= $e($ket !== '' ? $ket : '-') ?></td>
+                                                    </tr>
+                                                  <?php } ?>
+                                                </tbody>
+                                              </table>
+                                            </div>
+                                          <?php } ?>
+                                          <?php if ($catatanLab !== '') { ?>
+                                            <div class="lab-catatan"><strong>Catatan / hasil:</strong> <?= nl2br($e($catatanLab)) ?></div>
+                                          <?php } elseif (!$l['hasil']) { ?>
+                                            <div class="text-muted small p-2">Hasil belum diinput.</div>
+                                          <?php } ?>
+                                        </div>
+                                      <?php }
+                                    } else { ?>
+                                      <div class="text-center text-muted py-3">🧪 Tidak ada pemeriksaan laboratorium pada kunjungan ini</div>
+                                    <?php } ?>
+                                  </div>
                                 </div>
+                                <?= operationMarkerHistoryHtml($operationHistory[$vid] ?? [], (string) $row['nomor_rm']) ?>
                               </div>
-
-                            <?php endforeach; ?>
-
-                          </div>
-
-                        <?php else: ?>
-
-                          <!-- 🚨 ALERT KOSONG -->
-                          <div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
-                            <i class="ti ti-info-circle"></i>
-                            <div>
-                              <strong>Belum ada riwayat kunjungan</strong><br>
-                              <small>Pasien ini belum memiliki data kunjungan yang tercatat di sistem.</small>
                             </div>
                           </div>
-
-                        <?php endif; ?>
-
+                        <?php endforeach; ?>
                       </div>
-                      <!-- END SCROLL -->
-
-                    </div>
+                    <?php else: ?>
+                      <div class="alert alert-danger d-flex align-items-center gap-2" role="alert">
+                        <i class="ti ti-info-circle"></i>
+                        <div>
+                          <strong>Belum ada riwayat kunjungan</strong><br>
+                          <small>Pasien ini belum memiliki data kunjungan yang tercatat di sistem.</small>
+                        </div>
+                      </div>
+                    <?php endif; ?>
                   </div>
-
                 </div>
               </div>
             </div>
@@ -784,9 +483,7 @@ try {
     </div>
   </div>
 
-  <?php
-  require 'library.php';
-  ?>
+  <?php require 'library.php'; ?>
   <script>
     document.querySelectorAll('.operation-history-picture img').forEach(image => {
       const showError = () => {
@@ -798,6 +495,5 @@ try {
     });
   </script>
 </body>
-
 
 </html>
