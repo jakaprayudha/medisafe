@@ -475,10 +475,15 @@ $(function () {
             }
           });
         } else {
+          // pesan BPJS bisa berisi beberapa baris (rincian per kolom + kode teknis)
+          const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+          const baris = String(res.message || "Gagal menyimpan pemeriksaan.").split("\n").filter(Boolean);
+          const kode = baris.length > 1 && /^\(Kode BPJS/.test(baris[baris.length - 1]) ? baris.pop() : "";
           Swal.fire({
             icon: "error",
-            title: "Oops...",
-            text: res.message
+            title: res.result ? "Ditolak BPJS (PCare)" : "Gagal menyimpan",
+            html: `<div style="text-align:left">${baris.map(esc).join("<br>")}</div>` +
+              (kode ? `<div style="margin-top:10px;font-size:12px;color:#475569">${esc(kode)}</div>` : "")
           });
         }
       },

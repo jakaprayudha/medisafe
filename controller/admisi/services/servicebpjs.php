@@ -118,25 +118,7 @@ function bpjsDecryptResponse($response, $consid, $secretKey, $tStamp, $decrypt =
     }
     $code = (string) $json['metaData']['code'];
     if (!in_array($code, ["200", "201"])) {
-        $errorMessage = 'Terjadi kesalahan';
-        if (isset($json['response']) && is_string($json['response'])) {
-            $errorMessage = $json['response'];
-        } elseif (isset($json['response']) && is_array($json['response'])) {
-            $messages = [];
-            foreach ($json['response'] as $err) {
-                $field = $err['field'] ?? '';
-                $msg   = $err['message'] ?? 'Kesalahan tidak diketahui';
-                if ($field) {
-                    $label = ucfirst(
-                        preg_replace('/([a-z])([A-Z])/', '$1 $2', $field)
-                    );
-                    $messages[] = "{$label}: {$msg}";
-                } else {
-                    $messages[] = $msg;
-                }
-            }
-            $errorMessage = implode("\n", $messages);
-        }
+        $errorMessage = bpjsPesanError($code, (string) ($json['metaData']['message'] ?? ''), $json['response'] ?? null);
         return [
             'success' => false,
             'code'    => $code,
@@ -184,6 +166,66 @@ function stringDecrypt($key, $dtdecrypt)
         $iv
     );
 }
+/**
+ * Susun pesan error BPJS/PCare yang bisa dipahami user.
+ * Rincian per kolom dari BPJS (response = [{field, message}] / {field, message} / string) diutamakan.
+ * Bila BPJS tidak mengirim rincian, dulu yang tampil hanya kode teknis (mis. "PRECONDITION_FAILED");
+ * kini diberi penjelasan sesuai kode + kode teknisnya tetap disertakan untuk dilaporkan ke BPJS.
+ */
+function bpjsPesanError(string $code, string $metaMessage, $response): string
+{
+    $rinci = [];
+    $tambah = function ($err) use (&$rinci) {
+        if (is_string($err)) {
+            if (trim($err) !== '') $rinci[] = trim($err);
+            return;
+        }
+        if (!is_array($err)) return;
+        $msg = trim((string) ($err['message'] ?? ''));
+        if ($msg === '') return;
+        $field = trim((string) ($err['field'] ?? ''));
+        $label = [
+            'kddiag1' => 'Diagnosa utama', 'kddiag2' => 'Diagnosa 2', 'kddiag3' => 'Diagnosa 3', 'kdtacc' => 'TACC', 'alasantacc' => 'Alasan TACC',
+            'kddokter' => 'Dokter', 'kdpoli' => 'Poli', 'kdpolirujukinternal' => 'Poli rujuk internal', 'kdstatuspulang' => 'Status pulang',
+            'tglpulang' => 'Tanggal pulang', 'tgldaftar' => 'Tanggal daftar', 'nokartu' => 'No. kartu BPJS', 'nokunjungan' => 'No. kunjungan',
+            'kdsadar' => 'Kesadaran', 'kdprognosa' => 'Prognosa', 'kdppk' => 'Faskes rujukan', 'tglestrujuk' => 'Tanggal estimasi rujuk',
+            'kdsubspesialis1' => 'Subspesialis', 'kdsarana' => 'Sarana', 'kdkhusus' => 'Rujukan khusus', 'keluhan' => 'Keluhan', 'anamnesa' => 'Anamnesa',
+            'sistole' => 'Sistole', 'diastole' => 'Diastole', 'beratbadan' => 'Berat badan', 'tinggibadan' => 'Tinggi badan', 'resprate' => 'Respirasi',
+            'heartrate' => 'Nadi', 'lingkarperut' => 'Lingkar perut', 'suhu' => 'Suhu', 'terapiobat' => 'Terapi obat', 'terapinonobat' => 'Terapi non-obat',
+            'kdtindakan' => 'Tindakan', 'biaya' => 'Biaya',
+        ][strtolower($field)] ?? ucfirst(preg_replace('/([a-z])([A-Z])/', '$1 $2', $field));
+        $rinci[] = $field !== '' ? $label . ': ' . $msg : $msg;
+    };
+    if (is_string($response)) {
+        $tambah($response);
+    } elseif (is_array($response)) {
+        // satu objek {field, message} atau daftar objek
+        if (isset($response['message']) || isset($response['field'])) $tambah($response);
+        else foreach ($response as $err) $tambah($err);
+    }
+
+    $penjelasan = [
+        '400' => 'Permintaan ke BPJS tidak valid. Periksa kembali data yang diisi.',
+        '401' => 'Akses ke BPJS ditolak (kredensial PCare tidak valid atau kedaluwarsa). Hubungi admin untuk memeriksa pengaturan bridging BPJS.',
+        '404' => 'Data tidak ditemukan di BPJS (mis. no. kunjungan / no. kartu / kode referensi tidak terdaftar).',
+        '412' => 'Data ditolak BPJS karena belum memenuhi syarat PCare. Periksa kembali: diagnosa (kode ICD-10 valid), dokter & poli sesuai jadwal PCare, tanggal kunjungan/pulang, status pulang, isian TACC bila diagnosa non-spesialistik dirujuk, serta kepesertaan BPJS pasien aktif.',
+        '424' => 'Data terkait di BPJS belum tersedia (mis. pendaftaran PCare belum ada). Pastikan pasien sudah terdaftar di PCare.',
+        '428' => 'Data yang sama sudah tercatat di BPJS (duplikat). Periksa apakah data ini sudah pernah dikirim.',
+        '500' => 'Server BPJS sedang mengalami gangguan. Coba lagi beberapa saat lagi.',
+        '503' => 'Layanan BPJS sedang tidak tersedia / sibuk. Coba lagi beberapa saat lagi.',
+    ];
+    $kodeTeknis = 'Kode BPJS: ' . $code . ($metaMessage !== '' ? ' ' . $metaMessage : '');
+
+    if ($rinci) {
+        // rincian dari BPJS sudah spesifik; tambahkan kode teknis untuk laporan
+        return implode("\n", $rinci) . "\n(" . $kodeTeknis . ')';
+    }
+    $teks = $penjelasan[$code] ?? ($metaMessage !== '' && !preg_match('/^[A-Z_]+$/', $metaMessage)
+        ? $metaMessage
+        : 'BPJS menolak permintaan tanpa keterangan rinci.');
+    return $teks . "\n(" . $kodeTeknis . ')';
+}
+
 function bpjsError($message)
 {
     return [
