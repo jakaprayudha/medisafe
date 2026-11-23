@@ -2,7 +2,7 @@
 include '../../database/connect.php';
 $id_customer = $_SESSION['id_customer'];
 $noKunjung = $_GET['id'];
-$stmt = $koneksi->prepare("SELECT pk.jdwpraktek, sc.clinic_name, pc.KodePPK, pv.*, pk.tglEstRujuk, pk.kdDiag1, pk.nmDiag1,pk.nmSubSpesialis1, pk.nmKategori, pk.nmfaskes, p.patient_name, p.patient_gender, p.patient_datebirth, p.patient_bpjs FROM pasien_visit pv INNER JOIN ms_patient p ON pv.id_patient = p.id_patient INNER JOIN pcare_kunjungan AS pk ON pv.noKunjung = pk.noKunjungan INNER JOIN setting_clinic AS sc ON sc.id_customer = pv.id_customer INNER JOIN setting_pcare AS pc ON pc.id_customer = pv.id_customer WHERE pv.noKunjung = ? AND pv.id_customer = ?");
+$stmt = $koneksi->prepare("SELECT pk.jdwpraktek, sc.clinic_name, pc.KodePPK, pv.*, pk.tglEstRujuk, pk.kdDiag1, pk.nmDiag1, pk.kdDiag2, pk.nmDiag2, pk.kdDiag3, pk.nmDiag3, pk.nmSubSpesialis1, pk.nmKategori, pk.nmfaskes, p.patient_name, p.patient_gender, p.patient_datebirth, p.patient_bpjs FROM pasien_visit pv INNER JOIN ms_patient p ON pv.id_patient = p.id_patient INNER JOIN pcare_kunjungan AS pk ON pv.noKunjung = pk.noKunjungan INNER JOIN setting_clinic AS sc ON sc.id_customer = pv.id_customer INNER JOIN setting_pcare AS pc ON pc.id_customer = pv.id_customer WHERE pv.noKunjung = ? AND pv.id_customer = ?");
 $stmt->bind_param('ss', $noKunjung, $id_customer);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -19,8 +19,34 @@ $tgl_lahir     = $data['patient_datebirth'];
 $umur          = $tgl_lahir ? date_diff(date_create($tgl_lahir), date_create('today'))->y : '';
 
 // ================= DATA KUNJUNGAN =================
-$diagnosa         = ($data['kdDiag1']) . " - " . ($data['nmDiag1']);
-$catatan          = $data['catatan'];
+// diagnosa utama + sekunder (dulu hanya kdDiag1 yang dicetak; diagnosa 2 & 3 tidak pernah diambil)
+$e = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
+$fmtDiag = fn($kode, $nama) => trim((string) $kode) === '' ? '' : trim((string) $kode) . (trim((string) $nama) !== '' ? ' - ' . trim((string) $nama) : '');
+$diagnosa = $fmtDiag($data['kdDiag1'] ?? '', $data['nmDiag1'] ?? '');
+$diagnosaSekunder = array_values(array_filter([
+    $fmtDiag($data['kdDiag2'] ?? '', $data['nmDiag2'] ?? ''),
+    $fmtDiag($data['kdDiag3'] ?? '', $data['nmDiag3'] ?? ''),
+]));
+// cadangan bila data PCare kosong: kode dari RME (pasien_visit.diagnosa / diagnosa_sekunder = "I10,K30,")
+if ($diagnosa === '' || !$diagnosaSekunder) {
+    $kodeRme = array_values(array_filter(array_map('trim', explode(',', (string) ($data['diagnosa_sekunder'] ?? '')))));
+    $kodeUtama = trim((string) ($data['diagnosa'] ?? ''));
+    $semuaKode = array_values(array_unique(array_filter(array_merge([$kodeUtama], $kodeRme))));
+    $namaIcd = [];
+    if ($semuaKode) {
+        $stIcd = $koneksi->prepare("SELECT code, icd10 FROM icd_10 WHERE code IN (" . implode(',', array_fill(0, count($semuaKode), '?')) . ")");
+        $stIcd->bind_param(str_repeat('s', count($semuaKode)), ...$semuaKode);
+        $stIcd->execute();
+        foreach ($stIcd->get_result()->fetch_all(MYSQLI_NUM) as [$kd, $nm]) $namaIcd[$kd] = $nm;
+        $stIcd->close();
+    }
+    if ($diagnosa === '' && $kodeUtama !== '') $diagnosa = $fmtDiag($kodeUtama, $namaIcd[$kodeUtama] ?? '');
+    if (!$diagnosaSekunder) {
+        foreach ($kodeRme as $kd) if ($kd !== $kodeUtama) $diagnosaSekunder[] = $fmtDiag($kd, $namaIcd[$kd] ?? '');
+    }
+}
+if ($diagnosa === '') $diagnosa = '-';
+$catatan          = $data['catatan'] ?? '';
 $telah_diberikan  = $data['tindakan'];
 $no_kunjungan     = $noKunjung;
 
@@ -219,8 +245,15 @@ $tgl_cetak = date('d F Y');
                     <tr>
                         <td style="padding-top: 15px;">Diagnosa</td>
                         <td style="padding-top: 15px;">:</td>
-                        <td colspan="6" style="padding-top: 15px;"><?= $diagnosa ?></td>
+                        <td colspan="6" style="padding-top: 15px;"><?= $e($diagnosa) ?></td>
                     </tr>
+                    <?php if ($diagnosaSekunder): ?>
+                    <tr>
+                        <td style="padding-top: 6px;">Diagnosa sekunder</td>
+                        <td style="padding-top: 6px;">:</td>
+                        <td colspan="6" style="padding-top: 6px;"><?= implode('<br>', array_map($e, $diagnosaSekunder)) ?></td>
+                    </tr>
+                    <?php endif ?>
                     <tr>
                         <td style="padding-top: 15px;">Telah diberikan</td>
                         <td style="padding-top: 15px;">:</td>
@@ -249,11 +282,9 @@ $tgl_cetak = date('d F Y');
 |--------------------------------------------------------------------------
 */
 
-                            $namaDokter = preg_replace(
-                                '/^\s*dr\.?\s+/i',
-                                '',
-                                $namaDokter
-                            );
+                            // "dr. X", "dr X", "dr.X" (tanpa spasi; dulu tercetak "dr. dr.X"); "drg." dipertahankan
+                            $gelarDrg = (bool) preg_match('/^\s*drg(?:\.\s*|\s+)/i', $namaDokter);
+                            $namaDokter = preg_replace('/^\s*drg?(?:\.\s*|\s+)/i', '', $namaDokter);
 
                             /*
 |--------------------------------------------------------------------------
@@ -261,7 +292,7 @@ $tgl_cetak = date('d F Y');
 |--------------------------------------------------------------------------
 */
 
-                            $namaDokterTampil = 'dr. ' . $namaDokter;
+                            $namaDokterTampil = ($gelarDrg ? 'drg. ' : 'dr. ') . $namaDokter;
 
                             ?>
 
