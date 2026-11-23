@@ -27,7 +27,7 @@
      </div>
    </div>
  </div>
- <div class="modal fade" id="periodeTablePenunjang" tabindex="-1">
+ <div class="modal fade" id="modalPenunjang" tabindex="-1">
    <div class="modal-dialog">
      <form id="programFormPenunjang" class="modal-content">
        <div class="modal-header">
@@ -56,12 +56,13 @@
            </div>
            <div class="mb-3">
              <label for="inspection_date" class="form-label required">Sumber Hasil</label>
-             <input type="text" value="Lab Klinik" class="form-control" id="inspection_source" name="inspection_source" required>
+             <input type="text" value="Lab Klinik" class="form-control bg-light" id="inspection_source" name="inspection_source" readonly tabindex="-1" title="Sumber hasil dikunci: Lab Klinik">
            </div>
 
            <div class="mb-3">
-             <label for="inspection_note" class="form-label">Catatan</label>
-             <textarea class="form-control" id="inspection_note" name="inspection_note" rows="5"></textarea>
+             <label for="inspection_note" class="form-label required">Catatan</label>
+             <textarea class="form-control catatan-teks" id="inspection_note" name="inspection_note" rows="5" required maxlength="2000" placeholder="Tulis catatan dalam bentuk teks (tanpa angka)"></textarea>
+             <div class="form-text">Wajib diisi, berupa teks — angka tidak bisa diketik.</div>
            </div>
          </div>
        </div>
@@ -112,6 +113,40 @@
    </div>
  </div>
  <script>
+  // Sumber hasil dikunci "Lab Klinik"; catatan wajib berupa teks (angka tidak diterima)
+  (function() {
+    const FORM = '#programFormPenunjang';
+    $(document).on('input', FORM + ' .catatan-teks', function() {
+      const bersih = this.value.replace(/[0-9]/g, '');
+      if (bersih !== this.value) {
+        const pos = this.selectionStart - (this.value.length - bersih.length);
+        this.value = bersih;
+        this.setSelectionRange(pos, pos);
+        $(this).addClass('is-invalid');
+        clearTimeout(this._t);
+        this._t = setTimeout(() => $(this).removeClass('is-invalid'), 1200);
+      }
+    });
+    // dipasang lebih dulu dari handler simpan: hentikan submit bila catatan tidak valid
+    document.addEventListener('submit', function(e) {
+      if (!e.target.matches(FORM)) return;
+      const f = e.target;
+      f.querySelector('[name="inspection_source"]').value = 'Lab Klinik';
+      const c = f.querySelector('[name="inspection_note"]');
+      const v = c.value.trim();
+      let pesan = '';
+      if (v === '') pesan = 'Catatan wajib diisi.';
+      else if (/[0-9]/.test(v)) pesan = 'Catatan tidak boleh berisi angka.';
+      else if (!/[A-Za-z\u00C0-\u024F]/.test(v)) pesan = 'Catatan harus berupa teks.';
+      if (pesan) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        c.classList.add('is-invalid');
+        Swal.fire('Lengkapi data', pesan, 'warning');
+      }
+    }, true);
+  })();
+
    const apiUrlPenunjang = 'controller/visit/penunjang?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&id_patient=<?= $id_patient ?>';
 
    $(document).ready(function() {
@@ -238,8 +273,8 @@
      $('#btnTambahPenunjang').on('click', function() {
        $('#programFormPenunjang')[0].reset(); // ✅ pakai programFormPenunjang, bukan addForm
        $('#id_inspection').val('');
-       $('#periodeTablePenunjang .modal-title').text('Tambah Data');
-       $('#periodeTablePenunjang').modal('show');
+       $('#modalPenunjang .modal-title').text('Tambah Data');
+       $('#modalPenunjang').modal('show');
      });
 
 
@@ -258,7 +293,7 @@
          .then(data => {
            if (data.status === 'success') {
              Swal.fire('Berhasil!', data.message, 'success');
-             $('#periodeTablePenunjang').modal('hide');
+             $('#modalPenunjang').modal('hide');
              table.ajax.reload(null, false);
            } else {
              Swal.fire('Gagal!', data.message, 'error');
@@ -294,8 +329,8 @@
              }
 
              $('#id_inspection').val(d.id_inspection);
-             $('#periodeTablePenunjang .modal-title').text('Edit Data');
-             $('#periodeTablePenunjang').modal('show');
+             $('#modalPenunjang .modal-title').text('Edit Data');
+             $('#modalPenunjang').modal('show');
            }
          });
      });
@@ -327,16 +362,16 @@
  </script>
 
  <script>
-   $('#periodeTablePenunjang').on('shown.bs.modal', function() {
+   $('#modalPenunjang').on('shown.bs.modal', function() {
      $('#inspection_name').select2({
-       dropdownParent: $('#periodeTablePenunjang'),
+       dropdownParent: $('#modalPenunjang'),
        width: '100%'
      });
    });
    $(document).ready(function() {
 
      $('#inspection_name').select2({
-       dropdownParent: $('#periodeTablePenunjang'),
+       dropdownParent: $('#modalPenunjang'),
        width: '100%',
        tags: true, // bisa input manual
        placeholder: "Ketik atau pilih obat",
@@ -514,8 +549,10 @@
          Swal.close();
 
          if (res.status === 'success') {
-           Swal.fire('Berhasil', 'Hasil lab disimpan', 'success');
+           Swal.fire({ icon: 'success', title: 'Hasil lab disimpan', timer: 1300, showConfirmButton: false });
            $('#hasilModal').modal('hide');
+           // muat ulang daftar agar kolom Hasil langsung terisi (dulu harus refresh halaman)
+           if ($.fn.DataTable.isDataTable('#periodeTablePenunjang')) $('#periodeTablePenunjang').DataTable().ajax.reload(null, false);
          } else {
            Swal.fire('Gagal', res.message, 'error');
          }
