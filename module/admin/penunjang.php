@@ -1,190 +1,339 @@
 <?php
-$title = 'Penunjang';
-// require '../../database/connect.php';
+/**
+ * Pemeriksaan Penunjang (lab) — permintaan & hasil kunjungan ini + riwayat lab pasien di kunjungan lain.
+ * Aturan: sumber hasil dikunci "Lab Klinik"; catatan wajib teks tanpa angka.
+ * Perbaikan: query kunjungan dirangkai langsung dari URL (SQL injection) tanpa batas faskes, $_GET['rme'] tanpa
+ * default, id kunjungan dicetak mentah (XSS), isi tabel/hasil disisipkan tanpa escape, select2 diinisialisasi ulang
+ * tiap modal dibuka tanpa mode ketik -> nama pemeriksaan ketikan sendiri hilang & saat ubah nama bisa terkirim
+ * kosong, pemeriksaan kunjungan lama ikut bisa diubah/dihapus dari kunjungan ini, modal di luar </body>,
+ * gagal hapus tanpa pesan, kolom Aksi di paling kanan.
+ */
+$title = 'Pemeriksaan Penunjang';
 require '../../controller/view.php';
-$no = $_GET['no'];
-$rm = $_GET['rm'];
-$check = mysqli_query($koneksi, "SELECT id_patient FROM pasien_visit WHERE visit_ID='$no'");
-$datacheck = mysqli_fetch_array($check);
-$id_patient = $datacheck['id_patient'];
+$no = trim((string) ($_GET['no'] ?? ''));
+$rm = trim((string) ($_GET['rm'] ?? ''));
+$rme = (string) ($_GET['rme'] ?? '');
+$idc = (int) ($_SESSION['id_customer'] ?? 0);
+$h = fn($v) => htmlspecialchars((string) ($v ?? ''), ENT_QUOTES, 'UTF-8');
+
+$st = $koneksi->prepare("SELECT visit_status FROM pasien_visit WHERE visit_ID = ? AND id_customer = ? LIMIT 1");
+$st->bind_param('si', $no, $idc);
+$st->execute();
+$kv = $st->get_result()->fetch_assoc();
+$st->close();
+
+$st = $koneksi->prepare("SELECT assemen, tarif FROM laboratorium_detail WHERE status = '1' ORDER BY assemen");
+$st->execute();
+$masterLab = $st->get_result()->fetch_all(MYSQLI_ASSOC);
+$st->close();
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="id">
 
 <head>
   <base href="../../">
-  <?php
-  require '../../assets/template/head.php';
-  ?>
+  <?php require '../../assets/template/head.php'; ?>
+  <style>
+    .pj .kepala { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .pj .kepala .ic { width: 42px; height: 42px; border-radius: 12px; background: #e0f2fe; color: #075985; display: inline-flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+    .pj .kepala h5 { margin: 0; font-weight: 700; color: #0f172a; }
+    .pj .kepala small { color: #475569; }
+    .pj .sec { border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; background: #fff; }
+    .pj .sec-h { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .pj .sec-h b { font-size: 1rem; color: #0f172a; }
+    .pj table.t { width: 100%; border-collapse: collapse; font-size: .86rem; }
+    .pj table.t th { font-size: .7rem; text-transform: uppercase; color: #475569; font-weight: 700; background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 7px 8px; white-space: nowrap; }
+    .pj table.t td { border-bottom: 1px solid #eef2f6; padding: 8px; vertical-align: top; color: #1f2937; }
+    .pj table.t tr:last-child td { border-bottom: 0; }
+    .pj .aksi { white-space: nowrap; }
+    .pj .aksi .btn { padding: 3px 9px; font-weight: 600; }
+    .pj .nama { font-weight: 700; color: #0f172a; }
+    .pj .nomor { font-size: .72rem; color: #64748b; }
+    .pj .st { font-size: .72rem; font-weight: 700; border-radius: 6px; padding: 2px 8px; white-space: nowrap; display: inline-block; }
+    .pj .st-ok { background: #dcfce7; color: #14532d; }
+    .pj .st-belum { background: #fef3c7; color: #92400e; }
+    .pj .hasil { font-weight: 700; color: #0f172a; }
+    .pj .catatan { font-size: .8rem; color: #334155; white-space: pre-line; }
+    .pj .kosong { text-align: center; padding: 26px 10px; color: #475569; }
+    .pj .kosong i { font-size: 2rem; color: #94a3b8; display: block; margin-bottom: 6px; }
+    #hasilModal .flag { font-size: .7rem; font-weight: 800; border-radius: 5px; padding: 1px 6px; }
+    #hasilModal .flag-H { background: #fee2e2; color: #991b1b; }
+    #hasilModal .flag-L { background: #dbeafe; color: #1e3a8a; }
+    #hasilModal tr.abn .hasil-input { border-color: #f59e0b; background: #fffbeb; font-weight: 700; }
+    #hasilModal .hasil-input { font-weight: 600; }
+  </style>
 </head>
 
 <body>
-  <!--  Body Wrapper -->
   <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
     data-sidebar-position="fixed" data-header-position="fixed">
-    <!-- Sidebar Start -->
-    <?php
-    require 'sidebar.php';
-    ?>
-    <!--  Sidebar End -->
-    <!--  Main wrapper -->
+    <?php require 'sidebar.php'; ?>
     <div class="body-wrapper">
-      <!--  Header Start -->
-      <?php
-      require 'navbar.php';
-      ?>
-      <!--  Header End -->
+      <?php require 'navbar.php'; ?>
       <div class="body-wrapper-inner">
-        <div class="container-fluid">
+        <div class="container-fluid pj">
           <?php
-          $rme = $_GET['rme']; // default a
-          if ($rme == 'a') {
-            include 'menu_rme.php';
-          } else if ($rme == 'b') {
-            include 'menu_rmeb.php';
-          } else if ($rme == 'c') {
-            include 'menu_rme_inap.php';
-          }
+          if ($rme === 'a') include 'menu_rme.php';
+          elseif ($rme === 'b') include 'menu_rmeb.php';
+          elseif ($rme === 'c') include 'menu_rme_inap.php';
           ?>
-          <div class="row">
-            <div class="col-12">
-              <?php
-              require 'card-pasien.php';
-              ?>
-            </div>
-            <div class="col-lg-12 d-flex align-items-stretch">
-              <div class="card w-100">
-                <div class="card-body p-4">
-                  <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Data Penunjang</h5>
-                    <!-- Grup tombol di sisi kanan -->
-                    <div class="d-flex ms-auto gap-2">
-                      <a href="module/admin/print/formulir_lab?no=<?= urlencode((string) ($no ?? '')) ?>&rm=<?= urlencode((string) ($rm ?? '')) ?>" target="_blank">
-                        <button class="btn btn-light"><i class="fas fa-print"></i> Cetak</button>
-                      </a>
-                      <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
-                    </div>
-                  </div>
-                  <div class="table-responsive" data-simplebar>
-                    <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
-                      <thead>
-                        <tr>
-                          <th>Nama Pemeriksaan</th>
-                          <th>Tanggal</th>
-                          <th>Sumber</th>
-                          <th>Keterangan</th>
-                          <th>Hasil</th>
-                          <th class="text-center">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody></tbody>
-                    </table>
-                  </div>
+          <?php if (!$kv): ?>
+            <div class="alert alert-danger mt-3">Kunjungan tidak ditemukan untuk faskes ini.</div>
+          <?php else: ?>
+          <?php require 'card-pasien.php'; ?>
+
+          <div class="card w-100">
+            <div class="card-body p-3 p-md-4">
+              <div class="kepala">
+                <span class="ic"><i class="ti ti-microscope"></i></span>
+                <div class="flex-grow-1">
+                  <h5>Pemeriksaan Penunjang</h5>
+                  <small>Permintaan laboratorium kunjungan ini, input hasil, dan riwayat lab pasien.</small>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                  <a class="btn btn-outline-dark" target="_blank" href="module/admin/print/formulir_lab?no=<?= $h(urlencode($no)) ?>&rm=<?= $h(urlencode($rm)) ?>"><i class="ti ti-printer me-1"></i>Cetak</a>
+                  <?php if ((int) $kv['visit_status'] !== 99): ?>
+                    <button type="button" class="btn btn-primary" id="btnTambah"><i class="ti ti-plus me-1"></i>Tambah Pemeriksaan</button>
+                  <?php endif ?>
+                </div>
+              </div>
+              <?php if ((int) $kv['visit_status'] === 99): ?>
+                <div class="alert alert-warning"><i class="ti ti-ban me-1"></i>Kunjungan ini sudah <b>dibatalkan</b>.</div>
+              <?php endif ?>
+
+              <div class="sec">
+                <div class="sec-h">
+                  <b><i class="ti ti-flask me-1"></i>Kunjungan ini</b>
+                  <span class="badge bg-dark" id="nKini">0</span>
+                  <span class="small text-muted ms-md-2" id="ringkasKini"></span>
+                </div>
+                <div class="table-responsive">
+                  <table class="t">
+                    <thead>
+                      <tr>
+                        <th style="width:1%">Aksi</th>
+                        <th>Pemeriksaan</th>
+                        <th>Tanggal</th>
+                        <th>Hasil</th>
+                        <th>Catatan</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbKini"><tr><td colspan="5" class="kosong"><span class="spinner-border spinner-border-sm me-2"></span>Memuat...</td></tr></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="sec mb-0">
+                <div class="sec-h">
+                  <b><i class="ti ti-history me-1"></i>Riwayat lab kunjungan sebelumnya</b>
+                  <span class="badge bg-dark" id="nRiwayat">0</span>
+                  <input type="search" class="form-control ms-md-auto" id="cariRiwayat" placeholder="Cari pemeriksaan..." style="max-width:260px">
+                </div>
+                <div class="table-responsive" style="max-height:50vh">
+                  <table class="t">
+                    <thead>
+                      <tr>
+                        <th style="width:1%">Aksi</th>
+                        <th>Pemeriksaan</th>
+                        <th>Tanggal</th>
+                        <th>Hasil</th>
+                        <th>Catatan</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbRiwayat"></tbody>
+                  </table>
                 </div>
               </div>
             </div>
           </div>
+          <?php endif ?>
         </div>
       </div>
     </div>
   </div>
 
-
-
-  <?php
-  require 'library.php';
-  ?>
-</body>
-<div class="modal fade" id="programModal" tabindex="-1">
-  <div class="modal-dialog">
-    <form id="programForm" class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title"></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" name="id_inspection" id="id_inspection">
-        <input type="hidden" name="id_visit" id="id_visit" value="<?= $_GET['no'] ?>">
-        <div class="row">
+  <div class="modal fade" id="programModal" tabindex="-1" aria-labelledby="programModalTitle" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="programForm" class="modal-content" novalidate>
+        <div class="modal-header">
+          <h5 class="modal-title" id="programModalTitle">Tambah Pemeriksaan</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="id_inspection" id="id_inspection">
+          <input type="hidden" name="id_visit" id="id_visit" value="<?= $h($no) ?>">
           <div class="mb-3">
-            <label for="inspection_name" class="form-label required">Nama Pemeriksaan</label>
-            <select name="inspection_name" id="inspection_name" class="form-select js-example-basic-item" required>
-              <option value="">Select Option</option>
-              <?php
-              $getbarang = tampildata("SELECT * FROM laboratorium_detail WHERE status='1'");
-              ?>
-              <?php foreach ($getbarang as $barang): ?>
-                <option value="<?= $barang['assemen']; ?>" data-harga="<?= $barang['tarif']; ?>"><?= $barang['assemen']; ?></option>
+            <label for="inspection_name" class="form-label fw-semibold">Nama pemeriksaan <span class="text-danger">*</span></label>
+            <select name="inspection_name" id="inspection_name" class="form-select" style="width:100%">
+              <option value=""></option>
+              <?php foreach ($masterLab as $m): ?>
+                <option value="<?= $h($m['assemen']) ?>"><?= $h($m['assemen']) ?></option>
               <?php endforeach ?>
             </select>
+            <div class="form-text">Pilih dari daftar, atau ketik nama pemeriksaan lain.</div>
           </div>
-          <div class="mb-3">
-            <label for="inspection_date" class="form-label required">Tanggal Pemeriksaan</label>
-            <input type="date" value="<?= date('Y-m-d') ?>" class="form-control" id="inspection_date" name="inspection_date" required>
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label for="inspection_date" class="form-label fw-semibold">Tanggal <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" id="inspection_date" name="inspection_date" max="<?= date('Y-m-d') ?>">
+            </div>
+            <div class="col-6">
+              <label for="inspection_source" class="form-label fw-semibold">Sumber hasil</label>
+              <input type="text" value="Lab Klinik" class="form-control bg-light" id="inspection_source" name="inspection_source" readonly tabindex="-1" title="Sumber hasil dikunci: Lab Klinik">
+            </div>
           </div>
-          <div class="mb-3">
-            <label for="inspection_date" class="form-label required">Sumber Hasil</label>
-            <input type="text" value="Lab Klinik" class="form-control bg-light" id="inspection_source" name="inspection_source" readonly tabindex="-1" title="Sumber hasil dikunci: Lab Klinik">
-          </div>
-
-          <div class="mb-3">
-            <label for="inspection_note" class="form-label required">Catatan</label>
-            <textarea class="form-control catatan-teks" id="inspection_note" name="inspection_note" rows="5" required maxlength="2000" placeholder="Tulis catatan dalam bentuk teks (tanpa angka)"></textarea>
-            <div class="form-text">Wajib diisi, berupa teks — angka tidak bisa diketik.</div>
+          <div>
+            <label for="inspection_note" class="form-label fw-semibold">Catatan <span class="text-danger">*</span></label>
+            <textarea class="form-control catatan-teks" id="inspection_note" name="inspection_note" rows="4" maxlength="2000" placeholder="Mis. puasa sejak malam, sampel darah vena"></textarea>
+            <div class="form-text">Wajib diisi berupa teks — angka tidak bisa diketik.</div>
           </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Simpan</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<div class="modal fade" id="hasilModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-
-      <div class="modal-header">
-        <h5 class="modal-title" id="hasilModalTitle">Input Hasil Lab</h5>
-        <button class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-        <div id="previewContainer" style="display:none;">
-          <iframe
-            id="previewFrame"
-            style="width:100%; height:75vh; border:none;">
-          </iframe>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary" id="btnSimpan"><i class="ti ti-device-floppy me-1"></i>Simpan</button>
         </div>
-        <table class="table table-bordered">
-          <thead>
-            <tr>
-              <th>Pemeriksaan</th>
-              <th>Hasil</th>
-              <th>Satuan</th>
-              <th>Normal</th>
-              <th>Keterangan</th>
-            </tr>
-          </thead>
-          <tbody id="hasilBody"></tbody>
-        </table>
-      </div>
-
-      <div class="modal-footer">
-        <div class="modal-footer" id="hasilFooter">
-          <button class="btn btn-primary" id="saveHasil">Simpan</button>
-        </div>
-      </div>
-
+      </form>
     </div>
   </div>
-</div>
+
+  <div class="modal fade" id="hasilModal" tabindex="-1" aria-labelledby="hasilModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title mb-0" id="hasilModalTitle">Input Hasil Lab</h5>
+            <small class="text-muted" id="hasilInfo"></small>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div id="previewContainer" style="display:none;">
+            <iframe id="previewFrame" title="Preview hasil laboratorium" style="width:100%; height:72vh; border:none;"></iframe>
+          </div>
+          <div class="table-responsive" id="hasilWrap">
+            <table class="table table-sm align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Parameter</th>
+                  <th style="width:170px">Hasil</th>
+                  <th>Satuan</th>
+                  <th>Nilai normal</th>
+                  <th>Keterangan</th>
+                </tr>
+              </thead>
+              <tbody id="hasilBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer" id="hasilFooter">
+          <span class="small text-muted me-auto" id="hasilProgres"></span>
+          <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Batal</button>
+          <button type="button" class="btn btn-primary" id="saveHasil"><i class="ti ti-device-floppy me-1"></i>Simpan Hasil</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <?php require 'library.php'; ?>
+<?php if ($kv): ?>
 <script>
-  // Sumber hasil dikunci "Lab Klinik"; catatan wajib berupa teks (angka tidak diterima)
   (function() {
-    const FORM = '#programForm';
-    $(document).on('input', FORM + ' .catatan-teks', function() {
+    const NO = <?= json_encode($no) ?>;
+    const RM = <?= json_encode($rm) ?>;
+    const apiUrl = 'controller/visit/penunjang?no=' + encodeURIComponent(NO);
+    // pemeriksaan yang hasilnya dientri lewat modul lab (format khusus) -> hanya preview
+    const LAB_KHUSUS = ['ureum / kreatinin', 'darah lengkap', 'widal'];
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const tgl = (s) => { const d = s ? new Date(String(s).slice(0, 10) + 'T00:00:00') : null; return d && !isNaN(d) ? d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'; };
+    const hariIni = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+    const isKhusus = (nama) => LAB_KHUSUS.some(k => String(nama || '').toLowerCase().includes(k));
+    let data = [];
+
+    // ---------- daftar ----------
+    function muat() {
+      return fetch(apiUrl, { cache: 'no-store' })
+        .then(r => r.json())
+        .then(res => {
+          if (res.status !== 'success') throw new Error(res.message);
+          data = res.data || [];
+          render();
+        })
+        .catch(err => $('#tbKini').html(`<tr><td colspan="5" class="kosong text-danger"><i class="ti ti-alert-triangle"></i>${esc(err.message || 'Gagal memuat data.')}</td></tr>`));
+    }
+
+    function baris(r, kini) {
+      const khusus = isKhusus(r.inspection_name);
+      const terisi = +r.hasil_terisi > 0;
+      const btnHasil = khusus ?
+        `<button type="button" class="btn btn-sm btn-dark hasil-btn" data-id="${+r.id_inspection}"><i class="ti ti-eye me-1"></i>Lihat</button>` :
+        (kini ?
+          `<button type="button" class="btn btn-sm ${terisi ? 'btn-success' : 'btn-primary'} hasil-btn" data-id="${+r.id_inspection}"><i class="ti ti-${terisi ? 'pencil' : 'test-pipe'} me-1"></i>${terisi ? 'Ubah Hasil' : 'Isi Hasil'}</button>` :
+          `<button type="button" class="btn btn-sm btn-dark hasil-btn" data-id="${+r.id_inspection}" data-lihat="1"><i class="ti ti-eye me-1"></i>Lihat</button>`);
+      const aksi = btnHasil + (kini ?
+        ` <button type="button" class="btn btn-sm btn-warning edit-btn" data-id="${+r.id_inspection}" title="Ubah permintaan"><i class="ti ti-edit"></i></button>
+          <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="${+r.id_inspection}" title="Hapus"><i class="ti ti-trash"></i></button>` : '');
+      const hasil = terisi ?
+        `<span class="hasil">${esc(r.hasil)}</span>${r.keterangan ? ` <span class="text-muted small">(${esc(r.keterangan)})</span>` : ''}` :
+        '<span class="st st-belum">Belum ada hasil</span>';
+      return `<tr>
+        <td class="aksi">${aksi}</td>
+        <td><div class="nama">${esc(r.inspection_name || '-')}</div><div class="nomor">${esc(r.inspection_number || '')}${kini ? '' : ' · kunjungan ' + esc(tgl(r.visit_date))}</div></td>
+        <td class="text-nowrap">${esc(tgl(r.inspection_date))}</td>
+        <td>${hasil}</td>
+        <td class="catatan">${esc(r.inspection_note || '-')}</td>
+      </tr>`;
+    }
+
+    function render() {
+      const kini = data.filter(r => +r.is_current === 1);
+      const q = String($('#cariRiwayat').val() || '').trim().toLowerCase();
+      const lama = data.filter(r => +r.is_current !== 1);
+      const lamaTampil = lama.filter(r => !q || `${r.inspection_name} ${r.inspection_note} ${r.hasil || ''}`.toLowerCase().includes(q));
+      const belum = kini.filter(r => !(+r.hasil_terisi > 0)).length;
+      $('#nKini').text(kini.length);
+      $('#nRiwayat').text(lama.length);
+      $('#ringkasKini').text(kini.length ? (belum ? `${belum} pemeriksaan belum ada hasil` : 'Semua hasil sudah terisi') : '');
+      $('#tbKini').html(kini.length ? kini.map(r => baris(r, true)).join('') :
+        '<tr><td colspan="5" class="kosong"><i class="ti ti-flask-off"></i>Belum ada permintaan pemeriksaan pada kunjungan ini.</td></tr>');
+      $('#tbRiwayat').html(lamaTampil.length ? lamaTampil.map(r => baris(r, false)).join('') :
+        `<tr><td colspan="5" class="kosong">${lama.length ? 'Tidak ada riwayat yang cocok.' : 'Belum ada riwayat lab di kunjungan lain.'}</td></tr>`);
+    }
+    $('#cariRiwayat').on('input', render);
+
+    // ---------- form permintaan ----------
+    const $nama = $('#inspection_name').select2({
+      dropdownParent: $('#programModal'),
+      width: '100%',
+      tags: true,
+      placeholder: 'Ketik atau pilih pemeriksaan',
+      createTag: p => { const t = $.trim(p.term); return t ? { id: t, text: t, newOption: true } : null; },
+      templateResult: d => { const $r = $('<span></span>').text(d.text); if (d.newOption) $r.append(' <em class="text-muted">(baru)</em>'); return $r; }
+    }).on('change', () => $('#programForm .select2-selection').removeClass('border-danger'));
+
+    function setNama(v) {
+      if (v && !$nama.find('option').filter((_, o) => o.value === v).length) $nama.append(new Option(v, v));
+      $nama.val(v || '').trigger('change');
+    }
+    function bukaForm(d) {
+      const f = $('#programForm')[0];
+      f.reset();
+      $(f).find('.is-invalid').removeClass('is-invalid');
+      $('#id_inspection').val(d ? d.id_inspection : '');
+      setNama(d ? d.inspection_name : '');
+      $('#inspection_date').val(d ? String(d.inspection_date || '').slice(0, 10) : hariIni());
+      $('#inspection_source').val('Lab Klinik');
+      $('#inspection_note').val(d ? (d.inspection_note || '') : '');
+      $('#programModalTitle').text(d ? 'Ubah Permintaan Pemeriksaan' : 'Tambah Pemeriksaan');
+      $('#programModal').modal('show');
+    }
+    $('#btnTambah').on('click', () => bukaForm(null));
+    $(document).on('click', '.edit-btn', function() {
+      const d = data.find(r => +r.id_inspection === +$(this).data('id'));
+      if (d) bukaForm(d);
+    });
+
+    // catatan: hanya teks (angka langsung dibuang saat diketik)
+    $('#inspection_note').on('input', function() {
       const bersih = this.value.replace(/[0-9]/g, '');
       if (bersih !== this.value) {
         const pos = this.selectionStart - (this.value.length - bersih.length);
@@ -193,449 +342,169 @@ $id_patient = $datacheck['id_patient'];
         $(this).addClass('is-invalid');
         clearTimeout(this._t);
         this._t = setTimeout(() => $(this).removeClass('is-invalid'), 1200);
-      }
+      } else $(this).removeClass('is-invalid');
     });
-    // dipasang lebih dulu dari handler simpan: hentikan submit bila catatan tidak valid
-    document.addEventListener('submit', function(e) {
-      if (!e.target.matches(FORM)) return;
-      const f = e.target;
-      f.querySelector('[name="inspection_source"]').value = 'Lab Klinik';
-      const c = f.querySelector('[name="inspection_note"]');
-      const v = c.value.trim();
-      let pesan = '';
-      if (v === '') pesan = 'Catatan wajib diisi.';
-      else if (/[0-9]/.test(v)) pesan = 'Catatan tidak boleh berisi angka.';
-      else if (!/[A-Za-z\u00C0-\u024F]/.test(v)) pesan = 'Catatan harus berupa teks.';
-      if (pesan) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        c.classList.add('is-invalid');
-        Swal.fire('Lengkapi data', pesan, 'warning');
-      }
-    }, true);
-  })();
+    $('#inspection_date').on('input', function() { $(this).removeClass('is-invalid'); });
 
-  const apiUrl = 'controller/visit/penunjang?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&id_patient=<?= $id_patient ?>';
-
-  $(document).ready(function() {
-
-    var table = $('#periodeTable').DataTable({
-      processing: true,
-      serverSide: false,
-      order: [
-        [1, "desc"]
-      ], // Urutkan berdasarkan kolom tanggal
-      ajax: {
-        url: apiUrl,
-        type: "GET",
-        dataSrc: function(json) {
-          return json.data.map(function(row) {
-            return {
-              "actions": (() => {
-                let name = (row.inspection_name || '').toLowerCase();
-
-                let isLabKhusus =
-                  name.includes('ureum / kreatinin') ||
-                  name.includes('darah lengkap') ||
-                  name.includes('widal');
-
-                let btnClass = row.is_current == 1 ?
-                  'btn-success' :
-                  (isLabKhusus ? 'btn-light' : 'btn-info');
-
-                let icon = isLabKhusus ? 'fas fa-eye' : 'fas fa-flask';
-                let title = isLabKhusus ? 'Lihat Hasil' : 'Input Hasil';
-                return `
-                  <div class="text-center">
-                    <div class="btn-group btn-group-sm" role="group">
-                      <a class="btn ${btnClass} hasil-btn"
-                        title="${title}"
-                        data-id="${row.id_inspection}"
-                        data-kode="${row.inspection_name}">
-                        <i class="${icon}"></i>
-                      </a>
-
-                      <a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id_inspection}">
-                        <i class="fas fa-edit"></i>
-                      </a>
-
-                      <a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_inspection}">
-                        <i class="fas fa-trash"></i>
-                      </a>
-                    </div>
-                  </div>
-                `;
-              })(),
-              "name": (() => {
-
-                let badge = '';
-
-                if (row.is_current == 1) {
-                  badge = `
-            <span class="badge bg-success ms-1">
-                Visit Saat Ini
-            </span>
-            `;
-                }
-
-                return `
-              ${row.inspection_name ?? '-'}
-              ${badge}
-          `;
-              })(),
-              "tanggal": row.inspection_date ?? "-",
-              "sumber": row.inspection_source ?? "-",
-              "keterangan": row.inspection_note ?? "-",
-              "hasil": row.hasil ?
-                `${row.hasil}${row.keterangan ? ' (' + row.keterangan + ')' : ''}` :
-                "-"
-            };
-          });
-        }
-      },
-      columns: [{
-          data: "name",
-          className: "text-wrap"
-        },
-        {
-          data: "tanggal",
-          className: "text-wrap"
-        },
-        {
-          data: "sumber",
-          className: "text-wrap"
-        },
-        {
-          data: "keterangan",
-          className: "text-wrap"
-        },
-        {
-          data: "hasil",
-          className: "text-wrap"
-        },
-        {
-          data: "actions",
-          orderable: false,
-          searchable: false
-        }
-      ],
-      // ← Letakkan di sini
-      createdRow: function(row, data) {
-
-        if (data.is_current == 1) {
-
-          $(row)
-            .addClass('table-success')
-            .css('font-weight', '600');
-
-        }
-
-      }
-
-    });
-
-    $('#customSearch').on('keyup', function() {
-      table.search(this.value).draw();
-    });
-
-    // 🔹 Tambah
-    $('#btnTambah').on('click', function() {
-      $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
-      $('#id_inspection').val('');
-      $('#programModal .modal-title').text('Tambah Data');
-      $('#programModal').modal('show');
-    });
-
-
-    // 🔹 Submit (Tambah / Update)
     $('#programForm').on('submit', function(e) {
       e.preventDefault();
-
-      let formData = new FormData(this); // ✅ ambil langsung FormData
-      let id = $('#id_inspection').val();
-
-      fetch(apiUrl + (id ? `?id=${id}` : ''), {
-          method: id ? 'POST' : 'POST', // biar gampang semua via POST
-          body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === 'success') {
-            Swal.fire('Berhasil!', data.message, 'success');
+      const nama = String($nama.val() || '').trim();
+      const tanggal = $('#inspection_date').val();
+      const cat = $('#inspection_note').val().trim();
+      let pesan = '';
+      if (!nama) { pesan = 'Nama pemeriksaan wajib dipilih.'; $('#programForm .select2-selection').addClass('border-danger'); }
+      else if (!tanggal || tanggal > hariIni()) { pesan = 'Tanggal wajib diisi dan tidak boleh di masa depan.'; $('#inspection_date').addClass('is-invalid'); }
+      else if (!cat) pesan = 'Catatan wajib diisi.';
+      else if (/[0-9]/.test(cat)) pesan = 'Catatan tidak boleh berisi angka.';
+      else if (!/[A-Za-zÀ-ɏ]/.test(cat)) pesan = 'Catatan harus berupa teks.';
+      if (pesan) {
+        if (/Catatan/.test(pesan)) $('#inspection_note').addClass('is-invalid');
+        Swal.fire('Lengkapi data', pesan, 'warning');
+        return;
+      }
+      $('#inspection_source').val('Lab Klinik');
+      const $b = $('#btnSimpan').prop('disabled', true);
+      fetch(apiUrl, { method: 'POST', body: new FormData(this) })
+        .then(r => r.json())
+        .then(res => {
+          if (res.status === 'success') {
             $('#programModal').modal('hide');
-            table.ajax.reload(null, false);
+            Swal.fire({ icon: 'success', title: 'Tersimpan', text: res.message, timer: 1400, showConfirmButton: false });
+            muat();
           } else {
-            Swal.fire('Gagal!', data.message, 'error');
+            if (res.field === 'inspection_name') $('#programForm .select2-selection').addClass('border-danger');
+            else if (res.field) $('#' + res.field).addClass('is-invalid');
+            Swal.fire('Gagal', res.message || 'Gagal menyimpan.', 'error');
           }
-        });
+        })
+        .catch(() => Swal.fire('Gagal', 'Terjadi kesalahan pada server.', 'error'))
+        .finally(() => $b.prop('disabled', false));
     });
 
-    // 🔹 Edit
-    $(document).on('click', '.edit-btn', function() {
-      let id = $(this).data('id');
-      fetch(apiUrl + `&id=${id}`)
-        .then(res => res.json())
-        .then(resp => {
-          if (resp.status === 'success') {
-            let d = resp.data;
-
-            // isi otomatis berdasarkan name field (kecuali file)
-            for (let key in d) {
-              if (key !== "inspection_results") {
-                $(`[name="${key}"]`).val(d[key]);
-              }
-            }
-
-            // kalau ada file lama → kasih link preview
-            if (d.inspection_results) {
-              $("#inspection_results").after(`
-            <div id="oldFile" class="mt-2">
-              <a href="${d.inspection_results}" target="_blank">Lihat File Lama</a>
-            </div>
-          `);
-            } else {
-              $("#oldFile").remove();
-            }
-
-            $('#id_inspection').val(d.id_inspection);
-            $('#programModal .modal-title').text('Edit Data');
-            $('#programModal').modal('show');
-          }
-        });
-    });
-    // 🔹 Delete
     $(document).on('click', '.delete-btn', function() {
-      let id = $(this).data('id');
+      const id = $(this).data('id');
+      const d = data.find(r => +r.id_inspection === +id) || {};
       Swal.fire({
-        title: 'Hapus Data?',
+        title: 'Hapus pemeriksaan?',
+        html: `<b>${esc(d.inspection_name)}</b>` + (+d.hasil_terisi > 0 ? '<div class="alert alert-warning py-2 mt-2 mb-0 small">Hasil lab yang sudah diisi ikut terhapus.</div>' : ''),
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Hapus',
-        cancelButtonText: 'Batal'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          fetch(apiUrl + `&id=${id}`, {
-              method: 'DELETE'
-            })
-            .then(res => res.json())
-            .then(data => {
-              if (data.status === 'success') {
-                Swal.fire('Berhasil!', 'Data dihapus.', 'success');
-                table.ajax.reload(null, false);
-              }
-            });
-        }
+        confirmButtonColor: '#dc2626',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+      }).then(x => {
+        if (!x.isConfirmed) return;
+        fetch(apiUrl + '&id=' + encodeURIComponent(id), { method: 'DELETE' })
+          .then(r => r.json())
+          .then(res => {
+            if (res.status === 'success') {
+              Swal.fire({ icon: 'success', title: 'Dihapus', text: res.message, timer: 1400, showConfirmButton: false });
+              muat();
+            } else Swal.fire('Gagal', res.message || 'Gagal menghapus.', 'error');
+          })
+          .catch(() => Swal.fire('Gagal', 'Terjadi kesalahan pada server.', 'error'));
       });
     });
-  });
-</script>
 
-<script>
-  $('#programModal').on('shown.bs.modal', function() {
-    $('#inspection_name').select2({
-      dropdownParent: $('#programModal'),
-      width: '100%'
-    });
-  });
-  $(document).ready(function() {
-
-    $('#inspection_name').select2({
-      dropdownParent: $('#programModal'),
-      width: '100%',
-      tags: true, // bisa input manual
-      placeholder: "Ketik atau pilih obat",
-
-      createTag: function(params) {
-        return {
-          id: params.term,
-          text: params.term,
-          newOption: true
-        }
-      },
-
-      templateResult: function(data) {
-        let $result = $("<span></span>");
-        $result.text(data.text);
-
-        if (data.newOption) {
-          $result.append(" <em>(baru)</em>");
-        }
-
-        return $result;
-      }
-
-    });
-
-    // auto isi harga
-    $('#inspection_name').on('change', function() {
-      currentInspectionId = $(this).data('id');
-      let harga = $(this).find(':selected').data('harga') || '';
-      $('#harga').val(harga);
-    });
-
-  });
-</script>
-<script>
-  let currentInspectionId = null;
-
-  $(document).on('click', '.hasil-btn', function() {
-
-    let kode = ($(this).data('kode') || '').toLowerCase();
-    let id = $(this).data('id');
-
-    let isPreview =
-      kode.includes('darah lengkap') ||
-      kode.includes('widal') ||
-      kode.includes('ureum / kreatinin');
-
-    let no = new URLSearchParams(window.location.search).get('no');
-    let rm = new URLSearchParams(window.location.search).get('rm');
-
-    // =========================
-    // 🔥 MODE PREVIEW (IFRAME)
-    // =========================
-    if (isPreview) {
-
-      $('#hasilModalTitle').text('Preview Hasil Laboratorium');
-
-      // hide input table
-      $('#hasilBody').closest('table').hide();
-
-      // hide tombol simpan
-      $('#hasilFooter').hide();
-
-      // tampilkan iframe
-      $('#previewContainer').show();
-
-      // set source iframe
-      $('#previewFrame').attr(
-        'src',
-        `module/admin/print/formulir_lab_id?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}&id_inspection=${id}`
-      );
-
-      $('#hasilModal').modal('show');
-      return;
+    // ---------- hasil ----------
+    let currentInspectionId = null;
+    const angka = (v) => { const s = String(v ?? '').trim().replace(/\s/g, ''); if (!/^-?[\d.,]+$/.test(s)) return null; const n = parseFloat(/,\d{1,2}$/.test(s) ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '')); return isNaN(n) ? null : n; };
+    function flag($tr) {
+      const v = angka($tr.find('.hasil-input').val());
+      const min = angka($tr.data('min')), max = angka($tr.data('max'));
+      let f = '';
+      if (v !== null && min !== null && v < min) f = 'L';
+      else if (v !== null && max !== null && max !== 0 && v > max) f = 'H';
+      $tr.toggleClass('abn', !!f).find('.flag').remove();
+      if (f) $tr.find('.hasil-input').after(`<span class="flag flag-${f} ms-1">${f}</span>`);
+    }
+    function progres() {
+      const $i = $('#hasilBody .hasil-input');
+      const n = $i.filter(function() { return this.value.trim() !== ''; }).length;
+      $('#hasilProgres').text($i.length ? `${n} dari ${$i.length} parameter terisi` : '');
     }
 
-    // =========================
-    // 🧪 MODE INPUT
-    // =========================
+    $(document).on('click', '.hasil-btn', function() {
+      const id = $(this).data('id');
+      const d = data.find(r => +r.id_inspection === +id) || {};
+      const lihat = !!$(this).data('lihat');
+      $('#hasilInfo').text(`${d.inspection_name || ''} · ${tgl(d.inspection_date)}`);
 
-    $('#previewContainer').hide();
-    $('#hasilBody').closest('table').show();
-    $('#hasilFooter').show();
-
-    let title = 'Input Hasil Lab';
-
-    if (kode.includes('darah lengkap')) {
-      title = 'Hasil Pemeriksaan Darah Lengkap';
-    } else if (kode.includes('widal')) {
-      title = 'Hasil Pemeriksaan Widal Test';
-    } else if (kode.includes('ureum / kreatinin')) {
-      title = 'Hasil Pemeriksaan Ureum / Kreatinin';
-    }
-
-    $('#hasilModalTitle').text(title);
-    currentInspectionId = id;
-
-    $('#hasilBody').html('<tr><td colspan="5">Loading...</td></tr>');
-
-    fetch(`controller/lab/getLabItem?kode=${encodeURIComponent(kode)}&id_inspection=${id}`)
-      .then(res => res.json())
-      .then(res => {
-
-        let html = '';
-
-        res.data.forEach(item => {
-          html += `
-        <tr>
-          <td>${item.assemen}</td>
-          <td>
-            <input 
-              type="text" 
-              class="form-control hasil-input" 
-              data-id="${item.id}" 
-              value="${item.hasil ?? ''}"
-            >
-          </td>
-          <td>${item.satuan ?? '-'}</td>
-          <td>${item.minimum ?? '-'} - ${item.maksimum ?? '-'}</td>
-          <td>${item.catatan ?? '-'}</td>
-        </tr>
-        `;
-        });
-
-        $('#hasilBody').html(html);
+      if (isKhusus(d.inspection_name)) {
+        $('#hasilModalTitle').text('Preview Hasil Laboratorium');
+        $('#hasilWrap, #hasilFooter').hide();
+        $('#previewContainer').show();
+        $('#previewFrame').attr('src', `module/admin/print/formulir_lab_id?no=${encodeURIComponent(NO)}&rm=${encodeURIComponent(RM)}&id_inspection=${encodeURIComponent(id)}`);
         $('#hasilModal').modal('show');
-
-      });
-
-  });
-  $('#hasilModal').on('hidden.bs.modal', function() {
-    $('#previewFrame').attr('src', '');
-  });
-  $('#saveHasil').on('click', function() {
-
-    let btn = $(this);
-    btn.prop('disabled', true).html('⏳ Menyimpan...');
-
-    Swal.fire({
-      title: 'Menyimpan hasil...',
-      text: 'Mohon tunggu',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
+        return;
       }
-    });
 
-    let results = [];
+      $('#previewContainer').hide();
+      $('#hasilWrap').show();
+      $('#hasilFooter').toggle(!lihat);
+      $('#hasilModalTitle').text(lihat ? 'Hasil Lab' : 'Input Hasil Lab');
+      currentInspectionId = id;
+      $('#hasilBody').html('<tr><td colspan="5" class="text-center text-muted py-4"><span class="spinner-border spinner-border-sm me-2"></span>Memuat parameter...</td></tr>');
+      $('#hasilModal').modal('show');
 
-    $('#hasilBody tr').each(function() {
-      let id_item = $(this).find('.hasil-input').data('id');
-      let hasil = $(this).find('.hasil-input').val();
-
-      if (id_item) {
-        results.push({
-          id_item: id_item,
-          hasil: hasil
-        });
-      }
-    });
-
-    fetch('controller/lab/saveResult.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          id_inspection: currentInspectionId,
-          data: results
+      fetch(`controller/lab/getLabItem?kode=${encodeURIComponent(d.inspection_name || '')}&id_inspection=${encodeURIComponent(id)}`)
+        .then(r => r.json())
+        .then(res => {
+          if (res.status !== 'success') throw new Error(res.message);
+          const items = res.data || [];
+          if (!items.length) {
+            $('#hasilBody').html('<tr><td colspan="5" class="text-center text-muted py-4">Pemeriksaan ini belum punya parameter di master lab.</td></tr>');
+            $('#hasilFooter').hide();
+            return;
+          }
+          $('#hasilBody').html(items.map(it => `
+            <tr data-min="${esc(it.minimum)}" data-max="${esc(it.maksimum)}">
+              <td class="fw-semibold">${esc(it.assemen)}</td>
+              <td><div class="d-flex align-items-center">
+                <input type="text" class="form-control form-control-sm hasil-input" data-id="${+it.id}" maxlength="255" ${lihat ? 'readonly' : ''}>
+              </div></td>
+              <td>${esc(it.satuan || '-')}</td>
+              <td class="text-nowrap">${esc(it.minimum ?? '-')} – ${esc(it.maksimum ?? '-')}</td>
+              <td class="small">${esc(it.catatan || '-')}</td>
+            </tr>`).join(''));
+          $('#hasilBody tr').each(function(i) {
+            $(this).find('.hasil-input').val(items[i].hasil ?? '');
+            flag($(this));
+          });
+          progres();
+          if (!lihat) $('#hasilBody .hasil-input').filter(function() { return !this.value; }).first().trigger('focus');
         })
-      })
-      .then(res => res.json())
-      .then(res => {
+        .catch(err => $('#hasilBody').html(`<tr><td colspan="5" class="text-center text-danger py-4">${esc(err.message || 'Gagal memuat parameter.')}</td></tr>`));
+    });
+    $('#hasilBody').on('input', '.hasil-input', function() { flag($(this).closest('tr')); progres(); });
+    $('#hasilModal').on('hidden.bs.modal', () => $('#previewFrame').attr('src', 'about:blank'));
 
-        Swal.close();
+    $('#saveHasil').on('click', function() {
+      const results = $('#hasilBody .hasil-input').map(function() { return { id_item: $(this).data('id'), hasil: $(this).val() }; }).get();
+      if (!results.length) return;
+      const $b = $(this).prop('disabled', true);
+      fetch('controller/lab/saveResult.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id_inspection: currentInspectionId, data: results })
+        })
+        .then(r => r.json())
+        .then(res => {
+          if (res.status === 'success') {
+            $('#hasilModal').modal('hide');
+            Swal.fire({ icon: 'success', title: 'Hasil lab disimpan', timer: 1300, showConfirmButton: false });
+            muat(); // kolom Hasil langsung terisi tanpa refresh halaman
+          } else Swal.fire('Gagal', res.message || 'Gagal menyimpan hasil.', 'error');
+        })
+        .catch(() => Swal.fire('Gagal', 'Terjadi kesalahan pada server.', 'error'))
+        .finally(() => $b.prop('disabled', false));
+    });
 
-        if (res.status === 'success') {
-          Swal.fire({ icon: 'success', title: 'Hasil lab disimpan', timer: 1300, showConfirmButton: false });
-          $('#hasilModal').modal('hide');
-          // muat ulang daftar agar kolom Hasil langsung terisi (dulu harus refresh halaman)
-          if ($.fn.DataTable.isDataTable('#periodeTable')) $('#periodeTable').DataTable().ajax.reload(null, false);
-        } else {
-          Swal.fire('Gagal', res.message, 'error');
-        }
-
-      })
-      .catch(() => {
-        Swal.close();
-        Swal.fire('Error', 'Terjadi kesalahan', 'error');
-      })
-      .finally(() => {
-        btn.prop('disabled', false).html('Simpan');
-      });
-
-  });
+    muat();
+  })();
 </script>
+<?php endif ?>
+</body>
 
 </html>
