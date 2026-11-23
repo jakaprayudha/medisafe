@@ -310,8 +310,8 @@
         const tb = parseFloat($id('tinggiBadan').value), bb = parseFloat($id('beratBadan').value);
         if (tb >= 30 && bb > 0) {
             const bmi = bb / Math.pow(tb / 100, 2), ket = bmi < 18.5 ? 'Kurus' : bmi < 25 ? 'Normal' : bmi < 30 ? 'Gemuk' : 'Obesitas';
-            $id('bmi').value = bmi.toFixed(2); $id('bmiKet').value = ket; $id('pdBmi').textContent = bmi.toFixed(2) + ' · ' + ket;
-        } else { $id('bmi').value = ''; $id('bmiKet').value = ''; $id('pdBmi').textContent = '—'; }
+            $id('bmi').value = bmi.toFixed(2); $id('bmiKet').value = ket;
+        } else { $id('bmi').value = ''; $id('bmiKet').value = ''; }
     }
     ['tinggiBadan', 'beratBadan'].forEach(i => $id(i).addEventListener('input', hitungBmi));
 
@@ -342,7 +342,7 @@
             const el = $id(k), v = el.value.trim().replace(',', '.');
             if (v !== '' && (isNaN(+v) || +v < a || +v > b)) { el.classList.add('is-invalid'); salah.push(nm + ' ' + a + '–' + b); }
         });
-        if (salah.length) { err.push('nilai tidak wajar: ' + salah.join(', ')); bootstrap.Collapse.getOrCreateInstance($id('pdVitalBox'), { toggle: false }).show(); }
+        if (salah.length) err.push('nilai tidak wajar: ' + salah.join(', '));
         const s = $id('sistole').value, d = $id('diastole').value;
         if ((s && !d) || (!s && d)) tandai($id(s ? 'diastole' : 'sistole'), 'sistole & diastole diisi berpasangan');
         $id('pdError').textContent = err.length ? 'Lengkapi: ' + err.join(', ') + '.' : '';

@@ -1,240 +1,130 @@
 <?php
-include '../../database/connect.php';
-session_start();
+/**
+ * Tindakan / jasa (pasien_billing) satu kunjungan — module/admin/kasir_detail.
+ *
+ * GET    ?no=<visit_ID>        -> { status, data:[...] }
+ * GET    ?id=<id_billing>      -> { status, user:{...} }   (nama "user" dipertahankan untuk kompatibilitas)
+ * POST   nomor_visit, item, qty, diskon, kategori, catatan   -> tambah (harga dari ms_tarif faskes)
+ * PUT    iduser|id, jumlah|harga, diskon, qty?, catatan?      -> ubah
+ * DELETE ?id=<id_billing>
+ *
+ * Perbaikan dari versi lama: SQL injection (no, search, harga), diskon 0 ditolak saat ubah ("wajib diisi"),
+ * kunjungan tidak dicek milik faskes, item tetap bisa diubah/dihapus setelah kunjungan lunas,
+ * qty/diskon negatif atau diskon melebihi subtotal, session_start() ganda (Notice sebelum JSON).
+ */
+require '../../database/connect.php';
+header('Content-Type: application/json; charset=utf-8');
 
-header('Content-Type: application/json');
-
-// Ambil id_customer dari session
-$id_customer = $_SESSION['id_customer'] ?? null;
-
-if (!$id_customer) {
-   echo json_encode([
-      'status' => 'error',
-      'message' => 'Session id_customer tidak ditemukan'
-   ]);
+function balas(int $kode, array $isi): void
+{
+   http_response_code($kode);
+   echo json_encode($isi, JSON_UNESCAPED_UNICODE);
    exit;
 }
 
-// Ambil method
-$method = $_SERVER['REQUEST_METHOD'];
+$idc = (string) ($_SESSION['id_customer'] ?? '');
+session_write_close();
+if ($idc === '') balas(401, ['status' => 'error', 'message' => 'Sesi berakhir, silakan login ulang.']);
 
-switch ($method) {
-   case 'POST':
-      createTarif($id_customer);
-      break;
-   case 'GET':
-      if (isset($_GET['id'])) {
-         getTarifID($_GET['id'], $id_customer);
-      } else {
-         getTarif($id_customer);
-      }
-      break;
-   case 'PUT':
-      updateFarmasi($id_customer);
-      break;
-   case 'DELETE':
-      deleteTarif($id_customer);
-      break;
-   default:
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Method tidak diizinkan.'
-      ]);
-      break;
+function angka($v, string $nama, int $min = 0): int
+{
+   $v = trim((string) ($v ?? ''));
+   if ($v === '') return $min;
+   if (!preg_match('/^\d{1,10}$/', str_replace('.', '', $v))) balas(422, ['status' => 'error', 'message' => "$nama harus berupa angka bulat."]);
+   $n = (int) str_replace('.', '', $v);
+   if ($n < $min) balas(422, ['status' => 'error', 'message' => "$nama minimal $min."]);
+   return $n;
 }
 
-/* ================= CREATE ================= */
-function createTarif($id_customer)
+/** Kunjungan milik faskes & belum lunas, atau berhenti dengan error. */
+function cekKunjungan(mysqli $k, string $no, string $idc): void
 {
-   global $koneksi;
-
-   $nomor_rm     = $_POST['nomor_rm'] ?? '';
-   $nomor_visit  = $_POST['nomor_visit'] ?? '';
-   $item         = $_POST['item'] ?? '';
-   $diskon       = $_POST['diskon'] ?? 0;
-   $jumlah       = $_POST['qty'] ?? 0;
-   $catatan      = $_POST['catatan'] ?? '';
-   $kategori      = $_POST['kategori'] ?? '';
-
-   // Ambil harga
-   $checkharga = mysqli_query($koneksi, "SELECT * FROM ms_tarif WHERE tarif_name='$item' AND id_customer='$id_customer'");
-   $dataharga  = mysqli_fetch_array($checkharga);
-
-   $hargaitem = $dataharga['tarif_amount'] ?? 0;
-
-   if (empty($item)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Nama Tarif harus diisi.'
-      ]);
-      exit;
-   }
-
-   $query = "INSERT INTO pasien_billing 
-      (id_customer, id_visit, billing_item, billing_price, billing_qty, billing_discount, billing_category, billing_notes) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-   $stmt = $koneksi->prepare($query);
-   $stmt->bind_param(
-      "isssssss",
-      $id_customer,
-      $nomor_visit,
-      $item,
-      $hargaitem,
-      $jumlah,
-      $diskon,
-      $kategori,
-      $catatan
-   );
-
-   if ($stmt->execute()) {
-      echo json_encode([
-         'status' => 'success',
-         'message' => 'Data berhasil ditambahkan.'
-      ]);
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal insert'
-      ]);
-   }
+   $st = $k->prepare("SELECT status_bayar FROM pasien_visit WHERE visit_ID = ? AND id_customer = ? LIMIT 1");
+   $st->bind_param('ss', $no, $idc);
+   $st->execute();
+   $r = $st->get_result()->fetch_assoc();
+   $st->close();
+   if (!$r) balas(404, ['status' => 'error', 'message' => 'Kunjungan tidak ditemukan untuk faskes ini.']);
+   if ((int) $r['status_bayar'] === 1) balas(409, ['status' => 'error', 'message' => 'Kunjungan sudah lunas, tagihan tidak bisa diubah lagi.']);
 }
 
-/* ================= READ ================= */
-function getTarif($id_customer)
+function ambilItem(mysqli $k, int $id, string $idc): array
 {
-   global $koneksi;
-
-   $start  = $_GET['start'] ?? 0;
-   $length = $_GET['length'] ?? 10;
-   $search = $_GET['search']['value'] ?? '';
-   $no     = $_GET['no'] ?? '';
-
-   $query = "SELECT * FROM pasien_billing WHERE id_customer='$id_customer'";
-
-   if (!empty($no)) {
-      $query .= " AND id_visit='$no'";
-   }
-
-   if (!empty($search)) {
-      $query .= " AND billing_item LIKE '%$search%'";
-   }
-
-   $totalQuery  = "SELECT COUNT(*) as total FROM ($query) as x";
-   $totalResult = mysqli_query($koneksi, $totalQuery);
-   $totalData   = mysqli_fetch_assoc($totalResult);
-
-   $query .= " LIMIT $start, $length";
-   $result = mysqli_query($koneksi, $query);
-
-   $data = [];
-   while ($row = mysqli_fetch_assoc($result)) {
-      $data[] = $row;
-   }
-
-   echo json_encode([
-      'status' => 'success',
-      'data' => $data,
-      'recordsTotal' => $totalData['total'],
-      'recordsFiltered' => $totalData['total']
-   ]);
+   $st = $k->prepare("SELECT * FROM pasien_billing WHERE id_billing = ? AND id_customer = ? LIMIT 1");
+   $st->bind_param('is', $id, $idc);
+   $st->execute();
+   $r = $st->get_result()->fetch_assoc();
+   $st->close();
+   if (!$r) balas(404, ['status' => 'error', 'message' => 'Data tidak ditemukan.']);
+   return $r;
 }
 
-/* ================= READ BY ID ================= */
-function getTarifID($id, $id_customer)
-{
-   global $koneksi;
+try {
+   switch ($_SERVER['REQUEST_METHOD']) {
+      case 'GET':
+         if (isset($_GET['id'])) balas(200, ['status' => 'success', 'user' => ambilItem($koneksi, (int) $_GET['id'], $idc)]);
+         $no = trim((string) ($_GET['no'] ?? ''));
+         $st = $koneksi->prepare("SELECT * FROM pasien_billing WHERE id_visit = ? AND id_customer = ? ORDER BY id_billing");
+         $st->bind_param('ss', $no, $idc);
+         $st->execute();
+         $data = $st->get_result()->fetch_all(MYSQLI_ASSOC);
+         $st->close();
+         balas(200, ['status' => 'success', 'data' => $data, 'recordsTotal' => count($data), 'recordsFiltered' => count($data)]);
 
-   $query = "SELECT * FROM pasien_billing WHERE id_billing=? AND id_customer=?";
+      case 'POST':
+         $no = trim((string) ($_POST['nomor_visit'] ?? ''));
+         $item = trim((string) ($_POST['item'] ?? ''));
+         if ($item === '') balas(422, ['status' => 'error', 'message' => 'Nama tindakan harus dipilih.']);
+         cekKunjungan($koneksi, $no, $idc);
+         $qty = angka($_POST['qty'] ?? '1', 'Jumlah', 1);
+         $diskon = angka($_POST['diskon'] ?? '0', 'Diskon');
+         $kategori = mb_substr(trim((string) ($_POST['kategori'] ?? '')), 0, 255);
+         $catatan = mb_substr(trim((string) ($_POST['catatan'] ?? '')), 0, 2000);
+         $st = $koneksi->prepare("SELECT tarif_amount FROM ms_tarif WHERE tarif_name = ? AND id_customer = ? AND tarif_status = 1 ORDER BY id_tarif DESC LIMIT 1");
+         $st->bind_param('ss', $item, $idc);
+         $st->execute();
+         $t = $st->get_result()->fetch_assoc();
+         $st->close();
+         if (!$t) balas(422, ['status' => 'error', 'message' => 'Tindakan tidak ada di master tarif faskes ini.']);
+         $harga = (int) $t['tarif_amount'];
+         if ($diskon > $harga * $qty) balas(422, ['status' => 'error', 'message' => 'Diskon tidak boleh melebihi subtotal (Rp' . number_format($harga * $qty, 0, ',', '.') . ').']);
+         $st = $koneksi->prepare("INSERT INTO pasien_billing (id_customer, id_visit, billing_item, billing_price, billing_qty, billing_discount, billing_category, billing_notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+         $st->bind_param('sssiiiss', $idc, $no, $item, $harga, $qty, $diskon, $kategori, $catatan);
+         $st->execute();
+         $st->close();
+         balas(200, ['status' => 'success', 'message' => 'Tindakan ditambahkan.']);
 
-   $stmt = $koneksi->prepare($query);
-   $stmt->bind_param("ss", $id, $id_customer);
-   $stmt->execute();
+      case 'PUT':
+         parse_str(file_get_contents('php://input'), $in);
+         $id = (int) ($in['id'] ?? $in['iduser'] ?? 0);
+         $lama = ambilItem($koneksi, $id, $idc);
+         cekKunjungan($koneksi, (string) $lama['id_visit'], $idc);
+         $harga = angka($in['harga'] ?? $in['jumlah'] ?? $lama['billing_price'], 'Harga');
+         $qty = angka($in['qty'] ?? $lama['billing_qty'], 'Jumlah', 1);
+         $diskon = angka($in['diskon'] ?? '0', 'Diskon');
+         $catatan = array_key_exists('catatan', $in) ? mb_substr(trim((string) $in['catatan']), 0, 2000) : (string) $lama['billing_notes'];
+         if ($diskon > $harga * $qty) balas(422, ['status' => 'error', 'message' => 'Diskon tidak boleh melebihi subtotal (Rp' . number_format($harga * $qty, 0, ',', '.') . ').']);
+         $st = $koneksi->prepare("UPDATE pasien_billing SET billing_price = ?, billing_qty = ?, billing_discount = ?, billing_notes = ? WHERE id_billing = ? AND id_customer = ?");
+         $st->bind_param('iiisis', $harga, $qty, $diskon, $catatan, $id, $idc);
+         $st->execute();
+         $st->close();
+         balas(200, ['status' => 'success', 'message' => 'Tindakan diperbarui.']);
 
-   $result = $stmt->get_result();
+      case 'DELETE':
+         $id = (int) ($_GET['id'] ?? 0);
+         $lama = ambilItem($koneksi, $id, $idc);
+         cekKunjungan($koneksi, (string) $lama['id_visit'], $idc);
+         $st = $koneksi->prepare("DELETE FROM pasien_billing WHERE id_billing = ? AND id_customer = ?");
+         $st->bind_param('is', $id, $idc);
+         $st->execute();
+         $st->close();
+         balas(200, ['status' => 'success', 'message' => 'Tindakan dihapus.']);
 
-   if ($result->num_rows > 0) {
-      echo json_encode([
-         'status' => 'success',
-         'user' => $result->fetch_assoc() // 🔥 tetap user karena frontend pakai ini
-      ]);
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Data tidak ditemukan'
-      ]);
+      default:
+         balas(405, ['status' => 'error', 'message' => 'Method tidak diizinkan.']);
    }
-}
-
-/* ================= UPDATE ================= */
-function updateFarmasi($id_customer)
-{
-   global $koneksi;
-
-   parse_str(file_get_contents("php://input"), $_PUT);
-
-   $id     = $_PUT['iduser'] ?? '';
-   $diskon = $_PUT['diskon'] ?? '';
-   $jumlah = $_PUT['jumlah'] ?? '';
-
-   if (!$id || !$diskon || !$jumlah) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'ID dan diskon dan Jumlah wajib diisi'
-      ]);
-      exit;
-   }
-
-   $query = "UPDATE pasien_billing 
-             SET billing_discount=?, billing_price=? 
-             WHERE id_billing=? AND id_customer=?";
-
-   $stmt = $koneksi->prepare($query);
-   $stmt->bind_param("iiss", $diskon, $jumlah, $id, $id_customer);
-
-   if ($stmt->execute()) {
-      echo json_encode([
-         'status' => 'success',
-         'message' => 'Update berhasil'
-      ]);
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal update'
-      ]);
-   }
-}
-
-/* ================= DELETE ================= */
-function deleteTarif($id_customer)
-{
-   global $koneksi;
-
-   $id = $_GET['id'] ?? '';
-
-   if (!$id) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'ID kosong'
-      ]);
-      exit;
-   }
-
-   $query = "DELETE FROM pasien_billing 
-             WHERE id_billing=? AND id_customer=?";
-
-   $stmt = $koneksi->prepare($query);
-   $stmt->bind_param("ss", $id, $id_customer);
-
-   if ($stmt->execute()) {
-      echo json_encode([
-         'status' => 'success',
-         'message' => 'Berhasil dihapus'
-      ]);
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal hapus'
-      ]);
-   }
+} catch (Throwable $e) {
+   error_log('[visit/tindakan] ' . $e->getMessage());
+   balas(500, ['status' => 'error', 'message' => 'Gagal memproses tindakan.']);
 }

@@ -63,9 +63,14 @@
       width: 100% !important;
    }
 
-   .container-fluid {
-      max-width: 1400px;
-      margin: 0 auto;
+   /* Konten mengikuti lebar area di samping sidebar (sama seperti navbar).
+      Tema membatasi .body-wrapper .container-fluid 1200px + rata tengah -> saat zoom out / layar lebar
+      muncul celah kosong besar antara sidebar dan konten. */
+   .container-fluid,
+   .body-wrapper .container-fluid,
+   .app-header .container-fluid {
+      max-width: none;
+      margin: 0;
    }
 
    .page-wrapper {

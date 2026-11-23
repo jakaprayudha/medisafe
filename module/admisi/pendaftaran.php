@@ -60,11 +60,6 @@ date_default_timezone_set('Asia/Jakarta');
     .pd-dk.pilih { border-color: #5d87ff; background: #ecf2ff; }
     .pd-dk:disabled { opacity: .5; cursor: not-allowed; }
     .pd-dk .pd-ava { width: 32px; height: 32px; font-size: .72rem; }
-    .pd-vital { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-    .pd-vital .vf { border: 1px solid #edf0f4; border-radius: 10px; padding: 7px 9px; background: #fafbfc; }
-    .pd-vital .vf label { font-size: .7rem; color: #64748b; margin-bottom: 3px; display: block; }
-    .pd-vital .vf.td { grid-column: span 2; }
-    @media (max-width: 767.98px) { .pd-vital { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     .pd-sticky { position: sticky; top: 90px; }
     .pd-sk { border-radius: 10px; background: linear-gradient(90deg, #eef1f4 25%, #f6f8fb 50%, #eef1f4 75%); background-size: 200% 100%; animation: pdsk 1.2s infinite; }
     @keyframes pdsk { to { background-position: -200% 0; } }
@@ -207,18 +202,87 @@ date_default_timezone_set('Asia/Jakarta');
                       <textarea class="form-control" id="keluhan" name="keluhan" rows="2" placeholder="Keluhan utama pasien"></textarea>
                     </div>
 
-                    <a class="small fw-semibold text-decoration-none" data-bs-toggle="collapse" href="#pdVitalBox" role="button" aria-expanded="true"><i class="fas fa-heart-pulse me-1 text-danger"></i>Tanda vital &amp; antropometri <span class="text-muted fw-normal">(opsional, bisa diisi perawat nanti)</span> <i class="fas fa-chevron-down ms-1 small"></i></a>
-                    <div class="collapse show mt-2" id="pdVitalBox">
-                      <div class="pd-vital">
-                        <div class="vf td"><label>Tekanan darah (mmHg)</label><div class="input-group input-group-sm"><input type="number" inputmode="decimal" class="form-control" name="sistole" id="sistole" min="50" max="300"><span class="input-group-text">/</span><input type="number" inputmode="decimal" class="form-control" name="diastole" id="diastole" min="20" max="200"></div></div>
-                        <div class="vf"><label>Nadi (x/mnt)</label><input type="number" inputmode="decimal" class="form-control form-control-sm" name="heartRate" id="heartRate" min="20" max="250"></div>
-                        <div class="vf"><label>Respirasi (x/mnt)</label><input type="number" inputmode="decimal" class="form-control form-control-sm" name="respRate" id="respRate" min="4" max="80"></div>
-                        <div class="vf"><label>Suhu (°C)</label><input type="number" inputmode="decimal" step="0.1" class="form-control form-control-sm" name="suhu" id="suhu" min="30" max="45"></div>
-                        <div class="vf"><label>SpO₂ (%)</label><input type="number" inputmode="decimal" class="form-control form-control-sm" name="saturasiOksigen" id="saturasiOksigen" min="50" max="100"></div>
-                        <div class="vf"><label>Tinggi (cm)</label><input type="number" inputmode="decimal" step="0.1" class="form-control form-control-sm" name="tinggiBadan" id="tinggiBadan" min="30" max="250"></div>
-                        <div class="vf"><label>Berat (kg)</label><input type="number" inputmode="decimal" step="0.1" class="form-control form-control-sm" name="beratBadan" id="beratBadan" min="0.5" max="350"></div>
-                        <div class="vf"><label>Lingkar perut (cm)</label><input type="number" inputmode="decimal" class="form-control form-control-sm" name="lingkarPerut" id="lingkarPerut" min="20" max="250"></div>
-                        <div class="vf"><label>BMI (otomatis)</label><div class="fw-bold small pt-1" id="pdBmi">—</div><input type="hidden" name="bmi" id="bmi"><input type="hidden" name="bmiKet" id="bmiKet"></div>
+                    <!-- Urutan & susunan mengikuti form lama (controller/admisi/pages/viewpendaftaran.php):
+                         Pemeriksaan Fisik lalu Tanda Vital. Opsional; bila diisi harus dalam rentang wajar. -->
+                    <div id="pdVitalBox">
+                      <hr>
+                      <h6 class="text-primary fw-semibold mb-3">Pemeriksaan Fisik</h6>
+                      <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                          <label class="form-label small fw-semibold" for="suhu">Suhu</label>
+                          <div class="input-group">
+                            <input type="number" inputmode="decimal" class="form-control" name="suhu" id="suhu" step="0.1" min="30" max="45">
+                            <span class="input-group-text">°C</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <label class="form-label small fw-semibold" for="tinggiBadan">Tinggi Badan</label>
+                          <div class="input-group">
+                            <input type="number" inputmode="decimal" class="form-control" name="tinggiBadan" id="tinggiBadan" step="0.1" min="30" max="250">
+                            <span class="input-group-text">cm</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <label class="form-label small fw-semibold" for="beratBadan">Berat Badan</label>
+                          <div class="input-group">
+                            <input type="number" inputmode="decimal" class="form-control" name="beratBadan" id="beratBadan" step="0.1" min="0.5" max="350">
+                            <span class="input-group-text">kg</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <label class="form-label small fw-semibold" for="bmi">BMI</label>
+                          <input type="text" class="form-control bg-light" id="bmi" name="bmi" readonly tabindex="-1">
+                        </div>
+                        <div class="col-md-4">
+                          <label class="form-label small fw-semibold" for="bmiKet">Keterangan BMI</label>
+                          <input type="text" class="form-control bg-light" id="bmiKet" name="bmiKet" readonly tabindex="-1">
+                        </div>
+                        <div class="col-md-4">
+                          <label class="form-label small fw-semibold" for="lingkarPerut">Lingkar Perut</label>
+                          <div class="input-group">
+                            <input type="number" inputmode="decimal" class="form-control" name="lingkarPerut" id="lingkarPerut" min="20" max="250">
+                            <span class="input-group-text">cm</span>
+                          </div>
+                        </div>
+                      </div>
+                      <hr>
+                      <h6 class="text-primary fw-semibold mb-3">Tanda Vital</h6>
+                      <div class="row g-3">
+                        <div class="col-md-6">
+                          <label class="form-label small fw-semibold" for="sistole">Sistole</label>
+                          <div class="input-group">
+                            <input type="number" inputmode="decimal" class="form-control" name="sistole" id="sistole" min="50" max="300">
+                            <span class="input-group-text">mmHg</span>
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label small fw-semibold" for="diastole">Diastole</label>
+                          <div class="input-group">
+                            <input type="number" inputmode="decimal" class="form-control" name="diastole" id="diastole" min="20" max="200">
+                            <span class="input-group-text">mmHg</span>
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label small fw-semibold" for="respRate">Respiratory Rate</label>
+                          <div class="input-group">
+                            <input type="number" inputmode="decimal" class="form-control" name="respRate" id="respRate" min="4" max="80">
+                            <span class="input-group-text">/menit</span>
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label small fw-semibold" for="heartRate">Heart Rate</label>
+                          <div class="input-group">
+                            <input type="number" inputmode="decimal" class="form-control" name="heartRate" id="heartRate" min="20" max="250">
+                            <span class="input-group-text">BPM</span>
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label small fw-semibold" for="saturasiOksigen">Saturasi Oksigen</label>
+                          <div class="input-group">
+                            <input type="number" inputmode="decimal" class="form-control" name="saturasiOksigen" id="saturasiOksigen" min="50" max="100">
+                            <span class="input-group-text">%</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     <div class="small text-danger mt-3 d-none" id="pdError"></div>
