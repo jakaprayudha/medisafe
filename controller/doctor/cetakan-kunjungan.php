@@ -45,7 +45,7 @@ if ($diagnosa === '' || !$diagnosaSekunder) {
         foreach ($kodeRme as $kd) if ($kd !== $kodeUtama) $diagnosaSekunder[] = $fmtDiag($kd, $namaIcd[$kd] ?? '');
     }
 }
-if ($diagnosa === '') $diagnosa = '-';
+if ($diagnosa === '') $diagnosa = $diagnosaSekunder ? array_shift($diagnosaSekunder) : '-';
 $catatan          = $data['catatan'] ?? '';
 $telah_diberikan  = $data['tindakan'];
 $no_kunjungan     = $noKunjung;
@@ -245,15 +245,8 @@ $tgl_cetak = date('d F Y');
                     <tr>
                         <td style="padding-top: 15px;">Diagnosa</td>
                         <td style="padding-top: 15px;">:</td>
-                        <td colspan="6" style="padding-top: 15px;"><?= $e($diagnosa) ?></td>
+                        <td colspan="6" style="padding-top: 15px;"><?= $e(implode(', ', array_merge([$diagnosa], $diagnosaSekunder))) ?></td>
                     </tr>
-                    <?php if ($diagnosaSekunder): ?>
-                    <tr>
-                        <td style="padding-top: 6px;">Diagnosa sekunder</td>
-                        <td style="padding-top: 6px;">:</td>
-                        <td colspan="6" style="padding-top: 6px;"><?= implode('<br>', array_map($e, $diagnosaSekunder)) ?></td>
-                    </tr>
-                    <?php endif ?>
                     <tr>
                         <td style="padding-top: 15px;">Telah diberikan</td>
                         <td style="padding-top: 15px;">:</td>
