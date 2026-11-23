@@ -380,7 +380,16 @@ require '../../controller/view.php';
                           <input type="text" class="form-control" id="pc_user" maxlength="100" autocomplete="off" spellcheck="false">
                         </div>
                         <div class="mb-3">
-                          <label class="form-label" for="pc_pass">Password PCare</label>
+                          <label class="form-label" for="pc_passNow">Password PCare saat ini</label>
+                          <div class="input-group">
+                            <input type="password" class="form-control bg-light" id="pc_passNow" value="••••••••" readonly tabindex="-1">
+                            <button class="btn btn-light border" type="button" id="btnLihatPass" title="Tampilkan password saat ini"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-light border" type="button" id="btnSalinPass" title="Salin password" disabled><i class="fas fa-copy"></i></button>
+                          </div>
+                          <div class="form-text" id="pc_passNowHint">Klik ikon mata untuk melihat password yang sedang dipakai.</div>
+                        </div>
+                        <div class="mb-3">
+                          <label class="form-label" for="pc_pass">Password baru</label>
                           <div class="input-group">
                             <input type="password" class="form-control" id="pc_pass" autocomplete="new-password">
                             <button class="btn btn-light border" type="button" data-eye="#pc_pass" title="Tampilkan"><i class="fas fa-eye"></i></button>
@@ -388,6 +397,8 @@ require '../../controller/view.php';
                           <div class="form-text" id="pc_passHint">Kosongkan bila password tidak diganti.</div>
                         </div>
                         <button type="submit" class="btn btn-primary w-100" id="btnPcare"><i class="fas fa-save me-1"></i> Simpan Akun PCare</button>
+                        <div class="mt-3 p-2 rounded-2 small" id="pcUpdateInfo" style="background:#f8fafc;border:1px solid #e5eaef"><i class="fas fa-history me-1 text-muted"></i>Memuat info pembaruan…</div>
+                        <div class="mt-2" id="pcLog"></div>
                       </form>
                     </div>
                     <div class="col-lg-6">
@@ -719,6 +730,13 @@ require '../../controller/view.php';
           if (p) {
             $('#pc_user').val(p.username || '');
             $('#pc_passHint').text(p.ada_password ? 'Kosongkan bila password tidak diganti.' : 'Password belum diisi.');
+            passTerlihat = null;
+            $('#pc_passNow').attr('type', 'password').val(p.ada_password ? '••••••••' : '');
+            $('#btnLihatPass i').attr('class', 'fas fa-eye');
+            $('#btnLihatPass').prop('disabled', !p.ada_password);
+            $('#btnSalinPass').prop('disabled', true);
+            $('#pc_passNowHint').text(p.ada_password ? 'Klik ikon mata untuk melihat password yang sedang dipakai.' : 'Password PCare belum diisi.');
+            renderLogPcare(p);
             $('#stPcare').text(p.kode_ppk || 'Terkonfigurasi');
             $('#stPcareSub').text('PCare · ' + (p.username ? 'akun ' + p.username : 'username belum diisi'));
             $('#pcareKred').html(kv('Kode PPK', p.kode_ppk, 1) + kv('Consumer ID', p.cons_id, 1) + kv('Service', p.service, 1) + kv('Server', p.server) + kv('Secret Key', p.secret_key, 1) + kv('User Key', p.user_key, 1));
@@ -757,6 +775,56 @@ require '../../controller/view.php';
           $('#antrolBox').html(`<div class="bs-empty text-danger"><i class="fas fa-exclamation-circle"></i>${esc(m)}</div>`);
         });
       }
+
+      // ---- password saat ini & riwayat perubahan akun PCare ----
+      let passTerlihat = null;
+      const tglJam = t => { const d = new Date(String(t).replace(' ', 'T')); return isNaN(d) ? String(t) : d.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); };
+      const lalu = t => { const d = new Date(String(t).replace(' ', 'T')); if (isNaN(d)) return ''; const m = Math.round((Date.now() - d) / 60000);
+        return m < 1 ? 'baru saja' : m < 60 ? m + ' menit lalu' : m < 1440 ? Math.round(m / 60) + ' jam lalu' : Math.round(m / 1440) + ' hari lalu'; };
+      function renderLogPcare(p) {
+        if (!p.log_aktif) {
+          $('#pcUpdateInfo').html('<i class="fas fa-history me-1 text-muted"></i>Riwayat perubahan belum aktif (tabel log belum dibuat). Perubahan mulai dicatat setelah diaktifkan tim IT.');
+          $('#pcLog').empty();
+          return;
+        }
+        const log = p.log || [];
+        if (!log.length) {
+          $('#pcUpdateInfo').html('<i class="fas fa-history me-1 text-muted"></i>Belum ada perubahan tercatat sejak riwayat diaktifkan.');
+          $('#pcLog').empty();
+          return;
+        }
+        const apa = l => [l.username_lama !== l.username_baru ? `username <b>${esc(l.username_lama || '-')}</b> → <b>${esc(l.username_baru || '-')}</b>` : '', +l.password_diganti ? 'password diganti' : ''].filter(Boolean).join(' · ') || 'disimpan';
+        const t = log[0];
+        $('#pcUpdateInfo').html(`<i class="fas fa-history me-1 text-muted"></i><b>Terakhir diperbarui:</b> ${esc(tglJam(t.created_at))} <span class="text-muted">(${esc(lalu(t.created_at))})</span> oleh <b>${esc(t.diubah_oleh || '-')}</b><div class="text-muted mt-1">${apa(t)}</div>`);
+        $('#pcLog').html(log.length > 1 ? `<details class="small"><summary class="text-muted" style="cursor:pointer">Riwayat perubahan (${log.length})</summary>
+          <table class="table table-sm mb-0 mt-1"><tbody>${log.map(l => `<tr><td class="text-nowrap">${esc(tglJam(l.created_at))}</td><td>${esc(l.diubah_oleh || '-')}</td><td>${apa(l)}</td></tr>`).join('')}</tbody></table></details>` : '');
+      }
+      $('#btnLihatPass').on('click', function() {
+        const btn = $(this);
+        if (passTerlihat !== null) {   // sembunyikan lagi
+          passTerlihat = null;
+          $('#pc_passNow').attr('type', 'password').val('••••••••');
+          btn.find('i').attr('class', 'fas fa-eye');
+          $('#btnSalinPass').prop('disabled', true);
+          return;
+        }
+        btn.prop('disabled', true);
+        api('lihat_password', {}).then(res => {
+          passTerlihat = res.password || '';
+          $('#pc_passNow').attr('type', 'text').val(passTerlihat);
+          btn.find('i').attr('class', 'fas fa-eye-slash');
+          $('#btnSalinPass').prop('disabled', !passTerlihat);
+          // tutup otomatis setelah 30 detik agar tidak terbuka terus di layar
+          clearTimeout(btn.data('t'));
+          btn.data('t', setTimeout(() => { if (passTerlihat !== null) btn.trigger('click'); }, 30000));
+        }, gagal).always(() => btn.prop('disabled', false));
+      });
+      $('#btnSalinPass').on('click', function() {
+        if (!passTerlihat) return;
+        (navigator.clipboard ? navigator.clipboard.writeText(passTerlihat) : Promise.reject()).then(
+          () => sukses('Password disalin.'),
+          () => { $('#pc_passNow').trigger('select'); document.execCommand && document.execCommand('copy'); sukses('Password disalin.'); });
+      });
 
       $('#formPcare').on('submit', function(e) {
         e.preventDefault();

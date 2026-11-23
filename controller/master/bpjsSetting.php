@@ -60,6 +60,25 @@ function bsJalankan(mysqli $k, string $sql, string $types, array $params): int
    return $n;
 }
 
+/** Tabel log akun PCare ada? (dibuat lewat migrations/20261123_setting_pcare_log.sql) */
+function bsAdaLogPcare(mysqli $k): bool
+{
+   static $ada = null;
+   if ($ada === null) {
+      $r = $k->query("SHOW TABLES LIKE 'setting_pcare_log'");
+      $ada = $r && $r->num_rows > 0;
+   }
+   return $ada;
+}
+
+/** Riwayat perubahan akun PCare terbaru (kosong bila tabel log belum dibuat). */
+function bsLogPcare(mysqli $k, int $idc, int $batas = 10): array
+{
+   if (!bsAdaLogPcare($k)) return [];
+   return bsSemua($k, "SELECT username_lama, username_baru, password_diganti, diubah_oleh, created_at FROM setting_pcare_log
+      WHERE id_customer=? ORDER BY created_at DESC, id DESC LIMIT " . (int) $batas, 'i', [$idc]);
+}
+
 /** Tampilkan hanya 4 karakter terakhir. */
 function bsMasker(?string $v): ?string
 {
@@ -163,6 +182,8 @@ switch ($aksi) {
             'server' => $host,
             'secret_key' => bsMasker($p['secret_key']),
             'user_key' => bsMasker($p['user_key']),
+            'log_aktif' => bsAdaLogPcare($koneksi),
+            'log' => bsLogPcare($koneksi, $idc),
          ] : null,
          'antrol' => $a ? [
             'username' => $a['username'],
@@ -184,12 +205,30 @@ switch ($aksi) {
       if (!bsSatu($koneksi, "SELECT id FROM setting_pcare WHERE id_customer=? LIMIT 1", 'i', [$idc])) {
          bsGagal('Konfigurasi PCare faskes belum dibuat. Hubungi tim IT.', 409);
       }
+      $lama = bsSatu($koneksi, "SELECT username, password FROM setting_pcare WHERE id_customer=? LIMIT 1", 'i', [$idc]);
       if ($pass !== '') {
          bsJalankan($koneksi, "UPDATE setting_pcare SET username=?, password=? WHERE id_customer=?", 'ssi', [$user, $pass, $idc]);
       } else {
          bsJalankan($koneksi, "UPDATE setting_pcare SET username=? WHERE id_customer=?", 'si', [$user, $idc]);
       }
-      bsJawab(['success' => true, 'message' => 'Akun PCare disimpan.']);
+      // catat perubahan (password tidak ikut disimpan di log, hanya penanda "diganti")
+      $gantiUser = (string) $lama['username'] !== $user;
+      $gantiPass = $pass !== '' && $pass !== (string) $lama['password'];
+      if (($gantiUser || $gantiPass) && bsAdaLogPcare($koneksi)) {
+         $oleh = mb_substr((string) ($_SESSION['fullname'] ?? $_SESSION['username'] ?? '-'), 0, 150);
+         $uid = mb_substr((string) ($_SESSION['uid_user'] ?? ''), 0, 100);
+         $ip = mb_substr((string) ($_SERVER['REMOTE_ADDR'] ?? ''), 0, 45);
+         bsJalankan($koneksi, "INSERT INTO setting_pcare_log (id_customer, username_lama, username_baru, password_diganti, diubah_oleh, uid_user, ip) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            'ississs', [$idc, (string) $lama['username'], $user, $gantiPass ? 1 : 0, $oleh, $uid, $ip]);
+      }
+      bsJawab(['success' => true, 'message' => ($gantiUser || $gantiPass) ? 'Akun PCare disimpan.' : 'Tidak ada perubahan pada akun PCare.']);
+
+   // password PCare hanya dikirim saat diminta (tombol mata), tidak ikut di data status
+   case 'lihat_password':
+      if ($_SERVER['REQUEST_METHOD'] !== 'POST') bsGagal('Method tidak diizinkan.', 405);
+      $p = bsSatu($koneksi, "SELECT password FROM setting_pcare WHERE id_customer=? LIMIT 1", 'i', [$idc]);
+      if (!$p) bsGagal('Konfigurasi PCare faskes belum dibuat.', 404);
+      bsJawab(['success' => true, 'password' => (string) $p['password']]);
 
    // ================= DOKTER BPJS + iCARE =================
    case 'dokter':
