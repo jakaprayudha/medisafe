@@ -1,290 +1,163 @@
 <?php
-include '../../database/connect.php';
-$method = $_SERVER['REQUEST_METHOD'];
-switch ($method) {
-   case 'POST':
-      createData();
-      break;
-   case 'GET':
-      if (isset($_GET['id'])) {
-         getID($_GET['id']);
-      } else {
-         getData();
-      }
-      break;
-   case 'PUT':
-      // Update User
-      updateData();
-      break;
-
-   case 'DELETE':
-      // Delete User
-      deleteData();
-      break;
-
-   default:
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Method tidak diizinkan.'
-      ]);
-      break;
-}
-
-// Function untuk Create
-function createData()
-{
-   global $koneksi;
-
-   if (empty($_POST)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Data tidak ditemukan.'
-      ]);
-      exit;
-   }
-
-   // Ambil semua field yang valid untuk tabel resep_luar
-   $allowedFields = [
-      'id_visit',
-      'prescriptio',
-      'signatura',
-      'subscriptio',
-      'pro'
-   ];
-
-   $fields = ['resep_number']; // tambahkan resep_number
-   $values = [generateDoctorNumber($koneksi)];
-
-   foreach ($allowedFields as $f) {
-      if (isset($_POST[$f])) {
-         $fields[] = $f;
-         $values[] = $_POST[$f];
-      }
-   }
-
-   if (empty($fields)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Tidak ada data yang dikirim.'
-      ]);
-      exit;
-   }
-
-   // Buat placeholder dan tipe untuk prepared statement
-   $placeholders = implode(', ', array_fill(0, count($fields), '?'));
-   $columns = implode(', ', $fields);
-   $types = str_repeat('s', count($fields)); // semua string
-
-   $query = "INSERT INTO resep_luar ($columns) VALUES ($placeholders)";
-
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param($types, ...$values);
-
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil ditambahkan.'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menambahkan data: ' . $stmt->error
-         ]);
-      }
-
-      $stmt->close();
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query: ' . $koneksi->error
-      ]);
-   }
-}
-
 /**
- * Generate resep_number unik dengan format DCT-XXXXXX
+ * Resep luar per kunjungan (module/admin/resep, component_resep, farmasi_order_luar_detail).
+ *   GET    ?no=<visit_ID>          -> { status, data:[...] }
+ *   GET    ?no=..&id=<id_resep>    -> { status, data:{...} }
+ *   POST   (form)                  -> tambah { status, message, id }
+ *   PUT    (form, id_resep)        -> ubah
+ *   DELETE ?id=<id_resep>          -> hapus
+ * Perbaikan: tabel resep_luar tidak punya id_customer dan dulu tidak dicek sama sekali -> resep faskes lain bisa
+ * dibaca/diubah/dihapus lewat id atau nomor kunjungan; resep bisa ditambahkan ke kunjungan faskes lain; PUT bisa
+ * memindahkan resep ke kunjungan lain (id_visit); pesan error SQL dikirim ke browser; tanpa validasi isi.
+ * Kepemilikan dicek lewat pasien_visit (visit_ID + id_customer sesi).
  */
-function generateDoctorNumber($koneksi)
+include '../../database/connect.php';
+if (session_status() === PHP_SESSION_NONE) session_start();
+header('Content-Type: application/json; charset=utf-8');
+$idc = (int) ($_SESSION['id_customer'] ?? 0);
+session_write_close();
+
+function rlBalas(int $kode, array $isi): void
 {
-   $count = 0; // inisialisasi supaya tidak merah
-   do {
-      $random = mt_rand(100000, 999999); // 6 digit angka
-      $doctorNumber = "DCT-" . $random;
+   http_response_code($kode);
+   echo json_encode($isi, JSON_UNESCAPED_UNICODE);
+   exit;
+}
+if ($idc <= 0) rlBalas(401, ['status' => 'error', 'message' => 'Sesi berakhir, silakan login ulang.']);
 
-      // cek ke database apakah sudah ada
-      $check = $koneksi->prepare("SELECT COUNT(*) FROM resep_luar WHERE resep_number = ?");
-      $check->bind_param("s", $doctorNumber);
-      $check->execute();
-      $check->bind_result($count);
-      $check->fetch();
-      $check->close();
-   } while ($count > 0); // ulang jika sudah ada
+const RL_FIELD = ['prescriptio' => 'Prescriptio', 'signatura' => 'Signatura', 'subscriptio' => 'Subscriptio', 'pro' => 'Pro'];
+const RL_WAJIB = ['prescriptio', 'signatura'];
+const RL_SELECT = "SELECT r.id_resep, r.id_visit, r.resep_number, r.prescriptio, r.signatura, r.subscriptio, r.pro, r.created_at
+   FROM resep_luar r INNER JOIN pasien_visit v ON v.visit_ID = r.id_visit AND v.id_customer = ?";
 
-   return $doctorNumber;
+try {
+   switch ($_SERVER['REQUEST_METHOD']) {
+      case 'GET':
+         isset($_GET['id']) ? rlGetId((int) $_GET['id'], $idc) : rlGetData(trim((string) ($_GET['no'] ?? '')), $idc);
+         break;
+      case 'POST':
+         rlCreate($_POST, $idc);
+         break;
+      case 'PUT':
+         parse_str(file_get_contents('php://input'), $put);
+         rlUpdate($put, $idc);
+         break;
+      case 'DELETE':
+         rlDelete((int) ($_GET['id'] ?? 0), $idc);
+         break;
+      default:
+         rlBalas(405, ['status' => 'error', 'message' => 'Method tidak diizinkan.']);
+   }
+} catch (Throwable $e) {
+   error_log('[visit/resepLuar] ' . $e->getMessage());
+   rlBalas(500, ['status' => 'error', 'message' => 'Terjadi kesalahan pada server.']);
 }
 
-function getData()
+/** Ambil isi resep dari input + validasi. */
+function rlIsi(array $in): array
 {
-   global $koneksi;
-   // pastikan ada parameter "no" (nomor_visit)
-   $no = isset($_GET['no']) ? mysqli_real_escape_string($koneksi, $_GET['no']) : '';
-   $query = "SELECT * FROM resep_luar WHERE id_visit = '$no'
-             ORDER BY id_resep  ASC";
-   $result = mysqli_query($koneksi, $query);
-
-   if (!$result) {
-      http_response_code(500);
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal mengambil data: ' . mysqli_error($koneksi)
-      ]);
-      return;
+   $d = [];
+   foreach (RL_FIELD as $k => $label) {
+      $v = is_scalar($in[$k] ?? null) ? trim((string) $in[$k]) : '';
+      if (mb_strlen($v) > 2000) rlBalas(422, ['status' => 'error', 'message' => "$label maksimal 2000 karakter."]);
+      if ($v === '' && in_array($k, RL_WAJIB, true)) rlBalas(422, ['status' => 'error', 'message' => "$label wajib diisi.", 'field' => $k]);
+      $d[$k] = $v;
    }
-
-   // Ambil semua data dalam bentuk array asosiatif
-   $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
-
-   // Tutup hasil query
-   mysqli_free_result($result);
-
-   // Kirimkan data dalam format JSON
-   header('Content-Type: application/json');
-   echo json_encode([
-      'status' => 'success',
-      'data' => $data,
-   ]);
+   return $d;
 }
 
-// Function untuk Read User berdasarkan ID
-function  getID($iduser)
+function rlCari(int $id, int $idc): ?array
 {
    global $koneksi;
-
-   // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM resep_luar   WHERE id_resep = ?";
-
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $iduser); // Bind parameter iduser
-      $stmt->execute();
-      $result = $stmt->get_result();
-
-      if ($result->num_rows > 0) {
-         $data = $result->fetch_assoc();
-         echo json_encode([
-            'status' => 'success',
-            'data' => $data
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Data tidak ditemukan.'
-         ]);
-      }
-
-      $stmt->close();
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
-   }
+   $st = $koneksi->prepare(RL_SELECT . " WHERE r.id_resep = ? LIMIT 1");
+   $st->bind_param('ii', $idc, $id);
+   $st->execute();
+   $row = $st->get_result()->fetch_assoc();
+   $st->close();
+   return $row ?: null;
 }
 
-
-
-function updateData()
+function rlGetData(string $no, int $idc): void
 {
    global $koneksi;
-   parse_str(file_get_contents("php://input"), $_PUT);
-
-   if (empty($_PUT['id_resep'])) {
-      echo json_encode(['status' => 'error', 'message' => 'ID tidak ditemukan.']);
-      return;
-   }
-
-   $id = $_PUT['id_resep'];
-   $allowedFields = [
-      'id_visit',
-      'prescriptio',
-      'signatura',
-      'subscriptio',
-      'pro'
-   ];
-   $fields = [];
-   $values = [];
-
-   foreach ($allowedFields as $f) {
-      if (isset($_PUT[$f])) {
-         $fields[] = "$f=?";
-         $values[] = $_PUT[$f];
-      }
-   }
-
-   if (empty($fields)) {
-      echo json_encode(['status' => 'error', 'message' => 'Tidak ada data diupdate.']);
-      return;
-   }
-
-   $values[] = $id;
-   $types = str_repeat('s', count($values) - 1) . "i";
-
-   $query = "UPDATE resep_luar SET " . implode(',', $fields) . " WHERE id_resep=?";
-   $stmt = $koneksi->prepare($query);
-
-   if ($stmt) {
-      $stmt->bind_param($types, ...$values);
-      if ($stmt->execute()) {
-         echo json_encode(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
-      } else {
-         echo json_encode(['status' => 'error', 'message' => 'Update gagal: ' . $stmt->error]);
-      }
-      $stmt->close();
-   } else {
-      echo json_encode(['status' => 'error', 'message' => 'Query error: ' . $koneksi->error]);
-   }
+   $st = $koneksi->prepare(RL_SELECT . " WHERE r.id_visit = ? ORDER BY r.id_resep ASC");
+   $st->bind_param('is', $idc, $no);
+   $st->execute();
+   $data = $st->get_result()->fetch_all(MYSQLI_ASSOC);
+   $st->close();
+   rlBalas(200, ['status' => 'success', 'data' => $data]);
 }
 
+function rlGetId(int $id, int $idc): void
+{
+   $row = rlCari($id, $idc);
+   if (!$row) rlBalas(404, ['status' => 'error', 'message' => 'Resep tidak ditemukan.']);
+   rlBalas(200, ['status' => 'success', 'data' => $row]);
+}
 
-
-// Function untuk Delete User
-function deleteData()
+function rlCreate(array $in, int $idc): void
 {
    global $koneksi;
+   $visit = trim((string) ($in['id_visit'] ?? ''));
+   if ($visit === '') rlBalas(422, ['status' => 'error', 'message' => 'Nomor kunjungan tidak ditemukan.']);
+   $d = rlIsi($in);
 
-   // Ambil ID user dari query parameter
-   $id = isset($_GET['id']) ? $_GET['id'] : '';
+   $st = $koneksi->prepare("SELECT visit_status FROM pasien_visit WHERE visit_ID = ? AND id_customer = ? LIMIT 1");
+   $st->bind_param('si', $visit, $idc);
+   $st->execute();
+   $kunj = $st->get_result()->fetch_assoc();
+   $st->close();
+   if (!$kunj) rlBalas(404, ['status' => 'error', 'message' => 'Kunjungan tidak ditemukan untuk faskes ini.']);
+   if ((int) $kunj['visit_status'] === 99) rlBalas(422, ['status' => 'error', 'message' => 'Kunjungan sudah dibatalkan.']);
 
-   if (empty($id)) {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'ID tidak ditemukan.'
-      ]);
-      exit;
-   }
+   $nomor = rlNomor();
+   $st = $koneksi->prepare("INSERT INTO resep_luar (resep_number, id_visit, prescriptio, signatura, subscriptio, pro) VALUES (?, ?, ?, ?, ?, ?)");
+   $st->bind_param('ssssss', $nomor, $visit, $d['prescriptio'], $d['signatura'], $d['subscriptio'], $d['pro']);
+   $st->execute();
+   $id = $st->insert_id;
+   $st->close();
+   rlBalas(200, ['status' => 'success', 'message' => 'Resep luar ditambahkan.', 'id' => $id, 'resep_number' => $nomor]);
+}
 
-   // Query untuk menghapus data user
-   $query = "DELETE FROM resep_luar WHERE id_resep = ?";
+function rlUpdate(array $in, int $idc): void
+{
+   global $koneksi;
+   $id = (int) ($in['id_resep'] ?? ($_GET['id'] ?? 0));
+   if ($id <= 0 || !rlCari($id, $idc)) rlBalas(404, ['status' => 'error', 'message' => 'Resep tidak ditemukan.']);
+   $d = rlIsi($in);
+   // id_visit sengaja tidak ikut diubah (dulu bisa memindahkan resep ke kunjungan lain)
+   $st = $koneksi->prepare("UPDATE resep_luar SET prescriptio = ?, signatura = ?, subscriptio = ?, pro = ? WHERE id_resep = ?");
+   $st->bind_param('ssssi', $d['prescriptio'], $d['signatura'], $d['subscriptio'], $d['pro'], $id);
+   $st->execute();
+   $st->close();
+   rlBalas(200, ['status' => 'success', 'message' => 'Resep luar diperbarui.']);
+}
 
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $id);
+function rlDelete(int $id, int $idc): void
+{
+   global $koneksi;
+   if ($id <= 0 || !rlCari($id, $idc)) rlBalas(404, ['status' => 'error', 'message' => 'Resep tidak ditemukan atau sudah terhapus.']);
+   $st = $koneksi->prepare("DELETE FROM resep_luar WHERE id_resep = ?");
+   $st->bind_param('i', $id);
+   $st->execute();
+   $st->close();
+   rlBalas(200, ['status' => 'success', 'message' => 'Resep luar dihapus.']);
+}
 
-      if ($stmt->execute()) {
-         echo json_encode([
-            'status' => 'success',
-            'message' => 'Data berhasil dihapus.'
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Gagal menghapus.'
-         ]);
+/** Nomor resep unik DCT-XXXXXX (format lama dipertahankan). */
+function rlNomor(): string
+{
+   global $koneksi;
+   $st = $koneksi->prepare("SELECT 1 FROM resep_luar WHERE resep_number = ? LIMIT 1");
+   for ($i = 0; $i < 20; $i++) {
+      $nomor = 'DCT-' . random_int(100000, 999999);
+      $st->bind_param('s', $nomor);
+      $st->execute();
+      if (!$st->get_result()->fetch_row()) {
+         $st->close();
+         return $nomor;
       }
-
-      $stmt->close();
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
    }
+   $st->close();
+   throw new RuntimeException('Gagal membuat nomor resep unik.');
 }
