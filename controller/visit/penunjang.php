@@ -42,10 +42,30 @@ switch ($method) {
       break;
 }
 
+/**
+ * Aturan form pemeriksaan penunjang: sumber hasil selalu "Lab Klinik" (dikunci) dan catatan wajib
+ * berupa teks tanpa angka. Mengembalikan pesan error, atau null bila valid (nilai $_POST dinormalkan).
+ */
+function validasiPenunjang(): ?string
+{
+   $_POST['inspection_source'] = 'Lab Klinik';
+   $catatan = trim((string) ($_POST['inspection_note'] ?? ''));
+   if ($catatan === '') return 'Catatan wajib diisi.';
+   if (preg_match('/\d/', $catatan)) return 'Catatan tidak boleh berisi angka.';
+   if (!preg_match('/\p{L}/u', $catatan)) return 'Catatan harus berupa teks.';
+   $_POST['inspection_note'] = mb_substr($catatan, 0, 2000);
+   return null;
+}
+
 # ================= CREATE =================
 function createData()
 {
    global $koneksi, $id_customer;
+
+   if ($pesan = validasiPenunjang()) {
+      echo json_encode(['status' => 'error', 'message' => $pesan]);
+      return;
+   }
 
    $allowedFields = [
       'id_visit',
@@ -104,8 +124,12 @@ SELECT
     pv.visit_ID,
     pv.visit_date,
 
-    lr.hasil,
-    lr.keterangan,
+    -- 1 baris per pemeriksaan. Dulu LEFT JOIN laboratorium_result langsung -> pemeriksaan multi-parameter
+    -- (mis. Widal) muncul berulang, 1 baris per parameter.
+    CASE WHEN COALESCE(lr.terisi, 0) = 1 THEN lr.hasil_satu
+         WHEN COALESCE(lr.terisi, 0) > 1 THEN CONCAT(lr.terisi, ' parameter terisi') END AS hasil,
+    CASE WHEN COALESCE(lr.terisi, 0) = 1 THEN lr.keterangan_satu END AS keterangan,
+    COALESCE(lr.terisi, 0) AS hasil_terisi,
 
     CASE
         WHEN pv.visit_ID = ? THEN 1
@@ -117,12 +141,19 @@ FROM visit_inspection vi
 INNER JOIN pasien_visit pv
     ON pv.visit_ID = vi.id_visit
 
-LEFT JOIN laboratorium_result lr
-    ON lr.id_inspection = vi.id_inspection
-    AND LOWER(TRIM(vi.inspection_name)) NOT IN (
-        'Darah Lengkap',
-        'Urine Rutin'
+LEFT JOIN (
+    SELECT id_inspection,
+           COUNT(CASE WHEN TRIM(COALESCE(hasil, '')) <> '' THEN 1 END) AS terisi,
+           MAX(CASE WHEN TRIM(COALESCE(hasil, '')) <> '' THEN hasil END) AS hasil_satu,
+           MAX(CASE WHEN TRIM(COALESCE(hasil, '')) <> '' THEN keterangan END) AS keterangan_satu
+    FROM laboratorium_result
+    WHERE id_inspection IN (
+        SELECT vi2.id_inspection FROM visit_inspection vi2
+        INNER JOIN pasien_visit pv2 ON pv2.visit_ID = vi2.id_visit
+        WHERE pv2.id_patient = ? AND pv2.id_customer = ?
     )
+    GROUP BY id_inspection
+) lr ON lr.id_inspection = vi.id_inspection
 WHERE pv.id_patient = ?
   AND pv.id_customer = ?
 
@@ -132,7 +163,7 @@ ORDER BY
     vi.id_inspection DESC
 ");
 
-   $stmt->bind_param("sss", $no, $id_patient, $id_customer);
+   $stmt->bind_param("sssss", $no, $id_patient, $id_customer, $id_patient, $id_customer);
    $stmt->execute();
 
    $result = $stmt->get_result();
@@ -186,6 +217,11 @@ function updateData()
          'status' => 'error',
          'message' => 'ID tidak ditemukan'
       ]);
+      return;
+   }
+
+   if ($pesan = validasiPenunjang()) {
+      echo json_encode(['status' => 'error', 'message' => $pesan]);
       return;
    }
 

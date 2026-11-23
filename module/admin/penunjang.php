@@ -124,12 +124,13 @@ $id_patient = $datacheck['id_patient'];
           </div>
           <div class="mb-3">
             <label for="inspection_date" class="form-label required">Sumber Hasil</label>
-            <input type="text" value="Lab Klinik" class="form-control" id="inspection_source" name="inspection_source" required>
+            <input type="text" value="Lab Klinik" class="form-control bg-light" id="inspection_source" name="inspection_source" readonly tabindex="-1" title="Sumber hasil dikunci: Lab Klinik">
           </div>
 
           <div class="mb-3">
-            <label for="inspection_note" class="form-label">Catatan</label>
-            <textarea class="form-control" id="inspection_note" name="inspection_note" rows="5"></textarea>
+            <label for="inspection_note" class="form-label required">Catatan</label>
+            <textarea class="form-control catatan-teks" id="inspection_note" name="inspection_note" rows="5" required maxlength="2000" placeholder="Tulis catatan dalam bentuk teks (tanpa angka)"></textarea>
+            <div class="form-text">Wajib diisi, berupa teks — angka tidak bisa diketik.</div>
           </div>
         </div>
       </div>
@@ -180,6 +181,40 @@ $id_patient = $datacheck['id_patient'];
   </div>
 </div>
 <script>
+  // Sumber hasil dikunci "Lab Klinik"; catatan wajib berupa teks (angka tidak diterima)
+  (function() {
+    const FORM = '#programForm';
+    $(document).on('input', FORM + ' .catatan-teks', function() {
+      const bersih = this.value.replace(/[0-9]/g, '');
+      if (bersih !== this.value) {
+        const pos = this.selectionStart - (this.value.length - bersih.length);
+        this.value = bersih;
+        this.setSelectionRange(pos, pos);
+        $(this).addClass('is-invalid');
+        clearTimeout(this._t);
+        this._t = setTimeout(() => $(this).removeClass('is-invalid'), 1200);
+      }
+    });
+    // dipasang lebih dulu dari handler simpan: hentikan submit bila catatan tidak valid
+    document.addEventListener('submit', function(e) {
+      if (!e.target.matches(FORM)) return;
+      const f = e.target;
+      f.querySelector('[name="inspection_source"]').value = 'Lab Klinik';
+      const c = f.querySelector('[name="inspection_note"]');
+      const v = c.value.trim();
+      let pesan = '';
+      if (v === '') pesan = 'Catatan wajib diisi.';
+      else if (/[0-9]/.test(v)) pesan = 'Catatan tidak boleh berisi angka.';
+      else if (!/[A-Za-z\u00C0-\u024F]/.test(v)) pesan = 'Catatan harus berupa teks.';
+      if (pesan) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        c.classList.add('is-invalid');
+        Swal.fire('Lengkapi data', pesan, 'warning');
+      }
+    }, true);
+  })();
+
   const apiUrl = 'controller/visit/penunjang?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&id_patient=<?= $id_patient ?>';
 
   $(document).ready(function() {
@@ -583,8 +618,10 @@ $id_patient = $datacheck['id_patient'];
         Swal.close();
 
         if (res.status === 'success') {
-          Swal.fire('Berhasil', 'Hasil lab disimpan', 'success');
+          Swal.fire({ icon: 'success', title: 'Hasil lab disimpan', timer: 1300, showConfirmButton: false });
           $('#hasilModal').modal('hide');
+          // muat ulang daftar agar kolom Hasil langsung terisi (dulu harus refresh halaman)
+          if ($.fn.DataTable.isDataTable('#periodeTable')) $('#periodeTable').DataTable().ajax.reload(null, false);
         } else {
           Swal.fire('Gagal', res.message, 'error');
         }
