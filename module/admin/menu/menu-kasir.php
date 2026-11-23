@@ -18,13 +18,23 @@
            <span class="hide-menu">Aktivitas</span>
         </li>
         <li class="sidebar-item">
-           <a class="sidebar-link <?php if ($title == 'Farmasi Order') {
+           <a class="sidebar-link <?php if ($title == 'Kasir') {
                                        echo 'active';
                                     } ?>"
               href="module/admin/kasir"
               aria-expanded="false">
               <iconify-icon icon="mdi:register-outline"></iconify-icon>
               <span class="hide-menu">Penerimaan</span>
+           </a>
+        </li>
+        <li class="sidebar-item">
+           <a class="sidebar-link <?php if ($title == 'Laporan Kasir') {
+                                       echo 'active';
+                                    } ?>"
+              href="module/admin/rpt_kasir"
+              aria-expanded="false">
+              <iconify-icon icon="mdi:chart-box-outline"></iconify-icon>
+              <span class="hide-menu">Laporan Kasir</span>
            </a>
         </li>
         <!-- <li class="sidebar-item">

@@ -64,6 +64,7 @@
             <li><a href="module/admin/rpt_ranap">Rawat Inap</a></li>
             <li><a href="module/admin/rpt_prosedur">Tindakan (Prosedur)</a></li>
             <li><a href="module/admin/rpt_farmasi">Farmasi</a></li>
+            <li><a href="module/admin/rpt_kasir">Kasir</a></li>
             <li><a href="module/admin/pharmacy_expired">Expired Obat</a></li>
             <li><a href="module/admin/pharmacy_usage">Pemakaian Obat Pasien</a></li>
          </ul>
@@ -305,13 +306,23 @@
          <span class="hide-menu">Kasir</span>
       </li>
       <li class="sidebar-item">
-         <a class="sidebar-link <?php if ($title == 'Farmasi Order') {
+         <a class="sidebar-link <?php if ($title == 'Kasir') {
                                     echo 'active';
                                  } ?>"
             href="module/admin/kasir"
             aria-expanded="false">
             <iconify-icon icon="mdi:register-outline"></iconify-icon>
             <span class="hide-menu">Penerimaan</span>
+         </a>
+      </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Laporan Kasir') {
+                                     echo 'active';
+                                  } ?>"
+            href="module/admin/rpt_kasir"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:chart-box-outline"></iconify-icon>
+            <span class="hide-menu">Laporan Kasir</span>
          </a>
       </li>
    </ul>
