@@ -13,14 +13,13 @@ if (!$visit) {
    exit;
 }
 
-$query = $koneksi->prepare("SELECT * FROM pasien_cpo 
-   LEFT JOIN pasien_visit ON pasien_cpo.visit_ID=pasien_visit.visit_ID
-   LEFT JOIN ms_users ON pasien_cpo.petugas=ms_users.id_user
-   WHERE pasien_cpo.visit_ID=? AND pasien_cpo.id_customer=? 
+// kolom eksplisit: dulu SELECT * ikut ms_users -> hash password petugas terkirim ke browser
+$query = $koneksi->prepare("SELECT pasien_cpo.*, ms_users.fullname, ms_users.roles, ms_users.signature_user
+   FROM pasien_cpo
+   LEFT JOIN ms_users ON pasien_cpo.petugas = ms_users.id_user
+   WHERE pasien_cpo.visit_ID=? AND pasien_cpo.id_customer=?
    ORDER BY pasien_cpo.tanggal ASC
 ");
-
-
 
 $query->bind_param("si", $visit, $id_customer);
 $query->execute();

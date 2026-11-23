@@ -1,24 +1,26 @@
 <?php
+/**
+ * Hapus 1 baris CPO. POST id.
+ * Perbaikan: id ditempel langsung ke SQL (injection) & tanpa cek faskes -> baris faskes lain bisa terhapus;
+ * pesan error SQL dikirim ke browser; id yang tidak ada tetap "berhasil".
+ */
 include '../../database/connect.php';
-session_start();
+require_once __DIR__ . '/cpoService.php';
 
-header('Content-Type: application/json');
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') cpoBalas(405, ['status' => 'error', 'message' => 'Method tidak diizinkan.']);
+$idc = cpoCustomer();
+$id = (int) ($_POST['id'] ?? 0);
+if ($id <= 0) cpoBalas(422, ['status' => 'error', 'message' => 'ID tidak valid.']);
 
-$id = $_POST['id'] ?? '';
-
-if (!$id) {
-   echo json_encode(['status' => 'error', 'message' => 'ID kosong']);
-   exit;
+try {
+   $st = $koneksi->prepare("DELETE FROM pasien_cpo WHERE id = ? AND id_customer = ?");
+   $st->bind_param('ii', $id, $idc);
+   $st->execute();
+   $n = $st->affected_rows;
+   $st->close();
+} catch (Throwable $e) {
+   error_log('[visit/deleteCpo] ' . $e->getMessage());
+   cpoBalas(500, ['status' => 'error', 'message' => 'Gagal menghapus CPO.']);
 }
-
-// 🔥 TEST QUERY
-$q = mysqli_query($koneksi, "DELETE FROM pasien_cpo WHERE id='$id'");
-
-if ($q) {
-   echo json_encode(['status' => 'success', 'message' => 'Berhasil dihapus']);
-} else {
-   echo json_encode([
-      'status' => 'error',
-      'message' => mysqli_error($koneksi)
-   ]);
-}
+if ($n < 1) cpoBalas(404, ['status' => 'error', 'message' => 'Data tidak ditemukan atau sudah terhapus.']);
+cpoBalas(200, ['status' => 'success', 'message' => 'Data CPO dihapus.']);

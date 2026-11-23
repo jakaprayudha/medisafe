@@ -1,78 +1,59 @@
 <?php
+/**
+ * Tambah baris Catatan Pemberian Obat (module/admin/cpo). POST form: nomor_visit + array tanggal[], nama_obat[], dosis[],
+ * signature[], jam_pagi[], jam_siang[], jam_sore[], jam_malam[], petugas[].
+ * Perbaikan: baris tidak divalidasi (tanggal/jam sembarang, petugas faskes lain), sebagian tersimpan bila ada yang gagal,
+ * tetap "success" walau tidak ada baris yang disimpan.
+ */
 include '../../database/connect.php';
-session_start();
-header("Content-Type: application/json");
+require_once __DIR__ . '/cpoService.php';
 
-$visit = $_POST['nomor_visit'] ?? null;
-$id_customer = $_SESSION['id_customer'] ?? null;
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') cpoBalas(405, ['status' => 'error', 'message' => 'Method tidak diizinkan.']);
+$idc = cpoCustomer();
+$visit = trim((string) ($_POST['nomor_visit'] ?? ''));
+if ($visit === '') cpoBalas(422, ['status' => 'error', 'message' => 'Nomor kunjungan tidak ditemukan.']);
 
-if (!$visit || !$id_customer) {
-   echo json_encode([
-      "status" => "error",
-      "message" => "Session / visit tidak valid"
-   ]);
-   exit;
+try {
+   $st = $koneksi->prepare("SELECT visit_status FROM pasien_visit WHERE visit_ID = ? AND id_customer = ? LIMIT 1");
+   $st->bind_param('si', $visit, $idc);
+   $st->execute();
+   $kunj = $st->get_result()->fetch_assoc();
+   $st->close();
+   if (!$kunj) cpoBalas(404, ['status' => 'error', 'message' => 'Kunjungan tidak ditemukan untuk faskes ini.']);
+   if ((int) $kunj['visit_status'] === 99) cpoBalas(422, ['status' => 'error', 'message' => 'Kunjungan sudah dibatalkan.']);
+
+   $kol = ['tanggal', 'nama_obat', 'dosis', 'signature', 'jam_pagi', 'jam_siang', 'jam_sore', 'jam_malam', 'petugas'];
+   $arr = [];
+   foreach ($kol as $k) $arr[$k] = is_array($_POST[$k] ?? null) ? array_values($_POST[$k]) : [];
+   $n = count($arr['nama_obat']);
+   if ($n > 200) cpoBalas(422, ['status' => 'error', 'message' => 'Maksimal 200 baris sekali simpan.']);
+
+   $petugasValid = cpoPetugasValid($koneksi, $idc);
+   $baris = [];
+   for ($i = 0; $i < $n; $i++) {
+      $in = [];
+      foreach ($kol as $k) $in[$k] = $arr[$k][$i] ?? '';
+      if (trim(implode('', array_map(fn($v) => is_scalar($v) ? (string) $v : '', [$in['nama_obat'], $in['dosis'], $in['signature']]))) === '') continue;   // baris kosong dilewati
+      [$d, $err] = cpoBaris($in, $petugasValid, 'Baris ' . ($i + 1));
+      if ($err) cpoBalas(422, ['status' => 'error', 'message' => $err, 'baris' => $i]);
+      $baris[] = $d;
+   }
+   if (!$baris) cpoBalas(422, ['status' => 'error', 'message' => 'Belum ada obat yang diisi.']);
+
+   $koneksi->begin_transaction();
+   $st = $koneksi->prepare("INSERT INTO pasien_cpo
+      (visit_ID, id_customer, tanggal, nama_item, dosis, signature, jam_pagi, jam_siang, jam_sore, jam_malam, petugas)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+   foreach ($baris as $d) {
+      $st->bind_param('sisssssssss', $visit, $idc, $d['tanggal'], $d['nama_item'], $d['dosis'], $d['signature'],
+         $d['jam_pagi'], $d['jam_siang'], $d['jam_sore'], $d['jam_malam'], $d['petugas']);
+      $st->execute();
+   }
+   $st->close();
+   $koneksi->commit();
+} catch (Throwable $e) {
+   try { $koneksi->rollback(); } catch (Throwable $x) {}
+   error_log('[visit/cpoController] ' . $e->getMessage());
+   cpoBalas(500, ['status' => 'error', 'message' => 'Gagal menyimpan CPO.']);
 }
-
-// 🔥 VALIDASI visit benar milik customer
-$check = $koneksi->prepare("
-   SELECT visit_ID FROM pasien_visit 
-   WHERE visit_ID=? AND id_customer=?
-");
-$check->bind_param("si", $visit, $id_customer);
-$check->execute();
-$res = $check->get_result();
-
-if ($res->num_rows == 0) {
-   echo json_encode([
-      "status" => "error",
-      "message" => "Visit tidak ditemukan / tidak valid"
-   ]);
-   exit;
-}
-
-// 🔥 ambil data
-$tanggal   = $_POST['tanggal'] ?? [];
-$id_obat   = $_POST['nama_obat'] ?? [];
-$dosis     = $_POST['dosis'] ?? [];
-$signature = $_POST['signature'] ?? [];
-$jam_pagi  = $_POST['jam_pagi'] ?? [];
-$jam_siang = $_POST['jam_siang'] ?? [];
-$jam_sore  = $_POST['jam_sore'] ?? [];
-$jam_malam = $_POST['jam_malam'] ?? [];
-$petugas   = $_POST['petugas'] ?? [];
-
-// 🔥 reset data lama (mode replace)
-// $koneksi->query("DELETE FROM pasien_cpo WHERE visit_ID='$visit'");
-
-$stmt = $koneksi->prepare("
-   INSERT INTO pasien_cpo
-   (visit_ID, id_customer, tanggal, nama_item, dosis, signature, jam_pagi, jam_siang, jam_sore, jam_malam, petugas)
-   VALUES (?,?,?,?,?,?,?,?,?,?,?)
-");
-
-for ($i = 0; $i < count($tanggal); $i++) {
-
-   if (empty($id_obat[$i])) continue;
-
-   $stmt->bind_param(
-      "sisssssssss",
-      $visit,
-      $id_customer,
-      $tanggal[$i],
-      $id_obat[$i],
-      $dosis[$i],
-      $signature[$i],
-      $jam_pagi[$i],
-      $jam_siang[$i],
-      $jam_sore[$i],
-      $jam_malam[$i],
-      $petugas[$i]
-   );
-
-   $stmt->execute();
-}
-
-echo json_encode([
-   "status" => "success"
-]);
+cpoBalas(200, ['status' => 'success', 'message' => count($baris) . ' baris CPO tersimpan.', 'total' => count($baris)]);

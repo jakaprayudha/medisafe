@@ -1,34 +1,25 @@
 <?php
+/**
+ * Daftar CPO satu kunjungan. GET ?visit_ID=<visit_ID> (atau ?no=).
+ * Perbaikan: SELECT * ikut JOIN ms_users -> hash password & data akun petugas terkirim ke browser, dan kolom
+ * created_at/status CPO tertimpa kolom ms_users.
+ */
 include '../../database/connect.php';
-header("Content-Type: application/json");
-session_start();
-$visit = $_GET['visit_ID'] ?? $_GET['no'] ?? null;
-$id_customer = $_SESSION['id_customer'] ?? null;
+require_once __DIR__ . '/cpoService.php';
 
-if (!$visit) {
-   echo json_encode([
-      "status" => "error",
-      "message" => "visit kosong"
-   ]);
-   exit;
-}
+$idc = cpoCustomer();
+$visit = trim((string) ($_GET['visit_ID'] ?? $_GET['no'] ?? ''));
+if ($visit === '') cpoBalas(422, ['status' => 'error', 'message' => 'Nomor kunjungan kosong.']);
 
-$query = $koneksi->prepare("SELECT * FROM pasien_cpo 
-   LEFT JOIN ms_users u ON pasien_cpo.petugas = u.id_user
-   WHERE pasien_cpo.visit_ID=? AND pasien_cpo.id_customer=? 
-   ORDER BY pasien_cpo.tanggal ASC
-");
+$st = $koneksi->prepare("SELECT c.id, c.tanggal, c.nama_item, c.dosis, c.signature, c.jam_pagi, c.jam_siang, c.jam_sore, c.jam_malam,
+      c.petugas, c.created_at, u.fullname AS petugas_nama, u.roles AS petugas_role
+   FROM pasien_cpo c
+   LEFT JOIN ms_users u ON u.id_user = c.petugas AND u.id_customer = c.id_customer
+   WHERE c.visit_ID = ? AND c.id_customer = ?
+   ORDER BY c.tanggal ASC, c.id ASC");
+$st->bind_param('si', $visit, $idc);
+$st->execute();
+$data = $st->get_result()->fetch_all(MYSQLI_ASSOC);
+$st->close();
 
-$query->bind_param("si", $visit, $id_customer);
-$query->execute();
-$result = $query->get_result();
-
-$data = [];
-while ($row = $result->fetch_assoc()) {
-   $data[] = $row;
-}
-
-echo json_encode([
-   "status" => "success",
-   "data" => $data
-]);
+cpoBalas(200, ['status' => 'success', 'data' => $data]);
