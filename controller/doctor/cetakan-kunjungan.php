@@ -21,7 +21,8 @@ $umur          = $tgl_lahir ? date_diff(date_create($tgl_lahir), date_create('to
 // ================= DATA KUNJUNGAN =================
 // diagnosa utama + sekunder (dulu hanya kdDiag1 yang dicetak; diagnosa 2 & 3 tidak pernah diambil)
 $e = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
-$fmtDiag = fn($kode, $nama) => trim((string) $kode) === '' ? '' : trim((string) $kode) . (trim((string) $nama) !== '' ? ' - ' . trim((string) $nama) : '');
+// format cetak: "Nama diagnosa (KODE)"; bila nama tidak ada, kode saja
+$fmtDiag = fn($kode, $nama) => trim((string) $kode) === '' ? '' : (trim((string) $nama) !== '' ? trim((string) $nama) . ' (' . trim((string) $kode) . ')' : trim((string) $kode));
 $diagnosa = $fmtDiag($data['kdDiag1'] ?? '', $data['nmDiag1'] ?? '');
 $diagnosaSekunder = array_values(array_filter([
     $fmtDiag($data['kdDiag2'] ?? '', $data['nmDiag2'] ?? ''),
