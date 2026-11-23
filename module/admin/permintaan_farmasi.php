@@ -1,85 +1,135 @@
 <?php
-$title = 'Permintan Farmasi';
+$title = 'Permintaan Farmasi';
 require '../../controller/view.php';
-
+$rme = (string) ($_GET['rme'] ?? '');
+$noVisit = (string) ($_GET['no'] ?? '');
+$noRm = (string) ($_GET['rm'] ?? '');
+$h = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="id">
 
 <head>
   <base href="../../">
   <?php
   require '../../assets/template/head.php';
   ?>
+  <style>
+    .pf .kepala { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .pf .kepala .ic { width: 42px; height: 42px; border-radius: 12px; background: #e0e7ff; color: #3730a3; display: inline-flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+    .pf .kepala h5 { margin: 0; font-weight: 700; color: #0f172a; }
+    .pf .kepala small { color: #475569; }
+    .pf .alur { display: flex; flex-wrap: wrap; gap: 6px; font-size: .76rem; color: #334155; }
+    .pf .alur span { background: #f1f5f9; border-radius: 999px; padding: 2px 10px; }
+    .pf .alur span b { color: #1d4ed8; }
+    .pf .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pf .chip { border: 1px solid #cbd5e1; background: #fff; color: #1f2937; border-radius: 999px; padding: 5px 12px; font-size: .82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+    .pf .chip .n { background: #e2e8f0; color: #0f172a; border-radius: 999px; padding: 0 7px; font-size: .74rem; }
+    .pf .chip.on { background: #1e293b; border-color: #1e293b; color: #fff; }
+    .pf .chip.on .n { background: #fff; color: #1e293b; }
+    .pf .chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .pf .pf-cari { width: 100%; }
+    @media (min-width: 768px) { .pf .pf-cari { width: 300px; } }
+    .pf .tiket { background: #fff; border: 1px solid #e2e8f0; border-left: 5px solid #64748b; border-radius: 14px; padding: 14px 16px; height: 100%; display: flex; flex-direction: column; }
+    .pf .tiket[data-st="0"] { border-left-color: #334155; }
+    .pf .tiket[data-st="1"] { border-left-color: #d97706; }
+    .pf .tiket[data-st="2"] { border-left-color: #2563eb; }
+    .pf .tiket[data-st="3"] { border-left-color: #059669; }
+    .pf .tiket .atas { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+    .pf .tiket .aksi { display: flex; flex-wrap: wrap; gap: 6px; }
+    .pf .tiket .aksi .btn { font-weight: 600; }
+    .pf .tiket .judul { font-weight: 700; color: #0f172a; font-size: 1rem; }
+    .pf .tiket .meta { font-size: .76rem; color: #475569; }
+    .pf .st { font-size: .74rem; font-weight: 700; border-radius: 6px; padding: 3px 9px; white-space: nowrap; color: #fff; }
+    .pf .st-0 { background: #334155; } .pf .st-1 { background: #b45309; } .pf .st-2 { background: #1d4ed8; } .pf .st-3 { background: #047857; }
+    .pf .tipe { font-size: .72rem; font-weight: 700; border-radius: 6px; padding: 2px 8px; border: 1px solid; }
+    .pf .tipe-Racikan { color: #92400e; border-color: #f59e0b; background: #fffbeb; }
+    .pf .tipe-Non { color: #1e3a8a; border-color: #93c5fd; background: #eff6ff; }
+    .pf .tipe-BMHP { color: #581c87; border-color: #d8b4fe; background: #faf5ff; }
+    .pf .langkah { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 4px 0 10px; }
+    .pf .langkah div { font-size: .68rem; color: #64748b; text-align: center; }
+    .pf .langkah div::before { content: ''; display: block; height: 5px; border-radius: 3px; background: #e2e8f0; margin-bottom: 3px; }
+    .pf .langkah div.ok { color: #0f172a; font-weight: 600; }
+    .pf .langkah div.ok::before { background: #059669; }
+    .pf .langkah div.kini::before { background: #2563eb; }
+    .pf .obat { width: 100%; font-size: .84rem; border-collapse: collapse; }
+    .pf .obat th { font-size: .7rem; text-transform: uppercase; color: #475569; font-weight: 700; border-bottom: 1px solid #e2e8f0; padding: 4px 6px; }
+    .pf .obat td { border-bottom: 1px dashed #e5e7eb; padding: 5px 6px; vertical-align: top; color: #1f2937; }
+    .pf .obat tr:last-child td { border-bottom: 0; }
+    .pf .obat .dagang { font-size: .72rem; color: #64748b; }
+    .pf .racik { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 6px 10px; font-size: .8rem; color: #78350f; margin-bottom: 8px; }
+    .pf .catatan { background: #f8fafc; border-radius: 10px; padding: 6px 10px; font-size: .8rem; color: #334155; margin-top: 8px; white-space: pre-line; }
+    .pf .kosong-obat { border: 1px dashed #f59e0b; background: #fffbeb; color: #92400e; border-radius: 10px; padding: 10px; font-size: .82rem; text-align: center; }
+    .pf .kosong { text-align: center; padding: 40px 10px; color: #475569; }
+    .ti-spin { display: inline-block; animation: pfPutar .8s linear infinite; }
+    @keyframes pfPutar { to { transform: rotate(360deg); } }
+    .pf .kosong i { font-size: 2.4rem; color: #94a3b8; }
+    #programModal .tipe-pilih { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    #programModal .tipe-pilih label { border: 2px solid #e2e8f0; border-radius: 12px; padding: 10px; cursor: pointer; text-align: center; height: 100%; }
+    #programModal .tipe-pilih label i { font-size: 1.4rem; display: block; color: #475569; }
+    #programModal .tipe-pilih label b { display: block; font-size: .88rem; color: #0f172a; }
+    #programModal .tipe-pilih label small { color: #64748b; font-size: .7rem; }
+    #programModal .btn-check:checked + label { border-color: #2563eb; background: #eff6ff; }
+    #programModal .btn-check:checked + label i { color: #2563eb; }
+    @media (max-width: 575.98px) { #programModal .tipe-pilih { grid-template-columns: 1fr; } }
+  </style>
 </head>
 
 <body>
   <!--  Body Wrapper -->
   <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
     data-sidebar-position="fixed" data-header-position="fixed">
-    <!-- Sidebar Start -->
-    <?php
-    require 'sidebar.php';
-    ?>
-    <!--  Sidebar End -->
-    <!--  Main wrapper -->
+    <?php require 'sidebar.php'; ?>
     <div class="body-wrapper">
-      <!--  Header Start -->
-      <?php
-      require 'navbar.php';
-      ?>
-      <!--  Header End -->
+      <?php require 'navbar.php'; ?>
       <div class="body-wrapper-inner">
-        <div class="container-fluid">
+        <div class="container-fluid pf">
           <?php
-          $rme = $_GET['rme']; // default a
-          if ($rme == 'a') {
-            include 'menu_rme.php';
-          } else if ($rme == 'b') {
-            include 'menu_rmeb.php';
-          } else if ($rme == 'c') {
-            include 'menu_rme_inap.php';
-          }
+          if ($rme === 'a') include 'menu_rme.php';
+          elseif ($rme === 'b') include 'menu_rmeb.php';
+          elseif ($rme === 'c') include 'menu_rme_inap.php';
           ?>
-          <div class="row">
-            <div class="col-12">
-              <?php require 'card-pasien.php';?>
-            </div>
-            <div class="col-lg-12 d-flex align-items-stretch">
-              <div class="card w-100">
-                <div class="card-body p-4">
-                  <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Data Item Farmasi</h5>
-                    <!-- Grup tombol di sisi kanan -->
-                    <div class="d-flex ms-auto gap-2">
-                      <a href="module/admin/print/print_all_resep?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>" target="_blank">
-                        <button class="btn btn-light"><i class="fas fa-print"></i> Print</button>
-                      </a>
-                      <button class="btn btn-success d-none" id="btnKirimObat"><i class="ti ti-send"></i> Kirim Obat <span class="badge bg-light text-dark ms-1" id="btnKirimObatCount">0</span></button>
-                      <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
-                    </div>
-                  </div>
-                  <div class="alert alert-danger d-flex align-items-center mb-4 peringatanAlergi d-none" role="alert">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <div>
-                      <strong>Peringatan Alergi:</strong><span id="desAplergi"></span>.
-                    </div>
-                  </div>
-                  <div class="table-responsive" data-simplebar>
-                    <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
-                      <thead>
-                        <tr>
-                          <th class="text-dark fw-normal">Tanggal</th>
-                          <th class="text-dark fw-normal">Type</th>
-                          <th scope="col" class="text-dark fw-normal">Catatan</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Status</th>
-                          <th scope="col" class="text-dark fw-normal text-center">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody></tbody>
-                    </table>
+          <?php require 'card-pasien.php'; ?>
+
+          <div class="card w-100">
+            <div class="card-body p-3 p-md-4">
+              <div class="kepala">
+                <span class="ic"><i class="ti ti-pill"></i></span>
+                <div class="flex-grow-1">
+                  <h5>Permintaan Farmasi</h5>
+                  <div class="alur mt-1">
+                    <span><b>1</b> Buat tiket</span><span><b>2</b> Isi rincian obat / racikan</span><span><b>3</b> Kirim ke farmasi</span>
                   </div>
                 </div>
+                <div class="d-flex flex-wrap gap-2">
+                  <a class="btn btn-outline-dark" target="_blank" href="module/admin/print/print_all_resep?no=<?= $h(urlencode($noVisit)) ?>&rm=<?= $h(urlencode($noRm)) ?>"><i class="ti ti-printer me-1"></i>Cetak Resep</a>
+                  <button type="button" class="btn btn-success d-none" id="btnKirimObat"><i class="ti ti-send me-1"></i>Kirim Semua <span class="badge bg-white text-success ms-1" id="btnKirimObatCount">0</span></button>
+                  <button type="button" class="btn btn-primary" id="btnTambah"><i class="ti ti-plus me-1"></i>Tambah Tiket</button>
+                </div>
+              </div>
+
+              <div class="alert alert-danger d-flex align-items-start gap-2 peringatanAlergi d-none" role="alert">
+                <i class="ti ti-alert-triangle fs-5"></i>
+                <div><strong>Peringatan alergi obat:</strong> <span id="desAplergi"></span></div>
+              </div>
+              <div class="alert alert-warning d-none" id="alertBatal" role="alert"><i class="ti ti-ban me-1"></i>Kunjungan ini sudah <b>dibatalkan</b>. Tiket baru tidak dapat dibuat.</div>
+
+              <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                <div class="chips" id="filterStatus">
+                  <button type="button" class="chip on" data-f="all">Semua <span class="n" data-n="all">0</span></button>
+                  <button type="button" class="chip" data-f="0"><span class="dot" style="background:#334155"></span>Belum dikirim <span class="n" data-n="0">0</span></button>
+                  <button type="button" class="chip" data-f="1"><span class="dot" style="background:#b45309"></span>Terkirim <span class="n" data-n="1">0</span></button>
+                  <button type="button" class="chip" data-f="2"><span class="dot" style="background:#1d4ed8"></span>Persiapan <span class="n" data-n="2">0</span></button>
+                  <button type="button" class="chip" data-f="3"><span class="dot" style="background:#047857"></span>Selesai <span class="n" data-n="3">0</span></button>
+                </div>
+                <div class="ms-md-auto d-flex gap-2 pf-cari">
+                  <input type="search" class="form-control" id="customSearch" placeholder="Cari obat / catatan...">
+                  <button type="button" class="btn btn-outline-dark" id="btnMuatUlang" title="Muat ulang"><i class="ti ti-refresh"></i></button>
+                </div>
+              </div>
+
+              <div class="row g-3" id="tiketList">
+                <div class="col-12 kosong"><span class="spinner-border spinner-border-sm me-2"></span>Memuat tiket...</div>
               </div>
             </div>
           </div>
@@ -87,99 +137,58 @@ require '../../controller/view.php';
       </div>
     </div>
   </div>
-  <?php
-  require 'library.php';
-  ?>
-</body>
-<div class="modal fade" id="programModal" tabindex="-1">
+
+<div class="modal fade" id="programModal" tabindex="-1" aria-labelledby="programModalTitle" aria-hidden="true">
   <div class="modal-dialog">
-    <form id="programForm" class="modal-content">
+    <form id="programForm" class="modal-content" novalidate>
       <div class="modal-header">
-        <h5 class="modal-title"></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <h5 class="modal-title" id="programModalTitle">Tiket Permintaan Farmasi</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
       </div>
       <div class="modal-body">
         <input type="hidden" name="id_permintaan_farmasi" id="id_permintaan_farmasi">
-        <input type="hidden" name="id_visit" id="id_visit" value="<?= $_GET['no'] ?>">
-        <div class="row">
-          <div class="col-12">
-            <div class="alert alert-primary" role="alert">
-              Buat Tiket Order Permintaan Farmasi Sebelum Membuat Isi Rincian Obat yang akan dibuat
-            </div>
+        <input type="hidden" name="id_visit" id="id_visit" value="<?= $h($noVisit) ?>">
+        <p class="small text-muted mb-2">Buat tiket dulu, lalu isi rincian obat di tiket tersebut.</p>
+        <label class="form-label fw-semibold">Tipe obat <span class="text-danger">*</span></label>
+        <div class="tipe-pilih mb-3">
+          <div>
+            <input type="radio" class="btn-check" name="tipe_obat" id="tipeNon" value="Non Racikan" checked>
+            <label for="tipeNon"><i class="ti ti-pill"></i><b>Non Racikan</b><small>Obat jadi / paten</small></label>
+          </div>
+          <div>
+            <input type="radio" class="btn-check" name="tipe_obat" id="tipeRacikan" value="Racikan">
+            <label for="tipeRacikan"><i class="ti ti-flask"></i><b>Racikan</b><small>Puyer, kapsul, salep racik</small></label>
+          </div>
+          <div>
+            <input type="radio" class="btn-check" name="tipe_obat" id="tipeBmhp" value="BMHP">
+            <label for="tipeBmhp"><i class="ti ti-first-aid-kit"></i><b>BMHP</b><small>Bahan medis habis pakai</small></label>
+          </div>
+        </div>
+        <div class="row g-2 racikan-field">
+          <div class="col-6">
+            <label class="form-label" for="rck_jumlah">Jumlah dibuat</label>
+            <input type="number" name="rck_jumlah" id="rck_jumlah" class="form-control" min="1" max="10000" step="1" placeholder="10">
+          </div>
+          <div class="col-6">
+            <label class="form-label" for="rck_satuan">Satuan</label>
+            <input type="text" id="rck_satuan" name="rck_satuan" class="form-control" list="rckSatuanList" maxlength="100" placeholder="Pulvis">
           </div>
           <div class="col-12">
-            <div class="mb-3">
-              <label class="form-label required">Type</label>
-              <select class='form-select' required id="tipe_obat" name="tipe_obat">
-                <option value="">PILIH</option>
-                <option value="Racikan">Racikan</option>
-                <option value="Non Racikan">Non Racikan</option>
-                <option value="BMHP">BMHP</option>
-              </select>
-            </div>
+            <label class="form-label" for="rck_signa">Signa</label>
+            <input type="text" name="rck_signa" id="rck_signa" class="form-control" maxlength="255" placeholder="3x1 sesudah makan">
+            <div class="form-text">Opsional — bisa dilengkapi nanti di Form Racikan.</div>
           </div>
-          <div class="col-6 racikan-field">
-            <div class="mb-3">
-              <label class="form-label">Jumlah </label>
-              <input type="number" name="rck_jumlah" id="rck_jumlah" class='form-control'>
-            </div>
-          </div>
-
-          <div class="col-6 racikan-field">
-            <div class="mb-3">
-              <label class="form-label">Satuan </label>
-              <input type="text" id='rck_satuan' name='rck_satuan' class='form-control'>
-            </div>
-          </div>
-
-          <div class="col-12 racikan-field">
-            <div class="mb-3">
-              <label class="form-label">Signa </label>
-              <input type="text" name="rck_signa" id='rck_signa' class='form-control'>
-            </div>
-          </div>
-          <div class="col-12">
-            <div class="mb-3">
-              <label class="form-label">Catatan Bebas</label>
-              <textarea name="catatan_permintaan" id="catatan_permintaan" class="form-control" rows="5"></textarea>
-            </div>
-          </div>
+        </div>
+        <div class="mt-3">
+          <label class="form-label" for="catatan_permintaan">Catatan untuk farmasi</label>
+          <textarea name="catatan_permintaan" id="catatan_permintaan" class="form-control" rows="3" maxlength="5000" placeholder="Opsional, mis. pasien sulit menelan tablet"></textarea>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Simpan</button>
+        <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Batal</button>
+        <button type="submit" class="btn btn-primary" id="btnSimpanTiket"><i class="ti ti-device-floppy me-1"></i>Buat Tiket</button>
       </div>
     </form>
-  </div>
-</div>
-<!-- 💊 Modal Rincian Obat -->
-<div class="modal fade" id="rincianObatModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Rincian Obat <small class="text-muted fw-normal" id="rincianObatInfo"></small></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="table-responsive">
-          <table class="table table-sm table-bordered align-middle mb-0">
-            <thead class="table-light">
-              <tr>
-                <th class="text-center" style="width:40px">No</th>
-                <th>Item</th>
-                <th class="text-center">Qty</th>
-                <th>Signa</th>
-                <th>Catatan</th>
-              </tr>
-            </thead>
-            <tbody id="rincianObatBody"></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
-      </div>
-    </div>
   </div>
 </div>
 <!-- 🧪 Modal Form Racikan -->
@@ -530,6 +539,7 @@ require '../../controller/view.php';
     </form>
   </div>
 </div>
+  <?php require 'library.php'; ?>
 <script>
   $(function() {
     const rckApi = 'controller/farmasi/racikan.php';
@@ -822,7 +832,7 @@ require '../../controller/view.php';
           if (res.status === 'success') {
             $modal.modal('hide');
             Swal.fire('Berhasil!', res.message, 'success');
-            $('#periodeTable').DataTable().ajax.reload(null, false);
+            muatTiket();
           } else {
             Swal.fire('Gagal!', res.message || 'Racikan gagal disimpan.', 'error');
           }
@@ -833,409 +843,345 @@ require '../../controller/view.php';
   });
 </script>
 <script>
-  $(document).ready(function() {
-    $('#id_pharmacy').select2({
-      dropdownParent: $('#programModal'),
-      width: '100%'
-    });
+  (function() {
+    const NO_VISIT = <?= json_encode($noVisit) ?>;
+    const NO_RM = <?= json_encode($noRm) ?>;
+    const RME = <?= json_encode($rme !== '' ? $rme : 'c') ?>;
+    const apiUrl = 'controller/visit/permintaanFarmasi?no=' + encodeURIComponent(NO_VISIT);
+    const STATUS = {
+      0: 'Belum dikirim',
+      1: 'Terkirim ke farmasi',
+      2: 'Persiapan',
+      3: 'Selesai'
+    };
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+    const angka = (v) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n.toLocaleString('id-ID', { maximumFractionDigits: 2 }) : esc(v);
+    };
+    const waktu = (s) => {
+      const d = s ? new Date(String(s).replace(' ', 'T')) : null;
+      return d && !isNaN(d) ? d.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+    };
 
-    $('#id_pharmacy').on('change', function() {
-      let harga = $(this).find(':selected').data('harga') || 0;
-      $('#harga').val(harga);
-    });
-  });
-</script>
-<script>
-  const apiUrl = 'controller/visit/permintaanFarmasi?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>';
-  const urlParams = new URLSearchParams(window.location.search);
-  const rmeParam = urlParams.get('rme') || 'c'; // default kalau kosong
-  const nomorm = urlParams.get('rm') || 'c'; // default kalau kosong
+    let tiket = [];
+    let filter = 'all';
+    let kunjunganBatal = false;
+    let alergi = '';
+    let memuat = null;
 
-  let tiketBelumKirim = [];
-  const escapeHtmlRow = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[c]));
+    const $list = $('#tiketList');
+    // nama dagang sering diisi '.' / '-' / sama dengan generik -> jangan ditampilkan
+    const dagangBerarti = (it) => /[a-z0-9]{2,}/i.test(it.nama_dagang || '') && String(it.nama_dagang).trim().toLowerCase() !== String(it.nama || '').trim().toLowerCase();
+    const isRacikan = (t) => String(t.tipe_obat || '').trim().toLowerCase() === 'racikan';
+    const siapKirim = () => tiket.filter(t => +t.status_permintaan === 0 && t.jumlah_item > 0);
 
-  $(document).ready(function() {
-    var table = $('#periodeTable').DataTable({
-      processing: true,
-      serverSide: false, // 🔹 ubah jadi false
-      ajax: {
-        url: apiUrl,
-        type: "GET",
-        dataSrc: function(json) {
-          // 📤 kumpulkan tiket yang belum dikirim
-          tiketBelumKirim = (json.data || [])
-            .filter(row => row.status_permintaan == 0)
-            .map(row => row.id_permintaan_farmasi);
-          $('#btnKirimObatCount').text(tiketBelumKirim.length);
-          $('#btnKirimObat').toggleClass('d-none', tiketBelumKirim.length === 0);
+    function muatTiket() {
+      if (memuat) memuat.abort();
+      memuat = new AbortController();
+      $('#btnMuatUlang i').addClass('ti-spin');
+      return fetch(apiUrl, { signal: memuat.signal, cache: 'no-store' })
+        .then(res => res.json())
+        .then(res => {
+          if (res.status !== 'success') throw new Error(res.message || 'Gagal memuat tiket.');
+          tiket = (res.data || []).map(t => ({ ...t, items: t.items || [], jumlah_item: +t.jumlah_item || 0 }));
+          kunjunganBatal = !!(res.kunjungan && +res.kunjungan.visit_status === 99);
+          $('#alertBatal').toggleClass('d-none', !kunjunganBatal);
+          $('#btnTambah').prop('disabled', kunjunganBatal);
+          render();
+        })
+        .catch(err => {
+          if (err.name === 'AbortError') return;
+          $list.html(`<div class="col-12 kosong text-danger"><i class="ti ti-alert-triangle d-block mb-2"></i>${esc(err.message || 'Terjadi kesalahan pada server.')}
+            <div class="mt-2"><button type="button" class="btn btn-outline-dark btn-sm" onclick="muatTiket()">Coba lagi</button></div></div>`);
+        })
+        .finally(() => $('#btnMuatUlang i').removeClass('ti-spin'));
+    }
+    window.muatTiket = muatTiket;
 
-          return json.data.map(function(row) {
-            return {
-              "actions": (function() {
+    function kartu(t) {
+      const st = +t.status_permintaan || 0;
+      const id = +t.id_permintaan_farmasi;
+      const rck = isRacikan(t);
+      const tipeKls = rck ? 'Racikan' : (t.tipe_obat === 'BMHP' ? 'BMHP' : 'Non');
+      const urlDetail = `module/admin/permintaan_farmasi_details?no=${encodeURIComponent(NO_VISIT)}&rm=${encodeURIComponent(NO_RM)}&rme=${encodeURIComponent(RME)}&id=${id}&type=${encodeURIComponent(t.tipe_obat || '')}`;
 
-                let btnDelete = '';
-                let btnKirim = '';
-                let btnRacikan = '';
-
-                // 🧪 tiket racikan yang belum selesai → form racikan
-                if (String(row.tipe_obat || '').trim().toLowerCase() === 'racikan' && row.status_permintaan != 3) {
-                  btnRacikan = `
-      <a class="btn btn-warning racikan-btn"
-         href="javascript:;"
-         title="Form Racikan"
-         data-id="${row.id_permintaan_farmasi}">
-        <i class="fas fa-mortar-pestle"></i> + Racikan
-      </a>
-    `;
-                }
-
-                // 📤 belum dikirim → tombol kirim obat per tiket
-                if (row.status_permintaan == 0) {
-                  btnKirim = `
-      <a class="btn btn-primary kirim-btn"
-         href="javascript:;"
-         title="Kirim Obat"
-         data-id="${row.id_permintaan_farmasi}">
-        <i class="ti ti-send"></i>
-      </a>
-    `;
-                }
-
-                // ❌ kalau selesai → tidak ada delete
-                if (row.status_permintaan != 3) {
-                  btnDelete = `
-      <a class="btn btn-danger delete-btn" 
-         href="javascript:;" 
-         data-id="${row.id_permintaan_farmasi}">
-        <i class="fas fa-trash"></i>
-      </a>
-    `;
-                }
-
-                return `
-    <div class="text-center">
-      <div class="btn-group btn-group-sm" role="group">
-
-        <a class="btn btn-success rincian-btn"
-           href="javascript:;"
-           title="Rincian Obat"
-           data-id="${row.id_permintaan_farmasi}"
-           data-tipe="${row.tipe_obat ?? ''}">
-          <i class="fas fa-pills"></i>
-        </a>
-
-        <a class="btn btn-info" 
-          href="module/admin/permintaan_farmasi_details?no=${encodeURIComponent(urlParams.get('no'))}&rm=${encodeURIComponent(nomorm)}&rme=${rmeParam}&id=${row.id_permintaan_farmasi}&type=${encodeURIComponent(row.tipe_obat || '')}">
-          <i class="fas fa-pencil"></i>
-        </a>
-
-        ${btnRacikan}
-
-        ${btnKirim}
-
-        ${btnDelete}
-
-      </div>
-    </div>
-  `;
-
-              })(),
-              "timestamp": row.created_at ?? "-",
-              "tipe_obat": escapeHtmlRow(row.tipe_obat ?? "-") + (row.rck_nama ? `<div class="small text-muted">${escapeHtmlRow(row.rck_nama)}</div>` : ''),
-              "catatan": row.catatan_permintaan ?? "-",
-              "status_permintaan": (function() {
-                let status = row.status_permintaan;
-
-                let badgeClass = '';
-                let label = '';
-
-                if (status == 1) {
-                  badgeClass = 'bg-warning';
-                  label = 'Sudah Kirim';
-                } else if (status == 2) {
-                  badgeClass = 'bg-primary';
-                  label = 'Persiapan';
-                } else if (status == 3) {
-                  badgeClass = 'bg-success';
-                  label = 'Selesai';
-                } else {
-                  badgeClass = 'bg-dark';
-                  label = 'Belum Dikirim';
-                }
-
-                return `<span class="badge ${badgeClass} d-block text-center">${label}</span>`;
-              })()
-            };
-          });
-        }
-      },
-      columns: [{
-          data: "timestamp"
-        },
-        {
-          data: "tipe_obat"
-        },
-        {
-          data: "catatan"
-        },
-        {
-          data: "status_permintaan"
-        },
-        {
-          data: "actions",
-          orderable: false,
-          searchable: false
-        },
-      ],
-      footerCallback: function(row, data, start, end, display) {
-        var api = this.api();
-
-        // Hitung total bobot
-        let total = api
-          .column(3, {
-            page: 'current'
-          })
-          .data()
-          .reduce((a, b) => {
-            return (parseFloat(a) || 0) + (parseFloat(b) || 0);
-          }, 0);
-
-        // Tampilkan di footer
-        $(api.column(3).footer()).html(total.toFixed(2) + " %");
+      let aksi = '';
+      if (rck && st !== 3) {
+        aksi += `<button type="button" class="btn btn-warning btn-sm racikan-btn" data-id="${id}"><i class="ti ti-flask me-1"></i>Form Racikan</button>`;
       }
+      aksi += `<a class="btn btn-primary btn-sm" href="${urlDetail}"><i class="ti ti-${st === 3 ? 'list-details' : 'pencil'} me-1"></i>${st === 3 ? 'Lihat Obat' : (t.jumlah_item ? 'Ubah Obat' : 'Isi Obat')}</a>`;
+      if (st === 0) {
+        aksi += t.jumlah_item ?
+          `<button type="button" class="btn btn-success btn-sm kirim-btn" data-id="${id}"><i class="ti ti-send me-1"></i>Kirim</button>` :
+          `<button type="button" class="btn btn-success btn-sm" disabled title="Isi rincian obat terlebih dahulu"><i class="ti ti-send me-1"></i>Kirim</button>`;
+      }
+      if (st !== 3) {
+        aksi += `<button type="button" class="btn btn-danger btn-sm delete-btn" data-id="${id}" title="Hapus tiket"><i class="ti ti-trash"></i></button>`;
+      }
+
+      const langkah = ['Dibuat', 'Terkirim', 'Persiapan', 'Selesai'].map((l, i) => {
+        const kls = i <= st ? 'ok' : (i === st + 1 ? 'kini' : '');
+        return `<div class="${kls}">${l}</div>`;
+      }).join('');
+
+      let racik = '';
+      if (rck) {
+        const bagian = [
+          t.rck_nama ? `<b>${esc(t.rck_nama)}</b>` : '<b>Racikan</b>',
+          t.rck_jumlah ? `${esc(t.rck_jumlah)} ${esc(t.rck_satuan || '')}` : '',
+          t.rck_tipe ? (t.rck_tipe === 'DTD' ? 'DTD' : 'Non DTD') : '',
+          t.rck_signa ? `Signa: ${esc(t.rck_signa)}` : ''
+        ].filter(Boolean);
+        racik = `<div class="racik"><i class="ti ti-flask me-1"></i>${bagian.join(' &nbsp;•&nbsp; ')}</div>`;
+      }
+
+      const obat = t.items.length ? `
+        <div class="table-responsive"><table class="obat">
+          <thead><tr><th style="width:28px">#</th><th>Obat</th><th class="text-end">Qty</th>${rck ? '' : '<th>Signa</th>'}<th>Ket.</th></tr></thead>
+          <tbody>${t.items.map((it, i) => `<tr>
+            <td>${i + 1}</td>
+            <td>${esc(it.nama || '-')}${dagangBerarti(it) ? `<div class="dagang">${esc(it.nama_dagang)}</div>` : ''}</td>
+            <td class="text-end text-nowrap">${angka(rck && it.qty_racik != null ? it.qty_racik : it.qty)} <span class="text-muted small">${esc(it.satuan || '')}</span></td>
+            ${rck ? '' : `<td>${esc(it.signa || '-')}</td>`}
+            <td>${esc(it.catatan || '-')}</td>
+          </tr>`).join('')}</tbody>
+        </table></div>` :
+        `<div class="kosong-obat"><i class="ti ti-alert-triangle me-1"></i>Belum ada obat. ${st === 3 ? '' : `<a href="${urlDetail}" class="fw-semibold">Isi rincian obat</a> sebelum dikirim.`}</div>`;
+
+      return `
+        <div class="col-12 col-xxl-6">
+          <div class="tiket" data-st="${st}">
+            <div class="atas">
+              <div class="aksi">${aksi}</div>
+              <span class="st st-${st}">${STATUS[st] || 'Belum dikirim'}</span>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <span class="tipe tipe-${tipeKls}">${esc(t.tipe_obat || '-')}</span>
+              <span class="judul">Tiket #${id}</span>
+              <span class="meta ms-auto"><i class="ti ti-clock me-1"></i>${waktu(t.created_at)} · ${t.jumlah_item} obat</span>
+            </div>
+            <div class="langkah">${langkah}</div>
+            ${racik}
+            ${obat}
+            ${t.catatan_permintaan ? `<div class="catatan"><b>Catatan:</b> ${esc(t.catatan_permintaan)}</div>` : ''}
+          </div>
+        </div>`;
+    }
+
+    function render() {
+      const n = { all: tiket.length, 0: 0, 1: 0, 2: 0, 3: 0 };
+      tiket.forEach(t => { n[+t.status_permintaan || 0]++; });
+      Object.keys(n).forEach(k => $(`#filterStatus [data-n="${k}"]`).text(n[k]));
+
+      const siap = siapKirim();
+      $('#btnKirimObatCount').text(siap.length);
+      $('#btnKirimObat').toggleClass('d-none', siap.length < 2);
+
+      const q = String($('#customSearch').val() || '').trim().toLowerCase();
+      const tampil = tiket.filter(t => {
+        if (filter !== 'all' && String(+t.status_permintaan || 0) !== filter) return false;
+        if (!q) return true;
+        const teks = [t.tipe_obat, t.rck_nama, t.catatan_permintaan, t.id_permintaan_farmasi, ...t.items.map(it => `${it.nama} ${it.nama_dagang || ''} ${it.signa || ''} ${it.catatan || ''}`)].join(' ').toLowerCase();
+        return teks.includes(q);
+      });
+
+      if (!tiket.length) {
+        $list.html(`<div class="col-12 kosong"><i class="ti ti-pill d-block mb-2"></i><b>Belum ada permintaan farmasi.</b>
+          <div class="small mb-3">Buat tiket untuk resep obat, racikan, atau BMHP pasien ini.</div>
+          ${kunjunganBatal ? '' : '<button type="button" class="btn btn-primary" onclick="$(\'#btnTambah\').trigger(\'click\')"><i class="ti ti-plus me-1"></i>Tambah Tiket</button>'}</div>`);
+        return;
+      }
+      if (!tampil.length) {
+        $list.html('<div class="col-12 kosong"><i class="ti ti-search d-block mb-2"></i>Tidak ada tiket yang cocok dengan filter.</div>');
+        return;
+      }
+      $list.html(tampil.map(kartu).join(''));
+    }
+
+    $('#filterStatus').on('click', '.chip', function() {
+      filter = String($(this).data('f'));
+      $('#filterStatus .chip').removeClass('on');
+      $(this).addClass('on');
+      render();
+    });
+    $('#customSearch').on('input', render);
+    $('#btnMuatUlang').on('click', muatTiket);
+    // status tiket diubah farmasi dari layar lain -> segarkan saat tab dibuka lagi
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') muatTiket();
     });
 
-    $('#customSearch').on('keyup', function() {
-      table.search(this.value).draw();
-    });
+    // 🔹 Tambah tiket
+    function aturRacikan() {
+      const rck = $('input[name="tipe_obat"]:checked').val() === 'Racikan';
+      $('.racikan-field').toggle(rck);
+      if (!rck) $('.racikan-field input').val('');
+    }
+    $(document).on('change', 'input[name="tipe_obat"]', aturRacikan);
 
-    // 🔹 Tambah
     $('#btnTambah').on('click', function() {
-      $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
+      if (kunjunganBatal) return;
+      $('#programForm')[0].reset();
       $('#id_permintaan_farmasi').val('');
-      $('#programModal .modal-title').text('Tambah Data');
+      aturRacikan();
       $('#programModal').modal('show');
     });
 
-    // 🔹 Submit (Tambah / Update)
     $('#programForm').on('submit', function(e) {
       e.preventDefault();
-      let formData = new URLSearchParams(new FormData(this));
-      let id = $('#id_permintaan_farmasi').val();
-
-      fetch(apiUrl + (id ? `?id=${id}` : ''), {
-          method: id ? 'PUT' : 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: formData
+      const jml = $('#rck_jumlah').val();
+      if (jml !== '' && !(Number.isInteger(+jml) && +jml >= 1 && +jml <= 10000)) {
+        $('#rck_jumlah').addClass('is-invalid').trigger('focus');
+        return;
+      }
+      $('#rck_jumlah').removeClass('is-invalid');
+      const tipe = $('input[name="tipe_obat"]:checked').val();
+      const $btn = $('#btnSimpanTiket').prop('disabled', true);
+      fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams(new FormData(this))
         })
         .then(res => res.json())
         .then(data => {
-          if (data.status === 'success') {
-            Swal.fire('Berhasil!', data.message, 'success');
-            $('#programModal').modal('hide');
-            table.ajax.reload(null, false);
-          } else {
-            Swal.fire('Gagal!', data.message, 'error');
-          }
-        });
-    });
-
-    // 💊 Rincian Obat per tiket
-    const escapeHtml = (v) => String(v ?? '-').replace(/[&<>"']/g, c => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[c]));
-
-    $(document).on('click', '.rincian-btn', function() {
-      const id = $(this).data('id');
-      const isRacikan = String($(this).data('tipe') || '').trim().toLowerCase() === 'racikan';
-      const $body = $('#rincianObatBody');
-
-      $('#rincianObatInfo').text($(this).data('tipe') ? `(${$(this).data('tipe')})` : '');
-      $body.html('<tr><td colspan="5" class="text-center text-muted">Memuat data...</td></tr>');
-      $('#rincianObatModal').modal('show');
-
-      fetch(`controller/visit/permintaanFarmasiDetails?no=${encodeURIComponent(id)}`)
-        .then(res => res.json())
-        .then(res => {
-          const items = (res && res.status === 'success') ? (res.data || []) : null;
-          if (items === null) {
-            $body.html(`<tr><td colspan="5" class="text-center text-danger">${escapeHtml(res?.message || 'Gagal memuat data.')}</td></tr>`);
+          if (data.status !== 'success') {
+            Swal.fire('Gagal!', data.message || 'Tiket gagal dibuat.', 'error');
             return;
           }
-          if (!items.length) {
-            $body.html('<tr><td colspan="5" class="text-center text-muted">Belum ada obat pada tiket ini.</td></tr>');
-            return;
-          }
-          $body.html(items.map((item, i) => `
-            <tr>
-              <td class="text-center">${i + 1}</td>
-              <td>${escapeHtml(item.pharmacy_name_generic)}</td>
-              <td class="text-center">${escapeHtml(item.qty)}</td>
-              <td>${isRacikan ? '-' : escapeHtml(item.signa)}</td>
-              <td>${escapeHtml(item.catatan)}</td>
-            </tr>
-          `).join(''));
+          $('#programModal').modal('hide');
+          muatTiket();
+          Swal.fire({
+            icon: 'success',
+            title: 'Tiket dibuat',
+            text: tipe === 'Racikan' ? 'Lanjut isi bahan racikan sekarang?' : 'Lanjut isi rincian obat sekarang?',
+            showCancelButton: true,
+            confirmButtonText: tipe === 'Racikan' ? 'Isi racikan' : 'Isi obat',
+            cancelButtonText: 'Nanti',
+            reverseButtons: true
+          }).then(r => {
+            if (!r.isConfirmed || !data.id) return;
+            if (tipe === 'Racikan') {
+              $('<button class="racikan-btn d-none">').attr('data-id', data.id).appendTo('body').trigger('click').remove();
+            } else {
+              window.location.href = `module/admin/permintaan_farmasi_details?no=${encodeURIComponent(NO_VISIT)}&rm=${encodeURIComponent(NO_RM)}&rme=${encodeURIComponent(RME)}&id=${data.id}&type=${encodeURIComponent(tipe)}`;
+            }
+          });
         })
-        .catch(() => {
-          $body.html('<tr><td colspan="5" class="text-center text-danger">Terjadi kesalahan pada server.</td></tr>');
-        });
+        .catch(() => Swal.fire('Gagal!', 'Terjadi kesalahan pada server.', 'error'))
+        .finally(() => $btn.prop('disabled', false));
     });
 
-    // 📤 Kirim Obat: satu tiket (tombol di Actions)
+    // 📤 Kirim obat
     $(document).on('click', '.kirim-btn', function() {
-      kirimObat([$(this).data('id')], 'Pastikan data sudah benar.');
+      kirimObat([$(this).data('id')]);
     });
-
-    // 📤 Kirim Obat: semua tiket Belum Dikirim sekaligus (tombol header)
     $('#btnKirimObat').on('click', function() {
-      const ids = tiketBelumKirim.slice();
+      const ids = siapKirim().map(t => t.id_permintaan_farmasi);
       if (!ids.length) {
-        Swal.fire('Info', 'Tidak ada tiket yang belum dikirim.', 'info');
+        Swal.fire('Info', 'Tidak ada tiket berisi obat yang belum dikirim.', 'info');
         return;
       }
-      kirimObat(ids, `${ids.length} tiket akan dikirim bersamaan. Pastikan data sudah benar.`);
+      kirimObat(ids);
     });
 
-    function kirimObat(ids, konfirmasi) {
+    function kirimObat(ids) {
+      const kosong = tiket.filter(t => +t.status_permintaan === 0 && !t.jumlah_item).length;
+      const daftar = tiket.filter(t => ids.map(String).includes(String(t.id_permintaan_farmasi)));
+      const html = `<div class="text-start small">
+          ${daftar.map(t => `<div>• <b>Tiket #${esc(t.id_permintaan_farmasi)}</b> ${esc(t.tipe_obat || '')} — ${t.jumlah_item} obat</div>`).join('')}
+          ${alergi ? `<div class="alert alert-danger py-2 mt-2 mb-0"><b>Alergi obat:</b> ${esc(alergi)}</div>` : ''}
+          ${ids.length > 1 && kosong ? `<div class="text-muted mt-2">${kosong} tiket tanpa obat tidak ikut dikirim.</div>` : ''}
+        </div>`;
       Swal.fire({
-        title: 'Kirim obat?',
-        text: konfirmasi,
+        title: ids.length > 1 ? `Kirim ${ids.length} tiket ke farmasi?` : 'Kirim tiket ke farmasi?',
+        html,
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: 'Ya, kirim',
         cancelButtonText: 'Batal',
         reverseButtons: true
       }).then((result) => {
-        if (!result.isConfirmed) {
-          return;
-        }
+        if (!result.isConfirmed) return;
         Swal.fire({
           title: 'Sedang mengirim...',
-          text: 'Mohon tunggu, proses sedang berjalan.',
+          text: 'Mohon tunggu, pasien BPJS juga dikirim ke PCare.',
           allowOutsideClick: false,
           allowEscapeKey: false,
-          allowEnterKey: false,
           showConfirmButton: false,
-          showCancelButton: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
+          didOpen: () => Swal.showLoading()
         });
         $.ajax({
           url: 'controller/farmasi/kirimObat.php',
           type: 'POST',
           contentType: 'application/json',
           dataType: 'json',
-          data: JSON.stringify({
-            ids: ids
-          }),
+          data: JSON.stringify({ ids }),
           success: function(res) {
             if (res.status == 'success') {
-              Swal.fire({
-                icon: 'success',
-                title: 'Berhasil!',
-                text: `${res.total || ids.length} tiket obat berhasil dikirim.`,
-                confirmButtonText: 'OK'
-              });
-              table.ajax.reload(null, false);
+              Swal.fire('Berhasil!', `${res.total || ids.length} tiket dikirim. ${res.message || ''}`, 'success');
             } else {
-              Swal.fire({
-                icon: 'error',
-                title: 'Gagal!',
-                text: res.message || 'Terjadi kesalahan.',
-                confirmButtonText: 'OK'
-              });
+              Swal.fire('Gagal!', res.message || 'Terjadi kesalahan.', 'error');
             }
+            muatTiket();
           },
           error: function(xhr) {
-            Swal.fire({
-              icon: 'error',
-              title: 'Gagal!',
-              text: (xhr.responseJSON && xhr.responseJSON.message) || 'Terjadi kesalahan pada server.',
-              confirmButtonText: 'OK'
-            });
+            Swal.fire('Gagal!', (xhr.responseJSON && xhr.responseJSON.message) || 'Terjadi kesalahan pada server.', 'error');
+            muatTiket();
           }
         });
       });
     }
 
-    // 🔹 Delete
+    // 🔹 Hapus tiket
     $(document).on('click', '.delete-btn', function() {
-      let id = $(this).data('id');
+      const id = $(this).data('id');
+      const t = tiket.find(x => String(x.id_permintaan_farmasi) === String(id)) || {};
+      const terkirim = +t.status_permintaan > 0;
       Swal.fire({
-        title: 'Hapus Data?',
+        title: `Hapus tiket #${id}?`,
+        html: `Tiket <b>${esc(t.tipe_obat || '')}</b> beserta <b>${t.jumlah_item || 0} rincian obat</b> akan dihapus.` +
+          (terkirim ? '<div class="alert alert-warning py-2 mt-2 mb-0 small">Tiket ini <b>sudah dikirim ke farmasi</b>. Pastikan farmasi tahu tiket dibatalkan.</div>' : ''),
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Hapus',
-        cancelButtonText: 'Batal'
+        confirmButtonColor: '#dc2626',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
       }).then((result) => {
-        if (result.isConfirmed) {
-          fetch(apiUrl + `&id=${id}`, {
-              method: 'DELETE'
-            })
-            .then(res => res.json())
-            .then(data => {
-              if (data.status === 'success') {
-                Swal.fire('Berhasil!', 'Data dihapus.', 'success');
-                table.ajax.reload(null, false);
-              }
-            });
-        }
+        if (!result.isConfirmed) return;
+        fetch(apiUrl + '&id=' + encodeURIComponent(id), { method: 'DELETE' })
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === 'success') {
+              Swal.fire('Berhasil!', data.message || 'Tiket dihapus.', 'success');
+            } else {
+              Swal.fire('Gagal!', data.message || 'Tiket gagal dihapus.', 'error');
+            }
+            muatTiket();
+          })
+          .catch(() => Swal.fire('Gagal!', 'Terjadi kesalahan pada server.', 'error'));
       });
     });
-  });
-</script>
-<script>
-  $(document).ready(function() {
 
-    function toggleRacikan() {
-      let tipe = $('#tipe_obat').val();
-
-      if (tipe === 'Racikan') {
-        $('.racikan-field').show();
-      } else {
-        $('.racikan-field').hide();
-        $('.racikan-field input').val(''); // reset value
-      }
-    }
-
-    // event change
-    $(document).on('change', '#tipe_obat', function() {
-      toggleRacikan();
-    });
-
-    // initial load
-    toggleRacikan();
-
-  });
-</script>
-<script>
-  $(document).ready(function() {
-    const params = new URLSearchParams(window.location.search);
-    const nomor_visit = params.get('no');
+    // ⚠️ alergi obat
     $.ajax({
       url: 'controller/master/getAlergiObat.php',
       type: 'POST',
-      data: {
-        visit_id: nomor_visit
-      },
+      data: { visit_id: NO_VISIT },
       dataType: 'json',
       success: function(response) {
-        const desAlObat = response.data?.desAlObat;
-        if (response.status === 'success' && desAlObat) {
-          $('.peringatanAlergi').removeClass('d-none');
-          $('#desAplergi').text(desAlObat);
-        } else {
-          $('.peringatanAlergi').addClass('d-none');
-          $('#desAplergi').text('');
-        }
-      },
+        alergi = String(response.data?.desAlObat || '').trim();
+        $('.peringatanAlergi').toggleClass('d-none', !(response.status === 'success' && alergi));
+        $('#desAplergi').text(alergi);
+      }
     });
-  })
+
+    muatTiket();
+  })();
 </script>
+</body>
 
 </html>

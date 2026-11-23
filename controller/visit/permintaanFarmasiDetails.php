@@ -196,9 +196,10 @@ function createData()
 function getData()
 {
    global $koneksi;
-   // pastikan ada parameter "no" (nomor_visit)
-   $no = isset($_GET['no']) ? mysqli_real_escape_string($koneksi, $_GET['no']) : '';
-   $query = "SELECT 
+   // "no" = id tiket permintaan farmasi; dibatasi faskes sesi (dulu tanpa filter faskes & SQL dirangkai langsung)
+   $no = (int) ($_GET['no'] ?? 0);
+   $idc = (string) ($_SESSION['id_customer'] ?? '');
+   $stmt = $koneksi->prepare("SELECT 
             permintaan_pharmacy_details.*, 
             ms_pharmacy.pharmacy_name_generic, 
             ms_pharmacy.pharmacy_name_trade,
@@ -207,17 +208,19 @@ function getData()
           FROM permintaan_pharmacy_details 
           LEFT JOIN ms_pharmacy 
           ON permintaan_pharmacy_details.id_pharmacy = ms_pharmacy.id_pharmacy
-          LEFT JOIN permintaan_pharmacy 
+          INNER JOIN permintaan_pharmacy 
           ON permintaan_pharmacy_details.id_permintaan_farmasi = permintaan_pharmacy.id_permintaan_farmasi
-          WHERE permintaan_pharmacy_details.id_permintaan_farmasi = '$no'
-          ORDER BY id_pharmacy_details ASC";
-   $result = mysqli_query($koneksi, $query);
+          WHERE permintaan_pharmacy_details.id_permintaan_farmasi = ? AND permintaan_pharmacy.id_customer = ?
+          ORDER BY id_pharmacy_details ASC");
+   $stmt->bind_param('is', $no, $idc);
+   $result = $stmt->execute() ? $stmt->get_result() : false;
 
    if (!$result) {
+      error_log('[visit/permintaanFarmasiDetails] ' . $koneksi->error);
       http_response_code(500);
       echo json_encode([
          'status' => 'error',
-         'message' => 'Gagal mengambil data: ' . mysqli_error($koneksi)
+         'message' => 'Gagal mengambil data rincian obat.'
       ]);
       return;
    }
