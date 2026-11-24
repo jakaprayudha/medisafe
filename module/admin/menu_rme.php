@@ -25,6 +25,9 @@
         <a href="module/admin/imunisasi?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>&rme=a">
            <button class="nav-link <?= ($current == 'imunisasi.php') ? 'active' : '' ?>">Imunisasi</button>
         </a>
+        <a href="module/admin/form_dinkes_balita?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>&rme=a">
+           <button class="nav-link <?= ($current == 'form_dinkes_balita.php') ? 'active' : '' ?>">Dinkes Balita</button>
+        </a>
         <a href="module/admin/billing?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>&rme=a">
            <button class="nav-link <?= ($current == 'billing.php') ? 'active' : '' ?>">Tindakan</button>
         </a>
