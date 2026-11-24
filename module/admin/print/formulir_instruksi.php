@@ -175,21 +175,24 @@
             let diag = "";
             let obat = "";
 
+            // isi di-escape (dulu HTML mentah) dan nilai kosong tidak tercetak "null"
+            const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])).replace(/\n/g, '<br>');
+            const isi = v => v && String(v).trim() ? e(v) + "<br><br>" : "";
             resp.data.forEach(d => {
 
                tbody += `
                   <tr>
-                     <td>${d.cppt_date} ${d.cppt_time}</td>
-                     <td>${d.perjalanan}</td>
-                     <td>${d.tindakan}</td>
-                     <td>${d.tanda_tangan}</td>
+                     <td>${e(d.cppt_date)} ${e(String(d.cppt_time || '').slice(0, 5))}</td>
+                     <td>${e(d.perjalanan)}</td>
+                     <td>${e(d.tindakan)}</td>
+                     <td>${e(d.tanda_tangan || d.users_entry)}</td>
                   </tr>
                `;
 
-               ku += d.ku + "<br><br>";
-               fisik += d.pemeriksaan_fisik + "<br><br>";
-               diag += d.diagnosa + "<br><br>";
-               obat += d.pengobatan + "<br><br>";
+               ku += isi(d.ku);
+               fisik += isi(d.pemeriksaan_fisik);
+               diag += isi(d.diagnosa);
+               obat += isi(d.pengobatan);
             });
 
             document.getElementById("tbl_body").innerHTML = tbody;
