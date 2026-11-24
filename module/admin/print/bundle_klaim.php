@@ -78,12 +78,15 @@ register_shutdown_function(function () use (&$tempPaths, $tempDir) {
 // CEK DATA KONDISIONAL
 // =============================================================================
 
-$dataekg = mysqli_fetch_array(mysqli_query(
-    $koneksi,
-    "SELECT id_ekg FROM ekg_results
-     WHERE visit_ID='$visit' AND nomor_rm='$rm'
-     ORDER BY id_ekg DESC LIMIT 1"
-));
+// EKG dicek per kunjungan (milik faskes sesi) — nomor_rm di ekg_results bisa berbeda format dengan ?rm
+$ekgStmt = $koneksi->prepare("SELECT e.id_ekg FROM ekg_results e
+     JOIN pasien_visit v ON v.visit_ID = e.visit_ID AND v.id_customer = ?
+     WHERE e.visit_ID = ? ORDER BY e.id_ekg DESC LIMIT 1");
+$ekgIdc = (int) ($_SESSION['id_customer'] ?? 0);
+$ekgStmt->bind_param('is', $ekgIdc, $visit);
+$ekgStmt->execute();
+$dataekg = $ekgStmt->get_result()->fetch_array();
+$ekgStmt->close();
 
 $datatriase = mysqli_fetch_array(mysqli_query(
     $koneksi,
