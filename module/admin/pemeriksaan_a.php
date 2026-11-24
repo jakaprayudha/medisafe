@@ -189,6 +189,7 @@ $data = mysqli_fetch_array($check);
                     </div>
                     <div class="mb-3">
                       <label class="form-label">Diagnosa Sekunder (ICD-10)</label>
+                      <input type="hidden" name="diagnosa_sekunder_ada" value="1"><!-- penanda: halaman ini mengelola diagnosa sekunder (boleh dikosongkan) -->
                       <select id="diagnosa_sekunder" name="diagnosa_sekunder[]"
                         class="form-select" multiple style="width:100%">
                       </select>
