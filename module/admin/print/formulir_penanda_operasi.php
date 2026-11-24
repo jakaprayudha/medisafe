@@ -1,6 +1,10 @@
 <?php
 require_once __DIR__ . '/../../../database/connect.php';
 require_once __DIR__ . '/../../../controller/visit/operationMarkerPrint.php';
+if (empty($_SESSION['id_customer'])) {
+   http_response_code(401);
+   exit('Sesi berakhir. Silakan login kembali.');
+}
 
 $markerVisit = $_GET['no'] ?? '';
 $markerId = !empty($operationMarkerBundle) ? null : ($_GET['id'] ?? null);

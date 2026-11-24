@@ -1,4 +1,12 @@
 <?php
+/**
+ * Penanda operasi (module/admin/penanda_operasi). Setiap simpan = versi baru (tidak ada ubah/hapus).
+ *   GET  ?visit_ID=..          -> daftar versi kunjungan (versi dihitung per jenis gambar) + status kunjungan
+ *   GET  ?visit_ID=..&id=..    -> 1 dokumen (anotasi + catatan; tanpa gambar PNG — editor menggambar ulang dari anotasi)
+ *   POST (JSON)                -> simpan versi baru
+ * Perbaikan: buka dokumen dulu ikut mengirim PNG base64 (~2,6 MB) yang tidak dipakai; nomor versi dihitung lintas
+ * jenis gambar; kunjungan batal tetap bisa disimpan; sesi tidak ditutup (request lain pengguna yang sama ikut antre).
+ */
 header('Content-Type: application/json; charset=utf-8');
 
 function markerResponse(int $code, array $response): void
@@ -15,6 +23,10 @@ require_once __DIR__ . '/operationMarkerStore.php';
 $clinic = (int) ($_SESSION['id_customer'] ?? 0);
 if ($clinic <= 0) markerResponse(401, ['status' => 'error', 'message' => 'Session klinik tidak ditemukan']);
 $method = $_SERVER['REQUEST_METHOD'];
+$sessionToken = (string) ($_SESSION['operation_marker_token'] ?? '');
+$authorId = (string) $_SESSION['uid_user'];
+$author = (string) ($_SESSION['fullname'] ?? $_SESSION['uid_user']);
+session_write_close();
 if (!in_array($method, ['GET', 'POST'], true)) {
    markerResponse(405, ['status' => 'error', 'message' => 'Method tidak diizinkan']);
 }
@@ -25,7 +37,7 @@ if (!is_array($data)) markerResponse(400, ['status' => 'error', 'message' => 'JS
 $visit = $data['visit_ID'] ?? '';
 if (!is_string($visit) || $visit === '') markerResponse(400, ['status' => 'error', 'message' => 'Nomor kunjungan wajib diisi']);
 if ($method === 'POST' && (!is_string($data['token'] ?? null) ||
-    !hash_equals($_SESSION['operation_marker_token'] ?? '', $data['token']))) {
+    $sessionToken === '' || !hash_equals($sessionToken, $data['token']))) {
    markerResponse(403, ['status' => 'error', 'message' => 'Token formulir tidak valid. Muat ulang halaman.']);
 }
 
@@ -33,24 +45,42 @@ try {
    if (!operationMarkerVisit($koneksi, $visit, $clinic)) {
       markerResponse(404, ['status' => 'error', 'message' => 'Kunjungan tidak ditemukan pada klinik ini']);
    }
+   $stmt = $koneksi->prepare("SELECT visit_status FROM pasien_visit WHERE visit_ID = ? AND id_customer = ? LIMIT 1");
+   $stmt->bind_param('si', $visit, $clinic);
+   $stmt->execute();
+   $batal = (int) ($stmt->get_result()->fetch_row()[0] ?? 0) === 99;
+   $stmt->close();
    if ($method === 'GET') {
       if (isset($data['id'])) {
          $id = filter_var($data['id'], FILTER_VALIDATE_INT);
          if (!$id || $id < 1) markerResponse(400, ['status' => 'error', 'message' => 'ID dokumen tidak valid']);
-         $documents = operationMarkerDocuments($koneksi, $visit, $clinic, $id);
-         if (!$documents) markerResponse(404, ['status' => 'error', 'message' => 'Dokumen tidak ditemukan']);
-         $document = $documents[0];
-         $document['image'] = 'data:image/png;base64,' . base64_encode($document['image_png']);
-         unset($document['image_png']);
+         $stmt = $koneksi->prepare("SELECT id, marker_type, annotations, notes, created_by, created_at
+            FROM operation_markers WHERE id = ? AND visit_ID = ? AND id_customer = ? LIMIT 1");
+         $stmt->bind_param('isi', $id, $visit, $clinic);
+         $stmt->execute();
+         $document = $stmt->get_result()->fetch_assoc();
+         if (!$document) markerResponse(404, ['status' => 'error', 'message' => 'Dokumen tidak ditemukan']);
          $document['annotations'] = json_decode($document['annotations'], true, 512, JSON_THROW_ON_ERROR);
          markerResponse(200, ['status' => 'success', 'data' => $document]);
       }
-      $stmt = $koneksi->prepare("SELECT id, marker_type, notes, created_by, created_at
-         FROM operation_markers WHERE visit_ID = ? AND id_customer = ? ORDER BY id DESC");
+      $stmt = $koneksi->prepare("SELECT id, marker_type, notes, created_by, created_at,
+            JSON_LENGTH(annotations) AS jumlah_penanda, (OCTET_LENGTH(image_png) > 0) AS ada_gambar
+         FROM operation_markers WHERE visit_ID = ? AND id_customer = ? ORDER BY id ASC");
       $stmt->bind_param('si', $visit, $clinic);
       $stmt->execute();
-      markerResponse(200, ['status' => 'success', 'data' => $stmt->get_result()->fetch_all(MYSQLI_ASSOC)]);
+      $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+      $per = [];
+      foreach ($rows as &$r) {
+         $r['versi'] = $per[$r['marker_type']] = ($per[$r['marker_type']] ?? 0) + 1;   // versi per jenis gambar
+         $r['jumlah_penanda'] = (int) $r['jumlah_penanda'];
+         $r['ada_gambar'] = (bool) $r['ada_gambar'];
+      }
+      unset($r);
+      foreach ($rows as &$r) $r['terbaru'] = $r['versi'] === $per[$r['marker_type']];
+      unset($r);
+      markerResponse(200, ['status' => 'success', 'data' => array_reverse($rows), 'kunjungan' => ['batal' => $batal]]);
    }
+   if ($batal) markerResponse(422, ['status' => 'error', 'message' => 'Kunjungan sudah dibatalkan — penanda operasi tidak bisa disimpan.']);
    $type = $data['marker_type'] ?? '';
    $notes = $data['notes'] ?? '';
    $annotations = $data['annotations'] ?? null;
@@ -101,8 +131,6 @@ try {
    unset($decodedImage);
    $json = json_encode($annotations, JSON_UNESCAPED_UNICODE);
    if (strlen($json) > 2 * 1024 * 1024) markerResponse(413, ['status' => 'error', 'message' => 'Jumlah coretan terlalu besar']);
-   $authorId = (string) $_SESSION['uid_user'];
-   $author = (string) ($_SESSION['fullname'] ?? $_SESSION['uid_user']);
    $createdAt = date('Y-m-d H:i:s');
    $stmt = $koneksi->prepare("INSERT INTO operation_markers
       (id_customer, visit_ID, marker_type, annotations, image_png, notes, created_by_id, created_by, created_at)
