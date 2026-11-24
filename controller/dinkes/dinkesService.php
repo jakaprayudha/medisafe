@@ -409,6 +409,34 @@ function dkHapusVisit(mysqli $k, int $idc, string $visitID): array
 }
 
 /**
+ * Cek ke API Dinkes (GET) apakah kunjungan sudah ada di sana. Hanya membaca; tidak mengubah dk_status.
+ * @return array{status:string, message:string}  status: ada | tidak_ada | error
+ */
+function dkCekRemote(mysqli $k, int $idc, string $visitID): array
+{
+   try {
+      if (dkToken() === '') return ['status' => 'error', 'message' => 'DINKES_TOKEN belum diisi di .env.'];
+      $c = dkKonteks($k, $idc, $visitID);
+      if (!$c) return ['status' => 'error', 'message' => 'Kunjungan tidak ditemukan.'];
+      $nik = preg_replace('/\D/', '', (string) $c['patient_nik']);
+      $balita = $c['umur'] !== null && $c['umur'] < 5;
+      [$code, $res, $err] = $balita
+         ? dkHttp(dkToken(), 'GET', 'data-balita', ['nik' => $nik, 'tanggal_ukur' => $c['visit_date']])
+         : dkHttp(dkToken(), 'GET', 'data-pasien-dewasa', ['tanggal_periksa' => $c['visit_date'], 'no_periksa' => $visitID, 'nik' => $nik]);
+      $ok = dkOk($code, $res);
+      $pesan = $ok ? (string) ($res['message'] ?? 'OK') : dkPesan($code, $res, (string) $err);
+      dkLog($k, $idc, $visitID, 'get', $code, $ok, $pesan);
+      if (!$ok) return ['status' => 'error', 'message' => $pesan];
+      return empty($res['data'])
+         ? ['status' => 'tidak_ada', 'message' => 'Belum ada di Dinkes.']
+         : ['status' => 'ada', 'message' => 'Sudah terkirim ke Dinkes.'];
+   } catch (Throwable $e) {
+      error_log('[dinkesService] ' . $e->getMessage());
+      return ['status' => 'error', 'message' => 'Kesalahan internal saat cek ke Dinkes.'];
+   }
+}
+
+/**
  * visit_ID untuk id_visit (PK pasien_visit) bila kunjungan itu pernah dikirim ke Dinkes, selain itu null.
  * Dipanggil SEBELUM DELETE pasien_visit; setelah DELETE sukses panggil dkHapusVisit() dengan hasilnya.
  */

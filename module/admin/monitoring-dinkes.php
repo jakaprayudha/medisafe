@@ -81,6 +81,7 @@ require '../../controller/view.php';
             <td>${esc(r.dk_id ?? '-')}</td><td>${esc(r.dk_attempts)}</td>
             <td style="max-width:320px" class="small">${esc(r.dk_error || '')}</td>
             <td class="text-nowrap">
+              <button class="btn btn-sm btn-outline-secondary" data-aksi="cek" data-v="${esc(r.visit_ID)}">Cek Dinkes</button>
               ${r.dk_status === 'hapus_gagal'
                 ? `<button class="btn btn-sm btn-danger" data-aksi="hapus" data-v="${esc(r.visit_ID)}">Ulangi hapus</button>`
                 : (['gagal', 'belum', 'dilewati'].includes(r.dk_status) ? `<button class="btn btn-sm btn-primary" data-aksi="kirim" data-v="${esc(r.visit_ID)}">Kirim ulang</button>` : '')}
@@ -95,7 +96,7 @@ require '../../controller/view.php';
         b.disabled = true;
         try {
           const res = await api(API, { method: 'POST', body: new URLSearchParams({ aksi: b.dataset.aksi, visit: b.dataset.v }) });
-          toast(res.hasil.message, ['terkirim', 'dihapus'].includes(res.hasil.status) ? 'success' : 'warning');
+          toast(res.hasil.message, ['terkirim', 'dihapus', 'ada'].includes(res.hasil.status) ? 'success' : 'warning');
         } catch (e) { toast(e.message, 'error'); }
         muat();
       });
