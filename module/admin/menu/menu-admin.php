@@ -92,6 +92,17 @@
          </a>
       </li>
 
+      <li class="sidebar-item">
+         <a class="sidebar-link <?php if ($title == 'Monitoring Dinkes') {
+                                    echo 'active';
+                                 } ?>"
+            href="module/admin/monitoring-dinkes"
+            aria-expanded="false">
+            <iconify-icon icon="mdi:human-queue"></iconify-icon>
+            <span class="hide-menu">Monitoring Dinkes</span>
+         </a>
+      </li>
+
       <li class="sidebar-item has-sub">
          <a href="javascript:void(0)" class="sidebar-link" onclick="toggleSidebarMenu(this)">
             <iconify-icon icon="solar:folder-bold"></iconify-icon>
