@@ -40,6 +40,9 @@ require '../../controller/view.php';
                     <option value="">Dewasa &amp; balita</option><option>dewasa</option><option>balita</option>
                   </select>
                 </div>
+                <div class="col-6 col-md-2"><input type="date" class="form-control" id="dmDari" title="Dari tanggal"></div>
+                <div class="col-6 col-md-2"><input type="date" class="form-control" id="dmSampai" title="Sampai tanggal"></div>
+                <div class="col-12 col-md-2"><button class="btn btn-primary w-100" id="dmLama">Kirim kunjungan lama</button></div>
               </div>
               <div class="table-responsive">
                 <table class="table table-sm align-middle">
@@ -98,6 +101,28 @@ require '../../controller/view.php';
           const res = await api(API, { method: 'POST', body: new URLSearchParams({ aksi: b.dataset.aksi, visit: b.dataset.v }) });
           toast(res.hasil.message, ['terkirim', 'dihapus', 'ada'].includes(res.hasil.status) ? 'success' : 'warning');
         } catch (e) { toast(e.message, 'error'); }
+        muat();
+      });
+      $('dmSampai').value = new Date().toISOString().slice(0, 10);
+      $('dmLama').addEventListener('click', async ev => {
+        const dari = $('dmDari').value, sampai = $('dmSampai').value;
+        if (!dari || !sampai) return toast('Isi rentang tanggal.', 'warning');
+        const b = ev.currentTarget;
+        b.disabled = true;
+        let total = 0, kirim = 0, sisaLalu = Infinity;
+        try {
+          while (true) {
+            const { hasil } = await api(API, { method: 'POST', body: new URLSearchParams({ aksi: 'kirim_lama', dari, sampai }) });
+            if (hasil.message) { toast(hasil.message, 'warning'); break; }
+            total += hasil.diproses; kirim += hasil.terkirim;
+            b.textContent = `Memproses… ${total} (sisa ${hasil.sisa})`;
+            if (!hasil.diproses || !hasil.sisa || hasil.sisa >= sisaLalu) break; // sisa tidak turun = tidak ada kemajuan
+            sisaLalu = hasil.sisa;
+          }
+          toast(`${total} kunjungan diproses, ${kirim} terkirim.`);
+        } catch (e) { toast(e.message, 'error'); }
+        b.textContent = 'Kirim kunjungan lama';
+        b.disabled = false;
         muat();
       });
       muat();
