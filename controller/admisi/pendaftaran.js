@@ -226,7 +226,7 @@
         $id('kunjSakit').value = 'true';
         $id('tanggalKunjung').value = tglJkt(0);
         $id('tanggalKunjung').max = tglJkt(0);
-        $id('tanggalKunjung').min = tglJkt(-7);
+        $id('tanggalKunjung').removeAttribute('min');
         $id('kodedokter').value = $id('namadokter').value = $id('namadokterPcare').value = $id('jampraktek').value = '';
         $id('pdError').classList.add('d-none');
         $id('pdForm').querySelectorAll('.is-invalid').forEach(e => e.classList.remove('is-invalid'));
@@ -289,13 +289,12 @@
     $(document).on('click', '#pdDokterUlang', muatDokter);
     function renderDokter() {
         if (!dokterList.length) { $id('pdDokter').innerHTML = '<div class="small text-warning-emphasis"><i class="fas fa-calendar-xmark me-1"></i>Tidak ada dokter dengan jadwal di poli ini pada tanggal tersebut.</div>'; return; }
-        const buka = dokterList.filter(d => !d.tutup);
-        $id('pdDokter').innerHTML = dokterList.map(d => `<button type="button" class="pd-dk ${d.kode === $id('kodedokter').value ? 'pilih' : ''}" data-kode="${esc(d.kode)}" ${d.tutup ? 'disabled title="Jam praktik sudah selesai"' : ''}>
+        $id('pdDokter').innerHTML = dokterList.map(d => `<button type="button" class="pd-dk ${d.kode === $id('kodedokter').value ? 'pilih' : ''}" data-kode="${esc(d.kode)}" ${d.tutup ? 'title="Jam praktik sudah lewat"' : ''}>
             <span class="pd-ava">${esc(inisial(d.nama))}</span>
             <span class="min-w-0"><span class="d-block fw-semibold small text-truncate">${esc(d.nama)}</span>
-              <span class="d-block small ${d.tutup ? 'text-danger' : 'text-muted'}">${d.jam ? esc(d.jam) : 'Jadwal PCare'}${d.tutup ? ' · sudah tutup' : ''}</span>
+              <span class="d-block small ${d.tutup ? 'text-warning-emphasis' : 'text-muted'}">${d.jam ? esc(d.jam) : 'Jadwal PCare'}${d.tutup ? ' · jam lewat' : ''}</span>
               ${namaBeda(d) ? `<span class="d-block small text-warning-emphasis" title="Kode dokter di master jadwal mengarah ke tenaga lain di BPJS"><i class="fas fa-triangle-exclamation me-1"></i>Di BPJS: ${esc(d.pcare)}</span>` : ''}</span></button>`).join('');
-        if (buka.length === 1 && !$id('kodedokter').value) pilihDokter(buka[0]);
+        if (dokterList.length === 1 && !$id('kodedokter').value) pilihDokter(dokterList[0]);
     }
     // nama dokter lokal vs nama di master BPJS (kode dokter salah petik -> pendaftaran PCare atas nama orang lain)
     function namaBeda(d) {
@@ -314,7 +313,7 @@
     }
     $id('pdDokter').addEventListener('click', e => {
         const b = e.target.closest('.pd-dk');
-        if (b && !b.disabled) pilihDokter(dokterList.find(d => d.kode === b.dataset.kode));
+        if (b) pilihDokter(dokterList.find(d => d.kode === b.dataset.kode));
     });
 
     /* penjamin: BPJS hanya bila peserta aktif; tipe pasien mengikuti penjamin (seperti sebelumnya) */
@@ -369,7 +368,7 @@
         if (sakit() && !$id('kodedokter').value) { err.push('dokter'); $id('pdDokter').classList.add('border', 'border-danger', 'rounded'); }
         if (!$id('keluhan').value.trim()) tandai($id('keluhan'), 'keluhan');
         const t = $id('tanggalKunjung').value;
-        if (!t || t > tglJkt(0) || t < tglJkt(-7)) tandai($id('tanggalKunjung'), 'tanggal (hari ini s.d. 7 hari ke belakang)');
+        if (!t || t > tglJkt(0)) tandai($id('tanggalKunjung'), 'tanggal kunjungan (maksimal hari ini)');
         if ($id('typePasien').value === 'BPJS' && !(B && B.aktif)) err.push('peserta BPJS tidak aktif / belum terverifikasi — pilih penjamin non-BPJS');
         const hp = $id('pdHp').value.replace(/\D/g, '');
         if ($id('typePasien').value === 'BPJS' && hp.length < 10) tandai($id('pdHp'), 'no. HP (min. 10 digit) untuk antrean BPJS');
