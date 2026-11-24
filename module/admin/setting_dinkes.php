@@ -30,12 +30,8 @@ require '../../controller/view.php';
             <div class="card-body">
               <form id="dkForm" class="row g-3" autocomplete="off">
                 <div class="col-12 col-lg-8">
-                  <label class="form-label" for="dkToken">Token Dinkes</label>
-                  <div class="input-group">
-                    <input type="password" class="form-control" id="dkToken" placeholder="Kosongkan bila tidak diubah" autocomplete="new-password">
-                    <span class="input-group-text" id="dkTokenLama">belum diisi</span>
-                  </div>
-                  <div class="form-text">Token diberikan Dinkes untuk faskes ini. Tidak pernah ditampilkan penuh maupun dicatat di log.</div>
+                  <div class="small" id="dkTokenInfo"></div>
+                  <div class="form-text">Token Dinkes satu untuk semua faskes dan dipasang admin sistem di server (DINKES_TOKEN di .env). Tidak ditampilkan maupun dicatat di log.</div>
                 </div>
                 <div class="col-12 col-lg-8">
                   <label class="form-label" for="dkPuskes">Puskesmas default</label>
@@ -92,14 +88,15 @@ require '../../controller/view.php';
       }
 
       api(API).then(res => {
+        const ok = !!res.token_server;
+        $('dkTokenInfo').innerHTML = ok ? '<span class="text-success"><i class="ti ti-circle-check me-1"></i>Token Dinkes terpasang di server</span>' : '<span class="text-danger"><i class="ti ti-alert-triangle me-1"></i>Token Dinkes belum dipasang di server — hubungi admin sistem</span>';
+        if (ok) muatPuskes(true);
         const d = res.data;
         if (!d) return;
         puskesTersimpan = d.puskes_id ? String(d.puskes_id) : '';
         $('dkAktif').checked = !!+d.aktif;
-        $('dkTokenLama').textContent = d.token || 'belum diisi';
         if (d.puskes_id) $('dkPuskes').innerHTML = `<option value="${esc(d.puskes_id)}">Puskesmas ID ${esc(d.puskes_id)}</option>`, $('dkPuskes').value = puskesTersimpan;
         $('dkInfo').textContent = d.diubah_oleh ? `Terakhir diubah oleh ${d.diubah_oleh}${d.diubah_pada ? ' pada ' + d.diubah_pada : ''}.` : '';
-        if (d.token) muatPuskes(true);
       }).catch(e => toast(e.message, 'error'));
 
       $('dkMuat').addEventListener('click', () => muatPuskes(false));
@@ -109,8 +106,7 @@ require '../../controller/view.php';
       $('dkForm').addEventListener('submit', async ev => {
         ev.preventDefault();
         try {
-          const res = await post({ aksi: 'simpan', token: $('dkToken').value, puskes_id: $('dkPuskes').value, aktif: $('dkAktif').checked ? 1 : 0 });
-          $('dkToken').value = '';
+          const res = await post({ aksi: 'simpan', puskes_id: $('dkPuskes').value, aktif: $('dkAktif').checked ? 1 : 0 });
           toast(res.message);
           setTimeout(() => location.reload(), 900);
         } catch (e) { toast(e.message, 'error'); }

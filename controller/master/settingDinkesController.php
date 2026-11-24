@@ -5,8 +5,9 @@
  * GET                       -> konfigurasi (token disamarkan)
  * GET  ?aksi=puskesmas      -> daftar puskesmas dari Dinkes (refrensi-puskesmas)
  * GET  ?aksi=diagnosa&q=A01 -> pencarian ICD10 di Dinkes (referensi-diagnosa)
- * POST aksi=simpan          -> simpan token (kosong = tidak diubah), puskes_id, aktif
+ * POST aksi=simpan          -> simpan puskes_id & aktif untuk faskes ini
  * POST aksi=tes             -> uji token (baca refrensi-puskesmas)
+ * Token Dinkes satu untuk semua faskes: DINKES_TOKEN di .env.
  */
 require_once __DIR__ . '/../../database/connect.php';
 require_once __DIR__ . '/../../utility/security.php';
@@ -34,11 +35,11 @@ function dsGagal(string $msg, int $code = 422): void
    dsJawab(['status' => 'error', 'message' => $msg], $code);
 }
 
-/** Panggil API Dinkes dengan token tersimpan; keluar dengan pesan error bila gagal. */
-function dsAmbil(array $cfg, string $path, array $q = []): array
+/** Panggil API Dinkes dengan token server; keluar dengan pesan error bila gagal. */
+function dsAmbil(string $path, array $q = []): array
 {
-   if (trim((string) ($cfg['token'] ?? '')) === '') dsGagal('Token Dinkes belum diisi.');
-   [$code, $res, $err] = dkHttp((string) $cfg['token'], 'GET', $path, $q);
+   if (dkToken() === '') dsGagal('Token Dinkes belum dipasang di server (DINKES_TOKEN di .env).');
+   [$code, $res, $err] = dkHttp(dkToken(), 'GET', $path, $q);
    if (!dkOk($code, $res)) dsGagal(dkPesan($code, $res, (string) $err), 502);
    return $res['data'] ?? [];
 }
@@ -49,19 +50,18 @@ $cfg = dkSetting($koneksi, $idc);
 
 if ($method === 'GET') {
    if ($aksi === '') {
-      dsJawab(['status' => 'success', 'data' => $cfg ? [
-         'token' => trim((string) $cfg['token']) === '' ? null : str_repeat('•', 8) . substr((string) $cfg['token'], -4),
+      dsJawab(['status' => 'success', 'token_server' => dkToken() !== '', 'data' => $cfg ? [
          'puskes_id' => $cfg['puskes_id'],
          'aktif' => (int) $cfg['aktif'],
          'diubah_oleh' => $cfg['updated_by'],
          'diubah_pada' => $cfg['updated_at'],
       ] : null]);
    }
-   if ($aksi === 'puskesmas') dsJawab(['status' => 'success', 'data' => dsAmbil($cfg ?? [], 'refrensi-puskesmas')]);
+   if ($aksi === 'puskesmas') dsJawab(['status' => 'success', 'data' => dsAmbil('refrensi-puskesmas')]);
    if ($aksi === 'diagnosa') {
       $q = trim((string) ($_GET['q'] ?? ''));
       if (mb_strlen($q) < 2) dsJawab(['status' => 'success', 'data' => []]);
-      dsJawab(['status' => 'success', 'data' => dsAmbil($cfg ?? [], 'referensi-diagnosa', ['q' => $q])]);
+      dsJawab(['status' => 'success', 'data' => dsAmbil('referensi-diagnosa', ['q' => $q])]);
    }
    dsGagal('Aksi tidak dikenal.');
 }
@@ -70,24 +70,20 @@ if ($method !== 'POST') dsGagal('Method tidak diizinkan', 405);
 
 switch ($aksi) {
    case 'simpan':
-      $token = trim((string) ($_POST['token'] ?? ''));
       $puskes = (int) ($_POST['puskes_id'] ?? 0);
       $aktif = !empty($_POST['aktif']) ? 1 : 0;
-      if ($token !== '' && !preg_match('/^[\x21-\x7E ]{10,2000}$/', $token)) dsGagal('Format token tidak valid.');
-      if ($token === '' && (!$cfg || trim((string) $cfg['token']) === '')) {
-         if ($aktif) dsGagal('Isi token Dinkes sebelum mengaktifkan integrasi.');
-      }
+      if ($aktif && dkToken() === '') dsGagal('Token Dinkes belum dipasang di server (DINKES_TOKEN di .env).');
       if ($aktif && $puskes <= 0) dsGagal('Pilih puskesmas default sebelum mengaktifkan integrasi.');
       $user = (string) ($_SESSION['username'] ?? '');
-      $st = $koneksi->prepare("INSERT INTO setting_dinkes (id_customer, token, puskes_id, aktif, updated_by) VALUES (?, NULLIF(?, ''), NULLIF(?, 0), ?, ?)
-         ON DUPLICATE KEY UPDATE token=IF(VALUES(token) IS NULL, token, VALUES(token)), puskes_id=VALUES(puskes_id), aktif=VALUES(aktif), updated_by=VALUES(updated_by)");
-      $st->bind_param('isiis', $idc, $token, $puskes, $aktif, $user);
+      $st = $koneksi->prepare("INSERT INTO setting_dinkes (id_customer, puskes_id, aktif, updated_by) VALUES (?, NULLIF(?, 0), ?, ?)
+         ON DUPLICATE KEY UPDATE puskes_id=VALUES(puskes_id), aktif=VALUES(aktif), updated_by=VALUES(updated_by)");
+      $st->bind_param('iiis', $idc, $puskes, $aktif, $user);
       $st->execute();
       $st->close();
       dsJawab(['status' => 'success', 'message' => 'Pengaturan Dinkes disimpan.']);
 
    case 'tes':
-      $data = dsAmbil($cfg ?? [], 'refrensi-puskesmas');
+      $data = dsAmbil('refrensi-puskesmas');
       dsJawab(['status' => 'success', 'message' => 'Terhubung ke Dinkes (' . count($data) . ' puskesmas terbaca).']);
 
    default:

@@ -1,13 +1,32 @@
 <?php
 /**
- * Klien & sinkronisasi ke API Dinkes Deli Serdang (Dinkes.postman_collection.json).
+ * Klien & sinkronisasi ke API Dinkes Deli Serdang.
  * Kunjungan < 5 tahun -> data balita (butuh isian "Data Dinkes Balita"), >= 5 tahun -> pemeriksaan pasien dewasa.
  * Data kunjungan SELALU tersimpan lebih dulu; fungsi dkKirimVisit/dkHapusVisit tidak pernah melempar exception
  * sehingga gangguan Dinkes tidak menghalangi petugas menyimpan kunjungan. Status & pesan gagal disimpan di dinkes_kirim.
- * Skema: migrations/20261125_dinkes.sql. Z-score & stunting dihitung Dinkes (dibaca balik lewat GET data-balita).
+ * Z-score & stunting dihitung Dinkes (dibaca balik lewat GET data-balita).
  */
 
 const DK_BASE = 'https://api-dss.deliserdangkab.go.id/api/gateway/dinas-kesehatan/';
+
+function dkToken(): string
+{
+   static $t = null;
+   if ($t === null) {
+      $t = (string) getenv('DINKES_TOKEN');
+      if ($t === '') {
+         try {
+            require_once __DIR__ . '/../../utility/env.php';
+            loadEnv();
+            $t = (string) getenv('DINKES_TOKEN');
+         } catch (Throwable $e) { // .env tidak ada
+            $t = '';
+         }
+      }
+      $t = trim($t, " \t\n\r\0\x0B\"'");
+   }
+   return $t;
+}
 
 function dkSetting(mysqli $k, int $idc): ?array
 {
@@ -289,7 +308,7 @@ function dkKirimVisit(mysqli $k, int $idc, string $visitID): array
 {
    try {
       $cfg = dkSetting($k, $idc);
-      if (!$cfg || !(int) $cfg['aktif'] || trim((string) $cfg['token']) === '') {
+      if (!$cfg || !(int) $cfg['aktif'] || dkToken() === '') {
          return ['status' => 'nonaktif', 'message' => 'Integrasi Dinkes tidak aktif.'];
       }
       $c = dkKonteks($k, $idc, $visitID);
@@ -323,7 +342,7 @@ function dkKirimVisit(mysqli $k, int $idc, string $visitID): array
       $puskes = (int) ($baris['puskes_id'] ?: $cfg['puskes_id']);
       if ($puskes <= 0) return $lewati('Puskesmas belum dipilih di pengaturan Dinkes.', 'belum');
 
-      $token = (string) $cfg['token'];
+      $token = dkToken();
       if ($jenis === 'dewasa') {
          $body = dkMapDewasa($c, $puskes);
          $path = $remote ? 'update-pasien-dewasa' : 'tambah-pasien-dewasa';
@@ -368,12 +387,12 @@ function dkHapusVisit(mysqli $k, int $idc, string $visitID): array
          return ['status' => 'tidak_ada', 'message' => 'Tidak ada data di Dinkes.'];
       }
       $cfg = dkSetting($k, $idc);
-      if (!$cfg || trim((string) $cfg['token']) === '') {
-         return ['status' => 'nonaktif', 'message' => 'Token Dinkes belum diisi.'];
+      if (dkToken() === '') {
+         return ['status' => 'nonaktif', 'message' => 'DINKES_TOKEN belum diisi di .env.'];
       }
       $path = $baris['jenis'] === 'balita' ? 'hapus-balita' : 'hapus-pemeriksaan-pasien-dewasa';
       // ponytail: body hapus-balita belum terdokumentasi di collection; diasumsikan sama dengan dewasa ({"id": ...})
-      [$code, $res, $err] = dkHttp((string) $cfg['token'], 'DELETE', $path, [], ['id' => (int) $baris['dk_id']]);
+      [$code, $res, $err] = dkHttp(dkToken(), 'DELETE', $path, [], ['id' => (int) $baris['dk_id']]);
       $ok = dkOk($code, $res);
       $pesan = $ok ? (string) ($res['message'] ?? 'OK') : dkPesan($code, $res, (string) $err);
       dkLog($k, $idc, $visitID, 'hapus', $code, $ok, $pesan);

@@ -81,8 +81,8 @@ try {
    $cfg = dkSetting($koneksi, $idc);
 
    if (isset($_GET['puskesmas'])) { // daftar untuk pilihan override per data
-      if (!$cfg || trim((string) $cfg['token']) === '') dbBalas(422, ['status' => 'error', 'message' => 'Token Dinkes belum diisi.']);
-      [$code, $res, $err] = dkHttp((string) $cfg['token'], 'GET', 'refrensi-puskesmas');
+      if (dkToken() === '') dbBalas(422, ['status' => 'error', 'message' => 'Token Dinkes belum dipasang di server.']);
+      [$code, $res, $err] = dkHttp(dkToken(), 'GET', 'refrensi-puskesmas');
       if (!dkOk($code, $res)) dbBalas(502, ['status' => 'error', 'message' => dkPesan($code, $res, (string) $err)]);
       dbBalas(200, ['status' => 'success', 'data' => $res['data'] ?? []]);
    }
