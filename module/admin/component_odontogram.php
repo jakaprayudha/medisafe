@@ -5,15 +5,20 @@
        gap: 20px;
     }
 
+    /* 1 baris per rahang (dulu flex-wrap: gigi 28/38 turun sendiri ke baris baru); geser ke samping bila layar sempit */
+    .odontogram { overflow-x: auto; padding-bottom: 4px; }
     .row-gigi {
        display: flex;
        justify-content: center;
-       gap: 8px;
-       flex-wrap: wrap;
+       gap: 4px;
+       flex-wrap: nowrap;
+       min-width: max-content;
+       margin: 0 auto;
     }
 
     .gigi {
-       width: 50px;
+       width: 44px;
+       flex-shrink: 0;
        height: 60px;
        border: 1px solid #ccc;
        border-radius: 6px;
@@ -260,7 +265,7 @@
              tbody.innerHTML = '';
 
              document.querySelectorAll('.gigi').forEach(gigi => {
-                gigi.style.background = '#fff';
+                gigi.style.background = '#fff'; gigi.style.borderColor = '';
              });
 
              if (!res.data || res.data.length === 0) {
@@ -360,11 +365,11 @@
 
        // reset semua warna
        document.querySelectorAll('.gigi').forEach(g => {
-          g.style.background = '#fff';
+          g.style.background = '#fff'; g.style.borderColor = '';
        });
 
        // highlight yg dipilih
-       el.style.background = "#ffccc7";
+       el.style.background = "#fca5a5"; el.style.borderColor = "#dc2626";
 
        console.log("Selected gigi:", no);
     }
@@ -385,7 +390,7 @@
 
        document.querySelectorAll('.gigi').forEach(g => {
 
-          g.style.background = '#fff';
+          g.style.background = '#fff'; g.style.borderColor = '';
 
        });
 
@@ -400,7 +405,7 @@
              parseInt(row.no_gigi)
           ) {
 
-             g.style.background = '#ffccc7';
+             g.style.background = '#fca5a5'; g.style.borderColor = '#dc2626';
 
              g.scrollIntoView({
                 behavior: 'smooth',
@@ -632,7 +637,7 @@
        document.querySelectorAll('.gigi')
           .forEach(g => {
 
-             g.style.background = '#fff';
+             g.style.background = '#fff'; g.style.borderColor = '';
 
           });
 

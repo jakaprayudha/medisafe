@@ -75,6 +75,9 @@
 
    .page-wrapper {
       overflow-x: hidden;
+      /* clip: tetap mencegah scroll horizontal tanpa menjadikan wrapper scroll container,
+         sehingga position: sticky (bar simpan / navigasi bagian) bekerja terhadap jendela */
+      overflow-x: clip;
    }
 
    /* styling untuk label yang required */
@@ -297,9 +300,9 @@
    }
 
    .pemeriksaan-accordion .accordion-button small {
-      font-size: 10px;
-      color: #8a94a6;
-      font-weight: 400;
+      font-size: 11px;
+      color: #1f2937;
+      font-weight: 500;
    }
 
    .accordion-icon {
@@ -364,8 +367,8 @@
       border-radius: 10px;
       background: #f8f9fc;
 
-      color: #6f7887;
-      font-size: 10px;
+      color: #1f2937;
+      font-size: 12px;
    }
 
    .section-description i {

@@ -716,7 +716,8 @@ $(function () {
   function changeCol(el, newCol) {
     el.closest('[class*="col-"]')
       .removeClass(function (index, className) {
-        return (className.match(/(^|\s)col-\d+/g) || []).join(" ");
+        // hapus col-N dan col-md-N (rme_new memakai col-md-N; dulu col-md-5 tertinggal sehingga lebar kolom tidak berubah)
+        return (className.match(/(^|\s)col-(md-)?\d+/g) || []).join(" ");
       })
       .addClass(newCol);
   }
