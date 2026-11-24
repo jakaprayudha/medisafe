@@ -81,10 +81,10 @@ if (empty($kodepoli) || empty($namapoli)) {
     echo json_encode(['success' => false, 'message' => 'Poli tujuan wajib dipilih.']);
     exit;
 }
-if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $tanggalperiksa) || $tanggalperiksa > date('Y-m-d') || $tanggalperiksa < date('Y-m-d', strtotime('-7 days'))) {
-    echo json_encode(['success' => false, 'message' => 'Tanggal kunjungan harus hari ini atau s.d. 7 hari ke belakang.']);
-    exit;
-}
+// if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $tanggalperiksa) || $tanggalperiksa > date('Y-m-d') || $tanggalperiksa < date('Y-m-d', strtotime('-7 days'))) {
+//     echo json_encode(['success' => false, 'message' => 'Tanggal kunjungan harus hari ini atau s.d. 7 hari ke belakang.']);
+//     exit;
+// }
 // tanda vital opsional; bila diisi harus dalam rentang wajar
 $vitalRentang = ['sistole' => ['Sistole', 50, 300], 'diastole' => ['Diastole', 20, 200], 'heartRate' => ['Nadi', 20, 250], 'respRate' => ['Respirasi', 4, 80],
     'suhu' => ['Suhu', 30, 45], 'saturasiOksigen' => ['SpO2', 50, 100], 'tinggiBadan' => ['Tinggi badan', 30, 250], 'beratBadan' => ['Berat badan', 0.5, 350],
