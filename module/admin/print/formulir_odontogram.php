@@ -29,7 +29,7 @@ $qDoctor = mysqli_query(
    "
     SELECT id_doctor
     FROM pasien_visit
-    WHERE visit_ID = '$visit_ID_safe'
+    WHERE visit_ID = '$visit_ID_safe' AND id_customer = " . (int) ($_SESSION['id_customer'] ?? 0) . "
     LIMIT 1
     "
 );
@@ -67,7 +67,8 @@ if ($doctorName) {
       "
         SELECT signature_user
         FROM ms_users
-        WHERE fullname LIKE '%$doctorNameClean%'
+        WHERE fullname LIKE '%$doctorNameClean%' AND id_customer = " . (int) ($_SESSION['id_customer'] ?? 0) . "
+        ORDER BY (roles = 'dokter') DESC
         LIMIT 1
         "
    );

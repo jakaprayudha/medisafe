@@ -46,8 +46,11 @@ if (!in_array($no_gigi, $valid_teeth, true)) {
    exit;
 }
 
+// baris diidentifikasi lewat id (1 gigi bisa punya beberapa temuan). Tanpa id (pemanggil lama: component_odontogram)
+// tetap memakai no_gigi seperti sebelumnya. Dulu ubah/hapus 1 temuan ikut mengubah/menghapus semua temuan di gigi itu.
+$id_row = filter_var($data['id'] ?? null, FILTER_VALIDATE_INT) ?: null;
 $old_no_gigi = filter_var($data['old_no_gigi'] ?? null, FILTER_VALIDATE_INT);
-if ($action === 'update' && !in_array($old_no_gigi, $valid_teeth, true)) {
+if ($action === 'update' && !$id_row && !in_array($old_no_gigi, $valid_teeth, true)) {
    http_response_code(400);
    echo json_encode(["status" => "error", "message" => "Nomor gigi yang akan diubah tidak valid"]);
    exit;
@@ -70,6 +73,19 @@ if ($action !== 'delete' && $fields['diagnosa'] === '') {
    exit;
 }
 
+$opsi = [
+   'elemen' => ['', 'mahkota', 'akar'],
+   'elemen_gigi' => ['', 'mesial', 'distal', 'oklusal', 'lingual', 'bukal'],
+   'prosedur' => ['', 'tambal', 'cabut'],
+];
+foreach ($opsi as $f => $boleh) {
+   if ($action !== 'delete' && !in_array($fields[$f], $boleh, true)) {
+      http_response_code(400);
+      echo json_encode(["status" => "error", "message" => "Pilihan $f tidak valid"]);
+      exit;
+   }
+}
+foreach (['diagnosa' => 255, 'keterangan' => 2000] as $f => $max) $fields[$f] = mb_substr($fields[$f], 0, $max);
 $elemen = $fields['elemen'];
 $elemen_gigi = $fields['elemen_gigi'];
 $diagnosa = $fields['diagnosa'];
@@ -89,8 +105,13 @@ try {
 
    if ($action !== 'insert') {
       $existing_no_gigi = $action === 'update' ? $old_no_gigi : $no_gigi;
-      $existing = $koneksi->prepare("SELECT 1 FROM odontogram WHERE visit_ID = ? AND no_gigi = ? AND id_customer = ?");
-      $existing->bind_param("sii", $visit_ID, $existing_no_gigi, $id_customer);
+      if ($id_row) {
+         $existing = $koneksi->prepare("SELECT 1 FROM odontogram WHERE id = ? AND visit_ID = ? AND id_customer = ?");
+         $existing->bind_param("isi", $id_row, $visit_ID, $id_customer);
+      } else {
+         $existing = $koneksi->prepare("SELECT 1 FROM odontogram WHERE visit_ID = ? AND no_gigi = ? AND id_customer = ?");
+         $existing->bind_param("sii", $visit_ID, $existing_no_gigi, $id_customer);
+      }
       $existing->execute();
       if (!$existing->get_result()->fetch_row()) {
          http_response_code(404);
@@ -117,6 +138,18 @@ try {
          $keterangan
       );
       $message = "Data berhasil disimpan";
+   } elseif ($action === 'update' && $id_row) {
+      $query = $koneksi->prepare("
+         UPDATE odontogram
+         SET no_gigi = ?, elemen = ?, elemen_gigi = ?, diagnosa = ?, prosedur = ?, keterangan = ?
+         WHERE id = ? AND visit_ID = ? AND id_customer = ?
+      ");
+      $query->bind_param("isssssisi", $no_gigi, $elemen, $elemen_gigi, $diagnosa, $prosedur, $keterangan, $id_row, $visit_ID, $id_customer);
+      $message = "Data berhasil diubah";
+   } elseif ($action === 'delete' && $id_row) {
+      $query = $koneksi->prepare("DELETE FROM odontogram WHERE id = ? AND visit_ID = ? AND id_customer = ?");
+      $query->bind_param("isi", $id_row, $visit_ID, $id_customer);
+      $message = "Data berhasil dihapus";
    } elseif ($action === 'update') {
       $query = $koneksi->prepare("
          UPDATE odontogram
