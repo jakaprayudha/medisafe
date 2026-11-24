@@ -130,16 +130,24 @@ if ($aksi === 'bpjs') {
       ppJawab(['success' => false, 'message' => $r['message'] ?? ($d['ketAktif'] ?? 'Layanan BPJS sedang tidak dapat diakses.')]);
    }
    $aktif = ($d['aktif'] ?? '') === true || ($d['aktif'] ?? '') === 'true';
-   $kdProv = (string) ($d['kdProviderPst']['kdProvider'] ?? '');
+   $kdProv = trim((string) ($d['kdProviderPst']['kdProvider'] ?? ''));
+   $nmProv = trim((string) ($d['kdProviderPst']['nmProvider'] ?? ''));
+   $ppkSaya = trim((string) ($kodeppk ?? ''));
+   // FKTP peserta dibanding faskes login (setting_pcare.KodePPK). Dulu bila KodePPK kosong semua pasien dianggap "FKTP lain".
+   $fktpLain = $aktif && $kdProv !== '' && $ppkSaya !== '' && strcasecmp($kdProv, $ppkSaya) !== 0;
    $peringatan = '';
    if ($aktif && $kdProv === '') $peringatan = 'Pasien belum memiliki FKTP terdaftar.';
-   elseif ($aktif && $kdProv !== (string) $kodeppk) $peringatan = 'Pasien terdaftar di FKTP lain: ' . ($d['kdProviderPst']['nmProvider'] ?? $kdProv);
+   elseif ($fktpLain) $peringatan = 'Pasien terdaftar di FKTP lain: ' . ($nmProv !== '' ? $nmProv : $kdProv);
+   $faskes = ppQ($koneksi, "SELECT clinic_name FROM setting_clinic WHERE id_customer = ? LIMIT 1", 'i', [$idc])[0]['clinic_name'] ?? '';
    ppJawab(['success' => true, 'aktif' => $aktif, 'message' => $aktif ? ($d['ketAktif'] ?? 'AKTIF') : ($d['ketAktif'] ?? 'Peserta tidak aktif'),
-      'peringatan' => $peringatan, 'data' => [
+      'peringatan' => $peringatan,
+      'fktp_lain' => $fktpLain,
+      'faskes_login' => ['kode' => $ppkSaya, 'nama' => (string) $faskes],
+      'data' => [
          'noKartu' => (string) ($d['noKartu'] ?? $noka),
          'nama' => (string) ($d['nama'] ?? ''),
-         'kdProvider' => $kdProv !== '' ? $kdProv : (string) $kodeppk,
-         'nmProvider' => (string) ($d['kdProviderPst']['nmProvider'] ?? ''),
+         'kdProvider' => $kdProv !== '' ? $kdProv : $ppkSaya,
+         'nmProvider' => $nmProv,
          'jnsPeserta' => (string) ($d['jnsPeserta']['nama'] ?? ''),
          'kelas' => (string) ($d['jnsKelas']['nama'] ?? ''),
          'hubunganKeluarga' => (string) ($d['hubunganKeluarga'] ?? ''),

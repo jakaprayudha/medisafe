@@ -87,6 +87,7 @@
         $id('pdNama').textContent = 'Memuat…';
         $id('pdBpjsBox').className = 'pd-bpjs info mb-3';
         $id('pdBpjsBox').innerHTML = '<div class="pd-sk" style="height:56px"></div>';
+        $id('pdFktp').classList.add('d-none');
         if (bpjsXhr) bpjsXhr.abort();
         B = null;
         getJSON(API, { aksi: 'detail', id }).done(res => {
@@ -139,7 +140,7 @@
                 bpjsBox('no', `<div class="fw-semibold text-danger small"><i class="fas fa-circle-xmark me-1"></i>BPJS tidak dapat diverifikasi</div><div class="small">${esc((res && res.message) || 'Layanan BPJS tidak merespons.')}</div>
                   <div class="small text-muted mt-1">Pasien bisa didaftarkan sebagai pasien umum. <a href="javascript:;" id="pdCekUlang">Cek ulang</a></div>`);
             } else {
-                B = Object.assign({ aktif: res.aktif, peringatan: res.peringatan, message: res.message }, res.data);
+                B = Object.assign({ aktif: res.aktif, peringatan: res.peringatan, message: res.message, fktpLain: !!res.fktp_lain, faskes: res.faskes_login || {}, fktpOk: false }, res.data);
                 if (B.aktif) {
                     $id('noKartu').value = B.noKartu || P.bpjs || '';
                     if (!P.bpjs && B.noKartu) $id('pdBpjs').innerHTML = esc(B.noKartu) + ' <span class="badge bg-info-subtle text-info">dari BPJS</span>';
@@ -165,6 +166,7 @@
                   ${baris('FKTP Terdaftar', judul(B.nmProvider))}
                   <div class="mt-2">${B.prolanis ? chip('Prolanis ' + B.prolanis, 'danger') : ''}${B.prb ? chip('PRB ' + B.prb, 'warning') : ''}${+B.tunggakan > 0 ? chip('Tunggakan', 'danger') : ''}</div>
                   ${B.peringatan ? `<div class="text-warning-emphasis mt-1"><i class="fas fa-triangle-exclamation me-1"></i>${esc(B.peringatan)}</div>` : ''}`);
+                if (B.aktif && B.fktpLain) infoFktp();
             }
             terapkanPenjamin();
         }).fail((x, s) => {
@@ -172,6 +174,43 @@
             B = { aktif: false };
             bpjsBox('no', '<div class="small text-danger"><i class="fas fa-circle-exclamation me-1"></i>Gagal mengecek BPJS. <a href="javascript:;" id="pdCekUlang">Cek ulang</a></div>');
             terapkanPenjamin();
+        });
+    }
+    /* Peserta BPJS terdaftar di FKTP lain (bukan faskes login): beri tahu, pendaftaran tetap bisa dilanjutkan. */
+    const fkNama = (nm, kd) => `<b>${esc(nm || '-')}</b>${kd ? `<span class="pd-fk-kode">Kode ${esc(kd)}</span>` : ''}`;
+    function infoFktp() {
+        const f = B.faskes || {};
+        $id('pdFktp').innerHTML = `<div class="fw-semibold mb-1"><i class="fas fa-hospital me-1"></i>Pasien terdaftar di FKTP lain</div>
+          FKTP peserta: <b>${esc(B.nmProvider || B.kdProvider || '-')}</b>${B.kdProvider ? ' (' + esc(B.kdProvider) + ')' : ''}<br>
+          Faskes ini: <b>${esc(f.nama || '-')}</b>${f.kode ? ' (' + esc(f.kode) + ')' : ''}
+          <div class="mt-1" style="color:#78350f">Pendaftaran tetap bisa dilanjutkan; bila PCare menolak, daftarkan dengan penjamin non-BPJS.</div>`;
+        $id('pdFktp').classList.remove('d-none');
+        return tanyaFktp();
+    }
+    function tanyaFktp() {
+        const id = P && P.id_patient, f = B.faskes || {};
+        return Swal.fire({
+            icon: 'warning',
+            title: 'Pasien terdaftar di FKTP lain',
+            html: `<div class="pd-fk">
+                <div class="pd-fk-box lain"><small>FKTP terdaftar peserta</small>${fkNama(B.nmProvider || B.kdProvider, B.kdProvider)}</div>
+                <div class="pd-fk-box"><small>Faskes Anda (login)</small>${fkNama(f.nama, f.kode)}</div>
+                <ul class="small">
+                  <li>Peserta BPJS pada dasarnya dilayani di FKTP tempat ia terdaftar.</li>
+                  <li>Pelayanan di FKTP lain dibatasi BPJS (mis. gawat darurat atau peserta sedang di luar domisili) — PCare bisa menolak pendaftaran.</li>
+                  <li>Bila ditolak, daftarkan dengan penjamin <b>Umum</b> / non-BPJS.</li>
+                </ul>
+              </div>`,
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-arrow-right me-1"></i>Lanjutkan pendaftaran',
+            cancelButtonText: 'Pilih pasien lain',
+            confirmButtonColor: '#5d87ff', cancelButtonColor: '#475569',
+            reverseButtons: true, allowOutsideClick: false, focusConfirm: true
+        }).then(r => {
+            if (!P || P.id_patient !== id) return false;
+            if (r.isConfirmed) { B.fktpOk = true; return true; }
+            if (r.dismiss === Swal.DismissReason.cancel) batal();
+            return false;
         });
     }
     $(document).on('click', '#pdCekUlang', () => P && cekBpjs());
@@ -355,6 +394,7 @@
     $id('pdForm').addEventListener('submit', e => { e.preventDefault(); simpan(); });
     function simpan() {
         if (menyimpan || !validasi()) return;
+        if ($id('typePasien').value === 'BPJS' && B && B.fktpLain && !B.fktpOk) { tanyaFktp().then(ok => ok && simpan()); return; }
         $id('nohp').value = $id('pdHp').value.replace(/\D/g, '');
         menyimpan = true;
         const btn = $id('create'), label = btn.innerHTML;

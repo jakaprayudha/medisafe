@@ -64,6 +64,15 @@ date_default_timezone_set('Asia/Jakarta');
     .pd-sk { border-radius: 10px; background: linear-gradient(90deg, #eef1f4 25%, #f6f8fb 50%, #eef1f4 75%); background-size: 200% 100%; animation: pdsk 1.2s infinite; }
     @keyframes pdsk { to { background-position: -200% 0; } }
     #pdForm .is-invalid + .select2 .select2-selection { border-color: #dc3545 !important; }
+    #pdFktp { color: #1f2937; border-color: #fcd34d; background: #fffbeb; }
+    .pd-fk { text-align: left; font-size: .92rem; color: #1f2937; }
+    .pd-fk-box { border: 1px solid #e5eaef; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+    .pd-fk-box.lain { background: #fff7ed; border-color: #fed7aa; }
+    .pd-fk-box small { display: block; color: #64748b; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; }
+    .pd-fk-box b { display: block; font-size: .98rem; }
+    .pd-fk-kode { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .8rem; color: #475569; }
+    .pd-fk ul { padding-left: 18px; margin: 10px 0 0; }
+    .pd-fk li + li { margin-top: 4px; }
   </style>
 </head>
 
@@ -130,6 +139,7 @@ date_default_timezone_set('Asia/Jakarta');
                     </div>
                   </div>
                   <div class="pd-bpjs info mb-3" id="pdBpjsBox"></div>
+                  <div class="alert alert-warning small d-none mb-3" id="pdFktp" role="alert"></div>
                   <div class="alert alert-warning small d-none" id="pdHariIni"></div>
                 </div>
               </div>
