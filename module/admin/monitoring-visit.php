@@ -149,6 +149,9 @@ $isSuper = in_array($_SESSION['roles'] ?? '', ['superadmin', 'administrator'], t
   <script>
     (function() {
       const API = 'controller/dashboard/rmeMonitoringController.php';
+      // superadmin membuka faskes tertentu dari module/administrator/monitoring-visit (?id_customer=&from=&to=)
+      const QS = new URLSearchParams(location.search);
+      const IDC = <?= $isSuper ? "(parseInt(QS.get('id_customer'), 10) || 0)" : '0' ?>;
       const $id = id => document.getElementById(id);
       const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
       const fmt = n => Number(n || 0).toLocaleString('id-ID');
@@ -181,6 +184,7 @@ $isSuper = in_array($_SESSION['roles'] ?? '', ['superadmin', 'administrator'], t
         $id('rmRefresh').querySelector('i').classList.add('fa-spin');
         try {
           const p = new URLSearchParams({ jenis, from: $id('rmFrom').value, to: $id('rmTo').value });
+          if (IDC) p.set('id_customer', IDC);
           const r = await fetch(API + '?' + p, { credentials: 'same-origin', cache: 'no-store' });
           const j = await r.json().catch(() => null);
           if (ini !== seq) return;
@@ -202,7 +206,7 @@ $isSuper = in_array($_SESSION['roles'] ?? '', ['superadmin', 'administrator'], t
 
       function tampil() {
         const r = D.ringkasan, cl = D.checklist;
-        $id('rmPeriodeInfo').innerHTML = `<i class="far fa-calendar me-1"></i>${tgl(D.periode.from)}${D.periode.from !== D.periode.to ? ' – ' + tgl(D.periode.to) : ''} · ${jenis === 'poli' ? 'Kunjungan poli' : 'Pasien rawat inap'} (tanpa batal)`;
+        $id('rmPeriodeInfo').innerHTML = `${IDC && D.faskes && D.faskes.nama ? '<b class="text-dark">' + esc(D.faskes.nama) + '</b> · <a href="module/administrator/monitoring-visit">« semua faskes</a> · ' : ''}<i class="far fa-calendar me-1"></i>${tgl(D.periode.from)}${D.periode.from !== D.periode.to ? ' – ' + tgl(D.periode.to) : ''} · ${jenis === 'poli' ? 'Kunjungan poli' : 'Pasien rawat inap'} (tanpa batal)`;
         $id('kTotal').textContent = fmt(r.total);
         $id('kTotalLbl').textContent = jenis === 'poli' ? 'Kunjungan poli' : 'Pasien rawat inap';
         $id('kTotalSub').textContent = fmt(r.dokter.length) + ' dokter';
@@ -294,7 +298,7 @@ $isSuper = in_array($_SESSION['roles'] ?? '', ['superadmin', 'administrator'], t
       ['rmFrom', 'rmTo'].forEach(id => $id(id).addEventListener('change', () => { tandai(); clearTimeout(tunda); tunda = setTimeout(muat, 300); }));
       $id('rmRefresh').addEventListener('click', muat);
 
-      setRange(rentangAwal[jenis]);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(QS.get('from') || '') && /^\d{4}-\d{2}-\d{2}$/.test(QS.get('to') || '')) { $id('rmFrom').value = QS.get('from'); $id('rmTo').value = QS.get('to'); tandai(); } else setRange(rentangAwal[jenis]);
       muat();
     })();
   </script>

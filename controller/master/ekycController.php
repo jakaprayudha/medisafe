@@ -4,10 +4,27 @@ include '../../database/connect.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-$id_customer = $_SESSION['id_customer'] ?? null;
 $username    = $_SESSION['fullname'] ?? ($_SESSION['username'] ?? 'system');
+$roleSaya    = $_SESSION['roles'] ?? '';
 
-if (!$id_customer) {
+/*
+|--------------------------------------------------------------------------
+| SCOPE FASKES
+|--------------------------------------------------------------------------
+| admin klinik          : hanya faskes di sesinya.
+| superadmin/administrator : SEMUA faskes (module/administrator/ekyc_verify), boleh menyaring ?id_customer=.
+| $id_customer === null artinya tanpa batas faskes; semua query memakai (? IS NULL OR id_customer = ?).
+*/
+$globalEkyc = in_array($roleSaya, ['superadmin', 'administrator'], true);
+if ($globalEkyc) {
+   $filterFaskes = trim((string) ($_GET['id_customer'] ?? $_POST['id_customer'] ?? ''));
+   $id_customer = ctype_digit($filterFaskes) && (int) $filterFaskes > 0 ? $filterFaskes : null;
+} else {
+   $id_customer = (string) ($_SESSION['id_customer'] ?? '');
+   if ($id_customer === '' || $id_customer === '0') $id_customer = null;
+}
+
+if (!isset($_SESSION['uid_user']) || (!$globalEkyc && $id_customer === null)) {
    http_response_code(401);
    echo json_encode([
       'status'  => 'error',
@@ -15,6 +32,7 @@ if (!$id_customer) {
    ]);
    exit;
 }
+session_write_close();
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -32,7 +50,7 @@ if ($method === 'POST' && isset($_POST['_method'])) {
 
 function requireAdmin()
 {
-   if (!in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], true)) {
+   if (!in_array($GLOBALS['roleSaya'], ['admin', 'superadmin', 'administrator'], true)) {
       http_response_code(403);
       echo json_encode([
          'status'  => 'error',
@@ -124,28 +142,32 @@ function getData()
 
    $stmt = $koneksi->prepare("
       SELECT
-         id_ekyc,
-         nama,
-         email,
-         nomor_hp,
-         nik,
-         ktp_file,
-         face_file,
-         status_verifikasi,
-         verified_at,
-         status,
-         created_at,
-         created_by
-      FROM tte_ekyc
-      WHERE id_customer = ?
-      ORDER BY id_ekyc DESC
+         e.id_ekyc,
+         e.id_customer,
+         COALESCE(sc.clinic_name, '-') AS clinic_name,
+         e.nama,
+         e.email,
+         e.nomor_hp,
+         e.nik,
+         e.ktp_file,
+         e.face_file,
+         e.status_verifikasi,
+         e.verified_at,
+         e.status,
+         e.created_at,
+         e.created_by
+      FROM tte_ekyc e
+      LEFT JOIN setting_clinic sc ON sc.id_customer = e.id_customer
+      WHERE (? IS NULL OR e.id_customer = ?)
+      ORDER BY e.id_ekyc DESC
    ");
 
    if (!$stmt) {
-      responseJson('error', 'Prepare gagal: ' . $koneksi->error);
+      error_log('[ekyc] ' . $koneksi->error);
+      responseJson('error', 'Gagal memuat data.');
    }
 
-   $stmt->bind_param('s', $id_customer);
+   $stmt->bind_param('ss', $id_customer, $id_customer);
    $stmt->execute();
 
    $data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -161,13 +183,14 @@ function getID($id)
    $id = (int) $id;
 
    $stmt = $koneksi->prepare("
-      SELECT *
-      FROM tte_ekyc
-      WHERE id_ekyc = ? AND id_customer = ?
+      SELECT e.*, COALESCE(sc.clinic_name, '-') AS clinic_name
+      FROM tte_ekyc e
+      LEFT JOIN setting_clinic sc ON sc.id_customer = e.id_customer
+      WHERE e.id_ekyc = ? AND (? IS NULL OR e.id_customer = ?)
       LIMIT 1
    ");
 
-   $stmt->bind_param('is', $id, $id_customer);
+   $stmt->bind_param('iss', $id, $id_customer, $id_customer);
    $stmt->execute();
 
    $data = $stmt->get_result()->fetch_assoc();
@@ -189,6 +212,10 @@ function createData()
    global $koneksi, $id_customer, $username;
 
    requireAdmin();
+
+   if ($id_customer === null) {
+      responseJson('error', 'Pemohon baru dibuat dari akun admin klinik (atau sertakan id_customer faskes).');
+   }
 
    if (empty($_POST)) {
       responseJson('error', 'Data tidak ditemukan.');
@@ -304,10 +331,10 @@ function toggleStatus()
    $stmt = $koneksi->prepare("
       UPDATE tte_ekyc
       SET status = ?
-      WHERE id_ekyc = ? AND id_customer = ?
+      WHERE id_ekyc = ? AND (? IS NULL OR id_customer = ?)
    ");
 
-   $stmt->bind_param('iis', $status, $id, $id_customer);
+   $stmt->bind_param('iiss', $status, $id, $id_customer, $id_customer);
 
    if (!$stmt->execute()) {
       responseJson('error', 'Gagal update status: ' . $stmt->error);
@@ -334,18 +361,36 @@ function deleteData()
       responseJson('error', 'ID tidak ditemukan.');
    }
 
+   $cekFile = $koneksi->prepare("SELECT ktp_file, face_file FROM tte_ekyc WHERE id_ekyc = ? AND (? IS NULL OR id_customer = ?) LIMIT 1");
+   $cekFile->bind_param('iss', $id, $id_customer, $id_customer);
+   $cekFile->execute();
+   $fileLama = $cekFile->get_result()->fetch_assoc();
+   $cekFile->close();
+   if (!$fileLama) {
+      responseJson('error', 'Data tidak ditemukan.');
+   }
+
    $stmt = $koneksi->prepare("
       DELETE FROM tte_ekyc
-      WHERE id_ekyc = ? AND id_customer = ?
+      WHERE id_ekyc = ? AND (? IS NULL OR id_customer = ?)
    ");
 
-   $stmt->bind_param('is', $id, $id_customer);
+   $stmt->bind_param('iss', $id, $id_customer, $id_customer);
 
    if (!$stmt->execute()) {
-      responseJson('error', 'Gagal menghapus: ' . $stmt->error);
+      error_log('[ekyc] hapus: ' . $stmt->error);
+      responseJson('error', 'Gagal menghapus data.');
    }
 
    $stmt->close();
+
+   // foto KTP & wajah adalah data pribadi: ikut dihapus dari server
+   foreach (['ktp_file', 'face_file'] as $kolomFoto) {
+      if (!empty($fileLama[$kolomFoto])) {
+         $pathFoto = '../../uploads/ekyc/' . basename($fileLama[$kolomFoto]);
+         if (is_file($pathFoto)) @unlink($pathFoto);
+      }
+   }
 
    responseJson('success', 'Data eKYC berhasil dihapus.');
 }
@@ -403,17 +448,22 @@ function uploadFile()
    $cek = $koneksi->prepare("
       SELECT id_ekyc, ktp_file, face_file, status_verifikasi
       FROM tte_ekyc
-      WHERE id_ekyc = ? AND id_customer = ?
+      WHERE id_ekyc = ? AND (? IS NULL OR id_customer = ?)
       LIMIT 1
    ");
 
-   $cek->bind_param('is', $id, $id_customer);
+   $cek->bind_param('iss', $id, $id_customer, $id_customer);
    $cek->execute();
    $row = $cek->get_result()->fetch_assoc();
    $cek->close();
 
    if (!$row) {
       responseJson('error', 'Data eKYC tidak ditemukan.');
+   }
+
+   // pemohon yang sudah terverifikasi tidak boleh ditimpa berkasnya
+   if (($row['status_verifikasi'] ?? '') === 'terverifikasi') {
+      responseJson('error', 'Pemohon sudah terverifikasi; berkas tidak dapat diganti.');
    }
 
    $uploadDir = '../../uploads/ekyc/';
@@ -473,13 +523,15 @@ function uploadFile()
    $stmt = $koneksi->prepare("
       UPDATE tte_ekyc
       SET $column = ?, status_verifikasi = ?
-      WHERE id_ekyc = ? AND id_customer = ?
+      WHERE id_ekyc = ? AND (? IS NULL OR id_customer = ?)
    ");
 
-   $stmt->bind_param('ssis', $fileName, $statusBaru, $id, $id_customer);
+   $stmt->bind_param('ssiss', $fileName, $statusBaru, $id, $id_customer, $id_customer);
 
    if (!$stmt->execute()) {
-      responseJson('error', 'File tersimpan tetapi gagal update data: ' . $stmt->error);
+      error_log('[ekyc] upload: ' . $stmt->error);
+      @unlink($target);
+      responseJson('error', 'File tersimpan tetapi gagal update data.');
    }
 
    $stmt->close();
@@ -503,24 +555,36 @@ function verifyData($data)
    $id     = (int) ($data['id_ekyc'] ?? 0);
    $status = $data['status_verifikasi'] ?? '';
 
-   if ($id <= 0 || !in_array($status, ['ktp_terverifikasi', 'menunggu', 'terverifikasi', 'ditolak'], true)) {
+   // 'menunggu' hanya diisi sistem saat liveness diunggah, bukan dipilih manual
+   if ($id <= 0 || !in_array($status, ['ktp_terverifikasi', 'terverifikasi', 'ditolak'], true)) {
       responseJson('error', 'Parameter verifikasi tidak valid.');
    }
 
    $cek = $koneksi->prepare("
-      SELECT ktp_file, face_file
+      SELECT ktp_file, face_file, status_verifikasi
       FROM tte_ekyc
-      WHERE id_ekyc = ? AND id_customer = ?
+      WHERE id_ekyc = ? AND (? IS NULL OR id_customer = ?)
       LIMIT 1
    ");
 
-   $cek->bind_param('is', $id, $id_customer);
+   $cek->bind_param('iss', $id, $id_customer, $id_customer);
    $cek->execute();
    $row = $cek->get_result()->fetch_assoc();
    $cek->close();
 
    if (!$row) {
       responseJson('error', 'Data eKYC tidak ditemukan.');
+   }
+
+   // urutan tahap: KTP menunggu -> KTP terverifikasi -> (liveness) menunggu -> terverifikasi; tolak hanya saat proses berjalan
+   $dari = (string) ($row['status_verifikasi'] ?? 'belum');
+   $boleh = [
+      'ktp_terverifikasi' => ['ktp_menunggu'],
+      'terverifikasi'     => ['menunggu'],
+      'ditolak'           => ['ktp_menunggu', 'ktp_terverifikasi', 'menunggu'],
+   ];
+   if (!in_array($dari, $boleh[$status], true)) {
+      responseJson('error', 'Perubahan status tidak sesuai tahapan (status saat ini: ' . $dari . ').');
    }
 
    // verifikasi KTP wajib ada file KTP
@@ -541,20 +605,20 @@ function verifyData($data)
    $stmt = $koneksi->prepare("
       UPDATE tte_ekyc
       SET status_verifikasi = ?, verified_at = ?
-      WHERE id_ekyc = ? AND id_customer = ?
+      WHERE id_ekyc = ? AND (? IS NULL OR id_customer = ?)
    ");
 
-   $stmt->bind_param('ssis', $status, $verifiedAt, $id, $id_customer);
+   $stmt->bind_param('ssiss', $status, $verifiedAt, $id, $id_customer, $id_customer);
 
    if (!$stmt->execute()) {
-      responseJson('error', 'Gagal update verifikasi: ' . $stmt->error);
+      error_log('[ekyc] verifikasi: ' . $stmt->error);
+      responseJson('error', 'Gagal memperbarui verifikasi.');
    }
 
    $stmt->close();
 
    $label = [
       'ktp_terverifikasi' => 'KTP Terverifikasi',
-      'menunggu'          => 'Menunggu Verifikasi',
       'terverifikasi'     => 'Terverifikasi',
       'ditolak'           => 'Ditolak'
    ][$status];

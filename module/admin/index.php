@@ -1,12 +1,22 @@
 <?php
 $title = 'Dashboard';
 require '../../controller/view.php';
-$checkvisit = mysqli_query($koneksi, "SELECT COUNT(*) AS total FROM pasien_visit");
-$visitTotal = mysqli_fetch_assoc($checkvisit);
-$totalorder = (int) ($visitTotal['total'] ?? 0);
-$checkbilling = mysqli_query($koneksi, "SELECT SUM(billing_price * billing_qty - billing_discount) AS total FROM pasien_billing");
-$data = mysqli_fetch_assoc($checkbilling);
-$amount = $data['total'] ?? 0;
+// Dulu di sini ada COUNT(*) seluruh pasien_visit & SUM seluruh pasien_billing (214 rb+ baris) untuk SEMUA role di tiap
+// buka dashboard, padahal hasilnya ($totalorder, $amount) tidak dipakai di mana pun -> dihapus.
+$idcDash = (int) ($_SESSION['id_customer'] ?? 0);
+// peringatan "klinik belum dibuat" hanya relevan untuk akun faskes (superadmin id_customer=0 tidak punya klinik);
+// dulu mengambil baris setting_clinic MANA PUN (tanpa filter faskes) sehingga peringatan tidak pernah muncul.
+$klinikAda = true;
+if ($idcDash > 0) {
+  $stK = $koneksi->prepare("SELECT 1 FROM setting_clinic WHERE id_customer = ? LIMIT 1");
+  $stK->bind_param('i', $idcDash);
+  $stK->execute();
+  $klinikAda = (bool) $stK->get_result()->fetch_row();
+  $stK->close();
+}
+$hariId = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+$blnId = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+$tanggalHariIni = $hariId[(int) date('w')] . ', ' . date('d') . ' ' . $blnId[(int) date('n')] . ' ' . date('Y');
 ?>
 <!doctype html>
 <html lang="en">
@@ -57,9 +67,7 @@ $amount = $data['total'] ?? 0;
       <div class="body-wrapper-inner">
         <div class="container-fluid">
           <?php
-          $check = mysqli_query($koneksi, "SELECT * FROM setting_clinic LIMIT 1");
-          $data = mysqli_fetch_array($check);
-          if ($data == NULL) { ?>
+          if (!$klinikAda) { ?>
             <div class="alert alert-danger" role="alert">
               Klinik Anda Belum Dibuat , maka silahkan lakukan pengaturan terlebih dahulu di menu <a href="module/admin/setting">
                 <strong>Pengaturan Klinik</strong>
@@ -68,8 +76,8 @@ $amount = $data['total'] ?? 0;
           <?php   }
           ?>
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5>👋 Selamat Datang, <?= $_SESSION['fullname'] ?></h5>
-            <span><?= date('l, d F Y') ?></span>
+            <h5>👋 Selamat Datang, <?= htmlspecialchars((string) ($_SESSION['fullname'] ?? ''), ENT_QUOTES, 'UTF-8') ?></h5>
+            <span><?= $tanggalHariIni ?></span>
           </div>
           <!--  Row 1 -->
           <?php

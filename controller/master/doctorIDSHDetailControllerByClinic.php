@@ -65,4 +65,9 @@ foreach ($rows as $r) {
       'kunjungan_30' => $kunj[mb_strtolower(trim((string) $r['doctor_name']))] ?? 0,
    ];
 }
-echo json_encode(['status' => 'success', 'data' => $data], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+$st = $koneksi->prepare('SELECT clinic_name FROM setting_clinic WHERE id_customer = ? LIMIT 1');
+$st->bind_param('i', $idc);
+$st->execute();
+$faskes = (string) ($st->get_result()->fetch_row()[0] ?? '');
+$st->close();
+echo json_encode(['status' => 'success', 'faskes' => $faskes, 'data' => $data], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);

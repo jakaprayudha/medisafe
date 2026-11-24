@@ -1,265 +1,124 @@
 <?php
-include '../../database/connect.php';
-session_start();
-
-header("Content-Type: application/json");
-
+/**
+ * Parameter pemeriksaan laboratorium (module/administrator/master-lab-detail). Data global: khusus superadmin.
+ *   GET kode=[&] | GET id=            -> daftar parameter sebuah pemeriksaan / detail satu parameter
+ *   POST aksi=simpan|hapus            -> tambah/ubah, hapus
+ * Perbaikan: sebelumnya TANPA cek login/role, SQL injection di semua query, pemanggilan fungsi yang tidak ada
+ * (generateKodeLab) & UPDATE memakai kolom yang tidak ada, serta tombol Edit/Hapus di halaman memakai URL salah (`&id_item=`
+ * tanpa `?`). Parameter yang sudah punya hasil pasien tidak boleh dihapus (hasil jadi yatim).
+ */
+require_once __DIR__ . '/../../database/connect.php';
+require_once __DIR__ . '/../../utility/security.php';
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
+requireRole(['superadmin', 'administrator']);
 $method = $_SERVER['REQUEST_METHOD'];
+session_write_close();
 
-// spoof PUT
-if ($method === 'POST' && isset($_POST['_method'])) {
-   $method = strtoupper($_POST['_method']);
+function ldJson(string $status, string $message, $data = null, int $code = 200): void
+{
+   http_response_code($code);
+   echo json_encode(['status' => $status, 'message' => $message, 'data' => $data], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+   exit;
+}
+function ldQ(mysqli $k, string $sql, string $t = '', array $a = []): array
+{
+   $st = $k->prepare($sql);
+   if (!$st) {
+      error_log('[labItem] ' . $k->error);
+      ldJson('error', 'Terjadi kesalahan server.', null, 500);
+   }
+   if ($t !== '') $st->bind_param($t, ...$a);
+   if (!$st->execute()) {
+      error_log('[labItem] ' . $st->error);
+      ldJson('error', 'Terjadi kesalahan server.', null, 500);
+   }
+   $r = $st->get_result();
+   $out = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+   $st->close();
+   return $out;
+}
+function ldExec(mysqli $k, string $sql, string $t, array $a): void
+{
+   $st = $k->prepare($sql);
+   if (!$st || !$st->bind_param($t, ...$a) || !$st->execute()) {
+      error_log('[labItem] ' . ($st ? $st->error : $k->error));
+      ldJson('error', 'Gagal menyimpan data.', null, 500);
+   }
+   $st->close();
 }
 
-
-switch ($method) {
-
-   // =============================
-   // 🟢 POST (MASTER / DETAIL)
-   // =============================
-   case 'POST':
-
-      // 🔥 INSERT DETAIL PARAMETER
-      if (isset($_POST['kode_lab'])) {
-         $kode_lab = $_POST['kode_lab'];
-         $urutan   = $_POST['urutan'] ?? null;
-         $nama     = $_POST['nama'] ?? null;
-         $satuan   = $_POST['satuan'] ?? null;
-         $minimum  = $_POST['minimum'] ?? null;
-         $maksimum = $_POST['maksimum'] ?? null;
-
-         $insert = mysqli_query($koneksi, "
-               INSERT INTO laboratorium_item 
-               (kode, urutan, assemen, satuan, minimum, maksimum)
-               VALUES 
-               ('$kode_lab', '$urutan', '$nama', '$satuan', '$minimum', '$maksimum')
-            ");
-         echo json_encode([
-            "status" => $insert ? "success" : "error",
-            "message" => $insert ? "Parameter berhasil ditambahkan" : mysqli_error($koneksi)
-         ]);
-         exit;
-      }
-
-      // 🔥 INSERT MASTER LAB
-      $assemen = $_POST['assemen'] ?? null;
-
-      if (!$assemen) {
-         echo json_encode([
-            "status" => "error",
-            "message" => "Nama pemeriksaan wajib diisi"
-         ]);
-         exit;
-      }
-
-      $kode = generateKodeLab($koneksi);
-
-      $insert = mysqli_query($koneksi, "
-         INSERT INTO laboratorium_detail (kode, assemen, status)
-         VALUES ('$kode', '$assemen', 1)
-      ");
-
-      echo json_encode([
-         "status" => $insert ? "success" : "error",
-         "message" => $insert ? "Data berhasil ditambahkan" : mysqli_error($koneksi),
-         "kode" => $kode
-      ]);
-
-      break;
-
-   // =============================
-   // 🔵 GET (LIST / DETAIL / PARAMETER)
-   // =============================
-   case 'GET':
-
-      // 🔥 DETAIL PARAMETER BY KODE
-      if (isset($_GET['kode'])) {
-
-         $kode = $_GET['kode'];
-
-         $query = mysqli_query($koneksi, "
-            SELECT *
-            FROM laboratorium_item
-            WHERE kode = '$kode'
-            ORDER BY urutan ASC
-         ");
-
-         $data = [];
-         while ($row = mysqli_fetch_assoc($query)) {
-            $data[] = $row;
-         }
-
-         echo json_encode([
-            "status" => "success",
-            "data" => $data
-         ]);
-         exit;
-      }
-
-      // 🔥 DETAIL MASTER BY ID
-      if (isset($_GET['id'])) {
-
-         $id = $_GET['id'];
-
-         $query = mysqli_query($koneksi, "
-            SELECT * FROM laboratorium_item 
-            WHERE id = '$id'
-         ");
-
-         echo json_encode([
-            "status" => "success",
-            "data" => mysqli_fetch_assoc($query)
-         ]);
-         exit;
-      }
-
-      // 🔥 LIST MASTER
-      $query = mysqli_query($koneksi, "
-         SELECT *
-         FROM laboratorium_detail
-         ORDER BY status = 1 DESC, assemen ASC
-      ");
-
-      $data = [];
-      while ($row = mysqli_fetch_assoc($query)) {
-         $data[] = $row;
-      }
-
-      echo json_encode([
-         "status" => "success",
-         "data" => $data
-      ]);
-
-      break;
-
-   // =============================
-   // 🟡 PUT (UPDATE / TOGGLE)
-   // =============================
-   case 'PUT':
-
-      parse_str(file_get_contents("php://input"), $_PUT);
-
-      // 🔥 TOGGLE STATUS MASTER
-      if (isset($_GET['toggle_status'])) {
-
-         $id_lab = $_PUT['id_lab'] ?? null;
-         $status = $_PUT['status'] ?? 0;
-
-         $update = mysqli_query($koneksi, "
-            UPDATE laboratorium_item
-            SET 
-               urutan = '$urutan',
-               nama = '$nama',
-               satuan = '$satuan',
-               minimum = '$minimum',
-               maksimum = '$maksimum'
-            WHERE id_item = '$id_item'
-         ");
-
-         echo json_encode([
-            "status" => $update ? "success" : "error",
-            "message" => $update ? "Status diupdate" : mysqli_error($koneksi)
-         ]);
-         exit;
-      }
-
-      // 🔥 UPDATE MASTER
-      if (isset($_GET['id'])) {
-
-         $id = $_GET['id'];
-         $assemen = $_PUT['assemen'] ?? null;
-
-         $update = mysqli_query($koneksi, "
-            UPDATE laboratorium_detail 
-            SET assemen = '$assemen'
-            WHERE id_lab = '$id'
-         ");
-
-         echo json_encode([
-            "status" => $update ? "success" : "error",
-            "message" => $update ? "Data berhasil diupdate" : mysqli_error($koneksi)
-         ]);
-         exit;
-      }
-
-      // 🔥 UPDATE PARAMETER
-      if (isset($_PUT['id_item'])) {
-
-         $id_item = $_PUT['id_item'];
-         $urutan  = $_PUT['urutan'] ?? null;
-         $assemen = $_PUT['nama'] ?? null;
-         $satuan  = $_PUT['satuan'] ?? null;
-         $minimum = $_PUT['minimum'] ?? null;
-         $maksimum = $_PUT['maksimum'] ?? null;
-
-         $update = mysqli_query($koneksi, "
-      UPDATE laboratorium_item
-      SET 
-         urutan = '$urutan',
-         assemen = '$assemen',
-         satuan = '$satuan',
-         minimum = '$minimum',
-         maksimum = '$maksimum'
-      WHERE id = '$id_item'
-   ");
-
-         echo json_encode([
-            "status" => $update ? "success" : "error",
-            "message" => $update ? "Parameter diupdate" : mysqli_error($koneksi)
-         ]);
-         exit;
-      }
-
-      break;
-
-   // =============================
-   // 🔴 DELETE (MASTER / PARAMETER)
-   // =============================
-   case 'DELETE':
-
-      parse_str(file_get_contents("php://input"), $_DELETE);
-
-      // 🔥 DELETE PARAMETER
-      if (isset($_GET['id_item'])) {
-
-         $id_item = $_GET['id_item'];
-
-         $delete = mysqli_query($koneksi, "
-      DELETE FROM laboratorium_item
-      WHERE id = '$id_item'
-   ");
-
-         echo json_encode([
-            "status" => $delete ? "success" : "error",
-            "message" => $delete ? "Parameter dihapus" : mysqli_error($koneksi)
-         ]);
-         exit;
-      }
-
-      // 🔥 DELETE MASTER
-      if (isset($_GET['id'])) {
-
-         $id = $_GET['id'];
-
-         // optional: hapus child dulu
-         mysqli_query($koneksi, "
-            DELETE FROM laboratorium_item 
-            WHERE kode_lab = (
-               SELECT kode FROM laboratorium_detail WHERE id_lab = '$id'
-            )
-         ");
-
-         $delete = mysqli_query($koneksi, "
-            DELETE FROM laboratorium_detail
-            WHERE id_lab = '$id'
-         ");
-
-         echo json_encode([
-            "status" => $delete ? "success" : "error",
-            "message" => $delete ? "Data dihapus" : mysqli_error($koneksi)
-         ]);
-         exit;
-      }
-
-      break;
+/* ------------------------------ GET ------------------------------ */
+if ($method === 'GET') {
+   if (isset($_GET['id'])) {
+      $row = ldQ($koneksi, 'SELECT id, kode, urutan, assemen, satuan, minimum, maksimum, tipe_isian FROM laboratorium_item WHERE id = ? LIMIT 1', 'i', [(int) $_GET['id']])[0] ?? null;
+      if (!$row) ldJson('error', 'Parameter tidak ditemukan.', null, 404);
+      ldJson('success', 'OK', $row);
+   }
+   $kode = trim((string) ($_GET['kode'] ?? ''));
+   if ($kode === '') ldJson('error', 'Kode pemeriksaan tidak ada.', null, 422);
+   $rows = ldQ($koneksi, 'SELECT id, urutan, assemen, satuan, minimum, maksimum, tipe_isian FROM laboratorium_item WHERE kode = ? ORDER BY (urutan IS NULL OR urutan = \'\'), CAST(urutan AS UNSIGNED), id', 's', [$kode]);
+   $pakai = [];
+   if ($rows) {
+      $ids = array_map(fn($r) => (int) $r['id'], $rows);
+      $ph = implode(',', array_fill(0, count($ids), '?'));
+      foreach (ldQ($koneksi, "SELECT id_item, COUNT(*) n FROM laboratorium_result WHERE id_item IN ($ph) GROUP BY id_item", str_repeat('i', count($ids)), $ids) as $r) $pakai[(int) $r['id_item']] = (int) $r['n'];
+   }
+   foreach ($rows as &$r) {
+      $r['id'] = (int) $r['id'];
+      $r['dipakai'] = $pakai[$r['id']] ?? 0;
+   }
+   unset($r);
+   ldJson('success', 'OK', $rows);
 }
+
+if ($method !== 'POST') ldJson('error', 'Method tidak didukung.', null, 405);
+
+$aksi = (string) ($_POST['aksi'] ?? 'simpan');
+$idItem = (int) ($_POST['id_item'] ?? 0);
+
+/* ---------------------------- hapus ----------------------------- */
+if ($aksi === 'hapus') {
+   if ($idItem <= 0) ldJson('error', 'ID parameter tidak valid.', null, 422);
+   if (!ldQ($koneksi, 'SELECT 1 FROM laboratorium_item WHERE id = ? LIMIT 1', 'i', [$idItem])) ldJson('error', 'Parameter tidak ditemukan.', null, 404);
+   $n = (int) (ldQ($koneksi, 'SELECT COUNT(*) n FROM laboratorium_result WHERE id_item = ?', 'i', [$idItem])[0]['n'] ?? 0);
+   if ($n > 0) ldJson('error', "Parameter ini sudah punya $n hasil pasien sehingga tidak bisa dihapus.", null, 409);
+   ldExec($koneksi, 'DELETE FROM laboratorium_item WHERE id = ?', 'i', [$idItem]);
+   ldJson('success', 'Parameter dihapus.');
+}
+
+/* ------------------------ tambah / ubah ------------------------- */
+$kode = trim((string) ($_POST['kode_lab'] ?? ''));
+$urutan = trim((string) ($_POST['urutan'] ?? ''));
+$nama = trim((string) ($_POST['nama'] ?? ''));
+$satuan = trim((string) ($_POST['satuan'] ?? ''));
+$min = trim((string) ($_POST['minimum'] ?? ''));
+$max = trim((string) ($_POST['maksimum'] ?? ''));
+$tipe = (string) ($_POST['tipe_isian'] ?? 'keduanya');
+if (!in_array($tipe, ['numerik', 'teks', 'keduanya'], true)) ldJson('error', 'Tipe isian tidak valid.', ['field' => 'tipe_isian'], 422);
+if ($nama === '') ldJson('error', 'Nama parameter wajib diisi.', ['field' => 'nama'], 422);
+if (mb_strlen($nama) > 100) ldJson('error', 'Nama parameter maksimal 100 karakter.', ['field' => 'nama'], 422);
+if ($urutan !== '' && !preg_match('/^\d{1,5}$/', $urutan)) ldJson('error', 'Urutan harus berupa angka.', ['field' => 'urutan'], 422);
+if (mb_strlen($satuan) > 100) ldJson('error', 'Satuan maksimal 100 karakter.', ['field' => 'satuan'], 422);
+if (mb_strlen($min) > 250) ldJson('error', 'Nilai minimum maksimal 250 karakter.', ['field' => 'minimum'], 422);
+if (mb_strlen($max) > 100) ldJson('error', 'Nilai maksimum maksimal 100 karakter.', ['field' => 'maksimum'], 422);
+if ($tipe === 'numerik') {
+   // parameter numerik: batas normal (bila diisi) harus angka agar bisa dibandingkan dengan hasil
+   foreach (['minimum' => $min, 'maksimum' => $max] as $f => $v) {
+      if ($v !== '' && !preg_match('/^-?\d+([.,]\d+)?$/', $v)) ldJson('error', 'Parameter numerik: nilai ' . $f . ' harus berupa angka (contoh: 12,5), atau kosongkan.', ['field' => $f], 422);
+   }
+}
+
+if ($idItem > 0) {
+   if (!ldQ($koneksi, 'SELECT 1 FROM laboratorium_item WHERE id = ? LIMIT 1', 'i', [$idItem])) ldJson('error', 'Parameter tidak ditemukan.', null, 404);
+   ldExec($koneksi, 'UPDATE laboratorium_item SET urutan = ?, assemen = ?, satuan = ?, minimum = ?, maksimum = ?, tipe_isian = ? WHERE id = ?', 'ssssssi', [$urutan, $nama, $satuan, $min, $max, $tipe, $idItem]);
+   ldJson('success', 'Parameter diperbarui.');
+}
+
+if ($kode === '' || !ldQ($koneksi, 'SELECT 1 FROM laboratorium_detail WHERE kode = ? LIMIT 1', 's', [$kode])) ldJson('error', 'Pemeriksaan induk tidak ditemukan.', null, 404);
+if ($urutan === '') {
+   // urutan otomatis: setelah parameter terakhir
+   $urutan = (string) (((int) (ldQ($koneksi, 'SELECT MAX(CAST(urutan AS UNSIGNED)) m FROM laboratorium_item WHERE kode = ?', 's', [$kode])[0]['m'] ?? 0)) + 1);
+}
+ldExec($koneksi, 'INSERT INTO laboratorium_item (kode, urutan, assemen, satuan, minimum, maksimum, tipe_isian) VALUES (?, ?, ?, ?, ?, ?, ?)', 'sssssss', [$kode, $urutan, $nama, $satuan, $min, $max, $tipe]);
+ldJson('success', 'Parameter ditambahkan.');

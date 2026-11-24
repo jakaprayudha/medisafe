@@ -1,352 +1,275 @@
 <?php
-$title = 'Data Lab';
+$title = 'Master Laboratorium';
 require '../../controller/view.php';
-$kode = $_GET['kode'];
-$checklab = mysqli_query($koneksi, "SELECT * FROM  laboratorium_detail WHERE kode = '$kode'");
-$datalab = mysqli_fetch_array($checklab);
+
+// Data master lab bersifat global: hanya superadmin/administrator.
+if (!isset($_SESSION['uid_user']) || !in_array($_SESSION['roles'] ?? '', ['superadmin', 'administrator'], true)) {
+  header('Location: ../../');
+  exit;
+}
+
+// Dulu $_GET['kode'] disisipkan langsung ke SQL (injection) & nama dicetak tanpa escape (XSS).
+$kode = trim((string) ($_GET['kode'] ?? ''));
+$st = $koneksi->prepare('SELECT id_lab, kode, assemen, tarif, status FROM laboratorium_detail WHERE kode = ? LIMIT 1');
+$st->bind_param('s', $kode);
+$st->execute();
+$lab = $st->get_result()->fetch_assoc();
+$st->close();
+if (!$lab) {
+  header('Location: master-lab');
+  exit;
+}
+$h = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="id">
 
 <head>
   <base href="../../">
-  <?php
-  require '../../assets/template/head.php';
-  ?>
+  <?php require '../../assets/template/head.php'; ?>
+  <style>
+    #ldTable th { font-size: 11px; font-weight: 700; color: #334155; white-space: nowrap; text-transform: uppercase; letter-spacing: .3px; }
+    #ldTable td { vertical-align: middle; font-size: 13px; color: #0f172a; }
+    .ld-nama { font-weight: 700; color: #0f172a; }
+    .ld-kode { font-family: ui-monospace, Menlo, monospace; font-size: 12px; background: #f1f5f9; color: #0f172a; border-radius: 6px; padding: 2px 7px; }
+    .ld-n { display: inline-block; min-width: 34px; text-align: center; padding: 3px 8px; border-radius: 7px; font-size: 12px; font-weight: 700; background: #f1f5f9; color: #334155; }
+    .ld-modal .modal-content { border: 0; border-radius: 16px; }
+    .ld-modal .form-label { font-weight: 600; color: #1e293b; font-size: 13px; }
+    .ld-modal .is-invalid { border-color: #dc3545; }
+    .ld-hint { color: #475569; font-size: 12px; }
+    .ld-tipe { display: inline-block; padding: 3px 9px; border-radius: 7px; font-size: 11px; font-weight: 700; }
+    .ld-tipe.numerik { background: #dbeafe; color: #1e40af; }
+    .ld-tipe.teks { background: #fef3c7; color: #92400e; }
+    .ld-tipe.keduanya { background: #e0e7ff; color: #3730a3; }
+  </style>
 </head>
 
 <body>
-  <!--  Body Wrapper -->
-  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
-    data-sidebar-position="fixed" data-header-position="fixed">
-    <!-- Sidebar Start -->
-    <?php
-    require '../admin/sidebar.php';
-    ?>
-    <!--  Sidebar End -->
-    <!--  Main wrapper -->
+  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="fixed" data-header-position="fixed">
+    <?php require '../admin/sidebar.php'; ?>
     <div class="body-wrapper">
-      <!--  Header Start -->
-      <?php
-      require '../admin/navbar-master.php';
-      ?>
-      <!--  Header End -->
+      <?php require '../admin/navbar-master.php'; ?>
       <div class="body-wrapper-inner">
         <div class="container-fluid">
-          <div class="card mb-3 shadow-sm border-0">
-            <div class="card-body d-flex justify-content-between align-items-center">
 
-              <!-- LEFT: NAMA PEMERIKSAAN -->
-              <div>
-                <h5 class="fw-bold mb-1">
-                  <i class="fas fa-vial me-2 text-primary"></i>
-                  <?= $datalab['assemen'] ?>
-                </h5>
-                <div class="text-muted small">
-                  Detail Parameter Pemeriksaan
-                </div>
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div>
+              <h4 class="fw-bold mb-0 text-dark"><i class="ti ti-flask text-primary me-2"></i><?= $h($lab['assemen']) ?></h4>
+              <div class="text-dark small d-flex flex-wrap align-items-center gap-2 mt-1">
+                <span class="ld-kode"><?= $h($lab['kode']) ?></span>
+                <span>Tarif: <b><?= (int) $lab['tarif'] ? 'Rp ' . number_format((int) $lab['tarif'], 0, ',', '.') : 'belum diatur' ?></b></span>
+                <span class="badge <?= (int) $lab['status'] === 1 ? 'bg-success' : 'bg-danger' ?>"><?= (int) $lab['status'] === 1 ? 'AKTIF' : 'TIDAK AKTIF' ?></span>
               </div>
-
-              <!-- RIGHT: STATUS -->
-              <?php
-              $status = $datalab['status'];
-              if ($status == 1) { ?>
-                <span class="badge bg-success px-3 py-2">
-                  AKTIF
-                </span>
-              <?php  } else { ?>
-                <span class="badge bg-danger px-3 py-2">
-                  TIDAK AKTIF
-                </span>
-              <?php   }
-              ?>
-
-
+            </div>
+            <div class="d-flex gap-2">
+              <a class="btn btn-light border" href="module/administrator/master-lab"><i class="ti ti-arrow-left me-1"></i>Kembali</a>
+              <button class="btn btn-primary" id="btnTambah"><i class="ti ti-plus me-1"></i>Tambah Parameter</button>
             </div>
           </div>
-          <div class="row">
-            <div class="col-lg-12 d-flex align-items-stretch">
-              <div class="card w-100">
-                <div class="card-body p-4">
-                  <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Data Master Parameter Lab</h5>
-                    <!-- Grup tombol di sisi kanan -->
-                    <div class="d-flex ms-auto gap-2">
-                      <button class="btn btn-light" id="" onclick="window.history.back()">
-                        <i class=" fas fa-arrow-left"></i> Kembali
-                      </button>
-                      <button class="btn btn-primary" id="btnTambah">
-                        <i class="fas fa-plus"></i> Tambah
-                      </button>
-                    </div>
-                  </div>
-                  <div class="table-responsive" data-simplebar>
-                    <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
-                      <thead>
-                        <tr>
-                          <th class="text-dark fw-normal">Urutan</th>
-                          <th class="text-dark fw-normal">Parameter</th>
-                          <th class="text-dark fw-normal">Satuan</th>
-                          <th class="text-dark fw-normal">Minumum</th>
-                          <th class="text-dark fw-normal">Maksimum</th>
-                          <th scope="col" class="text-dark fw-normal text-center col-1">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody></tbody>
-                    </table>
-                  </div>
-                </div>
+
+          <div class="card border-0 shadow-sm" style="border-radius:16px">
+            <div class="card-body p-3 p-md-4">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="fw-semibold text-dark">Parameter pemeriksaan <span class="ld-n ms-1" id="ldJumlah">-</span></div>
+                <div class="small text-dark">Parameter yang sudah punya hasil pasien tidak bisa dihapus.</div>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-hover align-middle w-100" id="ldTable">
+                  <thead>
+                    <tr>
+                      <th class="text-center" width="100">Aksi</th>
+                      <th>Urutan</th>
+                      <th>Parameter</th>
+                      <th>Satuan</th>
+                      <th title="Jenis isian hasil di modul lab">Tipe Isian</th>
+                      <th>Minimum</th>
+                      <th>Maksimum</th>
+                      <th class="text-center" title="Jumlah hasil pasien yang memakai parameter ini">Hasil</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>
   </div>
 
-
-
-  <?php
-  require '../admin/library.php';
-  ?>
-</body>
-<div class="modal fade" id="programModal" tabindex="-1">
-  <div class="modal-dialog">
-    <form id="programForm" class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Tambah Parameter</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-
-        <!-- 🔥 ID & RELASI -->
-        <input type="hidden" name="id_item" id="id_item">
-        <input type="hidden" name="kode_lab" id="kode_lab" value="<?= $_GET['kode'] ?>">
-
-        <div class="row">
-
-          <!-- URUTAN -->
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label">Urutan</label>
-              <input type="number" name="urutan" id="urutan" class="form-control" required>
-            </div>
-          </div>
-
-          <!-- SATUAN -->
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label">Satuan</label>
-              <input type="text" name="satuan" id="satuan" class="form-control">
-            </div>
-          </div>
-
-          <!-- NAMA PARAMETER -->
-          <div class="col-12">
-            <div class="mb-3">
-              <label class="form-label required">Nama Parameter</label>
-              <input type="text" name="nama" id="nama" class="form-control" required>
-            </div>
-          </div>
-
-          <!-- MIN -->
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label">Minimum</label>
-              <input type="text" name="minimum" id="minimum" class="form-control">
-            </div>
-          </div>
-
-          <!-- MAX -->
-          <div class="col-6">
-            <div class="mb-3">
-              <label class="form-label">Maksimum</label>
-              <input type="text" name="maksimum" id="maksimum" class="form-control">
-            </div>
-          </div>
-
+  <div class="modal fade ld-modal" id="programModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <form id="programForm" class="modal-content" novalidate>
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold text-dark" id="ldModalTitle">Tambah Parameter</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
         </div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Simpan</button>
-      </div>
-
-    </form>
+        <div class="modal-body">
+          <input type="hidden" name="aksi" value="simpan">
+          <input type="hidden" name="id_item" id="id_item">
+          <input type="hidden" name="kode_lab" id="kode_lab" value="<?= $h($lab['kode']) ?>">
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label class="form-label" for="urutan">Urutan</label>
+              <input type="number" min="0" max="99999" name="urutan" id="urutan" class="form-control" placeholder="otomatis">
+              <div class="ld-hint mt-1">Kosongkan untuk ditaruh paling akhir.</div>
+            </div>
+            <div class="col-6 mb-3">
+              <label class="form-label" for="satuan">Satuan</label>
+              <input type="text" name="satuan" id="satuan" class="form-control" maxlength="100" placeholder="mg/dL">
+            </div>
+            <div class="col-12 mb-3">
+              <label class="form-label" for="nama">Nama Parameter <span class="text-danger">*</span></label>
+              <input type="text" name="nama" id="nama" class="form-control" maxlength="100" required>
+            </div>
+            <div class="col-12 mb-3">
+              <label class="form-label" for="tipe_isian">Tipe Isian Hasil</label>
+              <select name="tipe_isian" id="tipe_isian" class="form-select">
+                <option value="keduanya">Angka atau teks (bebas)</option>
+                <option value="numerik">Angka saja (numerik)</option>
+                <option value="teks">Teks saja</option>
+              </select>
+              <div class="ld-hint mt-1" id="tipeHint"></div>
+            </div>
+            <div class="col-6 mb-1">
+              <label class="form-label" for="minimum">Minimum</label>
+              <input type="text" name="minimum" id="minimum" class="form-control" maxlength="250">
+            </div>
+            <div class="col-6 mb-1">
+              <label class="form-label" for="maksimum">Maksimum</label>
+              <input type="text" name="maksimum" id="maksimum" class="form-control" maxlength="100">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary" id="ldSimpan"><i class="ti ti-device-floppy me-1"></i>Simpan</button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
 
+  <?php require '../admin/library.php'; ?>
+  <script>
+    $(function() {
+      const API = 'controller/master/labDetailController.php';
+      const KODE = <?= json_encode($lab['kode'], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;
+      const esc = t => $('<div>').text(t ?? '').html();
+      const fmt = n => Number(n || 0).toLocaleString('id-ID');
+      const toast = (icon, title) => Swal.fire({ toast: true, position: 'top-end', icon, title, showConfirmButton: false, timer: 2400 });
+      const TIPE = { numerik: 'Angka', teks: 'Teks', keduanya: 'Angka / teks' };
+      const HINT = {
+        numerik: 'Petugas lab hanya bisa mengisi angka (contoh 12,5). Hasil otomatis diberi tanda ↑/↓ bila di luar nilai minimum–maksimum. Minimum/maksimum harus angka.',
+        teks: 'Petugas lab mengisi teks bebas, mis. Positif/Negatif atau Kuning jernih.',
+        keduanya: 'Petugas lab boleh mengisi angka maupun teks. Tanda ↑/↓ hanya muncul bila hasil dan batasnya berupa angka.'
+      };
+      const hint = () => $('#tipeHint').text(HINT[$('#tipe_isian').val()] || '');
+      $('#tipe_isian').on('change', hint);
+      const kosong = v => (v === null || v === '') ? '<span class="text-dark">-</span>' : esc(v);
 
-
-<script>
-  const urlParams = new URLSearchParams(window.location.search);
-  const kode = urlParams.get('kode');
-  const apiUrl = 'controller/master/labDetailController';
-  $(document).ready(function() {
-    var table = $('#periodeTable').DataTable({
-      processing: true,
-      serverSide: false, // 🔹 ubah jadi false
-      scrollX: true,
-      ajax: {
-        url: apiUrl + '?kode=' + kode,
-        type: "GET",
-        dataSrc: function(json) {
-          return json.data.map(function(row) {
-            return {
-              "actions": `
-                      <div class="text-end">
-								<div class="btn-group btn-group-sm" role="group">
-									<a class="btn btn-warning edit-btn" href="javascript:;" data-id="${row.id}">
-											<i class="fas fa-pencil"></i>
-									</a>
-									<a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id}">
-											<i class="fas fa-trash"></i>
-									</a>
-								</div>
-							</div>
-                    `,
-              "urutan": row.urutan,
-              "assemen": row.assemen,
-              "satuan": row.satuan,
-              "maksimum": row.maksimum,
-              "minimum": row.minimum,
-            };
-          });
-        }
-      },
-      columns: [{
-          data: "urutan"
-        },
-        {
-          data: "assemen"
-        },
-        {
-          data: "satuan"
-        },
-        {
-          data: "minimum"
-        },
-        {
-          data: "maksimum"
-        },
-        {
-          data: "actions",
-          orderable: false,
-          searchable: false
-        },
-      ],
-      footerCallback: function(row, data) {
-        let totalAktif = data.reduce((a, b) => {
-          return a + (b.status_val == 1 ? 1 : 0);
-        }, 0);
-
-      }
-    });
-
-    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-      let filter = $('#filterStatus').val();
-
-      if (!filter) return true;
-
-      let rowData = table.row(dataIndex).data();
-
-      return rowData.status_val == filter;
-    });
-
-    $('#filterStatus').on('change', function() {
-      table.draw();
-    });
-
-    $('#customSearch').on('keyup', function() {
-      table.search(this.value).draw();
-    });
-
-    // 🔹 Tambah
-    $('#btnTambah').on('click', function() {
-      $('#programForm')[0].reset(); // ✅ pakai programForm, bukan addForm
-      $('#id').val('');
-      $('#programModal .modal-title').text('Tambah Data');
-      $('#programModal').modal('show');
-    });
-
-    // 🔹 Submit (Tambah / Update)
-    $('#programForm').on('submit', function(e) {
-      e.preventDefault();
-      let formData = new URLSearchParams(new FormData(this));
-      let id = $('#id_item').val();
-      fetch(apiUrl + (id ? `?id=${id}` : ''), {
-          method: id ? 'PUT' : 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
+      const tabel = $('#ldTable').DataTable({
+        processing: true,
+        paging: false,
+        order: [[1, 'asc']],
+        ajax: {
+          url: API,
+          type: 'GET',
+          data: { kode: KODE },
+          dataSrc: function(json) {
+            if (!json || json.status !== 'success') {
+              Swal.fire('Gagal', (json && json.message) || 'Gagal mengambil data.', 'error');
+              return [];
+            }
+            $('#ldJumlah').text(fmt((json.data || []).length));
+            return json.data || [];
           },
-          body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === 'success') {
-            Swal.fire('Berhasil!', data.message, 'success');
-            $('#programModal').modal('hide');
-            table.ajax.reload(null, false);
-          } else {
-            Swal.fire('Gagal!', data.message, 'error');
-          }
-        });
-    });
-    // 🔹 Edit
-    $(document).on('click', '.edit-btn', function() {
-      let id = $(this).data('id');
+          error: xhr => Swal.fire('Gagal', xhr.status === 401 || xhr.status === 403 ? 'Sesi berakhir atau akses ditolak.' : 'Gagal mengambil data.', 'error')
+        },
+        language: { search: 'Cari:', info: '_TOTAL_ parameter', infoEmpty: 'Belum ada parameter', infoFiltered: '(dari _MAX_)', emptyTable: 'Belum ada parameter. Klik "Tambah Parameter".', zeroRecords: 'Tidak ditemukan.', processing: 'Memuat...' },
+        columns: [{
+            data: null, orderable: false, searchable: false, className: 'text-center',
+            render: (d, t, r) => `<div class="btn-group btn-group-sm">
+              <button type="button" class="btn btn-warning edit-btn" data-id="${r.id}" title="Edit"><i class="ti ti-edit"></i></button>
+              <button type="button" class="btn btn-danger delete-btn" data-id="${r.id}" data-nama="${esc(r.assemen)}" data-hasil="${r.dipakai}" title="Hapus"><i class="ti ti-trash"></i></button></div>`
+          },
+          { data: 'urutan', render: (v, t) => t === 'display' ? kosong(v) : (parseInt(v, 10) || 0) },
+          { data: 'assemen', render: (v, t) => t === 'display' ? `<span class="ld-nama">${esc(v)}</span>` : v },
+          { data: 'satuan', render: (v, t) => t === 'display' ? kosong(v) : v },
+          { data: 'tipe_isian', render: (v, t) => t === 'display' ? `<span class="ld-tipe ${esc(v)}">${esc(TIPE[v] || v)}</span>` : v },
+          { data: 'minimum', render: (v, t) => t === 'display' ? kosong(v) : v },
+          { data: 'maksimum', render: (v, t) => t === 'display' ? kosong(v) : v },
+          { data: 'dipakai', className: 'text-center', render: (v, t) => t === 'display' ? `<span class="ld-n">${fmt(v)}</span>` : v }
+        ]
+      });
 
-      fetch(apiUrl + `&id_item=${id}`)
-        .then(res => res.json())
-        .then(resp => {
-          if (resp.status === 'success') {
-            let d = resp.data;
+      function bersih() { $('#programForm .is-invalid').removeClass('is-invalid'); }
 
-            // 🔥 WAJIB
-            $('#id').val(d.id);
+      $('#btnTambah').on('click', function() {
+        $('#programForm')[0].reset();
+        $('#id_item').val('');
+        bersih();
+        hint();
+        $('#ldModalTitle').text('Tambah Parameter');
+        $('#programModal').modal('show');
+      });
 
-            // isi field lain
-            $('#id_item').val(d.id);
-            $('#urutan').val(d.urutan);
-            $('#nama').val(d.assemen);
-            $('#satuan').val(d.satuan);
-            $('#minimum').val(d.minimum);
-            $('#maksimum').val(d.maksimum);
+      $(document).on('click', '.edit-btn', function() {
+        $.getJSON(API, { id: $(this).data('id') }).done(function(res) {
+          if (res.status !== 'success') return Swal.fire('Gagal', res.message || 'Data tidak ditemukan.', 'error');
+          const d = res.data;
+          $('#programForm')[0].reset();
+          bersih();
+          $('#id_item').val(d.id);
+          $('#urutan').val(d.urutan);
+          $('#nama').val(d.assemen);
+          $('#satuan').val(d.satuan);
+          $('#minimum').val(d.minimum);
+          $('#maksimum').val(d.maksimum);
+          $('#tipe_isian').val(d.tipe_isian || 'keduanya');
+          hint();
+          $('#ldModalTitle').text('Edit Parameter');
+          $('#programModal').modal('show');
+        }).fail(() => Swal.fire('Error', 'Gagal mengambil data.', 'error'));
+      });
 
-            $('#programModal .modal-title').text('Edit Data');
-            $('#programModal').modal('show');
-          }
-        });
-    });
-    // 🔹 Delete
-    $(document).on('click', '.delete-btn', function() {
-      let id = $(this).data('id');
-      Swal.fire({
-        title: 'Hapus Data?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Hapus',
-        cancelButtonText: 'Batal'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          fetch(apiUrl + `&id_item=${id}`, {
-              method: 'DELETE'
-            })
-            .then(res => res.json())
-            .then(data => {
-              if (data.status === 'success') {
-                Swal.fire('Berhasil!', 'Data dihapus.', 'success');
-                table.ajax.reload(null, false);
-              }
-            });
+      $('#programForm').on('submit', function(e) {
+        e.preventDefault();
+        bersih();
+        if (!$('#nama').val().trim()) {
+          $('#nama').addClass('is-invalid').focus();
+          return Swal.fire('Nama parameter wajib diisi', '', 'warning');
         }
+        $('#ldSimpan').prop('disabled', true);
+        $.post(API, $(this).serialize(), null, 'json').done(function(res) {
+          $('#programModal').modal('hide');
+          tabel.ajax.reload(null, false);
+          toast('success', res.message);
+        }).fail(function(xhr) {
+          const r = xhr.responseJSON || {};
+          if (r.data && r.data.field) $('#' + (r.data.field === 'nama' ? 'nama' : r.data.field)).addClass('is-invalid').focus();
+          Swal.fire('Gagal', r.message || 'Terjadi kesalahan server.', 'error');
+        }).always(() => $('#ldSimpan').prop('disabled', false));
+      });
+
+      $(document).on('click', '.delete-btn', function() {
+        const id = $(this).data('id'), nama = $(this).attr('data-nama');
+        if (Number($(this).attr('data-hasil')) > 0) {
+          return Swal.fire('Tidak bisa dihapus', `"${nama}" sudah punya ${fmt($(this).attr('data-hasil'))} hasil pasien. Ubah saja namanya bila perlu.`, 'info');
+        }
+        Swal.fire({
+          title: 'Hapus parameter?', text: `"${nama}" akan dihapus.`, icon: 'warning',
+          showCancelButton: true, confirmButtonText: 'Ya, Hapus', cancelButtonText: 'Batal', confirmButtonColor: '#dc3545'
+        }).then(function(r) {
+          if (!r.isConfirmed) return;
+          $.post(API, { aksi: 'hapus', id_item: id }, null, 'json').done(function(res) {
+            tabel.ajax.reload(null, false);
+            toast('success', res.message);
+          }).fail(xhr => Swal.fire('Tidak bisa dihapus', (xhr.responseJSON && xhr.responseJSON.message) || 'Gagal menghapus data.', 'error'));
+        });
       });
     });
-
-
-
-  });
-</script>
+  </script>
+</body>
 
 </html>

@@ -1,9 +1,17 @@
 <?php
-$title = 'eKYC TTE';
-require '../../controller/view.php';
+// Dipakai dua peran: admin klinik (module/admin/ekyc_tte, hanya faskes sendiri) dan superadmin
+// (module/administrator/ekyc_verify -> mendefinisikan EKYC_GLOBAL, melihat semua faskes + kolom/filter Faskes).
+$ekGlobal = defined('EKYC_GLOBAL');
+$title = $ekGlobal ? 'Verifikasi eKYC' : 'eKYC TTE';
+require __DIR__ . '/../../controller/view.php';
+
+if ($ekGlobal && (!isset($_SESSION['uid_user']) || !in_array($_SESSION['roles'] ?? '', ['superadmin', 'administrator'], true))) {
+  header('Location: ../../');
+  exit;
+}
 
 // 🔐 Simpan / upload / verifikasi / hapus hanya untuk module admin
-$canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], true);
+$canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin', 'administrator'], true);
 ?>
 <!doctype html>
 <html lang="en">
@@ -21,14 +29,14 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
     data-sidebar-position="fixed" data-header-position="fixed">
     <!-- Sidebar Start -->
     <?php
-    require 'sidebar.php';
+    require __DIR__ . '/sidebar.php';
     ?>
     <!--  Sidebar End -->
     <!--  Main wrapper -->
     <div class="body-wrapper">
       <!--  Header Start -->
       <?php
-      require 'navbar.php';
+      require __DIR__ . '/' . ($ekGlobal ? 'navbar-master.php' : 'navbar.php');
       ?>
       <!--  Header End -->
       <div class="body-wrapper-inner">
@@ -39,11 +47,11 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
               <div class="d-flex flex-wrap align-items-center gap-3">
                 <span class="ek-icon bg-primary-subtle text-primary"><i class="fas fa-id-card"></i></span>
                 <div class="flex-grow-1" style="min-width:0">
-                  <h5 class="fw-semibold mb-0">eKYC Tanda Tangan Elektronik</h5>
-                  <div class="text-muted small">Verifikasi identitas pemohon TTE: KTP diverifikasi admin, lalu liveness wajah lewat kamera, lalu verifikasi akhir.</div>
+                  <h5 class="fw-semibold mb-0"><?= $ekGlobal ? 'Verifikasi eKYC TTE' : 'eKYC Tanda Tangan Elektronik' ?></h5>
+                  <div class="text-muted small"><?= $ekGlobal ? 'Antrean verifikasi pemohon TTE dari semua faskes: KTP diverifikasi, liveness wajah lewat kamera (dilakukan admin klinik), lalu verifikasi akhir.' : 'Verifikasi identitas pemohon TTE: KTP diverifikasi admin, lalu liveness wajah lewat kamera, lalu verifikasi akhir.' ?></div>
                 </div>
                 <button type="button" class="btn btn-light btn-sm" id="ekRefresh" title="Muat ulang"><i class="fas fa-sync-alt"></i></button>
-                <?php if ($canManageEkyc): ?>
+                <?php if ($canManageEkyc && !$ekGlobal): ?>
                   <button class="btn btn-primary" id="btnTambah"><i class="fas fa-user-plus me-1"></i>Tambah pemohon</button>
                 <?php endif; ?>
               </div>
@@ -67,7 +75,10 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
                   <button type="button" class="btn" data-f="terverifikasi">Terverifikasi <span class="badge" data-n="terverifikasi">0</span></button>
                   <button type="button" class="btn" data-f="ditolak">Ditolak <span class="badge" data-n="ditolak">0</span></button>
                 </div>
-                <div class="position-relative ms-auto" style="min-width:220px">
+                <?php if ($ekGlobal): ?>
+                  <select id="ekFaskes" class="form-select form-select-sm ms-auto" style="width:auto;max-width:240px"><option value="">Semua faskes</option></select>
+                <?php endif; ?>
+                <div class="position-relative <?= $ekGlobal ? '' : 'ms-auto' ?>" style="min-width:220px">
                   <i class="fas fa-search position-absolute text-muted" style="left:10px;top:50%;transform:translateY(-50%);font-size:.75rem"></i>
                   <input type="search" id="ekCari" class="form-control form-control-sm ps-4" placeholder="Cari nama, NIK, email, HP…">
                 </div>
@@ -75,12 +86,13 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
               <div class="table-responsive">
                 <table class="table align-middle mb-0 w-100" id="periodeTable">
                   <thead><tr>
+                    <th class="text-dark fw-normal text-center">Aksi</th>
+                    <?php if ($ekGlobal): ?><th class="text-dark fw-normal">Faskes</th><?php endif; ?>
                     <th class="text-dark fw-normal">Pemohon</th>
                     <th class="text-dark fw-normal">Kontak</th>
                     <th class="text-dark fw-normal">Tahap verifikasi</th>
                     <th class="text-dark fw-normal">Registrasi</th>
                     <th class="text-dark fw-normal text-center">Aktif</th>
-                    <th class="text-dark fw-normal text-end">Aksi</th>
                   </tr></thead>
                   <tbody></tbody>
                 </table>
@@ -94,7 +106,7 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
   </div>
 
   <?php
-  require 'library.php';
+  require __DIR__ . '/library.php';
   ?>
 </body>
 
@@ -148,10 +160,12 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
   .ek-tabs .btn .badge { background: #eef1f4; color: #5a6a85; margin-left: 4px; }
   .ek-tabs .btn.active { background: #5d87ff; border-color: #5d87ff; color: #fff; }
   .ek-tabs .btn.active .badge { background: rgba(255, 255, 255, .25); color: #fff; }
+  /* teks abu-abu dibuat lebih gelap agar terbaca */
+  .ek-label, .ek-sub, #periodeTable .text-muted, #ekycDetailModal .text-muted, #ekycModal .text-muted { color: #475569 !important; }
   .ek-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .03em; }
   .ek-nik { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .74rem; background: #f1f5f9; border-radius: 4px; padding: 1px 5px; color: #1e293b; }
   #periodeTable td { vertical-align: middle; }
-  #periodeTable > tbody > tr > td:last-child, #periodeTable > thead > tr > th:last-child { width: 1%; white-space: nowrap; }
+  #periodeTable > tbody > tr > td:first-child, #periodeTable > thead > tr > th:first-child { width: 1%; white-space: nowrap; }
   .ek-alur { display: flex; align-items: center; gap: 4px; }
   .ek-alur .t { width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: .66rem; border: 1px solid #e2e8f0; color: #94a3b8; background: #fff; }
   .ek-alur .t.ok { background: #13deb9; border-color: #13deb9; color: #fff; }
@@ -186,6 +200,7 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
 <script>
   const apiUrl = 'controller/master/ekycController';
   const canManageEkyc = <?= $canManageEkyc ? 'true' : 'false' ?>;
+  const ekGlobal = <?= $ekGlobal ? 'true' : 'false' ?>;
 
   $(document).ready(function() {
     const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -215,6 +230,20 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
       if (st.nTable.id !== 'periodeTable' || !filter) return true;
       return tahap(st.aoData[i]._aData).grup === filter;
     });
+    let filterFaskes = '';
+    $.fn.dataTable.ext.search.push((st, _d, i) => {
+      if (st.nTable.id !== 'periodeTable' || !filterFaskes) return true;
+      return String(st.aoData[i]._aData.id_customer) === filterFaskes;
+    });
+    function isiFaskes(rows) {
+      if (!ekGlobal) return;
+      const peta = new Map();
+      rows.forEach(r => peta.set(String(r.id_customer), r.clinic_name || ('Faskes ' + r.id_customer)));
+      const pilih = $('#ekFaskes'), lama = pilih.val();
+      pilih.html('<option value="">Semua faskes</option>' + [...peta].sort((a, b) => a[1].localeCompare(b[1])).map(([k, v]) => `<option value="${esc(k)}">${esc(v)}</option>`).join(''));
+      pilih.val(peta.has(lama) ? lama : '');
+      filterFaskes = pilih.val();
+    }
     function hitung(rows) {
       const g = { semua: rows.length, tindak: 0, proses: 0, terverifikasi: 0, ditolak: 0 };
       rows.forEach(r => g[tahap(r).grup]++);
@@ -234,11 +263,18 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
         info: '_START_–_END_ dari _TOTAL_ pemohon', infoEmpty: '0 pemohon', infoFiltered: '(disaring dari _MAX_)', lengthMenu: 'Tampil _MENU_', paginate: { previous: '‹', next: '›' } },
       ajax: {
         url: apiUrl, type: 'GET', cache: false,
-        dataSrc: json => { const rows = (json && json.data) || []; hitung(rows); return rows; },
+        dataSrc: json => { const rows = (json && json.data) || []; hitung(rows); isiFaskes(rows); return rows; },
         error: x => Swal.fire('Gagal memuat data', x.status === 401 ? 'Sesi berakhir, silakan login ulang.' : 'Tidak dapat terhubung ke server.', 'error')
       },
       rowId: r => 'ek' + r.id_ekyc,
       columns: [
+        { data: null, orderable: false, searchable: false, className: 'text-start', render: (v, t, r) => {
+            if (t !== 'display') return '';
+            const tp = tahap(r), utama = canManageEkyc && tp.grup !== 'terverifikasi' && tp.grup !== 'ditolak';
+            return `<div class="btn-group btn-group-sm"><button type="button" class="btn ${utama ? 'btn-primary' : 'btn-light'} detail-btn" data-id="${r.id_ekyc}"><i class="fas ${utama ? 'fa-arrow-right' : 'fa-id-card'} me-1"></i>${canManageEkyc ? tp.aksi : 'Lihat'}</button>` +
+              (canManageEkyc ? `<button type="button" class="btn btn-light text-danger delete-btn" data-id="${r.id_ekyc}" title="Hapus"><i class="fas fa-trash"></i></button>` : '') + '</div>';
+          } },
+        ...(ekGlobal ? [{ data: 'clinic_name', render: (v, t) => t === 'display' ? `<span class="fw-semibold text-dark">${esc(v || '-')}</span>` : (v || '') }] : []),
         { data: 'nama', render: (v, t, r) => t !== 'display' ? (v || '') + ' ' + (r.nik || '') :
             `<div class="fw-semibold text-dark">${esc(v || '-')}</div><span class="ek-nik">${esc(r.nik || '-')}</span>` },
         { data: 'email', render: (v, t, r) => t !== 'display' ? (v || '') + ' ' + (r.nomor_hp || '') :
@@ -247,13 +283,7 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
         { data: 'created_at', render: (v, t, r) => t === 'display' ? `<div class="small">${tgl(v)}</div><div class="small text-muted">${esc(r.created_by || '')}</div>` : (v || '') },
         { data: 'status', className: 'text-center', orderable: false, render: (v, t, r) => t !== 'display' ? v : (canManageEkyc
             ? `<div class="form-check form-switch d-inline-block m-0"><input class="form-check-input toggle-status" type="checkbox" role="switch" data-id="${r.id_ekyc}" ${v == '1' ? 'checked' : ''} title="Aktif / nonaktif"></div>`
-            : `<span class="badge ${v == '1' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}">${v == '1' ? 'Aktif' : 'Nonaktif'}</span>`) },
-        { data: null, orderable: false, searchable: false, className: 'text-end', render: (v, t, r) => {
-            if (t !== 'display') return '';
-            const tp = tahap(r), utama = canManageEkyc && tp.grup !== 'terverifikasi' && tp.grup !== 'ditolak';
-            return `<div class="btn-group btn-group-sm"><button type="button" class="btn ${utama ? 'btn-primary' : 'btn-light'} detail-btn" data-id="${r.id_ekyc}"><i class="fas ${utama ? 'fa-arrow-right' : 'fa-id-card'} me-1"></i>${canManageEkyc ? tp.aksi : 'Lihat'}</button>` +
-              (canManageEkyc ? `<button type="button" class="btn btn-light text-danger delete-btn" data-id="${r.id_ekyc}" title="Hapus"><i class="fas fa-trash"></i></button>` : '') + '</div>';
-          } }
+            : `<span class="badge ${v == '1' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}">${v == '1' ? 'Aktif' : 'Nonaktif'}</span>`) }
       ]
     });
     $('#ekTabs').on('click', '.btn', function() {
@@ -264,6 +294,7 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
     });
     let tCari;
     $('#ekCari').on('input', function() { clearTimeout(tCari); const v = this.value; tCari = setTimeout(() => table.search(v).draw(), 200); });
+    $('#ekFaskes').on('change', function() { filterFaskes = this.value; table.draw(); });
     $('#ekRefresh').on('click', () => table.ajax.reload(null, false));
     $('#nik').on('input', function() { this.value = this.value.replace(/\D/g, '').slice(0, 16); $('#nikHitung').text(this.value.length + '/16').toggleClass('text-success', this.value.length === 16); });
     $('#nomor_hp').on('input', function() { this.value = this.value.replace(/\D/g, '').slice(0, 15); });
@@ -500,6 +531,7 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
 
           $('#dNama').text(d.nama || '-');
           $('#dNik').text(d.nik || '-');
+          if (ekGlobal) $('#dFaskes').text(d.clinic_name || '-');
           $('#dEmail').text(d.email || '-');
           $('#dHp').text(d.nomor_hp || '-');
 
@@ -1209,6 +1241,7 @@ $canManageEkyc = in_array($_SESSION['roles'] ?? '', ['admin', 'superadmin'], tru
                 <h6 class="fw-bold mb-1" id="dNama">-</h6>
                 <div class="text-muted fs-3">
                   NIK: <span class="fw-semibold text-dark" id="dNik">-</span>
+                  <?php if ($ekGlobal): ?> | Faskes: <span class="fw-semibold text-dark" id="dFaskes">-</span><?php endif; ?>
                 </div>
                 <div class="text-muted fs-3">
                   Email: <span id="dEmail">-</span> | HP: <span id="dHp">-</span>

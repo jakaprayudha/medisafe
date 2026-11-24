@@ -52,6 +52,7 @@ function perVisit(mysqli $k, string $sql, array $ids): array
 }
 
 if ($idc <= 0) jawab(['status' => 'error', 'message' => 'Faskes tidak ditemukan.'], 422);
+$namaFaskes = (string) (q($koneksi, "SELECT clinic_name FROM setting_clinic WHERE id_customer = ? LIMIT 1", 'i', [$idc])[0]['clinic_name'] ?? '');
 $jenis = ($_GET['jenis'] ?? 'poli') === 'ranap' ? 'ranap' : 'poli';
 $tgl = function ($v, $d) {
    $v = (string) $v;
@@ -209,6 +210,7 @@ if (!ini_get('zlib.output_compression') && extension_loaded('zlib')) ob_start('o
 jawab([
    'status' => 'success',
    'jenis' => $jenis,
+   'faskes' => ['id' => $idc, 'nama' => $namaFaskes],
    'periode' => ['from' => $from, 'to' => $to],
    'checklist' => array_map(fn($x) => ['kode' => $x[0], 'label' => $x[1], 'ket' => $x[2], 'integrasi' => in_array($x[0], INTEGRASI, true)], $cl),
    'kolom' => ['visit', 'tanggal', 'jam', 'pasien', 'rm', 'dokter', 'poli', 'cek', 'pct', 'info'],

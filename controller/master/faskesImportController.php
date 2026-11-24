@@ -1,110 +1,63 @@
 <?php
-include '../../database/connect.php';
+/**
+ * Kelengkapan data per faskes untuk halaman Data Import (module/administrator/data-import). Khusus superadmin/administrator.
+ *   GET [refresh=1] -> { data: [{id_customer, clinic_name, pasien, dokter, nakes, farmasi, visit, poli, tarif, provider}] }
+ * Perbaikan: sebelumnya TANPA cek login/role; 8 subquery COUNT(*) berkorelasi per faskes (~1,4 dtk, memindai ulang tabel
+ * kunjungan & pasien untuk tiap faskes); SELECT f.* mengirim seluruh kolom setting_clinic; GET ?id= memakai tabel/kolom
+ * yang tidak ada (pasien, dokter, visit...); pesan error SQL bocor. Kini satu GROUP BY per tabel (~0,35 dtk total) dan
+ * dicache 5 menit.
+ */
+require_once __DIR__ . '/../../database/connect.php';
+require_once __DIR__ . '/../../utility/security.php';
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
+requireRole(['superadmin', 'administrator']);
+session_write_close();
 
-$method = $_SERVER['REQUEST_METHOD'];
-
-switch ($method) {
-   case 'GET':
-      if (isset($_GET['id'])) {
-         getID($_GET['id']);
-      } else {
-         getData();
-      }
-      break;
-
-   default:
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Method tidak diizinkan.'
-      ]);
-      break;
-}
-
-function getData()
+function fiJawab(array $d, int $c = 200): void
 {
-   global $koneksi;
-
-   // 🔥 QUERY SUDAH DIGABUNG (ADA COUNT)
-   $query = "SELECT 
-         f.*,
-
-         (SELECT COUNT(*) FROM ms_patient p WHERE p.id_customer = f.id_customer) AS total_pasien,
-         (SELECT COUNT(*) FROM ms_doctor d WHERE d.id_customer = f.id_customer) AS total_dokter,
-         (SELECT COUNT(*) FROM ms_pharmacy fa WHERE fa.id_customer = f.id_customer) AS total_farmasi,
-         (SELECT COUNT(*) FROM pasien_visit v WHERE v.id_customer = f.id_customer) AS total_visit,
-         (SELECT COUNT(*) FROM ms_poli poli WHERE poli.id_customer = f.id_customer) AS total_poli,
-         (SELECT COUNT(*) FROM ms_provider pv WHERE pv.id_customer = f.id_customer) AS total_provider,
-         (SELECT COUNT(*) FROM ms_nurse nr WHERE nr.id_customer = f.id_customer) AS total_nakes,
-         (SELECT COUNT(*) FROM ms_tarif tf WHERE tf.id_customer = f.id_customer) AS total_tarif
-         
-
-      FROM setting_clinic f
-      WHERE f.status != 99
-      ORDER BY f.clinic_name DESC
-   ";
-
-   $result = mysqli_query($koneksi, $query);
-
-   if (!$result) {
-      http_response_code(500);
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal mengambil data: ' . mysqli_error($koneksi)
-      ]);
-      return;
-   }
-
-   $data = mysqli_fetch_all($result, MYSQLI_ASSOC);
-   mysqli_free_result($result);
-
-   header('Content-Type: application/json');
-   echo json_encode([
-      'status' => 'success',
-      'data' => $data,
-   ]);
+   http_response_code($c);
+   echo json_encode($d, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+   exit;
 }
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') fiJawab(['status' => 'error', 'message' => 'Method tidak diizinkan.'], 405);
 
-// 🔹 DETAIL BY ID (optional bisa ikut count juga kalau mau)
-function getID($iduser)
-{
-   global $koneksi;
-
-   $query = "
-      SELECT 
-         f.*,
-
-         (SELECT COUNT(*) FROM pasien p WHERE p.id_faskes = f.id_faskes) AS total_pasien,
-         (SELECT COUNT(*) FROM dokter d WHERE d.id_faskes = f.id_faskes) AS total_dokter,
-         (SELECT COUNT(*) FROM farmasi fa WHERE fa.id_faskes = f.id_faskes) AS total_farmasi,
-         (SELECT COUNT(*) FROM visit v WHERE v.id_faskes = f.id_faskes) AS total_visit
-
-      FROM ms_faskes f
-      WHERE f.id_faskes = ?
-   ";
-
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("i", $iduser);
-      $stmt->execute();
-      $result = $stmt->get_result();
-
-      if ($result->num_rows > 0) {
-         $data = $result->fetch_assoc();
-         echo json_encode([
-            'status' => 'success',
-            'data' => $data
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Data tidak ditemukan.'
-         ]);
-      }
-
-      $stmt->close();
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
+$cache = sys_get_temp_dir() . '/medisafe_faskesimport.json';
+if (empty($_GET['refresh']) && is_file($cache) && time() - filemtime($cache) < 300) {
+   $c = json_decode((string) file_get_contents($cache), true);
+   if (is_array($c)) {
+      $c['cache'] = time() - filemtime($cache);
+      fiJawab($c);
    }
 }
+
+$t0 = microtime(true);
+$tabel = [
+   'pasien' => 'ms_patient', 'dokter' => 'ms_doctor', 'nakes' => 'ms_nurse', 'farmasi' => 'ms_pharmacy',
+   'visit' => 'pasien_visit', 'poli' => 'ms_poli', 'tarif' => 'ms_tarif', 'provider' => 'ms_provider',
+];
+$hitung = [];
+foreach ($tabel as $kunci => $t) {
+   $rs = $koneksi->query("SELECT id_customer, COUNT(*) n FROM $t GROUP BY id_customer");
+   if (!$rs) {
+      error_log('[faskesImport] ' . $t . ': ' . $koneksi->error);
+      fiJawab(['status' => 'error', 'message' => 'Gagal memuat data.'], 500);
+   }
+   foreach ($rs->fetch_all(MYSQLI_ASSOC) as $r) $hitung[$kunci][(int) $r['id_customer']] = (int) $r['n'];
+}
+$rs = $koneksi->query("SELECT id_customer, clinic_name FROM setting_clinic WHERE status != 99 ORDER BY clinic_name");
+if (!$rs) {
+   error_log('[faskesImport] ' . $koneksi->error);
+   fiJawab(['status' => 'error', 'message' => 'Gagal memuat data.'], 500);
+}
+$data = [];
+foreach ($rs->fetch_all(MYSQLI_ASSOC) as $c) {
+   $id = (int) $c['id_customer'];
+   $row = ['id_customer' => $id, 'clinic_name' => (string) $c['clinic_name']];
+   foreach ($tabel as $kunci => $_) $row[$kunci] = $hitung[$kunci][$id] ?? 0;
+   $data[] = $row;
+}
+$out = ['status' => 'success', 'data' => $data, 'cache' => 0, 'ms' => (int) round((microtime(true) - $t0) * 1000)];
+$tmp = $cache . '.' . getmypid();
+if (@file_put_contents($tmp, json_encode($out, JSON_UNESCAPED_UNICODE)) !== false) @rename($tmp, $cache);
+fiJawab($out);

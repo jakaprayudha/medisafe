@@ -56,6 +56,11 @@ $h = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
     #tblHasil thead th { position: sticky; top: 0; z-index: 1; background: #f8fafc; font-size: .74rem; text-transform: uppercase; color: #475569; }
     #tblHasil td { vertical-align: middle; }
     #tblHasil .hs-input { min-width: 120px; }
+    #tblHasil .hs-tipe { font-size: 10px; font-weight: 600; color: #475569; }
+    #tblHasil .hs-flag { display: inline-block; margin-top: 2px; font-size: 10px; font-weight: 800; border-radius: 5px; padding: 1px 6px; }
+    #tblHasil .hs-flag.tinggi { background: #fee2e2; color: #991b1b; }
+    #tblHasil .hs-flag.rendah { background: #fef3c7; color: #92400e; }
+    #tblHasil .hs-input.is-invalid { border-color: #dc3545; background: #fef2f2; }
     #tblHasil tr.terisi .hs-input { border-color: #86efac; background: #f0fdf4; }
     #tblHasil tr.ubah .hs-input { border-color: #f59e0b; background: #fffbeb; }
     #tblHasil .hs-normal { color: #475569; font-size: .8rem; max-width: 220px; white-space: normal; }
@@ -337,6 +342,27 @@ $h = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
         if (mn && mx) return /\d/.test(mx) && mx.length < 15 && mn.length < 15 ? `${esc(mn)} – ${esc(mx)}` : `${esc(mn)}<br>${esc(mx)}`;
         return esc(mn || mx) || '<span class="text-muted">-</span>';
       };
+      // tipe isian parameter (diatur di master-lab-detail): numerik = angka saja, teks, keduanya (bebas)
+      const TIPE = { numerik: 'Angka', teks: 'Teks', keduanya: 'Angka / teks' };
+      const ANGKA = /^-?\d+([.,]\d+)?$/;
+      const num = s => ANGKA.test(String(s).trim()) ? parseFloat(String(s).trim().replace(',', '.')) : null;
+      // penanda di luar rentang normal (hanya bila nilai & batas berupa angka)
+      function flagHasil(it, v) {
+        const x = num(v), mn = num(it.minimum), mx = num(it.maksimum);
+        if (x === null) return '';
+        if (mn !== null && x < mn) return '<span class="hs-flag rendah" title="Di bawah nilai normal">↓ rendah</span>';
+        if (mx !== null && mx !== 0 && x > mx) return '<span class="hs-flag tinggi" title="Di atas nilai normal">↑ tinggi</span>';
+        return '';
+      }
+      function periksaTipe(el) {
+        const tipe = el.dataset.tipe, v = el.value.trim();
+        const salah = tipe === 'numerik' && v !== '' && !ANGKA.test(v);
+        el.classList.toggle('is-invalid', salah);
+        const tr = el.closest('tr'), it = tr._item;
+        const fl = tr.querySelector('.hs-fl');
+        if (fl) fl.innerHTML = salah ? '<span class="hs-flag rendah">hanya angka</span>' : (it ? flagHasil(it, v) : '');
+        return !salah;
+      }
       function hitungHasil() {
         const semua = $hb.find('.hs-input');
         const isi = semua.filter((i, el) => el.value.trim() !== '').length;
@@ -363,15 +389,17 @@ $h = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
           }
           $hb.html(items.map((it, i) => {
             const v = it.hasil ?? '';
+            const tp = TIPE[it.tipe_isian] ? it.tipe_isian : 'keduanya';
             return `<tr class="${String(v).trim() ? 'terisi' : ''}" data-cari="${esc(String(it.assemen || '').toLowerCase())}">
               <td class="text-muted">${i + 1}</td>
-              <td class="fw-semibold">${esc(it.assemen)}</td>
-              <td><input type="text" class="form-control form-control-sm hs-input" maxlength="255" data-id="${esc(it.id)}" data-awal="${esc(v)}" value="${esc(v)}" aria-label="Hasil ${esc(it.assemen)}"></td>
+              <td class="fw-semibold"><span class="hs-nama">${esc(it.assemen)}</span><div class="hs-tipe">${TIPE[tp]}</div></td>
+              <td><input type="text" class="form-control form-control-sm hs-input" maxlength="255" data-tipe="${tp}" ${tp === 'numerik' ? 'inputmode="decimal" placeholder="angka"' : ''} data-id="${esc(it.id)}" data-awal="${esc(v)}" value="${esc(v)}" aria-label="Hasil ${esc(it.assemen)}"><div class="hs-fl">${flagHasil(it, v)}</div></td>
               <td>${kosong(it.satuan) ? '<span class="text-muted">-</span>' : esc(it.satuan)}</td>
               <td class="hs-normal">${normal(it)}</td>
               <td class="hs-normal">${kosong(it.catatan) ? '<span class="text-muted">-</span>' : esc(it.catatan)}</td>
             </tr>`;
           }).join(''));
+          $hb.find('tr[data-cari]').each((i, tr) => { tr._item = items[i]; });
           $('#saveHasil').prop('disabled', false);
           hitungHasil();
           setTimeout(() => { const f = $hb.find('.hs-input').filter((i, el) => !el.value.trim()).first(); (f.length ? f : $hb.find('.hs-input').first()).trigger('focus'); }, 350);
@@ -383,6 +411,7 @@ $h = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
         const tr = $(this).closest('tr');
         tr.toggleClass('ubah', this.value.trim() !== String($(this).data('awal') ?? '').trim());
         tr.toggleClass('terisi', this.value.trim() !== '');
+        periksaTipe(this);
         hitungHasil();
       });
       $hb.on('keydown', '.hs-input', function(e) {
@@ -411,6 +440,11 @@ $h = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
         const data = [];
         $hb.find('tr.ubah .hs-input').each(function() { data.push({ id_item: String($(this).data('id')), hasil: this.value.trim() }); });
         if (!data.length) return Swal.fire({ icon: 'info', title: 'Tidak ada perubahan', timer: 1200, showConfirmButton: false });
+        const salah = $hb.find('tr.ubah .hs-input').filter((i, el) => !periksaTipe(el)).first();
+        if (salah.length) {
+          salah.trigger('focus');
+          return Swal.fire({ icon: 'warning', title: 'Isian belum sesuai', text: `"${salah.closest('tr').find('.hs-nama').text()}" hanya menerima angka (contoh: 12,5).` });
+        }
         const btn = $(this).prop('disabled', true).html('<i class="ti ti-loader-2 icon-spin me-1"></i>Menyimpan…');
         try {
           await ambilJson('controller/lab/saveResult.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id_inspection: hasilId, data }) });
