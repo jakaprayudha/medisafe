@@ -6,17 +6,22 @@ $no = $_GET['no'] ?? null;
 $rm = $_GET['rm'] ?? null;
 
 $ekg = null;
-if ($no && $rm) {
+$ekgIdc = (int) ($_SESSION['id_customer'] ?? 0);
+if ($no && $ekgIdc > 0) {
+   // pasien diambil lewat kunjungan (milik faskes sesi). Dulu join ms_patient lewat nomor_rm: nomor RM tidak unik
+   // antar-faskes (bisa tampil pasien faskes lain) dan gagal untuk nomor_rm berformat "BPJS (004048)".
    $stmtEkg = mysqli_prepare(
       $koneksi,
       "SELECT er.*, mp.patient_name, mp.patient_datebirth
        FROM ekg_results er
-       INNER JOIN ms_patient mp ON er.nomor_rm = mp.nomor_rm
-       WHERE er.visit_ID = ? AND mp.nomor_rm = ?
+       INNER JOIN pasien_visit pv ON pv.visit_ID = er.visit_ID AND pv.id_customer = ?
+       INNER JOIN ms_patient mp ON mp.id_patient = pv.id_patient
+       WHERE er.visit_ID = ?
+       ORDER BY er.tanggal_pemeriksaan DESC, er.id_ekg DESC
        LIMIT 1"
    );
    if ($stmtEkg) {
-      mysqli_stmt_bind_param($stmtEkg, 'ss', $no, $rm);
+      mysqli_stmt_bind_param($stmtEkg, 'is', $ekgIdc, $no);
       mysqli_stmt_execute($stmtEkg);
       $resEkg = mysqli_stmt_get_result($stmtEkg);
       $ekg    = $resEkg ? mysqli_fetch_assoc($resEkg) : null;
