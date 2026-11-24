@@ -54,12 +54,11 @@ $(function () {
             $('#ToogleStPulang').addClass('d-none');
             APP.cetak("#nama_poli", d.nmPoli);
             APP.cetak("#id_patient", d.id_patient);
-            APP.cetak("#kdDokter", d.code_doctor);
-            APP.cetak("#nmDokter", d.id_doctor);
+            APP.cetak("#kdDokter", d.kdDokter || d.code_doctor || "");
+            APP.cetak("#nmDokter", d.nmDokter || d.id_doctor || "");
             APP.cetak("#tinggiBadan", d.tinggi_badan);
             APP.cetak("#beratBadan", d.berat_badan);
-            APP.cetak("#lingkar_perut", d.lingkar_perut || "0");
-            APP.cetak("#sistole", d.sistole || "0");
+                        APP.cetak("#sistole", d.sistole || "0");
             APP.cetak("#diastole", d.diastole || "0");
             APP.cetak("#respRate", d.resp_rate || "0");
             APP.cetak("#heartRate", d.heart_rate || "0");
@@ -68,8 +67,9 @@ $(function () {
             APP.cetak("#lingkarPerut", d.lingkar_perut || "0");
             APP.cetak("#keluhan_penyerta", d.keluhan || "");
             APP.cetak("#keluhan_utama", d.anamnesa || "");
-            APP.cetak("#tindakan", d.tindakan);
+            APP.cetak("#tindakan", d.tindakan || "");
             APP.cetak("#status_pasien", "UMUM");
+            if (d.kondisi_masuk) $("#kondisi_masuk").val(d.kondisi_masuk).trigger("change");
             // APP.cetakhtml('#idUmur', d.umur);
             // APP.cetakhtml('#nomor_bpjs', d.noKartu || '-');
             // APP.cetakhtml('#nomor_nik', d.patient_nik);
@@ -196,7 +196,7 @@ $(function () {
               }
               checkRujuk(d.subSpesialis, d.kdkhSpesialis);
               window.kdTacc = d.kdTacc;
-              window.alasanTacc = d.alasanTacc = 'null' ? '' : d.alasanTacc;
+              window.alasanTacc = d.alasanTacc && d.alasanTacc !== 'null' ? d.alasanTacc : '';
               window.kdKhusus = d.kdKhusus;
               window.subSpesialis = d.subSpesialis;
               window.kdSarana = d.kdSarana;
@@ -209,7 +209,16 @@ $(function () {
               }
             }
           }
+        } else if (res.status !== "success") {
+          Swal.fire({ icon: "error", title: "Gagal memuat data kunjungan", text: res.message || "Data kunjungan tidak ditemukan." });
         }
+      },
+      error: function (xhr) {
+        Swal.fire({
+          icon: "error",
+          title: "Gagal memuat data kunjungan",
+          text: (xhr.responseJSON && xhr.responseJSON.message) || "Periksa koneksi lalu muat ulang halaman.",
+        });
       },
     });
   };
@@ -499,7 +508,7 @@ $(function () {
 
       complete: function () {
         btn.prop("disabled", false);
-        APP.load_btn_non(btn, "Simpan Pemeriksaan");
+        APP.load_btn_non(btn, statusEdit ? "Update Pemeriksaan" : "Simpan Pemeriksaan");
       }
     });
   });
@@ -589,28 +598,30 @@ $(function () {
           let data = res.list;
           let tbody = $("#tableRujukan tbody");
           tbody.empty();
+          // kolom Aksi di depan; data BPJS di-escape sebelum disisipkan
+          const e = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
           $.each(data, function (index, item) {
             let row = `
                             <tr>
-                                <td>${index + 1}</td>
-                                <td><strong>${item.nmppk}</strong></td>
-                                <td>${item.kelas}</td>
-                                <td>${item.nmkc}</td>
-                                <td>${item.alamatPpk}</td>
-                                <td>${item.telpPpk}</td>
-                                <td>${(Number(item.distance) / 1000).toFixed(2)} km</td>
-                                <td>${item.jmlRujuk}</td>
-                                <td>${item.kapasitas}</td>
-                                <td>${item.persentase}%</td>
-                                <td>${item.jadwal}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-primary pilihFaskes"
-                                        data-kode="${item.kdppk}"
-                                        data-jadwal="${item.jadwal}"
-                                        data-nama="${item.nmppk}">
+                                    <button type="button" class="btn btn-sm btn-primary pilihFaskes"
+                                        data-kode="${e(item.kdppk)}"
+                                        data-jadwal="${e(item.jadwal)}"
+                                        data-nama="${e(item.nmppk)}">
                                         Pilih
                                     </button>
                                 </td>
+                                <td>${index + 1}</td>
+                                <td><strong>${e(item.nmppk)}</strong></td>
+                                <td>${e(item.kelas)}</td>
+                                <td>${e(item.nmkc)}</td>
+                                <td>${e(item.alamatPpk)}</td>
+                                <td>${e(item.telpPpk)}</td>
+                                <td>${(Number(item.distance) / 1000).toFixed(2)} km</td>
+                                <td>${e(item.jmlRujuk)}</td>
+                                <td>${e(item.kapasitas)}</td>
+                                <td>${e(item.persentase)}%</td>
+                                <td>${e(item.jadwal)}</td>
                             </tr>
                         `;
             tbody.append(row);
@@ -770,10 +781,10 @@ $(function () {
   }
   function setupAlergiToogle(id, idtextarea) {
     $('#' + id).on('change', function () {
-      if ($(this).val() == '00') {
+      if ($(this).val() == '00' || !$(this).val()) {
         $('#' + idtextarea).prop('disabled', true).val('');
       } else {
-        $('#' + idtextarea).prop('disabled', false).val('');
+        $('#' + idtextarea).prop('disabled', false);
       }
     }).trigger('change');
   }
