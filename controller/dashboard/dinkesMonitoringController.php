@@ -5,6 +5,7 @@
  *   POST aksi=kirim  visit=<visit_ID>  -> kirim ulang (tambah/update)
  *   POST aksi=hapus  visit=<visit_ID>  -> ulangi hapus di Dinkes (status hapus_gagal)
  *   POST aksi=cek    visit=<visit_ID>  -> cek ke API Dinkes apakah sudah ada (ada|tidak_ada|error)
+ *   POST aksi=kirim_lama dari=Y-m-d sampai=Y-m-d -> kirim 1 batch kunjungan lama yang belum pernah diproses; ulangi sampai hasil.sisa=0
  */
 require_once __DIR__ . '/../../database/connect.php';
 require_once __DIR__ . '/../../utility/security.php';
@@ -30,6 +31,15 @@ try {
    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $visit = trim((string) ($_POST['visit'] ?? ''));
       $aksi = (string) ($_POST['aksi'] ?? '');
+      if ($aksi === 'kirim_lama') {
+         $dari = (string) ($_POST['dari'] ?? '');
+         $sampai = (string) ($_POST['sampai'] ?? '');
+         foreach ([$dari, $sampai] as $t) {
+            $d = DateTime::createFromFormat('Y-m-d', $t);
+            if (!$d || $d->format('Y-m-d') !== $t) dmBalas(['status' => 'error', 'message' => 'Rentang tanggal tidak valid.'], 422);
+         }
+         dmBalas(['status' => 'success', 'hasil' => dkKirimLama($koneksi, $idc, $dari, $sampai)]);
+      }
       if ($visit === '' || !in_array($aksi, ['kirim', 'hapus', 'cek'], true)) dmBalas(['status' => 'error', 'message' => 'Permintaan tidak valid.'], 422);
       $hasil = match ($aksi) {
          'kirim' => dkKirimVisit($koneksi, $idc, $visit),

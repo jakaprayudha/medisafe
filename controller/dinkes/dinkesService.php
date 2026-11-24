@@ -437,6 +437,41 @@ function dkCekRemote(mysqli $k, int $idc, string $visitID): array
 }
 
 /**
+ * Kirim kunjungan lama (sudah diperiksa, tapi belum punya baris dinkes_kirim) pada rentang tanggal, maks $limit per panggilan.
+ * Baris dinkes_kirim dibuat oleh dkKirimVisit, jadi panggilan berikutnya otomatis maju. Ulangi sampai sisa = 0.
+ * @return array{diproses:int, terkirim:int, sisa:int, message:string}
+ */
+function dkKirimLama(mysqli $k, int $idc, string $dari, string $sampai, int $limit = 20): array
+{
+   try {
+      if (dkPuskesClinic($k, $idc) <= 0 || dkToken() === '') {
+         return ['diproses' => 0, 'terkirim' => 0, 'sisa' => 0, 'message' => 'Integrasi Dinkes tidak aktif.'];
+      }
+      $from = "FROM pasien_visit pv INNER JOIN visit_pemeriksaan vp ON vp.nomor_visit = pv.visit_ID
+         WHERE pv.id_customer=? AND DATE(pv.visit_date) BETWEEN ? AND ?
+         AND NOT EXISTS (SELECT 1 FROM dinkes_kirim d WHERE d.id_customer=pv.id_customer AND d.visit_ID=pv.visit_ID)";
+      $st = $k->prepare("SELECT DISTINCT pv.visit_ID $from ORDER BY pv.visit_date LIMIT ?");
+      $st->bind_param('issi', $idc, $dari, $sampai, $limit);
+      $st->execute();
+      $ids = array_column($st->get_result()->fetch_all(MYSQLI_NUM), 0);
+      $st->close();
+      $terkirim = 0;
+      foreach ($ids as $v) {
+         if (dkKirimVisit($k, $idc, (string) $v)['status'] === 'terkirim') $terkirim++;
+      }
+      $st = $k->prepare("SELECT COUNT(DISTINCT pv.visit_ID) $from");
+      $st->bind_param('iss', $idc, $dari, $sampai);
+      $st->execute();
+      $sisa = (int) $st->get_result()->fetch_row()[0];
+      $st->close();
+      return ['diproses' => count($ids), 'terkirim' => $terkirim, 'sisa' => $sisa, 'message' => ''];
+   } catch (Throwable $e) {
+      error_log('[dinkesService] ' . $e->getMessage());
+      return ['diproses' => 0, 'terkirim' => 0, 'sisa' => 0, 'message' => 'Kesalahan internal saat mengirim kunjungan lama.'];
+   }
+}
+
+/**
  * visit_ID untuk id_visit (PK pasien_visit) bila kunjungan itu pernah dikirim ke Dinkes, selain itu null.
  * Dipanggil SEBELUM DELETE pasien_visit; setelah DELETE sukses panggil dkHapusVisit() dengan hasilnya.
  */
