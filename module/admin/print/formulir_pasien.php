@@ -2,18 +2,21 @@
 require_once '../../../database/connect.php';
 
 $id_patient = $_GET['id_patient'] ?? null;
+$id_customer = (int) ($_SESSION['id_customer'] ?? 0);
 
-if (!$id_patient) {
-    throw new InvalidArgumentException("Parameter 'id_patient' tidak ditemukan.");
+if (!$id_patient || $id_customer <= 0) {
+    http_response_code(400);
+    exit('Parameter pasien tidak valid atau sesi berakhir.');
 }
 
 /*
  * Menerapkan Prepared Statements untuk mencegah celah SQL Injection.
  */
-$query = "SELECT patient_ktp_file, patient_kk_file, patient_bpjs_file FROM ms_patient WHERE id_patient = ?";
+// hanya pasien milik faskes sesi (dulu dokumen pasien faskes lain bisa dibuka lewat id_patient)
+$query = "SELECT patient_ktp_file, patient_kk_file, patient_bpjs_file FROM ms_patient WHERE id_patient = ? AND id_customer = ?";
 $stmt  = mysqli_prepare($koneksi, $query);
 
-mysqli_stmt_bind_param($stmt, "s", $id_patient);
+mysqli_stmt_bind_param($stmt, "si", $id_patient, $id_customer);
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 $data   = mysqli_fetch_assoc($result);
