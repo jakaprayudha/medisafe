@@ -1,243 +1,167 @@
 <?php
+/**
+ * Dokumen klaim lainnya per kunjungan (module/admin/form_upload_klaim, cetak print/formulir_dokumen_lainnya).
+ * Tabel pasien_dokumen_klaim_lainnya, file PDF di uploads/lainnya/.
+ *   GET    ?no=<visit_ID>              -> { status, data:[{id_dokumen, tanggal, judul_dokumen, dokumen_path, created_at}] }
+ *   GET    ?no=..&id=<id_dokumen>      -> 1 data
+ *   POST   ?no=..  multipart (tgl_upload, judul_dokumen, dokumen_path=PDF)  -> tambah
+ *   POST   ?no=..&id=<id>  (tgl_upload, judul_dokumen)                        -> ubah tanggal & judul
+ *   DELETE ?no=..&id=<id>              -> hapus data + file
+ * Perbaikan: query tambah & daftar dirangkai dari input (SQL injection); tanpa cek login; ambil/ubah/hapus per id tanpa
+ * batas faskes & kunjungan (dokumen faskes lain bisa dihapus beserta filenya); visit_ID dari form tidak dicek
+ * kepemilikannya; hanya cek ekstensi (isi bukan PDF lolos) dan tanpa batas ukuran; pesan "Format harus JPG/PNG" untuk
+ * file PDF; judul kosong tersimpan; file tertinggal bila insert gagal; respon tanpa header JSON.
+ */
 include '../../database/connect.php';
-$method = $_SERVER['REQUEST_METHOD'];
-session_start();
+require_once __DIR__ . '/../../utility/visitGuard.php';
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
 
-switch ($method) {
-   case 'POST':
-      if (isset($_GET['id'])) {
-         updateTanggal($_GET['id']); // 🔥 EDIT
-      } else {
-         uploadPerawatan(); // 🔥 INSERT
-      }
-      break;
+const DL_MAKS = 5 * 1024 * 1024;
+const DL_DIR = 'uploads/lainnya/';
 
-   case 'GET':
-      isset($_GET['id']) ? getID($_GET['id']) : getData();
-      break;
-
-   case 'DELETE':
-      deleteData();
-      break;
-
-   default:
-      echo json_encode(['status' => 'error', 'message' => 'Method tidak diizinkan.']);
+function dlBalas(int $kode, array $isi): void
+{
+   http_response_code($kode);
+   echo json_encode($isi, JSON_UNESCAPED_UNICODE);
+   exit;
 }
 
+$no = trim((string) ($_GET['no'] ?? $_POST['visit_ID'] ?? ''));
+$kunj = visitGuard($koneksi, 'visit_ID', $no);   // 401 / 404 bila bukan kunjungan faskes ini
+session_write_close();
+$no = (string) $kunj['visit_ID'];
+$idc = (string) $kunj['id_customer'];            // kolom id_customer bertipe varchar
+$root = dirname(__DIR__, 2);
 
-
-// ======================================================
-// CREATE — UPLOAD FOTO PERAWATAN
-// ======================================================
-function uploadPerawatan()
-{
-   global $koneksi;
-
-   $rm    = $_POST['nomor_rm'] ?? '';
-   $visit = $_POST['visit_ID'] ?? '';
-   $judul = $_POST['judul_dokumen'] ?? '';
-   $id_customer = $_SESSION['id_customer'] ?? '';
-   $tgl   = $_POST['tgl_upload'] ?? date('Y-m-d');
-
-   if (!$visit) {
-      echo json_encode(["status" => "error", "message" => "Parameter tidak lengkap"]);
-      exit;
+try {
+   switch ($_SERVER['REQUEST_METHOD']) {
+      case 'GET':
+         isset($_GET['id']) ? dlGetId((int) $_GET['id'], $no, $idc) : dlList($no, $idc);
+         break;
+      case 'POST':
+         isset($_GET['id']) ? dlUbah((int) $_GET['id'], $no, $idc) : dlTambah($no, $idc, $kunj, $root);
+         break;
+      case 'DELETE':
+         dlHapus((int) ($_GET['id'] ?? 0), $no, $idc, $root);
+         break;
+      default:
+         dlBalas(405, ['status' => 'error', 'message' => 'Method tidak diizinkan.']);
    }
-
-   if (!isset($_FILES['dokumen_path']) || $_FILES['dokumen_path']['error'] !== UPLOAD_ERR_OK) {
-      echo json_encode(["status" => "error", "message" => "File tidak valid"]);
-      exit;
-   }
-
-   // FILE VALIDATION
-   $file = $_FILES['dokumen_path'];
-   $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-   $allowed = ['pdf'];
-
-   if (!in_array($ext, $allowed)) {
-      echo json_encode(["status" => "error", "message" => "Format harus JPG/PNG"]);
-      exit;
-   }
-
-   $dir = "../../uploads/lainnya/";
-   $newName = uniqid("docsklaim_", true) . "." . $ext;
-
-   $pathDB = "uploads/lainnya/" . $newName;
-   $pathFS = $dir . $newName;
-
-   if (!move_uploaded_file($file['tmp_name'], $pathFS)) {
-      echo json_encode(["status" => "error", "message" => "Gagal upload file"]);
-      exit;
-   }
-
-   // INSERT DB
-   mysqli_query($koneksi, "
-      INSERT INTO pasien_dokumen_klaim_lainnya 
-      (visit_ID, id_customer, tanggal, judul_dokumen, dokumen_path)
-      VALUES ('$visit', '$id_customer', '$tgl', '$judul', '$pathDB')
-   ");
-
-   echo json_encode(["status" => "success", "message" => "Dokumentasi berhasil disimpan"]);
+} catch (Throwable $e) {
+   error_log('[ranap/dokumenKlaimLainnya] ' . $e->getMessage());
+   dlBalas(500, ['status' => 'error', 'message' => 'Terjadi kesalahan pada server.']);
 }
 
-
-// ======================================================
-// GET LIST
-// ======================================================
-function getData()
+function dlCari(int $id, string $no, string $idc): ?array
 {
    global $koneksi;
-
-   $no = $_GET['no'] ?? '';
-   $id_customer = $_SESSION['id_customer'] ?? '';
-
-   $q = mysqli_query($koneksi, "SELECT * FROM pasien_dokumen_klaim_lainnya
-      WHERE visit_ID='$no'
-      AND id_customer='$id_customer'
-      ORDER BY id_dokumen DESC
-   ");
-
-   echo json_encode([
-      "status" => "success",
-      "data" => mysqli_fetch_all($q, MYSQLI_ASSOC)
-   ]);
-}
-
-
-// ======================================================
-// GET BY ID
-// ======================================================
-function getID($id)
-{
-   global $koneksi;
-
-   $st = $koneksi->prepare("SELECT * FROM pasien_dokumen_klaim_lainnya WHERE id_dokumen=?");
-   $st->bind_param("i", $id);
+   $st = $koneksi->prepare("SELECT id_dokumen, tanggal, judul_dokumen, dokumen_path, created_at FROM pasien_dokumen_klaim_lainnya
+      WHERE id_dokumen = ? AND visit_ID = ? AND id_customer = ? LIMIT 1");
+   $st->bind_param('iss', $id, $no, $idc);
    $st->execute();
-
-   $res = $st->get_result();
-
-   if ($res->num_rows) {
-      echo json_encode(["status" => "success", "data" => $res->fetch_assoc()]);
-   } else {
-      echo json_encode(["status" => "error", "message" => "Data tidak ditemukan"]);
-   }
+   $r = $st->get_result()->fetch_assoc();
+   $st->close();
+   return $r ?: null;
 }
 
-
-// ======================================================
-// DELETE
-// ======================================================
-function deleteData()
+function dlList(string $no, string $idc): void
 {
    global $koneksi;
-
-   $id = $_GET['id'] ?? '';
-
-   if (!$id) {
-      echo json_encode([
-         "status" => "error",
-         "message" => "ID tidak ditemukan"
-      ]);
-      return;
-   }
-
-   // =========================
-   // AMBIL DATA FILE
-   // =========================
-   $st = $koneksi->prepare("
-      SELECT dokumen_path
-      FROM pasien_dokumen_klaim_lainnya
-      WHERE id_dokumen = ?
-   ");
-
-   $st->bind_param("i", $id);
+   $st = $koneksi->prepare("SELECT id_dokumen, tanggal, judul_dokumen, dokumen_path, created_at FROM pasien_dokumen_klaim_lainnya
+      WHERE visit_ID = ? AND id_customer = ? ORDER BY tanggal DESC, id_dokumen DESC");
+   $st->bind_param('ss', $no, $idc);
    $st->execute();
-
-   $res = $st->get_result();
-
-   if (!$res->num_rows) {
-
-      echo json_encode([
-         "status" => "error",
-         "message" => "Data tidak ditemukan"
-      ]);
-
-      return;
-   }
-
-   $data = $res->fetch_assoc();
-
-   // =========================
-   // HAPUS FILE FISIK
-   // =========================
-   if (!empty($data['dokumen_path'])) {
-
-      $filePath = "../../" . $data['dokumen_path'];
-
-      if (file_exists($filePath)) {
-         unlink($filePath);
-      }
-   }
-
-   // =========================
-   // HAPUS DATABASE
-   // =========================
-   $del = $koneksi->prepare("
-      DELETE FROM pasien_dokumen_klaim_lainnya
-      WHERE id_dokumen = ?
-   ");
-
-   $del->bind_param("i", $id);
-
-   if ($del->execute()) {
-
-      echo json_encode([
-         "status" => "success",
-         "message" => "Data dan file berhasil dihapus"
-      ]);
-   } else {
-
-      echo json_encode([
-         "status" => "error",
-         "message" => "Gagal menghapus data"
-      ]);
-   }
+   $data = $st->get_result()->fetch_all(MYSQLI_ASSOC);
+   $st->close();
+   dlBalas(200, ['status' => 'success', 'data' => $data]);
 }
 
+function dlGetId(int $id, string $no, string $idc): void
+{
+   $r = dlCari($id, $no, $idc);
+   if (!$r) dlBalas(404, ['status' => 'error', 'message' => 'Data tidak ditemukan.']);
+   dlBalas(200, ['status' => 'success', 'data' => $r]);
+}
 
-// ======================================================
-// UPDATE TANGGAL SAJA
-// ======================================================
-function updateTanggal($id)
+/** Validasi tanggal & judul. */
+function dlIsi(): array
+{
+   $tgl = trim((string) ($_POST['tgl_upload'] ?? ''));
+   $judul = mb_substr(trim((string) ($_POST['judul_dokumen'] ?? '')), 0, 255);
+   $d = DateTime::createFromFormat('!Y-m-d', $tgl);
+   if (!$d || $d->format('Y-m-d') !== $tgl) dlBalas(422, ['status' => 'error', 'message' => 'Tanggal wajib diisi dengan tanggal yang valid.', 'field' => 'tgl_upload']);
+   if ($tgl > date('Y-m-d')) dlBalas(422, ['status' => 'error', 'message' => 'Tanggal tidak boleh di masa depan.', 'field' => 'tgl_upload']);
+   if ($judul === '') dlBalas(422, ['status' => 'error', 'message' => 'Judul dokumen wajib diisi.', 'field' => 'judul_dokumen']);
+   return [$tgl, $judul];
+}
+
+function dlTambah(string $no, string $idc, array $kunj, string $root): void
 {
    global $koneksi;
+   if ((int) $kunj['visit_status'] === 99) dlBalas(409, ['status' => 'error', 'message' => 'Kunjungan sudah dibatalkan.']);
+   [$tgl, $judul] = dlIsi();
 
-   $tgl = $_POST['tgl_upload'] ?? null;
-   $judul = $_POST['judul_dokumen'] ?? null;
-
-   if (!$tgl) {
-      echo json_encode(["status" => "error", "message" => "Tanggal wajib diisi"]);
-      exit;
+   $f = $_FILES['dokumen_path'] ?? null;
+   $err = [
+      UPLOAD_ERR_INI_SIZE => 'File melebihi batas upload server.', UPLOAD_ERR_FORM_SIZE => 'File terlalu besar.',
+      UPLOAD_ERR_PARTIAL => 'Upload terputus, coba lagi.', UPLOAD_ERR_NO_FILE => 'Pilih file PDF terlebih dahulu.',
+   ];
+   if (!$f || ($f['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file($f['tmp_name'])) {
+      dlBalas(422, ['status' => 'error', 'message' => $err[$f['error'] ?? UPLOAD_ERR_NO_FILE] ?? 'File gagal diunggah.', 'field' => 'dokumen_path']);
+   }
+   if ($f['size'] > DL_MAKS) dlBalas(422, ['status' => 'error', 'message' => 'Ukuran file maksimal 5 MB.', 'field' => 'dokumen_path']);
+   $fi = new finfo(FILEINFO_MIME_TYPE);
+   $head = (string) @file_get_contents($f['tmp_name'], false, null, 0, 5);
+   if ($fi->file($f['tmp_name']) !== 'application/pdf' || $head !== '%PDF-') {
+      dlBalas(422, ['status' => 'error', 'message' => 'File harus berformat PDF.', 'field' => 'dokumen_path']);
    }
 
-   $st = $koneksi->prepare("
-      UPDATE pasien_dokumen_klaim_lainnya 
-      SET tanggal = ?, judul_dokumen = ?
-      WHERE id_dokumen = ?
-   ");
+   $dir = $root . '/' . DL_DIR;
+   if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) dlBalas(500, ['status' => 'error', 'message' => 'Folder dokumen tidak tersedia.']);
+   $nama = uniqid('docsklaim_', true) . '.pdf';
+   if (!move_uploaded_file($f['tmp_name'], $dir . $nama)) dlBalas(500, ['status' => 'error', 'message' => 'Gagal menyimpan file.']);
 
-   $st->bind_param("ssi", $tgl, $judul, $id);
-
-   if ($st->execute()) {
-      echo json_encode([
-         "status" => "success",
-         "message" => "Tanggal berhasil diupdate"
-      ]);
-   } else {
-      echo json_encode([
-         "status" => "error",
-         "message" => "Gagal update"
-      ]);
+   $path = DL_DIR . $nama;
+   try {
+      $st = $koneksi->prepare("INSERT INTO pasien_dokumen_klaim_lainnya (visit_ID, id_customer, tanggal, judul_dokumen, dokumen_path) VALUES (?, ?, ?, ?, ?)");
+      $st->bind_param('sssss', $no, $idc, $tgl, $judul, $path);
+      $st->execute();
+      $id = $st->insert_id;
+      $st->close();
+   } catch (Throwable $e) {
+      @unlink($dir . $nama);   // jangan tinggalkan file yatim
+      throw $e;
    }
+   dlBalas(200, ['status' => 'success', 'message' => 'Dokumen berhasil disimpan.', 'id' => $id]);
+}
+
+function dlUbah(int $id, string $no, string $idc): void
+{
+   global $koneksi;
+   if (!$id || !dlCari($id, $no, $idc)) dlBalas(404, ['status' => 'error', 'message' => 'Data tidak ditemukan.']);
+   [$tgl, $judul] = dlIsi();
+   $st = $koneksi->prepare("UPDATE pasien_dokumen_klaim_lainnya SET tanggal = ?, judul_dokumen = ? WHERE id_dokumen = ? AND visit_ID = ? AND id_customer = ?");
+   $st->bind_param('ssiss', $tgl, $judul, $id, $no, $idc);
+   $st->execute();
+   $st->close();
+   dlBalas(200, ['status' => 'success', 'message' => 'Dokumen diperbarui.']);
+}
+
+function dlHapus(int $id, string $no, string $idc, string $root): void
+{
+   global $koneksi;
+   $r = $id ? dlCari($id, $no, $idc) : null;
+   if (!$r) dlBalas(404, ['status' => 'error', 'message' => 'Data tidak ditemukan atau sudah terhapus.']);
+   $st = $koneksi->prepare("DELETE FROM pasien_dokumen_klaim_lainnya WHERE id_dokumen = ? AND visit_ID = ? AND id_customer = ?");
+   $st->bind_param('iss', $id, $no, $idc);
+   $st->execute();
+   $st->close();
+   // hapus file hanya bila benar-benar di folder uploads/lainnya
+   $p = (string) $r['dokumen_path'];
+   if (strpos($p, DL_DIR) === 0) {
+      $file = $root . '/' . DL_DIR . basename($p);
+      if (is_file($file)) @unlink($file);
+   }
+   dlBalas(200, ['status' => 'success', 'message' => 'Dokumen dihapus.']);
 }

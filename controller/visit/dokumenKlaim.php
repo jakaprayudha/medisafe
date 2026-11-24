@@ -3,7 +3,8 @@
  * Dokumen SEP & FKPP per kunjungan (modal "Dokumen SEP / FKPP" di registrasi poliklinik).
  *
  * GET  ?no={visit_ID}                       -> {status, sep:{file,url,waktu,ada}|null, fkpp:{...}|null}
- * POST multipart no={visit_ID}, jenis=sep|fkpp, file=(PDF, maks 5 MB) -> simpan & kembalikan info file
+ * GET juga mengembalikan informed (Informed Consent -> pasien_visit.file_informed), dipakai module/admin/form_upload_klaim.
+ * POST multipart no={visit_ID}, jenis=sep|fkpp|informed, file=(PDF, maks 5 MB) -> simpan & kembalikan info file
  *
  * Kolom & folder SAMA dengan form_upload_klaim / cetak bundle klaim:
  *   SEP  -> pasien_visit.file_spp,  FKPP -> pasien_visit.file_fkpp,  file di uploads/dokumen/
@@ -28,6 +29,7 @@ function dkJawab(array $d, int $kode = 200): void
 const DK_JENIS = [
    'sep' => ['kolom' => 'file_spp', 'lama' => 'sep_file', 'folderLama' => 'sep', 'label' => 'SEP'],
    'fkpp' => ['kolom' => 'file_fkpp', 'lama' => 'fkpp_file', 'folderLama' => 'fkpp', 'label' => 'FKPP'],
+   'informed' => ['kolom' => 'file_informed', 'lama' => null, 'folderLama' => null, 'label' => 'Informed Consent'],
 ];
 const DK_MAKS = 5 * 1024 * 1024;
 $root = dirname(__DIR__, 2);
@@ -44,7 +46,7 @@ function dkInfo(string $root, array $row, string $jenis): ?array
    $j = DK_JENIS[$jenis];
    $kandidat = [];
    if (!empty($row[$j['kolom']])) $kandidat[] = ['dokumen', basename((string) $row[$j['kolom']])];
-   if (!empty($row[$j['lama']])) $kandidat[] = [$j['folderLama'], basename((string) $row[$j['lama']])];
+   if ($j['lama'] && !empty($row[$j['lama']])) $kandidat[] = [$j['folderLama'], basename((string) $row[$j['lama']])];
    foreach ($kandidat as [$folder, $file]) {
       $path = "$root/uploads/$folder/$file";
       $ada = is_file($path);
@@ -64,7 +66,7 @@ function dkInfo(string $root, array $row, string $jenis): ?array
 
 function dkBaris(mysqli $db, int $idVisit, int $idc): array
 {
-   $st = $db->prepare("SELECT visit_ID, file_spp, file_fkpp, sep_file, fkpp_file FROM pasien_visit WHERE id_visit = ? AND id_customer = ? LIMIT 1");
+   $st = $db->prepare("SELECT visit_ID, file_spp, file_fkpp, file_informed, sep_file, fkpp_file FROM pasien_visit WHERE id_visit = ? AND id_customer = ? LIMIT 1");
    $st->bind_param('ii', $idVisit, $idc);
    $st->execute();
    $r = $st->get_result()->fetch_assoc() ?: [];
@@ -74,7 +76,7 @@ function dkBaris(mysqli $db, int $idVisit, int $idc): array
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
    $row = dkBaris($koneksi, $idVisit, $idc);
-   dkJawab(['status' => 'success', 'sep' => dkInfo($root, $row, 'sep'), 'fkpp' => dkInfo($root, $row, 'fkpp')]);
+   dkJawab(['status' => 'success', 'sep' => dkInfo($root, $row, 'sep'), 'fkpp' => dkInfo($root, $row, 'fkpp'), 'informed' => dkInfo($root, $row, 'informed')]);
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') dkJawab(['status' => 'error', 'message' => 'Metode tidak diizinkan.'], 405);

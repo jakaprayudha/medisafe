@@ -198,7 +198,9 @@
 
             if (!item.dokumen_path) return;
 
-            const pdfPath = base + item.dokumen_path;
+            // hanya file di uploads/lainnya (nama file di-encode agar tidak bisa menyisipkan HTML)
+            if (!/^uploads\/lainnya\/[^/]+$/.test(item.dokumen_path)) return;
+            const pdfPath = base + 'uploads/lainnya/' + encodeURIComponent(item.dokumen_path.split('/').pop());
 
             console.log("PDF PATH:", pdfPath);
 

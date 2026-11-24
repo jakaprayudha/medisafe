@@ -1,124 +1,126 @@
 <?php
-$title = 'Form FKPP (Formulir Klaim Pelayanan Primer)';
-$no = $_GET['no'];
-$rm = $_GET['rm'];
+/**
+ * Dokumen klaim kunjungan: SEP (SPP), FKPP, Informed Consent (kolom pasien_visit.file_spp / file_fkpp / file_informed,
+ * API controller/visit/dokumenKlaim.php) dan dokumen klaim lainnya (controller/ranap/dokumenKlaimLainnya.php).
+ * Perbaikan: status setelah upload tidak pernah diperbarui (fungsi status hanya mengenal ktp/kk/bpjs/foto) dan tombol
+ * "Lihat" mengarah ke uploads/patient; handler upload terpasang ke SEMUA input file, sehingga memilih file di modal
+ * "Dokumen Lainnya" ikut dikirim ke endpoint SEP/FKPP; dokumen SEP/FKPP lama (kolom sep_file/fkpp_file) tidak tampil;
+ * nomor kunjungan & RM dicetak ke input tanpa escape; $_GET tanpa default; edit tidak mengisi judul (judul wajib diketik
+ * ulang); hapus tanpa pesan gagal; nama file disisipkan ke HTML tanpa escape; kolom Aksi di belakang.
+ */
+$title = 'Dokumen Klaim';
 require '../../controller/view.php';
+$no = trim((string) ($_GET['no'] ?? ''));
+$rm = trim((string) ($_GET['rm'] ?? ''));
+$rme = (string) ($_GET['rme'] ?? '');
+$idc = (int) ($_SESSION['id_customer'] ?? 0);
+$h = fn($v) => htmlspecialchars((string) ($v ?? ''), ENT_QUOTES, 'UTF-8');
+
+$st = $koneksi->prepare("SELECT visit_status FROM pasien_visit WHERE visit_ID = ? AND id_customer = ? LIMIT 1");
+$st->bind_param('si', $no, $idc);
+$st->execute();
+$kunj = $st->get_result()->fetch_assoc();
+$st->close();
+$batal = $kunj && (int) $kunj['visit_status'] === 99;
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="id">
 
 <head>
   <base href="../../">
-  <?php
-  require '../../assets/template/head.php';
-  ?>
-
+  <?php require '../../assets/template/head.php'; ?>
+  <style>
+    .uk .kepala { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .uk .kepala .ic { width: 42px; height: 42px; border-radius: 12px; background: #e0f2fe; color: #075985; display: inline-flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+    .uk .kepala h5 { margin: 0; font-weight: 700; color: #0f172a; }
+    .uk .kepala small { color: #475569; }
+    .uk .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    @media (max-width: 991.98px) { .uk .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 575.98px) { .uk .grid { grid-template-columns: 1fr; } }
+    .uk .dok { border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+    .uk .dok-h { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
+    .uk .dok-h .ic2 { width: 36px; height: 36px; border-radius: 10px; background: #fee2e2; color: #b91c1c; display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+    .uk .dok-h b { color: #0f172a; display: block; line-height: 1.2; }
+    .uk .dok-h .sub { color: #334155; font-size: .78rem; display: block; }
+    .uk .dok-h .st { margin-left: auto; font-size: .7rem; font-weight: 700; border-radius: 6px; padding: 2px 8px; white-space: nowrap; align-self: flex-start; }
+    .uk .st-ok { background: #dcfce7; color: #14532d; }
+    .uk .st-belum { background: #fee2e2; color: #991b1b; }
+    .uk .st-hilang { background: #fef3c7; color: #78350f; }
+    .uk .drop { margin: 0 14px 12px; border: 2px dashed #cbd5e1; border-radius: 10px; padding: 14px 8px; text-align: center; color: #334155; cursor: pointer; font-size: .85rem; }
+    .uk .drop.over { border-color: #2563eb; background: #eff6ff; }
+    .uk .drop i { font-size: 1.6rem; color: #475569; }
+    .uk .info { margin: 0 14px 12px; background: #f8fafc; border-radius: 10px; padding: 10px 12px; font-size: .82rem; color: #1e293b; word-break: break-all; }
+    .uk .dok-f { display: flex; gap: 6px; padding: 10px 14px; border-top: 1px solid #eef2f6; margin-top: auto; }
+    .uk .dok-f .btn { font-weight: 600; }
+    .uk .muat { position: absolute; inset: 0; background: rgba(255, 255, 255, .85); display: flex; align-items: center; justify-content: center; color: #1e293b; font-size: .85rem; z-index: 2; }
+    .uk .bagian { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 26px 0 12px; }
+    .uk .bagian h6 { margin: 0; font-weight: 700; color: #0f172a; }
+    .uk .tbl th { color: #334155; font-weight: 600; font-size: .8rem; text-transform: uppercase; letter-spacing: .02em; background: #f8fafc; }
+    .uk .tbl td { color: #0f172a; vertical-align: middle; }
+    .uk .kosong { border: 1px dashed #cbd5e1; border-radius: 12px; padding: 22px; text-align: center; color: #334155; }
+    #lihatModal iframe { width: 100%; height: 75vh; border: 0; background: #f1f5f9; border-radius: 8px; }
+  </style>
 </head>
 
 <body>
-  <!--  Body Wrapper -->
   <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
     data-sidebar-position="fixed" data-header-position="fixed">
-    <!-- Sidebar Start -->
-    <?php
-    require 'sidebar.php';
-    ?>
-    <!--  Sidebar End -->
-    <!--  Main wrapper -->
+    <?php require 'sidebar.php'; ?>
     <div class="body-wrapper">
-      <!--  Header Start -->
-      <?php
-      require 'navbar.php';
-      ?>
-      <!--  Header End -->
+      <?php require 'navbar.php'; ?>
       <div class="body-wrapper-inner">
         <div class="container-fluid">
           <?php
-          $rme = $_GET['rme']; // default a
-          if ($rme == 'a') {
-            include 'menu_rme.php';
-          } else if ($rme == 'b') {
-            include 'menu_rmeb.php';
-          } else if ($rme == 'c') {
-            include 'menu_rme_inap.php';
-          }
+          if ($rme === 'a') include 'menu_rme.php';
+          elseif ($rme === 'b') include 'menu_rmeb.php';
+          elseif ($rme === 'c') include 'menu_rme_inap.php';
           ?>
           <div class="row">
-            <div class="col-lg-12 d-flex align-items-stretch">
+            <div class="col-12"><?php require 'card-pasien.php'; ?></div>
+            <div class="col-12">
               <div class="card w-100">
-                <div class="card-body p-4">
-                  <h4 class="mb-3">Form FKPP (Formulir Klaim Pelayanan Primer)</h4>
-                  <!-- Data Pasien -->
-                  <?php require 'card-pasien.php'; ?>
-                  <div class="mb-3">
-                    <div class="alert alert-info d-flex align-items-start gap-2">
-                      <i class="fas fa-info-circle mt-1"></i>
-                      <div>
-                        <strong>Informasi Upload Dokumen:</strong>
-                        <ul class="mb-0 small">
-                          <li>Format file: PDF</li>
-                          <li>Ukuran maksimal: 2 MB</li>
-                          <li>Pastikan dokumen jelas dan tidak blur</li>
-                        </ul>
-                      </div>
-                    </div>
-                    <form id="formDokumen" enctype="multipart/form-data">
-                      <div class="row">
-                        <div class="col-6">
-                          <div class="mb-3">
-                            <label class="form-label">Upload SPP (SEP)</label>
-                            <input type="file" class="form-control" name="sep" accept="application/pdf">
-                            <p class="mt-1 small" id="statusSep"></p>
-                          </div>
-                        </div>
-                        <div class="col-6">
-                          <div class="mb-3">
-                            <label class="form-label">Upload FKPP</label>
-                            <input type="file" class="form-control" name="fkpp" accept="application/pdf">
-                            <p class="mt-1 small" id="statusFkpp"></p>
-                          </div>
-                        </div>
-                        <div class="col-6">
-                          <div class="mb-3">
-                            <label class="form-label">Upload Informed Consent</label>
-                            <input type="file" class="form-control" name="informed" accept="application/pdf">
-                            <p class="mt-1 small" id="statusInformed"></p>
-                          </div>
-                        </div>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-
-            <div class="col-lg-12 d-flex align-items-stretch">
-              <div class="card w-100">
-                <div class="card-body p-4">
-                  <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Dokumen Klaim Lainnya</h5>
-                    <!-- Grup tombol di sisi kanan -->
-                    <div class="d-flex ms-auto gap-2">
-                      <a href="module/admin/print/formulir_dokumen_lainnya?no=<?= urlencode((string) ($no ?? '')) ?>&rm=<?= urlencode((string) ($rm ?? '')) ?>" target="_blank">
-                        <button class="btn btn-outline-primary"><i class="fas fa-print"></i> Cetak</button>
-                      </a>
-                      <button class="btn btn-primary" id="btnTambah"><i class="fas fa-plus"></i> Tambah</button>
+                <div class="card-body p-4 uk">
+                  <div class="kepala">
+                    <span class="ic"><i class="ti ti-file-certificate"></i></span>
+                    <div class="flex-grow-1">
+                      <h5>Dokumen Klaim <span class="small text-muted fw-normal" id="ukJumlah"></span></h5>
+                      <small>SEP, FKPP (Formulir Klaim Pelayanan Primer), informed consent & dokumen pendukung klaim kunjungan ini.</small>
                     </div>
                   </div>
-                  <div class="table-responsive" data-simplebar>
-                    <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
-                      <thead>
-                        <tr>
-                          <th class="text-dark fw-normal col-4">Tanggal</th>
-                          <th>Judul Dokumen</th>
-                          <th>File</th>
-                          <th class="text-center col-1">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody></tbody>
-                    </table>
-                  </div>
+
+                  <?php if (!$kunj): ?>
+                    <div class="alert alert-danger mb-0"><i class="ti ti-alert-triangle me-1"></i>Kunjungan tidak ditemukan untuk faskes ini.</div>
+                  <?php else: ?>
+                    <?php if ($batal): ?>
+                      <div class="alert alert-warning"><i class="ti ti-ban me-1"></i>Kunjungan sudah dibatalkan — dokumen hanya dapat dilihat.</div>
+                    <?php endif; ?>
+                    <div class="grid" id="ukGrid">
+                      <?php foreach (['sep' => ['SEP / SPP', 'Surat Eligibilitas Peserta'], 'fkpp' => ['FKPP', 'Formulir Klaim Pelayanan Primer'], 'informed' => ['Informed Consent', 'Persetujuan tindakan medis']] as $key => [$label, $sub]): ?>
+                        <div class="dok" data-dok="<?= $key ?>" data-label="<?= $h($label) ?>">
+                          <div class="dok-h">
+                            <span class="ic2"><i class="ti ti-file-text"></i></span>
+                            <div><b><?= $h($label) ?></b><span class="sub"><?= $h($sub) ?></span></div>
+                            <span class="st"></span>
+                          </div>
+                          <div class="isi"></div>
+                          <div class="dok-f"></div>
+                          <div class="muat"><span class="spinner-border spinner-border-sm me-2"></span>Memuat…</div>
+                        </div>
+                      <?php endforeach; ?>
+                    </div>
+                    <input type="file" id="ukFile" accept="application/pdf,.pdf" class="d-none">
+                    <div class="small text-dark mt-2"><i class="ti ti-info-circle me-1"></i>Format PDF, maksimal 5 MB. Pastikan dokumen jelas dan tidak blur. Mengganti file tidak menghapus file lama di server.</div>
+
+                    <div class="bagian">
+                      <span class="ic2" style="width:34px;height:34px;border-radius:10px;background:#f1f5f9;color:#334155;display:inline-flex;align-items:center;justify-content:center"><i class="ti ti-files"></i></span>
+                      <h6 class="flex-grow-1">Dokumen Klaim Lainnya <span class="small text-muted fw-normal" id="dlJumlah"></span></h6>
+                      <a class="btn btn-outline-dark" target="_blank" rel="noopener" href="module/admin/print/formulir_dokumen_lainnya?<?= $h(http_build_query(['no' => $no, 'rm' => $rm])) ?>"><i class="ti ti-printer me-1"></i>Cetak</a>
+                      <?php if (!$batal): ?>
+                        <button type="button" class="btn btn-primary" id="btnTambah"><i class="ti ti-plus me-1"></i>Tambah dokumen</button>
+                      <?php endif; ?>
+                    </div>
+                    <div id="dlWadah"><div class="kosong"><span class="spinner-border spinner-border-sm me-2"></span>Memuat…</div></div>
+                  <?php endif; ?>
                 </div>
               </div>
             </div>
@@ -127,553 +129,283 @@ require '../../controller/view.php';
       </div>
     </div>
   </div>
-  </div>
 
-  <?php
-  require 'library.php';
-  ?>
-
+  <!-- MODAL TAMBAH / UBAH DOKUMEN LAINNYA -->
   <div class="modal fade" id="programModal" tabindex="-1">
-    <div class="modal-dialog">
-      <form id="programForm" class="modal-content" enctype="multipart/form-data">
+    <div class="modal-dialog modal-dialog-centered">
+      <form id="programForm" class="modal-content" enctype="multipart/form-data" novalidate>
         <div class="modal-header">
-          <h5 class="modal-title"></h5>
+          <h5 class="modal-title" id="dlJudulModal">Tambah Dokumen</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <input type="hidden" name="id_dokumen" id="id_dokumen">
-          <input type="hidden" name="nomor_rm" value="<?= $_GET['rm'] ?>">
-          <input type="hidden" name="visit_ID" value="<?= $_GET['no'] ?>">
-
-          <div class="row">
-            <div class="col-12">
-              <div class="mb-3">
-                <label for="tgl_upload" class="form-label">
-                  Tanggal <span class="text-danger">*</span>
-                </label>
-                <input type="date" value="<?= date('Y-m-d') ?>" name="tgl_upload" class="form-control" id="tgl_upload" required>
-              </div>
-            </div>
-            <div class="col-12">
-              <div class="mb-3">
-                <label for="judul_dokumen" class="form-label">
-                  Judul Dokumen <span class="text-danger">*</span>
-                </label>
-                <input type="text" name="judul_dokumen" class="form-control" id="judul_dokumen" required>
-              </div>
-            </div>
-            <div class="col-12" id="fileWrapper">
-              <div class="mb-3">
-                <label for="dokumen_path" class="form-label">
-                  File Klaim Lainnya <span class="text-danger">*</span>
-                </label>
-                <input type="file"
-                  name="dokumen_path"
-                  class="form-control"
-                  id="dokumen_path"
-                  accept=".pdf,application/pdf"
-                  required>
-              </div>
-            </div>
+          <div class="mb-3">
+            <label for="tgl_upload" class="form-label">Tanggal <span class="text-danger">*</span></label>
+            <input type="date" name="tgl_upload" class="form-control" id="tgl_upload" max="<?= date('Y-m-d') ?>" required>
+            <div class="invalid-feedback"></div>
           </div>
+          <div class="mb-3">
+            <label for="judul_dokumen" class="form-label">Judul Dokumen <span class="text-danger">*</span></label>
+            <input type="text" name="judul_dokumen" class="form-control" id="judul_dokumen" maxlength="255" placeholder="mis. Surat persetujuan tindakan medis" required>
+            <div class="invalid-feedback"></div>
+          </div>
+          <div class="mb-1" id="fileWrapper">
+            <label for="dokumen_path" class="form-label">File PDF <span class="text-danger">*</span></label>
+            <input type="file" name="dokumen_path" class="form-control" id="dokumen_path" accept=".pdf,application/pdf" required>
+            <div class="invalid-feedback"></div>
+            <div class="form-text text-dark">PDF, maksimal 5 MB.</div>
+          </div>
+          <div class="small text-dark d-none" id="fileTetap"><i class="ti ti-info-circle me-1"></i>File tidak dapat diganti — hapus lalu tambah ulang bila filenya salah.</div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Simpan</button>
+          <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary" id="dlSimpan"><i class="ti ti-device-floppy me-1"></i>Simpan</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- 🔥 Modal Preview File -->
-  <div class="modal fade" id="filePreviewModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
+  <!-- MODAL LIHAT PDF -->
+  <div class="modal fade" id="lihatModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
       <div class="modal-content">
-
         <div class="modal-header">
-          <h5 class="modal-title">Preview Dokumen</h5>
+          <h5 class="modal-title text-truncate" id="lihatJudul">Preview Dokumen</h5>
+          <a class="btn btn-sm btn-outline-dark ms-auto me-2" id="lihatAsli" target="_blank" rel="noopener"><i class="ti ti-external-link me-1"></i>Buka di tab baru</a>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-
-        <div class="modal-body text-center">
-          <!-- image -->
-          <img id="previewImage" src="" class="img-fluid d-none" />
-
-          <!-- pdf -->
-          <iframe id="previewPdf"
-            style="width:100%; height:500px;"
-            class="d-none"></iframe>
-        </div>
-
+        <div class="modal-body"><iframe id="lihatPdf" title="Preview dokumen"></iframe></div>
       </div>
     </div>
   </div>
 
+  <?php require 'library.php'; ?>
+  <?php if ($kunj): ?>
+  <script>
+    (function() {
+      'use strict';
+      const NO = <?= json_encode($no) ?>;
+      const BATAL = <?= json_encode($batal) ?>;
+      const HARI_INI = <?= json_encode(date('Y-m-d')) ?>;
+      const API_KLAIM = 'controller/visit/dokumenKlaim.php';
+      const API_LAIN = 'controller/ranap/dokumenKlaimLainnya.php?no=' + encodeURIComponent(NO);
+      const MAKS = 5 * 1024 * 1024;
+      const $id = i => document.getElementById(i);
+      const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const toast = (title, icon = 'success') => Swal.fire({ toast: true, position: 'top-end', icon, title, showConfirmButton: false, timer: 2200 });
+      const pesanXhr = (x, d) => (x && x.responseJSON && x.responseJSON.message) || d;
+      const BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      const tgl = s => { const m = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}:\d{2}))?/.exec(s || ''); return m ? `${+m[3]} ${BLN[m[2] - 1]} ${m[1]}${m[4] ? ' ' + m[4] : ''}` : '-'; };
+      const ukuran = b => b == null ? '' : b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
 
-</body>
-
-<script>
-  $(document).ready(function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const patientNumber = urlParams.get("no");
-
-    if (patientNumber) {
-      $.ajax({
-        url: "controller/master/getPatientDocsVisit.php",
-        type: "GET",
-        dataType: "json", // 🔥 penting
-        data: {
-          no: patientNumber
-        },
-        success: function(data) {
-
-          console.log("DATA DOC:", data); // 🔥 debug
-
-          if (data.status === "success") {
-            updateStatus("statusSep", data.files.file_spp, "SPP");
-            updateStatus("statusFkpp", data.files.file_fkpp, "FKPP");
-            updateStatus("statusInformed", data.files.file_informed, "INFORMED");
-          }
-
-        },
-        error: function(xhr) {
-          console.log("ERROR:", xhr.responseText);
-        }
-      });
-    }
-
-
-    function updateStatus(elementId, fileName, label) {
-      const baseUrl = document.querySelector("base").href + "uploads/dokumen/";
-
-      if (fileName && fileName !== "null" && fileName !== null) {
-
-        $("#" + elementId).html(`
-      <div class="d-flex align-items-center gap-2">
-        <span class="badge bg-success">${label} sudah upload</span>
-
-     <button type="button" class="btn btn-sm btn-primary"
-  onclick="previewFile('${baseUrl + fileName}')">
-  Lihat
-</button>
-      </div>
-    `);
-
-      } else {
-
-        $("#" + elementId).html(`
-      <span class="text-danger">
-        <i class="fas fa-times-circle"></i> Belum upload ${label}
-      </span>
-    `);
-
+      function lihat(url, judul) {
+        $id('lihatPdf').src = url;
+        $id('lihatAsli').href = url;
+        $id('lihatJudul').textContent = judul;
+        bootstrap.Modal.getOrCreateInstance($id('lihatModal')).show();
       }
-    }
+      $id('lihatModal').addEventListener('hidden.bs.modal', () => { $id('lihatPdf').src = 'about:blank'; });
 
+      /* ================= SEP / FKPP / INFORMED ================= */
+      let INFO = {}, sibuk = {}, target = null;
+      const kartu = k => document.querySelector(`.dok[data-dok="${k}"]`);
 
-  });
-</script>
-
-<script>
-  $(document).ready(function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const no = urlParams.get("no");
-
-    // 🔥 semua input file
-    $("input[type='file']").on("change", function() {
-      let input = this;
-      let fieldName = $(this).attr("name"); // ktp / kk / bpjs / foto
-
-      if (!input.files.length) return;
-
-      let formData = new FormData();
-      formData.append("no", no);
-      formData.append(fieldName, input.files[0]);
-
-      if (input.files[0].type !== "application/pdf") {
-        Swal.fire({
-          icon: 'error',
-          title: 'Format salah',
-          text: 'Hanya file PDF yang diperbolehkan'
-        });
-        return;
-      }
-
-      showStatus(fieldName, "Uploading...", true);
-      $(input).prop("disabled", true);
-
-      $.ajax({
-        url: "controller/master/uploadPatientVisit.php",
-        type: "POST",
-        data: formData,
-        contentType: false,
-        processData: false,
-        dataType: "json", // 🔥 WAJIB TAMBAH INI
-
-        success: function(data) {
-
-          if (data.status === "success") {
-
-            let fileName = data.files[fieldName];
-
-            showStatus(fieldName, fileName, true);
-
-            Swal.fire({
-              toast: true,
-              position: 'top-end',
-              icon: 'success',
-              title: 'Upload berhasil',
-              showConfirmButton: false,
-              timer: 2000
-            });
-
-          } else {
-
-            showStatus(fieldName, data.message, false);
-
-            Swal.fire({
-              toast: true,
-              position: 'top-end',
-              icon: 'error',
-              title: data.message,
-              showConfirmButton: false,
-              timer: 2500
-            });
-
-          }
-
-          $(input).prop("disabled", false);
-        },
-
-        error: function(xhr) {
-          console.log(xhr.responseText); // 🔥 debug penting
-
-          showStatus(fieldName, "Upload gagal", false);
-          $(input).prop("disabled", false);
-        }
-      });
-    });
-
-    // 🔥 FUNCTION STATUS FINAL
-    function showStatus(field, fileName, success) {
-      let el = "";
-
-      if (field === "ktp") el = "#statusKtp";
-      if (field === "kk") el = "#statusKk";
-      if (field === "bpjs") el = "#statusBpjs";
-      if (field === "foto") el = "#statusFoto";
-
-      const baseUrl = document.querySelector("base").href + "uploads/patient/";
-
-      // 🔥 kondisi loading
-      if (fileName === "Uploading...") {
-        $(el).html(`
-        <span class="text-warning">
-          <i class="fas fa-spinner fa-spin"></i> Uploading...
-        </span>
-      `);
-        return;
-      }
-
-      // 🔥 kalau success dan file ada
-      if (success && fileName && fileName !== "null") {
-        $(el).html(`
-          <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-success">Sudah upload</span>
-
-            <button type="button" class="btn btn-sm btn-primary"
-              onclick="previewFile('${baseUrl + fileName}')">
-              Lihat
-            </button>
-          </div>
-        `);
-      } else {
-        $(el).html(`
-        <span class="text-danger">
-          <i class="fas fa-times-circle"></i> ${fileName}
-        </span>
-      `);
-      }
-    }
-
-  });
-
-  function previewFile(url) {
-    const ext = url.split('.').pop().toLowerCase();
-
-    const img = document.getElementById("previewImage");
-    const pdf = document.getElementById("previewPdf");
-
-    // reset dulu
-    img.classList.add("d-none");
-    pdf.classList.add("d-none");
-
-    if (["jpg", "jpeg", "png"].includes(ext)) {
-      img.src = url;
-      img.classList.remove("d-none");
-    } else if (ext === "pdf") {
-      pdf.src = url;
-      pdf.classList.remove("d-none");
-    }
-
-    // buka modal
-    const modal = new bootstrap.Modal(document.getElementById("filePreviewModal"));
-    modal.show();
-  }
-</script>
-
-
-<script>
-  const apiUrl = 'controller/ranap/dokumenKlaimLainnya?no=<?= urlencode((string) ($_GET['no'] ?? '')) ?>&rm=<?= urlencode((string) ($_GET['rm'] ?? '')) ?>';
-
-  $(document).ready(function() {
-    var table = $('#periodeTable').DataTable({
-      processing: true,
-      serverSide: false, // 🔹 ubah jadi false
-      ajax: {
-        url: apiUrl,
-        type: "GET",
-        dataSrc: function(json) {
-
-          if (!json || json.status !== "success") {
-            console.warn("API Error:", json);
-            return []; // return kosong agar tidak loading
-          }
-
-          if (!Array.isArray(json.data)) {
-            return [];
-          }
-
-          return json.data.map(row => ({
-            actions: `
-                <div class="text-center">
-                    <div class="btn-group btn-group-sm" role="group">
-                      <a class="btn btn-warning edit-btn" 
-                        href="javascript:;" 
-                        data-id="${row.id_dokumen}"
-                        data-tanggal="${row.tanggal}">
-                        <i class="fas fa-edit"></i>
-                      </a>
-                        <a class="btn btn-danger delete-btn" href="javascript:;" data-id="${row.id_dokumen}">
-                            <i class="fas fa-trash"></i>
-                        </a>
-                    </div>
-                </div>
-              `,
-            tanggal: row.tanggal ?? "-",
-            judul: row.judul_dokumen ?? "-",
-            dokumen_path: row.dokumen_path ?
-              `
-<div class="d-flex gap-2">
-
-   <button 
-      class="btn btn-sm btn-primary preview-btn"
-      data-file="${row.dokumen_path}">
-      <i class="fas fa-eye"></i> Preview
-   </button>
-
-   <a href="${row.dokumen_path}" 
-      target="_blank"
-      class="btn btn-sm btn-danger">
-      <i class="fas fa-file-pdf"></i> PDF
-   </a>
-
-</div>
-` : "-",
+      function muatKlaim() {
+        $.ajax({ url: API_KLAIM, data: { no: NO }, dataType: 'json', cache: false })
+          .done(res => {
+            INFO = { sep: res.sep, fkpp: res.fkpp, informed: res.informed };
+            ['sep', 'fkpp', 'informed'].forEach(render);
+            $id('ukJumlah').textContent = `· ${['sep', 'fkpp', 'informed'].filter(k => INFO[k] && INFO[k].ada).length} dari 3 tersedia`;
+          })
+          .fail(x => document.querySelectorAll('.dok').forEach(el => {
+            el.querySelector('.muat') && el.querySelector('.muat').remove();
+            el.querySelector('.isi').innerHTML = `<div class="info text-danger"><i class="ti ti-alert-triangle me-1"></i>${esc(pesanXhr(x, 'Gagal memuat dokumen.'))}</div>`;
           }));
-        }
-      },
-      columns: [{
-          data: "tanggal",
-          className: "text-wrap"
-        },
-        {
-          data: "judul",
-          className: "text-wrap"
-        },
-        {
-          data: "dokumen_path",
-          className: "text-wrap"
-        },
-        {
-          data: "actions",
-          orderable: false,
-          searchable: false
-        }
-      ],
-
-    });
-
-
-
-    // 🔹 Tambah
-    $(document).on('click', '#btnTambah', function() {
-
-      const form = document.getElementById('programForm');
-
-      if (form) {
-        form.reset();
       }
 
-      $('#id_dokumen').val('');
+      function render(k) {
+        const el = kartu(k), d = INFO[k], label = el.dataset.label;
+        const st = el.querySelector('.st'), isi = el.querySelector('.isi'), foot = el.querySelector('.dok-f');
+        if (d && d.ada) { st.className = 'st st-ok'; st.textContent = 'Tersedia'; }
+        else if (d) { st.className = 'st st-hilang'; st.textContent = 'File hilang'; }
+        else { st.className = 'st st-belum'; st.textContent = 'Belum upload'; }
 
-      $('#fileWrapper').show();
-
-      $('#dokumen_path').prop('required', true);
-
-      $('.modal-title').text('Tambah Data');
-
-      const modal = new bootstrap.Modal(
-        document.getElementById('programModal')
-      );
-
-      modal.show();
-
-    });
-
-    // 🔹 Submit (Tambah / Update)
-    $('#programForm').on('submit', async function(e) {
-
-      e.preventDefault();
-
-      const btn = $(this).find('button[type="submit"]');
-
-      btn.prop('disabled', true);
-
-      btn.html(`
-      <span class="spinner-border spinner-border-sm"></span>
-      Menyimpan...
-   `);
-
-      try {
-
-        let formData = new FormData(this);
-
-        let id = $('#id_dokumen').val();
-
-        const response = await fetch(
-          apiUrl + (id ? `&id=${id}` : ''), {
-            method: 'POST',
-            body: formData
-          }
-        );
-
-        const data = await response.json();
-
-        console.log(data);
-
-        if (data.status === 'success') {
-
-          Swal.fire({
-            icon: 'success',
-            title: 'Berhasil',
-            text: data.message,
-            timer: 2000,
-            showConfirmButton: false
-          });
-
-          // reload table
-          table.ajax.reload(null, false);
-
-          // close modal bootstrap 5
-          bootstrap.Modal
-            .getInstance(document.getElementById('programModal'))
-            .hide();
-
-          // reset form
-          document.getElementById('programForm').reset();
-
+        if (d) {
+          isi.innerHTML = `<div class="info"><i class="ti ti-file-text me-1"></i>${esc(d.file)}
+            <div class="mt-1 text-dark">${d.waktu ? 'Diunggah ' + esc(tgl(d.waktu)) : ''}${d.ukuran != null ? ' · ' + esc(ukuran(d.ukuran)) : ''}${d.ada ? '' : '<div class="text-danger">File tidak ditemukan di server — unggah ulang.</div>'}</div></div>`;
+          foot.innerHTML = (d.ada ? `<button type="button" class="btn btn-sm btn-primary" data-lihat="${k}"><i class="ti ti-eye me-1"></i>Lihat</button>` : '')
+            + (BATAL ? '' : `<button type="button" class="btn btn-sm btn-outline-dark" data-unggah="${k}"><i class="ti ti-replace me-1"></i>Ganti</button>`);
         } else {
-
-          Swal.fire({
-            icon: 'error',
-            title: 'Gagal',
-            text: data.message
-          });
-
+          isi.innerHTML = BATAL ? '<div class="info">Belum ada dokumen.</div>'
+            : `<div class="drop" data-unggah="${k}" tabindex="0" role="button"><i class="ti ti-cloud-upload"></i><div class="fw-semibold mt-1">Unggah ${esc(label)}</div><div class="small">Klik atau seret file PDF ke sini</div></div>`;
+          foot.innerHTML = BATAL ? '' : `<button type="button" class="btn btn-sm btn-primary" data-unggah="${k}"><i class="ti ti-upload me-1"></i>Unggah</button>`;
         }
-
-      } catch (err) {
-
-        console.log(err);
-
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Terjadi kesalahan server'
-        });
-
-      } finally {
-
-        btn.prop('disabled', false);
-
-        btn.html('Simpan');
-
+        const m = el.querySelector('.muat');
+        if (sibuk[k]) { if (!m) el.insertAdjacentHTML('beforeend', `<div class="muat"><span class="spinner-border spinner-border-sm me-2"></span>${esc(sibuk[k])}</div>`); }
+        else if (m) m.remove();
       }
 
-    });
-    // 🔹 Delete
-    $(document).on('click', '.delete-btn', function() {
-      let id = $(this).data('id');
-      Swal.fire({
-        title: 'Hapus Data?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Hapus',
-        cancelButtonText: 'Batal'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          fetch(apiUrl + `&id=${id}`, {
-              method: 'DELETE'
-            })
-            .then(res => res.json())
-            .then(data => {
-              if (data.status === 'success') {
-                Swal.fire('Berhasil!', 'Data dihapus.', 'success');
-                table.ajax.reload(null, false);
-              }
-            });
+      async function unggah(k, file) {
+        if (!file) return;
+        const label = kartu(k).dataset.label;
+        if (file.type !== 'application/pdf' && !/\.pdf$/i.test(file.name)) return Swal.fire('Format tidak didukung', 'Hanya file PDF yang diperbolehkan.', 'warning');
+        if (file.size > MAKS) return Swal.fire('File terlalu besar', 'Ukuran maksimal 5 MB.', 'warning');
+        if (INFO[k] && INFO[k].ada) {
+          const x = await Swal.fire({ icon: 'question', title: `Ganti ${label}?`, text: 'File yang sekarang akan diganti dengan file baru.', showCancelButton: true, confirmButtonText: 'Ganti', cancelButtonText: 'Batal', cancelButtonColor: '#475569', reverseButtons: true });
+          if (!x.isConfirmed) return;
+        }
+        sibuk[k] = 'Mengunggah…';
+        render(k);
+        try {
+          const fd = new FormData();
+          fd.append('no', NO);
+          fd.append('jenis', k);
+          fd.append('file', file);
+          const r = await fetch(API_KLAIM, { method: 'POST', body: fd });
+          const res = await r.json().catch(() => ({ status: 'error', message: 'Respon server tidak valid.' }));
+          if (res.status !== 'success') throw new Error(res.message || 'Gagal mengunggah.');
+          toast(res.message || label + ' tersimpan.');
+        } catch (e) {
+          Swal.fire('Gagal', e.message, 'error');
+        } finally {
+          delete sibuk[k];
+          muatKlaim();
+        }
+      }
+
+      const grid = $id('ukGrid');
+      grid.addEventListener('click', e => {
+        const l = e.target.closest('[data-lihat]'), u = e.target.closest('[data-unggah]');
+        if (l) lihat(INFO[l.dataset.lihat].url, kartu(l.dataset.lihat).dataset.label);
+        if (u && !sibuk[u.dataset.unggah]) { target = u.dataset.unggah; $id('ukFile').click(); }
+      });
+      grid.addEventListener('keydown', e => { const u = e.target.closest('.drop[data-unggah]'); if (u && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); target = u.dataset.unggah; $id('ukFile').click(); } });
+      $id('ukFile').addEventListener('change', function() { const f = this.files[0]; this.value = ''; if (target) unggah(target, f); });
+      ['dragenter', 'dragover'].forEach(ev => grid.addEventListener(ev, e => { const z = e.target.closest('.drop'); if (z) { e.preventDefault(); z.classList.add('over'); } }));
+      ['dragleave', 'drop'].forEach(ev => grid.addEventListener(ev, e => { const z = e.target.closest('.drop'); if (z) { e.preventDefault(); z.classList.remove('over'); } }));
+      grid.addEventListener('drop', e => { const z = e.target.closest('.drop[data-unggah]'); if (z && e.dataTransfer.files[0] && !sibuk[z.dataset.unggah]) unggah(z.dataset.unggah, e.dataTransfer.files[0]); });
+
+      /* ================= DOKUMEN LAINNYA ================= */
+      let LAIN = [];
+      const urlLain = p => /^uploads\/lainnya\/[^/]+$/.test(p || '') ? 'uploads/lainnya/' + encodeURIComponent(p.split('/').pop()) : '';
+
+      function muatLain() {
+        $.ajax({ url: API_LAIN, dataType: 'json', cache: false })
+          .done(res => { LAIN = (res && res.data) || []; renderLain(); })
+          .fail(x => { $id('dlWadah').innerHTML = `<div class="kosong text-danger"><i class="ti ti-alert-triangle me-1"></i>${esc(pesanXhr(x, 'Gagal memuat dokumen lainnya.'))}</div>`; });
+      }
+
+      function renderLain() {
+        $id('dlJumlah').textContent = LAIN.length ? `· ${LAIN.length} dokumen` : '';
+        if (!LAIN.length) {
+          $id('dlWadah').innerHTML = '<div class="kosong"><i class="ti ti-files-off me-1"></i>Belum ada dokumen klaim lainnya.</div>';
+          return;
+        }
+        $id('dlWadah').innerHTML = `<div class="table-responsive"><table class="table tbl align-middle mb-0">
+          <thead><tr><th style="width:1%">Aksi</th><th style="width:150px">Tanggal</th><th>Judul Dokumen</th><th style="width:1%">File</th></tr></thead>
+          <tbody>${LAIN.map((r, i) => {
+            const url = urlLain(r.dokumen_path);
+            return `<tr>
+              <td class="text-nowrap">${BATAL ? '-' : `<div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-warning" data-ubah="${i}" title="Ubah tanggal & judul"><i class="ti ti-pencil"></i></button>
+                <button type="button" class="btn btn-danger" data-hapus="${i}" title="Hapus"><i class="ti ti-trash"></i></button></div>`}</td>
+              <td class="text-nowrap">${esc(tgl(r.tanggal))}</td>
+              <td class="text-wrap">${esc(r.judul_dokumen || '-')}</td>
+              <td class="text-nowrap">${url ? `<button type="button" class="btn btn-sm btn-primary" data-lihat-lain="${i}"><i class="ti ti-eye me-1"></i>Lihat</button>
+                <a class="btn btn-sm btn-outline-dark" href="${esc(url)}" target="_blank" rel="noopener" title="Buka PDF"><i class="ti ti-external-link"></i></a>` : '<span class="text-danger small">File tidak valid</span>'}</td>
+            </tr>`;
+          }).join('')}</tbody></table></div>`;
+      }
+
+      $id('dlWadah').addEventListener('click', e => {
+        const l = e.target.closest('[data-lihat-lain]'), u = e.target.closest('[data-ubah]'), d = e.target.closest('[data-hapus]');
+        if (l) { const r = LAIN[l.dataset.lihatLain]; lihat(urlLain(r.dokumen_path), r.judul_dokumen || 'Dokumen'); }
+        if (u) bukaModal(LAIN[u.dataset.ubah]);
+        if (d) hapus(LAIN[d.dataset.hapus]);
+      });
+
+      const form = $id('programForm');
+      function bersihkanInvalid() { form.querySelectorAll('.is-invalid').forEach(i => i.classList.remove('is-invalid')); }
+      function tandai(field, pesan) {
+        const i = form.querySelector(`[name="${field}"]`);
+        if (!i) return false;
+        i.classList.add('is-invalid');
+        i.parentElement.querySelector('.invalid-feedback').textContent = pesan;
+        i.focus();
+        return true;
+      }
+
+      function bukaModal(r) {
+        form.reset();
+        bersihkanInvalid();
+        $id('id_dokumen').value = r ? r.id_dokumen : '';
+        $id('tgl_upload').value = r ? (r.tanggal || HARI_INI) : HARI_INI;
+        $id('judul_dokumen').value = r ? (r.judul_dokumen || '') : '';
+        $id('fileWrapper').classList.toggle('d-none', !!r);
+        $id('fileTetap').classList.toggle('d-none', !r);
+        $id('dlJudulModal').textContent = r ? 'Ubah Dokumen' : 'Tambah Dokumen';
+        bootstrap.Modal.getOrCreateInstance($id('programModal')).show();
+      }
+      const btnTambah = $id('btnTambah');
+      if (btnTambah) btnTambah.addEventListener('click', () => bukaModal(null));
+
+      form.addEventListener('submit', async e => {
+        e.preventDefault();
+        bersihkanInvalid();
+        const id = $id('id_dokumen').value;
+        if (!$id('tgl_upload').value) return tandai('tgl_upload', 'Tanggal wajib diisi.');
+        if ($id('tgl_upload').value > HARI_INI) return tandai('tgl_upload', 'Tanggal tidak boleh di masa depan.');
+        if (!$id('judul_dokumen').value.trim()) return tandai('judul_dokumen', 'Judul dokumen wajib diisi.');
+        const f = $id('dokumen_path').files[0];
+        if (!id) {
+          if (!f) return tandai('dokumen_path', 'Pilih file PDF.');
+          if (f.type !== 'application/pdf' && !/\.pdf$/i.test(f.name)) return tandai('dokumen_path', 'Hanya file PDF.');
+          if (f.size > MAKS) return tandai('dokumen_path', 'Ukuran maksimal 5 MB.');
+        }
+        const btn = $id('dlSimpan');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan…';
+        try {
+          const fd = new FormData();
+          fd.append('tgl_upload', $id('tgl_upload').value);
+          fd.append('judul_dokumen', $id('judul_dokumen').value.trim());
+          if (!id) fd.append('dokumen_path', f);
+          const r = await fetch(API_LAIN + (id ? '&id=' + encodeURIComponent(id) : ''), { method: 'POST', body: fd });
+          const res = await r.json().catch(() => ({ status: 'error', message: 'Respon server tidak valid.' }));
+          if (res.status !== 'success') {
+            if (!(res.field && tandai(res.field, res.message))) Swal.fire('Gagal', res.message || 'Gagal menyimpan.', 'error');
+            return;
+          }
+          bootstrap.Modal.getInstance($id('programModal')).hide();
+          toast(res.message || 'Tersimpan.');
+          muatLain();
+        } catch (err) {
+          Swal.fire('Gagal', 'Tidak dapat terhubung ke server.', 'error');
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="ti ti-device-floppy me-1"></i>Simpan';
         }
       });
-    });
-  });
-  $(document).on('click', '.edit-btn', function() {
 
-    let id = $(this).data('id');
-    let tanggal = $(this).data('tanggal');
+      function hapus(r) {
+        Swal.fire({
+          icon: 'warning', title: 'Hapus dokumen?', html: `<b>${esc(r.judul_dokumen || '-')}</b><br>File PDF ikut dihapus dari server.`,
+          showCancelButton: true, confirmButtonText: 'Hapus', cancelButtonText: 'Batal', confirmButtonColor: '#dc2626', cancelButtonColor: '#475569', reverseButtons: true
+        }).then(x => {
+          if (!x.isConfirmed) return;
+          $.ajax({ url: API_LAIN + '&id=' + encodeURIComponent(r.id_dokumen), type: 'DELETE', dataType: 'json' })
+            .done(res => toast(res.message || 'Dokumen dihapus.'))
+            .fail(x => Swal.fire('Gagal', pesanXhr(x, 'Gagal menghapus dokumen.'), 'error'))
+            .always(muatLain);
+        });
+      }
 
-    $('#id_dokumen').val(id);
-    $('#tgl_upload').val(tanggal);
-
-    // 🔥 sembunyikan file
-    $('#fileWrapper').hide();
-    $('#dokumen_path').removeAttr('required');
-    $('#dokumen_path').val('');
-
-    $('#programModal .modal-title').text('Edit Tanggal');
-    const modal = new bootstrap.Modal(
-      document.getElementById('programModal')
-    );
-
-    modal.show();
-  });
-
-  $(document).on('click', '.preview-btn', function() {
-
-    let file = $(this).data('file');
-
-    $('#previewPdf').attr('src', file);
-
-    $('#previewImage').addClass('d-none');
-
-    $('#previewPdf').removeClass('d-none');
-
-    const modal = new bootstrap.Modal(
-      document.getElementById('filePreviewModal')
-    );
-
-    modal.show();
-
-  });
-</script>
+      muatKlaim();
+      muatLain();
+    })();
+  </script>
+  <?php endif; ?>
+</body>
 
 </html>
