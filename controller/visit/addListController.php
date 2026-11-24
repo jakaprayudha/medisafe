@@ -260,11 +260,14 @@ function deleteData()
       return;
    }
 
+   require_once __DIR__ . '/../dinkes/dinkesService.php';
+   $dkVid = dkVisitIdDikirim($koneksi, (int) ($_SESSION['id_customer'] ?? 0), $id); // Dinkes
    $query = "DELETE FROM pasien_visit WHERE id_visit=?";
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("i", $id);
 
       if ($stmt->execute()) {
+         if ($dkVid) dkHapusVisit($koneksi, (int) ($_SESSION['id_customer'] ?? 0), $dkVid); // Dinkes
          echo json_encode(['status' => 'success', 'message' => 'Data berhasil dihapus.']);
       } else {
          echo json_encode(['status' => 'error', 'message' => 'Gagal menghapus: ' . $stmt->error]);
