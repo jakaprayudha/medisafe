@@ -1,29 +1,27 @@
 <?php
-header("Content-Type: application/json");
+/**
+ * Data USG kunjungan (JSON). Cetak print/formulir_usg kini dirender di server; file ini dipertahankan untuk kompatibilitas.
+ * Dulu: no & rm disisipkan ke SQL (SQL injection), tanpa batas faskes, SELECT * gabungan kunjungan + pasien.
+ */
 require '../../../database/connect.php';
-
-$no = $_GET['no'] ?? '';
-$rm = $_GET['rm'] ?? '';
-
-if (!$no || !$rm) {
-   echo json_encode(["status" => "error", "message" => "Parameter kurang"]);
+header('Content-Type: application/json; charset=utf-8');
+$idc = (int) ($_SESSION['id_customer'] ?? 0);
+session_write_close();
+$no = trim((string) ($_GET['no'] ?? ''));
+if ($idc <= 0 || $no === '') {
+   http_response_code($idc <= 0 ? 401 : 400);
+   echo json_encode(['status' => 'error', 'message' => $idc <= 0 ? 'Sesi berakhir.' : 'Parameter kurang']);
    exit;
 }
-
-$q = mysqli_query($koneksi, "SELECT *
-    FROM usg_results usg INNER JOIN pasien_visit pv ON usg.visit_ID = pv.visit_ID INNER JOIN ms_patient mp ON usg.nomor_rm = mp.nomor_rm
-    WHERE usg.visit_ID = '$no' AND mp.nomor_rm = '$rm'
-    LIMIT 1
-");
-
-if (!$q || mysqli_num_rows($q) == 0) {
-   echo json_encode(["status" => "error", "message" => "Data tidak ditemukan"]);
+$st = $koneksi->prepare("SELECT u.id_usg, u.tanggal_pemeriksaan, u.usia_kandungan, u.usg1, u.usg2, u.usg3, u.dokter, u.interpretasi, p.patient_name, p.nomor_rm
+   FROM usg_results u JOIN pasien_visit v ON v.visit_ID = u.visit_ID LEFT JOIN ms_patient p ON p.id_patient = v.id_patient
+   WHERE u.visit_ID = ? AND v.id_customer = ? ORDER BY u.tanggal_pemeriksaan ASC, u.id_usg ASC");
+$st->bind_param('si', $no, $idc);
+$st->execute();
+$data = $st->get_result()->fetch_all(MYSQLI_ASSOC);
+$st->close();
+if (!$data) {
+   echo json_encode(['status' => 'error', 'message' => 'Data tidak ditemukan']);
    exit;
 }
-
-$data = mysqli_fetch_assoc($q);
-
-echo json_encode([
-   "status" => "success",
-   "data" => $data
-]);
+echo json_encode(['status' => 'success', 'data' => $data[0], 'semua' => $data], JSON_UNESCAPED_UNICODE);
