@@ -1,176 +1,91 @@
 <?php
+/**
+ * Cetak rekapitulasi pelayanan persalinan (data dari rpAmbil() di controller/ranap/getFormRekapPersalinan.php).
+ * Tetap berupa potongan HTML (tanpa <html>/<body>) agar aman di-bundle.
+ * Perbaikan: data diambil lewat curl ke getpersalinan.php (tanpa cookie sesi; getpersalinan rentan SQL injection & tanpa
+ * batas faskes) — gagal bila server memakai HTTPS self-signed / tidak bisa memanggil dirinya sendiri; tanggal pelayanan =
+ * tanggal cetak (bukan tanggal kunjungan); nama kota "Tanjung Morawa" tertulis tetap; nilai dicetak tanpa escape;
+ * tanda tangan default.png ditampilkan bila pasien belum tanda tangan; tarif tanpa format rupiah.
+ */
 require_once '../../../database/connect.php';
+require_once '../../admin/getdataclinic.php';
+if (!defined('RP_LIB')) define('RP_LIB', true);
+require_once __DIR__ . '/../../../controller/ranap/getFormRekapPersalinan.php';
 
-$no = $_GET['no'] ?? '';
-$rm = $_GET['rm'] ?? '';
-
-/* ================================
-   LOAD DATA DARI ENDPOINT
-================================ */
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-   ? "https://" : "http://";
-
-$host = $_SERVER['HTTP_HOST'];
-$current_path = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
-
-$api_url = $protocol . $host . $current_path . "/getpersalinan.php?no=$no&rm=$rm";
-$ch = curl_init($api_url);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-$response = curl_exec($ch);
-curl_close($ch);
-
-$decode = json_decode($response, true);
-$data = $decode['data'] ?? [];
-
-/* ================================
-   FORMAT TANGGAL INDONESIA
-================================ */
-function formatTanggalIndonesia($tanggal)
-{
-   if (!$tanggal) return "-";
-   $bulanIndo = [
-      1 => 'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember'
-   ];
-   $pecah = explode('-', $tanggal);
-   return intval($pecah[2]) . ' ' . $bulanIndo[(int)$pecah[1]] . ' ' . $pecah[0];
+$rpNo = trim((string) ($_GET['no'] ?? ''));
+$rpIdc = (int) ($_SESSION['id_customer'] ?? 0);
+$rpH = fn($v) => htmlspecialchars((string) ($v ?? ''), ENT_QUOTES, 'UTF-8');
+$st = $koneksi->prepare("SELECT id_visit FROM pasien_visit WHERE visit_ID = ? AND id_customer = ? LIMIT 1");
+$st->bind_param('si', $rpNo, $rpIdc);
+$st->execute();
+$rpIdVisit = (int) ($st->get_result()->fetch_row()[0] ?? 0);
+$st->close();
+if (!$rpIdVisit) {
+   echo '<p style="font-family:sans-serif;color:#b91c1c">Kunjungan tidak ditemukan untuk faskes ini.</p>';
+   return;
 }
+$rp = rpAmbil($koneksi, $rpIdVisit);
+$rpP = $rp['pasien'];
+$rpS = $rp['persalinan'] ?: [];
 
-$tanggalSekarang = formatTanggalIndonesia(date('Y-m-d'));
+if (!function_exists('formatTanggalIndonesia')) {
+   function formatTanggalIndonesia($tanggal)
+   {
+      $b = [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+      return preg_match('/^(\d{4})-(\d{2})-(\d{2})/', (string) $tanggal, $m) ? (int) $m[3] . ' ' . $b[(int) $m[2]] . ' ' . $m[1] : '-';
+   }
+}
+$rpTglPelayanan = formatTanggalIndonesia($rpP['tanggal_pelayanan']);
+$rpTempat = ucwords(strtolower(trim((string) ($datafaskes['faskes_district'] ?? '')))) ?: '..................';
+$rpTtd = '';
+if (!empty($rpS['ttd_file']) && is_file(__DIR__ . '/../../../uploads/ttd/' . basename($rpS['ttd_file']))) $rpTtd = '../../../uploads/ttd/' . rawurlencode(basename($rpS['ttd_file']));
+$rpV = fn($k) => ($x = trim((string) ($rpS[$k] ?? ''))) !== '' ? $rpH($x) : '-';
+$rpTarif = ($rpS['tarif_paket'] ?? '') !== '' && $rpS['tarif_paket'] !== null && ctype_digit((string) $rpS['tarif_paket']) ? 'Rp ' . number_format((int) $rpS['tarif_paket'], 0, ',', '.') : $rpV('tarif_paket');
 ?>
-
-<!-- ===========================
-     STYLE DI-ISOLASI (PREFIX)
-=========================== -->
 <style>
-   .form-persalinan {
-      width: 210mm;
-      min-height: 297mm;
-      margin: 0 auto;
-      padding: 0 10mm;
-      font-family: "Times New Roman", serif;
-   }
-
-   /* Judul */
-   .form-persalinan .form-title {
-      text-align: center;
-      font-size: 18pt;
-      font-weight: bold;
-      margin-top: 10px;
-      margin-bottom: 20px;
-      line-height: 1.4;
-      text-transform: uppercase;
-   }
-
-   /* Isi */
-   .form-persalinan .content {
-      font-size: 14pt;
-      line-height: 1.5;
-      margin-top: 10px;
-   }
-
-   .form-persalinan .content p {
-      margin: 4px 0;
-   }
-
-   .form-persalinan .content span {
-      font-weight: bold;
-      display: inline-block;
-      width: 240px;
-   }
-
-   /* Signature */
-   .form-persalinan .signature {
-      margin-top: 40px;
-      text-align: right;
-      font-size: 14pt;
-   }
-
-   .form-persalinan .signature-block {
-      display: inline-block;
-      text-align: center;
-      margin-top: 20px;
-   }
-
-   .form-persalinan .signature-image img {
-      max-width: 220px;
-      height: auto;
-   }
-
-   .form-persalinan .signature-name {
-      margin-top: 5px;
-      font-size: 14pt;
-   }
+   .form-persalinan { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 0 10mm; box-sizing: border-box; font-family: "Times New Roman", serif; }
+   .form-persalinan .form-title { text-align: center; font-size: 15pt; font-weight: bold; margin: 10px 0 18px; line-height: 1.4; text-transform: uppercase; }
+   .form-persalinan .content { font-size: 13pt; line-height: 1.5; }
+   .form-persalinan table { border-collapse: collapse; width: 100%; }
+   .form-persalinan td { padding: 3px 4px; vertical-align: top; }
+   .form-persalinan td.l { width: 230px; font-weight: bold; }
+   .form-persalinan td.t { width: 12px; }
+   .form-persalinan .signature { margin-top: 36px; display: flex; justify-content: flex-end; font-size: 13pt; }
+   .form-persalinan .signature-block { text-align: center; min-width: 240px; }
+   .form-persalinan .signature-image { height: 90px; display: flex; align-items: center; justify-content: center; }
+   .form-persalinan .signature-image img { max-height: 90px; max-width: 220px; }
 </style>
 
-
-<!-- =======================================================
-     FORMULIR PERSALINAN (AMAN DIBUNDLE – NO HEAD / NO BODY)
-=========================================================== -->
 <div class="form-persalinan">
-
    <?php include 'kopsurat.php'; ?>
 
    <div class="form-title">
-      REKAPITULASI PELAYANAN PERSALINAN DI FASILITAS KESEHATAN TINGKAT PERTAMA (FKTP)<br>
-      BPJS KESEHATAN CABANG LUBUK PAKAM
+      Rekapitulasi Pelayanan Persalinan di Fasilitas Kesehatan Tingkat Pertama (FKTP)<br>
+      BPJS Kesehatan Cabang Lubuk Pakam
    </div>
 
    <div class="content">
-
       <p>Saya yang bertanda tangan di bawah ini :</p>
-
-      <p><span>Nama Penderita</span>: <?= $data['patient_name'] ?? '-' ?></p>
-      <p><span>Nomor Identitas</span>: <?= $data['patient_nik'] ?? '-' ?></p>
-
-      <p>
-         <span>Tempat / Tanggal Lahir</span>:
-         <?= ($data['patient_place'] ?? '-') . " / " . formatTanggalIndonesia($data['patient_datebirth'] ?? '-') ?>
-      </p>
-
-      <p>
-         <span>Alamat dan Nomor Telepon</span>:
-         <?= ($data['patient_address'] ?? '-') . ", " . ($data['patient_phone'] ?? '-') ?>
-      </p>
-
-      <p><span>Tanggal Pelayanan</span>: <?= $tanggalSekarang ?></p>
-
-      <p><span>Gravid</span>: <?= $data['gravid'] ?? '-' ?></p>
-      <p><span>Abortus</span>: <?= $data['abortus'] ?? '-' ?></p>
-      <p><span>Partus</span>: <?= $data['partus'] ?? '-' ?></p>
-      <p><span>Jenis Persalinan</span>: <?= $data['jenis_persalinan'] ?? '-' ?></p>
-      <p><span>Besaran Tarif Paket</span>: <?= $data['tarif_paket'] ?? '-' ?></p>
-
+      <table>
+         <tr><td class="l">Nama Penderita</td><td class="t">:</td><td><?= $rpH($rpP['nama_pasien'] ?: '-') ?></td></tr>
+         <tr><td class="l">Nomor Identitas</td><td class="t">:</td><td><?= $rpH($rpP['nik'] ?: '-') ?><?= $rpP['bpjs'] ? ' / BPJS ' . $rpH($rpP['bpjs']) : '' ?></td></tr>
+         <tr><td class="l">Tempat / Tanggal Lahir</td><td class="t">:</td><td><?= $rpH($rpP['tempat_lahir'] ?: '-') ?> / <?= $rpH(formatTanggalIndonesia($rpP['tanggal_lahir'])) ?></td></tr>
+         <tr><td class="l">Alamat dan Nomor Telepon</td><td class="t">:</td><td><?= $rpH($rpP['alamat'] ?: '-') ?>, <?= $rpH($rpP['telepon'] ?: '-') ?></td></tr>
+         <tr><td class="l">Tanggal Pelayanan</td><td class="t">:</td><td><?= $rpH($rpTglPelayanan) ?></td></tr>
+         <tr><td class="l">Gravid</td><td class="t">:</td><td><?= $rpV('gravid') ?></td></tr>
+         <tr><td class="l">Abortus</td><td class="t">:</td><td><?= $rpV('abortus') ?></td></tr>
+         <tr><td class="l">Partus</td><td class="t">:</td><td><?= $rpV('partus') ?></td></tr>
+         <tr><td class="l">Jenis Persalinan</td><td class="t">:</td><td><?= $rpV('jenis_persalinan') ?></td></tr>
+         <tr><td class="l">Besaran Tarif Paket</td><td class="t">:</td><td><?= $rpTarif ?></td></tr>
+      </table>
    </div>
-
 
    <div class="signature">
-      <p>Tanjung Morawa, <?= $tanggalSekarang ?></p>
-
       <div class="signature-block">
-
-         <div class="signature-image">
-            <?php if (!empty($data['ttd_file'])): ?>
-               <img src="../../../uploads/ttd/<?= $data['ttd_file'] ?>">
-            <?php else: ?>
-               <img src="../../../uploads/ttd/default.png">
-            <?php endif; ?>
-         </div>
-
-         <strong><u><?= $data['patient_name'] ?? '................................................' ?></u></strong>
-         <div class="signature-name">Yang Membuat Pernyataan</div>
-
+         <p style="margin:0 0 6px"><?= $rpH($rpTempat) ?>, <?= $rpH($rpTglPelayanan) ?></p>
+         Yang Membuat Pernyataan
+         <div class="signature-image"><?php if ($rpTtd): ?><img src="<?= $rpH($rpTtd) ?>" alt="Tanda tangan pasien"><?php endif; ?></div>
+         <strong><u><?= $rpH($rpP['nama_pasien'] ?: '................................................') ?></u></strong>
       </div>
    </div>
-
 </div>
