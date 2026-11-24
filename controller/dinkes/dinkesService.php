@@ -9,33 +9,38 @@
 
 const DK_BASE = 'https://api-dss.deliserdangkab.go.id/api/gateway/dinas-kesehatan/';
 
-function dkToken(): string
+/** Nilai dari .env (getenv, lalu muat .env bila belum); '' bila tidak ada. */
+function dkEnv(string $key): string
 {
-   static $t = null;
-   if ($t === null) {
-      $t = (string) getenv('DINKES_TOKEN');
-      if ($t === '') {
-         try {
-            require_once __DIR__ . '/../../utility/env.php';
-            loadEnv();
-            $t = (string) getenv('DINKES_TOKEN');
-         } catch (Throwable $e) { // .env tidak ada
-            $t = '';
-         }
+   static $dimuat = false;
+   $v = (string) getenv($key);
+   if ($v === '' && !$dimuat) {
+      $dimuat = true;
+      try {
+         require_once __DIR__ . '/../../utility/env.php';
+         loadEnv();
+      } catch (Throwable $e) { // .env tidak ada
       }
-      $t = trim($t, " \t\n\r\0\x0B\"'");
+      $v = (string) getenv($key);
    }
-   return $t;
+   return trim($v, " \t\n\r\0\x0B\"'");
 }
 
-function dkSetting(mysqli $k, int $idc): ?array
+/** Token Authorization Dinkes: satu untuk semua faskes, DINKES_TOKEN di .env. */
+function dkToken(): string
 {
-   $st = $k->prepare("SELECT * FROM setting_dinkes WHERE id_customer=? LIMIT 1");
+   return dkEnv('DINKES_TOKEN');
+}
+
+/** Puskesmas faskes dari setting_clinic.puskes_id. 0 = faskes ini tidak ikut integrasi Dinkes. */
+function dkPuskesClinic(mysqli $k, int $idc): int
+{
+   $st = $k->prepare("SELECT puskes_id FROM setting_clinic WHERE id_customer=? LIMIT 1");
    $st->bind_param('i', $idc);
    $st->execute();
-   $r = $st->get_result()->fetch_assoc();
+   $v = (int) ($st->get_result()->fetch_row()[0] ?? 0);
    $st->close();
-   return $r ?: null;
+   return $v;
 }
 
 /** [http_code, json|null, error_curl]. Timeout pendek agar simpan kunjungan tidak menggantung saat Dinkes down. */
@@ -307,8 +312,8 @@ function dkAmbilRespon(mysqli $k, int $idc, string $token, array $c, int $rowId)
 function dkKirimVisit(mysqli $k, int $idc, string $visitID): array
 {
    try {
-      $cfg = dkSetting($k, $idc);
-      if (!$cfg || !(int) $cfg['aktif'] || dkToken() === '') {
+      $puskesDefault = dkPuskesClinic($k, $idc);
+      if ($puskesDefault <= 0 || dkToken() === '') {
          return ['status' => 'nonaktif', 'message' => 'Integrasi Dinkes tidak aktif.'];
       }
       $c = dkKonteks($k, $idc, $visitID);
@@ -339,8 +344,8 @@ function dkKirimVisit(mysqli $k, int $idc, string $visitID): array
       if ($jenis === 'balita' && ((float) $c['berat'] <= 0 || (float) $c['tinggi'] <= 0)) {
          return $lewati('Berat/tinggi badan belum diisi.', 'belum');
       }
-      $puskes = (int) ($baris['puskes_id'] ?: $cfg['puskes_id']);
-      if ($puskes <= 0) return $lewati('Puskesmas belum dipilih di pengaturan Dinkes.', 'belum');
+      $puskes = (int) ($baris['puskes_id'] ?: $puskesDefault);
+      if ($puskes <= 0) return $lewati('Puskesmas faskes belum diatur (setting_clinic.puskes_id).', 'belum');
 
       $token = dkToken();
       if ($jenis === 'dewasa') {
@@ -386,7 +391,6 @@ function dkHapusVisit(mysqli $k, int $idc, string $visitID): array
       if (!$baris || $baris['dk_id'] === null || in_array($baris['dk_status'], ['dihapus'], true)) {
          return ['status' => 'tidak_ada', 'message' => 'Tidak ada data di Dinkes.'];
       }
-      $cfg = dkSetting($k, $idc);
       if (dkToken() === '') {
          return ['status' => 'nonaktif', 'message' => 'DINKES_TOKEN belum diisi di .env.'];
       }

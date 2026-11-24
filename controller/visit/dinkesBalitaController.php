@@ -78,7 +78,7 @@ try {
    if (!$c) dbBalas(404, ['status' => 'error', 'message' => 'Kunjungan tidak ditemukan.']);
    $balita = $c['umur'] !== null && $c['umur'] < 5;
    $baris = dkBaris($koneksi, $idc, $no);
-   $cfg = dkSetting($koneksi, $idc);
+   $puskesDefault = dkPuskesClinic($koneksi, $idc);
 
    if (isset($_GET['puskesmas'])) { // daftar untuk pilihan override per data
       if (dkToken() === '') dbBalas(422, ['status' => 'error', 'message' => 'Token Dinkes belum dipasang di server.']);
@@ -114,8 +114,8 @@ try {
          'bb' => $c['berat'], 'tb' => $c['tinggi'], 'tanggal' => $c['visit_date']],
       'data' => $isi,
       'puskes_id' => $baris['puskes_id'] ?? null,
-      'puskes_default' => $cfg['puskes_id'] ?? null,
-      'integrasi_aktif' => $cfg && (int) $cfg['aktif'] === 1,
+      'puskes_default' => $puskesDefault ?: null,
+      'integrasi_aktif' => $puskesDefault > 0 && dkToken() !== '',
       'kirim' => $baris ? ['status' => $baris['dk_status'], 'error' => $baris['dk_error'], 'sent_at' => $baris['dk_sent_at']] : null,
       'zscore' => $respon['detail_zscore'] ?? null,
    ]);

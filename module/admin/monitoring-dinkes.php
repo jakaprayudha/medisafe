@@ -23,7 +23,6 @@ require '../../controller/view.php';
               <h4 class="fw-semibold mb-1">Monitoring Dinkes</h4>
               <div class="text-muted small">Status pengiriman kunjungan ke Dinkes Deli Serdang. Data selalu tersimpan di Medisafe walau pengiriman gagal.</div>
             </div>
-            <a class="btn btn-outline-primary" href="module/admin/setting_dinkes"><i class="ti ti-settings me-1"></i>Pengaturan</a>
           </div>
           <div class="d-flex flex-wrap gap-2 mb-3" id="dmRingkas"></div>
           <div class="card">
