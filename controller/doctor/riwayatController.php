@@ -242,6 +242,8 @@ function deleteData()
       return;
    }
 
+   require_once __DIR__ . '/../dinkes/dinkesService.php';
+   $dkVid = dkVisitIdDikirim($koneksi, (int) $id_customer, $id); // Dinkes
    $query = "DELETE FROM pasien_visit 
    WHERE id_visit = ? 
    AND id_customer = ?";
@@ -252,6 +254,7 @@ function deleteData()
       $stmt->bind_param("si", $id, $id_customer);
 
       if ($stmt->execute()) {
+         if ($dkVid) dkHapusVisit($koneksi, (int) $id_customer, $dkVid); // Dinkes
          echo json_encode([
             'status' => 'success',
             'message' => 'Data berhasil dihapus.'
