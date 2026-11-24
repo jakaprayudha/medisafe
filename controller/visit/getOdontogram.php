@@ -27,8 +27,9 @@ if (!is_string($visit_ID) || trim($visit_ID) === '') {
 
 try {
    $query = $koneksi->prepare("
-      SELECT * FROM odontogram
+      SELECT id, no_gigi, elemen, elemen_gigi, diagnosa, prosedur, keterangan, created_at FROM odontogram
       WHERE visit_ID = ? AND id_customer = ?
+      ORDER BY no_gigi, id
    ");
 
    $query->bind_param("si", $visit_ID, $id_customer);

@@ -234,7 +234,7 @@
  <script>
     function loadTableOdontogram() {
 
-       fetch('controller/visit/getOdontogram?visit_ID=<?= $_GET['no'] ?>')
+       fetch('controller/visit/getOdontogram?visit_ID=' + encodeURIComponent(<?= json_encode((string) ($_GET['no'] ?? ''), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>))
 
           .then(res => {
 
@@ -539,7 +539,7 @@
 
                    keterangan,
 
-                   visit_ID: "<?= $_GET['no'] ?>"
+                   visit_ID: <?= json_encode((string) ($_GET['no'] ?? ''), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
 
                 })
              }
@@ -640,7 +640,7 @@
        // Tampilkan kembali gigi yang memiliki data
 
        fetch(
-             'controller/visit/getOdontogram?visit_ID=<?= $_GET['no'] ?>'
+             'controller/visit/getOdontogram?visit_ID=' + encodeURIComponent(<?= json_encode((string) ($_GET['no'] ?? ''), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>)
           )
           .then(res => res.json())
           .then(res => {
@@ -689,7 +689,7 @@
 
                       no_gigi: noGigi,
 
-                      visit_ID: "<?= $_GET['no'] ?>"
+                      visit_ID: <?= json_encode((string) ($_GET['no'] ?? ''), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
 
                    })
 
