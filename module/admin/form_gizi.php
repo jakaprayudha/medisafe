@@ -1,3810 +1,479 @@
 <?php
-$title = 'Foto Gizi & Nutrisi';
-require '../../database/connect.php';
+/**
+ * Asesmen Gizi & Nutrisi (Proses Asuhan Gizi Terstandar) per kunjungan.
+ * Formulir dibangun dari controller/visit/giziSchema.php; disimpan lewat controller/visit/giziController.php.
+ * Perbaikan: tombol Simpan dulu tidak menyimpan apa pun (hanya console.log + pesan "berhasil" — data hilang);
+ * tidak bisa membuka asesmen tersimpan; tombol Cetak mengarah ke halaman yang tidak ada; id_patient diisi nomor RM;
+ * query pasien dirangkai dari URL (SQL injection) & tidak dipakai; $_GET no/rm/rme tanpa default; kategori IMT
+ * memakai batas WHO internasional (bukan Kemenkes) & tetap dihitung untuk anak; BB ideal Broca tanpa memperhitungkan
+ * jenis kelamin/tinggi; perubahan BB tanpa tanda naik/turun; hapus baris terakhir monitoring tidak mengosongkan select.
+ */
+$title = 'Asesmen Gizi';
 require '../../controller/view.php';
-$no = $_GET['no'];
-$rm = $_GET['rm'];
-$patient = mysqli_query($koneksi, "SELECT nomor_rm, id_patient FROM ms_patient WHERE nomor_rm='$rm'");
-$datapatient = mysqli_fetch_array($patient);
+require_once __DIR__ . '/../../controller/visit/giziSchema.php';
+$no = trim((string) ($_GET['no'] ?? ''));
+$rm = trim((string) ($_GET['rm'] ?? ''));
+$rme = (string) ($_GET['rme'] ?? '');
+$h = fn($v) => htmlspecialchars((string) ($v ?? ''), ENT_QUOTES, 'UTF-8');
+$skema = giziSkema();
+
+/** Render 1 field formulir. */
+function giziField(string $key, array $def, callable $h): string
+{
+   $lebar = (int) ($def['lebar'] ?? 12);
+   $wajib = !empty($def['wajib']) ? ' <span class="text-danger">*</span>' : (!empty($def['wajib_selesai']) ? ' <span class="text-warning-emphasis" title="Wajib sebelum ditandai Selesai">•</span>' : '');
+   $lbl = '<label class="form-label small fw-semibold" for="f_' . $key . '">' . $h($def['label']) . $wajib . '</label>';
+   $fb = '<div class="invalid-feedback"></div>';
+   $unit = fn($input) => !empty($def['unit']) ? '<div class="input-group">' . $input . '<span class="input-group-text">' . $h($def['unit']) . '</span></div>' : $input;
+   switch ($def['tipe']) {
+      case 'date':
+         $el = $lbl . '<input type="date" class="form-control" id="f_' . $key . '" data-f="' . $key . '">' . $fb;
+         break;
+      case 'text':
+         $el = $lbl . '<input type="text" class="form-control" id="f_' . $key . '" data-f="' . $key . '" maxlength="' . (int) ($def['max'] ?? 255) . '" placeholder="' . $h($def['ph'] ?? '') . '">' . $fb;
+         break;
+      case 'textarea':
+         $el = $lbl . '<textarea class="form-control" id="f_' . $key . '" data-f="' . $key . '" rows="' . (int) ($def['baris'] ?? 3) . '" maxlength="5000" placeholder="' . $h($def['ph'] ?? '') . '"></textarea>' . $fb;
+         break;
+      case 'number':
+         $el = $lbl . $unit('<input type="number" inputmode="decimal" class="form-control" id="f_' . $key . '" data-f="' . $key . '" min="' . $def['min'] . '" max="' . $def['max'] . '" step="' . $h($def['step']) . '">') . '<div class="invalid-feedback d-block"></div>';
+         break;
+      case 'select':
+         $el = $lbl . '<select class="form-select" id="f_' . $key . '" data-f="' . $key . '"><option value="">— Pilih —</option>'
+            . implode('', array_map(fn($o) => '<option>' . $h($o) . '</option>', $def['opsi'])) . '</select>' . $fb;
+         break;
+      case 'radio':
+         $el = '<div class="form-label small fw-semibold" id="f_' . $key . '">' . $h($def['label']) . '</div><div class="seg" data-radio="' . $key . '">'
+            . implode('', array_map(fn($o, $i) => '<input type="radio" name="r_' . $key . '" id="r_' . $key . $i . '" value="' . $h($o) . '"><label for="r_' . $key . $i . '">' . $h($o) . '</label>', $def['opsi'], array_keys($def['opsi'])))
+            . '</div><div class="invalid-feedback d-block"></div>';
+         break;
+      case 'checks':
+         $el = '<div class="form-label small fw-semibold" id="f_' . $key . '">' . $h($def['label']) . '</div><div class="chips" data-checks="' . $key . '">'
+            . implode('', array_map(fn($o, $i) => '<input type="checkbox" id="c_' . $key . $i . '" value="' . $h($o) . '"><label for="c_' . $key . $i . '">' . $h($o === 'Label Pangan' ? 'Membaca Label Pangan' : $o) . '</label>', $def['opsi'], array_keys($def['opsi'])))
+            . '</div>';
+         break;
+      case 'calc':
+         $input = !empty($def['panjang'])
+            ? '<textarea class="form-control hitung" id="f_' . $key . '" data-calc="' . $key . '" rows="2" readonly tabindex="-1"></textarea>'
+            : '<input type="text" class="form-control hitung" id="f_' . $key . '" data-calc="' . $key . '" readonly tabindex="-1">';
+         $el = '<label class="form-label small fw-semibold" for="f_' . $key . '">' . $h($def['label']) . ' <i class="ti ti-calculator text-muted" title="Dihitung otomatis"></i></label>' . $unit($input);
+         break;
+      case 'lab':
+         $rows = '';
+         foreach (giziLab() as $lk => [$nama, $u, $min, $max]) {
+            $rows .= '<tr><td class="fw-semibold">' . $h($nama) . '</td>'
+               . '<td><div class="input-group input-group-sm"><input type="number" inputmode="decimal" step="any" min="' . $min . '" max="' . $max . '" class="form-control" id="f_lab_' . $lk . '_nilai" data-lab="' . $lk . '" data-lk="nilai"><span class="input-group-text">' . $h($u) . '</span></div><div class="invalid-feedback d-block"></div></td>'
+               . '<td><input type="date" class="form-control form-control-sm" id="f_lab_' . $lk . '_tanggal" data-lab="' . $lk . '" data-lk="tanggal"><div class="invalid-feedback"></div></td>'
+               . '<td><input type="text" maxlength="255" class="form-control form-control-sm" data-lab="' . $lk . '" data-lk="keterangan"></td></tr>';
+         }
+         $el = '<div class="d-flex align-items-center mb-2"><span class="small text-muted">Isi yang tersedia saja.</span></div>'
+            . '<div class="table-responsive"><table class="t"><thead><tr><th>Pemeriksaan</th><th style="min-width:170px">Hasil</th><th>Tanggal</th><th>Keterangan</th></tr></thead><tbody>' . $rows . '</tbody></table></div>';
+         break;
+      case 'tabel':
+         $th = implode('', array_map(fn($c) => '<th>' . $h($c[0]) . '</th>', $def['kolom']));
+         $el = '<div class="d-flex align-items-center mb-2" id="f_' . $key . '"><span class="form-label small fw-semibold mb-0">' . $h($def['label']) . '</span>'
+            . '<button type="button" class="btn btn-sm btn-outline-dark ms-auto" data-tambah-baris="' . $key . '"><i class="ti ti-plus me-1"></i>Tambah baris</button></div>'
+            . '<div class="table-responsive"><table class="t"><thead><tr><th style="width:44px">Aksi</th>' . $th . '</tr></thead><tbody data-tabel="' . $key . '"></tbody></table></div><div class="invalid-feedback d-block"></div>';
+         break;
+      default:
+         $el = '';
+   }
+   return '<div class="col-md-' . $lebar . '">' . $el . '</div>';
+}
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="id">
 
 <head>
   <base href="../../">
-  <?php
-  require '../../assets/template/head.php';
-  ?>
+  <?php require '../../assets/template/head.php'; ?>
+  <style>
+    .gz .kepala { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .gz .kepala .ic { width: 42px; height: 42px; border-radius: 12px; background: #fef3c7; color: #92400e; display: inline-flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+    .gz .kepala h5 { margin: 0; font-weight: 700; color: #0f172a; }
+    .gz .kepala small { color: #475569; }
+    .gz table.t { width: 100%; border-collapse: collapse; font-size: .86rem; }
+    .gz table.t th { font-size: .7rem; text-transform: uppercase; color: #475569; font-weight: 700; background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 7px 8px; white-space: nowrap; }
+    .gz table.t td { border-bottom: 1px solid #eef2f6; padding: 7px 8px; vertical-align: top; color: #1f2937; }
+    .gz table.t tr.aktif td { background: #fffbeb; }
+    .gz .aksi { white-space: nowrap; }
+    .gz .aksi .btn { padding: 3px 9px; font-weight: 600; }
+    .gz .tag { font-size: .7rem; font-weight: 700; border-radius: 6px; padding: 2px 8px; display: inline-block; white-space: nowrap; }
+    .gz .tg-draft { background: #f1f5f9; color: #334155; }
+    .gz .tg-selesai { background: #dcfce7; color: #14532d; }
+    .gz .tg-rendah { background: #dcfce7; color: #14532d; }
+    .gz .tg-sedang { background: #fef3c7; color: #92400e; }
+    .gz .tg-tinggi { background: #fee2e2; color: #991b1b; }
+    .gz .kosong { text-align: center; padding: 26px 10px; color: #475569; }
+    .gz .nav-sec { position: sticky; top: 90px; z-index: 5; background: #fff; border-bottom: 1px solid #e2e8f0; padding: 8px 0; margin-bottom: 14px; display: flex; gap: 6px; overflow-x: auto; }
+    .gz .nav-sec a { white-space: nowrap; border: 1px solid #e2e8f0; border-radius: 999px; padding: 3px 11px; font-size: .78rem; font-weight: 600; color: #1f2937; text-decoration: none; }
+    .gz .nav-sec a:hover { border-color: #94a3b8; }
+    .gz .nav-sec a b { color: #92400e; margin-right: 3px; }
+    .gz .sec { border: 1px solid #e2e8f0; border-radius: 14px; margin-bottom: 14px; scroll-margin-top: 150px; }
+    .gz .sec-h { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid #eef2f6; background: #f8fafc; border-radius: 14px 14px 0 0; }
+    .gz .sec-h .huruf { width: 26px; height: 26px; border-radius: 8px; background: #fef3c7; color: #92400e; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: .82rem; }
+    .gz .sec-h b { color: #0f172a; }
+    .gz .sec-b { padding: 14px; }
+    .gz .seg { display: flex; gap: 6px; }
+    .gz .seg input, .gz .chips input { position: absolute; opacity: 0; pointer-events: none; }
+    .gz .seg label { flex: 1; text-align: center; border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 8px; cursor: pointer; font-weight: 600; font-size: .85rem; color: #1f2937; background: #fff; }
+    .gz .seg input:checked + label { background: #0f172a; border-color: #0f172a; color: #fff; }
+    .gz .seg input:focus-visible + label, .gz .chips input:focus-visible + label { outline: 2px solid #2563eb; outline-offset: 1px; }
+    .gz .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .gz .chips label { border: 1px solid #cbd5e1; border-radius: 999px; padding: 4px 12px; cursor: pointer; font-size: .82rem; font-weight: 600; color: #1f2937; background: #fff; }
+    .gz .chips input:checked + label { background: #fef3c7; border-color: #d97706; color: #78350f; }
+    .gz .chips input:checked + label::before { content: "✓ "; }
+    .gz .hitung { background: #f0f9ff !important; color: #0c4a6e; font-weight: 600; }
+    .gz .bar-simpan { position: sticky; bottom: 0; z-index: 6; background: #fff; border-top: 1px solid #e2e8f0; padding: 10px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .gz .bar-simpan .info { font-size: .82rem; color: #475569; margin-right: auto; }
+  </style>
 </head>
 
 <body>
-  <!--  Body Wrapper -->
   <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
     data-sidebar-position="fixed" data-header-position="fixed">
-    <!-- Sidebar Start -->
-    <?php
-    require 'sidebar.php';
-    ?>
-    <!--  Sidebar End -->
-    <!--  Main wrapper -->
+    <?php require 'sidebar.php'; ?>
     <div class="body-wrapper">
-      <!--  Header Start -->
-      <?php
-      require 'navbar.php';
-      ?>
-      <!--  Header End -->
+      <?php require 'navbar.php'; ?>
       <div class="body-wrapper-inner">
         <div class="container-fluid">
           <?php
-          $rme = $_GET['rme']; // default a
-          if ($rme == 'a') {
-            include 'menu_rme.php';
-          } else if ($rme == 'b') {
-            include 'menu_rmeb.php';
-          } else if ($rme == 'c') {
-            include 'menu_rme_inap.php';
-          }
+          if ($rme === 'a') include 'menu_rme.php';
+          elseif ($rme === 'b') include 'menu_rmeb.php';
+          elseif ($rme === 'c') include 'menu_rme_inap.php';
           ?>
           <div class="row">
+            <div class="col-12"><?php require 'card-pasien.php'; ?></div>
             <div class="col-12">
-              <?php
-              require 'card-pasien.php';
-              ?>
-            </div>
-            <!-- =========================================================
-     RME GIZI & NUTRISI
-========================================================= -->
-
-            <div class="col-lg-12 d-flex align-items-stretch">
-
-              <div class="card w-100 shadow-sm">
-
-                <div class="card-body p-4">
-
-                  <!-- =====================================================
-           HEADER
-      ====================================================== -->
-
-                  <div class="d-flex justify-content-between align-items-center mb-4">
-
-                    <div>
-
-                      <h5 class="card-title fw-semibold mb-1">
-                        RME Gizi & Nutrisi
-                      </h5>
-
-                      <small class="text-muted">
-                        Asesmen Gizi, Diagnosis, Intervensi Diet & Monitoring
-                      </small>
-
+              <div class="card w-100">
+                <div class="card-body p-4 gz">
+                  <div class="kepala">
+                    <span class="ic"><i class="ti ti-salad"></i></span>
+                    <div class="flex-grow-1">
+                      <h5>Asesmen Gizi &amp; Nutrisi</h5>
+                      <small>Skrining, asesmen, diagnosis gizi (PES), intervensi diet, edukasi, serta monitoring &amp; evaluasi.</small>
                     </div>
+                    <a class="btn btn-outline-dark" target="_blank" rel="noopener" title="Formulir asesmen kosong (identitas pasien terisi) untuk diisi manual"
+                      href="module/admin/print/formulir_gizi?<?= $h(http_build_query(['no' => $no, 'rm' => $rm, 'kosong' => 1])) ?>"><i class="ti ti-file me-1"></i>Formulir kosong</a>
+                    <button type="button" class="btn btn-primary" id="gzBtnBaru" disabled><i class="ti ti-plus me-1"></i>Asesmen baru</button>
+                  </div>
+                  <div class="alert alert-warning d-none" id="gzMigrasi"><i class="ti ti-alert-triangle me-1"></i>Tabel asesmen gizi belum dibuat (migrasi <code>20261124_pasien_gizi.sql</code> belum dijalankan) — asesmen belum bisa disimpan.</div>
+                  <div class="alert alert-danger d-none" id="gzBatal"><i class="ti ti-ban me-1"></i>Kunjungan ini sudah dibatalkan — asesmen baru tidak bisa ditambahkan.</div>
 
-
-                    <div class="d-flex ms-auto gap-2">
-
-                      <a
-                        href="module/admin/print/formulir_gizi?no=<?= urlencode((string) ($no ?? '')) ?>&rm=<?= urlencode((string) ($rm ?? '')) ?>"
-                        target="_blank"
-                        class="btn btn-outline-primary">
-
-                        <i class="fas fa-print me-1"></i>
-                        Cetak
-
-                      </a>
-
-                      <button
-                        type="button"
-                        class="btn btn-primary"
-                        id="btnSimpanGizi">
-
-                        <i class="fas fa-save me-1"></i>
-                        Simpan
-
-                      </button>
-
-                    </div>
-
+                  <div class="table-responsive mb-3">
+                    <table class="t">
+                      <thead><tr><th>Aksi</th><th>Tanggal</th><th>Nutrisionis</th><th>Risiko</th><th>Diagnosis gizi (PES)</th><th>Diet</th><th>Status</th></tr></thead>
+                      <tbody id="gzRiwayat"><tr><td colspan="7" class="kosong"><span class="spinner-border spinner-border-sm me-2"></span>Memuat…</td></tr></tbody>
+                    </table>
                   </div>
 
-
-                  <!-- =====================================================
-           IDENTITAS PASIEN
-      ====================================================== -->
-
-                  <div class="card border mb-4">
-
-                    <div class="card-header bg-light">
-
-                      <strong>
-                        <i class="fas fa-user me-2"></i>
-                        Identitas Nutrisionis
-                      </strong>
-
+                  <!-- FORMULIR -->
+                  <div id="gzForm" class="d-none">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                      <h6 class="fw-bold mb-0" id="gzJudul">Asesmen baru</h6>
+                      <span class="tag tg-draft" id="gzStatus">Draft</span>
                     </div>
-
-
-                    <div class="card-body">
-
-                      <div class="row">
-
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Tanggal Asesmen
-                          </label>
-
-                          <input
-                            type="date"
-                            class="form-control"
-                            id="gizi_tanggal_asesmen"
-                            value="<?= date('Y-m-d') ?>">
-
+                    <nav class="nav-sec" aria-label="Bagian formulir">
+                      <?php foreach ($skema as $kode => [$judul]): ?>
+                        <a href="#sec-<?= $kode ?>"><?= $kode === 'id' ? '' : '<b>' . $kode . '</b>' ?><?= $h($judul) ?></a>
+                      <?php endforeach; ?>
+                    </nav>
+                    <?php foreach ($skema as $kode => [$judul, $ikon, $fields]): ?>
+                      <section class="sec" id="sec-<?= $kode ?>">
+                        <div class="sec-h">
+                          <?= $kode === 'id' ? '<span class="huruf"><i class="ti ' . $ikon . '"></i></span>' : '<span class="huruf">' . $kode . '</span>' ?>
+                          <b><?= $h($judul) ?></b>
                         </div>
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Nutrisionis / Dietisien
-                          </label>
-
-                          <input
-                            type="text"
-                            class="form-control"
-                            id="gizi_nutrisionis">
-
-                        </div>
-
-                      </div>
-
+                        <div class="sec-b"><div class="row g-3">
+                          <?php foreach ($fields as $key => $def) echo giziField($key, $def, $h); ?>
+                        </div></div>
+                      </section>
+                    <?php endforeach; ?>
+                    <div class="bar-simpan">
+                      <span class="info" id="gzInfo"><span class="text-warning-emphasis">•</span> = wajib sebelum ditandai Selesai</span>
+                      <button type="button" class="btn btn-outline-dark" id="gzBtnTutup">Tutup</button>
+                      <a class="btn btn-outline-dark disabled" id="gzBtnCetak" target="_blank" rel="noopener" aria-disabled="true" title="Simpan dulu untuk mencetak"><i class="ti ti-printer me-1"></i>Cetak</a>
+                      <button type="button" class="btn btn-outline-primary" id="gzBtnDraft"><i class="ti ti-device-floppy me-1"></i>Simpan draft</button>
+                      <button type="button" class="btn btn-success" id="gzBtnSelesai"><i class="ti ti-circle-check me-1"></i>Simpan &amp; selesai</button>
                     </div>
-
                   </div>
-
-
-                  <!-- =====================================================
-           A. SCREENING RISIKO GIZI
-      ====================================================== -->
-
-                  <div class="card border mb-4">
-
-                    <div class="card-header bg-light">
-
-                      <strong>
-                        <i class="fas fa-filter me-2"></i>
-                        A. Skrining Risiko Gizi
-                      </strong>
-
-                    </div>
-
-
-                    <div class="card-body">
-
-                      <div class="row">
-
-
-                        <div class="col-md-6 mb-3">
-
-                          <label class="form-label">
-                            Penurunan berat badan tidak direncanakan?
-                          </label>
-
-                          <div>
-
-                            <div class="form-check form-check-inline">
-
-                              <input
-                                class="form-check-input"
-                                type="radio"
-                                name="penurunan_bb"
-                                value="Tidak">
-
-                              <label class="form-check-label">
-                                Tidak
-                              </label>
-
-                            </div>
-
-
-                            <div class="form-check form-check-inline">
-
-                              <input
-                                class="form-check-input"
-                                type="radio"
-                                name="penurunan_bb"
-                                value="Ya">
-
-                              <label class="form-check-label">
-                                Ya
-                              </label>
-
-                            </div>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-6 mb-3">
-
-                          <label class="form-label">
-                            Penurunan asupan makan?
-                          </label>
-
-                          <div>
-
-                            <div class="form-check form-check-inline">
-
-                              <input
-                                class="form-check-input"
-                                type="radio"
-                                name="penurunan_asupan"
-                                value="Tidak">
-
-                              <label class="form-check-label">
-                                Tidak
-                              </label>
-
-                            </div>
-
-
-                            <div class="form-check form-check-inline">
-
-                              <input
-                                class="form-check-input"
-                                type="radio"
-                                name="penurunan_asupan"
-                                value="Ya">
-
-                              <label class="form-check-label">
-                                Ya
-                              </label>
-
-                            </div>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-6 mb-3">
-
-                          <label class="form-label">
-                            Kondisi yang meningkatkan kebutuhan gizi?
-                          </label>
-
-                          <div>
-
-                            <div class="form-check form-check-inline">
-
-                              <input
-                                class="form-check-input"
-                                type="radio"
-                                name="kebutuhan_gizi"
-                                value="Tidak">
-
-                              <label class="form-check-label">
-                                Tidak
-                              </label>
-
-                            </div>
-
-
-                            <div class="form-check form-check-inline">
-
-                              <input
-                                class="form-check-input"
-                                type="radio"
-                                name="kebutuhan_gizi"
-                                value="Ya">
-
-                              <label class="form-check-label">
-                                Ya
-                              </label>
-
-                            </div>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-6 mb-3">
-
-                          <label class="form-label">
-                            Risiko Gizi
-                          </label>
-
-                          <select
-                            class="form-select"
-                            id="risiko_gizi">
-
-                            <option value="">
-                              Pilih Risiko
-                            </option>
-
-                            <option value="Rendah">
-                              Risiko Rendah
-                            </option>
-
-                            <option value="Sedang">
-                              Risiko Sedang
-                            </option>
-
-                            <option value="Tinggi">
-                              Risiko Tinggi
-                            </option>
-
-                          </select>
-
-                        </div>
-
-
-                        <div class="col-12">
-
-                          <label class="form-label">
-                            Catatan Skrining
-                          </label>
-
-                          <textarea
-                            class="form-control"
-                            id="catatan_skrining"
-                            rows="2"></textarea>
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-
-                  <!-- =====================================================
-           B. ANTROPOMETRI
-      ====================================================== -->
-
-                  <div class="card border mb-4">
-
-                    <div class="card-header bg-light">
-
-                      <strong>
-                        <i class="fas fa-weight-scale me-2"></i>
-                        B. Asesmen Antropometri
-                      </strong>
-
-                    </div>
-
-
-                    <div class="card-body">
-
-                      <div class="row">
-
-
-                        <div class="col-md-3 mb-3">
-
-                          <label class="form-label">
-                            Berat Badan
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="number"
-                              step="0.1"
-                              class="form-control"
-                              id="bb"
-                              placeholder="0">
-
-                            <span class="input-group-text">
-                              kg
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-3 mb-3">
-
-                          <label class="form-label">
-                            Tinggi Badan
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="number"
-                              step="0.1"
-                              class="form-control"
-                              id="tb"
-                              placeholder="0">
-
-                            <span class="input-group-text">
-                              cm
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-3 mb-3">
-
-                          <label class="form-label">
-                            IMT
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="text"
-                              class="form-control"
-                              id="imt"
-                              readonly>
-
-                            <span class="input-group-text">
-                              kg/m²
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-3 mb-3">
-
-                          <label class="form-label">
-                            Kategori IMT
-                          </label>
-
-                          <input
-                            type="text"
-                            class="form-control"
-                            id="kategori_imt"
-                            readonly>
-
-                        </div>
-
-
-                        <div class="col-md-3 mb-3">
-
-                          <label class="form-label">
-                            Berat Badan Ideal
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="text"
-                              class="form-control"
-                              id="bb_ideal"
-                              readonly>
-
-                            <span class="input-group-text">
-                              kg
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-3 mb-3">
-
-                          <label class="form-label">
-                            Berat Badan Biasanya
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="number"
-                              step="0.1"
-                              class="form-control"
-                              id="bb_biasa">
-
-                            <span class="input-group-text">
-                              kg
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-3 mb-3">
-
-                          <label class="form-label">
-                            Perubahan BB
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="text"
-                              class="form-control"
-                              id="perubahan_bb"
-                              readonly>
-
-                            <span class="input-group-text">
-                              kg
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-3 mb-3">
-
-                          <label class="form-label">
-                            Persentase Perubahan BB
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="text"
-                              class="form-control"
-                              id="persen_perubahan_bb"
-                              readonly>
-
-                            <span class="input-group-text">
-                              %
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-3 mb-3">
-
-                          <label class="form-label">
-                            Lingkar Lengan Atas
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="number"
-                              step="0.1"
-                              class="form-control"
-                              id="llla">
-
-                            <span class="input-group-text">
-                              cm
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-3 mb-3">
-
-                          <label class="form-label">
-                            Lingkar Pinggang
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="number"
-                              step="0.1"
-                              class="form-control"
-                              id="lingkar_pinggang">
-
-                            <span class="input-group-text">
-                              cm
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-3 mb-3">
-
-                          <label class="form-label">
-                            Lingkar Pinggul
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="number"
-                              step="0.1"
-                              class="form-control"
-                              id="lingkar_pinggul">
-
-                            <span class="input-group-text">
-                              cm
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-3 mb-3">
-
-                          <label class="form-label">
-                            Periode Perubahan BB
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="number"
-                              class="form-control"
-                              id="periode_perubahan_bb">
-
-                            <span class="input-group-text">
-                              bulan
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-
-                  <!-- =====================================================
-           C. BIOKIMIA
-      ====================================================== -->
-
-                  <div class="card border mb-4">
-
-                    <div class="card-header bg-light">
-
-                      <strong>
-                        <i class="fas fa-flask me-2"></i>
-                        C. Biokimia / Laboratorium
-                      </strong>
-
-                    </div>
-
-
-                    <div class="card-body">
-
-                      <div class="table-responsive">
-
-                        <table
-                          class="table table-bordered align-middle mb-0">
-
-                          <thead class="table-light">
-
-                            <tr>
-
-                              <th>
-                                Pemeriksaan
-                              </th>
-
-                              <th width="180">
-                                Hasil
-                              </th>
-
-                              <th width="130">
-                                Satuan
-                              </th>
-
-                              <th width="180">
-                                Tanggal
-                              </th>
-
-                              <th>
-                                Keterangan
-                              </th>
-
-                            </tr>
-
-                          </thead>
-
-
-                          <tbody>
-
-
-                            <tr>
-
-                              <td>
-                                Hemoglobin
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="number"
-                                  step="0.1"
-                                  class="form-control"
-                                  id="lab_hb">
-
-                              </td>
-
-                              <td>
-                                g/dL
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="date"
-                                  class="form-control"
-                                  id="lab_hb_tanggal">
-
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  id="lab_hb_keterangan">
-
-                              </td>
-
-                            </tr>
-
-
-                            <tr>
-
-                              <td>
-                                Gula Darah
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="number"
-                                  class="form-control"
-                                  id="lab_gula">
-
-                              </td>
-
-                              <td>
-                                mg/dL
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="date"
-                                  class="form-control"
-                                  id="lab_gula_tanggal">
-
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  id="lab_gula_keterangan">
-
-                              </td>
-
-                            </tr>
-
-
-                            <tr>
-
-                              <td>
-                                HbA1c
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="number"
-                                  step="0.1"
-                                  class="form-control"
-                                  id="lab_hba1c">
-
-                              </td>
-
-                              <td>
-                                %
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="date"
-                                  class="form-control"
-                                  id="lab_hba1c_tanggal">
-
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  id="lab_hba1c_keterangan">
-
-                              </td>
-
-                            </tr>
-
-
-                            <tr>
-
-                              <td>
-                                Kolesterol Total
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="number"
-                                  class="form-control"
-                                  id="lab_kolesterol">
-
-                              </td>
-
-                              <td>
-                                mg/dL
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="date"
-                                  class="form-control"
-                                  id="lab_kolesterol_tanggal">
-
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  id="lab_kolesterol_keterangan">
-
-                              </td>
-
-                            </tr>
-
-
-                            <tr>
-
-                              <td>
-                                LDL
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="number"
-                                  class="form-control"
-                                  id="lab_ldl">
-
-                              </td>
-
-                              <td>
-                                mg/dL
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="date"
-                                  class="form-control"
-                                  id="lab_ldl_tanggal">
-
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  id="lab_ldl_keterangan">
-
-                              </td>
-
-                            </tr>
-
-
-                            <tr>
-
-                              <td>
-                                HDL
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="number"
-                                  class="form-control"
-                                  id="lab_hdl">
-
-                              </td>
-
-                              <td>
-                                mg/dL
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="date"
-                                  class="form-control"
-                                  id="lab_hdl_tanggal">
-
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  id="lab_hdl_keterangan">
-
-                              </td>
-
-                            </tr>
-
-
-                            <tr>
-
-                              <td>
-                                Trigliserida
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="number"
-                                  class="form-control"
-                                  id="lab_trigliserida">
-
-                              </td>
-
-                              <td>
-                                mg/dL
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="date"
-                                  class="form-control"
-                                  id="lab_trigliserida_tanggal">
-
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  id="lab_trigliserida_keterangan">
-
-                              </td>
-
-                            </tr>
-
-
-                            <tr>
-
-                              <td>
-                                Albumin
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="number"
-                                  step="0.1"
-                                  class="form-control"
-                                  id="lab_albumin">
-
-                              </td>
-
-                              <td>
-                                g/dL
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="date"
-                                  class="form-control"
-                                  id="lab_albumin_tanggal">
-
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  id="lab_albumin_keterangan">
-
-                              </td>
-
-                            </tr>
-
-
-                            <tr>
-
-                              <td>
-                                Ureum
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="number"
-                                  class="form-control"
-                                  id="lab_ureum">
-
-                              </td>
-
-                              <td>
-                                mg/dL
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="date"
-                                  class="form-control"
-                                  id="lab_ureum_tanggal">
-
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  id="lab_ureum_keterangan">
-
-                              </td>
-
-                            </tr>
-
-
-                            <tr>
-
-                              <td>
-                                Kreatinin
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="number"
-                                  step="0.1"
-                                  class="form-control"
-                                  id="lab_kreatinin">
-
-                              </td>
-
-                              <td>
-                                mg/dL
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="date"
-                                  class="form-control"
-                                  id="lab_kreatinin_tanggal">
-
-                              </td>
-
-                              <td>
-
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  id="lab_kreatinin_keterangan">
-
-                              </td>
-
-                            </tr>
-
-
-                          </tbody>
-
-                        </table>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-
-                  <!-- =====================================================
-           D. PEMERIKSAAN KLINIS / FISIK
-      ====================================================== -->
-
-                  <div class="card border mb-4">
-
-                    <div class="card-header bg-light">
-
-                      <strong>
-                        <i class="fas fa-stethoscope me-2"></i>
-                        D. Pemeriksaan Klinis / Fisik
-                      </strong>
-
-                    </div>
-
-
-                    <div class="card-body">
-
-                      <div class="row">
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Nafsu Makan
-                          </label>
-
-                          <select
-                            class="form-select"
-                            id="nafsu_makan">
-
-                            <option value="">
-                              Pilih
-                            </option>
-
-                            <option value="Baik">
-                              Baik
-                            </option>
-
-                            <option value="Menurun">
-                              Menurun
-                            </option>
-
-                            <option value="Meningkat">
-                              Meningkat
-                            </option>
-
-                          </select>
-
-                        </div>
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Kesadaran
-                          </label>
-
-                          <select
-                            class="form-select"
-                            id="kesadaran_gizi">
-
-                            <option value="">
-                              Pilih
-                            </option>
-
-                            <option value="Compos Mentis">
-                              Compos Mentis
-                            </option>
-
-                            <option value="Somnolen">
-                              Somnolen
-                            </option>
-
-                            <option value="Sopor">
-                              Sopor
-                            </option>
-
-                            <option value="Koma">
-                              Koma
-                            </option>
-
-                          </select>
-
-                        </div>
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Kondisi Umum
-                          </label>
-
-                          <select
-                            class="form-select"
-                            id="kondisi_umum">
-
-                            <option value="">
-                              Pilih
-                            </option>
-
-                            <option value="Baik">
-                              Baik
-                            </option>
-
-                            <option value="Sedang">
-                              Sedang
-                            </option>
-
-                            <option value="Lemah">
-                              Lemah
-                            </option>
-
-                          </select>
-
-                        </div>
-
-
-                        <div class="col-md-12 mb-3">
-
-                          <label class="form-label">
-                            Keluhan / Gejala Terkait Gizi
-                          </label>
-
-
-                          <div class="row">
-
-
-                            <div class="col-md-3">
-
-                              <div class="form-check">
-
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  name="keluhan_gizi[]"
-                                  value="Mual">
-
-                                <label class="form-check-label">
-                                  Mual
-                                </label>
-
-                              </div>
-
-                            </div>
-
-
-                            <div class="col-md-3">
-
-                              <div class="form-check">
-
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  name="keluhan_gizi[]"
-                                  value="Muntah">
-
-                                <label class="form-check-label">
-                                  Muntah
-                                </label>
-
-                              </div>
-
-                            </div>
-
-
-                            <div class="col-md-3">
-
-                              <div class="form-check">
-
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  name="keluhan_gizi[]"
-                                  value="Diare">
-
-                                <label class="form-check-label">
-                                  Diare
-                                </label>
-
-                              </div>
-
-                            </div>
-
-
-                            <div class="col-md-3">
-
-                              <div class="form-check">
-
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  name="keluhan_gizi[]"
-                                  value="Konstipasi">
-
-                                <label class="form-check-label">
-                                  Konstipasi
-                                </label>
-
-                              </div>
-
-                            </div>
-
-
-                            <div class="col-md-3">
-
-                              <div class="form-check">
-
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  name="keluhan_gizi[]"
-                                  value="Sulit Menelan">
-
-                                <label class="form-check-label">
-                                  Sulit Menelan
-                                </label>
-
-                              </div>
-
-                            </div>
-
-
-                            <div class="col-md-3">
-
-                              <div class="form-check">
-
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  name="keluhan_gizi[]"
-                                  value="Gangguan Mengunyah">
-
-                                <label class="form-check-label">
-                                  Gangguan Mengunyah
-                                </label>
-
-                              </div>
-
-                            </div>
-
-
-                            <div class="col-md-3">
-
-                              <div class="form-check">
-
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  name="keluhan_gizi[]"
-                                  value="Kembung">
-
-                                <label class="form-check-label">
-                                  Kembung
-                                </label>
-
-                              </div>
-
-                            </div>
-
-
-                            <div class="col-md-3">
-
-                              <div class="form-check">
-
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  name="keluhan_gizi[]"
-                                  value="Nyeri Abdomen">
-
-                                <label class="form-check-label">
-                                  Nyeri Abdomen
-                                </label>
-
-                              </div>
-
-                            </div>
-
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-12 mb-3">
-
-                          <label class="form-label">
-                            Kondisi Fisik Khusus
-                          </label>
-
-
-                          <div class="row">
-
-
-                            <div class="col-md-3">
-
-                              <div class="form-check">
-
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  name="kondisi_fisik[]"
-                                  value="Edema">
-
-                                <label class="form-check-label">
-                                  Edema
-                                </label>
-
-                              </div>
-
-                            </div>
-
-
-                            <div class="col-md-3">
-
-                              <div class="form-check">
-
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  name="kondisi_fisik[]"
-                                  value="Asites">
-
-                                <label class="form-check-label">
-                                  Asites
-                                </label>
-
-                              </div>
-
-                            </div>
-
-
-                            <div class="col-md-3">
-
-                              <div class="form-check">
-
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  name="kondisi_fisik[]"
-                                  value="Dehidrasi">
-
-                                <label class="form-check-label">
-                                  Dehidrasi
-                                </label>
-
-                              </div>
-
-                            </div>
-
-
-                            <div class="col-md-3">
-
-                              <div class="form-check">
-
-                                <input
-                                  class="form-check-input"
-                                  type="checkbox"
-                                  name="kondisi_fisik[]"
-                                  value="Kehilangan Massa Otot">
-
-                                <label class="form-check-label">
-                                  Kehilangan Massa Otot
-                                </label>
-
-                              </div>
-
-                            </div>
-
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-12">
-
-                          <label class="form-label">
-                            Catatan Klinis
-                          </label>
-
-                          <textarea
-                            class="form-control"
-                            id="catatan_klinis"
-                            rows="3"></textarea>
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-
-                  <!-- =====================================================
-           E. RIWAYAT GIZI
-      ====================================================== -->
-
-                  <div class="card border mb-4">
-
-                    <div class="card-header bg-light">
-
-                      <strong>
-                        <i class="fas fa-utensils me-2"></i>
-                        E. Riwayat Gizi / Dietary History
-                      </strong>
-
-                    </div>
-
-
-                    <div class="card-body">
-
-                      <div class="row">
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Makan Utama
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="number"
-                              class="form-control"
-                              id="frekuensi_makan">
-
-                            <span class="input-group-text">
-                              kali/hari
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Snack
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="number"
-                              class="form-control"
-                              id="frekuensi_snack">
-
-                            <span class="input-group-text">
-                              kali/hari
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Pola Makan
-                          </label>
-
-                          <select
-                            class="form-select"
-                            id="pola_makan">
-
-                            <option value="">
-                              Pilih
-                            </option>
-
-                            <option value="Teratur">
-                              Teratur
-                            </option>
-
-                            <option value="Tidak Teratur">
-                              Tidak Teratur
-                            </option>
-
-                          </select>
-
-                        </div>
-
-
-                        <!-- =============================================
-                 RECALL 24 JAM
-            ============================================== -->
-
-                        <div class="col-12 mt-2">
-
-                          <div class="d-flex justify-content-between align-items-center mb-2">
-
-                            <h6 class="fw-semibold mb-0">
-                              Recall 24 Jam
-                            </h6>
-
-                            <button
-                              type="button"
-                              class="btn btn-sm btn-outline-primary"
-                              id="btnTambahRecall">
-
-                              <i class="fas fa-plus me-1"></i>
-                              Tambah
-
-                            </button>
-
-                          </div>
-
-
-                          <div class="table-responsive">
-
-                            <table
-                              class="table table-bordered align-middle"
-                              id="tableRecall">
-
-                              <thead class="table-light">
-
-                                <tr>
-
-                                  <th width="130">
-                                    Waktu
-                                  </th>
-
-                                  <th>
-                                    Makanan / Minuman
-                                  </th>
-
-                                  <th width="130">
-                                    Jumlah
-                                  </th>
-
-                                  <th width="130">
-                                    URT
-                                  </th>
-
-                                  <th width="60">
-                                    #
-                                  </th>
-
-                                </tr>
-
-                              </thead>
-
-
-                              <tbody id="recallBody">
-
-                                <tr>
-
-                                  <td>
-
-                                    <input
-                                      type="time"
-                                      class="form-control"
-                                      name="recall_waktu[]">
-
-                                  </td>
-
-
-                                  <td>
-
-                                    <input
-                                      type="text"
-                                      class="form-control"
-                                      name="recall_makanan[]"
-                                      placeholder="Contoh: Nasi, ayam, sayur">
-
-                                  </td>
-
-
-                                  <td>
-
-                                    <input
-                                      type="text"
-                                      class="form-control"
-                                      name="recall_jumlah[]">
-
-                                  </td>
-
-
-                                  <td>
-
-                                    <input
-                                      type="text"
-                                      class="form-control"
-                                      name="recall_urt[]"
-                                      placeholder="Piring / potong / gelas">
-
-                                  </td>
-
-
-                                  <td class="text-center">
-
-                                    <button
-                                      type="button"
-                                      class="btn btn-sm btn-outline-danger btnHapusRecall">
-
-                                      <i class="fas fa-trash"></i>
-
-                                    </button>
-
-                                  </td>
-
-                                </tr>
-
-                              </tbody>
-
-                            </table>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Estimasi Energi
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="number"
-                              class="form-control"
-                              id="asupan_energi">
-
-                            <span class="input-group-text">
-                              kcal
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Estimasi Protein
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="number"
-                              step="0.1"
-                              class="form-control"
-                              id="asupan_protein">
-
-                            <span class="input-group-text">
-                              g
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Cairan
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="number"
-                              class="form-control"
-                              id="asupan_cairan">
-
-                            <span class="input-group-text">
-                              mL/hari
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-
-                  <!-- =====================================================
-           F. RIWAYAT PERSONAL
-      ====================================================== -->
-
-                  <div class="card border mb-4">
-
-                    <div class="card-header bg-light">
-
-                      <strong>
-                        <i class="fas fa-notes-medical me-2"></i>
-                        F. Riwayat Personal
-                      </strong>
-
-                    </div>
-
-
-                    <div class="card-body">
-
-                      <div class="row">
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Pekerjaan
-                          </label>
-
-                          <input
-                            type="text"
-                            class="form-control"
-                            id="pekerjaan">
-
-                        </div>
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Aktivitas Fisik
-                          </label>
-
-                          <select
-                            class="form-select"
-                            id="aktivitas_fisik">
-
-                            <option value="">
-                              Pilih
-                            </option>
-
-                            <option value="Sangat Ringan">
-                              Sangat Ringan
-                            </option>
-
-                            <option value="Ringan">
-                              Ringan
-                            </option>
-
-                            <option value="Sedang">
-                              Sedang
-                            </option>
-
-                            <option value="Berat">
-                              Berat
-                            </option>
-
-                          </select>
-
-                        </div>
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Merokok
-                          </label>
-
-                          <select
-                            class="form-select"
-                            id="merokok">
-
-                            <option value="">
-                              Pilih
-                            </option>
-
-                            <option value="Tidak">
-                              Tidak
-                            </option>
-
-                            <option value="Ya">
-                              Ya
-                            </option>
-
-                          </select>
-
-                        </div>
-
-
-                        <div class="col-md-6 mb-3">
-
-                          <label class="form-label">
-                            Alergi Makanan
-                          </label>
-
-                          <textarea
-                            class="form-control"
-                            id="alergi_makanan"
-                            rows="3"></textarea>
-
-                        </div>
-
-
-                        <div class="col-md-6 mb-3">
-
-                          <label class="form-label">
-                            Intoleransi Makanan
-                          </label>
-
-                          <textarea
-                            class="form-control"
-                            id="intoleransi_makanan"
-                            rows="3"></textarea>
-
-                        </div>
-
-
-                        <div class="col-md-6 mb-3">
-
-                          <label class="form-label">
-                            Diet Sebelumnya
-                          </label>
-
-                          <textarea
-                            class="form-control"
-                            id="diet_sebelumnya"
-                            rows="3"></textarea>
-
-                        </div>
-
-
-                        <div class="col-md-6 mb-3">
-
-                          <label class="form-label">
-                            Pantangan / Makanan yang Dihindari
-                          </label>
-
-                          <textarea
-                            class="form-control"
-                            id="pantangan_makanan"
-                            rows="3"></textarea>
-
-                        </div>
-
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-
-                  <!-- =====================================================
-           G. KESIMPULAN ASESMEN
-      ====================================================== -->
-
-                  <div class="card border mb-4">
-
-                    <div class="card-header bg-light">
-
-                      <strong>
-                        <i class="fas fa-file-medical me-2"></i>
-                        G. Kesimpulan Asesmen Gizi
-                      </strong>
-
-                    </div>
-
-
-                    <div class="card-body">
-
-                      <textarea
-                        class="form-control"
-                        id="kesimpulan_asesmen"
-                        rows="5"
-                        placeholder="Ringkasan hasil asesmen gizi..."></textarea>
-
-                    </div>
-
-                  </div>
-
-
-                  <!-- =====================================================
-           H. DIAGNOSIS GIZI
-      ====================================================== -->
-
-                  <div class="card border mb-4">
-
-                    <div class="card-header bg-light">
-
-                      <strong>
-                        <i class="fas fa-diagnoses me-2"></i>
-                        H. Diagnosis Gizi
-                      </strong>
-
-                    </div>
-
-
-                    <div class="card-body">
-
-                      <div class="row">
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Domain
-                          </label>
-
-                          <select
-                            class="form-select"
-                            id="diagnosis_domain">
-
-                            <option value="">
-                              Pilih Domain
-                            </option>
-
-                            <option value="Intake">
-                              Intake
-                            </option>
-
-                            <option value="Clinical">
-                              Clinical
-                            </option>
-
-                            <option value="Behavioral / Environmental">
-                              Behavioral / Environmental
-                            </option>
-
-                          </select>
-
-                        </div>
-
-
-                        <div class="col-md-8 mb-3">
-
-                          <label class="form-label">
-                            Problem
-                          </label>
-
-                          <input
-                            type="text"
-                            class="form-control"
-                            id="diagnosis_problem"
-                            placeholder="Contoh: Asupan energi tidak adekuat">
-
-                        </div>
-
-
-                        <div class="col-md-6 mb-3">
-
-                          <label class="form-label">
-                            Etiologi
-                          </label>
-
-                          <textarea
-                            class="form-control"
-                            id="diagnosis_etiologi"
-                            rows="3"
-                            placeholder="Berkaitan dengan..."></textarea>
-
-                        </div>
-
-
-                        <div class="col-md-6 mb-3">
-
-                          <label class="form-label">
-                            Signs / Symptoms
-                          </label>
-
-                          <textarea
-                            class="form-control"
-                            id="diagnosis_tanda"
-                            rows="3"
-                            placeholder="Dibuktikan dengan..."></textarea>
-
-                        </div>
-
-
-                        <div class="col-12">
-
-                          <label class="form-label fw-semibold">
-                            Diagnosis Gizi / PES
-                          </label>
-
-                          <textarea
-                            class="form-control"
-                            id="diagnosis_pes"
-                            rows="4"
-                            readonly></textarea>
-
-                        </div>
-
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-
-                  <!-- =====================================================
-           I. INTERVENSI GIZI
-      ====================================================== -->
-
-                  <div class="card border mb-4">
-
-                    <div class="card-header bg-light">
-
-                      <strong>
-                        <i class="fas fa-bowl-food me-2"></i>
-                        I. Intervensi Gizi & Preskripsi Diet
-                      </strong>
-
-                    </div>
-
-
-                    <div class="card-body">
-
-
-                      <!-- TUJUAN -->
-
-                      <div class="mb-4">
-
-                        <label class="form-label fw-semibold">
-                          Tujuan Intervensi
-                        </label>
-
-
-                        <div class="row">
-
-
-                          <div class="col-md-4">
-
-                            <div class="form-check">
-
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                name="tujuan_intervensi[]"
-                                value="Meningkatkan Asupan Energi">
-
-                              <label class="form-check-label">
-                                Meningkatkan Asupan Energi
-                              </label>
-
-                            </div>
-
-                          </div>
-
-
-                          <div class="col-md-4">
-
-                            <div class="form-check">
-
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                name="tujuan_intervensi[]"
-                                value="Meningkatkan Berat Badan">
-
-                              <label class="form-check-label">
-                                Meningkatkan Berat Badan
-                              </label>
-
-                            </div>
-
-                          </div>
-
-
-                          <div class="col-md-4">
-
-                            <div class="form-check">
-
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                name="tujuan_intervensi[]"
-                                value="Menurunkan Berat Badan">
-
-                              <label class="form-check-label">
-                                Menurunkan Berat Badan
-                              </label>
-
-                            </div>
-
-                          </div>
-
-
-                          <div class="col-md-4">
-
-                            <div class="form-check">
-
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                name="tujuan_intervensi[]"
-                                value="Kontrol Gula Darah">
-
-                              <label class="form-check-label">
-                                Kontrol Gula Darah
-                              </label>
-
-                            </div>
-
-                          </div>
-
-
-                          <div class="col-md-4">
-
-                            <div class="form-check">
-
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                name="tujuan_intervensi[]"
-                                value="Kontrol Tekanan Darah">
-
-                              <label class="form-check-label">
-                                Kontrol Tekanan Darah
-                              </label>
-
-                            </div>
-
-                          </div>
-
-
-                          <div class="col-md-4">
-
-                            <div class="form-check">
-
-                              <input
-                                class="form-check-input"
-                                type="checkbox"
-                                name="tujuan_intervensi[]"
-                                value="Perbaikan Status Gizi">
-
-                              <label class="form-check-label">
-                                Perbaikan Status Gizi
-                              </label>
-
-                            </div>
-
-                          </div>
-
-
-                        </div>
-
-                      </div>
-
-
-                      <!-- PRESKRIPSI DIET -->
-
-                      <div class="row">
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Jenis Diet
-                          </label>
-
-                          <select
-                            class="form-select"
-                            id="jenis_diet">
-
-                            <option value="">
-                              Pilih Jenis Diet
-                            </option>
-
-                            <option value="Diet Biasa">
-                              Diet Biasa
-                            </option>
-
-                            <option value="Diet Lunak">
-                              Diet Lunak
-                            </option>
-
-                            <option value="Diet Saring">
-                              Diet Saring
-                            </option>
-
-                            <option value="Diet Cair">
-                              Diet Cair
-                            </option>
-
-                            <option value="Diet DM">
-                              Diet DM
-                            </option>
-
-                            <option value="Diet Rendah Garam">
-                              Diet Rendah Garam
-                            </option>
-
-                            <option value="Diet Rendah Lemak">
-                              Diet Rendah Lemak
-                            </option>
-
-                            <option value="Diet Rendah Protein">
-                              Diet Rendah Protein
-                            </option>
-
-                            <option value="Diet Tinggi Protein">
-                              Diet Tinggi Protein
-                            </option>
-
-                            <option value="Diet Ginjal">
-                              Diet Ginjal
-                            </option>
-
-                            <option value="Diet Hati">
-                              Diet Hati
-                            </option>
-
-                            <option value="Diet Jantung">
-                              Diet Jantung
-                            </option>
-
-                            <option value="Diet Tinggi Kalori Tinggi Protein">
-                              Tinggi Kalori Tinggi Protein
-                            </option>
-
-                            <option value="Diet Lainnya">
-                              Diet Lainnya
-                            </option>
-
-                          </select>
-
-                        </div>
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Energi
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="number"
-                              class="form-control"
-                              id="target_energi">
-
-                            <span class="input-group-text">
-                              kcal/hari
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Protein
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="number"
-                              step="0.1"
-                              class="form-control"
-                              id="target_protein">
-
-                            <span class="input-group-text">
-                              g/hari
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Lemak
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="number"
-                              step="0.1"
-                              class="form-control"
-                              id="target_lemak">
-
-                            <span class="input-group-text">
-                              g/hari
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Karbohidrat
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="number"
-                              step="0.1"
-                              class="form-control"
-                              id="target_karbohidrat">
-
-                            <span class="input-group-text">
-                              g/hari
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Cairan
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="number"
-                              class="form-control"
-                              id="target_cairan">
-
-                            <span class="input-group-text">
-                              mL/hari
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Bentuk Makanan
-                          </label>
-
-                          <select
-                            class="form-select"
-                            id="bentuk_makanan">
-
-                            <option value="">
-                              Pilih
-                            </option>
-
-                            <option value="Biasa">
-                              Biasa
-                            </option>
-
-                            <option value="Lunak">
-                              Lunak
-                            </option>
-
-                            <option value="Saring">
-                              Saring
-                            </option>
-
-                            <option value="Cair">
-                              Cair
-                            </option>
-
-                          </select>
-
-                        </div>
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Frekuensi Makan Utama
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="number"
-                              class="form-control"
-                              id="target_frekuensi_makan">
-
-                            <span class="input-group-text">
-                              kali/hari
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-4 mb-3">
-
-                          <label class="form-label">
-                            Snack
-                          </label>
-
-                          <div class="input-group">
-
-                            <input
-                              type="number"
-                              class="form-control"
-                              id="target_frekuensi_snack">
-
-                            <span class="input-group-text">
-                              kali/hari
-                            </span>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-12 mb-3">
-
-                          <label class="form-label">
-                            Pembatasan / Modifikasi Diet
-                          </label>
-
-                          <textarea
-                            class="form-control"
-                            id="modifikasi_diet"
-                            rows="3"
-                            placeholder="Contoh: pembatasan gula sederhana, natrium, lemak jenuh, cairan, dll."></textarea>
-
-                        </div>
-
-
-                        <div class="col-12">
-
-                          <label class="form-label">
-                            Instruksi Diet
-                          </label>
-
-                          <textarea
-                            class="form-control"
-                            id="instruksi_diet"
-                            rows="4"
-                            placeholder="Instruksi diet untuk pasien..."></textarea>
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-
-                  <!-- =====================================================
-           J. EDUKASI GIZI
-      ====================================================== -->
-
-                  <div class="card border mb-4">
-
-                    <div class="card-header bg-light">
-
-                      <strong>
-                        <i class="fas fa-chalkboard-user me-2"></i>
-                        J. Edukasi Gizi
-                      </strong>
-
-                    </div>
-
-
-                    <div class="card-body">
-
-                      <div class="row">
-
-
-                        <div class="col-md-3">
-
-                          <div class="form-check">
-
-                            <input
-                              class="form-check-input"
-                              type="checkbox"
-                              name="edukasi_gizi[]"
-                              value="Pemilihan Makanan">
-
-                            <label class="form-check-label">
-                              Pemilihan Makanan
-                            </label>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-3">
-
-                          <div class="form-check">
-
-                            <input
-                              class="form-check-input"
-                              type="checkbox"
-                              name="edukasi_gizi[]"
-                              value="Porsi Makan">
-
-                            <label class="form-check-label">
-                              Porsi Makan
-                            </label>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-3">
-
-                          <div class="form-check">
-
-                            <input
-                              class="form-check-input"
-                              type="checkbox"
-                              name="edukasi_gizi[]"
-                              value="Jadwal Makan">
-
-                            <label class="form-check-label">
-                              Jadwal Makan
-                            </label>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-3">
-
-                          <div class="form-check">
-
-                            <input
-                              class="form-check-input"
-                              type="checkbox"
-                              name="edukasi_gizi[]"
-                              value="Diet Penyakit">
-
-                            <label class="form-check-label">
-                              Diet Penyakit
-                            </label>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-3">
-
-                          <div class="form-check">
-
-                            <input
-                              class="form-check-input"
-                              type="checkbox"
-                              name="edukasi_gizi[]"
-                              value="Pembatasan Gula">
-
-                            <label class="form-check-label">
-                              Pembatasan Gula
-                            </label>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-3">
-
-                          <div class="form-check">
-
-                            <input
-                              class="form-check-input"
-                              type="checkbox"
-                              name="edukasi_gizi[]"
-                              value="Pembatasan Garam">
-
-                            <label class="form-check-label">
-                              Pembatasan Garam
-                            </label>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-3">
-
-                          <div class="form-check">
-
-                            <input
-                              class="form-check-input"
-                              type="checkbox"
-                              name="edukasi_gizi[]"
-                              value="Aktivitas Fisik">
-
-                            <label class="form-check-label">
-                              Aktivitas Fisik
-                            </label>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-md-3">
-
-                          <div class="form-check">
-
-                            <input
-                              class="form-check-input"
-                              type="checkbox"
-                              name="edukasi_gizi[]"
-                              value="Label Pangan">
-
-                            <label class="form-check-label">
-                              Membaca Label Pangan
-                            </label>
-
-                          </div>
-
-                        </div>
-
-
-                        <div class="col-12 mt-3">
-
-                          <label class="form-label">
-                            Materi / Catatan Edukasi
-                          </label>
-
-                          <textarea
-                            class="form-control"
-                            id="materi_edukasi"
-                            rows="4"></textarea>
-
-                        </div>
-
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-
-                  <!-- =====================================================
-           K. MONITORING & EVALUASI
-      ====================================================== -->
-
-                  <div class="card border mb-4">
-
-                    <div class="card-header bg-light">
-
-                      <strong>
-                        <i class="fas fa-chart-line me-2"></i>
-                        K. Monitoring & Evaluasi Gizi
-                      </strong>
-
-                    </div>
-
-
-                    <div class="card-body">
-
-
-                      <div class="table-responsive">
-
-                        <table
-                          class="table table-bordered align-middle"
-                          id="tableMonitoring">
-
-                          <thead class="table-light">
-
-                            <tr>
-
-                              <th>
-                                Parameter
-                              </th>
-
-                              <th>
-                                Target
-                              </th>
-
-                              <th>
-                                Hasil
-                              </th>
-
-                              <th>
-                                Tanggal
-                              </th>
-
-                              <th>
-                                Status
-                              </th>
-
-                              <th>
-                                Keterangan
-                              </th>
-
-                              <th width="60">
-                                #
-                              </th>
-
-                            </tr>
-
-                          </thead>
-
-
-                          <tbody id="monitoringBody">
-
-                            <tr>
-
-                              <td>
-
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  name="monitoring_parameter[]"
-                                  placeholder="Contoh: Berat Badan">
-
-                              </td>
-
-
-                              <td>
-
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  name="monitoring_target[]">
-
-                              </td>
-
-
-                              <td>
-
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  name="monitoring_hasil[]">
-
-                              </td>
-
-
-                              <td>
-
-                                <input
-                                  type="date"
-                                  class="form-control"
-                                  name="monitoring_tanggal[]">
-
-                              </td>
-
-
-                              <td>
-
-                                <select
-                                  class="form-select"
-                                  name="monitoring_status[]">
-
-                                  <option value="">
-                                    Pilih
-                                  </option>
-
-                                  <option value="Membaik">
-                                    Membaik
-                                  </option>
-
-                                  <option value="Tetap">
-                                    Tetap
-                                  </option>
-
-                                  <option value="Memburuk">
-                                    Memburuk
-                                  </option>
-
-                                </select>
-
-                              </td>
-
-
-                              <td>
-
-                                <input
-                                  type="text"
-                                  class="form-control"
-                                  name="monitoring_keterangan[]">
-
-                              </td>
-
-
-                              <td class="text-center">
-
-                                <button
-                                  type="button"
-                                  class="btn btn-sm btn-outline-danger btnHapusMonitoring">
-
-                                  <i class="fas fa-trash"></i>
-
-                                </button>
-
-                              </td>
-
-                            </tr>
-
-                          </tbody>
-
-                        </table>
-
-                      </div>
-
-
-                      <button
-                        type="button"
-                        class="btn btn-sm btn-outline-primary mb-3"
-                        id="btnTambahMonitoring">
-
-                        <i class="fas fa-plus me-1"></i>
-                        Tambah Parameter
-
-                      </button>
-
-
-                      <div class="row">
-
-
-                        <div class="col-md-6 mb-3">
-
-                          <label class="form-label">
-                            Evaluasi
-                          </label>
-
-                          <textarea
-                            class="form-control"
-                            id="evaluasi_gizi"
-                            rows="4"></textarea>
-
-                        </div>
-
-
-                        <div class="col-md-6 mb-3">
-
-                          <label class="form-label">
-                            Rencana Tindak Lanjut
-                          </label>
-
-                          <textarea
-                            class="form-control"
-                            id="rencana_tindak_lanjut"
-                            rows="4"></textarea>
-
-                        </div>
-
-
-                        <div class="col-md-4">
-
-                          <label class="form-label">
-                            Rencana Kontrol Gizi
-                          </label>
-
-                          <input
-                            type="date"
-                            class="form-control"
-                            id="tanggal_kontrol_gizi">
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-
-                  <!-- =====================================================
-           FOOTER
-      ====================================================== -->
-
-                  <div class="card border-0 bg-light">
-
-                    <div class="card-body">
-
-                      <div class="d-flex justify-content-between align-items-center">
-
-                        <div>
-
-                          <strong>
-                            Status Asesmen
-                          </strong>
-
-                          <div class="small text-muted">
-                            Pastikan asesmen, diagnosis, intervensi dan monitoring telah terdokumentasi.
-                          </div>
-
-                        </div>
-
-
-                        <select
-                          class="form-select"
-                          id="status_asesmen_gizi"
-                          style="width:220px;">
-
-                          <option value="Draft">
-                            Draft
-                          </option>
-
-                          <option value="Selesai">
-                            Selesai
-                          </option>
-
-                          <option value="Follow Up">
-                            Follow Up
-                          </option>
-
-                        </select>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
                 </div>
-
               </div>
-
             </div>
-
-
-            <!-- =========================================================
-     JAVASCRIPT RME GIZI
-========================================================= -->
-
-            <script>
-              $(document).ready(function() {
-
-
-                /* =========================================================
-                   HITUNG IMT
-                ========================================================= */
-
-                function hitungIMT() {
-
-                  const bb =
-                    parseFloat(
-                      $('#bb').val()
-                    );
-
-                  const tb =
-                    parseFloat(
-                      $('#tb').val()
-                    );
-
-
-                  if (
-                    !bb ||
-                    !tb ||
-                    tb <= 0
-                  ) {
-
-                    $('#imt').val('');
-                    $('#kategori_imt').val('');
-
-                    return;
-
-                  }
-
-
-                  const tinggiMeter =
-                    tb / 100;
-
-
-                  const imt =
-                    bb /
-                    (
-                      tinggiMeter *
-                      tinggiMeter
-                    );
-
-
-                  $('#imt').val(
-                    imt.toFixed(1)
-                  );
-
-
-                  let kategori = '';
-
-
-                  /*
-                   * Kategori umum dewasa.
-                   * Untuk pediatrik sebaiknya menggunakan
-                   * kurva pertumbuhan/indikator usia.
-                   */
-
-                  if (imt < 18.5) {
-
-                    kategori =
-                      'Kurus';
-
-                  } else if (
-                    imt < 25
-                  ) {
-
-                    kategori =
-                      'Normal';
-
-                  } else if (
-                    imt < 30
-                  ) {
-
-                    kategori =
-                      'Overweight';
-
-                  } else {
-
-                    kategori =
-                      'Obesitas';
-
-                  }
-
-
-                  $('#kategori_imt')
-                    .val(
-                      kategori
-                    );
-
-                }
-
-
-                /* =========================================================
-                   BERAT BADAN IDEAL
-                ========================================================= */
-
-                function hitungBBIdeal() {
-
-                  const tb =
-                    parseFloat(
-                      $('#tb').val()
-                    );
-
-
-                  if (
-                    !tb ||
-                    tb <= 0
-                  ) {
-
-                    $('#bb_ideal').val('');
-
-                    return;
-
-                  }
-
-
-                  /*
-                   * Rumus Broca sederhana.
-                   * Untuk implementasi klinis lebih lanjut,
-                   * formula dapat disesuaikan berdasarkan
-                   * jenis kelamin dan kondisi pasien.
-                   */
-
-                  const bbIdeal =
-                    (
-                      tb - 100
-                    ) -
-                    (
-                      0.1 *
-                      (
-                        tb - 100
-                      )
-                    );
-
-
-                  $('#bb_ideal')
-                    .val(
-                      bbIdeal.toFixed(1)
-                    );
-
-                }
-
-
-                /* =========================================================
-                   PERUBAHAN BB
-                ========================================================= */
-
-                function hitungPerubahanBB() {
-
-                  const bb =
-                    parseFloat(
-                      $('#bb').val()
-                    );
-
-
-                  const bbBiasa =
-                    parseFloat(
-                      $('#bb_biasa').val()
-                    );
-
-
-                  if (
-                    isNaN(bb) ||
-                    isNaN(bbBiasa) ||
-                    bbBiasa <= 0
-                  ) {
-
-                    $('#perubahan_bb').val('');
-                    $('#persen_perubahan_bb').val('');
-
-                    return;
-
-                  }
-
-
-                  const perubahan =
-                    bb -
-                    bbBiasa;
-
-
-                  const persen =
-                    (
-                      Math.abs(
-                        perubahan
-                      ) /
-                      bbBiasa
-                    ) *
-                    100;
-
-
-                  $('#perubahan_bb')
-                    .val(
-                      perubahan.toFixed(1)
-                    );
-
-
-                  $('#persen_perubahan_bb')
-                    .val(
-                      persen.toFixed(1)
-                    );
-
-                }
-
-
-                /* =========================================================
-                   EVENT ANTROPOMETRI
-                ========================================================= */
-
-                $('#bb, #tb')
-                  .on(
-                    'input',
-                    function() {
-
-                      hitungIMT();
-
-                      hitungBBIdeal();
-
-                      hitungPerubahanBB();
-
-                    }
-                  );
-
-
-                $('#bb_biasa')
-                  .on(
-                    'input',
-                    function() {
-
-                      hitungPerubahanBB();
-
-                    }
-                  );
-
-
-                /* =========================================================
-                   PES DIAGNOSIS GENERATOR
-                ========================================================= */
-
-                function generatePES() {
-
-                  const problem =
-                    $.trim(
-                      $('#diagnosis_problem')
-                      .val()
-                    );
-
-
-                  const etiologi =
-                    $.trim(
-                      $('#diagnosis_etiologi')
-                      .val()
-                    );
-
-
-                  const tanda =
-                    $.trim(
-                      $('#diagnosis_tanda')
-                      .val()
-                    );
-
-
-                  let hasil = '';
-
-
-                  if (problem) {
-
-                    hasil +=
-                      problem;
-
-                  }
-
-
-                  if (etiologi) {
-
-                    hasil +=
-                      ' berkaitan dengan ' +
-                      etiologi;
-
-                  }
-
-
-                  if (tanda) {
-
-                    hasil +=
-                      ' dibuktikan dengan ' +
-                      tanda;
-
-                  }
-
-
-                  $('#diagnosis_pes')
-                    .val(
-                      hasil
-                    );
-
-                }
-
-
-                $('#diagnosis_problem, #diagnosis_etiologi, #diagnosis_tanda')
-                  .on(
-                    'input',
-                    function() {
-
-                      generatePES();
-
-                    }
-                  );
-
-
-                /* =========================================================
-                   TAMBAH RECALL
-                ========================================================= */
-
-                $('#btnTambahRecall')
-                  .on(
-                    'click',
-                    function() {
-
-
-                      const row = `
-
-          <tr>
-
-            <td>
-
-              <input
-                type="time"
-                class="form-control"
-                name="recall_waktu[]">
-
-            </td>
-
-
-            <td>
-
-              <input
-                type="text"
-                class="form-control"
-                name="recall_makanan[]"
-                placeholder="Makanan / minuman">
-
-            </td>
-
-
-            <td>
-
-              <input
-                type="text"
-                class="form-control"
-                name="recall_jumlah[]">
-
-            </td>
-
-
-            <td>
-
-              <input
-                type="text"
-                class="form-control"
-                name="recall_urt[]"
-                placeholder="URT">
-
-            </td>
-
-
-            <td class="text-center">
-
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-danger btnHapusRecall">
-
-                <i class="fas fa-trash"></i>
-
-              </button>
-
-            </td>
-
-          </tr>
-
-        `;
-
-
-                      $('#recallBody')
-                        .append(
-                          row
-                        );
-
-                    }
-                  );
-
-
-                /* =========================================================
-                   HAPUS RECALL
-                ========================================================= */
-
-                $(document)
-                  .on(
-                    'click',
-                    '.btnHapusRecall',
-                    function() {
-
-                      const jumlah =
-                        $('#recallBody tr')
-                        .length;
-
-
-                      if (
-                        jumlah <= 1
-                      ) {
-
-                        $(this)
-                          .closest('tr')
-                          .find('input')
-                          .val('');
-
-                        return;
-
-                      }
-
-
-                      $(this)
-                        .closest('tr')
-                        .remove();
-
-                    }
-                  );
-
-
-                /* =========================================================
-                   TAMBAH MONITORING
-                ========================================================= */
-
-                $('#btnTambahMonitoring')
-                  .on(
-                    'click',
-                    function() {
-
-
-                      const row = `
-
-          <tr>
-
-            <td>
-
-              <input
-                type="text"
-                class="form-control"
-                name="monitoring_parameter[]">
-
-            </td>
-
-
-            <td>
-
-              <input
-                type="text"
-                class="form-control"
-                name="monitoring_target[]">
-
-            </td>
-
-
-            <td>
-
-              <input
-                type="text"
-                class="form-control"
-                name="monitoring_hasil[]">
-
-            </td>
-
-
-            <td>
-
-              <input
-                type="date"
-                class="form-control"
-                name="monitoring_tanggal[]">
-
-            </td>
-
-
-            <td>
-
-              <select
-                class="form-select"
-                name="monitoring_status[]">
-
-                <option value="">
-                  Pilih
-                </option>
-
-                <option value="Membaik">
-                  Membaik
-                </option>
-
-                <option value="Tetap">
-                  Tetap
-                </option>
-
-                <option value="Memburuk">
-                  Memburuk
-                </option>
-
-              </select>
-
-            </td>
-
-
-            <td>
-
-              <input
-                type="text"
-                class="form-control"
-                name="monitoring_keterangan[]">
-
-            </td>
-
-
-            <td class="text-center">
-
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-danger btnHapusMonitoring">
-
-                <i class="fas fa-trash"></i>
-
-              </button>
-
-            </td>
-
-          </tr>
-
-        `;
-
-
-                      $('#monitoringBody')
-                        .append(
-                          row
-                        );
-
-                    }
-                  );
-
-
-                /* =========================================================
-                   HAPUS MONITORING
-                ========================================================= */
-
-                $(document)
-                  .on(
-                    'click',
-                    '.btnHapusMonitoring',
-                    function() {
-
-                      const jumlah =
-                        $('#monitoringBody tr')
-                        .length;
-
-
-                      if (
-                        jumlah <= 1
-                      ) {
-
-                        $(this)
-                          .closest('tr')
-                          .find('input')
-                          .val('');
-
-                        return;
-
-                      }
-
-
-                      $(this)
-                        .closest('tr')
-                        .remove();
-
-                    }
-                  );
-
-
-                /* =========================================================
-                   SIMPAN
-                ========================================================= */
-
-                $('#btnSimpanGizi')
-                  .on(
-                    'click',
-                    function() {
-
-
-                      /*
-                       * Untuk sementara kumpulkan data
-                       * terlebih dahulu.
-                       *
-                       * Nanti dapat diarahkan ke:
-                       * nutritionAssessmentController.php
-                       */
-
-                      const data = {
-
-                        id_visit: '<?= htmlspecialchars($no ?? '') ?>',
-
-                        id_patient: '<?= htmlspecialchars($rm ?? '') ?>',
-
-                        tanggal_asesmen: $('#gizi_tanggal_asesmen')
-                          .val(),
-
-                        risiko_gizi: $('#risiko_gizi')
-                          .val(),
-
-                        bb: $('#bb')
-                          .val(),
-
-                        tb: $('#tb')
-                          .val(),
-
-                        imt: $('#imt')
-                          .val(),
-
-                        kategori_imt: $('#kategori_imt')
-                          .val(),
-
-                        bb_ideal: $('#bb_ideal')
-                          .val(),
-
-                        bb_biasa: $('#bb_biasa')
-                          .val(),
-
-                        perubahan_bb: $('#perubahan_bb')
-                          .val(),
-
-                        persen_perubahan_bb: $('#persen_perubahan_bb')
-                          .val(),
-
-                        kesimpulan_asesmen: $('#kesimpulan_asesmen')
-                          .val(),
-
-                        diagnosis_domain: $('#diagnosis_domain')
-                          .val(),
-
-                        diagnosis_problem: $('#diagnosis_problem')
-                          .val(),
-
-                        diagnosis_etiologi: $('#diagnosis_etiologi')
-                          .val(),
-
-                        diagnosis_tanda: $('#diagnosis_tanda')
-                          .val(),
-
-                        diagnosis_pes: $('#diagnosis_pes')
-                          .val(),
-
-                        jenis_diet: $('#jenis_diet')
-                          .val(),
-
-                        target_energi: $('#target_energi')
-                          .val(),
-
-                        target_protein: $('#target_protein')
-                          .val(),
-
-                        target_lemak: $('#target_lemak')
-                          .val(),
-
-                        target_karbohidrat: $('#target_karbohidrat')
-                          .val(),
-
-                        target_cairan: $('#target_cairan')
-                          .val(),
-
-                        bentuk_makanan: $('#bentuk_makanan')
-                          .val(),
-
-                        modifikasi_diet: $('#modifikasi_diet')
-                          .val(),
-
-                        instruksi_diet: $('#instruksi_diet')
-                          .val(),
-
-                        evaluasi_gizi: $('#evaluasi_gizi')
-                          .val(),
-
-                        rencana_tindak_lanjut: $('#rencana_tindak_lanjut')
-                          .val(),
-
-                        tanggal_kontrol_gizi: $('#tanggal_kontrol_gizi')
-                          .val(),
-
-                        status: $('#status_asesmen_gizi')
-                          .val()
-
-                      };
-
-
-                      console.log(
-                        'DATA RME GIZI:',
-                        data
-                      );
-
-
-                      Swal.fire({
-
-                        icon: 'success',
-
-                        title: 'Data Siap Disimpan',
-
-                        text: 'Form RME Gizi berhasil dikumpulkan. Controller dapat dihubungkan pada tahap berikutnya.',
-
-                        confirmButtonText: 'OK'
-
-                      });
-
-                    }
-                  );
-
-
-              });
-            </script>
           </div>
         </div>
       </div>
     </div>
   </div>
 
+  <?php require 'library.php'; ?>
+  <script>
+    (function() {
+      'use strict';
+      const NO = <?= json_encode($no) ?>, RM = <?= json_encode($rm) ?>;
+      const API = 'controller/visit/giziController?no=' + encodeURIComponent(NO);
+      const SKEMA = <?= json_encode(array_map(fn($s) => array_map(fn($f) => ['tipe' => $f['tipe']] + (isset($f['kolom']) ? ['kolom' => $f['kolom']] : []), $s[2]), $skema), JSON_UNESCAPED_UNICODE) ?>;
+      const LAB = <?= json_encode(array_keys(giziLab())) ?>;
+      const $id = i => document.getElementById(i);
+      const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      const tglId = s => { const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? (+m[3]) + ' ' + BLN[m[2] - 1] + ' ' + m[1] : '-'; };
+      const toast = (title, icon = 'success') => Swal.fire({ toast: true, position: 'top-end', icon, title, showConfirmButton: false, timer: 2400 });
+      const FIELDS = Object.assign({}, ...Object.values(SKEMA));
+      let K = {}, DATA = [], MIGRASI = false, AKTIF = null, kotor = false;
 
+      async function api(url, opt) {
+        const r = await fetch(url, opt);
+        const j = await r.json().catch(() => ({ status: 'error', message: 'Respon server tidak valid.' }));
+        if (!r.ok || j.status !== 'success') { const e = new Error(j.message || 'Terjadi kesalahan.'); e.field = j.field; throw e; }
+        return j;
+      }
 
-  <?php
-  require 'library.php';
-  ?>
+      /* ================= RIWAYAT ================= */
+      function muat() {
+        return api(API).then(res => {
+          DATA = res.data || [];
+          K = res.kunjungan || {};
+          MIGRASI = !!res.migrasi;
+          $id('gzMigrasi').classList.toggle('d-none', MIGRASI);
+          $id('gzBatal').classList.toggle('d-none', !K.batal);
+          $id('gzBtnBaru').disabled = !MIGRASI || K.batal;
+          renderRiwayat();
+        }).catch(e => { $id('gzRiwayat').innerHTML = `<tr><td colspan="7" class="kosong text-danger">${esc(e.message)}</td></tr>`; });
+      }
+      function renderRiwayat() {
+        if (!DATA.length) {
+          $id('gzRiwayat').innerHTML = `<tr><td colspan="7" class="kosong"><i class="ti ti-salad me-1"></i>Belum ada asesmen gizi untuk kunjungan ini.${MIGRASI && !K.batal ? ' Klik <b>Asesmen baru</b> untuk memulai.' : ''}</td></tr>`;
+          return;
+        }
+        $id('gzRiwayat').innerHTML = DATA.map(r => {
+          const cetak = 'module/admin/print/formulir_gizi?' + new URLSearchParams({ no: NO, rm: RM, id: r.id_gizi });
+          return `<tr class="${AKTIF && +AKTIF.id_gizi === +r.id_gizi ? 'aktif' : ''}">
+            <td><div class="aksi d-flex gap-1">
+              <button type="button" class="btn btn-sm btn-primary" data-buka="${r.id_gizi}" title="Buka / ubah"><i class="ti ti-pencil"></i></button>
+              <a class="btn btn-sm btn-outline-dark" href="${esc(cetak)}" target="_blank" rel="noopener" title="Cetak"><i class="ti ti-printer"></i></a>
+              ${r.status === 'Draft' ? `<button type="button" class="btn btn-sm btn-danger" data-hapus="${r.id_gizi}" title="Hapus draft"><i class="ti ti-trash"></i></button>` : ''}
+            </div></td>
+            <td class="text-nowrap fw-semibold">${esc(tglId(r.tanggal_asesmen))}</td>
+            <td>${esc(r.nutrisionis || '-')}</td>
+            <td>${r.risiko_gizi ? `<span class="tag tg-${esc(r.risiko_gizi.toLowerCase())}">${esc(r.risiko_gizi)}</span>` : '<span class="text-muted">-</span>'}</td>
+            <td style="max-width:360px">${r.diagnosis_pes ? esc(r.diagnosis_pes) : '<span class="text-muted">-</span>'}</td>
+            <td>${esc(r.jenis_diet || '-')}</td>
+            <td><span class="tag ${r.status === 'Selesai' ? 'tg-selesai' : 'tg-draft'}">${esc(r.status)}</span></td>
+          </tr>`;
+        }).join('');
+      }
+
+      /* ================= FORM: isi / baca ================= */
+      const form = $id('gzForm');
+      function barisTabel(key, r = {}) {
+        const kol = FIELDS[key].kolom;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><button type="button" class="btn btn-sm btn-outline-danger" data-hapus-baris title="Hapus baris"><i class="ti ti-x"></i></button></td>` +
+          Object.entries(kol).map(([ck, c]) => {
+            const v = esc(r[ck] ?? '');
+            if (c[1] === 'select') return `<td><select class="form-select form-select-sm" data-col="${ck}"><option value="">—</option>${c[2].map(o => `<option${o === r[ck] ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select></td>`;
+            return `<td><input type="${c[1]}" class="form-control form-control-sm" data-col="${ck}" value="${v}" placeholder="${esc(c[2] || '')}" maxlength="255"></td>`;
+          }).join('');
+        form.querySelector(`[data-tabel="${key}"]`).appendChild(tr);
+      }
+      function isi(d) {
+        Object.entries(FIELDS).forEach(([key, def]) => {
+          const v = d[key];
+          if (['date', 'text', 'textarea', 'number', 'select'].includes(def.tipe)) form.querySelector(`[data-f="${key}"]`).value = v ?? '';
+          else if (def.tipe === 'radio') form.querySelectorAll(`[name="r_${key}"]`).forEach(r => r.checked = r.value === v);
+          else if (def.tipe === 'checks') form.querySelectorAll(`[data-checks="${key}"] input`).forEach(c => c.checked = Array.isArray(v) && v.includes(c.value));
+          else if (def.tipe === 'lab') LAB.forEach(lk => ['nilai', 'tanggal', 'keterangan'].forEach(f => { form.querySelector(`[data-lab="${lk}"][data-lk="${f}"]`).value = (v && v[lk] && v[lk][f]) || ''; }));
+          else if (def.tipe === 'tabel') {
+            form.querySelector(`[data-tabel="${key}"]`).innerHTML = '';
+            (Array.isArray(v) && v.length ? v : [{}]).forEach(r => barisTabel(key, r));
+          }
+        });
+        hitung();
+      }
+      function baca() {
+        const d = {};
+        Object.entries(FIELDS).forEach(([key, def]) => {
+          if (['date', 'text', 'textarea', 'number', 'select'].includes(def.tipe)) d[key] = form.querySelector(`[data-f="${key}"]`).value.trim();
+          else if (def.tipe === 'radio') d[key] = (form.querySelector(`[name="r_${key}"]:checked`) || {}).value || '';
+          else if (def.tipe === 'checks') d[key] = [...form.querySelectorAll(`[data-checks="${key}"] input:checked`)].map(c => c.value);
+          else if (def.tipe === 'lab') { d.lab = {}; LAB.forEach(lk => { d.lab[lk] = {}; ['nilai', 'tanggal', 'keterangan'].forEach(f => d.lab[lk][f] = form.querySelector(`[data-lab="${lk}"][data-lk="${f}"]`).value.trim()); }); }
+          else if (def.tipe === 'tabel') d[key] = [...form.querySelectorAll(`[data-tabel="${key}"] tr`)].map(tr => Object.fromEntries([...tr.querySelectorAll('[data-col]')].map(el => [el.dataset.col, el.value.trim()])));
+        });
+        return d;
+      }
+
+      /* ================= HITUNG OTOMATIS (sama dengan giziHitung() di server) ================= */
+      const nilai = k => { const v = parseFloat(String(form.querySelector(`[data-f="${k}"]`).value).replace(',', '.')); return isFinite(v) && v > 0 ? v : null; };
+      const setCalc = (k, v) => { form.querySelector(`[data-calc="${k}"]`).value = v; };
+      function kategoriImt(imt) {
+        if (imt === null) return '';
+        if (K.umur !== null && K.umur !== undefined && K.umur < 18) return 'Anak: gunakan IMT/U';
+        return imt < 17 ? 'Kurus berat' : imt < 18.5 ? 'Kurus ringan' : imt <= 25 ? 'Normal' : imt <= 27 ? 'Gemuk ringan' : 'Obesitas';
+      }
+      function hitung() {
+        const bb = nilai('bb'), tb = nilai('tb'), biasa = nilai('bb_biasa');
+        const imt = bb && tb ? Math.round(bb / Math.pow(tb / 100, 2) * 10) / 10 : null;
+        setCalc('imt', imt === null ? '' : imt);
+        setCalc('kategori_imt', kategoriImt(imt));
+        if (tb && tb > 100) {
+          const wanita = /^p/i.test(K.jk || '');
+          const tanpaPotong = (wanita && tb < 150) || (!wanita && tb < 160);
+          setCalc('bb_ideal', Math.round((tb - 100) * (tanpaPotong ? 1 : 0.9) * 10) / 10);
+        } else setCalc('bb_ideal', '');
+        if (bb && biasa) {
+          const s = Math.round((bb - biasa) * 10) / 10;
+          setCalc('perubahan_bb', (s > 0 ? '+' : '') + s);
+          setCalc('persen_perubahan_bb', (s > 0 ? '+' : '') + Math.round(s / biasa * 1000) / 10);
+        } else { setCalc('perubahan_bb', ''); setCalc('persen_perubahan_bb', ''); }
+        const t = k => form.querySelector(`[data-f="${k}"]`).value.trim();
+        const p = t('diagnosis_problem'), e = t('diagnosis_etiologi'), s = t('diagnosis_tanda');
+        setCalc('diagnosis_pes', p ? p + (e ? ' berkaitan dengan ' + e : '') + (s ? ' dibuktikan dengan ' + s : '') : '');
+      }
+      form.addEventListener('input', e => {
+        kotor = true;
+        if (e.target.matches('[data-f="bb"],[data-f="tb"],[data-f="bb_biasa"],[data-f="diagnosis_problem"],[data-f="diagnosis_etiologi"],[data-f="diagnosis_tanda"]')) hitung();
+        if (e.target.classList.contains('is-invalid')) e.target.classList.remove('is-invalid');
+      });
+      form.addEventListener('change', () => { kotor = true; });
+
+      form.addEventListener('click', e => {
+        const t = e.target.closest('[data-tambah-baris]'), h = e.target.closest('[data-hapus-baris]');
+        if (t) { barisTabel(t.dataset.tambahBaris); kotor = true; }
+        if (h) {
+          const tb = h.closest('tbody');
+          if (tb.children.length <= 1) h.closest('tr').querySelectorAll('[data-col]').forEach(el => el.value = '');   // baris terakhir dikosongkan (termasuk select)
+          else h.closest('tr').remove();
+          kotor = true;
+        }
+      });
+
+      function aturCetak() {
+        const b = $id('gzBtnCetak'), ada = AKTIF && AKTIF.id_gizi;
+        b.classList.toggle('disabled', !ada);
+        b.setAttribute('aria-disabled', ada ? 'false' : 'true');
+        b.title = ada ? (kotor ? 'Mencetak versi yang terakhir disimpan' : 'Cetak asesmen ini') : 'Simpan dulu untuk mencetak';
+        if (ada) b.href = 'module/admin/print/formulir_gizi?' + new URLSearchParams({ no: NO, rm: RM, id: AKTIF.id_gizi });
+        else b.removeAttribute('href');
+      }
+
+      /* ================= BUKA / BARU ================= */
+      function tampilkanForm(judul, status) {
+        $id('gzJudul').textContent = judul;
+        $id('gzStatus').textContent = status;
+        $id('gzStatus').className = 'tag ' + (status === 'Selesai' ? 'tg-selesai' : 'tg-draft');
+        form.classList.remove('d-none');
+        form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        form.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+        kotor = false;
+        renderRiwayat();
+        aturCetak();
+        window.scrollTo({ top: form.getBoundingClientRect().top + window.scrollY - 90, behavior: 'smooth' });
+      }
+      async function konfirmasiBuang() {
+        if (!kotor || form.classList.contains('d-none')) return true;
+        const r = await Swal.fire({ icon: 'question', title: 'Buang perubahan yang belum disimpan?', showCancelButton: true, confirmButtonText: 'Buang', cancelButtonText: 'Batal', confirmButtonColor: '#dc2626', cancelButtonColor: '#475569', reverseButtons: true });
+        return r.isConfirmed;
+      }
+      $id('gzBtnBaru').addEventListener('click', async () => {
+        if (!(await konfirmasiBuang())) return;
+        AKTIF = null;
+        // isian awal: tanggal hari ini, nutrisionis = pengguna, antropometri dari tanda vital kunjungan,
+        // data latar (riwayat personal, alergi, BB biasa) dibawa dari asesmen terakhir bila ada
+        const awal = { tanggal_asesmen: K.hari_ini, nutrisionis: K.pengguna || '', bb: K.bb || '', tb: K.tb || '', lingkar_pinggang: K.lingkar_pinggang || '' };
+        if (DATA.length) {
+          try {
+            const last = (await api(API + '&id=' + DATA[0].id_gizi)).data.data || {};
+            ['bb_biasa', 'pekerjaan', 'aktivitas_fisik', 'merokok', 'alergi_makanan', 'intoleransi_makanan', 'diet_sebelumnya', 'pantangan_makanan'].forEach(k => { if (last[k]) awal[k] = last[k]; });
+            if (!awal.tb && last.tb) awal.tb = last.tb;
+          } catch (e) { /* abaikan, mulai kosong */ }
+        }
+        isi(awal);
+        tampilkanForm('Asesmen baru' + (DATA.length ? ' (lanjutan)' : ''), 'Draft');
+      });
+      $id('gzRiwayat').addEventListener('click', async e => {
+        const b = e.target.closest('[data-buka]'), d = e.target.closest('[data-hapus]');
+        if (b) {
+          if (!(await konfirmasiBuang())) return;
+          try {
+            const res = await api(API + '&id=' + encodeURIComponent(b.dataset.buka));
+            AKTIF = res.data;
+            isi(Object.assign({}, res.data.data, { tanggal_asesmen: res.data.tanggal_asesmen, nutrisionis: res.data.nutrisionis }));
+            tampilkanForm('Asesmen ' + tglId(res.data.tanggal_asesmen), res.data.status);
+          } catch (err) { Swal.fire('Gagal', err.message, 'error'); }
+        }
+        if (d) {
+          const r = DATA.find(x => +x.id_gizi === +d.dataset.hapus);
+          Swal.fire({
+            icon: 'warning', title: 'Hapus draft asesmen?', html: `Draft asesmen <b>${esc(tglId(r.tanggal_asesmen))}</b> akan dihapus.`,
+            showCancelButton: true, confirmButtonText: 'Hapus', cancelButtonText: 'Batal', confirmButtonColor: '#dc2626', cancelButtonColor: '#475569', reverseButtons: true
+          }).then(x => {
+            if (!x.isConfirmed) return;
+            api(API + '&id=' + encodeURIComponent(r.id_gizi), { method: 'DELETE' }).then(res => {
+              toast(res.message);
+              if (AKTIF && +AKTIF.id_gizi === +r.id_gizi) { AKTIF = null; form.classList.add('d-none'); kotor = false; }
+              muat();
+            }).catch(err => Swal.fire('Gagal', err.message, 'error'));
+          });
+        }
+      });
+      $id('gzBtnTutup').addEventListener('click', async () => {
+        if (!(await konfirmasiBuang())) return;
+        form.classList.add('d-none');
+        AKTIF = null;
+        kotor = false;
+        renderRiwayat();
+      });
+
+      /* ================= SIMPAN ================= */
+      function tandai(field, pesan) {
+        const el = $id('f_' + field) || form.querySelector(`[data-f="${field}"]`);
+        if (!el) return false;
+        el.classList.add('is-invalid');
+        const kol = el.closest('[class*="col-"]') || el.closest('td') || el.parentElement;
+        const fb = kol && kol.querySelector('.invalid-feedback');
+        if (fb) fb.textContent = pesan;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (el.focus) el.focus({ preventScroll: true });
+        return true;
+      }
+      let menyimpan = false;
+      async function simpan(status) {
+        if (menyimpan) return;
+        form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        form.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+        const d = baca();
+        if (!d.tanggal_asesmen) return tandai('tanggal_asesmen', 'Tanggal asesmen wajib diisi.');
+        if (!d.nutrisionis) return tandai('nutrisionis', 'Nama nutrisionis wajib diisi.');
+        menyimpan = true;
+        const btn = $id(status === 'Selesai' ? 'gzBtnSelesai' : 'gzBtnDraft'), label = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan…';
+        try {
+          const res = await api(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id_gizi: AKTIF ? AKTIF.id_gizi : null, status, data: d }) });
+          AKTIF = { id_gizi: res.id };
+          kotor = false;
+          aturCetak();
+          toast(res.message);
+          $id('gzStatus').textContent = status;
+          $id('gzStatus').className = 'tag ' + (status === 'Selesai' ? 'tg-selesai' : 'tg-draft');
+          $id('gzJudul').textContent = 'Asesmen ' + tglId(d.tanggal_asesmen);
+          muat();
+        } catch (err) {
+          if (!(err.field && tandai(err.field, err.message))) Swal.fire('Gagal', err.message, 'error');
+        } finally {
+          menyimpan = false;
+          btn.disabled = false;
+          btn.innerHTML = label;
+        }
+      }
+      $id('gzBtnDraft').addEventListener('click', () => simpan('Draft'));
+      $id('gzBtnSelesai').addEventListener('click', () => simpan('Selesai'));
+      window.addEventListener('beforeunload', e => { if (kotor && !form.classList.contains('d-none')) { e.preventDefault(); e.returnValue = ''; } });
+
+      muat();
+    })();
+  </script>
 </body>
-
-<?php
-$id_patient = $datapatient['id_patient'];
-?>
 
 </html>
