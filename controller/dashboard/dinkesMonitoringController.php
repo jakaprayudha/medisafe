@@ -4,6 +4,7 @@
  *   GET  [?status=&jenis=]  -> { ringkas:{status:n}, data:[...] } maks 300 terbaru
  *   POST aksi=kirim  visit=<visit_ID>  -> kirim ulang (tambah/update)
  *   POST aksi=hapus  visit=<visit_ID>  -> ulangi hapus di Dinkes (status hapus_gagal)
+ *   POST aksi=cek    visit=<visit_ID>  -> cek ke API Dinkes apakah sudah ada (ada|tidak_ada|error)
  */
 require_once __DIR__ . '/../../database/connect.php';
 require_once __DIR__ . '/../../utility/security.php';
@@ -29,8 +30,12 @@ try {
    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $visit = trim((string) ($_POST['visit'] ?? ''));
       $aksi = (string) ($_POST['aksi'] ?? '');
-      if ($visit === '' || !in_array($aksi, ['kirim', 'hapus'], true)) dmBalas(['status' => 'error', 'message' => 'Permintaan tidak valid.'], 422);
-      $hasil = $aksi === 'kirim' ? dkKirimVisit($koneksi, $idc, $visit) : dkHapusVisit($koneksi, $idc, $visit);
+      if ($visit === '' || !in_array($aksi, ['kirim', 'hapus', 'cek'], true)) dmBalas(['status' => 'error', 'message' => 'Permintaan tidak valid.'], 422);
+      $hasil = match ($aksi) {
+         'kirim' => dkKirimVisit($koneksi, $idc, $visit),
+         'hapus' => dkHapusVisit($koneksi, $idc, $visit),
+         'cek' => dkCekRemote($koneksi, $idc, $visit),
+      };
       dmBalas(['status' => 'success', 'hasil' => $hasil]);
    }
 
