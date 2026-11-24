@@ -1,377 +1,379 @@
 <?php
-$title = 'Pemeriksaan Rawat Inap';
+/**
+ * RME persalinan — Pemeriksaan Medis (menu "Pemeriksaan Medis" di menu_persalinan). Tampilan disamakan dengan
+ * Pemeriksaan Medis rawat inap (module/admin/rme_inap): kartu pasien, tanda vital + riwayat di kiri, anamnesis &
+ * diagnosa di kanan, bar simpan menempel di bawah.
+ * Simpan: form POST ke halaman ini, diproses controller/visit/assesmen.php, lalu dialihkan (Post/Redirect/Get).
+ * Perbaikan: query kunjungan dirangkai dari URL (SQL injection) tanpa batas faskes; INNER JOIN ms_doctor memakai
+ * id_doctor yang berisi NAMA dokter sehingga data tidak pernah ditemukan -> form selalu kosong, id_patient kosong,
+ * dan simpan tidak mengubah apa pun namun tetap "berhasil"; nilai dicetak tanpa escape (XSS); kategori BMI WHO.
+ */
+$title = 'Pemeriksaan Persalinan';
 require '../../controller/view.php';
 require '../../database/connect.php';
+define('ASESMEN_TANPA_ALERT', true);   // notifikasi ditampilkan halaman ini sendiri
 require '../../controller/visit/assesmen.php';
-$no = $_GET['no'];
-$rm = $_GET['rm'];
-$check = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN ms_doctor ON ms_doctor.id_doctor = pasien_visit.id_doctor WHERE visit_ID='$no' AND nomor_rm='$rm'");
-$data = mysqli_fetch_array($check);
-$id_patient = $data['id_patient'];
 
-// Hitung usia jika data ditemukan
-if ($data) {
-  $tanggal_lahir = new DateTime($data['patient_datebirth']);
-  $tanggal_visit = new DateTime($data['visit_date']);
-
-  $usia = $tanggal_lahir->diff($tanggal_visit);
+$no = trim((string) ($_GET['no'] ?? ''));
+$rm = trim((string) ($_GET['rm'] ?? ''));
+if (isset($_POST['simpan_pemeriksaan'])) {
+  // kembali ke halaman ini (refresh tidak mengirim ulang form); menu persalinan tetap
+  header('Location: rme_persalinan?' . http_build_query(['no' => $no, 'rm' => $rm, 'rme' => 'c', 'menu' => 'persalinan', 'simpan' => !empty($asesmenTersimpan) ? 'ok' : 'gagal']), true, 303);
+  exit;
 }
 
+$idcHalaman = (int) ($_SESSION['id_customer'] ?? 0);
+$check = $koneksi->prepare("SELECT pasien_visit.*, ms_patient.nomor_rm, ms_patient.patient_name, ms_patient.patient_gender, ms_patient.patient_datebirth
+  FROM pasien_visit LEFT JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient
+  WHERE pasien_visit.visit_ID = ? AND pasien_visit.id_customer = ? LIMIT 1");
+$check->bind_param('si', $no, $idcHalaman);
+$check->execute();
+$data = $check->get_result()->fetch_assoc() ?: [];
+$check->close();
+
+$h = fn($v) => htmlspecialchars((string) ($v ?? ''), ENT_QUOTES, 'UTF-8');
+$v = fn($k) => $h($data[$k] ?? '');
+// angka 0 dari data lama (mis. TD "0/0", SpO2 0) ditampilkan kosong supaya perawat tahu belum diisi
+$angka = fn($k) => (isset($data[$k]) && is_numeric($data[$k]) && (float) $data[$k] > 0) ? $h($data[$k]) : '';
+[$sistol, $diastol] = array_pad(explode('/', (string) ($data['tekanan_darah'] ?? '')), 2, '');
+$sistol = (int) $sistol > 0 ? (int) $sistol : '';
+$diastol = (int) $diastol > 0 ? (int) $diastol : '';
+$pilihan = function (array $opsi, ?string $nilai) use ($h) {
+  $nilai = trim((string) $nilai);
+  $html = '<option value="">— pilih —</option>';
+  if ($nilai !== '' && !in_array($nilai, $opsi, true)) $opsi[] = $nilai;   // nilai lama di luar daftar tetap tampil
+  foreach ($opsi as $o) $html .= '<option value="' . $h($o) . '"' . ($o === $nilai ? ' selected' : '') . '>' . $h($o) . '</option>';
+  return $html;
+};
+$usia = '';
+if (!empty($data['patient_datebirth']) && ($lahir = date_create(substr((string) $data['patient_datebirth'], 0, 10)))) {
+  $u = $lahir->diff(date_create(substr((string) (($data['visit_date'] ?? '') ?: date('Y-m-d')), 0, 10)) ?: new DateTime());
+  $usia = $u->y . ' tahun ' . $u->m . ' bulan ' . $u->d . ' hari';
+}
+$kodeSekunder = array_values(array_filter(array_map('trim', explode(',', (string) ($data['diagnosa_sekunder'] ?? ''))), 'strlen'));
+$statusSimpan = $_GET['simpan'] ?? '';
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="id">
 
 <head>
   <base href="../../">
-  <?php
-  require '../../assets/template/head.php';
-  ?>
+  <?php require '../../assets/template/head.php'; ?>
+  <style>
+    .ri-sec { background: #fff; border: 1px solid #e5eaef; border-radius: 14px; padding: 16px 18px; margin-bottom: 14px; }
+    .ri-sec-h { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .ri-sec-h .ic { width: 34px; height: 34px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+    .ri-sec-h b { font-size: .98rem; color: #0f172a; }
+    .ri-sec-h small { display: block; color: #475569; font-size: .76rem; font-weight: 400; }
+    .ri .form-label { font-size: .8rem; font-weight: 600; color: #334155; margin-bottom: 3px; }
+    .ri .form-control, .ri .form-select { font-size: .9rem; }
+    .ri textarea.form-control { min-height: 70px; }
+    .ri-vital { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .ri-vital .vf { border: 1px solid #edf0f4; border-radius: 10px; padding: 8px 10px; background: #fafbfc; }
+    .ri-vital .vf.td { grid-column: span 2; }
+    .ri-vital .vf label { font-size: .72rem; color: #475569; font-weight: 600; margin-bottom: 3px; display: block; }
+    .ri-vital .vf .input-group-text { font-size: .75rem; color: #475569; background: #fff; }
+    .ri-vital .vf .form-control { font-weight: 700; min-width: 0; }
+    .ri-vital .vf.abnormal .form-control { border-color: #f59e0b; background: #fffbeb; }
+    .ri-vital .bmi-box { font-weight: 800; font-size: 1.05rem; color: #0f172a; }
+    .ri-vital .bmi-ket { font-size: .76rem; font-weight: 700; border-radius: 6px; padding: 1px 7px; }
+    .ri-vital .td-info { font-size: .74rem; color: #b91c1c; font-weight: 600; margin-top: 4px; }
+    @media (max-width: 575.98px) { .ri-vital { grid-template-columns: 1fr; } .ri-vital .vf.td { grid-column: auto; } }
+    .ri-req::after { content: " *"; color: #dc2626; }
+    .ri-bar { position: sticky; bottom: 0; z-index: 20; background: rgba(255, 255, 255, .96); border-top: 1px solid #e5eaef; padding: 10px 0; margin-top: 4px; backdrop-filter: blur(6px); }
+    .ri-screening { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 8px 12px; font-size: .86rem; color: #1f2937; }
+    .ri .select2-container--default .select2-selection--multiple { min-height: calc(2.25rem + 2px); border-color: #ced4da; }
+  </style>
 </head>
 
 <body>
-  <!--  Body Wrapper -->
   <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
     data-sidebar-position="fixed" data-header-position="fixed">
-    <!-- Sidebar Start -->
-    <?php
-    require 'sidebar.php';
-    ?>
-    <!--  Sidebar End -->
-    <!--  Main wrapper -->
+    <?php require 'sidebar.php'; ?>
     <div class="body-wrapper">
-      <!--  Header Start -->
-      <?php
-      require 'navbar.php';
-      ?>
-      <!--  Header End -->
+      <?php require 'navbar.php'; ?>
       <div class="body-wrapper-inner">
-        <div class="container-fluid">
+        <div class="container-fluid ri">
           <div class="row">
-            <?php
-            require 'menu_persalinan.php';
-            ?>
-            <div class="col-lg-12 d-flex align-items-stretch">
-              <div class="card w-100">
-                <div class="card-body p-4">
-                  <form id="formPemeriksaan" class="p-4 border rounded shadow-sm" method="POST">
-                    <input type="hidden" name="nomor_rm" value="<?= $rm ?>">
-                    <input type="hidden" name="nomor_visit" value="<?= $no ?>">
-                    <input type="hidden" name="id_patient" id="id_patient" value="<?= $data['id_patient'] ?>" hidden>
-                    <h4 class="mb-3">Form Pemeriksaan Medis</h4>
-                    <!-- Data Pasien -->
-                    <div class="row">
-                      <div class="col-3">
-                        <div class="mb-3">
-                          <label for="patient_name" class="form-label">Nama Pasien</label>
-                          <input type="text" value="<?= $data['patient_name'] ?>" id="patient_name" readonly name="patient_name" class="form-control bg-light">
-                        </div>
-                      </div>
-                      <div class="col-3">
-                        <div class="mb-3">
-                          <label for="patient_gender" class="form-label">Gender</label>
-                          <input type="text" value="<?= $data['patient_gender'] ?>" id="patient_gender" name="patient_gender" class="form-control bg-light" readonly>
-                        </div>
-                      </div>
-                      <div class="col-3">
-                        <div class="mb-3">
-                          <label for="usia" class="form-label">Usia</label>
-                          <input type="text" value="<?php echo  $usia->y . " tahun " . $usia->m . " bulan " . $usia->d . " hari"; ?>" id="usia" name="usia" class="form-control bg-light" readonly>
-                        </div>
-                      </div>
-                      <div class="col-3">
-                        <div class="mb-3">
-                          <label for="doctor_name" class="form-label">Dokter</label>
-                          <input type="text" value="<?= $data['doctor_name'] ?>" id="doctor_name" name="dokter" class="form-control bg-light" readonly>
-                        </div>
-                      </div>
-                    </div>
+            <?php require 'menu_persalinan.php'; ?>
+          </div>
 
-                    <div class="mb-3">
-                      <label for="visit_notes" class="form-label">Catatan Screening</label>
-                      <input type="text" id="visit_notes" value="<?= $data['catatan_screening'] ?>" name="visit_notes" class="form-control bg-light" readonly>
-                    </div>
+          <?php if (!$data): ?>
+            <div class="alert alert-danger mt-3">Kunjungan tidak ditemukan untuk faskes ini.</div>
+          <?php else: ?>
+          <?php require 'card-pasien.php'; ?>
 
-                    <hr>
-                    <!-- Pemeriksaan oleh Perawat -->
-                    <h5>Pemeriksaan Vital Sign (Perawat)</h5>
-                    <div class="row g-2">
-                      <div class="col-md-4">
-                        <label for="kondisi_masuk" class="form-label">Kondisi Masuk <span class="text-danger">*</span></label>
-                        <select name="kondisi_masuk" id="kondisi_masuk" class="form-select" required>
-                          <option value="<?= @$data['kondisi_masuk'] ?>"><?= @$data['kondisi_masuk'] ?></option>
-                          <option value="Baik">Baik</option>
-                          <option value="Lemah">Lemah</option>
-                          <option value="Sedang">Sedang</option>
-                          <option value="Buruk">Buruk</option>
-                          <option value="Gawat Darurat">Gawat Darurat</option>
-                          <option value="Tidak Sadar">Tidak Sadar</option>
-                        </select>
-                      </div>
-                      <div class="col-md-4">
-                        <label class="form-label">
-                          Tekanan Darah (mmHg) <span class="text-danger">*</span>
-                        </label>
+          <form id="formPemeriksaan" method="POST" novalidate>
+            <input type="hidden" name="nomor_rm" value="<?= $h(($data['nomor_rm'] ?? '') ?: $rm) ?>">
+            <input type="hidden" name="nomor_visit" value="<?= $h($no) ?>">
+            <input type="hidden" name="id_patient" id="id_patient" value="<?= $v('id_patient') ?>">
+            <input type="hidden" name="simpan_pemeriksaan" value="1">
+            <!-- identitas (tampil di kartu pasien; kolom lama tetap dikirim) -->
+            <input type="hidden" id="patient_name" name="patient_name" value="<?= $v('patient_name') ?>">
+            <input type="hidden" id="patient_gender" name="patient_gender" value="<?= $v('patient_gender') ?>">
+            <input type="hidden" id="usia" name="usia" value="<?= $h($usia) ?>">
+            <input type="hidden" id="doctor_name" name="dokter" value="<?= $v('id_doctor') ?>">
+            <input type="hidden" id="visit_notes" name="visit_notes" value="<?= $v('catatan_screening') ?>">
 
-                        <div class="d-flex gap-2">
-                          <input
-                            type="number"
-                            id="sistolik"
-                            class="form-control"
-                            placeholder="Sistolik"
-                            required>
+            <div class="row g-3">
+              <div class="col-xl-5">
+                <!-- VITAL SIGN -->
+                <div class="ri-sec">
+                  <div class="ri-sec-h">
+                    <span class="ic bg-danger-subtle text-danger"><i class="ti ti-heartbeat"></i></span>
+                    <div><b>Tanda Vital</b><small>Diisi perawat / bidan saat pasien masuk</small></div>
+                  </div>
+                  <?php if (trim((string) ($data['catatan_screening'] ?? '')) !== ''): ?>
+                    <div class="ri-screening mb-3"><i class="ti ti-clipboard-text me-1 text-muted"></i><b>Catatan screening:</b> <?= $v('catatan_screening') ?></div>
+                  <?php endif ?>
+                  <div class="mb-3">
+                    <label for="kondisi_masuk" class="form-label ri-req">Kondisi masuk</label>
+                    <select name="kondisi_masuk" id="kondisi_masuk" class="form-select" required>
+                      <?= $pilihan(['Baik', 'Sedang', 'Lemah', 'Buruk', 'Gawat Darurat', 'Tidak Sadar'], $data['kondisi_masuk'] ?? '') ?>
+                    </select>
+                  </div>
+                  <div class="ri-vital">
+                    <div class="vf td" data-batas="sistol">
+                      <label class="ri-req">Tekanan darah</label>
+                      <div class="input-group input-group-sm">
+                        <input type="number" inputmode="numeric" id="sistolik" class="form-control" placeholder="Sistol" min="50" max="300" value="<?= $h($sistol) ?>" required>
+                        <span class="input-group-text">/</span>
+                        <input type="number" inputmode="numeric" id="diastolik" class="form-control" placeholder="Diastol" min="20" max="200" value="<?= $h($diastol) ?>" required>
+                        <span class="input-group-text">mmHg</span>
+                      </div>
+                      <input type="hidden" id="tekanan_darah" name="tekanan_darah" value="<?= $v('tekanan_darah') ?>">
+                      <div class="td-info" id="tdInfo"></div>
+                    </div>
+                    <div class="vf" data-min="36" data-max="37.5">
+                      <label for="suhu" class="ri-req">Suhu</label>
+                      <div class="input-group input-group-sm"><input type="number" inputmode="decimal" step="0.1" id="suhu" name="suhu" class="form-control" min="30" max="45" value="<?= $angka('suhu') ?>" required><span class="input-group-text">°C</span></div>
+                    </div>
+                    <div class="vf" data-min="60" data-max="100">
+                      <label for="nadi" class="ri-req">Nadi</label>
+                      <div class="input-group input-group-sm"><input type="number" inputmode="numeric" id="nadi" name="nadi" class="form-control" min="20" max="250" value="<?= $angka('nadi') ?>" required><span class="input-group-text">x/mnt</span></div>
+                    </div>
+                    <div class="vf" data-min="12" data-max="24">
+                      <label for="respirasi" class="ri-req">Respirasi</label>
+                      <div class="input-group input-group-sm"><input type="number" inputmode="numeric" id="respirasi" name="respirasi" class="form-control" min="4" max="80" value="<?= $angka('respirasi') ?>" required><span class="input-group-text">x/mnt</span></div>
+                    </div>
+                    <div class="vf" data-min="95" data-max="100">
+                      <label for="saturasi">SpO₂</label>
+                      <div class="input-group input-group-sm"><input type="number" inputmode="numeric" id="saturasi" name="saturasi" class="form-control" min="50" max="100" value="<?= $angka('saturasi') ?>"><span class="input-group-text">%</span></div>
+                    </div>
+                    <div class="vf">
+                      <label for="tinggi" class="ri-req">Tinggi badan</label>
+                      <div class="input-group input-group-sm"><input type="number" inputmode="decimal" step="0.1" id="tinggi" name="tinggi" class="form-control" min="30" max="250" value="<?= $angka('tinggi_badan') ?>" required><span class="input-group-text">cm</span></div>
+                    </div>
+                    <div class="vf">
+                      <label for="berat" class="ri-req">Berat badan</label>
+                      <div class="input-group input-group-sm"><input type="number" inputmode="decimal" step="0.1" id="berat" name="berat" class="form-control" min="0.5" max="350" value="<?= $angka('berat_badan') ?>" required><span class="input-group-text">kg</span></div>
+                    </div>
+                    <div class="vf td">
+                      <label>BMI (otomatis)</label>
+                      <div class="d-flex align-items-center gap-2"><span class="bmi-box" id="bmiTampil">—</span><span class="bmi-ket" id="bmiKetTampil"></span></div>
+                      <input type="hidden" id="bmi" name="bmi" value="<?= $v('bmi') ?>">
+                      <input type="hidden" id="bmi_keterangan" name="bmi_keterangan" value="<?= $v('bmi_keterangan') ?>">
+                    </div>
+                  </div>
+                  <div class="small text-muted mt-2"><i class="ti ti-info-circle me-1"></i>Kotak kuning = di luar rentang normal dewasa.</div>
+                </div>
 
-                          <span class="align-self-center">/</span>
+                <!-- RIWAYAT -->
+                <div class="ri-sec">
+                  <div class="ri-sec-h">
+                    <span class="ic bg-warning-subtle" style="color:#b45309"><i class="ti ti-history"></i></span>
+                    <div><b>Riwayat</b><small>Alergi, penyakit &amp; pengobatan sebelumnya</small></div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="riwayat_alergi" class="form-label">Riwayat alergi</label>
+                    <textarea id="riwayat_alergi" name="riwayat_alergi" rows="2" class="form-control" placeholder="Tulis &quot;Tidak ada&quot; bila tidak ada alergi"><?= $v('riwayat_alergi') ?></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label for="riwayat_penyakit_pribadi" class="form-label">Riwayat penyakit dahulu</label>
+                    <textarea id="riwayat_penyakit_pribadi" name="riwayat_penyakit_pribadi" rows="2" class="form-control"><?= $v('riwayat_penyakit_pribadi') ?></textarea>
+                  </div>
+                  <div class="mb-0">
+                    <label for="riwayat_pengobatan" class="form-label">Riwayat pengobatan</label>
+                    <textarea id="riwayat_pengobatan" name="riwayat_pengobatan" rows="2" class="form-control"><?= $v('riwayat_pengobatan') ?></textarea>
+                  </div>
+                </div>
+              </div>
 
-                          <input
-                            type="number"
-                            id="diastolik"
-                            class="form-control"
-                            placeholder="Diastolik"
-                            required>
-                        </div>
+              <div class="col-xl-7">
+                <!-- ANAMNESIS & PEMERIKSAAN -->
+                <div class="ri-sec">
+                  <div class="ri-sec-h">
+                    <span class="ic bg-primary-subtle text-primary"><i class="ti ti-stethoscope"></i></span>
+                    <div><b>Anamnesis &amp; Pemeriksaan Dokter</b><small>Subjektif &amp; objektif</small></div>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label for="keluhan_utama" class="form-label">Keluhan utama</label>
+                      <textarea id="keluhan_utama" name="keluhan_utama" rows="3" class="form-control"><?= $v('anamnesa') ?></textarea>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="keluhan_penyerta" class="form-label">Keluhan penyerta</label>
+                      <textarea id="keluhan_penyerta" name="keluhan_penyerta" rows="3" class="form-control"><?= $v('keluhan_penyerta') ?></textarea>
+                    </div>
+                    <div class="col-12">
+                      <label for="riwayat_penyakit_sekarang" class="form-label">Riwayat penyakit sekarang</label>
+                      <textarea id="riwayat_penyakit_sekarang" name="riwayat_penyakit_sekarang" rows="2" class="form-control"><?= $v('riwayat_penyakit_sekarang') ?></textarea>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="pemeriksaan_fisik" class="form-label">Pemeriksaan fisik</label>
+                      <textarea id="pemeriksaan_fisik" name="pemeriksaan_fisik" rows="3" class="form-control"><?= $v('pemeriksaan_fisik') ?></textarea>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="pemeriksaan_fungsional" class="form-label">Pemeriksaan fungsional</label>
+                      <textarea id="pemeriksaan_fungsional" name="pemeriksaan_fungsional" rows="3" class="form-control"><?= $v('pemeriksaan_fungsional') ?></textarea>
+                    </div>
+                  </div>
+                </div>
 
-                        <!-- hidden tetap dipakai -->
-                        <input
-                          type="hidden"
-                          id="tekanan_darah"
-                          name="tekanan_darah"
-                          value="<?= @$data['tekanan_darah'] ?>">
-                      </div>
-                      <div class="col-md-4">
-                        <label for="suhu" class="form-label">Suhu (°C) <span class="text-danger">*</span></label>
-                        <input type="number" value="<?= $data['suhu'] ?>" step="0.1" id="suhu" required name="suhu" class="form-control">
-                      </div>
-                      <div class="col-md-4">
-                        <label for="nadi" class="form-label">Nadi (x/menit) <span class="text-danger">*</span></label>
-                        <input type="number" value="<?= $data['nadi'] ?>" id="nadi" name="nadi" required class="form-control">
-                      </div>
-                      <div class="col-md-4 mt-2">
-                        <label for="respirasi" class="form-label">Respirasi (x/menit) <span class="text-danger">*</span></label>
-                        <input type="number" value="<?= $data['respirasi'] ?>" id="respirasi" name="respirasi" required class="form-control">
-                      </div>
-                      <div class="col-md-4 mt-2">
-                        <label for="saturasi" class="form-label">Saturasi (Spo2 %) </label>
-                        <input type="number" value="<?= $data['saturasi'] ?>" id="saturasi" name="saturasi" class="form-control">
-                      </div>
-                      <div class="col-md-4 mt-2">
-                        <label for="tinggi" class="form-label">Tinggi Badan (cm) <span class="text-danger">*</span></label>
-                        <input type="number" value="<?= $data['tinggi_badan'] ?>" id="tinggi" name="tinggi" required class="form-control">
-                      </div>
-                      <div class="col-md-4 mt-2">
-                        <label for="berat" class="form-label">Berat Badan (kg) <span class="text-danger">*</span></label>
-                        <input type="number" value="<?= $data['berat_badan'] ?>" id="berat" name="berat" required class="form-control">
-                      </div>
-                      <div class="col-md-4 mt-2">
-                        <label for="bmi" class="form-label">BMI</label>
-                        <input type="text" value="<?= $data['bmi'] ?>" id="bmi" name="bmi" readonly class="form-control bg-light">
-                      </div>
-                      <div class="col-md-4 mt-2">
-                        <label for="bmi_keterangan" class="form-label">Keterangan BMI </label>
-                        <input type="text" value="<?= $data['bmi_keterangan'] ?>" id="bmi_keterangan" name="bmi_keterangan" readonly class="form-control bg-light">
-                      </div>
-                    </div>
-
-                    <hr>
-
-                    <!-- Pemeriksaan oleh Dokter -->
-                    <h5>Pemeriksaan Dokter</h5>
-                    <div class="mb-3">
-                      <label for="keluhan_utama" class="form-label">Keluhan Utama</label>
-                      <textarea id="keluhan_utama" name="keluhan_utama" rows="2" class="form-control"><?= @$data['anamnesa'] ?></textarea>
-                    </div>
-                    <div class="mb-3">
-                      <label for="keluhan_penyerta" class="form-label">Keluhan Penyerta</label>
-                      <textarea id="keluhan_penyerta" name="keluhan_penyerta" rows="2" class="form-control"><?= @$data['keluhan_penyerta'] ?></textarea>
-                    </div>
-                    <div class="mb-3">
-                      <label for="riwayat_alergi" class="form-label">Riwayat Alergi</label>
-                      <textarea id="riwayat_alergi" name="riwayat_alergi" rows="2" class="form-control"><?= @$data['riwayat_alergi'] ?></textarea>
-                    </div>
-                    <div class="mb-3">
-                      <label for="riwayat_penyakit_pribadi" class="form-label">Riwayat Penyakit Pribadi</label>
-                      <textarea id="riwayat_penyakit_pribadi" name="riwayat_penyakit_pribadi" rows="2" class="form-control"><?= @$data['riwayat_penyakit_pribadi'] ?></textarea>
-                    </div>
-                    <div class="mb-3">
-                      <label for="riwayat_penyakit_sekarang" class="form-label">Riwayat Penyakit Sekarang</label>
-                      <textarea id="riwayat_penyakit_sekarang" name="riwayat_penyakit_sekarang" rows="2" class="form-control"><?= @$data['riwayat_penyakit_sekarang'] ?></textarea>
-                    </div>
-                    <div class="mb-3">
-                      <label for="riwayat_pengobatan" class="form-label">Riwayat Pengobatan</label>
-                      <textarea id="riwayat_pengobatan" name="riwayat_pengobatan" rows="2" class="form-control"><?= @$data['riwayat_pengobatan'] ?></textarea>
-                    </div>
-                    <div class="mb-3">
-                      <label for="pemeriksaan_fisik" class="form-label">Pemeriksaan Fisik</label>
-                      <textarea id="pemeriksaan_fisik" name="pemeriksaan_fisik" rows="2" class="form-control"><?= @$data['pemeriksaan_fisik'] ?></textarea>
-                    </div>
-                    <div class="mb-3">
-                      <label for="pemeriksaan_fungsional" class="form-label">Pemeriksaan Fungsional</label>
-                      <textarea id="pemeriksaan_fungsional" name="pemeriksaan_fungsional" rows="2" class="form-control"><?= @$data['pemeriksaan_fungsional'] ?></textarea>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Diagnosa (ICD-10)</label>
+                <!-- DIAGNOSA & RENCANA -->
+                <div class="ri-sec">
+                  <div class="ri-sec-h">
+                    <span class="ic bg-success-subtle text-success"><i class="ti ti-clipboard-check"></i></span>
+                    <div><b>Diagnosa &amp; Rencana</b><small>Asesmen &amp; plan</small></div>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-12">
+                      <label for="diagnosa" class="form-label">Diagnosa (ICD-10)</label>
                       <select id="diagnosa" name="diagnosa" class="form-select" style="width:100%"></select>
                     </div>
-                    <div class="mb-3">
-                      <label for="tindakan" class="form-label">Tindakan / Terapi / Instruksi / Rencana Rawat</label>
-                      <textarea id="tindakan" name="tindakan" rows="2" class="form-control"><?= @$data['tindakan'] ?></textarea>
+                    <div class="col-12">
+                      <label for="diagnosa_sekunder" class="form-label">Diagnosa sekunder (ICD-10)</label>
+                      <input type="hidden" name="diagnosa_sekunder_ada" value="1"><!-- penanda: halaman ini mengelola diagnosa sekunder (boleh dikosongkan) -->
+                      <select id="diagnosa_sekunder" name="diagnosa_sekunder[]" class="form-select" multiple style="width:100%"></select>
                     </div>
-
-                    <div class="mb-3">
+                    <div class="col-12">
+                      <label for="tindakan" class="form-label">Tindakan / terapi / instruksi / rencana rawat</label>
+                      <textarea id="tindakan" name="tindakan" rows="3" class="form-control"><?= $v('tindakan') ?></textarea>
+                    </div>
+                    <div class="col-md-7">
                       <label for="edukasi" class="form-label">Edukasi</label>
-                      <textarea id="edukasi" name="edukasi" rows="2" class="form-control"><?= @$data['edukasi'] ?></textarea>
+                      <textarea id="edukasi" name="edukasi" rows="2" class="form-control"><?= $v('edukasi') ?></textarea>
                     </div>
-
-                    <div class="mb-3">
-                      <label for="cara_keluar" class="form-label">Cara Keluar <span class="text-danger">*</span></label>
+                    <div class="col-md-5">
+                      <label for="cara_keluar" class="form-label ri-req">Cara keluar</label>
                       <select name="cara_keluar" id="cara_keluar" class="form-select" required>
-                        <option value="<?= @$data['kondisi_keluar'] ?>"><?= @$data['kondisi_keluar'] ?></option>
-                        <option value="Pulang">Pulang</option>
-                        <option value="Rujuk">Rujuk</option>
-                        <option value="Rawat Inap">Rawat Inap</option>
-                        <option value="Meninggal">Meninggal</option>
+                        <?= $pilihan(['Pulang', 'Rujuk', 'Rawat Inap', 'Meninggal'], $data['kondisi_keluar'] ?? '') ?>
                       </select>
                     </div>
-
-                    <!-- Tombol Submit -->
-                    <div class="d-grid">
-                      <button type="submit" name="simpan_pemeriksaan" class="btn btn-primary">Simpan Pemeriksaan</button>
-                    </div>
-                  </form>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+
+            <div class="ri-bar">
+              <div class="d-flex flex-wrap align-items-center gap-2">
+                <span class="small text-muted me-auto" id="riStatus"><i class="ti ti-pencil me-1"></i>Belum ada perubahan</span>
+                <button type="submit" class="btn btn-primary px-4" id="btnSimpan"><i class="ti ti-device-floppy me-1"></i>Simpan Pemeriksaan</button>
+              </div>
+            </div>
+          </form>
+          <?php endif ?>
         </div>
       </div>
     </div>
   </div>
 
-  <?php
-  require 'library.php';
-  ?>
-</body>
-
-
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-
-    const td = document.getElementById("tekanan_darah").value;
-
-    if (td && td.includes("/")) {
-      const [s, d] = td.split("/");
-
-      document.getElementById("sistolik").value = s;
-      document.getElementById("diastolik").value = d;
-    }
-
-    const $diagnosa = $('#diagnosa');
-
-    // destroy kalau sudah ada
-    if ($diagnosa.hasClass("select2-hidden-accessible")) {
-      $diagnosa.select2('destroy');
-    }
-
-    // init select2 ICD
-    $diagnosa.select2({
-      width: '100%',
-      placeholder: 'Cari diagnosa ICD-10...',
-      minimumInputLength: 2,
-      ajax: {
-        url: 'controller/visit/getICD10.php',
-        type: 'GET',
-        dataType: 'json',
-        delay: 300,
-        data: function(params) {
-          return {
-            search: params.term
-          };
-        },
-        processResults: function(data) {
-          return {
-            results: data
-          };
-        }
+  <?php require 'library.php'; ?>
+  <script>
+    (function() {
+      const form = document.getElementById('formPemeriksaan');
+      const statusSimpan = <?= json_encode($statusSimpan) ?>;
+      if (statusSimpan) {
+        Swal.fire(statusSimpan === 'ok' ? { icon: 'success', title: 'Pemeriksaan disimpan', timer: 1500, showConfirmButton: false } : { icon: 'error', title: 'Gagal menyimpan pemeriksaan', text: 'Data kunjungan/pasien tidak ditemukan untuk faskes ini.' });
+        const u = new URL(location.href); u.searchParams.delete('simpan'); history.replaceState(null, '', u);
       }
-    });
+      if (!form) return;
+      const $id = id => document.getElementById(id);
+      let berubah = false, menyimpan = false;
 
-    const existingDiagnosa = `<?= @$data['diagnosa'] ?>`; // misal A00
-
-    if (existingDiagnosa) {
-
-      fetch(`controller/visit/getICD10.php?search=${existingDiagnosa}`)
-        .then(res => res.json())
-        .then(data => {
-
-          const item = data.find(d => d.id === existingDiagnosa);
-
-          if (item) {
-            const option = new Option(item.text, item.id, true, true);
-            $('#diagnosa').append(option).trigger('change');
-          }
-
+      // ---------- BMI (kategori dewasa Kemenkes RI) & penanda vital di luar rentang ----------
+      function hitungBMI() {
+        const tb = parseFloat($id('tinggi').value), bb = parseFloat($id('berat').value);
+        if (!(tb > 0 && bb > 0)) { $id('bmi').value = ''; $id('bmi_keterangan').value = ''; $id('bmiTampil').textContent = '—'; $id('bmiKetTampil').textContent = ''; return; }
+        const bmi = bb / Math.pow(tb / 100, 2);
+        const [ket, bg, fg] = bmi < 17 ? ['Kurus berat', '#fee2e2', '#991b1b'] : bmi < 18.5 ? ['Kurus ringan', '#fef3c7', '#78350f'] : bmi <= 25 ? ['Normal', '#dcfce7', '#166534']
+          : bmi <= 27 ? ['Gemuk ringan', '#fef3c7', '#78350f'] : ['Obesitas', '#fee2e2', '#991b1b'];
+        $id('bmi').value = bmi.toFixed(2); $id('bmi_keterangan').value = ket;
+        $id('bmiTampil').textContent = bmi.toFixed(1).replace('.', ',');
+        Object.assign($id('bmiKetTampil').style, { background: bg, color: fg });
+        $id('bmiKetTampil').textContent = ket;
+      }
+      function tandaiVital() {
+        form.querySelectorAll('.vf[data-min]').forEach(vf => {
+          const el = vf.querySelector('input'), val = parseFloat(el.value);
+          vf.classList.toggle('abnormal', el.value !== '' && (val < +vf.dataset.min || val > +vf.dataset.max));
         });
+        const s = parseFloat($id('sistolik').value), d = parseFloat($id('diastolik').value);
+        form.querySelector('.vf.td[data-batas]').classList.toggle('abnormal', (s && (s >= 140 || s < 90)) || (d && (d >= 90 || d < 60)));
+        // kehamilan: TD >= 140/90 perlu diwaspadai preeklamsia
+        $id('tdInfo').textContent = (s >= 140 || d >= 90) ? 'TD ≥ 140/90 — waspada hipertensi / preeklamsia' : '';
+      }
+      ['tinggi', 'berat'].forEach(i => $id(i).addEventListener('input', hitungBMI));
+      form.querySelectorAll('.ri-vital input').forEach(el => el.addEventListener('input', tandaiVital));
+      hitungBMI(); tandaiVital();
 
-    }
-  });
+      // ---------- ICD-10 ----------
+      const icd = (el, opsi) => $(el).select2(Object.assign({
+        width: '100%', minimumInputLength: 2, language: { inputTooShort: () => 'Ketik minimal 2 huruf (kode atau nama penyakit)' },
+        ajax: { url: 'controller/visit/getICD10.php', dataType: 'json', delay: 300, data: p => ({ search: p.term }), processResults: d => ({ results: d }) }
+      }, opsi));
+      icd('#diagnosa', { placeholder: 'Cari kode / nama diagnosa…', allowClear: true });
+      icd('#diagnosa_sekunder', { placeholder: 'Cari diagnosa sekunder…', multiple: true });
+      async function isiIcd(el, kode) {
+        try {
+          const r = await fetch('controller/visit/getICD10.php?search=' + encodeURIComponent(kode));
+          const d = await r.json();
+          const it = d.find(x => x.id === kode) || { id: kode, text: kode };
+          $(el).append(new Option(it.text, it.id, true, true)).trigger('change');
+        } catch (e) { $(el).append(new Option(kode, kode, true, true)).trigger('change'); }
+      }
+      const diagAwal = <?= json_encode(trim((string) ($data['diagnosa'] ?? ''))) ?>;
+      const sekAwal = <?= json_encode($kodeSekunder) ?>;
+      (async () => {
+        if (diagAwal) await isiIcd('#diagnosa', diagAwal);
+        for (const k of sekAwal) await isiIcd('#diagnosa_sekunder', k);
+        berubah = false; $id('riStatus').innerHTML = '<i class="ti ti-pencil me-1"></i>Belum ada perubahan';
+      })();
 
-  document.getElementById("formPemeriksaan").addEventListener("submit", function(e) {
+      // ---------- perubahan belum disimpan ----------
+      const tandai = () => { if (!berubah) { berubah = true; $id('riStatus').innerHTML = '<span class="text-warning-emphasis"><i class="ti ti-alert-circle me-1"></i>Ada perubahan belum disimpan</span>'; } };
+      form.addEventListener('input', tandai);
+      $('#diagnosa, #diagnosa_sekunder').on('select2:select select2:unselect select2:clear', tandai);
+      window.addEventListener('beforeunload', e => { if (berubah && !menyimpan) { e.preventDefault(); e.returnValue = ''; } });
 
-    const s = document.getElementById("sistolik").value;
-    const d = document.getElementById("diastolik").value;
-
-    if (!s || !d) {
-      alert("Tekanan darah wajib diisi!");
-      e.preventDefault();
-      return;
-    }
-
-    const td = `${s}/${d}`;
-
-    // 🔥 INI KUNCI
-    document.getElementById("tekanan_darah").value = td;
-
-    console.log("TD DIKIRIM:", td); // debug
-  });
-
-  function hitungBMI() {
-    let tinggi = parseFloat(document.getElementById('tinggi').value);
-    let berat = parseFloat(document.getElementById('berat').value);
-
-    let bmiInput = document.getElementById('bmi');
-    let ketInput = document.getElementById('bmi_keterangan');
-
-    if (!tinggi || !berat) {
-      bmiInput.value = '';
-      ketInput.value = '';
-      return;
-    }
-
-    tinggi = tinggi / 100;
-    let bmi = berat / (tinggi * tinggi);
-
-    let kategori = '';
-
-    if (bmi < 18.5) {
-      kategori = 'Kurus';
-    } else if (bmi < 25) {
-      kategori = 'Normal';
-    } else if (bmi < 30) {
-      kategori = 'Overweight';
-    } else {
-      kategori = 'Obesitas';
-    }
-
-    // 🔥 pisah output
-    bmiInput.value = bmi.toFixed(2);
-    ketInput.value = kategori;
-  }
-
-  // realtime
-  document.getElementById('tinggi').addEventListener('input', hitungBMI);
-  document.getElementById('berat').addEventListener('input', hitungBMI);
-
-  // load awal (kalau edit data)
-  window.addEventListener('DOMContentLoaded', hitungBMI);
-</script>
+      // ---------- validasi & simpan ----------
+      form.addEventListener('submit', function(e) {
+        if (menyimpan) { e.preventDefault(); return; }
+        form.querySelectorAll('.is-invalid').forEach(x => x.classList.remove('is-invalid'));
+        const s = $id('sistolik').value.trim(), d = $id('diastolik').value.trim();
+        $id('tekanan_darah').value = s && d ? `${s}/${d}` : '';
+        const kurang = [];
+        form.querySelectorAll('[required], input[type=number]').forEach(el => {
+          const kosong = el.required && (el.tagName === 'SELECT' ? !$(el).val() : el.value.trim() === '');
+          const salah = !kosong && el.type === 'number' && el.value !== '' && !el.checkValidity();
+          if (kosong || salah) {
+            el.classList.add('is-invalid');
+            const lbl = form.querySelector(`label[for="${el.id}"]`) || el.closest('.vf')?.querySelector('label');
+            kurang.push((lbl ? lbl.textContent.replace('*', '').trim() : el.id) + (salah ? ' (nilai tidak wajar)' : ''));
+          }
+        });
+        if (kurang.length) {
+          e.preventDefault();
+          Swal.fire({ icon: 'warning', title: 'Lengkapi data', html: [...new Set(kurang)].map(x => '• ' + x).join('<br>') });
+          form.querySelector('.is-invalid')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          return;
+        }
+        menyimpan = true;
+        $id('btnSimpan').disabled = true;
+        $id('btnSimpan').innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan…';
+      });
+    })();
+  </script>
+</body>
 
 </html>

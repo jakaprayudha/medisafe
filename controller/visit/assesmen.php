@@ -14,6 +14,15 @@ if (isset($_POST['simpan_pemeriksaan'])) {
       : '';
    // sebagian halaman mengirim "bmi_keterangan", handler dulu hanya membaca "bmi_ket" -> keterangan BMI tidak tersimpan
    $bmiKet = $in('bmi_ket') !== '' ? $in('bmi_ket') : $in('bmi_keterangan');
+   // diagnosa sekunder hanya diubah oleh halaman yang memiliki kolomnya (penanda diagnosa_sekunder_ada);
+   // dulu halaman tanpa kolom ini (pemeriksaan_b, rme_persalinan) mengosongkan diagnosa sekunder setiap kali simpan
+   $kelolaSekunder = isset($_POST['diagnosa_sekunder']) || !empty($_POST['diagnosa_sekunder_ada']) ? 1 : 0;
+   // kunjungan + pasien wajib ada di faskes sesi; dulu UPDATE yang tidak mengenai baris apa pun tetap "berhasil"
+   $cekAsesmen = $koneksi->prepare("SELECT 1 FROM pasien_visit WHERE visit_ID = ? AND id_patient = ? AND id_customer = ? LIMIT 1");
+   $cekAsesmen->bind_param('sss', $nomor_visit, $id_patient, $idCustomerAsesmen);
+   $cekAsesmen->execute();
+   $asesmenAda = (bool) $cekAsesmen->get_result()->fetch_row();
+   $cekAsesmen->close();
 
 
    $stmt = $koneksi->prepare("UPDATE pasien_visit SET
@@ -41,12 +50,12 @@ if (isset($_POST['simpan_pemeriksaan'])) {
          visit_out = ?, 
          kondisi_keluar = ?,
          saturasi = ?,
-         diagnosa_sekunder = ?
+         diagnosa_sekunder = IF(? = 1, ?, diagnosa_sekunder)
       WHERE visit_ID = ? AND id_patient = ? AND id_customer = ?
    ");
 
    $stmt->bind_param(
-      "sssssssssssssssssssssssssss",
+      "sssssssssssssssssssssssissss",
 
       $in('kondisi_masuk'),
       $in('tekanan_darah'),
@@ -72,6 +81,7 @@ if (isset($_POST['simpan_pemeriksaan'])) {
       $in('cara_keluar'),
       $in('cara_keluar'),
       $in('saturasi'),
+      $kelolaSekunder,
       $diagnosa_sekunder,
 
       $nomor_visit,
@@ -79,7 +89,7 @@ if (isset($_POST['simpan_pemeriksaan'])) {
       $idCustomerAsesmen
    );
 
-   $asesmenTersimpan = $stmt->execute() && $stmt->affected_rows >= 0;
+   $asesmenTersimpan = $asesmenAda && $stmt->execute();
    // halaman yang mendefinisikan ASESMEN_TANPA_ALERT menampilkan notifikasinya sendiri (tanpa <script> sebelum <!doctype>)
    if (!defined('ASESMEN_TANPA_ALERT')) {
       echo $asesmenTersimpan ? "<script>alert('Pemeriksaan berhasil disimpan');</script>" : "<script>alert('Gagal menyimpan');</script>";

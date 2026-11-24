@@ -1,3 +1,10 @@
+<?php
+// pasien persalinan: halaman yang dibuka dari menu persalinan tetap menampilkan menu persalinan (bukan menu rawat inap)
+if (($_GET['menu'] ?? '') === 'persalinan') {
+   require __DIR__ . '/menu_persalinan.php';
+   return;
+}
+?>
   <?php
    $current = basename($_SERVER['PHP_SELF']); // ambil nama file aktif, misalnya "permintaan_farmasi.php"
    $roles = $_SESSION['roles'];

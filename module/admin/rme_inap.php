@@ -244,6 +244,7 @@ $statusSimpan = $_GET['simpan'] ?? '';
                     </div>
                     <div class="col-12">
                       <label for="diagnosa_sekunder" class="form-label">Diagnosa sekunder (ICD-10)</label>
+                      <input type="hidden" name="diagnosa_sekunder_ada" value="1"><!-- penanda: halaman ini mengelola diagnosa sekunder (boleh dikosongkan) -->
                       <select id="diagnosa_sekunder" name="diagnosa_sekunder[]" class="form-select" multiple style="width:100%"></select>
                     </div>
                     <div class="col-12">
