@@ -201,7 +201,9 @@ foreach ($visits as $i => $v):
       </div>
       <div class="rw-dot bg-<?= $warna ?>"></div>
       <div class="rw-card">
-         <div class="rw-head" data-bs-toggle="collapse" data-bs-target="#<?= $uid ?>" role="button" aria-expanded="<?= $offset + $i === 0 ? 'true' : 'false' ?>">
+         <?php /* buka/tutup lewat JS di patient_details (data-rw-target), BUKAN data-bs-toggle="collapse": handler collapse Bootstrap 5
+                  berjalan di fase capture dan memanggil preventDefault() untuk klik pada <a>, sehingga tombol Resume tidak bisa dibuka */ ?>
+         <div class="rw-head" data-rw-target="#<?= $uid ?>" role="button" tabindex="0" aria-controls="<?= $uid ?>" aria-expanded="<?= $offset + $i === 0 ? 'true' : 'false' ?>">
             <div class="min-w-0 flex-grow-1">
                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
                   <span class="rw-badge bg-<?= $warna ?>-subtle text-<?= $warna ?>"><?= e($jenis) ?></span>
@@ -217,7 +219,7 @@ foreach ($visits as $i => $v):
                </div>
             </div>
             <div class="d-flex align-items-center gap-2 flex-shrink-0">
-               <a href="<?= e($resume) ?>" target="_blank" class="btn btn-sm btn-light text-danger" title="Download resume <?= $ranap ? 'rawat inap' : 'poliklinik' ?>" onclick="event.stopPropagation()"><i class="fas fa-file-pdf me-1"></i>Resume</a>
+               <a href="<?= e($resume) ?>" target="_blank" class="btn btn-sm btn-light text-danger" title="Download resume <?= $ranap ? 'rawat inap' : 'poliklinik' ?>" rel="noopener"><i class="fas fa-file-pdf me-1"></i>Resume</a>
                <i class="fas fa-chevron-down rw-chev"></i>
             </div>
          </div>

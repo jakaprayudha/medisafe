@@ -1074,6 +1074,23 @@ $tabAwal = ['1' => 'umum', '2' => 'kontak', '3' => 'darurat', '4' => 'dokumen', 
             });
         }
         $('#rwMore').on('click', () => muatRiwayat(true));
+        // buka/tutup kartu riwayat. Tidak memakai data-bs-toggle="collapse" karena handler Bootstrap (fase capture)
+        // membatalkan klik pada link di dalamnya -> tombol Resume tidak bisa dibuka.
+        function rwToggle(head) {
+          const el = document.querySelector(head.dataset.rwTarget);
+          if (el) bootstrap.Collapse.getOrCreateInstance(el, { toggle: false }).toggle();
+        }
+        $('#rwList').on('click', '.rw-head[data-rw-target]', function(e) {
+          if ($(e.target).closest('a, button, input, select, textarea, label').length) return;   // klik tombol/link di header
+          rwToggle(this);
+        });
+        $('#rwList').on('keydown', '.rw-head[data-rw-target]', function(e) {
+          if (e.target === this && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); rwToggle(this); }
+        });
+        $('#rwList').on('show.bs.collapse hide.bs.collapse', '.collapse', function(e) {
+          if (e.target !== this) return;   // abaikan event dari elemen bersarang
+          $(`#rwList .rw-head[data-rw-target="#${this.id}"]`).attr('aria-expanded', e.type === 'show' ? 'true' : 'false');
+        });
         $(document).on('click', '#rwRetry', function() {
           $(this).closest('.alert').remove();
           muatRiwayat();
