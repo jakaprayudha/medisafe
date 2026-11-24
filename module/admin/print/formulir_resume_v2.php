@@ -14,17 +14,26 @@ $query = "SELECT * FROM pasien_visit
           LEFT JOIN ms_room_bed ON ms_room_bed.id_bed = permintaan_ranap.id_bed 
           LEFT JOIN ms_provider ON ms_provider.id_provider = pasien_visit.id_provider 
           LEFT JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa 
-          LEFT JOIN resume_medis ON resume_medis.visit_ID = pasien_visit.visit_ID AND resume_medis.nomor_rm = ms_patient.nomor_rm 
+          LEFT JOIN resume_medis ON resume_medis.id_resume = (SELECT MAX(r2.id_resume) FROM resume_medis r2 WHERE r2.visit_ID = pasien_visit.visit_ID) 
           LEFT JOIN ms_users AS dokter ON REPLACE(REPLACE(REPLACE(REPLACE(LOWER(dokter.fullname), 'dr.', ''), 'dr ', ''), '.', ''), ' ', '') = 
        REPLACE(REPLACE(REPLACE(REPLACE(LOWER(pasien_visit.id_doctor), 'dr.', ''), 'dr ', ''), '.', ''), ' ', '')
           LEFT JOIN  pasien_triase ON pasien_triase.visit_ID = pasien_visit.visit_ID
-          WHERE pasien_visit.visit_ID='$visit' AND ms_patient.nomor_rm='$rm'";
-
-$checkdata = mysqli_query($koneksi, $query);
-$dataresume = mysqli_fetch_array($checkdata) ?: [];
+          WHERE pasien_visit.visit_ID = ? AND pasien_visit.id_customer = ?
+          LIMIT 1";
+// Perbaikan: dulu dirangkai dari URL (SQL injection), tanpa batas faskes, difilter nomor RM dari URL (format beda ->
+// kosong) dan resume_medis di-join lewat nomor RM sehingga bila dobel yang tercetak baris lama -> kini resume terbaru.
+$rsIdc = (int) ($_SESSION['id_customer'] ?? 0);
+$rsSt = $koneksi->prepare($query);
+$rsSt->bind_param('si', $visit, $rsIdc);
+$rsSt->execute();
+$dataresume = $rsSt->get_result()->fetch_array() ?: [];
+$rsSt->close();
 $dataresume['signature_user'] = cariTtdDokter($koneksi, $dataresume['id_doctor'] ?? '', $_SESSION['id_customer'] ?? null) ?? '';
-$diagnosamasuk = mysqli_query($koneksi, "SELECT pasien_visit.diagnosa, icd_10.code, icd_10.icd10 FROM pasien_visit LEFT JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa  WHERE visit_ID='$visit'");
-$datadiagnosamasuk = mysqli_fetch_array($diagnosamasuk);
+$rsSt = $koneksi->prepare("SELECT pasien_visit.diagnosa, icd_10.code, icd_10.icd10 FROM pasien_visit LEFT JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa WHERE visit_ID = ? AND pasien_visit.id_customer = ?");
+$rsSt->bind_param('si', $visit, $rsIdc);
+$rsSt->execute();
+$datadiagnosamasuk = $rsSt->get_result()->fetch_array();
+$rsSt->close();
 
 ?>
 <!DOCTYPE html>
@@ -135,35 +144,35 @@ $datadiagnosamasuk = mysqli_fetch_array($diagnosamasuk);
 
          <tr>
             <td class="resume-label">Nama Pasien</td>
-            <td id="rm_name" style="width: 28%;"><?php echo $dataresume['patient_name'] ?? ''; ?></td>
+            <td id="rm_name" style="width: 28%;"><?= htmlspecialchars((string) ($dataresume['patient_name'] ?? '')) ?></td>
             <td class="resume-label">Tanggal Masuk</td>
             <td id="rm_tgl_masuk" style="width: 28%;">
-               <?= ($dataresume['visit_date'] ?? '') . ' ' . substr($dataresume['jam_masuk'] ?? '', 0, 5); ?>
+               <?= htmlspecialchars(($dataresume['visit_date'] ?? '') . ' ' . substr($dataresume['jam_masuk'] ?? '', 0, 5)) ?>
             </td>
          </tr>
          <tr>
             <td class="resume-label">Jenis Kelamin</td>
-            <td id="rm_jk"><?php echo $dataresume['patient_gender'] ?? ''; ?></td>
+            <td id="rm_jk"><?= htmlspecialchars((string) ($dataresume['patient_gender'] ?? '')) ?></td>
             <td class="resume-label">Tanggal Keluar</td>
-            <td id="rm_tgl_keluar"><?php echo ($dataresume['tanggal_pulang'] ?? '') . ' ' . ($dataresume['jam_pulang'] ?? ''); ?></td>
+            <td id="rm_tgl_keluar"><?= htmlspecialchars(($dataresume['tanggal_pulang'] ?? '') . ' ' . ($dataresume['jam_pulang'] ?? '')) ?></td>
          </tr>
          <tr>
             <td class="resume-label">No. Rekam Medis</td>
-            <td id="rm_no_rm"><?php echo $dataresume['nomor_rm'] ?? ''; ?></td>
+            <td id="rm_no_rm"><?= htmlspecialchars((string) ($dataresume['nomor_rm'] ?? '')) ?></td>
             <td class="resume-label">Ruang Rawat</td>
-            <td id="rm_ruang"><?php echo $dataresume['room_name'] ?? ''; ?></td>
+            <td id="rm_ruang"><?= htmlspecialchars((string) ($dataresume['room_name'] ?? '')) ?></td>
          </tr>
          <tr>
             <td class="resume-label">Tanggal Lahir</td>
-            <td id="rm_tgl_lahir"><?php echo $dataresume['patient_datebirth'] ?? ''; ?></td>
+            <td id="rm_tgl_lahir"><?= htmlspecialchars((string) ($dataresume['patient_datebirth'] ?? '')) ?></td>
             <td class="resume-label">Kamar / Kelas</td>
-            <td id="rm_kelas"><?php echo $dataresume['bed_name'] ?? ''; ?></td>
+            <td id="rm_kelas"><?= htmlspecialchars((string) ($dataresume['bed_name'] ?? '')) ?></td>
          </tr>
          <tr>
             <td class="resume-label">Cara Bayar</td>
-            <td id="rm_cara_bayar"><?php echo $dataresume['provider_name'] ?? ''; ?></td>
+            <td id="rm_cara_bayar"><?= htmlspecialchars((string) ($dataresume['provider_name'] ?? '')) ?></td>
             <td class="resume-label">Dokter</td>
-            <td id="rm_dpjp"><?php echo $dataresume['id_doctor'] ?? ''; ?></td>
+            <td id="rm_dpjp"><?= htmlspecialchars((string) ($dataresume['id_doctor'] ?? '')) ?></td>
          </tr>
 
          <tr>
@@ -172,18 +181,18 @@ $datadiagnosamasuk = mysqli_fetch_array($diagnosamasuk);
          </tr>
          <tr>
             <td class="resume-label">Indikasi Rawat Inap</td>
-            <td colspan="3" id="rs_indikasi"><?php echo $dataresume['anamnesa'] ?? ''; ?></td>
+            <td colspan="3" id="rs_indikasi"><?= htmlspecialchars((string) ($dataresume['anamnesa'] ?? '')) ?></td>
          </tr>
          <tr>
             <td class="resume-label">Pemeriksaan Fisik</td>
-            <td colspan="3" id="rs_fisik" style="white-space:pre-line"><?php echo $dataresume['pemeriksaan_fisik'] ?? ''; ?></td>
+            <td colspan="3" id="rs_fisik" style="white-space:pre-line"><?= htmlspecialchars((string) ($dataresume['pemeriksaan_fisik'] ?? '')) ?></td>
          </tr>
          <tr>
             <td class="resume-label">Diagnosa Utama</td>
-            <td colspan="3" id="rm_dpjp_utama"><?php echo $dataresume['diagnosa_utama'] ?? ''; ?></td>
+            <td colspan="3" id="rm_dpjp_utama"><?= htmlspecialchars((string) ($dataresume['diagnosa_utama'] ?? '')) ?></td>
          </tr>
          <?php
-         $sekunder = trim($dataresume['diagnosa_sekunder']);
+         $sekunder = trim((string) ($dataresume['diagnosa_sekunder'] ?? ''));
          $hasilDiagnosa = $sekunder;
 
          if (!empty($sekunder)) {
@@ -253,48 +262,56 @@ $datadiagnosamasuk = mysqli_fetch_array($diagnosamasuk);
 
          <?php
          $terapi = '';
-         $getobat = mysqli_query($koneksi, "SELECT ms_pharmacy.pharmacy_name_generic, permintaan_pharmacy_details.qty, permintaan_pharmacy_details.signa
-            FROM permintaan_pharmacy
-            INNER JOIN permintaan_pharmacy_details ON permintaan_pharmacy_details.id_permintaan_farmasi = permintaan_pharmacy.id_permintaan_farmasi
-            INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy_details.id_pharmacy
-            WHERE permintaan_pharmacy.id_visit='$visit' AND permintaan_pharmacy.status_obat_pulang=0");
-         while ($obat = mysqli_fetch_assoc($getobat)) {
-            $terapi .= "- {$obat['pharmacy_name_generic']} {$obat['qty']} {$obat['signa']}\n";
+         // dihitung hanya bila resume belum berisi & kunjungan milik faskes (tabel farmasi tanpa index, ±0,8 dtk)
+         if ($dataresume && ($dataresume['pemeriksaan_penunjang'] ?? null) === null) {
+            $obSt = $koneksi->prepare("SELECT COALESCE(NULLIF(m.pharmacy_name_generic, ''), d.item_name) AS nama, d.qty, d.signa
+               FROM permintaan_pharmacy t
+               JOIN permintaan_pharmacy_details d ON d.id_permintaan_farmasi = t.id_permintaan_farmasi
+               LEFT JOIN ms_pharmacy m ON m.id_pharmacy = d.id_pharmacy
+               WHERE t.id_visit = ? AND t.id_customer = ? AND t.status_obat_pulang = 0");
+            $obSt->bind_param('si', $visit, $rsIdc);
+            $obSt->execute();
+            foreach ($obSt->get_result()->fetch_all(MYSQLI_ASSOC) as $obat) $terapi .= "- {$obat['nama']} {$obat['qty']} {$obat['signa']}\n";
+            $obSt->close();
          }
          ?>
          <tr>
             <td class="resume-label">Terapi Selama di Klinik</td>
-            <td colspan="3" style="white-space:pre-line" id="rs_terapi_rs"><?= $dataresume['pemeriksaan_penunjang'] ?? $terapi ?></td>
+            <td colspan="3" style="white-space:pre-line" id="rs_terapi_rs"><?= htmlspecialchars((string) ($dataresume['pemeriksaan_penunjang'] ?? $terapi)) ?></td>
          </tr>
 
          <tr>
             <td class="resume-label">Alergi Obat</td>
-            <td colspan="3" id="rs_alergi"><?php echo $dataresume['alergi_obat'] ?? ''; ?></td>
+            <td colspan="3" id="rs_alergi"><?= htmlspecialchars((string) ($dataresume['alergi_obat'] ?? '')) ?></td>
          </tr>
 
          <?php
          $terapipulang = '';
-         $getobatpulang = mysqli_query($koneksi, "SELECT ms_pharmacy.pharmacy_name_generic, permintaan_pharmacy_details.qty, permintaan_pharmacy_details.signa
-            FROM permintaan_pharmacy
-            INNER JOIN permintaan_pharmacy_details ON permintaan_pharmacy_details.id_permintaan_farmasi = permintaan_pharmacy.id_permintaan_farmasi
-            INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy_details.id_pharmacy
-            WHERE permintaan_pharmacy.id_visit='$visit' AND permintaan_pharmacy.status_obat_pulang=1");
-         while ($obat = mysqli_fetch_assoc($getobatpulang)) {
-            $terapipulang .= "- {$obat['pharmacy_name_generic']} {$obat['qty']} {$obat['signa']}\n";
+         // dihitung hanya bila resume belum berisi & kunjungan milik faskes (tabel farmasi tanpa index, ±0,8 dtk)
+         if ($dataresume && ($dataresume['instruksi'] ?? null) === null) {
+            $obSt = $koneksi->prepare("SELECT COALESCE(NULLIF(m.pharmacy_name_generic, ''), d.item_name) AS nama, d.qty, d.signa
+               FROM permintaan_pharmacy t
+               JOIN permintaan_pharmacy_details d ON d.id_permintaan_farmasi = t.id_permintaan_farmasi
+               LEFT JOIN ms_pharmacy m ON m.id_pharmacy = d.id_pharmacy
+               WHERE t.id_visit = ? AND t.id_customer = ? AND t.status_obat_pulang = 1");
+            $obSt->bind_param('si', $visit, $rsIdc);
+            $obSt->execute();
+            foreach ($obSt->get_result()->fetch_all(MYSQLI_ASSOC) as $obat) $terapipulang .= "- {$obat['nama']} {$obat['qty']} {$obat['signa']}\n";
+            $obSt->close();
          }
          ?>
          <tr>
             <td class="resume-label">Terapi Pulang</td>
-            <td colspan="3" style="white-space:pre-line" id="rs_terapi_pulang"><?= $dataresume['instruksi'] ?? $terapipulang ?></td>
+            <td colspan="3" style="white-space:pre-line" id="rs_terapi_pulang"><?= htmlspecialchars((string) ($dataresume['instruksi'] ?? $terapipulang)) ?></td>
          </tr>
 
          <tr>
             <td class="resume-label">Kondisi Pasien Saat Pulang</td>
-            <td colspan="3" id="rs_kondisi_pulang"><?= $dataresume['kondisi_pulang'] ?? '' ?></td>
+            <td colspan="3" id="rs_kondisi_pulang"><?= htmlspecialchars((string) ($dataresume['kondisi_pulang'] ?? '')) ?></td>
          </tr>
          <tr>
             <td class="resume-label">Cara Keluar</td>
-            <td colspan="3" id="rs_cara_keluar"><?= $dataresume['cara_keluar'] ?? '' ?></td>
+            <td colspan="3" id="rs_cara_keluar"><?= htmlspecialchars((string) ($dataresume['cara_keluar'] ?? '')) ?></td>
          </tr>
 
          <!-- 
@@ -308,7 +325,7 @@ $datadiagnosamasuk = mysqli_fetch_array($diagnosamasuk);
          <table class="resume-table" style="margin-top: -1px;">
             <tr>
                <td class="resume-label">Rencana Tindak Lanjut</td>
-               <td colspan="3" id="rs_rencana"><?= $dataresume['rencana_tindak_lanjut'] ?? '' ?></td>
+               <td colspan="3" id="rs_rencana"><?= htmlspecialchars((string) ($dataresume['rencana_tindak_lanjut'] ?? '')) ?></td>
             </tr>
          </table>
 
@@ -332,7 +349,7 @@ $datadiagnosamasuk = mysqli_fetch_array($diagnosamasuk);
                $imgSrc = (!empty($ttdFile) && file_exists($ttdPath)) ? $ttdPath : '../../../uploads/ttd/default.png';
                ?>
                <img src="<?= $imgSrc ?>" class="resume-sign-img" alt="TTD Dokter">
-               <div class="resume-doc-line" id="doctor_name"><?= $dataresume['id_doctor'] ?? '' ?></div>
+               <div class="resume-doc-line" id="doctor_name"><?= htmlspecialchars((string) ($dataresume['id_doctor'] ?? '')) ?></div>
             </div>
          </div>
       </div>
