@@ -134,7 +134,7 @@ require '../../admin/getdataclinic.php';
       const no = url.get("no");
       const rm = url.get("rm");
 
-      if (!no || !rm) return;
+      if (!no) return;   // rm tidak dipakai getpasien (dulu tanpa rm halaman kosong)
 
       fetch(`getpasien.php?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}`)
          .then(res => res.json())
@@ -153,7 +153,7 @@ require '../../admin/getdataclinic.php';
                let tanggal = formatTanggal(data.visit_date);
 
                document.getElementById("ttd_tanggal").innerText =
-                  "<?= $datafaskes['faskes_district'] ?>, " + tanggal;
+                  <?= json_encode((string) ($datafaskes['faskes_district'] ?? ''), JSON_HEX_TAG | JSON_UNESCAPED_UNICODE) ?> + ", " + tanggal;
             }
 
             // Isi field
@@ -165,7 +165,7 @@ require '../../admin/getdataclinic.php';
             // 🔥 SET TTD DINAMIS
             if (data.signature_path) {
                document.getElementById("ttd_img").src =
-                  `../../../uploads/ttd/${data.signature_path}`;
+                  `../../../uploads/ttd/${encodeURIComponent(String(data.signature_path).split('/').pop())}`;
             } else {
                document.getElementById("ttd_img").style.display = "none";
             }
@@ -183,11 +183,8 @@ require '../../admin/getdataclinic.php';
          "Juli", "Agustus", "September", "Oktober", "November", "Desember"
       ];
 
-      let d = new Date(tgl);
-      let hari = d.getDate();
-      let bln = bulan[d.getMonth()];
-      let thn = d.getFullYear();
-
-      return `${hari} ${bln} ${thn}`;
+      // dibaca manual: new Date("YYYY-MM-DD HH:MM:SS") -> Invalid Date di Safari
+      const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(tgl || ''));
+      return m ? `${+m[3]} ${bulan[m[2] - 1]} ${m[1]}` : '';
    }
 </script>
