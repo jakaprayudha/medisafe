@@ -14,6 +14,27 @@ if (!$visit_ID) {
    exit;
 }
 
+// kunjungan wajib milik faskes sesi & belum selesai/batal (dulu bisa memproses kunjungan faskes lain / yang sudah pulang)
+$idCustomer = (int) ($_SESSION['id_customer'] ?? 0);
+$cek = $koneksi->prepare("SELECT visit_status FROM pasien_visit WHERE visit_ID = ? AND id_customer = ? LIMIT 1");
+$cek->bind_param("si", $visit_ID, $idCustomer);
+$cek->execute();
+$status = $cek->get_result()->fetch_row()[0] ?? null;
+$cek->close();
+if ($status === null) {
+   http_response_code(404);
+   echo json_encode(['status' => 'error', 'message' => 'Kunjungan tidak ditemukan untuk faskes ini.']);
+   exit;
+}
+if (in_array((int) $status, [3, 4], true)) {
+   echo json_encode(['status' => 'error', 'message' => 'Pemeriksaan kunjungan ini sudah diselesaikan.']);
+   exit;
+}
+if ((int) $status === 99) {
+   echo json_encode(['status' => 'error', 'message' => 'Kunjungan ini sudah dibatalkan.']);
+   exit;
+}
+
 // mulai transaction
 $koneksi->begin_transaction();
 
@@ -23,9 +44,9 @@ try {
    $stmt = $koneksi->prepare("
       UPDATE pasien_visit 
       SET visit_status = 4
-      WHERE visit_ID = ?
+      WHERE visit_ID = ? AND id_customer = ?
    ");
-   $stmt->bind_param("s", $visit_ID);
+   $stmt->bind_param("si", $visit_ID, $idCustomer);
    $stmt->execute();
 
    // 2. update status ranap -> pulang
@@ -75,10 +96,10 @@ try {
 
    // rollback
    $koneksi->rollback();
+   error_log('[visit/selesaikanPemeriksaan] ' . $e->getMessage());
 
    echo json_encode([
       'status' => 'error',
-      'message' => 'Gagal proses',
-      'error' => $e->getMessage()
+      'message' => 'Gagal memproses, silakan coba lagi.'
    ]);
 }
