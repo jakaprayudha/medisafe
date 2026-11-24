@@ -2,6 +2,8 @@
 $title = 'Permintaan Rawat Inap';
 require '../../database/connect.php';
 require '../../controller/view.php';
+$EMBED = !empty($_GET['embed']);   // ditampilkan di dalam View RME Baru
+if ($EMBED) $_GET['rme'] = '';     // tanpa menu RME
 ?>
 <!doctype html>
 <html lang="en">
@@ -9,7 +11,7 @@ require '../../controller/view.php';
 <head>
   <base href="../../">
   <?php
-  require '../../assets/template/head.php';
+  require '../../assets/template/head.php'; require __DIR__ . '/embed_mode.php';
   ?>
   <style>
     .icon-circle {
@@ -61,14 +63,14 @@ require '../../controller/view.php';
     data-sidebar-position="fixed" data-header-position="fixed">
     <!-- Sidebar Start -->
     <?php
-    require 'sidebar.php';
+    if (!$EMBED) require 'sidebar.php';
     ?>
     <!--  Sidebar End -->
     <!--  Main wrapper -->
     <div class="body-wrapper">
       <!--  Header Start -->
       <?php
-      require 'navbar.php';
+      if (!$EMBED) require 'navbar.php';
       ?>
       <!--  Header End -->
       <div class="body-wrapper-inner">
@@ -121,7 +123,7 @@ require '../../controller/view.php';
           <div class="row">
             <div class="col-12">
               <?php
-              require 'card-pasien.php';
+              if (!$EMBED) require 'card-pasien.php';
               ?>
             </div>
             <div class="col-lg-12 d-flex align-items-stretch">

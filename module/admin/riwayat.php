@@ -10,6 +10,8 @@
  */
 $title = 'Riwayat';
 require '../../controller/view.php';
+$EMBED = !empty($_GET['embed']);   // ditampilkan di dalam View RME Baru
+if ($EMBED) $_GET['rme'] = '';     // tanpa menu RME
 require_once __DIR__ . '/../../controller/visit/historyLabels.php';
 require_once __DIR__ . '/../../controller/visit/operationMarkerHistory.php';
 $no = $_GET['no'] ?? '';
@@ -137,7 +139,7 @@ $isi = fn($v) => trim((string) ($v ?? '')) !== '' ? nl2br($e(trim((string) $v)))
 
 <head>
   <base href="../../">
-  <?php require '../../assets/template/head.php'; ?>
+  <?php require '../../assets/template/head.php'; require __DIR__ . '/embed_mode.php'; ?>
   <style>
     .vital-box { border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px; background: #f9fafb; }
     .vital-value { font-size: 16px; font-weight: 600; color: #111827; }
@@ -173,9 +175,9 @@ $isi = fn($v) => trim((string) ($v ?? '')) !== '' ? nl2br($e(trim((string) $v)))
 <body>
   <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
     data-sidebar-position="fixed" data-header-position="fixed">
-    <?php require 'sidebar.php'; ?>
+    <?php if (!$EMBED) require 'sidebar.php'; ?>
     <div class="body-wrapper">
-      <?php require 'navbar.php'; ?>
+      <?php if (!$EMBED) require 'navbar.php'; ?>
       <div class="body-wrapper-inner">
         <div class="container-fluid">
           <?php
@@ -186,7 +188,7 @@ $isi = fn($v) => trim((string) ($v ?? '')) !== '' ? nl2br($e(trim((string) $v)))
           ?>
           <div class="row">
             <div class="col-12">
-              <?php require 'card-pasien.php'; ?>
+              <?php if (!$EMBED) require 'card-pasien.php'; ?>
             </div>
             <div class="col-lg-12 d-flex align-items-stretch">
               <div class="card w-100">

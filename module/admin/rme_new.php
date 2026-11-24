@@ -1,25 +1,33 @@
 <?php
 $title = 'Pemeriksaan';
+/*
+ * RME satu halaman (View RME Baru). Perbaikan: wajib ?rm sama persis dengan nomor RM (format berbeda -> halaman
+ * ditolak 404); flatpickr dimuat dua kali (sudah ada di head.php); akordeon hanya bisa membuka 1 bagian (isi vital,
+ * anamnesa, diagnosa harus buka-tutup bergantian); Saturasi tanpa batas (0% lolos); bagian Vaksin/Tindakan/Riwayat/
+ * Rawat Inap hanya teks tanpa fungsi; kotak keterangan dobel di atas komponen; tombol simpan jauh di bawah.
+ */
 require '../../controller/view.php';
 require '../../database/connect.php';
 require '../../controller/visit/assesmen.php';
 $no = $_GET['no'] ?? '';
 $rm = $_GET['rm'] ?? '';
-if (!is_string($no) || !is_string($rm) || $no === '' || $rm === '') {
+if (!is_string($no) || !is_string($rm) || $no === '') {
   http_response_code(400);
-  exit('Nomor kunjungan dan nomor RM wajib diisi.');
+  exit('Nomor kunjungan wajib diisi.');
 }
-$cycleVisitStmt = $koneksi->prepare("SELECT v.id_patient FROM pasien_visit v
+$cycleVisitStmt = $koneksi->prepare("SELECT v.id_patient, p.nomor_rm FROM pasien_visit v
   JOIN ms_patient p ON p.id_patient = v.id_patient
-  WHERE v.visit_ID = ? AND v.id_customer = ? AND p.nomor_rm = ? LIMIT 1");
-$cycleVisitStmt->bind_param('sis', $no, $_SESSION['id_customer'], $rm);
+  WHERE v.visit_ID = ? AND v.id_customer = ? LIMIT 1");
+$cycleVisitStmt->bind_param('si', $no, $_SESSION['id_customer']);
 $cycleVisitStmt->execute();
 $cycleVisit = $cycleVisitStmt->get_result()->fetch_assoc();
 if (!$cycleVisit) {
   http_response_code(404);
-  exit('Kunjungan tidak ditemukan pada klinik ini atau nomor RM tidak sesuai.');
+  exit('Kunjungan tidak ditemukan pada klinik ini.');
 }
 $id_patient = $cycleVisit['id_patient'];
+$rm = (string) ($cycleVisit['nomor_rm'] ?? $rm);   // nomor RM dari database
+$h = fn($v) => htmlspecialchars((string) ($v ?? ''), ENT_QUOTES, 'UTF-8');
 $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
 ?>
 <!doctype html>
@@ -30,8 +38,27 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
   <?php
   require '../../assets/template/head.php';
   ?>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <style>
+    .rmx-bar { position: sticky; top: 92px; z-index: 7; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 8px 10px; margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; box-shadow: 0 2px 8px rgba(15, 23, 42, .06); }
+    .rmx-bar a.chip { border: 1px solid #e2e8f0; border-radius: 999px; padding: 3px 10px; font-size: .76rem; font-weight: 600; color: #1f2937; text-decoration: none; white-space: nowrap; }
+    .rmx-bar a.chip:hover { border-color: #94a3b8; background: #f8fafc; }
+    .rmx-bar .ctl { margin-left: auto; display: flex; gap: 6px; }
+    .rmx-bar .ctl .btn { padding: 3px 10px; font-size: .76rem; font-weight: 600; }
+    .pemeriksaan-accordion .accordion-item { scroll-margin-top: 150px; }
+    .rmx-link { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 14px 16px; background: #f8fafc; }
+    .rmx-link .ic { width: 40px; height: 40px; border-radius: 10px; background: #e0e7ff; color: #3730a3; display: inline-flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+    .rmx-embed { border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff; min-height: 120px; position: relative; }
+    .rmx-embed iframe { display: block; width: 100%; border: 0; height: 200px; }
+    .rmx-embed-muat { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #1f2937; font-size: .86rem; background: #fff; }
+    .rmx-link p { margin: 0; color: #1f2937; font-size: .86rem; }
+    /* teks abu-abu di dalam RME (keterangan, placeholder komponen) dibuat gelap agar terbaca */
+    #accordionPemeriksaan .text-muted, #accordionPemeriksaan .form-text, #accordionPemeriksaan .text-secondary, #accordionPemeriksaan small:not(.badge) { color: #1f2937 !important; }
+    #accordionPemeriksaan .farmasi-placeholder, #accordionPemeriksaan .farmasi-placeholder p { color: #1f2937 !important; }
+    #accordionPemeriksaan ::placeholder { color: #6b7280; opacity: 1; }
+    .rmx-save { position: sticky; bottom: 0; z-index: 7; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px 12px 0 0; padding: 10px 12px; margin-top: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; box-shadow: 0 -4px 12px rgba(15, 23, 42, .06); }
+    .rmx-save #printActions { margin: 0 !important; }
+    .rmx-save #simpan_pemeriksaan { margin-left: auto; min-width: 240px; font-weight: 600; }
+  </style>
 
 </head>
 
@@ -75,6 +102,25 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
      ACCORDION PEMERIKSAAN
 ========================================================= -->
 
+            <nav class="rmx-bar" aria-label="Bagian RME">
+              <a class="chip" href="#collapsePasien" data-buka>Pasien</a>
+              <a class="chip" href="#collapseVital" data-buka>Vital sign</a>
+              <a class="chip" href="#collapseDokter" data-buka>Anamnesa</a>
+              <a class="chip" href="#collapseDiagnosa" data-buka>Diagnosa</a>
+              <a class="chip" href="#collapseOdontogram" data-buka>Odontogram</a>
+              <a class="chip" href="#collapseFarmasi" data-buka>Farmasi</a>
+              <a class="chip" href="#collapseResepLuar" data-buka>Resep luar</a>
+              <a class="chip" href="#collapseLab" data-buka>Lab</a>
+              <a class="chip" href="#collapseVaksin" data-buka>Vaksin</a>
+              <a class="chip" href="#collapseTindakan" data-buka>Tindakan</a>
+              <a class="chip" href="#collapseRiwayatPengobatan" data-buka>Riwayat</a>
+              <a class="chip" href="#collapseRawatInap" data-buka>Rawat inap</a>
+              <a class="chip" href="#collapsePulang" data-buka>Status pulang</a>
+              <span class="ctl">
+                <button type="button" class="btn btn-outline-dark" id="rmxBukaSemua">Buka semua</button>
+                <button type="button" class="btn btn-outline-dark" id="rmxTutupSemua">Tutup semua</button>
+              </span>
+            </nav>
             <div class="accordion pemeriksaan-accordion" id="accordionPemeriksaan">
 
               <!-- =====================================================
@@ -111,7 +157,7 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
                   id="collapsePasien"
                   class="accordion-collapse collapse show"
                   aria-labelledby="headingPasien"
-                  data-bs-parent="#accordionPemeriksaan">
+                  >
 
                   <div class="accordion-body">
 
@@ -161,7 +207,7 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
                   id="collapseScreening"
                   class="accordion-collapse collapse"
                   aria-labelledby="headingScreening"
-                  data-bs-parent="#accordionPemeriksaan">
+                  >
 
                   <div class="accordion-body">
 
@@ -208,11 +254,11 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
                 <h2 class="accordion-header" id="headingVital">
 
                   <button
-                    class="accordion-button collapsed"
+                    class="accordion-button"
                     type="button"
                     data-bs-toggle="collapse"
                     data-bs-target="#collapseVital"
-                    aria-expanded="false"
+                    aria-expanded="true"
                     aria-controls="collapseVital">
 
                     <span class="accordion-icon perawat">
@@ -238,9 +284,9 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
 
                 <div
                   id="collapseVital"
-                  class="accordion-collapse collapse"
+                  class="accordion-collapse collapse show"
                   aria-labelledby="headingVital"
-                  data-bs-parent="#accordionPemeriksaan">
+                  >
 
                   <div class="accordion-body">
 
@@ -542,6 +588,9 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
                           <input
                             type="number"
                             id="saturasi"
+                            min="50"
+                            max="100"
+                            step="1"
                             name="saturasi"
                             class="form-control">
 
@@ -680,11 +729,11 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
                 <h2 class="accordion-header" id="headingDokter">
 
                   <button
-                    class="accordion-button collapsed"
+                    class="accordion-button"
                     type="button"
                     data-bs-toggle="collapse"
                     data-bs-target="#collapseDokter"
-                    aria-expanded="false"
+                    aria-expanded="true"
                     aria-controls="collapseDokter">
 
                     <span class="accordion-icon dokter">
@@ -710,9 +759,9 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
 
                 <div
                   id="collapseDokter"
-                  class="accordion-collapse collapse"
+                  class="accordion-collapse collapse show"
                   aria-labelledby="headingDokter"
-                  data-bs-parent="#accordionPemeriksaan">
+                  >
 
                   <div class="accordion-body">
 
@@ -882,11 +931,11 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
                 <h2 class="accordion-header" id="headingDiagnosa">
 
                   <button
-                    class="accordion-button collapsed"
+                    class="accordion-button"
                     type="button"
                     data-bs-toggle="collapse"
                     data-bs-target="#collapseDiagnosa"
-                    aria-expanded="false"
+                    aria-expanded="true"
                     aria-controls="collapseDiagnosa">
 
                     <span class="accordion-icon diagnosa">
@@ -912,9 +961,9 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
 
                 <div
                   id="collapseDiagnosa"
-                  class="accordion-collapse collapse"
+                  class="accordion-collapse collapse show"
                   aria-labelledby="headingDiagnosa"
-                  data-bs-parent="#accordionPemeriksaan">
+                  >
 
                   <div class="accordion-body">
 
@@ -1090,26 +1139,11 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
                   id="collapseOdontogram"
                   class="accordion-collapse collapse"
                   aria-labelledby="headingOdontogram"
-                  data-bs-parent="#accordionPemeriksaan">
+                  >
 
                   <div class="accordion-body">
 
-                    <div class="section-placeholder odontogram-placeholder">
-
-                      <div class="section-placeholder-icon">
-                        <i class="bi bi-grid-3x3-gap"></i>
-                      </div>
-
-                      <div>
-                        <strong>Odontogram</strong>
-
-                        <p class="mb-0">
-                          Pemeriksaan odontogram pasien dapat dilakukan
-                          pada modul odontogram.
-                        </p>
-                      </div>
-
-                    </div>
+                    
                     <?php require 'component_odontogram.php'; ?>
 
                   </div>
@@ -1155,7 +1189,7 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
                   id="collapseFarmasi"
                   class="accordion-collapse collapse"
                   aria-labelledby="headingFarmasi"
-                  data-bs-parent="#accordionPemeriksaan">
+                  >
 
                   <div class="accordion-body">
 
@@ -1225,26 +1259,11 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
                   id="collapseResepLuar"
                   class="accordion-collapse collapse"
                   aria-labelledby="headingResepLuar"
-                  data-bs-parent="#accordionPemeriksaan">
+                  >
 
                   <div class="accordion-body">
 
-                    <div class="section-placeholder">
-
-                      <div class="section-placeholder-icon">
-                        <i class="bi bi-prescription2"></i>
-                      </div>
-
-                      <div>
-                        <strong>Resep Luar</strong>
-
-                        <p class="mb-0">
-                          Digunakan untuk mencatat resep yang diberikan
-                          kepada pasien untuk ditebus di luar fasilitas kesehatan.
-                        </p>
-                      </div>
-
-                    </div>
+                    
                     <?php
                     require 'component_resep.php';
                     ?>
@@ -1292,26 +1311,11 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
                   id="collapseLab"
                   class="accordion-collapse collapse"
                   aria-labelledby="headingLab"
-                  data-bs-parent="#accordionPemeriksaan">
+                  >
 
                   <div class="accordion-body">
 
-                    <div class="section-placeholder">
-
-                      <div class="section-placeholder-icon">
-                        <i class="bi bi-eyedropper"></i>
-                      </div>
-
-                      <div>
-                        <strong>Pemeriksaan Laboratorium</strong>
-
-                        <p class="mb-0">
-                          Section untuk permintaan pemeriksaan dan
-                          melihat hasil laboratorium pasien.
-                        </p>
-                      </div>
-
-                    </div>
+                    
 
                     <?php
                     require 'component_penunjang.php';
@@ -1362,26 +1366,14 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
                   id="collapseVaksin"
                   class="accordion-collapse collapse"
                   aria-labelledby="headingVaksin"
-                  data-bs-parent="#accordionPemeriksaan">
+                  >
 
                   <div class="accordion-body">
 
-                    <div class="section-placeholder">
-
-                      <div class="section-placeholder-icon">
-                        <i class="bi bi-shield-plus"></i>
-                      </div>
-
-                      <div>
-                        <strong>Vaksinasi</strong>
-
-                        <p class="mb-0">
-                          Digunakan untuk mencatat pemberian vaksin
-                          dan riwayat vaksinasi pasien.
-                        </p>
-                      </div>
-
+                    <div class="rmx-embed" data-src="module/admin/vaksin?<?= $h(http_build_query(['no' => $no, 'rm' => $rm, 'rme' => 'a', 'embed' => 1])) ?>" data-judul="Vaksinasi">
+                      <div class="rmx-embed-muat"><span class="spinner-border spinner-border-sm me-2"></span>Memuat vaksinasi…</div>
                     </div>
+                    <div class="text-end mt-1"><button type="button" class="btn btn-link btn-sm p-0 rmx-reload"><i class="bi bi-arrow-clockwise me-1"></i>Muat ulang</button></div>
 
                   </div>
 
@@ -1426,26 +1418,14 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
                   id="collapseTindakan"
                   class="accordion-collapse collapse"
                   aria-labelledby="headingTindakan"
-                  data-bs-parent="#accordionPemeriksaan">
+                  >
 
                   <div class="accordion-body">
 
-                    <div class="section-placeholder">
-
-                      <div class="section-placeholder-icon">
-                        <i class="bi bi-bandaid"></i>
-                      </div>
-
-                      <div>
-                        <strong>Tindakan Medis</strong>
-
-                        <p class="mb-0">
-                          Digunakan untuk mencatat tindakan medis
-                          yang dilakukan kepada pasien.
-                        </p>
-                      </div>
-
+                    <div class="rmx-embed" data-src="module/admin/billing?<?= $h(http_build_query(['no' => $no, 'rm' => $rm, 'rme' => 'a', 'embed' => 1])) ?>" data-judul="Tindakan">
+                      <div class="rmx-embed-muat"><span class="spinner-border spinner-border-sm me-2"></span>Memuat tindakan…</div>
                     </div>
+                    <div class="text-end mt-1"><button type="button" class="btn btn-link btn-sm p-0 rmx-reload"><i class="bi bi-arrow-clockwise me-1"></i>Muat ulang</button></div>
 
                   </div>
 
@@ -1490,26 +1470,14 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
                   id="collapseRiwayatPengobatan"
                   class="accordion-collapse collapse"
                   aria-labelledby="headingRiwayatPengobatan"
-                  data-bs-parent="#accordionPemeriksaan">
+                  >
 
                   <div class="accordion-body">
 
-                    <div class="section-placeholder">
-
-                      <div class="section-placeholder-icon">
-                        <i class="bi bi-clock-history"></i>
-                      </div>
-
-                      <div>
-                        <strong>Riwayat Pengobatan</strong>
-
-                        <p class="mb-0">
-                          Menampilkan riwayat pengobatan dan terapi
-                          pasien dari kunjungan sebelumnya.
-                        </p>
-                      </div>
-
+                    <div class="rmx-embed" data-src="module/admin/riwayat?<?= $h(http_build_query(['no' => $no, 'rm' => $rm, 'rme' => 'a', 'embed' => 1])) ?>" data-judul="Riwayat pengobatan">
+                      <div class="rmx-embed-muat"><span class="spinner-border spinner-border-sm me-2"></span>Memuat riwayat pengobatan…</div>
                     </div>
+                    <div class="text-end mt-1"><button type="button" class="btn btn-link btn-sm p-0 rmx-reload"><i class="bi bi-arrow-clockwise me-1"></i>Muat ulang</button></div>
 
                   </div>
 
@@ -1554,26 +1522,14 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
                   id="collapseRawatInap"
                   class="accordion-collapse collapse"
                   aria-labelledby="headingRawatInap"
-                  data-bs-parent="#accordionPemeriksaan">
+                  >
 
                   <div class="accordion-body">
 
-                    <div class="section-placeholder">
-
-                      <div class="section-placeholder-icon">
-                        <i class="bi bi-hospital"></i>
-                      </div>
-
-                      <div>
-                        <strong>Rawat Inap</strong>
-
-                        <p class="mb-0">
-                          Digunakan untuk proses permintaan,
-                          perencanaan, dan administrasi rawat inap pasien.
-                        </p>
-                      </div>
-
+                    <div class="rmx-embed" data-src="module/admin/rawat_inap?<?= $h(http_build_query(['no' => $no, 'rm' => $rm, 'rme' => 'a', 'embed' => 1])) ?>" data-judul="Rawat inap">
+                      <div class="rmx-embed-muat"><span class="spinner-border spinner-border-sm me-2"></span>Memuat rawat inap…</div>
                     </div>
+                    <div class="text-end mt-1"><button type="button" class="btn btn-link btn-sm p-0 rmx-reload"><i class="bi bi-arrow-clockwise me-1"></i>Muat ulang</button></div>
 
                   </div>
 
@@ -1592,11 +1548,11 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
                 <h2 class="accordion-header" id="headingPulang">
 
                   <button
-                    class="accordion-button collapsed"
+                    class="accordion-button"
                     type="button"
                     data-bs-toggle="collapse"
                     data-bs-target="#collapsePulang"
-                    aria-expanded="false"
+                    aria-expanded="true"
                     aria-controls="collapsePulang">
 
                     <span class="accordion-icon pulang">
@@ -1622,9 +1578,9 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
 
                 <div
                   id="collapsePulang"
-                  class="accordion-collapse collapse"
+                  class="accordion-collapse collapse show"
                   aria-labelledby="headingPulang"
-                  data-bs-parent="#accordionPemeriksaan">
+                  >
 
                   <div class="accordion-body">
 
@@ -2129,16 +2085,15 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
      PRINT ACTIONS
 ========================================================= -->
 
-            <hr>
-
-            <div
-              class="d-flex justify-content-center align-items-center gap-3 mt-3"
+            <div class="rmx-save">
+              <div
+              class="d-flex flex-wrap align-items-center gap-2"
               id="printActions">
 
 
               <button
                 type="button"
-                class="btn btn-success px-4 py-2 shadow-sm rounded-pill btn-printkunjungan d-none"
+                class="btn btn-outline-dark btn-printkunjungan d-none"
                 id="btn-printkunjungan">
 
                 <i class="bi bi-printer-fill me-2"></i>
@@ -2150,7 +2105,7 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
 
               <button
                 type="button"
-                class="btn btn-info text-white px-4 py-2 shadow-sm rounded-pill btn-print d-none"
+                class="btn btn-outline-dark btn-print d-none"
                 id="btn-print">
 
                 <i class="bi bi-file-earmark-text-fill me-2"></i>
@@ -2160,17 +2115,6 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
               </button>
 
             </div>
-
-
-            <hr>
-
-
-            <!-- =========================================================
-     SIMPAN — ID TETAP
-========================================================= -->
-
-            <div class="d-grid">
-
               <button
                 type="button"
                 id="simpan_pemeriksaan"
@@ -2181,7 +2125,6 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
                 Simpan Pemeriksaan
 
               </button>
-
             </div>
           </div>
         </div>
@@ -2235,6 +2178,52 @@ $_SESSION['rme_cycle_token'] ??= bin2hex(random_bytes(32));
   <?php require 'library.php'; ?>
   <script src="controller/admisi/helper.js?v=<?= filemtime(__DIR__ . '/../../controller/admisi/helper.js') ?>"></script>
   <script src="controller/doctor/rmeCycle.js?v=<?= filemtime(__DIR__ . '/../../controller/doctor/rmeCycle.js') ?>"></script>
+  <script>
+    // navigasi akordeon: klik chip -> buka bagian & gulir; buka/tutup semua
+    (function() {
+      const buka = el => bootstrap.Collapse.getOrCreateInstance(el, { toggle: false }).show();
+      document.querySelectorAll('.rmx-bar [data-buka]').forEach(a => a.addEventListener('click', e => {
+        e.preventDefault();
+        const el = document.querySelector(a.getAttribute('href'));
+        if (!el) return;
+        buka(el);
+        setTimeout(() => el.closest('.accordion-item').scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+      }));
+      // bagian Vaksin / Tindakan / Riwayat / Rawat Inap tampil di halaman ini (mode sematan), dimuat saat dibuka
+      function muatSematan(box, paksa) {
+        let fr = box.querySelector('iframe');
+        if (fr && !paksa) return;
+        if (fr) fr.remove();
+        const muat = box.querySelector('.rmx-embed-muat');
+        muat.style.display = 'flex';
+        fr = document.createElement('iframe');
+        fr.title = box.dataset.judul;
+        fr.loading = 'eager';
+        fr.src = box.dataset.src;
+        fr.addEventListener('load', () => {
+          muat.style.display = 'none';
+          const doc = fr.contentDocument;
+          if (!doc) return;
+          const atur = () => {
+            // tinggi isi (body), bukan dokumen — dokumen minimal setinggi iframe sehingga tidak bisa mengecil
+            const tinggi = doc.body ? doc.body.scrollHeight : 200;
+            fr.style.height = Math.min(tinggi + 4, Math.round(window.innerHeight * 0.8)) + 'px';
+          };
+          atur();
+          try { new fr.contentWindow.ResizeObserver(atur).observe(doc.body); } catch (e) { setInterval(atur, 1000); }
+        });
+        box.appendChild(fr);
+      }
+      document.querySelectorAll('.rmx-embed').forEach(box => {
+        const col = box.closest('.accordion-collapse');
+        col.addEventListener('shown.bs.collapse', () => muatSematan(box, false));
+        if (col.classList.contains('show')) muatSematan(box, false);
+        box.parentElement.querySelector('.rmx-reload').addEventListener('click', () => muatSematan(box, true));
+      });
+      document.getElementById('rmxBukaSemua').addEventListener('click', () => document.querySelectorAll('#accordionPemeriksaan .accordion-collapse').forEach(buka));
+      document.getElementById('rmxTutupSemua').addEventListener('click', () => document.querySelectorAll('#accordionPemeriksaan .accordion-collapse').forEach(el => bootstrap.Collapse.getOrCreateInstance(el, { toggle: false }).hide()));
+    })();
+  </script>
   <script src="controller/doctor/kunjunganrj.js?v=<?= filemtime(__DIR__ . '/../../controller/doctor/kunjunganrj.js') ?>"></script>
 </body>
 

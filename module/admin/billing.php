@@ -8,6 +8,8 @@
  */
 $title = 'Tindakan';
 require '../../controller/view.php';
+$EMBED = !empty($_GET['embed']);   // ditampilkan di dalam View RME Baru
+if ($EMBED) $_GET['rme'] = '';     // tanpa menu RME
 $no = trim((string) ($_GET['no'] ?? ''));
 $rm = trim((string) ($_GET['rm'] ?? ''));
 $rme = (string) ($_GET['rme'] ?? '');
@@ -27,7 +29,7 @@ foreach ($tarif as $t) $grupTarif[trim((string) $t['tarif_services']) ?: 'Lainny
 
 <head>
   <base href="../../">
-  <?php require '../../assets/template/head.php'; ?>
+  <?php require '../../assets/template/head.php'; require __DIR__ . '/embed_mode.php'; ?>
   <style>
     .bl .kepala { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 14px; }
     .bl .kepala .ic { width: 42px; height: 42px; border-radius: 12px; background: #fef3c7; color: #92400e; display: inline-flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
@@ -59,9 +61,9 @@ foreach ($tarif as $t) $grupTarif[trim((string) $t['tarif_services']) ?: 'Lainny
 <body>
   <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
     data-sidebar-position="fixed" data-header-position="fixed">
-    <?php require 'sidebar.php'; ?>
+    <?php if (!$EMBED) require 'sidebar.php'; ?>
     <div class="body-wrapper">
-      <?php require 'navbar.php'; ?>
+      <?php if (!$EMBED) require 'navbar.php'; ?>
       <div class="body-wrapper-inner">
         <div class="container-fluid bl">
           <?php
@@ -69,7 +71,7 @@ foreach ($tarif as $t) $grupTarif[trim((string) $t['tarif_services']) ?: 'Lainny
           elseif ($rme === 'b') include 'menu_rmeb.php';
           elseif ($rme === 'c') include 'menu_rme_inap.php';
           ?>
-          <?php require 'card-pasien.php'; ?>
+          <?php if (!$EMBED) require 'card-pasien.php'; ?>
 
           <div class="card w-100">
             <div class="card-body p-3 p-md-4">
