@@ -1,190 +1,178 @@
 <?php
+/**
+ * Resume Medis (ringkasan pulang rawat inap). Data: controller/ranap/getResume.php, simpan: controller/ranap/saveResumeMedis.php,
+ * cetak: module/admin/print/formulir_resume_v2.
+ * Perbaikan: $_SESSION dibaca sebelum sesi dimulai; query kunjungan/CPPT/obat dirangkai dari URL (SQL injection);
+ * INNER JOIN icd_10 membuat data kosong bila diagnosa masuk bukan kode ICD; difilter nomor RM dari URL; atribut
+ * value pada <textarea> (tidak berfungsi); terapi selama rawat hanya dari CPPT pertama; obat pulang dicari per tiket
+ * (N+1); diagnosa sekunder lama berformat "R11,R63.8" terbaca sebagai satu diagnosa; tombol Simpan bisa diklik
+ * berulang (resume dobel) tanpa validasi; id kunjungan/RM dicetak mentah ke JavaScript (XSS); tombol di dalam <a>.
+ */
 $title = 'Resume Medis';
-$no = $_GET['no'];
-$rm = $_GET['rm'];
-$id_customer = $_SESSION['id_customer'];
-require '../../database/connect.php';
 require '../../controller/view.php';
-$checkvisit = mysqli_query($koneksi, "SELECT * FROM pasien_visit INNER JOIN ms_patient ON ms_patient.id_patient = pasien_visit.id_patient INNER JOIN icd_10 ON icd_10.code = pasien_visit.diagnosa WHERE visit_ID='$no' AND nomor_rm='$rm'");
-$dataresume =  mysqli_fetch_array($checkvisit);
+$no = trim((string) ($_GET['no'] ?? ''));
+$rm = trim((string) ($_GET['rm'] ?? ''));
+$rme = (string) ($_GET['rme'] ?? '');
+$h = fn($v) => htmlspecialchars((string) ($v ?? ''), ENT_QUOTES, 'UTF-8');
+$kondisi = ['Sembuh', 'Membaik', 'Belum Sembuh', 'Mati < 48 Jam', 'Mati > 48 Jam', 'Lainnya'];
+$cara = ['Diizinkan Pulang', 'Pulang Paksa', 'Lari', 'Pindah Ke FKTP Rawat Inap Lain', 'Dirujuk Ke RS', 'Lainnya'];
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="id">
 
 <head>
   <base href="../../">
-  <?php
-  require '../../assets/template/head.php';
-  ?>
-
+  <?php require '../../assets/template/head.php'; ?>
+  <style>
+    .rs .kepala { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .rs .kepala .ic { width: 42px; height: 42px; border-radius: 12px; background: #e0e7ff; color: #3730a3; display: inline-flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+    .rs .kepala h5 { margin: 0; font-weight: 700; color: #0f172a; }
+    .rs .kepala small { color: #475569; }
+    .rs .st { font-size: .72rem; font-weight: 700; border-radius: 6px; padding: 2px 8px; white-space: nowrap; display: inline-block; }
+    .rs .st-ok { background: #dcfce7; color: #14532d; }
+    .rs .st-belum { background: #fef3c7; color: #92400e; }
+    .rs .info { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px 18px; border: 1px solid #e2e8f0; background: #f8fafc; border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; }
+    .rs .info small { display: block; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #475569; }
+    .rs .info b { color: #0f172a; font-size: .9rem; word-break: break-word; }
+    .rs .info .lebar { grid-column: 1 / -1; }
+    .rs .sec { border: 1px solid #e2e8f0; border-radius: 14px; margin-bottom: 14px; }
+    .rs .sec-h { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid #eef2f6; background: #f8fafc; border-radius: 14px 14px 0 0; }
+    .rs .sec-h .no { width: 26px; height: 26px; border-radius: 8px; background: #e0e7ff; color: #3730a3; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: .82rem; }
+    .rs .sec-h b { color: #0f172a; }
+    .rs .sec-b { padding: 14px; }
+    .rs .lbl { display: flex; align-items: center; gap: 6px; }
+    .rs .lbl .btn-link { font-size: .78rem; padding: 0; margin-left: auto; text-decoration: none; font-weight: 600; }
+    .rs .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .rs .chips input { position: absolute; opacity: 0; pointer-events: none; }
+    .rs .chips label { border: 1px solid #cbd5e1; border-radius: 999px; padding: 5px 12px; cursor: pointer; font-size: .84rem; font-weight: 600; color: #1f2937; background: #fff; }
+    .rs .chips input:checked + label { background: #0f172a; border-color: #0f172a; color: #fff; }
+    .rs .chips input:focus-visible + label { outline: 2px solid #2563eb; outline-offset: 1px; }
+    .rs .chips.is-invalid label { border-color: #dc3545; }
+    .rs .bar { position: sticky; bottom: 0; z-index: 6; background: #fff; border-top: 1px solid #e2e8f0; padding: 10px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .rs .bar .ket { margin-right: auto; font-size: .82rem; color: #475569; }
+    .rs .is-invalid + .select2 .select2-selection { border-color: #dc3545 !important; }
+    .rs .select2-container .select2-selection--multiple { min-height: 38px; }
+  </style>
 </head>
 
 <body>
-  <!--  Body Wrapper -->
   <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
     data-sidebar-position="fixed" data-header-position="fixed">
-    <!-- Sidebar Start -->
-    <?php
-    require 'sidebar.php';
-    ?>
-    <!--  Sidebar End -->
-    <!--  Main wrapper -->
+    <?php require 'sidebar.php'; ?>
     <div class="body-wrapper">
-      <!--  Header Start -->
-      <?php
-      require 'navbar.php';
-      ?>
-      <!--  Header End -->
+      <?php require 'navbar.php'; ?>
       <div class="body-wrapper-inner">
         <div class="container-fluid">
           <?php
-          $rme = $_GET['rme']; // default a
-          if ($rme == 'a') {
-            include 'menu_rme.php';
-          } else if ($rme == 'b') {
-            include 'menu_rmeb.php';
-          } else if ($rme == 'c') {
-            include 'menu_rme_inap.php';
-          }
+          if ($rme === 'a') include 'menu_rme.php';
+          elseif ($rme === 'b') include 'menu_rmeb.php';
+          elseif ($rme === 'c') include 'menu_rme_inap.php';
           ?>
           <div class="row">
-            <div class="col-lg-12 d-flex align-items-stretch">
+            <div class="col-12"><?php require 'card-pasien.php'; ?></div>
+            <div class="col-12">
               <div class="card w-100">
-                <div class="card-body p-4">
-                  <h4 class="mb-3">Resume Medis</h4>
-
-                  <!-- IDENTITAS PASIEN -->
-                  <?php
-                  require 'card-pasien.php';
-                  ?>
-
-                  <hr>
-
-                  <!-- FORM RESUM MEDIS -->
-                  <div class="row">
-
-                    <div class="col-3 mb-3">
-                      <label class="form-label">Tanggal Pulang</label>
-                      <input type="date" id="tanggal_pulang" class="form-control" required>
+                <div class="card-body p-4 rs">
+                  <div class="kepala">
+                    <span class="ic"><i class="ti ti-file-certificate"></i></span>
+                    <div class="flex-grow-1">
+                      <h5>Resume Medis <span class="st st-belum" id="rsStatus">Memuat…</span></h5>
+                      <small id="rsSub">Ringkasan perawatan saat pasien pulang dari rawat inap.</small>
                     </div>
-
-                    <div class="col-3 mb-3">
-                      <label class="form-label">Jam Pulang</label>
-                      <input type="time" id="jam_pulang" class="form-control" required>
-                    </div>
-
-                    <div class="col-6 mb-3">
-                      <label class="form-label">Diagnosa Masuk</label>
-                      <input type="text" class="form-control   bg-light" readonly value="<?= $dataresume['diagnosa'] ?? '' ?> - <?= $dataresume['icd10'] ?? '' ?>">
-                    </div>
-
-                    <div class="col-6 mb-3">
-                      <label class="form-label">Indikasi Rawat Inap</label>
-                      <input type="text" class="form-control bg-light" readonly value="<?= $dataresume['anamnesa'] ?? '' ?> ">
-                    </div>
-
-                    <div class="col-6 mb-3">
-                      <label class="form-label">Diagnosa Utama (ICD-10)</label>
-                      <select id="diagnosa_utama" name="diagnosa_utama" class="form-select"></select>
-                    </div>
-
-                    <div class="col-6 mb-3">
-                      <label class="form-label">Diagnosa Sekunder (ICD-10)</label>
-                      <select id="diagnosa_sekunder" name="diagnosa_sekunder[]" class="form-select" multiple></select>
-                    </div>
-
-                    <div class="col-6 mb-3">
-                      <label class="form-label">Pemeriksaan Fisik</label>
-                      <textarea id="pemeriksaan_fisik" name="pemeriksaan_fisik" class="form-control" rows="6"></textarea>
-                    </div>
-                    <?php
-                    $terapi = "-";
-
-                    $query = mysqli_query($koneksi, "SELECT * FROM visit_cppt  WHERE visit_ID='$no'  AND id_customer='$id_customer'  ORDER BY created_at ASC  LIMIT 1");
-
-                    $dataresep = mysqli_fetch_assoc($query);
-
-                    if ($dataresep) {
-                      $terapi = $dataresep['planning'] ?? "-";
-                    }
-                    ?>
-                    <div class="col-6 mb-3">
-                      <label class="form-label">Terapi Selama Rawat Inap</label>
-                      <textarea id="pemeriksaan_penunjang" class="form-control" rows="6"><?= $terapi ?></textarea>
-                    </div>
-
-                    <div class="col-6 mb-3">
-                      <label class="form-label">Alergi Obat</label>
-                      <textarea id="alergi_obat" class="form-control" rows="6" value="<?= $dataresume['alergi_obat'] ?? '' ?> "></textarea>
-                    </div>
-                    <?php
-                    $no = $_GET['no'];
-                    $terapipulang = '';
-                    $gettiketpulang = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy WHERE id_visit='$no' AND status_obat_pulang=1");
-                    while ($tiket = mysqli_fetch_assoc($gettiketpulang)) {
-                      $idvisit = $tiket['id_permintaan_farmasi'];
-                      $getobat = mysqli_query($koneksi, "SELECT * FROM permintaan_pharmacy_details INNER JOIN ms_pharmacy ON ms_pharmacy.id_pharmacy = permintaan_pharmacy_details.id_pharmacy WHERE id_permintaan_farmasi='$idvisit'");
-                      while ($obat = mysqli_fetch_assoc($getobat)) {
-                        $terapipulang .= "- {$obat['pharmacy_name_generic']} {$obat['qty']} {$obat['signa']}\n";
-                      }
-                    }
-                    ?>
-                    <div class="col-6 mb-3">
-                      <label class="form-label">Terapi Pulang</label>
-                      <textarea id="instruksi" class="form-control" rows="6"><?= $terapipulang ?></textarea>
-                    </div>
-
-                    <div class="col-6 mb-3">
-                      <label class="form-label">Rencana Tindak Lanjut</label>
-                      <textarea id="rencana_tindak_lanjut" name="rencana_tindak_lanjut" class="form-control" rows="6" value="<?= $dataresume['rencana_tindak_lanjut'] ?? '' ?> "></textarea>
-                    </div>
-
-                    <div class="col-6 mb-3">
-                      <label class="form-label">Kondisi Pasien Saat Pulang</label>
-                      <select name="kondisi_pulang" id="kondisi_pulang" class="form-select">
-                        <option value="">PILIH</option>
-                        <option value="Sembuh">Sembuh</option>
-                        <option value="Membaik">Membaik</option>
-                        <option value="Belum Sembuh">Belum Sembuh</option>
-                        <option value="Mati < 48 Jam">Mati < 48 Jam</option>
-                        <option value="Mati > 48 Jam">Mati > 48 Jam</option>
-                        <option value="Lainnya">Lainnya</option>
-                      </select>
-                    </div>
-
-
-                    <div class="col-6 mb-3">
-                      <label class="form-label">Cara Keluar</label>
-                      <select name="cara_keluar" id="cara_keluar" class="form-select">
-                        <option value="">PILIH</option>
-                        <option value="Diizinkan Pulang">Diizinkan Pulang</option>
-                        <option value="Pulang Paksa">Pulang Paksa</option>
-                        <option value="Lari">Lari</option>
-                        <option value="Pindah Ke FKTP Rawat Inap Lain">Pindah Ke FKTP Rawat Inap Lain</option>
-                        <option value="Dirujuk Ke RS">Dirujuk Ke RS</option>
-                        <option value="Lainnya">Lainnya</option>
-                      </select>
-                    </div>
-
-
-                    <!-- 
-                    <div class="col-6 mb-3">
-                      <label class="form-label">DPJP</label>
-                      <input type="text" id="dokter" class="form-control bg-light" readonly>
-                    </div> -->
-
+                    <a class="btn btn-outline-dark disabled" id="rsCetak" target="_blank" rel="noopener" aria-disabled="true"
+                      href="module/admin/print/formulir_resume_v2?<?= $h(http_build_query(['no' => $no, 'rm' => $rm])) ?>"><i class="ti ti-printer me-1"></i>Cetak</a>
                   </div>
+                  <div class="alert alert-danger d-none" id="rsGagal"></div>
+                  <div class="alert alert-danger d-none" id="rsBatal"><i class="ti ti-ban me-1"></i>Kunjungan ini sudah dibatalkan — resume tidak bisa disimpan.</div>
 
-                  <div class="text-end mt-3">
-                    <a href="module/admin/print/formulir_resume_v2?no=<?= urlencode((string) ($no ?? '')) ?>&rm=<?= urlencode((string) ($rm ?? '')) ?>" target="_blank">
-                      <button class="btn btn-outline-primary">
-                        <iconify-icon icon="mdi:printer-outline"></iconify-icon> Cetak
-                      </button>
-                    </a>
-                    <button id="openModal" class="btn btn-primary">
-                      <iconify-icon icon="mdi:content-save-outline"></iconify-icon> Simpan
-                    </button>
+                  <div id="rsIsi" class="d-none">
+                    <div class="info">
+                      <div><small>Tanggal masuk</small><b id="iMasuk">-</b></div>
+                      <div><small>Ruang / bed</small><b id="iRuang">-</b></div>
+                      <div><small>DPJP</small><b id="iDpjp">-</b></div>
+                      <div><small>Diagnosa masuk</small><b id="iDx">-</b></div>
+                      <div class="lebar"><small>Indikasi rawat inap</small><b id="iIndikasi" style="font-weight:500">-</b></div>
+                    </div>
+
+                    <section class="sec">
+                      <div class="sec-h"><span class="no">1</span><b>Kepulangan</b></div>
+                      <div class="sec-b"><div class="row g-3">
+                        <div class="col-md-3 col-6">
+                          <label class="form-label small fw-semibold" for="tanggal_pulang">Tanggal pulang <span class="text-danger">*</span></label>
+                          <input type="date" id="tanggal_pulang" class="form-control">
+                          <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                          <label class="form-label small fw-semibold lbl" for="jam_pulang">Jam pulang <span class="text-danger">*</span><button type="button" class="btn btn-link" id="rsSekarang">Sekarang</button></label>
+                          <input type="time" id="jam_pulang" class="form-control">
+                          <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label small fw-semibold" for="cara_keluar">Cara keluar <span class="text-danger">*</span></label>
+                          <select id="cara_keluar" class="form-select">
+                            <option value="">— Pilih —</option>
+                            <?php foreach ($cara as $c): ?><option><?= $h($c) ?></option><?php endforeach; ?>
+                          </select>
+                          <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="col-12">
+                          <div class="form-label small fw-semibold" id="kondisi_pulang">Kondisi pasien saat pulang <span class="text-danger">*</span></div>
+                          <div class="chips" id="kondisiChips">
+                            <?php foreach ($kondisi as $i => $c): ?>
+                              <input type="radio" name="kondisi" id="kd<?= $i ?>" value="<?= $h($c) ?>"><label for="kd<?= $i ?>"><?= $h($c) ?></label>
+                            <?php endforeach; ?>
+                          </div>
+                          <div class="invalid-feedback d-block"></div>
+                        </div>
+                      </div></div>
+                    </section>
+
+                    <section class="sec">
+                      <div class="sec-h"><span class="no">2</span><b>Diagnosis akhir</b></div>
+                      <div class="sec-b"><div class="row g-3">
+                        <div class="col-md-6">
+                          <label class="form-label small fw-semibold" for="diagnosa_utama">Diagnosa utama (ICD-10) <span class="text-danger">*</span></label>
+                          <select id="diagnosa_utama" class="form-select"></select>
+                          <div class="invalid-feedback d-block"></div>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label small fw-semibold" for="diagnosa_sekunder">Diagnosa sekunder (ICD-10)</label>
+                          <select id="diagnosa_sekunder" class="form-select" multiple></select>
+                          <div class="invalid-feedback d-block"></div>
+                        </div>
+                      </div></div>
+                    </section>
+
+                    <section class="sec">
+                      <div class="sec-h"><span class="no">3</span><b>Pemeriksaan &amp; terapi</b></div>
+                      <div class="sec-b"><div class="row g-3">
+                        <div class="col-md-6">
+                          <label class="form-label small fw-semibold lbl" for="pemeriksaan_fisik">Pemeriksaan fisik<button type="button" class="btn btn-link" data-isi="pemeriksaan_fisik">Isi dari tanda vital</button></label>
+                          <textarea id="pemeriksaan_fisik" class="form-control" rows="6" maxlength="10000"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label small fw-semibold lbl" for="terapi_rawat">Terapi selama rawat inap<button type="button" class="btn btn-link" data-isi="terapi_rawat">Isi dari CPPT</button></label>
+                          <textarea id="terapi_rawat" class="form-control" rows="6" maxlength="10000"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label small fw-semibold lbl" for="terapi_pulang">Terapi pulang<button type="button" class="btn btn-link" data-isi="terapi_pulang">Isi dari resep obat pulang</button></label>
+                          <textarea id="terapi_pulang" class="form-control" rows="5" maxlength="10000"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label small fw-semibold lbl" for="alergi_obat">Alergi obat<button type="button" class="btn btn-link" data-isi="alergi">Isi dari riwayat alergi</button></label>
+                          <textarea id="alergi_obat" class="form-control" rows="2" maxlength="2000"></textarea>
+                          <label class="form-label small fw-semibold mt-3" for="rencana_tindak_lanjut">Rencana tindak lanjut</label>
+                          <textarea id="rencana_tindak_lanjut" class="form-control" rows="2" maxlength="5000" placeholder="mis. kontrol poli 3 hari lagi"></textarea>
+                        </div>
+                      </div></div>
+                    </section>
+
+                    <div class="bar">
+                      <span class="ket" id="rsKet"></span>
+                      <button type="button" class="btn btn-primary px-4" id="rsSimpan"><i class="ti ti-device-floppy me-1"></i>Simpan resume</button>
+                    </div>
                   </div>
+                  <div id="rsMuat" class="text-center text-muted py-5"><span class="spinner-border spinner-border-sm me-2"></span>Memuat data kunjungan…</div>
                 </div>
               </div>
             </div>
@@ -194,188 +182,162 @@ $dataresume =  mysqli_fetch_array($checkvisit);
     </div>
   </div>
 
-  <?php
-  require 'library.php';
-  ?>
-</body>
-<script>
-  function extractCode(text) {
-    if (!text) return "";
-    const parts = text.split(" - ");
-    return parts[0].trim();
-  }
+  <?php require 'library.php'; ?>
+  <script>
+    (function() {
+      'use strict';
+      const NO = <?= json_encode($no) ?>;
+      const $id = i => document.getElementById(i);
+      const BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      const tglId = s => { const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? (+m[3]) + ' ' + BLN[m[2] - 1] + ' ' + m[1] : '-'; };
+      const sekarang = () => { const p = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Jakarta' }); return { tgl: p.slice(0, 10), jam: p.slice(11, 16) }; };
+      const toast = (title, icon = 'success') => Swal.fire({ toast: true, position: 'top-end', icon, title, showConfirmButton: false, timer: 2400 });
+      let SARAN = {}, P = {}, kotor = false;
 
-  function normalizeList(value) {
-    if (!value) return [];
-    if (Array.isArray(value)) return value;
-    return value
-      .split(";")
-      .map(v => v.trim())
-      .filter(Boolean);
-  }
-
-  function setSelect2Single(selector, storedText) {
-    if (!storedText) return;
-    const code = extractCode(storedText) || storedText;
-    const option = new Option(storedText, code, true, true);
-    $(selector).append(option).trigger('change');
-  }
-
-  function setSelect2Multiple(selector, storedText) {
-    const items = normalizeList(storedText);
-    if (!items.length) return;
-    items.forEach(text => {
-      const code = extractCode(text) || text;
-      const option = new Option(text, code, true, true);
-      $(selector).append(option);
-    });
-    $(selector).trigger('change');
-  }
-
-  document.addEventListener("DOMContentLoaded", () => {
-
-    const url = new URLSearchParams(window.location.search);
-    const no = url.get("no");
-    const rm = url.get("rm");
-
-    if (!no || !rm) return;
-
-    // ===== GET DATA PASIEN + RESUME =====
-    fetch(`controller/ranap/getResume?no=${encodeURIComponent(no)}&rm=${encodeURIComponent(rm)}`)
-      .then(r => r.json())
-      .then(res => {
-
-        if (!res || res.status !== "success") return;
-
-        const p = res.pasien ?? {};
-        const i = res.resume ?? {};
-
-        // ===== SET DATA DARI resume_medis =====
-        for (let key in i) {
-          if (document.getElementById(key)) {
-            document.getElementById(key).value = i[key] ?? "";
-          }
-        }
-
-        // ===== SET DATA DARI pasien_visit =====
-        if (document.getElementById("pemeriksaan_fisik"))
-          document.getElementById("pemeriksaan_fisik").value = p.pemeriksaan_fisik ?? "";
-
-        if (document.getElementById("alergi_obat"))
-          document.getElementById("alergi_obat").value = p.alergi_obat ?? "";
-
-        if (document.getElementById("kondisi_pulang"))
-          document.getElementById("kondisi_pulang").value = p.kondisi_pulang ?? "";
-
-        if (document.getElementById("cara_keluar"))
-          document.getElementById("cara_keluar").value = p.cara_keluar ?? "";
-
-        if (document.getElementById("rencana_tindak_lanjut"))
-          document.getElementById("rencana_tindak_lanjut").value = p.rencana_tindak_lanjut ?? "";
-
-        setSelect2Single('#diagnosa_utama', p.diagnosa_utama ?? "");
-        setSelect2Multiple('#diagnosa_sekunder', p.diagnosa_sekunder ?? "");
-
-      })
-      .catch(err => console.error("ERR GET:", err));
-
-  });
-
-  // =============== SAVE DATA RANAP ===============
-  document.getElementById("openModal").addEventListener("click", () => {
-
-    const diagUtamaData = $('#diagnosa_utama').select2('data') || [];
-    const diagUtamaText = diagUtamaData.length ? (diagUtamaData[0].text || "") : "";
-    const diagUtamaVal = diagUtamaData.length ? (diagUtamaData[0].id || "") : "";
-
-    const diagSekunderData = $('#diagnosa_sekunder').select2('data') || [];
-    const diagSekunderText = diagSekunderData
-      .map(item => item.text || "")
-      .filter(Boolean)
-      .join('; ');
-    const diagSekunderVal = diagSekunderData
-      .map(item => item.id || "")
-      .filter(Boolean)
-      .join(',');
-
-    const diagnosaMasuk = document.getElementById("diagnosa_masuk")?.value ?? "";
-    const diagnosaText = diagUtamaText || diagSekunderText ?
-      `${diagUtamaText}${diagSekunderText ? ' | ' + diagSekunderText : ''}` :
-      diagnosaMasuk;
-
-    let data = {
-      visit_ID: "<?= $_GET['no'] ?>",
-      nomor_rm: "<?= $_GET['rm'] ?>",
-    };
-
-    data.diagnosa_utama = diagUtamaVal;
-    data.diagnosa_utama_text = diagUtamaText;
-    data.diagnosa_sekunder = diagSekunderVal;
-    data.diagnosa_sekunder_text = diagSekunderText;
-    data.diagnosa = diagnosaText;
-    data.pemeriksaan_fisik = document.getElementById("pemeriksaan_fisik")?.value ?? "";
-    data.pemeriksaan_penunjang = document.getElementById("pemeriksaan_penunjang")?.value ?? "";
-    data.alergi_obat = document.getElementById("alergi_obat")?.value ?? "";
-    data.instruksi = document.getElementById("instruksi")?.value ?? "";
-    data.kondisi_pulang = document.getElementById("kondisi_pulang")?.value ?? "";
-    data.cara_keluar = document.getElementById("cara_keluar")?.value ?? "";
-    data.rencana_tindak_lanjut = document.getElementById("rencana_tindak_lanjut")?.value ?? "";
-    data.id_doctor = document.getElementById("dokter")?.value ?? "";
-    data.tindakan = data.pemeriksaan_fisik;
-    data.obat = data.alergi_obat;
-    data.tanggal_pulang = document.getElementById("tanggal_pulang")?.value ?? "";
-    data.jam_pulang = document.getElementById("jam_pulang")?.value ?? "";
-
-
-    fetch("controller/ranap/saveResumeMedis.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-      })
-      .then(r => r.json())
-      .then(res => {
-        Swal.fire({
-          icon: res.status,
-          title: res.status === "success" ? "Berhasil" : "Gagal",
-          text: res.message
-        });
-      })
-      .catch(err => {
-        alert("Terjadi error saat menyimpan!");
-        console.error(err);
-      });
-
-  });
-</script>
-
-<script>
-  function initICD(selector, multiple = false) {
-    $(selector).select2({
-      width: '100%',
-      placeholder: 'Cari diagnosa ICD-10...',
-      minimumInputLength: 2,
-      multiple: multiple,
-      ajax: {
-        url: 'controller/visit/getICD10.php',
-        dataType: 'json',
-        delay: 300,
-        data: params => ({
-          search: params.term
-        }),
-        processResults: data => ({
-          results: data
-        })
+      // select2 ICD-10 (dibuat sekali)
+      function initICD(sel, multiple) {
+        $(sel).select2({
+          width: '100%', placeholder: 'Cari kode / nama diagnosa…', minimumInputLength: 2, multiple, allowClear: !multiple,
+          ajax: { url: 'controller/visit/getICD10.php', dataType: 'json', delay: 300, data: p => ({ search: p.term }), processResults: d => ({ results: d }) }
+        }).on('change', () => { kotor = true; $(sel).removeClass('is-invalid'); });
       }
-    });
-  }
+      initICD('#diagnosa_utama', false);
+      initICD('#diagnosa_sekunder', true);
+      const setICD = (sel, items) => {
+        const $s = $(sel).empty();
+        (items || []).forEach(it => $s.append(new Option(it.text, it.id, true, true)));
+        $s.trigger('change');
+      };
 
-  // utama = single
-  initICD('#diagnosa_utama');
+      function statusResume(r) {
+        const ada = !!r;
+        $id('rsStatus').className = 'st ' + (ada ? 'st-ok' : 'st-belum');
+        $id('rsStatus').textContent = ada ? 'Tersimpan' : 'Belum dibuat';
+        $id('rsCetak').classList.toggle('disabled', !ada);
+        $id('rsCetak').setAttribute('aria-disabled', ada ? 'false' : 'true');
+        $id('rsKet').textContent = ada ? `Terakhir disimpan ${r.created_at ? tglId(r.created_at) : ''}${r.petugas ? ' oleh ' + r.petugas : ''}` : 'Isian awal diambil dari data kunjungan, CPPT & resep — periksa sebelum disimpan.';
+      }
 
-  // sekunder = multi 🔥
-  initICD('#diagnosa_sekunder', true);
-</script>
+      fetch('controller/ranap/getResume?no=' + encodeURIComponent(NO))
+        .then(r => r.json().then(j => ({ ok: r.ok, j })))
+        .then(({ ok, j }) => {
+          $id('rsMuat').classList.add('d-none');
+          if (!ok || j.status !== 'success') {
+            $id('rsGagal').textContent = j.message || 'Gagal memuat data.';
+            $id('rsGagal').classList.remove('d-none');
+            $id('rsStatus').classList.add('d-none');
+            return;
+          }
+          P = j.pasien; SARAN = j.saran || {};
+          const r = j.resume;
+          $id('rsIsi').classList.remove('d-none');
+          $id('iMasuk').textContent = tglId(P.tgl_masuk) + (P.visit_time ? ' ' + String(P.visit_time).slice(0, 5) : '');
+          $id('iRuang').textContent = P.ruang || '-';
+          $id('iDpjp').textContent = P.id_doctor || '-';
+          $id('iDx').textContent = P.diagnosa ? P.diagnosa + (P.diagnosa_nama ? ' — ' + P.diagnosa_nama : '') : '-';
+          $id('iIndikasi').textContent = P.indikasi || '-';
+          $id('rsBatal').classList.toggle('d-none', !P.batal);
+          $id('rsSimpan').disabled = !!P.batal;
+
+          const now = sekarang();
+          $id('tanggal_pulang').max = now.tgl;
+          $id('tanggal_pulang').min = String(P.tgl_masuk || '').slice(0, 10);
+          // nilai tersimpan; bila belum ada resume -> saran otomatis
+          $id('tanggal_pulang').value = (r && r.tanggal_pulang) || (P.visit_date_out ? String(P.visit_date_out).slice(0, 10) : '');
+          $id('jam_pulang').value = (r && r.jam_pulang) ? String(r.jam_pulang).slice(0, 5) : '';
+          $id('cara_keluar').value = P.cara_keluar || '';
+          document.querySelectorAll('[name="kondisi"]').forEach(x => x.checked = x.value === P.kondisi_pulang);
+          setICD('#diagnosa_utama', P.dx_utama ? [P.dx_utama] : []);
+          setICD('#diagnosa_sekunder', P.dx_sekunder);
+          $id('pemeriksaan_fisik').value = (r && r.tindakan) || P.pemeriksaan_fisik || SARAN.pemeriksaan_fisik || '';
+          $id('terapi_rawat').value = r ? (r.pemeriksaan_penunjang || '') : (SARAN.terapi_rawat || '');
+          $id('terapi_pulang').value = r ? (r.instruksi || '') : (SARAN.terapi_pulang || '');
+          $id('alergi_obat').value = P.alergi_obat || (r && r.obat) || SARAN.alergi || '';
+          $id('rencana_tindak_lanjut').value = P.rencana_tindak_lanjut || '';
+          document.querySelectorAll('[data-isi]').forEach(b => { const k = b.dataset.isi; b.disabled = !SARAN[k]; b.title = SARAN[k] ? '' : 'Tidak ada data'; });
+          statusResume(r);
+          kotor = false;
+        })
+        .catch(() => { $id('rsMuat').classList.add('d-none'); $id('rsGagal').textContent = 'Tidak dapat terhubung ke server.'; $id('rsGagal').classList.remove('d-none'); });
+
+      // tombol "Isi dari ..." — konfirmasi bila kolom sudah berisi
+      const TUJUAN = { pemeriksaan_fisik: 'pemeriksaan_fisik', terapi_rawat: 'terapi_rawat', terapi_pulang: 'terapi_pulang', alergi: 'alergi_obat' };
+      document.querySelectorAll('[data-isi]').forEach(b => b.addEventListener('click', async () => {
+        const el = $id(TUJUAN[b.dataset.isi]), isi = SARAN[b.dataset.isi] || '';
+        if (!isi) return;
+        if (el.value.trim() && el.value.trim() !== isi.trim()) {
+          const r = await Swal.fire({ icon: 'question', title: 'Kolom sudah berisi', text: 'Ganti isinya, atau tambahkan di bawah?', showDenyButton: true, showCancelButton: true,
+            confirmButtonText: 'Ganti', denyButtonText: 'Tambahkan', cancelButtonText: 'Batal', denyButtonColor: '#0f172a', cancelButtonColor: '#475569' });
+          if (r.isDismissed) return;
+          el.value = r.isConfirmed ? isi : el.value.replace(/\s+$/, '') + '\n' + isi;
+        } else el.value = isi;
+        kotor = true;
+        el.focus();
+      }));
+      $id('rsSekarang').addEventListener('click', () => { const n = sekarang(); $id('jam_pulang').value = n.jam; if (!$id('tanggal_pulang').value) $id('tanggal_pulang').value = n.tgl; kotor = true; });
+      $id('rsIsi').addEventListener('input', () => { kotor = true; });
+      $id('rsIsi').addEventListener('change', e => { kotor = true; e.target.classList && e.target.classList.remove('is-invalid'); if (e.target.name === 'kondisi') $id('kondisiChips').classList.remove('is-invalid'); });
+
+      /* ================= SIMPAN ================= */
+      function bersihkan() {
+        document.querySelectorAll('#rsIsi .is-invalid').forEach(e => e.classList.remove('is-invalid'));
+        document.querySelectorAll('#rsIsi .invalid-feedback').forEach(e => e.textContent = '');
+      }
+      function tandai(field, pesan) {
+        const el = field === 'kondisi_pulang' ? $id('kondisiChips') : $id(field);
+        if (!el) return false;
+        el.classList.add('is-invalid');
+        const fb = el.closest('[class*="col-"]').querySelector('.invalid-feedback');
+        if (fb) fb.textContent = pesan;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (field.startsWith('diagnosa')) $(el).select2('open'); else if (el.focus) el.focus({ preventScroll: true });
+        return true;
+      }
+      let menyimpan = false;
+      $id('rsSimpan').addEventListener('click', async () => {
+        if (menyimpan) return;
+        bersihkan();
+        const data = {
+          tanggal_pulang: $id('tanggal_pulang').value,
+          jam_pulang: $id('jam_pulang').value,
+          cara_keluar: $id('cara_keluar').value,
+          kondisi_pulang: (document.querySelector('[name="kondisi"]:checked') || {}).value || '',
+          diagnosa_utama: $('#diagnosa_utama').val() || '',
+          diagnosa_sekunder: $('#diagnosa_sekunder').val() || [],
+          pemeriksaan_fisik: $id('pemeriksaan_fisik').value,
+          terapi_rawat: $id('terapi_rawat').value,
+          terapi_pulang: $id('terapi_pulang').value,
+          alergi_obat: $id('alergi_obat').value,
+          rencana_tindak_lanjut: $id('rencana_tindak_lanjut').value,
+        };
+        if (!data.tanggal_pulang) return tandai('tanggal_pulang', 'Tanggal pulang wajib diisi.');
+        if (!data.jam_pulang) return tandai('jam_pulang', 'Jam pulang wajib diisi.');
+        if (!data.cara_keluar) return tandai('cara_keluar', 'Pilih cara keluar.');
+        if (!data.kondisi_pulang) return tandai('kondisi_pulang', 'Pilih kondisi pasien saat pulang.');
+        if (!data.diagnosa_utama) return tandai('diagnosa_utama', 'Diagnosa utama wajib diisi.');
+        menyimpan = true;
+        const btn = $id('rsSimpan'), label = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan…';
+        try {
+          const r = await fetch('controller/ranap/saveResumeMedis.php?no=' + encodeURIComponent(NO), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+          const j = await r.json().catch(() => ({ status: 'error', message: 'Respon server tidak valid.' }));
+          if (!r.ok || j.status !== 'success') { if (!(j.field && tandai(j.field, j.message))) Swal.fire('Gagal', j.message || 'Gagal menyimpan.', 'error'); return; }
+          kotor = false;
+          statusResume({ created_at: sekarang().tgl, petugas: '' });
+          $id('rsKet').textContent = 'Tersimpan ' + sekarang().jam + ' — siap dicetak.';
+          toast(j.message);
+        } catch (e) {
+          Swal.fire('Gagal', 'Tidak dapat terhubung ke server.', 'error');
+        } finally {
+          menyimpan = false;
+          btn.disabled = !!P.batal;
+          btn.innerHTML = label;
+        }
+      });
+      window.addEventListener('beforeunload', e => { if (kotor) { e.preventDefault(); e.returnValue = ''; } });
+    })();
+  </script>
+</body>
 
 </html>
