@@ -1,43 +1,25 @@
 <?php
+/**
+ * Data rekap persalinan (JSON). Cetak formulir_persalinan kini membaca data langsung; file ini dipertahankan untuk
+ * kompatibilitas. Dulu: no & rm disisipkan ke SQL (SQL injection) tanpa cek login / batas faskes.
+ */
 require '../../../database/connect.php';
-
-$no = $_GET['no'] ?? '';
-$rm = $_GET['rm'] ?? '';
-
-if (!$no || !$rm) {
-   echo json_encode(["status" => "error", "message" => "Parameter kurang"]);
+header('Content-Type: application/json; charset=utf-8');
+$idc = (int) ($_SESSION['id_customer'] ?? 0);
+session_write_close();
+$no = trim((string) ($_GET['no'] ?? ''));
+if ($idc <= 0 || $no === '') {
+   http_response_code($idc <= 0 ? 401 : 400);
+   echo json_encode(['status' => 'error', 'message' => $idc <= 0 ? 'Sesi berakhir.' : 'Parameter kurang']);
    exit;
 }
-
-// gabungkan data pasien + visit + tabel persalinan
-$q = mysqli_query($koneksi, "
-    SELECT 
-        ms_patient.patient_name,
-        ms_patient.patient_nik,
-        ms_patient.patient_place,
-        ms_patient.patient_datebirth,
-        ms_patient.patient_address,
-        ms_patient.patient_phone,
-
-        visit_persalinan.gravid,
-        visit_persalinan.abortus,
-        visit_persalinan.partus,
-        visit_persalinan.jenis_persalinan,
-        visit_persalinan.tarif_paket,
-        visit_persalinan.ttd_file
-
-    FROM pasien_visit
-    INNER JOIN ms_patient 
-        ON ms_patient.id_patient = pasien_visit.id_patient
-    LEFT JOIN visit_persalinan
-        ON visit_persalinan.visit_ID = pasien_visit.visit_ID
-       AND visit_persalinan.nomor_rm = '$rm'
-    WHERE pasien_visit.visit_ID = '$no'
-");
-
-$data = mysqli_fetch_assoc($q);
-
-echo json_encode([
-   "status" => "success",
-   "data" => $data
-]);
+$st = $koneksi->prepare("SELECT p.patient_name, p.patient_nik, p.patient_place, p.patient_datebirth, p.patient_address, p.patient_phone,
+      vp.gravid, vp.abortus, vp.partus, vp.jenis_persalinan, vp.tarif_paket, vp.ttd_file
+   FROM pasien_visit v JOIN ms_patient p ON p.id_patient = v.id_patient
+   LEFT JOIN visit_persalinan vp ON vp.visit_ID = v.visit_ID
+   WHERE v.visit_ID = ? AND v.id_customer = ? ORDER BY vp.id_persalinan DESC LIMIT 1");
+$st->bind_param('si', $no, $idc);
+$st->execute();
+$data = $st->get_result()->fetch_assoc();
+$st->close();
+echo json_encode(['status' => 'success', 'data' => $data], JSON_UNESCAPED_UNICODE);
