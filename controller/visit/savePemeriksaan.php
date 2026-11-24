@@ -97,6 +97,9 @@ WHERE nomor_rm=? AND nomor_visit=?");
          }
       }
       $koneksi->commit();
+      // Dinkes: data sudah tersimpan; kegagalan kirim tidak menghalangi (status ada di monitoring-dinkes)
+      require_once __DIR__ . '/../dinkes/dinkesService.php';
+      dkKirimVisit($koneksi, (int) ($_SESSION['id_customer'] ?? 0), (string) $nomor_visit);
       echo json_encode(['status' => 'success', 'message' => 'Data pemeriksaan berhasil disimpan']);
    } catch (Exception $e) {
       $koneksi->rollback();

@@ -162,11 +162,14 @@ function deleteData()
       return;
    }
    // kunjungan yang sudah selesai dilayani berisi rekam medis -> tidak boleh dihapus
+   require_once __DIR__ . '/../dinkes/dinkesService.php';
+   $dkVid = dkVisitIdDikirim($koneksi, (int) $ID_CUSTOMER, $id); // Dinkes
    $stmt = $koneksi->prepare("DELETE FROM pasien_visit WHERE id_visit = ? AND id_customer = ? AND visit_status NOT IN (3,4)");
    $stmt->bind_param('ii', $id, $ID_CUSTOMER);
    $stmt->execute();
    $n = $stmt->affected_rows;
    $stmt->close();
+   if ($n > 0 && $dkVid) dkHapusVisit($koneksi, (int) $ID_CUSTOMER, $dkVid); // Dinkes
    if ($n > 0) error_log("[registrasiController] kunjungan #$id dihapus oleh " . ($_SESSION['username'] ?? $ROLE));
    echo json_encode($n > 0 ? ['status' => 'success', 'message' => 'Data berhasil dihapus.']
       : ['status' => 'error', 'message' => 'Data tidak ditemukan atau sudah dilayani (tidak dapat dihapus).']);
