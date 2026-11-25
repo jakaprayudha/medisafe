@@ -1,1433 +1,221 @@
 <?php
 
 /**
- * ============================================================
- * DASHBOARD ADMINISTRATOR UTAMA
- * ============================================================
+ * Dashboard Superadmin (module/dashboard/dashboard-administrator) — data GLOBAL seluruh faskes.
+ *   GET ?action=dashboard&periode=today|week|month|custom&tanggal_mulai=..&tanggal_selesai=..[&refresh=1]
  *
- * Endpoint:
- * controller/dashboard/administratorDashboardController.php?action=dashboard
- *
- * Scope:
- * - GLOBAL / SELURUH FASKES
- * - TIDAK menggunakan id_customer sebagai filter utama
- *
- * Data:
- * - Total Faskes
- * - Faskes Aktif
- * - Faskes Pending
- * - Total Pasien
- * - IDSH Pasien
- * - IDSH Dokter
- * - Faskes Terbaru
- * - Monitoring Database
- * - Monitoring RME
- * - Alert
- * - Statistik periode
- *
- * ============================================================
+ * Perbaikan performa & keamanan:
+ *  - dulu TANPA cek login/role: siapa pun bisa membaca angka global; sekarang hanya superadmin (401/403).
+ *  - session dilepas (session_write_close) agar halaman lain tidak menunggu request ini.
+ *  - ~16 query -> 6-8: hitung faskes 3x -> 1x; COUNT(DISTINCT id_patient) di pasien_visit (0,5 dtk) diganti hitung
+ *    ms_patient digabung dengan IDSH (1 query); RME lengkap/total 2 scan -> 1 scan; SHOW COLUMNS tiap pemuatan -> sekali.
+ *  - angka global yang jarang berubah (faskes, pasien, IDSH, SatuSehat) di-cache di file sementara (5 menit),
+ *    data periode (kunjungan, RME) 60 detik; ?refresh=1 memaksa hitung ulang. Hanya angka agregat yang di-cache.
+ *  - rentang tanggal dibatasi maks. 366 hari (dulu bebas -> scan tabel penuh).
+ *  - tidak ada lagi pesan "belum tersedia": import, SatuSehat, eKYC dan kontrak kini dibaca dari tabel yang ada.
  */
-
-if (session_status() === PHP_SESSION_NONE) {
-   session_start();
-}
-
+if (session_status() === PHP_SESSION_NONE) session_start();
 header('Content-Type: application/json; charset=utf-8');
-
+header('Cache-Control: no-store');
 include '../../database/connect.php';
-
-
-/* ============================================================
-   ERROR REPORTING
-============================================================ */
-
 mysqli_report(MYSQLI_REPORT_OFF);
 
-
-/* ============================================================
-   RESPONSE
-============================================================ */
-
-function responseJson(
-   $status,
-   $message,
-   $data = []
-) {
-
-   echo json_encode(
-      array_merge(
-         [
-            'status'  => $status,
-            'message' => $message
-         ],
-         $data
-      ),
-      JSON_UNESCAPED_UNICODE
-   );
-
+$roles = $_SESSION['roles'] ?? '';
+$login = isset($_SESSION['uid_user']);
+session_write_close();
+if (!$login) {
+   http_response_code(401);
+   echo json_encode(['status' => false, 'message' => 'Sesi berakhir, silakan login ulang.']);
+   exit;
+}
+if ($roles !== 'superadmin') {
+   http_response_code(403);
+   echo json_encode(['status' => false, 'message' => 'Akses hanya untuk superadmin.']);
    exit;
 }
 
-
-/* ============================================================
-   PERIOD
-============================================================ */
-
-function getPeriod()
+function dbJawab(array $d): void
 {
-   $periode = $_GET['periode'] ?? 'today';
-
-   $today = date('Y-m-d');
-
-   switch ($periode) {
-
-      case 'week':
-
-         $start = date(
-            'Y-m-d',
-            strtotime('monday this week')
-         );
-
-         $end = $today;
-
-         break;
-
-
-      case 'month':
-
-         $start = date(
-            'Y-m-01'
-         );
-
-         $end = $today;
-
-         break;
-
-
-      case 'custom':
-
-         $start =
-            $_GET['tanggal_mulai']
-            ?? $today;
-
-         $end =
-            $_GET['tanggal_selesai']
-            ?? $today;
-
-
-         $startValid =
-            DateTime::createFromFormat(
-               'Y-m-d',
-               $start
-            );
-
-         $endValid =
-            DateTime::createFromFormat(
-               'Y-m-d',
-               $end
-            );
-
-
-         if (
-            !$startValid ||
-            !$endValid
-         ) {
-
-            $start = $today;
-            $end   = $today;
-         }
-
-         break;
-
-
-      case 'today':
-
-      default:
-
-         $periode = 'today';
-
-         $start = $today;
-         $end   = $today;
-
-         break;
-   }
-
-
-   if ($start > $end) {
-
-      $tmp   = $start;
-      $start = $end;
-      $end   = $tmp;
-   }
-
-
-   return [
-
-      'type'  => $periode,
-
-      'start' => $start,
-
-      'end'   => $end
-
-   ];
+   echo json_encode(['status' => true, 'message' => 'Dashboard berhasil diambil.'] + $d, JSON_UNESCAPED_UNICODE);
+   exit;
 }
 
-
-/* ============================================================
-   SAFE QUERY
-============================================================ */
-
-function fetchOne($sql)
+/** Satu baris hasil query (atau []). */
+function dbSatu(string $sql): array
 {
    global $koneksi;
-
-   $result = mysqli_query(
-      $koneksi,
-      $sql
-   );
-
-   if (!$result) {
-
-      return null;
-   }
-
-   $row =
-      mysqli_fetch_assoc($result);
-
-   mysqli_free_result($result);
-
+   $r = mysqli_query($koneksi, $sql);
+   if (!$r) return [];
+   $row = mysqli_fetch_assoc($r) ?: [];
+   mysqli_free_result($r);
    return $row;
 }
 
-
-/* ============================================================
-   SAFE COUNT
-============================================================ */
-
-function getCount($sql)
-{
-   $row = fetchOne($sql);
-
-   if (!$row) {
-
-      return 0;
-   }
-
-   return (int)(
-      $row['total']
-      ?? 0
-   );
-}
-
-
-/* ============================================================
-   FORMAT NUMBER
-============================================================ */
-
-function formatNumber($number)
-{
-   return number_format(
-      (float)$number,
-      0,
-      ',',
-      '.'
-   );
-}
-
-
-/* ============================================================
-   FORMAT PERSENTASE
-============================================================ */
-
-function percentage(
-   $value,
-   $total
-) {
-
-   if ((float)$total <= 0) {
-
-      return 0;
-   }
-
-   return round(
-      (
-         (float)$value /
-         (float)$total
-      ) * 100,
-      1
-   );
-}
-
-
-/* ============================================================
-   TOTAL FASKES
-============================================================ */
-
-function getFaskesKPI()
+function dbSemua(string $sql): array
 {
    global $koneksi;
-
-
-   $total = getCount("
-        SELECT COUNT(*) AS total
-        FROM ms_faskes
-    ");
-
-
-   $aktif = getCount("
-        SELECT COUNT(*) AS total
-        FROM ms_faskes
-        WHERE faskes_status = 1
-    ");
-
-
-   $pending = getCount("
-        SELECT COUNT(*) AS total
-        FROM ms_faskes
-        WHERE faskes_status = 0
-           OR faskes_status IS NULL
-    ");
-
-
-   return [
-
-      'total'   => $total,
-
-      'aktif'   => $aktif,
-
-      'pending' => $pending
-
-   ];
+   $r = mysqli_query($koneksi, $sql);
+   if (!$r) return [];
+   $rows = mysqli_fetch_all($r, MYSQLI_ASSOC);
+   mysqli_free_result($r);
+   return $rows;
 }
 
-
-/* ============================================================
-   TOTAL PASIEN
-============================================================ */
-
-function getPatientKPI()
+/** Cache agregat di file sementara. $ttl detik; $segar=true -> hitung ulang. Mengembalikan [data, umurDetik]. */
+function dbCache(string $kunci, int $ttl, bool $segar, callable $hitung): array
 {
-   /*
-     * Menggunakan DISTINCT id_patient
-     * agar satu pasien tidak dihitung
-     * berulang kali.
-     */
-
-   $total = getCount("
-        SELECT COUNT(DISTINCT id_patient) AS total
-        FROM pasien_visit
-        WHERE id_patient IS NOT NULL
-          AND TRIM(id_patient) <> ''
-    ");
-
-
-   /*
-     * Fallback jika pasien_visit kosong.
-     */
-
-   if ($total <= 0) {
-
-      $total = getCount("
-            SELECT COUNT(*) AS total
-            FROM ms_patient
-        ");
+   $file = sys_get_temp_dir() . '/medisafe_dash_' . md5($kunci) . '.json';
+   if (!$segar && is_file($file) && ($umur = time() - filemtime($file)) < $ttl) {
+      $d = json_decode((string) @file_get_contents($file), true);
+      if (is_array($d)) return [$d, $umur];
    }
-
-
-   return $total;
+   $d = $hitung();
+   $tmp = $file . '.' . bin2hex(random_bytes(4));
+   if (@file_put_contents($tmp, json_encode($d)) !== false) @rename($tmp, $file);   // tulis atomik
+   return [$d, 0];
 }
 
-
-/* ============================================================
-   IDSH PASIEN
-============================================================ */
-
-function getPatientIDSH()
+function dbPersen($a, $b): float
 {
-   $total = getCount("
-        SELECT COUNT(*) AS total
-        FROM ms_patient
-    ");
-
-
-   $terverifikasi = getCount("
-        SELECT COUNT(*) AS total
-        FROM ms_patient
-        WHERE idsh IS NOT NULL
-          AND TRIM(idsh) <> ''
-    ");
-
-
-   return [
-
-      'total' =>
-      $total,
-
-      'terverifikasi' =>
-      $terverifikasi,
-
-      'persentase' =>
-      percentage(
-         $terverifikasi,
-         $total
-      )
-
-   ];
+   return (float) $b > 0 ? round($a / $b * 100, 1) : 0.0;
 }
 
-
-/* ============================================================
-   IDSH DOKTER
-============================================================ */
-
-function getDoctorIDSH()
+/* ===== periode ===== */
+function dbPeriode(): array
 {
-   /*
-     * Untuk ms_doctor:
-     * - total dokter menggunakan id_doctor
-     *
-     * Karena schema yang tersedia sebelumnya
-     * belum memastikan nama field IDSH dokter,
-     * kita hitung total dokter terlebih dahulu.
-     */
-
-   $total = getCount("
-        SELECT COUNT(*) AS total
-        FROM ms_doctor
-    ");
-
-
-   /*
-     * Coba beberapa kemungkinan field IDSH.
-     *
-     * Jika field tidak tersedia,
-     * otomatis dianggap 0.
-     */
-
-   $terverifikasi = 0;
-
-
-   $candidateFields = [
-
-      'idsh',
-      'doctor_idsh',
-      'id_sh',
-      'doctor_id_sh'
-
-   ];
-
-
-   foreach (
-      $candidateFields
-      as $field
-   ) {
-
-      $check = mysqli_query(
-         $GLOBALS['koneksi'],
-         "
-            SHOW COLUMNS
-            FROM ms_doctor
-            LIKE '" .
-            mysqli_real_escape_string(
-               $GLOBALS['koneksi'],
-               $field
-            ) .
-            "'
-            "
-      );
-
-
-      if (
-         $check &&
-         mysqli_num_rows($check) > 0
-      ) {
-
-         mysqli_free_result(
-            $check
-         );
-
-
-         $terverifikasi =
-            getCount("
-                    SELECT COUNT(*) AS total
-                    FROM ms_doctor
-                    WHERE `$field` IS NOT NULL
-                      AND TRIM(`$field`) <> ''
-                ");
-
-         break;
-      }
-
-
-      if ($check) {
-
-         mysqli_free_result(
-            $check
-         );
-      }
-   }
-
-
-   return [
-
-      'total' =>
-      $total,
-
-      'terverifikasi' =>
-      $terverifikasi,
-
-      'persentase' =>
-      percentage(
-         $terverifikasi,
-         $total
-      )
-
-   ];
+   $tipe = $_GET['periode'] ?? 'today';
+   $hari = date('Y-m-d');
+   $valid = fn($s) => ($d = DateTime::createFromFormat('!Y-m-d', (string) $s)) && $d->format('Y-m-d') === $s;
+   if ($tipe === 'week') [$a, $b] = [date('Y-m-d', strtotime('monday this week')), $hari];
+   elseif ($tipe === 'month') [$a, $b] = [date('Y-m-01'), $hari];
+   elseif ($tipe === 'custom' && $valid($_GET['tanggal_mulai'] ?? '') && $valid($_GET['tanggal_selesai'] ?? '')) [$a, $b] = [$_GET['tanggal_mulai'], $_GET['tanggal_selesai']];
+   else [$tipe, $a, $b] = ['today', $hari, $hari];
+   if ($a > $b) [$a, $b] = [$b, $a];
+   if ($b > $hari) $b = $hari;                                   // masa depan tidak ada datanya
+   if ($a > $b) $a = $b;
+   if ((strtotime($b) - strtotime($a)) / 86400 > 366) $a = date('Y-m-d', strtotime($b . ' -366 days'));
+   return ['type' => $tipe, 'start' => $a, 'end' => $b];
 }
 
-
-/* ============================================================
-   FASKES TERBARU
-============================================================ */
-
-function getLatestFaskes()
+/* ===== blok data ===== */
+function dbGlobal(): array
 {
    global $koneksi;
-
-
-   $sql = "
-        SELECT
-
-            mf.id_faskes,
-
-          sc.clinic_name as faskes_code,
-
-            mf.faskes_status,
-
-            mf.faskes_city,
-
-            mf.faskes_district,
-
-            mf.faskes_address,
-
-            mf.faskes_phone,
-
-            mf.created_at,
-
-            sc.clinic_name
-
-        FROM ms_faskes mf
-        LEFT JOIN setting_clinic sc ON mf.id_clinic = sc.id
-
-        ORDER BY
-            id_faskes DESC
-
-        LIMIT 10
-    ";
-
-
-   $result =
-      mysqli_query(
-         $koneksi,
-         $sql
-      );
-
-
-   if (!$result) {
-
-      return [];
-   }
-
-
-   $data = [];
-
-
-   while (
-      $row =
-      mysqli_fetch_assoc($result)
-   ) {
-
-      /*
-         * Karena schema ms_faskes
-         * belum menunjukkan field tipe faskes,
-         * jangan mengarang "Rumah Sakit/Klinik/Puskesmas".
-         */
-
-      $status =
-         (int)(
-            $row['faskes_status']
-            ?? 0
-         );
-
-
-      if ($status === 1) {
-
-         $statusLabel = 'AKTIF';
-
-         $statusClass =
-            'adm-online';
-      } else {
-
-         $statusLabel = 'PENDING';
-
-         $statusClass =
-            'adm-warning';
-      }
-
-
-      $data[] = [
-
-         'id_faskes' =>
-         (int)$row['id_faskes'],
-
-         'faskes_code' =>
-         $row['faskes_code']
-            ?: '-',
-
-         'faskes_city' =>
-         $row['faskes_city']
-            ?: '-',
-
-         'faskes_district' =>
-         $row['faskes_district']
-            ?: '-',
-
-         'faskes_address' =>
-         $row['faskes_address']
-            ?: '-',
-
-         'faskes_phone' =>
-         $row['faskes_phone']
-            ?: '-',
-
-         'status' =>
-         $status,
-
-         'status_label' =>
-         $statusLabel,
-
-         'status_class' =>
-         $statusClass,
-
-         'created_at' =>
-         $row['created_at']
-            ?: null
-
-      ];
-   }
-
-
-   mysqli_free_result(
-      $result
-   );
-
-
-   return $data;
-}
-
-
-/* ============================================================
-   MONITORING DATABASE
-============================================================ */
-
-function getDatabaseStatus()
-{
-   global $koneksi;
-
-
-   $ping = false;
-   if ($koneksi) {
-      $pingResult = @$koneksi->query('SELECT 1');
-      if ($pingResult) {
-         $ping = true;
-         mysqli_free_result($pingResult);
-      }
-   }
-
-   if ($ping) {
-
-      return [
-
-         'name' =>
-         'Database Platform',
-
-         'status' =>
-         'online',
-
-         'status_label' =>
-         'NORMAL',
-
-         'status_class' =>
-         'adm-online',
-
-         'description' =>
-         'Database server dan koneksi aplikasi'
-
-      ];
-   }
-
-
+   $f = dbSatu("SELECT COUNT(*) total, COALESCE(SUM(faskes_status = 1), 0) aktif, COALESCE(SUM(faskes_status = 0 OR faskes_status IS NULL), 0) pending FROM ms_faskes");
+   $p = dbSatu("SELECT COUNT(*) total, COALESCE(SUM(idsh IS NOT NULL AND TRIM(idsh) <> ''), 0) idsh FROM ms_patient");
+   // kolom IDSH dokter: dicek sekali (SHOW COLUMNS), bukan satu query per kandidat
+   $kol = array_column(dbSemua("SHOW COLUMNS FROM ms_doctor"), 'Field');
+   $kolIdsh = null;
+   foreach (['idsh', 'doctor_idsh', 'id_sh', 'doctor_id_sh'] as $c) if (in_array($c, $kol, true)) { $kolIdsh = $c; break; }
+   $d = $kolIdsh
+      ? dbSatu("SELECT COUNT(*) total, COALESCE(SUM(`$kolIdsh` IS NOT NULL AND TRIM(`$kolIdsh`) <> ''), 0) idsh FROM ms_doctor")
+      : dbSatu("SELECT COUNT(*) total, 0 idsh FROM ms_doctor");
+   $e = dbSemua("SELECT status_verifikasi s, COUNT(*) n FROM tte_ekyc GROUP BY status_verifikasi");
+   $ekyc = array_column($e, 'n', 's');
+   $im = dbSemua("SELECT status s, COUNT(*) n FROM import_jobs GROUP BY status");
+   $imp = array_column($im, 'n', 's');
+   $terbaru = dbSemua("SELECT mf.id_faskes, sc.clinic_name, mf.faskes_status, mf.faskes_city, mf.faskes_district, mf.created_at
+      FROM ms_faskes mf LEFT JOIN setting_clinic sc ON sc.id = mf.id_clinic ORDER BY mf.id_faskes DESC LIMIT 6");
+   $jobs = dbSemua("SELECT type, id_faskes, status, total_rows, processed_rows, success_count, error_count, created_at FROM import_jobs ORDER BY id DESC LIMIT 5");
    return [
-
-      'name' =>
-      'Database Platform',
-
-      'status' =>
-      'error',
-
-      'status_label' =>
-      'ERROR',
-
-      'status_class' =>
-      'adm-error',
-
-      'description' =>
-      'Koneksi database bermasalah'
-
+      'faskes' => ['total' => (int) ($f['total'] ?? 0), 'aktif' => (int) ($f['aktif'] ?? 0), 'pending' => (int) ($f['pending'] ?? 0)],
+      'pasien' => ['total' => (int) ($p['total'] ?? 0), 'idsh' => (int) ($p['idsh'] ?? 0)],
+      'dokter' => ['total' => (int) ($d['total'] ?? 0), 'idsh' => (int) ($d['idsh'] ?? 0)],
+      'ekyc' => ['menunggu' => (int) ($ekyc['ktp_menunggu'] ?? 0), 'total' => array_sum($ekyc)],
+      'import' => ['status' => $imp, 'jobs' => $jobs],
+      'faskes_terbaru' => $terbaru,
    ];
 }
 
-
-/* ============================================================
-   MONITORING RME
-============================================================ */
-
-function getRMEMonitoring(
-   $start,
-   $end
-) {
-
-   global $koneksi;
-
-
-   /*
-     * Kita gunakan field RME yang memang tersedia
-     * di pasien_visit.
-     */
-
-   $total = getCount("
-        SELECT COUNT(*) AS total
-
-        FROM pasien_visit
-
-        WHERE visit_date
-              BETWEEN '" .
-      mysqli_real_escape_string(
-         $koneksi,
-         $start
-      ) .
-      "' AND '" .
-      mysqli_real_escape_string(
-         $koneksi,
-         $end
-      ) .
-      "'
-    ");
-
-
-   /*
-     * RME dianggap lengkap jika
-     * field-field utama terisi.
-     */
-
-   $lengkap = getCount("
-        SELECT COUNT(*) AS total
-
-        FROM pasien_visit
-
-        WHERE visit_date
-              BETWEEN '" .
-      mysqli_real_escape_string(
-         $koneksi,
-         $start
-      ) .
-      "' AND '" .
-      mysqli_real_escape_string(
-         $koneksi,
-         $end
-      ) .
-      "'
-
-        AND COALESCE(
-                NULLIF(TRIM(anamnesa), ''),
-                NULL
-            ) IS NOT NULL
-
-        AND COALESCE(
-                NULLIF(TRIM(diagnosa), ''),
-                NULL
-            ) IS NOT NULL
-
-        AND COALESCE(
-                NULLIF(TRIM(tindakan), ''),
-                NULL
-            ) IS NOT NULL
-    ");
-
-
-   $tidakLengkap =
-      max(
-         0,
-         $total - $lengkap
-      );
-
-
+function dbPeriodeData(string $a, string $b): array
+{
+   $ea = mysqli_real_escape_string($GLOBALS['koneksi'], $a);
+   $eb = mysqli_real_escape_string($GLOBALS['koneksi'], $b);
+   // 1 scan: total kunjungan + RME lengkap + faskes aktif (semua memakai indeks idx_date_cust)
+   $k = dbSatu("SELECT COUNT(*) total, COUNT(DISTINCT id_customer) faskes,
+         COALESCE(SUM(TRIM(COALESCE(anamnesa, '')) <> '' AND TRIM(COALESCE(diagnosa, '')) <> '' AND TRIM(COALESCE(tindakan, '')) <> ''), 0) lengkap
+      FROM pasien_visit WHERE visit_date BETWEEN '$ea' AND '$eb'");
+   $hari = dbSemua("SELECT visit_date d, COUNT(*) n FROM pasien_visit WHERE visit_date BETWEEN '$ea' AND '$eb' GROUP BY visit_date ORDER BY visit_date");
+   $top = dbSemua("SELECT v.id_customer, COUNT(*) n FROM pasien_visit v WHERE v.visit_date BETWEEN '$ea' AND '$eb' GROUP BY v.id_customer ORDER BY n DESC LIMIT 6");
+   if ($top) {
+      $ids = implode(',', array_map(fn($r) => (int) $r['id_customer'], $top));
+      $nama = array_column(dbSemua("SELECT id_customer, clinic_name FROM setting_clinic WHERE id_customer IN ($ids)"), 'clinic_name', 'id_customer');
+      foreach ($top as &$r) $r['nama'] = $nama[$r['id_customer']] ?? ('Faskes #' . $r['id_customer']);
+      unset($r);
+   }
    return [
-
-      'total' =>
-      $total,
-
-      'lengkap' =>
-      $lengkap,
-
-      'tidak_lengkap' =>
-      $tidakLengkap,
-
-      'persentase' =>
-      percentage(
-         $lengkap,
-         $total
-      )
-
+      'kunjungan' => ['total' => (int) ($k['total'] ?? 0), 'faskes_aktif' => (int) ($k['faskes'] ?? 0), 'lengkap' => (int) ($k['lengkap'] ?? 0), 'per_hari' => $hari, 'top' => $top],
    ];
 }
 
-
-/* ============================================================
-   DATA IMPORT
-============================================================ */
-
-function getImportMonitoring()
+/** Rekap pengiriman SatuSehat. satusehat_log (530 rb+ baris) tidak punya indeks created_at -> scan penuh (~0,4 dtk), jadi di-cache lebih lama. */
+function dbSatuSehat(string $a, string $b): array
 {
-   /*
-     * BELUM ADA TABLE IMPORT
-     * yang diberikan dalam schema.
-     *
-     * Jangan membuat angka dummy.
-     */
-
-   return [
-
-      'available' =>
-      false,
-
-      'message' =>
-      'Data import belum memiliki sumber tabel/log yang teridentifikasi.',
-
-      'items' => []
-
-   ];
+   $ea = mysqli_real_escape_string($GLOBALS['koneksi'], $a);
+   $eb = mysqli_real_escape_string($GLOBALS['koneksi'], $b);
+   $ss = dbSemua("SELECT status s, COUNT(*) n FROM satusehat_log WHERE created_at >= '$ea 00:00:00' AND created_at < DATE_ADD('$eb', INTERVAL 1 DAY) GROUP BY status");
+   $n = array_column($ss, 'n', 's');
+   // log terakhir lewat PK (MAX(created_at) tanpa indeks = scan penuh)
+   $terakhir = dbSatu("SELECT created_at t FROM satusehat_log ORDER BY id DESC LIMIT 1")['t'] ?? null;
+   return ['sukses' => (int) ($n['success'] ?? 0), 'gagal' => (int) ($n['error'] ?? 0), 'terakhir' => $terakhir];
 }
 
-
-/* ============================================================
-   INTEGRATION
-============================================================ */
-
-function getIntegrationMonitoring()
-{
-   /*
-     * Belum ada tabel monitoring integration
-     * pada schema yang diberikan.
-     *
-     * Jangan mengklaim SATUSEHAT ONLINE
-     * hanya berdasarkan keberadaan konfigurasi.
-     */
-
-   return [
-
-      [
-
-         'name' =>
-         'SATUSEHAT',
-
-         'description' =>
-         'Healthcare interoperability',
-
-         'status' =>
-         'unknown',
-
-         'status_label' =>
-         'BELUM DIMONITOR',
-
-         'status_class' =>
-         'adm-warning'
-
-      ],
-
-
-      [
-
-         'name' =>
-         'Laboratory',
-
-         'description' =>
-         'Laboratory data integration',
-
-         'status' =>
-         'unknown',
-
-         'status_label' =>
-         'BELUM DIMONITOR',
-
-         'status_class' =>
-         'adm-warning'
-
-      ],
-
-
-      [
-
-         'name' =>
-         'IDSH',
-
-         'description' =>
-         'Identitas dokter & pasien',
-
-         'status' =>
-         'available',
-
-         'status_label' =>
-         'ACTIVE',
-
-         'status_class' =>
-         'adm-online'
-
-      ],
-
-
-      [
-
-         'name' =>
-         'API Gateway',
-
-         'description' =>
-         'Platform API service',
-
-         'status' =>
-         'unknown',
-
-         'status_label' =>
-         'BELUM DIMONITOR',
-
-         'status_class' =>
-         'adm-warning'
-
-      ]
-
-   ];
-}
-
-
-/* ============================================================
-   ALERT
-============================================================ */
-
-function getAlerts(
-   $faskes,
-   $import,
-   $rme
-) {
-
-   $alerts = [];
-
-
-   /*
-     * FASKES PENDING
-     */
-
-   if (
-      $faskes['pending'] > 0
-   ) {
-
-      $alerts[] = [
-
-         'type' =>
-         'danger',
-
-         'icon' =>
-         'solar:danger-triangle-bold',
-
-         'title' =>
-         $faskes['pending'] .
-            ' Faskes Belum Terverifikasi',
-
-         'text' =>
-         'Data fasilitas kesehatan membutuhkan proses verifikasi administrator.'
-
-      ];
-   }
-
-
-   /*
-     * IMPORT
-     */
-
-   if (
-      !empty($import['available'])
-   ) {
-
-      /*
-         * Reserved untuk implementasi
-         * tabel import.
-         */
-   }
-
-
-   /*
-     * RME
-     */
-
-   if (
-      $rme['tidak_lengkap'] > 0
-   ) {
-
-      $alerts[] = [
-
-         'type' =>
-         'info',
-
-         'icon' =>
-         'solar:document-text-bold',
-
-         'title' =>
-         'Monitoring RME Menemukan Data Tidak Lengkap',
-
-         'text' =>
-         formatNumber(
-            $rme['tidak_lengkap']
-         ) .
-            ' data RME pada periode terpilih belum memenuhi kelengkapan.'
-
-      ];
-   }
-
-
-   /*
-     * Jika tidak ada alert
-     */
-
-   if (
-      count($alerts) === 0
-   ) {
-
-      $alerts[] = [
-
-         'type' =>
-         'info',
-
-         'icon' =>
-         'solar:check-circle-bold',
-
-         'title' =>
-         'Tidak Ada Alert Kritis',
-
-         'text' =>
-         'Tidak ditemukan aktivitas yang membutuhkan tindak lanjut segera.'
-
-      ];
-   }
-
-
-   return $alerts;
-}
-
-
-/* ============================================================
-   SYSTEM MONITOR
-============================================================ */
-
-function getSystemMonitoring()
-{
-   $database =
-      getDatabaseStatus();
-
-
-   return [
-
-      [
-
-         'key' =>
-         'satusehat',
-
-         'name' =>
-         'Integrasi SATUSEHAT',
-
-         'description' =>
-         'API connectivity dan pertukaran data',
-
-         'status' =>
-         'unknown',
-
-         'status_label' =>
-         'BELUM DIMONITOR',
-
-         'status_class' =>
-         'adm-warning',
-
-         'icon' =>
-         'solar:link-bold'
-
-      ],
-
-
-      [
-
-         'key' =>
-         'database',
-
-         'name' =>
-         $database['name'],
-
-         'description' =>
-         $database['description'],
-
-         'status' =>
-         $database['status'],
-
-         'status_label' =>
-         $database['status_label'],
-
-         'status_class' =>
-         $database['status_class'],
-
-         'icon' =>
-         'solar:database-bold'
-
-      ],
-
-
-      [
-
-         'key' =>
-         'laboratory',
-
-         'name' =>
-         'Laboratory Service',
-
-         'description' =>
-         'Integrasi dan sinkronisasi data laboratorium',
-
-         'status' =>
-         'unknown',
-
-         'status_label' =>
-         'BELUM DIMONITOR',
-
-         'status_class' =>
-         'adm-warning',
-
-         'icon' =>
-         'solar:test-tube-bold'
-
-      ],
-
-
-      [
-
-         'key' =>
-         'import',
-
-         'name' =>
-         'Data Import Service',
-
-         'description' =>
-         'Monitoring proses import data',
-
-         'status' =>
-         'unknown',
-
-         'status_label' =>
-         'BELUM DIMONITOR',
-
-         'status_class' =>
-         'adm-warning',
-
-         'icon' =>
-         'solar:cloud-upload-bold'
-
-      ],
-
-
-      [
-
-         'key' =>
-         'rme',
-
-         'name' =>
-         'Monitoring RME',
-
-         'description' =>
-         'Monitoring kelengkapan data rekam medis elektronik',
-
-         'status' =>
-         'normal',
-
-         'status_label' =>
-         'NORMAL',
-
-         'status_class' =>
-         'adm-online',
-
-         'icon' =>
-         'solar:monitor-bold'
-
-      ]
-
-   ];
-}
-
-
-/* ============================================================
-   MAIN DASHBOARD
-============================================================ */
-
-function getDashboard()
-{
-   $period =
-      getPeriod();
-
-
-   /*
-     * --------------------------------------------------------
-     * KPI FASKES
-     * --------------------------------------------------------
-     */
-
-   $faskes =
-      getFaskesKPI();
-
-
-   /*
-     * --------------------------------------------------------
-     * KPI PASIEN
-     * --------------------------------------------------------
-     */
-
-   $totalPasien =
-      getPatientKPI();
-
-
-   /*
-     * --------------------------------------------------------
-     * IDSH
-     * --------------------------------------------------------
-     */
-
-   $idshPasien =
-      getPatientIDSH();
-
-   $idshDokter =
-      getDoctorIDSH();
-
-
-   /*
-     * --------------------------------------------------------
-     * RME
-     * --------------------------------------------------------
-     */
-
-   $rme =
-      getRMEMonitoring(
-         $period['start'],
-         $period['end']
-      );
-
-
-   /*
-     * --------------------------------------------------------
-     * FASKES TERBARU
-     * --------------------------------------------------------
-     */
-
-   $latestFaskes =
-      getLatestFaskes();
-
-
-   /*
-     * --------------------------------------------------------
-     * IMPORT
-     * --------------------------------------------------------
-     */
-
-   $import =
-      getImportMonitoring();
-
-
-   /*
-     * --------------------------------------------------------
-     * SYSTEM
-     * --------------------------------------------------------
-     */
-
-   $system =
-      getSystemMonitoring();
-
-
-   /*
-     * --------------------------------------------------------
-     * INTEGRATION
-     * --------------------------------------------------------
-     */
-
-   $integration =
-      getIntegrationMonitoring();
-
-
-   /*
-     * --------------------------------------------------------
-     * ALERT
-     * --------------------------------------------------------
-     */
-
-   $alerts =
-      getAlerts(
-         $faskes,
-         $import,
-         $rme
-      );
-
-
-   /*
-     * --------------------------------------------------------
-     * RESPONSE
-     * --------------------------------------------------------
-     */
-
-   responseJson(
-
-      true,
-
-      'Dashboard administrator berhasil diambil.',
-
-      [
-
-         'server_time' =>
-         date('Y-m-d H:i:s'),
-
-
-         'scope' =>
-         'global',
-
-
-         'period' =>
-         $period,
-
-
-         'kpi' => [
-
-            'faskes' => [
-
-               'total' =>
-               $faskes['total'],
-
-               'aktif' =>
-               $faskes['aktif'],
-
-               'pending' =>
-               $faskes['pending']
-
-            ],
-
-
-            'pasien' => [
-
-               'total' =>
-               $totalPasien
-
-            ],
-
-
-            'dokter' => [
-
-               'total' =>
-               $idshDokter['total'],
-
-               'terverifikasi' =>
-               $idshDokter['terverifikasi'],
-
-               'persentase' =>
-               $idshDokter['persentase']
-
-            ],
-
-
-            'import' => [
-
-               'persentase' =>
-               null,
-
-               'available' =>
-               $import['available']
-
-            ]
-
-         ],
-
-
-         'idsh' => [
-
-            'dokter' =>
-            $idshDokter,
-
-            'pasien' =>
-            $idshPasien
-
-         ],
-
-
-         'faskes' =>
-         $latestFaskes,
-
-
-         'system' =>
-         $system,
-
-
-         'import' =>
-         $import,
-
-
-         'integration' =>
-         $integration,
-
-
-         'rme' =>
-         $rme,
-
-
-         'alerts' =>
-         $alerts
-
-      ]
-   );
-}
-
-
-/* ============================================================
-   ROUTER
-============================================================ */
-
-$action =
-   $_GET['action']
-   ?? 'dashboard';
-
-
-switch ($action) {
-
-   case 'dashboard':
-
-      getDashboard();
-
-      break;
-
-
-   default:
-
-      responseJson(
-         false,
-         'Action dashboard tidak ditemukan.'
-      );
-
-      break;
-}
+/* ===== susun respons ===== */
+$periode = dbPeriode();
+$segar = !empty($_GET['refresh']);
+$t0 = microtime(true);
+[$g, $umurG] = dbCache('global', 300, $segar, 'dbGlobal');
+[$p, $umurP] = dbCache('periode:' . $periode['start'] . ':' . $periode['end'], 60, $segar, fn() => dbPeriodeData($periode['start'], $periode['end']));
+[$ssRaw, $umurS] = dbCache('satusehat:' . $periode['start'] . ':' . $periode['end'], 300, $segar, fn() => dbSatuSehat($periode['start'], $periode['end']));
+
+$ping = (bool) @mysqli_query($koneksi, 'SELECT 1');
+$kun = $p['kunjungan'];
+$ss = $ssRaw;
+$ssTotal = $ss['sukses'] + $ss['gagal'];
+$ssPersen = dbPersen($ss['sukses'], $ssTotal);
+$rmeTotal = $kun['total'];
+$rme = ['total' => $rmeTotal, 'lengkap' => $kun['lengkap'], 'tidak_lengkap' => max(0, $rmeTotal - $kun['lengkap']), 'persentase' => dbPersen($kun['lengkap'], $rmeTotal)];
+$imp = $g['import']['status'];
+$impGagal = (int) ($imp['failed'] ?? 0);
+$impAntre = (int) (($imp['pending'] ?? 0) + ($imp['processing'] ?? 0));
+
+$ssStatus = !$ssTotal ? ['unknown', 'TIDAK ADA AKTIVITAS', 'adm-warning'] : ($ssPersen >= 90 ? ['online', 'NORMAL', 'adm-online'] : ($ssPersen >= 70 ? ['warning', 'PERLU DICEK', 'adm-warning'] : ['error', 'BANYAK GAGAL', 'adm-error']));
+
+$alerts = [];
+if ($g['faskes']['pending'] > 0) $alerts[] = ['type' => 'danger', 'icon' => 'solar:danger-triangle-bold', 'title' => $g['faskes']['pending'] . ' faskes belum aktif', 'text' => 'Faskes berstatus pending menunggu aktivasi / verifikasi.', 'href' => 'module/administrator/master-faskes', 'aksi' => 'Kelola faskes'];
+if ($g['ekyc']['menunggu'] > 0) $alerts[] = ['type' => 'warning', 'icon' => 'solar:shield-user-bold', 'title' => $g['ekyc']['menunggu'] . ' eKYC menunggu verifikasi', 'text' => 'KTP sudah diunggah dan belum diverifikasi.', 'href' => 'module/administrator/ekyc_verify', 'aksi' => 'Verifikasi'];
+if ($impGagal > 0) $alerts[] = ['type' => 'danger', 'icon' => 'solar:cloud-cross-bold', 'title' => $impGagal . ' proses import gagal', 'text' => 'Periksa file dan ulangi proses import.', 'href' => 'module/administrator/data-import', 'aksi' => 'Lihat import'];
+if ($impAntre > 0) $alerts[] = ['type' => 'info', 'icon' => 'solar:clock-circle-bold', 'title' => $impAntre . ' proses import belum selesai', 'text' => 'Status pending / sedang diproses.', 'href' => 'module/administrator/data-import', 'aksi' => 'Lihat import'];
+if ($ssTotal >= 20 && $ssPersen < 90) $alerts[] = ['type' => $ssPersen < 70 ? 'danger' : 'warning', 'icon' => 'solar:link-broken-bold', 'title' => 'Pengiriman SatuSehat ' . $ssPersen . '% berhasil', 'text' => number_format($ss['gagal'], 0, ',', '.') . ' dari ' . number_format($ssTotal, 0, ',', '.') . ' pengiriman gagal pada periode ini.', 'href' => 'module/administrator/master-satu-sehat', 'aksi' => 'Cek SatuSehat'];
+if ($rme['total'] >= 20 && $rme['persentase'] < 70) $alerts[] = ['type' => 'info', 'icon' => 'solar:document-text-bold', 'title' => 'Kelengkapan RME ' . $rme['persentase'] . '%', 'text' => number_format($rme['tidak_lengkap'], 0, ',', '.') . ' kunjungan belum lengkap (anamnesa / diagnosa / tindakan).', 'href' => 'module/administrator/monitoring-visit', 'aksi' => 'Monitoring RME'];
+if (!$alerts) $alerts[] = ['type' => 'ok', 'icon' => 'solar:check-circle-bold', 'title' => 'Tidak ada yang perlu tindak lanjut', 'text' => 'Semua indikator utama dalam kondisi baik.', 'href' => null, 'aksi' => null];
+
+dbJawab([
+   'server_time' => date('Y-m-d H:i:s'),
+   'scope' => 'global',
+   'period' => $periode,
+   'cache' => ['global_detik' => $umurG, 'periode_detik' => $umurP, 'satusehat_detik' => $umurS, 'waktu_ms' => (int) round((microtime(true) - $t0) * 1000)],
+   'kpi' => [
+      'faskes' => $g['faskes'],
+      'pasien' => ['total' => $g['pasien']['total']],
+      'dokter' => ['total' => $g['dokter']['total'], 'terverifikasi' => $g['dokter']['idsh'], 'persentase' => dbPersen($g['dokter']['idsh'], $g['dokter']['total'])],
+      'kunjungan' => ['total' => $kun['total'], 'faskes_aktif' => $kun['faskes_aktif']],
+      'satusehat' => ['sukses' => $ss['sukses'], 'gagal' => $ss['gagal'], 'persentase' => $ssPersen, 'total' => $ssTotal],
+   ],
+   'idsh' => [
+      'dokter' => ['total' => $g['dokter']['total'], 'terverifikasi' => $g['dokter']['idsh'], 'persentase' => dbPersen($g['dokter']['idsh'], $g['dokter']['total'])],
+      'pasien' => ['total' => $g['pasien']['total'], 'terverifikasi' => $g['pasien']['idsh'], 'persentase' => dbPersen($g['pasien']['idsh'], $g['pasien']['total'])],
+   ],
+   'kunjungan' => $kun,
+   'faskes' => $g['faskes_terbaru'],
+   'import' => ['status' => $imp, 'jobs' => $g['import']['jobs']],
+   'ekyc' => $g['ekyc'],
+   'rme' => $rme,
+   'integration' => [
+      ['name' => 'SatuSehat', 'description' => $ssTotal ? number_format($ssTotal, 0, ',', '.') . ' pengiriman, ' . $ssPersen . '% berhasil' : 'Tidak ada pengiriman pada periode ini', 'icon' => 'solar:link-bold', 'status' => $ssStatus[0], 'status_label' => $ssStatus[1], 'status_class' => $ssStatus[2], 'info' => $ss['terakhir'] ? 'Log terakhir ' . $ss['terakhir'] : null, 'href' => 'module/administrator/master-satu-sehat'],
+      ['name' => 'Database', 'description' => 'Koneksi database aplikasi', 'icon' => 'solar:database-bold', 'status' => $ping ? 'online' : 'error', 'status_label' => $ping ? 'NORMAL' : 'ERROR', 'status_class' => $ping ? 'adm-online' : 'adm-error', 'info' => null, 'href' => null],
+      ['name' => 'Import Data', 'description' => ($imp ? array_sum($imp) . ' job: ' . implode(', ', array_map(fn($k, $v) => "$v $k", array_keys($imp), $imp)) : 'Belum ada job import'), 'icon' => 'solar:cloud-upload-bold', 'status' => $impGagal ? 'error' : ($impAntre ? 'warning' : 'online'), 'status_label' => $impGagal ? 'ADA GAGAL' : ($impAntre ? 'ANTRE' : 'NORMAL'), 'status_class' => $impGagal ? 'adm-error' : ($impAntre ? 'adm-warning' : 'adm-online'), 'info' => null, 'href' => 'module/administrator/data-import'],
+      ['name' => 'eKYC', 'description' => $g['ekyc']['total'] . ' pengajuan, ' . $g['ekyc']['menunggu'] . ' menunggu verifikasi', 'icon' => 'solar:shield-user-bold', 'status' => $g['ekyc']['menunggu'] ? 'warning' : 'online', 'status_label' => $g['ekyc']['menunggu'] ? 'MENUNGGU' : 'NORMAL', 'status_class' => $g['ekyc']['menunggu'] ? 'adm-warning' : 'adm-online', 'info' => null, 'href' => 'module/administrator/ekyc_verify'],
+   ],
+   'alerts' => $alerts,
+]);

@@ -32,6 +32,30 @@ if ($idcLab === '' || !$milik) {
    exit;
 }
 
+// tipe isian per parameter (master-lab-detail): numerik = hanya angka, teks / keduanya = bebas
+$idsItem = [];
+foreach ($items as $item) {
+   if (is_array($item) && isset($item['id_item']) && ctype_digit((string) $item['id_item'])) $idsItem[] = (int) $item['id_item'];
+}
+$tipeItem = [];
+if ($idsItem) {
+   $ph = implode(',', array_fill(0, count($idsItem), '?'));
+   $q = $koneksi->prepare("SELECT id, assemen, tipe_isian FROM laboratorium_item WHERE id IN ($ph)");
+   $q->bind_param(str_repeat('i', count($idsItem)), ...$idsItem);
+   $q->execute();
+   foreach ($q->get_result()->fetch_all(MYSQLI_ASSOC) as $r) $tipeItem[(int) $r['id']] = $r;
+   $q->close();
+}
+foreach ($items as $item) {
+   if (!is_array($item) || !isset($item['id_item']) || !ctype_digit((string) $item['id_item'])) continue;
+   $h = trim((string) ($item['hasil'] ?? ''));
+   $t = $tipeItem[(int) $item['id_item']] ?? null;
+   if ($t && $t['tipe_isian'] === 'numerik' && $h !== '' && !preg_match('/^-?\d+([.,]\d+)?$/', $h)) {
+      http_response_code(422);
+      echo json_encode(['status' => 'error', 'message' => 'Parameter "' . $t['assemen'] . '" hanya menerima angka (contoh: 12,5). Nilai "' . mb_substr($h, 0, 30) . '" tidak valid.']);
+      exit;
+   }
+}
 foreach ($items as $item) {
 
    if (!is_array($item) || !isset($item['id_item']) || !ctype_digit((string) $item['id_item'])) continue;

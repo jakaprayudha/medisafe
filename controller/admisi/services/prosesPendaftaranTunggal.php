@@ -17,19 +17,19 @@ if ($kunjSakit === false) {
     $typePatient = 'BPJS';
 }
 
-$nomorkartu     = $_POST['noKartu'] ?? '';
-$nik            = $_POST['noNik'] ?? '';
-$nohp           = $_POST['noHp'] ?? '';
-$kodepoli       = $_POST['kdPoli'] ?? '';
-$namapoli       = $_POST['nmPoli'] ?? '';
-$norm           = $_POST['norm'] ?? '';
-$tanggalperiksa = $_POST['tglDaftar'] ?? '';
-$kodedokter     = $_POST['kdDokter'] ?? null;
-$namadokter     = $_POST['nmDokter'] ?? null;
+$nomorkartu      = $_POST['noKartu'] ?? '';
+$nik             = $_POST['noNik'] ?? '';
+$nohp            = $_POST['noHp'] ?? '';
+$kodepoli        = $_POST['kdPoli'] ?? '';
+$namapoli        = $_POST['nmPoli'] ?? '';
+$norm            = $_POST['norm'] ?? '';
+$tanggalperiksa  = $_POST['tglDaftar'] ?? '';
+$kodedokter      = $_POST['kdDokter'] ?? null;
+$namadokter      = $_POST['nmDokter'] ?? null;
 $namadokterPcare = $_POST['nmDokterPcare'] ?? null;
-$jampraktek     = $_POST['jampraktek'] ?? '';
-$id_patient     = $_POST['id_patient'] ?? '';
-$nama           = $_POST['nama'] ?? '';
+$jampraktek      = $_POST['jampraktek'] ?? '';
+$id_patient      = $_POST['id_patient'] ?? '';
+$nama            = $_POST['nama'] ?? '';
 
 $kdProviderPeserta = $_POST['kdProviderPeserta'] ?? '';
 $keluhan        = !empty($_POST['keluhan']) ? $_POST['keluhan'] : null;
@@ -76,19 +76,23 @@ if (!isset($_POST['kunjSakit'])) {
     exit;
 }
 
-// --- validasi tambahan (dulu tidak dicek) ---
 if (empty($kodepoli) || empty($namapoli)) {
     echo json_encode(['success' => false, 'message' => 'Poli tujuan wajib dipilih.']);
     exit;
 }
-// if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $tanggalperiksa) || $tanggalperiksa > date('Y-m-d') || $tanggalperiksa < date('Y-m-d', strtotime('-7 days'))) {
-//     echo json_encode(['success' => false, 'message' => 'Tanggal kunjungan harus hari ini atau s.d. 7 hari ke belakang.']);
-//     exit;
-// }
+
 // tanda vital opsional; bila diisi harus dalam rentang wajar
-$vitalRentang = ['sistole' => ['Sistole', 50, 300], 'diastole' => ['Diastole', 20, 200], 'heartRate' => ['Nadi', 20, 250], 'respRate' => ['Respirasi', 4, 80],
-    'suhu' => ['Suhu', 30, 45], 'saturasiOksigen' => ['SpO2', 50, 100], 'tinggiBadan' => ['Tinggi badan', 30, 250], 'beratBadan' => ['Berat badan', 0.5, 350],
-    'lingkarPerut' => ['Lingkar perut', 20, 250]];
+$vitalRentang = [
+    'sistole' => ['Sistole', 50, 300],
+    'diastole' => ['Diastole', 20, 200],
+    'heartRate' => ['Nadi', 20, 250],
+    'respRate' => ['Respirasi', 4, 80],
+    'suhu' => ['Suhu', 30, 45],
+    'saturasiOksigen' => ['SpO2', 50, 100],
+    'tinggiBadan' => ['Tinggi badan', 30, 250],
+    'beratBadan' => ['Berat badan', 0.5, 350],
+    'lingkarPerut' => ['Lingkar perut', 20, 250]
+];
 $vitalSalah = [];
 foreach ($vitalRentang as $k => [$nm, $min, $max]) {
     $v = str_replace(',', '.', trim((string) ($_POST[$k] ?? '')));
@@ -98,6 +102,7 @@ if ($vitalSalah) {
     echo json_encode(['success' => false, 'message' => 'Nilai tanda vital tidak wajar: ' . implode(', ', $vitalSalah) . '.']);
     exit;
 }
+
 // pasien wajib milik faskes ini
 $cekPasien = $koneksi->prepare("SELECT id_patient FROM ms_patient WHERE id_patient = ? AND id_customer = ? LIMIT 1");
 $idPasienInt = (int) $id_patient;
@@ -110,7 +115,8 @@ if (!$adaPasien) {
     echo json_encode(['success' => false, 'message' => 'Data pasien tidak ditemukan di faskes ini. Pilih ulang pasien.']);
     exit;
 }
-// cegah daftar dobel (mis. tombol simpan ditekan dua kali): pasien sama, tanggal sama, poli sama, belum batal
+
+// cegah daftar dobel lokal: pasien sama, tanggal sama, poli sama, belum batal
 if (($_POST['paksa'] ?? '') !== '1') {
     $cekDobel = $koneksi->prepare("SELECT visit_ID, visit_antrian, id_doctor FROM pasien_visit WHERE id_patient = ? AND id_customer = ? AND visit_date = ? AND id_poli = ? AND visit_status <> 99 LIMIT 1");
     $idPasienStr = (string) $idPasienInt;
@@ -123,7 +129,7 @@ if (($_POST['paksa'] ?? '') !== '1') {
         exit;
     }
 }
-// nilai untuk penyimpanan lokal: kosong / 0 = tidak diisi (dulu tersimpan "0/0" sehingga terbaca sudah diperiksa)
+
 $lokal = function ($v) {
     $v = str_replace(',', '.', trim((string) $v));
     return ($v === '' || !is_numeric($v) || (float) $v <= 0) ? null : (string) (0 + $v);
@@ -153,7 +159,7 @@ try {
         $created_user = "Onsite";
         $source_hub = "Poliklinik";
         $status_antrian = 0;
-        // keluhan -> anamnesa (dulu keluhan_penyerta, sehingga keluhan pasien umum tidak tampil di vital sign / detail)
+
         $stmt = $koneksi->prepare("INSERT INTO pasien_visit (id_patient, visit_ID, visit_date, id_poli, source_hub, created_user, visit_antrian, status_antrian, id_customer, id_doctor, visit_time, anamnesa, tekanan_darah, sistole, diastole, nadi, respirasi, tinggi_badan, berat_badan, lingkar_perut, patient_name_pcare, suhu, saturasi, bmi, bmi_keterangan, code_doctor, id_provider) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("sssssssssssssssssssssssssss", $id_patient, $visit_ID, $tanggalperiksa, $namapoli, $source_hub, $created_user, $nomorantrean, $status_antrian, $safe_idcustomer, $namadokter, $visit_time, $keluhan, $tdLokal, $sistoleLokal, $diastoleLokal, $nadiLokal, $respLokal, $tbLokal, $bbLokal, $lpLokal, $nama, $suhuLokal, $satLokal, $bmiLokal, $bmiKetLokal, $kodedokter, $safe_kdProv);
         if (!$stmt->execute()) {
@@ -164,76 +170,116 @@ try {
         exit;
     }
 
+    // Antrean lokal tetap dibuat baik bridging Antrol maupun saat lewati_antrol = 1
     $visit_ID = generateVisitID($koneksi, $idcustomer);
     $resultAntrian = createAntrian($koneksi, $kodepoli, $idcustomer, $visit_ID, $kodedokter, $tanggalperiksa, $jampraktek);
     $nomorantrean = $resultAntrian['display'];
     $angkaantrean = $resultAntrian['nomor'];
     $kodeAntri    = $resultAntrian['kode'];
+
     global $status_antrol;
+    $lewati_antrol = ($_POST['lewati_antrol'] ?? '') === '1';
     
-    if ($status_antrol && $kunjSakit) {
+    // Kirim ke Antrol BPJS hanya jika belum dilewati ($lewati_antrol == false)
+    if ($status_antrol && $kunjSakit && !$lewati_antrol) {
         $payloadAntrean = [
-            "nomorkartu" => $nomorkartu,
-            "nik" => $nik,
-            "nohp" => $nohp,
-            "kodepoli" => $kodepoli,
-            "namapoli" => $namapoli,
-            "norm" => $norm,
-            "tanggalperiksa"  => $tanggalperiksa,
-            "kodedokter" => $kodedokter,
-            "namadokter" => $namadokterPcare,
-            "jampraktek" => $jampraktek,
-            "nomorantrean"    => $nomorantrean,
-            "angkaantrean" => $angkaantrean,
-            "keterangan" => ""
+            "nomorkartu"     => $nomorkartu,
+            "nik"            => $nik,
+            "nohp"           => $nohp,
+            "kodepoli"       => $kodepoli,
+            "namapoli"       => $namapoli,
+            "norm"           => $norm,
+            "tanggalperiksa" => $tanggalperiksa,
+            "kodedokter"     => $kodedokter,
+            "namadokter"     => $namadokterPcare,
+            "jampraktek"     => $jampraktek,
+            "nomorantrean"   => $nomorantrean,
+            "angkaantrean"   => $angkaantrean,
+            "keterangan"     => ""
         ];
         $resAntrean = antrolPost("/antrean/add", $payloadAntrean);
         if ($resAntrean['code'] != '200') {
-            throw new Exception($resAntrean['message'] ?? "Gagal mengambil antrean BPJS.");
+            $metaAntrean = is_array($resAntrean['metadata'] ?? null)
+                ? ($resAntrean['metadata']['message'] ?? '')
+                : (is_string($resAntrean['metadata'] ?? null) ? $resAntrean['metadata'] : '');
+            $msgAntrean = !empty($resAntrean['message'])
+                ? $resAntrean['message']
+                : ($metaAntrean !== '' ? $metaAntrean : "Gagal mengambil antrean BPJS.");
+
+            // Cek jika peserta sudah terdaftar di poli tersebut pada hari ini
+            $isSudahDaftarBpjs = (stripos($msgAntrean, 'peserta sudah terdaftar di poli tersebut pada hari ini') !== false)
+                              || (stripos($msgAntrean, 'terdaftar') !== false)
+                              || (stripos($msgAntrean, 'hari yang sama') !== false)
+                              || (stripos($msgAntrean, 'sudah ada') !== false)
+                              || (stripos($msgAntrean, 'hanya dapat') !== false)
+                              || (stripos($msgAntrean, 'duplikasi') !== false)
+                              || (stripos($msgAntrean, 'antrean') !== false && stripos($msgAntrean, 'sama') !== false);
+
+            if ($safe_kdProv === 1 && $isSudahDaftarBpjs) {
+                // Rollback antrean lokal sementara sambil menunggu konfirmasi user
+                $koneksi->rollback();
+                echo json_encode([
+                    'success'      => false,
+                    'batal_antrol' => true,
+                    'bpjs_message' => $msgAntrean,
+                    'message'      => 'Pasien sebelumnya telah didaftarkan lalu dibatalkan. Jika kamu ingin melanjutkannya maka status ke BPJS tidak bridging antrean melainkan bridging PCare.'
+                ]);
+                exit;
+            }
+
+            throw new Exception($msgAntrean);
         }
     }
     
+    // Langsung jalankan bridging pendaftaran PCare
     $payloadPendaftaran = [
         "kdProviderPeserta" => $kdProviderPeserta,
-        "tglDaftar" => $tglDaftarFormat,
-        "noKartu" => $nomorkartu,
-        "kdPoli" => $kodepoli,
-        "keluhan" => $keluhan,
-        "kunjSakit" => $kunjSakit,
-        "sistole" => $sistole,
-        "diastole" => $diastole,
-        "beratBadan" => $beratBadan,
-        "tinggiBadan" => $tinggiBadan,
-        "respRate" => $respRate,
-        "lingkarPerut" => $lingkarPerut,
-        "heartRate" => $heartRate,
-        "rujukBalik" => $rujukbalik,
-        "kdTkp" => $kdTkp
+        "tglDaftar"         => $tglDaftarFormat,
+        "noKartu"           => $nomorkartu,
+        "kdPoli"            => $kodepoli,
+        "keluhan"           => $keluhan,
+        "kunjSakit"         => $kunjSakit,
+        "sistole"           => $sistole,
+        "diastole"          => $diastole,
+        "beratBadan"        => $beratBadan,
+        "tinggiBadan"       => $tinggiBadan,
+        "respRate"          => $respRate,
+        "lingkarPerut"      => $lingkarPerut,
+        "heartRate"         => $heartRate,
+        "rujukBalik"        => $rujukbalik,
+        "kdTkp"             => $kdTkp
     ];
     
     $resPendaftaran = bpjsPost("/pendaftaran", $payloadPendaftaran);
     if ($resPendaftaran['code'] != '200') {
-        $errorMsg = $resPendaftaran['metadata'] ?? "Gagal pendaftaran BPJS.";
-        $payloadBatal = [
-            "tanggalperiksa" => $tanggalperiksa,
-            "kodepoli"       => $kodepoli,
-            "nomorkartu"     => $nomorkartu,
-            "alasan"         => "Dibatalkan sistem (Pendaftaran gagal: " . $errorMsg . ")"
-        ];
+        $metaPcare = is_array($resPendaftaran['metadata'] ?? null)
+            ? ($resPendaftaran['metadata']['message'] ?? '')
+            : (is_string($resPendaftaran['metadata'] ?? null) ? $resPendaftaran['metadata'] : '');
+        $errorMsg = !empty($resPendaftaran['message'])
+            ? $resPendaftaran['message']
+            : ($metaPcare !== '' ? $metaPcare : "Gagal pendaftaran BPJS.");
 
         $statusBatalText = "";
-        try {
-            $resBatal = antrolPost("/antrean/batal", $payloadBatal);
-            if (isset($resBatal['code']) && $resBatal['code'] == '200') {
-                $statusBatalText = " [Antrean BPJS berhasil dibatalkan otomatis].";
-            }
-        } catch (Exception $exBatal) {}
+        if ($status_antrol && $kunjSakit && !$lewati_antrol) {
+            $payloadBatal = [
+                "tanggalperiksa" => $tanggalperiksa,
+                "kodepoli"       => $kodepoli,
+                "nomorkartu"     => $nomorkartu,
+                "alasan"         => "Dibatalkan sistem (Pendaftaran gagal: " . $errorMsg . ")"
+            ];
+            try {
+                $resBatal = antrolPost("/antrean/batal", $payloadBatal);
+                if (isset($resBatal['code']) && $resBatal['code'] == '200') {
+                    $statusBatalText = " [Antrean BPJS berhasil dibatalkan otomatis].";
+                }
+            } catch (Exception $exBatal) {}
+        }
         throw new Exception($errorMsg . $statusBatalText);
     }
 
     $bpjs_berhasil = true;
 
-    $noUrut = (string)$resPendaftaran['data']['message'];
+    $noUrut = (string)($resPendaftaran['data']['message'] ?? '');
     $created_user = $kunjSakit ? "JKNOnsite" : "JKNSehat";
     $antrianBPJS = $kunjSakit ? $nomorantrean : $noUrut;
     
@@ -246,7 +292,6 @@ try {
     $status_antrian = 0;
     
     $stmtVisit = $koneksi->prepare("INSERT INTO pasien_visit (id_patient, visit_ID, visit_date, id_poli, source_hub, created_user, visit_antrian, status_antrian, id_customer, id_doctor, noKartu, visit_time, anamnesa, tekanan_darah, sistole, diastole, nadi, respirasi, tinggi_badan, berat_badan, lingkar_perut, patient_name_pcare, suhu, saturasi, bmi, bmi_keterangan, code_doctor, id_provider) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    // $safe_idcustomer dan $safe_kdProv dimasukkan agar kolom INT tidak dimasuki string ""
     $stmtVisit->bind_param("ssssssssssssssssssssssssssss", $id_patient, $visit_ID, $tanggalperiksa, $namapoli, $source_hub, $created_user, $antrianBPJS, $status_antrian, $safe_idcustomer, $namadokter, $nomorkartu, $visit_time, $keluhan, $tdLokal, $sistoleLokal, $diastoleLokal, $nadiLokal, $respLokal, $tbLokal, $bbLokal, $lpLokal, $nama, $suhuLokal, $satLokal, $bmiLokal, $bmiKetLokal, $kodedokter, $safe_kdProv);
     if (!$stmtVisit->execute()) throw new Exception("Gagal simpan pasien_visit: " . $stmtVisit->error);
     $stmtVisit->close();
@@ -258,21 +303,19 @@ try {
 
     $koneksi->commit();
     echo json_encode([
-        'success'  => true,
-        'message'  => "Berhasil Mendaftar Pasien BPJS",
-        'visitID'  => $visit_ID,
-        'antian'   => $nomorantrean,
-        'type'     => "BPJS"
+        'success' => true,
+        'message' => "Berhasil Mendaftar Pasien BPJS",
+        'visitID' => $visit_ID,
+        'antian'  => $nomorantrean,
+        'type'    => "BPJS"
     ]);
 
 } catch (Exception $e) {
-    // DB Lokal Gagal -> Rollback MySQL
     $koneksi->rollback();
     $errorMessage = $e->getMessage();
 
-    // AUTO-KOMPENSASI BPJS:
-    // Jika API pendaftaran BPJS sudah keburu masuk, tapi MySQL lokal gagal, batalkan di server BPJS!
-    if (isset($bpjs_berhasil) && $bpjs_berhasil === true) {
+    // Auto-kompensasi jika PCare sudah masuk tapi simpan DB lokal gagal
+    if (isset($bpjs_berhasil) && $bpjs_berhasil === true && $status_antrol && $kunjSakit && !$lewati_antrol) {
         $payloadBatalKompensasi = [
             "tanggalperiksa" => $tanggalperiksa,
             "kodepoli"       => $kodepoli,
@@ -286,7 +329,7 @@ try {
 
     echo json_encode([
         'success' => false,
-        'message' => $errorMessage // SEKARANG AKAN MUNCUL PESAN MYSQL YANG ASLI: misal "Column cannot be null" dll.
+        'message' => $errorMessage
     ]);
 }
 

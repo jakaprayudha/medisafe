@@ -834,6 +834,7 @@ session_write_close();
   require 'library.php';
   ?>
   <script src="controller/admisi/helper.js"></script>
+  <script src="controller/admisi/batalPendaftaran.js?v=<?= @filemtime(__DIR__ . '/../../controller/admisi/batalPendaftaran.js') ?>"></script>
 
 
 
@@ -1366,6 +1367,8 @@ session_write_close();
           <li><a class="dropdown-item btn-reschedule" href="javascript:;" data-id="${row.id_visit}" data-doctor="${esc(row.id_doctor)}"><i class="fas fa-user-md me-2 text-dark"></i>Ganti dokter</a></li>
           <li><a class="dropdown-item edit-visit-btn" href="javascript:;" data-visit="${esc(row.visit_ID)}" data-date="${esc(row.visit_date)}" data-patient="${esc(row.id_patient)}" data-time="${esc(row.visit_time)}"><i class="fas fa-clock me-2 text-warning"></i>Ubah waktu</a></li>
           <li><a class="dropdown-item delete-btn text-danger" href="javascript:;" data-id="${row.id_visit}" data-prov="${esc(row.id_provider)}" data-visit="${esc(row.visit_ID)}" data-nama="${esc(row.patient_name || row.patient_name_pcare || '')}"><i class="fas fa-times-circle me-2"></i>Batalkan pendaftaran</a></li>` : ''}
+          ${batal ? `<li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item aktif-kembali-btn text-success" href="javascript:;" data-visit="${esc(row.visit_ID)}" data-nama="${esc(row.patient_name || row.patient_name_pcare || '')}"><i class="fas fa-rotate-left me-2"></i>Aktifkan kembali</a></li>` : ''}
         </ul></div>`;
     }
 
@@ -1505,65 +1508,19 @@ session_write_close();
       window.table.ajax.reload(null, false);
     }, 15000);
 
+    // 🔹 Aktifkan kembali kunjungan batal (RME/CPPT terbuka lagi)
+    $(document).on('click', '.aktif-kembali-btn', function() {
+      BatalPendaftaran.aktifkan({ visit: $(this).data('visit'), nama: $(this).data('nama') || '', onSelesai: () => window.table.ajax.reload(null, false) });
+    });
+
     // 🔹 Batal pendaftaran
     $(document).on('click', '.delete-btn', function() {
       const visit = $(this).data('visit');
       const prov = String($(this).data('prov'));
       const nama = $(this).data('nama') || '';
-      Swal.fire({
-        title: 'Batalkan pendaftaran?',
-        html: nama ? `<div class="small mb-2">${esc(nama)} · ${esc(visit)}</div>` : '',
-        icon: 'warning',
-        input: 'textarea',
-        inputPlaceholder: 'Tulis alasan pembatalan…',
-        inputAttributes: { 'aria-label': 'Alasan' },
-        showCancelButton: true,
-        confirmButtonText: 'Ya, batalkan',
-        cancelButtonText: 'Kembali',
-        confirmButtonColor: '#dc3545',
-        reverseButtons: true,
-        preConfirm: (alasan) => {
-          if (!alasan || !alasan.trim()) Swal.showValidationMessage('Alasan wajib diisi');
-          return alasan && alasan.trim();
-        }
-      }).then((result) => {
-        if (!result.isConfirmed) return;
-        const alasan = result.value;
-        Swal.fire({ title: 'Membatalkan…', text: 'Sedang memproses data', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        if (prov === '1') {
-          $.ajax({
-            url: 'controller/wsbpjs/batalAntrian.php',
-            type: 'POST',
-            data: { novisit: visit, alasan: alasan },
-            dataType: 'json'
-          }).done(function(res) {
-            if (res && res.success) batalAntrian(visit, alasan, prov);
-            else Swal.fire('Gagal membatalkan', (res && res.message) || 'Antrean BPJS gagal dibatalkan.', 'error');
-          }).fail(() => Swal.fire('Gagal membatalkan', 'Layanan antrean BPJS tidak merespons. Coba lagi.', 'error'));
-        } else {
-          batalAntrian(visit, alasan, prov);
-        }
-      });
+      // cek asesmen/CPPT/rawat inap -> konfirmasi Ya/Tidak -> alasan wajib -> batal (lihat controller/admisi/batalPendaftaran.js)
+      BatalPendaftaran.mulai({ visit: visit, prov: prov, nama: nama, onSelesai: () => window.table.ajax.reload(null, false) });
     });
-
-    function batalAntrian(visit, alasan, prov) {
-      $.ajax({
-        url: 'controller/admisi/services/deletePendaftaran.php',
-        type: 'POST',
-        data: { novisit: visit, alasan: alasan, provider: prov },
-        dataType: 'json'
-      }).done(function(res) {
-        // dulu selalu menampilkan "Berhasil" walau server gagal
-        if (res && res.success) {
-          Swal.fire({ title: 'Pendaftaran dibatalkan', text: res.peringatan || res.message, icon: res.peringatan ? 'warning' : 'success' });
-          window.table.ajax.reload(null, false);
-        } else {
-          Swal.fire('Gagal membatalkan', (res && res.message) || 'Terjadi kesalahan.', 'error');
-        }
-      }).fail(function(x) {
-        Swal.fire('Gagal membatalkan', (x.responseJSON && x.responseJSON.message) || 'Terjadi kesalahan server.', 'error');
-      });
-    }
     teksPeriode();
     /* ================= DETAIL HASIL PEMERIKSAAN =================
      * - modal langsung tampil dengan identitas dari baris tabel, isi menyusul (skeleton)

@@ -1,190 +1,207 @@
 <?php
 $title = 'Data Import';
 require '../../controller/view.php';
+
+// Import massal data faskes: hanya superadmin/administrator.
+if (!isset($_SESSION['uid_user']) || !in_array($_SESSION['roles'] ?? '', ['superadmin', 'administrator'], true)) {
+  header('Location: ../../');
+  exit;
+}
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="id">
 
 <head>
   <base href="../../">
-  <?php
-  require '../../assets/template/head.php';
-  ?>
+  <?php require '../../assets/template/head.php'; ?>
+  <style>
+    .di-kpi { border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px; background: #fff; height: 100%; }
+    .di-kpi .n { font-size: 24px; font-weight: 800; color: #0f172a; line-height: 1.1; }
+    .di-kpi .l { font-size: 12px; font-weight: 600; color: #334155; margin-top: 2px; }
+    .di-chip { border: 1px solid #cbd5e1; background: #fff; color: #334155; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .di-chip:hover { background: #f1f5f9; }
+    .di-chip.on { background: #1e293b; border-color: #1e293b; color: #fff; }
+    table.di-t th { font-size: 11px; font-weight: 700; color: #334155; white-space: nowrap; text-transform: uppercase; letter-spacing: .3px; }
+    table.di-t td { vertical-align: middle; font-size: 13px; color: #0f172a; }
+    .di-nama { font-weight: 700; color: #0f172a; min-width: 190px; }
+    .di-sub { font-size: 11px; color: #475569; }
+    .di-c { display: inline-block; min-width: 46px; text-align: center; padding: 3px 7px; border-radius: 7px; font-size: 12px; font-weight: 700; }
+    .di-c.g { background: #dcfce7; color: #166534; }
+    .di-c.r { background: #fee2e2; color: #991b1b; }
+    .di-b { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 7px; font-size: 11px; font-weight: 700; }
+    .di-b.g { background: #dcfce7; color: #166534; }
+    .di-b.b { background: #dbeafe; color: #1e40af; }
+    .di-b.x { background: #f1f5f9; color: #334155; }
+    .di-b.r { background: #fee2e2; color: #991b1b; }
+    .di-info { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; color: #1e3a8a; font-size: 13px; }
+    .di-modal .modal-content { border: 0; border-radius: 16px; }
+    .di-modal .form-label { font-weight: 600; color: #1e293b; font-size: 13px; }
+    .di-modal .is-invalid { border-color: #dc3545; }
+    .di-hint { color: #475569; font-size: 12px; }
+    #previewTable th { font-size: 11px; white-space: nowrap; color: #334155; background: #f8fafc; }
+    #previewTable td { font-size: 12px; white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; color: #0f172a; }
+    .di-skel { display: inline-block; height: 1.2rem; width: 56px; border-radius: 6px; background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%); background-size: 200% 100%; animation: dis 1.2s infinite; }
+    @keyframes dis { to { background-position: -200% 0; } }
+    .spin { animation: disp 1s linear infinite; }
+    @keyframes disp { to { transform: rotate(360deg); } }
+  </style>
 </head>
 
 <body>
-  <!--  Body Wrapper -->
-  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
-    data-sidebar-position="fixed" data-header-position="fixed">
-    <!-- Sidebar Start -->
-    <?php
-    require '../admin/sidebar.php';
-    ?>
-    <!--  Sidebar End -->
-    <!--  Main wrapper -->
+  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full" data-sidebar-position="fixed" data-header-position="fixed">
+    <?php require '../admin/sidebar.php'; ?>
     <div class="body-wrapper">
-      <!--  Header Start -->
-      <?php
-      require '../admin/navbar-master.php';
-      ?>
-      <!--  Header End -->
+      <?php require '../admin/navbar-master.php'; ?>
       <div class="body-wrapper-inner">
         <div class="container-fluid">
-          <div class="row">
-            <div class="col-lg-12 d-flex align-items-stretch">
-              <div class="card w-100">
-                <div class="card-body p-4">
-                  <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold">Data Import</h5>
-                    <!-- Grup tombol di sisi kanan -->
-                    <div class="d-flex ms-auto gap-2">
-                      <button class="btn btn-primary" id="btnImport">
-                        <i class="fas fa-upload"></i> Import
-                      </button>
-                    </div>
-                  </div>
-                  <div class="alert alert-primary d-flex justify-content-between align-items-start" role="alert">
-                    <div>
-                      📥 <strong>Import Data</strong><br>
-                      Gunakan fitur ini untuk mengunggah data secara massal sesuai template yang telah disediakan.
-                      Pastikan format file sudah sesuai.
-                      Jika terdapat data yang belum tersedia di sistem, harap sesuaikan terlebih dahulu sebelum melakukan import.
-                    </div>
 
-                    <div class="ms-3">
-                      <div class="dropdown">
-                        <button class="btn btn-sm btn-light dropdown-toggle" data-bs-toggle="dropdown">
-                          📄 Lihat Format
-                        </button>
-                        <ul class="dropdown-menu">
-                          <li><a class="dropdown-item" href="templates/pasien.xlsx" target="_blank">Master Pasien</a></li>
-                          <li><a class="dropdown-item" href="templates/dokter.xlsx" target="_blank">Master Dokter</a></li>
-                          <li><a class="dropdown-item" href="templates/farmasi.xlsx" target="_blank">Master Farmasi</a></li>
-                          <li><a class="dropdown-item" href="templates/visit.xlsx" target="_blank">Master Visit</a></li>
-                          <li><a class="dropdown-item" href="templates/faskes.xlsx" target="_blank">Master Faskes</a></li>
-                        </ul>
-                      </div>
-                    </div>
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div>
+              <h4 class="fw-bold mb-0 text-dark"><i class="ti ti-download text-primary me-2"></i>Data Import</h4>
+              <div class="text-dark small">Unggah data massal (pasien, farmasi) dari Excel ke faskes tertentu dan pantau kelengkapan datanya.</div>
+            </div>
+            <button class="btn btn-primary" id="btnImport"><i class="ti ti-upload me-1"></i>Import Data</button>
+          </div>
 
-                  </div>
-                  <div class="table-responsive" data-simplebar>
-                    <table class="table text-nowrap align-middle table-custom mb-0" id="periodeTable">
-                      <thead>
-                        <tr>
-                          <th>Kode Faskes</th>
-                          <th>Nama Faskes</th>
-                          <th>Pasien</th>
-                          <th>Dokter</th>
-                          <th>Nakes</th>
-                          <th>Farmasi</th>
-                          <th>Visit</th>
-                          <th>Poli</th>
-                          <th>Tarif</th>
-                          <th>Provider</th>
-                        </tr>
-                      </thead>
-                      <tbody></tbody>
-                    </table>
-                  </div>
+          <div class="di-info p-3 mb-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+              <b>Sebelum import:</b> pakai template yang disediakan, pastikan kolom sesuai, dan lengkapi dulu data pendukung (poli, dokter, dsb.) di sistem.
+              Data yang sudah ada (NIK/No. RM sama) dilewati sebagai duplikat.
+            </div>
+            <div class="dropdown">
+              <button class="btn btn-sm btn-light border dropdown-toggle" data-bs-toggle="dropdown"><i class="ti ti-file-spreadsheet me-1"></i>Template Excel</button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="templates/pasien.xlsx" target="_blank" rel="noopener">Master Pasien</a></li>
+                <li><a class="dropdown-item" href="templates/dokter.xlsx" target="_blank" rel="noopener">Master Dokter</a></li>
+                <li><a class="dropdown-item" href="templates/farmasi.xlsx" target="_blank" rel="noopener">Master Farmasi</a></li>
+                <li><a class="dropdown-item" href="templates/visit.xlsx" target="_blank" rel="noopener">Master Visit</a></li>
+                <li><a class="dropdown-item" href="templates/faskes.xlsx" target="_blank" rel="noopener">Master Faskes</a></li>
+              </ul>
+            </div>
+          </div>
 
-                  <hr class="mt-4">
-                  <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="fw-semibold mb-0">🕓 Riwayat Import Job</h6>
-                    <span class="text-muted small" id="jobsLastRefresh"></span>
-                  </div>
-                  <div class="table-responsive">
-                    <table class="table table-sm table-bordered mb-0" id="jobsTable">
-                      <thead class="table-light">
-                        <tr>
-                          <th>Waktu</th>
-                          <th>Tipe</th>
-                          <th>Total</th>
-                          <th>Berhasil</th>
-                          <th>Duplikat</th>
-                          <th>Error</th>
-                          <th>Progress</th>
-                          <th>Status</th>
-                          <th>Detail</th>
-                        </tr>
-                      </thead>
-                      <tbody id="jobsTableBody">
-                        <tr><td colspan="9" class="text-center text-muted">Memuat...</td></tr>
-                      </tbody>
-                    </table>
-                  </div>
+          <div class="row g-3 mb-3">
+            <div class="col-6 col-xl-3"><div class="di-kpi"><div class="n" id="kFaskes"><span class="di-skel"></span></div><div class="l">Faskes aktif</div></div></div>
+            <div class="col-6 col-xl-3"><div class="di-kpi"><div class="n" id="kLengkap"><span class="di-skel"></span></div><div class="l">Data dasar lengkap (8 jenis)</div></div></div>
+            <div class="col-6 col-xl-3"><div class="di-kpi"><div class="n" id="kKosong"><span class="di-skel"></span></div><div class="l">Belum ada data pasien</div></div></div>
+            <div class="col-6 col-xl-3"><div class="di-kpi"><div class="n" id="kJob"><span class="di-skel"></span></div><div class="l" id="kJobL">Import berjalan / gagal</div></div></div>
+          </div>
+
+          <div class="card border-0 shadow-sm mb-3" style="border-radius:16px">
+            <div class="card-body p-3 p-md-4">
+              <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                <div class="fw-semibold text-dark">Kelengkapan data per faskes</div>
+                <div class="d-flex flex-wrap gap-2" id="fkFilter">
+                  <button type="button" class="di-chip on" data-f="">Semua</button>
+                  <button type="button" class="di-chip" data-f="kurang">Ada yang kosong</button>
+                  <button type="button" class="di-chip" data-f="pasien">Belum ada pasien</button>
                 </div>
+              </div>
+              <div class="table-responsive" id="fkWrap">
+                <table class="table table-hover align-middle w-100 di-t" id="faskesTable">
+                  <thead>
+                    <tr>
+                      <th class="text-center" width="70">Aksi</th>
+                      <th>Faskes</th>
+                      <th class="text-center">Pasien</th>
+                      <th class="text-center">Dokter</th>
+                      <th class="text-center">Nakes</th>
+                      <th class="text-center">Farmasi</th>
+                      <th class="text-center">Visit</th>
+                      <th class="text-center">Poli</th>
+                      <th class="text-center">Tarif</th>
+                      <th class="text-center">Provider</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
               </div>
             </div>
           </div>
+
+          <div class="card border-0 shadow-sm" style="border-radius:16px">
+            <div class="card-body p-3 p-md-4">
+              <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                <div class="fw-semibold text-dark"><i class="ti ti-history me-1"></i>Riwayat Import</div>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="di-sub" id="jobsInfo"></span>
+                  <button type="button" class="btn btn-light border btn-sm" id="jobsRefresh" title="Muat ulang"><i class="ti ti-refresh"></i></button>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-hover align-middle w-100 di-t" id="jobsTable">
+                  <thead>
+                    <tr>
+                      <th class="text-center" width="80">Aksi</th>
+                      <th>Waktu</th>
+                      <th>Tipe</th>
+                      <th class="text-end">Total</th>
+                      <th class="text-end">Berhasil</th>
+                      <th class="text-end">Duplikat</th>
+                      <th class="text-end">Error</th>
+                      <th style="min-width:120px">Progress</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
   </div>
 
-  <div class="modal fade" id="importModal">
-    <div class="modal-dialog modal-lg">
+  <div class="modal fade di-modal" id="importModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
       <div class="modal-content">
-
         <div class="modal-header">
-          <h5 class="modal-title">📥 Import Data</h5>
-          <button class="btn-close" data-bs-dismiss="modal"></button>
+          <div>
+            <h5 class="modal-title fw-bold text-dark">Import Data</h5>
+            <small class="text-dark">File Excel (.xlsx / .xls), maksimal 20 MB.</small>
+          </div>
+          <button class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
         </div>
-
         <div class="modal-body">
-          <div class="mb-3">
-            <label>Pilih Faskes</label>
-            <select id="faskesSelect" class="form-select">
-              <option value="">-- Pilih Faskes --</option>
-            </select>
-          </div>
-          <!-- Pilih jenis -->
-          <div class="mb-3">
-            <label>Jenis Data</label>
-            <select id="importType" class="form-select">
-              <option value="">-- Pilih --</option>
-              <option value="pasien">Master Pasien</option>
-              <option value="farmasi">Master Farmasi</option>
-            </select>
-          </div>
-
-          <!-- Upload -->
-          <div class="mb-3">
-            <label>Upload File (Excel)</label>
-            <input type="file" id="importFile" class="form-control" accept=".xlsx,.xls">
-          </div>
-
-          <!-- Preview -->
-          <div id="previewArea" style="display:none;">
-            <hr>
-            <h6>🔍 Preview Data</h6>
-            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
-              <table class="table table-bordered" id="previewTable">
-                <thead></thead>
-                <tbody></tbody>
-              </table>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label" for="faskesSelect">Faskes tujuan <span class="text-danger">*</span></label>
+              <select id="faskesSelect" class="form-select"><option value="">-- Pilih Faskes --</option></select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label" for="importType">Jenis data <span class="text-danger">*</span></label>
+              <select id="importType" class="form-select">
+                <option value="">-- Pilih --</option>
+                <option value="pasien">Master Pasien</option>
+                <option value="farmasi">Master Farmasi</option>
+              </select>
+            </div>
+            <div class="col-12 mb-3">
+              <label class="form-label" for="importFile">File Excel <span class="text-danger">*</span></label>
+              <input type="file" id="importFile" class="form-control" accept=".xlsx,.xls">
+              <div class="di-hint mt-1" id="fileInfo"></div>
             </div>
           </div>
-
-          <!-- Progress -->
-          <div id="progressArea" style="display:none;">
-            <hr>
-            <h6>⏳ Sedang memproses...</h6>
-            <div class="progress mb-2" style="height: 22px;">
-              <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
-                id="progressBar" role="progressbar" style="width: 0%">0%</div>
+          <div id="previewArea" style="display:none">
+            <div class="fw-semibold text-dark mb-1">Pratinjau <span class="di-hint" id="previewInfo"></span></div>
+            <div class="table-responsive border rounded" style="max-height:280px;overflow:auto">
+              <table class="table table-sm mb-0" id="previewTable"><thead></thead><tbody></tbody></table>
             </div>
-            <div id="progressStatus" class="text-muted small text-center">Menunggu proses dimulai...</div>
           </div>
-
+          <div id="progressArea" style="display:none" class="mt-3">
+            <div class="fw-semibold text-dark mb-1">Sedang memproses…</div>
+            <div class="progress mb-2" style="height:22px">
+              <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" id="progressBar" role="progressbar" style="width:0%">0%</div>
+            </div>
+            <div id="progressStatus" class="di-hint text-center">Menunggu proses dimulai…</div>
+          </div>
         </div>
-
         <div class="modal-footer">
-          <button class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
-          <button class="btn btn-success" id="btnUpload" disabled>
-            🚀 Proses Import
-          </button>
+          <button class="btn btn-light" data-bs-dismiss="modal" id="btnTutup">Tutup</button>
+          <button class="btn btn-success" id="btnUpload" disabled><i class="ti ti-player-play me-1"></i>Proses Import</button>
         </div>
-
       </div>
     </div>
   </div>
@@ -416,7 +433,7 @@ require '../../controller/view.php';
           $('#progressBar').css('width', pct + '%').text(pct + '%');
           $('#progressStatus').text(processed + ' / ' + total + ' baris diproses');
 
-          if (response.job_status === 'completed') {
+          if (response.job_status === 'done') {
             clearInterval(pollingInterval);
             pollingInterval = null;
             $('#progressArea').hide();
@@ -638,7 +655,7 @@ require '../../controller/view.php';
   const statusBadge = {
     pending:    '<span class="badge bg-secondary">⏳ Pending</span>',
     processing: '<span class="badge bg-primary">🔄 Processing</span>',
-    completed:  '<span class="badge bg-success">✅ Selesai</span>',
+    done:  '<span class="badge bg-success">✅ Selesai</span>',
     error:      '<span class="badge bg-danger">❌ Gagal</span>',
   };
 
@@ -665,17 +682,17 @@ require '../../controller/view.php';
           const processed = (j.success || 0) + (j.duplicates || 0) + (j.errors || 0);
           const pct = j.status === 'processing' 
             ? Math.min(100, Math.round((processed / total) * 100))
-            : (j.status === 'completed' ? 100 : 0);
+            : (j.status === 'done' ? 100 : 0);
 
           const progBar = j.status === 'processing'
             ? `<div class="progress" style="height:16px;min-width:90px;">
                  <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:${pct}%">${pct}%</div>
                </div>`
-            : (j.status === 'completed' ? `<div class="progress" style="height:16px;min-width:90px;">
+            : (j.status === 'done' ? `<div class="progress" style="height:16px;min-width:90px;">
                  <div class="progress-bar bg-success" style="width:100%">100%</div>
                </div>` : '-');
 
-          const detailBtn = (j.status === 'completed')
+          const detailBtn = (j.status === 'done')
             ? `<button class="btn btn-xs btn-sm btn-outline-primary py-0 px-2 view-job-result" data-id="${j.id}">Lihat</button>`
             : '-';
 
@@ -713,9 +730,9 @@ require '../../controller/view.php';
       });
   });
 
-  // Load on page ready and refresh every 60 seconds
+  // Load on page ready and refresh every 5 minutes
   loadJobsTable();
-  setInterval(loadJobsTable, 60000);
+  setInterval(loadJobsTable, 300000); // 300000 ms = 5 menit
 </script>
 
 </html>

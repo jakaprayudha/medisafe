@@ -123,6 +123,8 @@ $isSuper = in_array($_SESSION['roles'] ?? '', ['superadmin', 'administrator'], t
     (function() {
       const API = 'controller/master/doctorIDSHDetailControllerByClinic.php';
       const API_SS = 'controller/master/settingSatusehatController.php';
+      // superadmin membuka faskes tertentu dari module/administrator/doctor-idsh (?id_customer=) — hanya melihat, tanpa aksi ubah
+      const IDC = <?= $isSuper ? "(parseInt(new URLSearchParams(location.search).get('id_customer'), 10) || 0)" : '0' ?>;
       const ST = { lengkap: ['Lengkap', 'bg-success-subtle text-success'], cari_ihs: ['ID IHS belum dicari', 'bg-warning-subtle text-warning'], nik: ['NIK belum valid', 'bg-danger-subtle text-danger'] };
       const WARNA = ['#5d87ff', '#13deb9', '#ffae1f', '#fa896b', '#a855f7', '#539bff', '#14b8a6', '#f472b6'];
       const $id = id => document.getElementById(id);
@@ -135,10 +137,14 @@ $isSuper = in_array($_SESSION['roles'] ?? '', ['superadmin', 'administrator'], t
       async function muat() {
         $id('btnRefresh').querySelector('i').classList.add('fa-spin');
         try {
-          const r = await fetch(API, { credentials: 'same-origin', cache: 'no-store' });
+          const r = await fetch(API + (IDC ? '?id_customer=' + IDC : ''), { credentials: 'same-origin', cache: 'no-store' });
           const j = await r.json().catch(() => null);
           if (!r.ok || !j || j.status !== 'success') throw new Error((j && j.message) || 'Gagal memuat data (HTTP ' + r.status + ').');
           D = j.data;
+          if (IDC) {
+            document.querySelector('h5.fw-semibold').innerHTML = 'ID Satu Sehat Dokter · ' + esc(j.faskes || '') + ' <a class="small ms-2" href="module/administrator/doctor-idsh">« semua faskes</a>';
+            ['btnCariSemua'].forEach(i => { $id(i).style.display = 'none'; });
+          }
           tampil();
         } catch (e) {
           tabel.clear().draw();
@@ -186,6 +192,7 @@ $isSuper = in_array($_SESSION['roles'] ?? '', ['superadmin', 'administrator'], t
           { data: 'kunjungan_30', className: 'text-end', render: (v, t, r) => t !== 'display' ? v : (v ? (r.status !== 'lengkap' ? `<b class="text-danger">${fmt(v)}</b>` : fmt(v)) : '<span class="text-muted">0</span>') },
           { data: 'status', render: (v, t) => t !== 'display' ? ST[v][0] : `<span class="di-badge ${ST[v][1]}">${ST[v][0]}</span>` },
           { data: null, orderable: false, className: 'text-end text-nowrap', render: r => {
+            if (IDC) return '';
             const b = [];
             b.push(`<button type="button" class="btn btn-sm btn-light di-nik" data-id="${r.id_doctor}" title="${r.doctor_nik ? 'Ubah' : 'Isi'} NIK"><i class="fas fa-id-card me-1"></i>${r.doctor_nik ? 'Ubah' : 'Isi'} NIK</button>`);
             if (r.nik_valid) b.push(`<button type="button" class="btn btn-sm ${r.idsh ? 'btn-light' : 'btn-primary'} di-ihs" data-id="${r.id_doctor}" title="${r.idsh ? 'Perbarui' : 'Cari'} ID IHS dari Satu Sehat"><i class="fas fa-${r.idsh ? 'sync-alt' : 'search'} me-1"></i>${r.idsh ? 'Perbarui' : 'Cari IHS'}</button>`);

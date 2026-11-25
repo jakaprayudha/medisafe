@@ -63,7 +63,8 @@ if ($action === 'ringkasan') {
    $kv = q($koneksi, "SELECT COUNT(*) total, SUM(p.idsh IS NULL OR p.idsh = '') tanpa, COUNT(DISTINCT IF(p.idsh IS NULL OR p.idsh = '', p.id_patient, NULL)) pasien
                       FROM pasien_visit v JOIN ms_patient p ON p.id_patient = v.id_patient
                       WHERE v.visit_date >= ? AND v.id_customer = ? AND (v.visit_status IS NULL OR v.visit_status <> 99)", 'si', [$awal, $idc])[0] ?? [];
-   jawab(['status' => 'success', 'status_pasien' => $st, 'total' => array_sum($st),
+   $nm = (string) (q($koneksi, "SELECT clinic_name FROM setting_clinic WHERE id_customer = ? LIMIT 1", 'i', [$idc])[0]['clinic_name'] ?? '');
+   jawab(['status' => 'success', 'faskes' => $nm, 'status_pasien' => $st, 'total' => array_sum($st),
       'kunjungan_30' => ['total' => (int) ($kv['total'] ?? 0), 'tanpa_ihs' => (int) ($kv['tanpa'] ?? 0), 'pasien_tanpa_ihs' => (int) ($kv['pasien'] ?? 0)]]);
 }
 

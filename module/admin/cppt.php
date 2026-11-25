@@ -97,7 +97,7 @@ foreach ($petugas as $p) if ($uidSesi !== '' && (string) $p['uid_user'] === $uid
                     <a class="btn btn-outline-dark" target="_blank" rel="noopener" href="module/admin/print/formulir_cppt?<?= $h(http_build_query(['no' => $no, 'rm' => $rm])) ?>"><i class="ti ti-printer me-1"></i>Cetak</a>
                     <button type="button" class="btn btn-primary" id="btnTambah" disabled><i class="ti ti-plus me-1"></i>Tambah CPPT</button>
                   </div>
-                  <div class="alert alert-danger d-none" id="cpBatal"><i class="ti ti-ban me-1"></i>Kunjungan ini sudah dibatalkan — CPPT baru tidak bisa ditambahkan.</div>
+                  <div class="alert alert-danger d-none" id="cpBatal"><i class="ti ti-ban me-1"></i>Kunjungan ini sudah dibatalkan — CPPT baru tidak bisa ditambahkan. Bila salah batal, aktifkan kembali lewat menu Aksi di halaman Registrasi.</div>
                   <div class="filter" id="cpFilter"></div>
                   <div class="table-responsive">
                     <table class="t">

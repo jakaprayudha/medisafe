@@ -222,6 +222,7 @@
         $id('pdForm').reset();
         penjaminManual = false;
         $id('paksa').value = '0';
+        if ($id('lewati_antrol')) $id('lewati_antrol').value = '0';
         $id('jSakit').checked = true;
         $id('kunjSakit').value = 'true';
         $id('tanggalKunjung').value = tglJkt(0);
@@ -399,7 +400,9 @@
         const btn = $id('create'), label = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Mendaftarkan…';
-        $.ajax({ type: 'POST', url: 'controller/admisi/services/prosesPendaftaranTunggal.php', dataType: 'json', data: $('#pdForm').serialize() })
+        const formData = $('#pdForm').serialize();
+        if ($id('lewati_antrol')) $id('lewati_antrol').value = '0';
+        $.ajax({ type: 'POST', url: 'controller/admisi/services/prosesPendaftaranTunggal.php', dataType: 'json', data: formData })
             .done(res => {
                 if (res && res.success) {
                     Swal.fire({
@@ -411,6 +414,23 @@
                 } else if (res && res.dobel) {
                     Swal.fire({ icon: 'warning', title: 'Sudah terdaftar', text: res.message + ' Tetap daftarkan lagi?', showCancelButton: true, confirmButtonText: 'Ya, daftarkan lagi', cancelButtonText: 'Batal', reverseButtons: true })
                         .then(r => { if (r.isConfirmed) { $id('paksa').value = '1'; simpan(); $id('paksa').value = '0'; } });
+                } else if (res && ($id('kodeprov') && $id('kodeprov').value == '1') && (res.batal_antrol || String(res.message || '').toLowerCase().includes('sudah terdaftar') || String(res.message || '').toLowerCase().includes('terdaftar di poli'))) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Konfirmasi Pendaftaran',
+                        text: 'Pasien sebelumnya telah didaftarkan lalu dibatalkan. Jika kamu ingin melanjutkannya maka status ke BPJS tidak bridging antrean melainkan bridging PCare.',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ya',
+                        cancelButtonText: 'Batal',
+                        confirmButtonColor: '#5d87ff',
+                        cancelButtonColor: '#6c757d',
+                        reverseButtons: true
+                    }).then(r => {
+                        if (r.isConfirmed) {
+                            if ($id('lewati_antrol')) $id('lewati_antrol').value = '1';
+                            simpan();
+                        }
+                    });
                 } else {
                     Swal.fire({ icon: 'error', title: 'Gagal mendaftar', text: (res && res.message) || 'Terjadi kesalahan.' });
                 }

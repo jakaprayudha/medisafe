@@ -123,6 +123,7 @@ require '../../controller/view.php';
     require '../admin/library.php';
     ?>
     <script src="controller/admisi/helper.js"></script>
+    <script src="controller/admisi/batalPendaftaran.js"></script>
     <script src="controller/admisi/listpendaftaran.js"></script>
 </body>
 

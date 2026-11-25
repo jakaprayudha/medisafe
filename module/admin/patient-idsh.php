@@ -107,6 +107,8 @@ $isSuper = in_array($_SESSION['roles'] ?? '', ['superadmin', 'administrator'], t
     (function() {
       const API = 'controller/master/patientIDSHDetailControllerByClinic.php';
       const API_SS = 'controller/master/settingSatusehatController.php';
+      // superadmin membuka faskes tertentu dari module/administrator/patient-idsh (?id_customer=) — hanya melihat, tanpa aksi cari IHS
+      const IDC = <?= $isSuper ? "(parseInt(new URLSearchParams(location.search).get('id_customer'), 10) || 0)" : '0' ?>;
       const ST = { lengkap: ['Lengkap', 'bg-success-subtle text-success'], antre: ['Menunggu sinkron', 'bg-info-subtle text-info'], tidak_ditemukan: ['NIK tidak ditemukan', 'bg-warning-subtle text-warning'], nik: ['NIK belum valid', 'bg-danger-subtle text-danger'] };
       const $id = id => document.getElementById(id);
       const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -116,10 +118,11 @@ $isSuper = in_array($_SESSION['roles'] ?? '', ['superadmin', 'administrator'], t
 
       async function ringkasan() {
         try {
-          const r = await fetch(API + '?action=ringkasan', { credentials: 'same-origin', cache: 'no-store' });
+          const r = await fetch(API + '?action=ringkasan' + (IDC ? '&id_customer=' + IDC : ''), { credentials: 'same-origin', cache: 'no-store' });
           const j = await r.json();
           if (j.status !== 'success') throw new Error(j.message);
           const s = j.status_pasien, t = j.total || 0;
+          if (IDC && j.faskes) { document.querySelector('h5.fw-semibold').innerHTML = 'ID Satu Sehat Pasien · ' + esc(j.faskes) + ' <a class="small ms-2" href="module/administrator/patient-idsh">« semua faskes</a>'; }
           $id('kL').textContent = fmt(s.lengkap); $id('kA').textContent = fmt(s.antre); $id('kT').textContent = fmt(s.tidak_ditemukan); $id('kN').textContent = fmt(s.nik);
           $id('kLSub').textContent = 'dari ' + fmt(t) + ' pasien';
           const w = v => (t ? v / t * 100 : 0) + '%';
@@ -141,6 +144,7 @@ $isSuper = in_array($_SESSION['roles'] ?? '', ['superadmin', 'administrator'], t
           emptyTable: 'Tidak ada pasien pada filter ini', zeroRecords: 'Tidak ada pasien yang cocok', paginate: { previous: '‹', next: '›' } },
         ajax: (req, cb) => {
           const p = new URLSearchParams({ action: 'list', draw: req.draw, start: req.start, length: req.length, q: $id('piCari').value.trim(), status: filter, urut: $id('piUrut').value });
+          if (IDC) p.set('id_customer', IDC);
           fetch(API + '?' + p, { credentials: 'same-origin', cache: 'no-store' }).then(r => r.json()).then(j => {
             if (j.status !== 'success') throw new Error(j.message || 'Gagal memuat data.');
             $id('piInfo').textContent = fmt(j.recordsTotal) + ' pasien' + (filter ? ' · ' + ST[filter][0] : '');
@@ -153,7 +157,7 @@ $isSuper = in_array($_SESSION['roles'] ?? '', ['superadmin', 'administrator'], t
           { data: 'nik', render: (v, t, r) => r.nik_ada ? `<span class="pi-mono">${esc(v)}</span>` : '<span class="text-muted">Belum diisi</span>' },
           { data: 'idsh', render: v => v ? `<span class="pi-mono">${esc(v)}</span>` : '<span class="text-muted">-</span>' },
           { data: 'status', render: v => `<span class="pi-badge ${ST[v][1]}">${ST[v][0]}</span>` },
-          { data: null, className: 'text-end', render: r => r.status === 'antre' || r.status === 'tidak_ditemukan'
+          { data: null, className: 'text-end', render: r => IDC ? '' : r.status === 'antre' || r.status === 'tidak_ditemukan'
               ? `<button type="button" class="btn btn-sm ${r.status === 'antre' ? 'btn-primary' : 'btn-light'} pi-ihs" data-id="${r.id_patient}"><i class="fas fa-search me-1"></i>${r.status === 'antre' ? 'Cari IHS' : 'Cari ulang'}</button>`
               : (r.status === 'nik' ? `<a class="btn btn-sm btn-light" href="module/admin/patient_details?pt=${r.id_patient}&tabs=1" target="_blank" rel="noopener"><i class="fas fa-pen me-1"></i>Perbaiki NIK</a>` : '') }
         ]
