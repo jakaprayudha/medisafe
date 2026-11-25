@@ -834,6 +834,7 @@ session_write_close();
   require 'library.php';
   ?>
   <script src="controller/admisi/helper.js"></script>
+  <script src="controller/admisi/batalPendaftaran.js"></script>
 
 
 
@@ -1510,60 +1511,9 @@ session_write_close();
       const visit = $(this).data('visit');
       const prov = String($(this).data('prov'));
       const nama = $(this).data('nama') || '';
-      Swal.fire({
-        title: 'Batalkan pendaftaran?',
-        html: nama ? `<div class="small mb-2">${esc(nama)} · ${esc(visit)}</div>` : '',
-        icon: 'warning',
-        input: 'textarea',
-        inputPlaceholder: 'Tulis alasan pembatalan…',
-        inputAttributes: { 'aria-label': 'Alasan' },
-        showCancelButton: true,
-        confirmButtonText: 'Ya, batalkan',
-        cancelButtonText: 'Kembali',
-        confirmButtonColor: '#dc3545',
-        reverseButtons: true,
-        preConfirm: (alasan) => {
-          if (!alasan || !alasan.trim()) Swal.showValidationMessage('Alasan wajib diisi');
-          return alasan && alasan.trim();
-        }
-      }).then((result) => {
-        if (!result.isConfirmed) return;
-        const alasan = result.value;
-        Swal.fire({ title: 'Membatalkan…', text: 'Sedang memproses data', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        if (prov === '1') {
-          $.ajax({
-            url: 'controller/wsbpjs/batalAntrian.php',
-            type: 'POST',
-            data: { novisit: visit, alasan: alasan },
-            dataType: 'json'
-          }).done(function(res) {
-            if (res && res.success) batalAntrian(visit, alasan, prov);
-            else Swal.fire('Gagal membatalkan', (res && res.message) || 'Antrean BPJS gagal dibatalkan.', 'error');
-          }).fail(() => Swal.fire('Gagal membatalkan', 'Layanan antrean BPJS tidak merespons. Coba lagi.', 'error'));
-        } else {
-          batalAntrian(visit, alasan, prov);
-        }
-      });
+      // cek asesmen/CPPT/rawat inap -> konfirmasi Ya/Tidak -> alasan wajib -> batal (lihat controller/admisi/batalPendaftaran.js)
+      BatalPendaftaran.mulai({ visit: visit, prov: prov, nama: nama, onSelesai: () => window.table.ajax.reload(null, false) });
     });
-
-    function batalAntrian(visit, alasan, prov) {
-      $.ajax({
-        url: 'controller/admisi/services/deletePendaftaran.php',
-        type: 'POST',
-        data: { novisit: visit, alasan: alasan, provider: prov },
-        dataType: 'json'
-      }).done(function(res) {
-        // dulu selalu menampilkan "Berhasil" walau server gagal
-        if (res && res.success) {
-          Swal.fire({ title: 'Pendaftaran dibatalkan', text: res.peringatan || res.message, icon: res.peringatan ? 'warning' : 'success' });
-          window.table.ajax.reload(null, false);
-        } else {
-          Swal.fire('Gagal membatalkan', (res && res.message) || 'Terjadi kesalahan.', 'error');
-        }
-      }).fail(function(x) {
-        Swal.fire('Gagal membatalkan', (x.responseJSON && x.responseJSON.message) || 'Terjadi kesalahan server.', 'error');
-      });
-    }
     teksPeriode();
     /* ================= DETAIL HASIL PEMERIKSAAN =================
      * - modal langsung tampil dengan identitas dari baris tabel, isi menyusul (skeleton)

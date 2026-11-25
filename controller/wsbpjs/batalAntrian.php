@@ -6,6 +6,14 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/../../utility/visitGuard.php';
 $nomor_visit = (string) ($_POST['novisit'] ?? '');
 $kunjBatal = visitGuard($koneksi, 'visit_ID', $nomor_visit);
+// alasan wajib + konfirmasi bila kunjungan sudah punya asesmen/CPPT/rawat inap (sebelum antrean BPJS dibatalkan)
+require_once __DIR__ . '/../../utility/batalGuard.php';
+if ((int) $kunjBatal['visit_status'] === 4) {
+    http_response_code(409);
+    echo json_encode(['success' => false, 'message' => 'Kunjungan sudah selesai dilayani, tidak dapat dibatalkan.']);
+    exit;
+}
+batalPastikan($koneksi, $kunjBatal, (string) ($_POST['alasan'] ?? ''));
 $stBatal = $koneksi->prepare("SELECT pv.noKartu, pv.visit_date, p.kdPoli FROM pasien_visit AS pv INNER JOIN master_poli AS p ON p.nmPoli = pv.id_poli WHERE pv.id_visit = ? LIMIT 1");
 $idVisitBatal = (int) $kunjBatal['id_visit'];
 $stBatal->bind_param('i', $idVisitBatal);
