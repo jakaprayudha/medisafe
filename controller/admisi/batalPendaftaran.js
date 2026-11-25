@@ -35,18 +35,28 @@
         });
     }
 
-    function tanyaAlasan(visit, nama) {
+    function tanyaAlasan(visit, nama, prov) {
+        const isBpjs = String(prov) === '1';
         return Swal.fire({
-            icon: 'question',
-            title: 'Alasan pembatalan',
-            html: `<div class="small mb-2">${nama ? esc(nama) + ' · ' : ''}${esc(visit)}</div>`,
+            icon: 'warning',
+            title: 'Batalkan Pendaftaran?',
+            html: `<div class="text-start small">
+                ${nama ? `<div class="mb-2 fw-semibold fs-4 text-dark">${esc(nama)} <span class="text-muted fs-2">(${esc(visit)})</span></div>` : ''}
+                <div class="alert alert-danger py-2 px-3 mb-3 border-danger bg-danger-subtle text-danger" style="border-radius:8px;">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    <strong>Peringatan Penting:</strong> Pasien yang sudah dibatalkan <strong>tidak bisa dikembalikan lagi</strong> dan harus didaftarkan ulang.
+                    ${isBpjs ? `<div class="mt-1">Jika didaftarkan ulang pada hari yang sama, antreannya <strong>tidak masuk ke Antrean BPJS</strong> dan di PCare akan berstatus <strong>Bridging PCare</strong> (bukan Bridging Antrean).</div>` : ''}
+                </div>
+                <div class="mb-1 fw-semibold">Masukkan alasan pembatalan <span class="text-danger">*</span>:</div>
+            </div>`,
             input: 'textarea',
-            inputPlaceholder: 'Mis. pasien pulang, dikoordinasikan dengan dr. X / perawat Y pada jam …',
+            inputPlaceholder: 'Mis. pasien pulang / batal berobat, dikoordinasikan dengan dr. X / perawat Y pada jam …',
             inputAttributes: { 'aria-label': 'Alasan', maxlength: 500 },
             showCancelButton: true,
-            confirmButtonText: 'Batalkan pendaftaran',
+            confirmButtonText: '<i class="fas fa-times-circle me-1"></i>Batalkan pendaftaran',
             cancelButtonText: 'Kembali',
             confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
             reverseButtons: true,
             preConfirm: (a) => {
                 a = (a || '').trim();
@@ -117,7 +127,7 @@
                         const y = await tanyaKlinis(k, o.nama);
                         if (!y.isConfirmed) return;
                     }
-                    const a = await tanyaAlasan(o.visit, o.nama);
+                    const a = await tanyaAlasan(o.visit, o.nama, o.prov);
                     if (!a.isConfirmed) return;
                     kerjakan(o, a.value, !!k.butuh_konfirmasi);
                 })

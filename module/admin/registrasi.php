@@ -834,7 +834,7 @@ session_write_close();
   require 'library.php';
   ?>
   <script src="controller/admisi/helper.js"></script>
-  <script src="controller/admisi/batalPendaftaran.js"></script>
+  <script src="controller/admisi/batalPendaftaran.js?v=<?= @filemtime(__DIR__ . '/../../controller/admisi/batalPendaftaran.js') ?>"></script>
 
 
 

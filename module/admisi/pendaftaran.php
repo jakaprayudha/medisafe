@@ -167,6 +167,7 @@ date_default_timezone_set('Asia/Jakarta');
                   <input type="hidden" name="nmDokterPcare" id="namadokterPcare">
                   <input type="hidden" name="jampraktek" id="jampraktek">
                   <input type="hidden" name="paksa" id="paksa" value="0">
+                  <input type="hidden" name="lewati_antrol" id="lewati_antrol" value="0">
                   <div class="card-body">
                     <div class="pd-sec">Jenis kunjungan</div>
                     <div class="pd-seg mb-3" id="pdJenis">
