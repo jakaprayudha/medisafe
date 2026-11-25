@@ -1367,6 +1367,8 @@ session_write_close();
           <li><a class="dropdown-item btn-reschedule" href="javascript:;" data-id="${row.id_visit}" data-doctor="${esc(row.id_doctor)}"><i class="fas fa-user-md me-2 text-dark"></i>Ganti dokter</a></li>
           <li><a class="dropdown-item edit-visit-btn" href="javascript:;" data-visit="${esc(row.visit_ID)}" data-date="${esc(row.visit_date)}" data-patient="${esc(row.id_patient)}" data-time="${esc(row.visit_time)}"><i class="fas fa-clock me-2 text-warning"></i>Ubah waktu</a></li>
           <li><a class="dropdown-item delete-btn text-danger" href="javascript:;" data-id="${row.id_visit}" data-prov="${esc(row.id_provider)}" data-visit="${esc(row.visit_ID)}" data-nama="${esc(row.patient_name || row.patient_name_pcare || '')}"><i class="fas fa-times-circle me-2"></i>Batalkan pendaftaran</a></li>` : ''}
+          ${batal ? `<li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item aktif-kembali-btn text-success" href="javascript:;" data-visit="${esc(row.visit_ID)}" data-nama="${esc(row.patient_name || row.patient_name_pcare || '')}"><i class="fas fa-rotate-left me-2"></i>Aktifkan kembali</a></li>` : ''}
         </ul></div>`;
     }
 
@@ -1505,6 +1507,11 @@ session_write_close();
       if ($('.modal.show').length || $('#periodeTable .dropdown-menu.show').length || (window.Swal && Swal.isVisible())) return;
       window.table.ajax.reload(null, false);
     }, 15000);
+
+    // 🔹 Aktifkan kembali kunjungan batal (RME/CPPT terbuka lagi)
+    $(document).on('click', '.aktif-kembali-btn', function() {
+      BatalPendaftaran.aktifkan({ visit: $(this).data('visit'), nama: $(this).data('nama') || '', onSelesai: () => window.table.ajax.reload(null, false) });
+    });
 
     // 🔹 Batal pendaftaran
     $(document).on('click', '.delete-btn', function() {

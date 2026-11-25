@@ -73,7 +73,41 @@
             .fail(x => gagal(pesan(x, 'Layanan antrean BPJS tidak merespons. Coba lagi.')));
     }
 
+    // Aktifkan kembali kunjungan batal (CPPT/RME terkunci bila status batal). Alasan wajib.
+    function aktifkan(o) {
+        Swal.fire({
+            icon: 'question',
+            title: 'Aktifkan kembali kunjungan?',
+            html: `<div class="small mb-2">${o.nama ? esc(o.nama) + ' · ' : ''}${esc(o.visit)}</div>
+                <div class="small text-start">RME/CPPT kunjungan ini bisa diisi lagi. Pendaftaran PCare/antrean BPJS yang sudah dihapus <b>tidak</b> dibuat ulang otomatis.</div>`,
+            input: 'textarea',
+            inputPlaceholder: 'Alasan diaktifkan kembali (mis. salah batal, dikoordinasikan dengan dr. X)',
+            inputAttributes: { 'aria-label': 'Alasan', maxlength: 500 },
+            showCancelButton: true,
+            confirmButtonText: 'Ya, aktifkan',
+            cancelButtonText: 'Tidak',
+            reverseButtons: true,
+            preConfirm: (a) => {
+                a = (a || '').trim();
+                if (a.length < 10) { Swal.showValidationMessage('Alasan wajib diisi (minimal 10 karakter)'); return false; }
+                return a;
+            }
+        }).then(r => {
+            if (!r.isConfirmed) return;
+            Swal.fire({ title: 'Memproses…', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            $.ajax({ url: 'controller/admisi/services/aktifkanKembaliPendaftaran.php', type: 'POST', data: { novisit: o.visit, alasan: r.value }, dataType: 'json' })
+                .done(res => {
+                    if (res && res.success) {
+                        Swal.fire({ title: 'Kunjungan aktif kembali', text: res.peringatan || res.message, icon: res.peringatan ? 'warning' : 'success' });
+                        if (o.onSelesai) o.onSelesai(res);
+                    } else Swal.fire('Gagal', (res && res.message) || 'Terjadi kesalahan.', 'error');
+                })
+                .fail(x => Swal.fire('Gagal', pesan(x, 'Terjadi kesalahan server.'), 'error'));
+        });
+    }
+
     w.BatalPendaftaran = {
+        aktifkan: aktifkan,
         mulai: function (o) {
             $.ajax({ url: 'controller/admisi/services/cekBatalPendaftaran.php', type: 'POST', data: { novisit: o.visit }, dataType: 'json' })
                 .done(async res => {
