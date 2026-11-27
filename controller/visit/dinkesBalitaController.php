@@ -93,8 +93,9 @@ try {
       if ($err) dbBalas(422, ['status' => 'error', 'message' => $err]);
       $puskes = (int) ($_POST['puskes_id'] ?? 0);
       dkSimpanBalita($koneksi, $idc, $no, $isi, $puskes > 0 ? $puskes : null);
-      $hasil = dkKirimVisit($koneksi, $idc, $no);
-      dbBalas(200, ['status' => 'success', 'message' => 'Data tersimpan.', 'kirim' => $hasil]);
+      // auto-kirim dinonaktifkan; kirim manual lewat tombol / monitoring-dinkes
+      // $hasil = dkKirimVisit($koneksi, $idc, $no);
+      dbBalas(200, ['status' => 'success', 'message' => 'Data tersimpan.']);
    }
 
    $isi = $baris && $baris['data'] ? (json_decode($baris['data'], true) ?: []) : [];
