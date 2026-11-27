@@ -53,7 +53,7 @@ function getData()
             ms_poli.*,
             ms_provider.provider_name,
             CASE 
-                WHEN visit_pemeriksaan.nomor_visit IS NOT NULL THEN 1
+                WHEN pasien_visit.tekanan_darah IS NOT NULL AND pasien_visit.tekanan_darah <> '' THEN 1
                 ELSE 0
             END AS status_dilayani
         FROM pasien_visit
@@ -63,8 +63,6 @@ function getData()
             ON ms_doctor.id_doctor = pasien_visit.id_doctor
         LEFT JOIN ms_poli 
             ON ms_poli.id_poli = pasien_visit.id_poli
-        LEFT JOIN visit_pemeriksaan 
-            ON visit_pemeriksaan.nomor_visit = pasien_visit.visit_ID
       LEFT JOIN ms_provider 
             ON ms_provider.id_provider = pasien_visit.id_provider
         WHERE 1=1
