@@ -81,8 +81,8 @@ try {
    $puskesDefault = dkPuskesClinic($koneksi, $idc);
 
    if (isset($_GET['puskesmas'])) { // daftar untuk pilihan override per data
-      if (dkToken() === '') dbBalas(422, ['status' => 'error', 'message' => 'Token Dinkes belum dipasang di server.']);
-      [$code, $res, $err] = dkHttp(dkToken(), 'GET', 'refrensi-puskesmas');
+      if (dkAuth($koneksi, $idc) === null) dbBalas(422, ['status' => 'error', 'message' => 'Kredensial Dinkes klinik belum diisi / login gagal.']);
+      [$code, $res, $err] = dkHttp($koneksi, $idc, 'GET', 'referensi/puskes');
       if (!dkOk($code, $res)) dbBalas(502, ['status' => 'error', 'message' => dkPesan($code, $res, (string) $err)]);
       dbBalas(200, ['status' => 'success', 'data' => $res['data'] ?? []]);
    }
@@ -115,7 +115,7 @@ try {
       'data' => $isi,
       'puskes_id' => $baris['puskes_id'] ?? null,
       'puskes_default' => $puskesDefault ?: null,
-      'integrasi_aktif' => $puskesDefault > 0 && dkToken() !== '',
+      'integrasi_aktif' => $puskesDefault > 0 && dkAuth($koneksi, $idc) !== null,
       'kirim' => $baris ? ['status' => $baris['dk_status'], 'error' => $baris['dk_error'], 'sent_at' => $baris['dk_sent_at']] : null,
       'zscore' => $respon['detail_zscore'] ?? null,
    ]);
