@@ -121,10 +121,9 @@ function dkKonteks(mysqli $k, int $idc, string $visitID): ?array
    $st = $k->prepare("SELECT pv.id_visit, pv.visit_ID, pv.visit_date, pv.diagnosa AS dx_visit,
          mp.id_patient, mp.patient_nik, mp.patient_kk, mp.patient_name, mp.patient_gender, mp.patient_datebirth, mp.patient_place,
          mp.patient_address, mp.patient_provinsi, mp.patient_kabupaten, mp.patient_kecamatan, mp.patient_kelurahan,
-         vp.diagnosa AS dx_periksa, vp.anamnesa, vp.tekanan_darah, vp.suhu, vp.nadi, vp.respirasi, vp.tinggi, vp.berat, vp.bmi, vp.bmi_ket
+         pv.diagnosa AS dx_periksa, pv.anamnesa, pv.tekanan_darah, pv.suhu, pv.nadi, pv.respirasi, pv.tinggi_badan AS tinggi, pv.berat_badan AS berat, pv.bmi, NULL AS bmi_ket
       FROM pasien_visit pv
       INNER JOIN ms_patient mp ON mp.id_patient = pv.id_patient
-      LEFT JOIN visit_pemeriksaan vp ON vp.nomor_visit = pv.visit_ID
       WHERE pv.visit_ID = ? AND pv.id_customer = ? LIMIT 1");
    $st->bind_param('si', $visitID, $idc);
    $st->execute();
@@ -437,8 +436,8 @@ function dkKirimLama(mysqli $k, int $idc, string $dari, string $sampai, int $lim
       if (dkPuskesClinic($k, $idc) <= 0 || dkAuth($k, $idc) === null) {
          return ['diproses' => 0, 'terkirim' => 0, 'sisa' => 0, 'message' => 'Integrasi Dinkes tidak aktif.'];
       }
-      $from = "FROM pasien_visit pv INNER JOIN visit_pemeriksaan vp ON vp.nomor_visit = pv.visit_ID
-         WHERE pv.id_customer=? AND DATE(pv.visit_date) BETWEEN ? AND ?
+      $from = "FROM pasien_visit pv
+         WHERE pv.tekanan_darah IS NOT NULL AND pv.tekanan_darah <> '' AND pv.id_customer=? AND DATE(pv.visit_date) BETWEEN ? AND ?
          AND NOT EXISTS (SELECT 1 FROM dinkes_kirim d WHERE d.id_customer=pv.id_customer AND d.visit_ID=pv.visit_ID)";
       $st = $k->prepare("SELECT DISTINCT pv.visit_ID $from ORDER BY pv.visit_date LIMIT ?");
       $st->bind_param('issi', $idc, $dari, $sampai, $limit);
