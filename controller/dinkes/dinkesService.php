@@ -7,29 +7,39 @@
  * Z-score & stunting dihitung Dinkes (dibaca balik lewat GET data-balita).
  */
 
-const DK_BASE = 'https://api-dss.deliserdangkab.go.id/api/gateway/dinas-kesehatan/';
+const DK_BASE = 'https://dinkesds-simpus.deliserdangkab.go.id/api/klinik/v1/';
 
-/** Nilai dari .env (getenv, lalu muat .env bila belum); '' bila tidak ada. */
-function dkEnv(string $key): string
+/**
+ * Login per klinik (setting_clinic.dinkes_username / dinkes_client_secret) -> ['username'=>, 'token'=>]; null bila
+ * kredensial kosong atau login gagal. Token (berlaku 1 jam) di-cache per proses; $segar=true memaksa login ulang.
+ * ponytail: cache hanya selama request, tidak disimpan ke DB; simpan bila login per request jadi beban.
+ */
+function dkAuth(mysqli $k, int $idc, bool $segar = false): ?array
 {
-   static $dimuat = false;
-   $v = (string) getenv($key);
-   if ($v === '' && !$dimuat) {
-      $dimuat = true;
-      try {
-         require_once __DIR__ . '/../../utility/env.php';
-         loadEnv();
-      } catch (Throwable $e) { // .env tidak ada
-      }
-      $v = (string) getenv($key);
-   }
-   return trim($v, " \t\n\r\0\x0B\"'");
-}
-
-/** Token Authorization Dinkes: satu untuk semua faskes, DINKES_TOKEN di .env. */
-function dkToken(): string
-{
-   return dkEnv('DINKES_TOKEN');
+   static $cache = [];
+   if ($segar) unset($cache[$idc]);
+   if (isset($cache[$idc])) return $cache[$idc];
+   $st = $k->prepare("SELECT dinkes_username, dinkes_client_secret FROM setting_clinic WHERE id_customer=? LIMIT 1");
+   $st->bind_param('i', $idc);
+   $st->execute();
+   $r = $st->get_result()->fetch_row();
+   $st->close();
+   $u = trim((string) ($r[0] ?? ''));
+   $sec = trim((string) ($r[1] ?? ''));
+   if ($u === '' || $sec === '') return null;
+   $ch = curl_init(DK_BASE . 'login');
+   curl_setopt_array($ch, [
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_POST => true,
+      CURLOPT_CONNECTTIMEOUT => 5,
+      CURLOPT_TIMEOUT => 12,
+      CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Accept: application/json'],
+      CURLOPT_POSTFIELDS => json_encode(['username' => $u, 'client_secret' => $sec]),
+   ]);
+   $res = json_decode((string) curl_exec($ch), true);
+   curl_close($ch);
+   $t = (string) ($res['data']['token'] ?? '');
+   return $t === '' ? null : ($cache[$idc] = ['username' => $u, 'token' => $t]);
 }
 
 /** Puskesmas faskes dari setting_clinic.puskes_id. 0 = faskes ini tidak ikut integrasi Dinkes. */
@@ -43,15 +53,13 @@ function dkPuskesClinic(mysqli $k, int $idc): int
    return $v;
 }
 
-/** [http_code, json|null, error_curl]. Timeout pendek agar simpan kunjungan tidak menggantung saat Dinkes down. */
-function dkHttp(string $token, string $method, string $path, array $query = [], ?array $body = null): array
+/** [http_code, json|null, error_curl]. Timeout pendek agar simpan kunjungan tidak menggantung saat Dinkes down. 401 -> login ulang sekali. */
+function dkHttp(mysqli $k, int $idc, string $method, string $path, array $query = [], ?array $body = null, bool $ulang = true): array
 {
-   $token = trim($token);
-   if (stripos($token, 'bearer ') !== 0) {
-      $token = 'Bearer ' . $token; // ponytail: asumsi bearer standar; bila Dinkes minta token mentah, hapus baris ini
-   }
+   $auth = dkAuth($k, $idc, !$ulang);
+   if (!$auth) return [0, null, 'login Dinkes gagal / kredensial klinik belum diisi'];
    $url = DK_BASE . $path . ($query ? '?' . http_build_query($query) : '');
-   $h = ['Authorization: ' . $token, 'Accept: application/json'];
+   $h = ['x-username: ' . $auth['username'], 'x-token: ' . $auth['token'], 'Accept: application/json'];
    $ch = curl_init($url);
    curl_setopt_array($ch, [
       CURLOPT_RETURNTRANSFER => true,
@@ -68,6 +76,7 @@ function dkHttp(string $token, string $method, string $path, array $query = [], 
    $err = curl_error($ch);
    $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
    curl_close($ch);
+   if ($code === 401 && $ulang) return dkHttp($k, $idc, $method, $path, $query, $body, false);
    return [$code, $raw === false ? null : json_decode($raw, true), $err];
 }
 
@@ -258,47 +267,30 @@ function dkMapBalitaTambah(array $c, array $f, int $puskes): array
    ];
 }
 
-/** Bentuk update-balita berbeda dari tambah (lihat collection); z-score diambil dari GET terakhir. */
-function dkMapBalitaUpdate(array $c, array $f, int $puskes, int $remoteId, ?array $respon): array
+/** Update balita = bentuk tambah + id; z-score dihitung Dinkes. */
+function dkMapBalitaUpdate(array $c, array $f, int $puskes, int $remoteId): array
 {
-   $d = dkBalitaDasar($c, $f);
-   $z = $respon['detail_zscore'] ?? [];
-   $u = $d['ukur'];
-   return [
-      'id' => $remoteId,
-      'nik' => preg_replace('/\D/', '', (string) $c['patient_nik']),
-      'identitas' => ['jenis_kelamin' => $c['jk'], 'tanggal_lahir' => $c['patient_datebirth']] + $d['identitas'],
-      'tanggal_ukur' => $c['visit_date'],
-      'data_ukur' => [
-         'bb_lahir_kg' => $u['bb_lahir'],
-         'tb_lahir_cm' => $u['tb_lahir'],
-         'lila_cm' => $u['lila_cm'],
-         'lingkar_kepala_cm' => $u['lingkar_kepala_cm'],
-         'bb_terupdate_kg' => (float) $c['berat'],
-         'tb_terupdate_cm' => (float) $c['tinggi'],
-         'z_score_bb_u' => $z['bb_u']['zscore'] ?? null,
-         'interpretasi_bb_u' => $z['bb_u']['interpretasi'] ?? null,
-         'z_score_tb_u' => $z['tb_u']['zscore'] ?? null,
-         'interpretasi_tb_u' => $z['tb_u']['interpretasi'] ?? null,
-         'z_score_bb_tb' => $z['bb_tb']['zscore'] ?? null,
-         'interpretasi_bb_tb' => $z['bb_tb']['interpretasi'] ?? null,
-      ],
-      'riwayat' => $d['riwayat'],
-      'puskes' => $puskes,
-   ];
+   return ['id' => $remoteId] + dkMapBalitaTambah($c, $f, $puskes);
 }
 
 // ---------------------------------------------------------------- aksi
 
-/** Baca balik data balita dari Dinkes (berisi detail_zscore) dan simpan di dk_respon. Best-effort. */
-function dkAmbilRespon(mysqli $k, int $idc, string $token, array $c, int $rowId): void
+/** Baris balita pada tanggal ukur tertentu (GET balita mengembalikan semua pengukuran per NIK). */
+function dkCariUkur(array $data, string $tanggal): ?array
 {
-   [$code, $res] = dkHttp($token, 'GET', 'data-balita', [
-      'nik' => preg_replace('/\D/', '', (string) $c['patient_nik']),
-      'tanggal_ukur' => $c['visit_date'],
-   ]);
-   if (!dkOk($code, $res) || empty($res['data'][0])) return;
-   $json = json_encode($res['data'][0], JSON_UNESCAPED_UNICODE);
+   foreach ($data as $r) {
+      if (substr((string) ($r['tanggal_ukur'] ?? ''), 0, 10) === substr($tanggal, 0, 10)) return $r;
+   }
+   return null;
+}
+
+/** Baca balik data balita dari Dinkes (berisi detail_zscore) dan simpan di dk_respon. Best-effort. */
+function dkAmbilRespon(mysqli $k, int $idc, array $c, int $rowId): void
+{
+   [$code, $res] = dkHttp($k, $idc, 'GET', 'balita', ['nik' => preg_replace('/\D/', '', (string) $c['patient_nik'])]);
+   $row = dkOk($code, $res) ? dkCariUkur($res['data'] ?? [], (string) $c['visit_date']) : null;
+   if (!$row) return;
+   $json = json_encode($row, JSON_UNESCAPED_UNICODE);
    $st = $k->prepare("UPDATE dinkes_kirim SET dk_respon=? WHERE id=?");
    $st->bind_param('si', $json, $rowId);
    $st->execute();
@@ -313,7 +305,7 @@ function dkKirimVisit(mysqli $k, int $idc, string $visitID): array
 {
    try {
       $puskesDefault = dkPuskesClinic($k, $idc);
-      if ($puskesDefault <= 0 || dkToken() === '') {
+      if ($puskesDefault <= 0 || dkAuth($k, $idc) === null) {
          return ['status' => 'nonaktif', 'message' => 'Integrasi Dinkes tidak aktif.'];
       }
       $c = dkKonteks($k, $idc, $visitID);
@@ -347,22 +339,20 @@ function dkKirimVisit(mysqli $k, int $idc, string $visitID): array
       $puskes = (int) ($baris['puskes_id'] ?: $puskesDefault);
       if ($puskes <= 0) return $lewati('Puskesmas faskes belum diatur (setting_clinic.puskes_id).', 'belum');
 
-      $token = dkToken();
       if ($jenis === 'dewasa') {
          $body = dkMapDewasa($c, $puskes);
-         $path = $remote ? 'update-pasien-dewasa' : 'tambah-pasien-dewasa';
+         $path = $remote ? 'dewasa/update' : 'dewasa/insert';
          if ($remote) $body = ['id' => $remote] + $body;
          $aksi = $remote ? 'update' : 'tambah';
-         [$code, $res, $err] = dkHttp($token, $remote ? 'PUT' : 'POST', $path, [], $body);
+         [$code, $res, $err] = dkHttp($k, $idc, $remote ? 'PUT' : 'POST', $path, [], $body);
       } else {
          $form = $baris['data'] ? (json_decode($baris['data'], true) ?: []) : [];
          if (!$form) return $lewati('Menunggu pengisian Data Dinkes Balita.', 'belum');
-         $respon = $baris['dk_respon'] ? json_decode($baris['dk_respon'], true) : null;
          $aksi = $remote ? 'update' : 'tambah';
          if ($remote) {
-            [$code, $res, $err] = dkHttp($token, 'PUT', 'update-balita', [], dkMapBalitaUpdate($c, $form, $puskes, $remote, $respon));
+            [$code, $res, $err] = dkHttp($k, $idc, 'PUT', 'balita/update', [], dkMapBalitaUpdate($c, $form, $puskes, $remote));
          } else {
-            [$code, $res, $err] = dkHttp($token, 'POST', 'tambah-balita', [], dkMapBalitaTambah($c, $form, $puskes));
+            [$code, $res, $err] = dkHttp($k, $idc, 'POST', 'balita/insert', [], dkMapBalitaTambah($c, $form, $puskes));
          }
       }
 
@@ -375,7 +365,7 @@ function dkKirimVisit(mysqli $k, int $idc, string $visitID): array
       }
       $newId = isset($res['data']['id_insert']) ? (int) $res['data']['id_insert'] : null;
       dkSet($k, $rid, 'terkirim', $newId, '', true);
-      if ($jenis === 'balita') dkAmbilRespon($k, $idc, $token, $c, $rid);
+      if ($jenis === 'balita') dkAmbilRespon($k, $idc, $c, $rid);
       return ['status' => 'terkirim', 'message' => $pesan];
    } catch (Throwable $e) {
       error_log('[dinkesService] ' . $e->getMessage());
@@ -391,12 +381,11 @@ function dkHapusVisit(mysqli $k, int $idc, string $visitID): array
       if (!$baris || $baris['dk_id'] === null || in_array($baris['dk_status'], ['dihapus'], true)) {
          return ['status' => 'tidak_ada', 'message' => 'Tidak ada data di Dinkes.'];
       }
-      if (dkToken() === '') {
-         return ['status' => 'nonaktif', 'message' => 'DINKES_TOKEN belum diisi di .env.'];
+      if (dkAuth($k, $idc) === null) {
+         return ['status' => 'nonaktif', 'message' => 'Kredensial Dinkes klinik belum diisi / login gagal.'];
       }
-      $path = $baris['jenis'] === 'balita' ? 'hapus-balita' : 'hapus-pemeriksaan-pasien-dewasa';
-      // ponytail: body hapus-balita belum terdokumentasi di collection; diasumsikan sama dengan dewasa ({"id": ...})
-      [$code, $res, $err] = dkHttp(dkToken(), 'DELETE', $path, [], ['id' => (int) $baris['dk_id']]);
+      $path = ($baris['jenis'] === 'balita' ? 'balita/delete/' : 'dewasa/delete/') . (int) $baris['dk_id'];
+      [$code, $res, $err] = dkHttp($k, $idc, 'DELETE', $path);
       $ok = dkOk($code, $res);
       $pesan = $ok ? (string) ($res['message'] ?? 'OK') : dkPesan($code, $res, (string) $err);
       dkLog($k, $idc, $visitID, 'hapus', $code, $ok, $pesan);
@@ -415,19 +404,20 @@ function dkHapusVisit(mysqli $k, int $idc, string $visitID): array
 function dkCekRemote(mysqli $k, int $idc, string $visitID): array
 {
    try {
-      if (dkToken() === '') return ['status' => 'error', 'message' => 'DINKES_TOKEN belum diisi di .env.'];
+      if (dkAuth($k, $idc) === null) return ['status' => 'error', 'message' => 'Kredensial Dinkes klinik belum diisi / login gagal.'];
       $c = dkKonteks($k, $idc, $visitID);
       if (!$c) return ['status' => 'error', 'message' => 'Kunjungan tidak ditemukan.'];
       $nik = preg_replace('/\D/', '', (string) $c['patient_nik']);
       $balita = $c['umur'] !== null && $c['umur'] < 5;
       [$code, $res, $err] = $balita
-         ? dkHttp(dkToken(), 'GET', 'data-balita', ['nik' => $nik, 'tanggal_ukur' => $c['visit_date']])
-         : dkHttp(dkToken(), 'GET', 'data-pasien-dewasa', ['tanggal_periksa' => $c['visit_date'], 'no_periksa' => $visitID, 'nik' => $nik]);
+         ? dkHttp($k, $idc, 'GET', 'balita', ['nik' => $nik])
+         : dkHttp($k, $idc, 'GET', 'dewasa', ['tanggal_periksa' => $c['visit_date'], 'no_periksa' => $visitID, 'nik' => $nik]);
       $ok = dkOk($code, $res);
       $pesan = $ok ? (string) ($res['message'] ?? 'OK') : dkPesan($code, $res, (string) $err);
       dkLog($k, $idc, $visitID, 'get', $code, $ok, $pesan);
       if (!$ok) return ['status' => 'error', 'message' => $pesan];
-      return empty($res['data'])
+      $ada = $balita ? dkCariUkur($res['data'] ?? [], (string) $c['visit_date']) !== null : !empty($res['data']);
+      return !$ada
          ? ['status' => 'tidak_ada', 'message' => 'Belum ada di Dinkes.']
          : ['status' => 'ada', 'message' => 'Sudah terkirim ke Dinkes.'];
    } catch (Throwable $e) {
@@ -444,7 +434,7 @@ function dkCekRemote(mysqli $k, int $idc, string $visitID): array
 function dkKirimLama(mysqli $k, int $idc, string $dari, string $sampai, int $limit = 20): array
 {
    try {
-      if (dkPuskesClinic($k, $idc) <= 0 || dkToken() === '') {
+      if (dkPuskesClinic($k, $idc) <= 0 || dkAuth($k, $idc) === null) {
          return ['diproses' => 0, 'terkirim' => 0, 'sisa' => 0, 'message' => 'Integrasi Dinkes tidak aktif.'];
       }
       $from = "FROM pasien_visit pv INNER JOIN visit_pemeriksaan vp ON vp.nomor_visit = pv.visit_ID

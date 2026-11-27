@@ -1350,6 +1350,17 @@ session_write_close();
     }
 
     // ---------------- tabel ----------------
+    // Dinkes: balita (< 5 th pada tanggal kunjungan) / dewasa; status dari dinkes_kirim.dk_status
+    const DK_LABEL = { terkirim: ['Terkirim', 'success'], gagal: ['Gagal', 'danger'], belum: ['Menunggu', 'warning'], dilewati: ['Dilewati', 'secondary'], hapus_gagal: ['Hapus gagal', 'danger'] };
+    function dinkesAksiHtml(row) {
+      const th = parseInt(umur(row.patient_datebirth, row.visit_date), 10), balita = th < 5 || /bln|hr/.test(umur(row.patient_datebirth, row.visit_date));
+      const jenis = balita ? 'balita' : 'dewasa', st = DK_LABEL[row.dk_status];
+      const badge = st ? `<span class="badge bg-${st[1]}-subtle text-${st[1]} ms-1">${st[0]}</span>` : '<span class="badge bg-secondary-subtle text-secondary ms-1">Belum dikirim</span>';
+      return `<li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item dk-kirim-btn" href="javascript:;" data-visit="${esc(row.visit_ID)}" data-jenis="${jenis}"><i class="fas fa-paper-plane me-2 text-primary"></i>${row.dk_status === 'terkirim' ? 'Kirim ulang' : 'Kirim'} Dinkes ${jenis}${badge}</a></li>
+          <li><a class="dropdown-item dk-cek-btn" href="javascript:;" data-visit="${esc(row.visit_ID)}"><i class="fas fa-magnifying-glass me-2 text-info"></i>Cek status di Dinkes</a></li>`;
+    }
+
     function aksiHtml(row) {
       const selesai = row.visit_status === 4 || row.visit_status === 3, batal = row.visit_status === 99;
       const sudahTtd = !!row.signature_path, sudahFoto = !!row.ada_foto;
@@ -1363,6 +1374,7 @@ session_write_close();
           <li><hr class="dropdown-divider"></li>
           <li><a class="dropdown-item dok-btn" href="javascript:;" data-visit="${esc(row.visit_ID)}" data-jenis="sep">${row.ada_sep ? '<i class="fas fa-file-circle-check me-2 text-success"></i>Lihat SEP' : '<i class="fas fa-file-arrow-up me-2 text-info"></i>Upload SEP'}</a></li>
           <li><a class="dropdown-item dok-btn" href="javascript:;" data-visit="${esc(row.visit_ID)}" data-jenis="fkpp">${row.ada_fkpp ? '<i class="fas fa-file-circle-check me-2 text-success"></i>Lihat FKPP' : '<i class="fas fa-file-arrow-up me-2 text-info"></i>Upload FKPP'}</a></li>
+          ${!batal ? dinkesAksiHtml(row) : ''}
           ${!selesai && !batal ? `<li><hr class="dropdown-divider"></li>
           <li><a class="dropdown-item btn-reschedule" href="javascript:;" data-id="${row.id_visit}" data-doctor="${esc(row.id_doctor)}"><i class="fas fa-user-md me-2 text-dark"></i>Ganti dokter</a></li>
           <li><a class="dropdown-item edit-visit-btn" href="javascript:;" data-visit="${esc(row.visit_ID)}" data-date="${esc(row.visit_date)}" data-patient="${esc(row.id_patient)}" data-time="${esc(row.visit_time)}"><i class="fas fa-clock me-2 text-warning"></i>Ubah waktu</a></li>
@@ -1507,6 +1519,21 @@ session_write_close();
       if ($('.modal.show').length || $('#periodeTable .dropdown-menu.show').length || (window.Swal && Swal.isVisible())) return;
       window.table.ajax.reload(null, false);
     }, 15000);
+
+    // 🔹 Kirim manual / cek status ke Dinkes
+    $(document).on('click', '.dk-kirim-btn, .dk-cek-btn', function() {
+      const kirim = this.classList.contains('dk-kirim-btn'), visit = $(this).data('visit'), jenis = $(this).data('jenis');
+      Swal.fire({ title: kirim ? 'Mengirim ke Dinkes…' : 'Mengecek ke Dinkes…', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      $.ajax({ url: 'controller/visit/dinkesKirimController', type: 'POST', dataType: 'json', data: { aksi: kirim ? 'kirim' : 'cek', visit } })
+        .done(r => {
+          const h = r.hasil || {}, ok = ['terkirim', 'ada'].includes(h.status);
+          const perluForm = kirim && jenis === 'balita' && h.status === 'belum' && /Data Dinkes Balita/.test(h.message || '');
+          Swal.fire({ icon: ok ? 'success' : 'warning', title: ok ? 'Berhasil' : 'Perhatian', text: h.message || '', showCancelButton: perluForm, confirmButtonText: perluForm ? 'Isi Data Balita' : 'OK', cancelButtonText: 'Tutup' })
+            .then(x => { if (perluForm && x.isConfirmed) location.href = 'module/admin/form_dinkes_balita?no=' + encodeURIComponent(visit) + '&rme=a'; });
+        })
+        .fail(x => Swal.fire('Gagal', (x.responseJSON && x.responseJSON.message) || 'Tidak dapat menghubungi server.', 'error'))
+        .always(() => window.table.ajax.reload(null, false));
+    });
 
     // 🔹 Aktifkan kembali kunjungan batal (RME/CPPT terbuka lagi)
     $(document).on('click', '.aktif-kembali-btn', function() {
