@@ -75,10 +75,11 @@ function rgDaftar(mysqli $db, int $idc, array $in): array
          (COALESCE(pv.file_spp, '') <> '' OR COALESCE(pv.sep_file, '') <> '') AS ada_sep,
          (COALESCE(pv.file_fkpp, '') <> '' OR COALESCE(pv.fkpp_file, '') <> '') AS ada_fkpp,
          ms.patient_name, ms.nomor_rm, ms.patient_gender, ms.patient_datebirth, ms.patient_bpjs, ms.face_image AS patient_face_image,
-         pr.provider_name
+         pr.provider_name, dk.dk_status
       FROM pasien_visit pv
       LEFT JOIN ms_patient ms ON ms.id_patient = pv.id_patient
       LEFT JOIN ms_provider pr ON pr.id_provider = pv.id_provider
+      LEFT JOIN dinkes_kirim dk ON dk.id_customer = pv.id_customer AND dk.visit_ID = pv.visit_ID
       WHERE $where AND " . RG_TAB[$tab] . "
       ORDER BY pv.visit_date ASC, pv.id_poli ASC, pv.id_doctor ASC, LEFT(pv.visit_antrian, 1) ASC,
          CAST(REGEXP_SUBSTR(pv.visit_antrian, '[0-9]+$') AS UNSIGNED) ASC, pv.id_visit ASC
