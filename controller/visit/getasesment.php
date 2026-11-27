@@ -9,7 +9,7 @@ if (!$nomor_visit) {
 }
 
 // ambil data pemeriksaan
-$stmt = $koneksi->prepare("SELECT * FROM visit_pemeriksaan WHERE nomor_visit=?");
+$stmt = $koneksi->prepare("SELECT visit_ID AS nomor_visit, id_patient AS nomor_rm, kondisi_masuk, tekanan_darah, suhu, nadi, respirasi, tinggi_badan AS tinggi, berat_badan AS berat, bmi, bmi_keterangan AS bmi_ket, pemeriksaan_fisik, diagnosa, anamnesa, NULL AS analyst, NULL AS riwayat_konsumsi FROM pasien_visit WHERE visit_ID=?");
 $stmt->bind_param("s", $nomor_visit);
 $stmt->execute();
 $result = $stmt->get_result();
