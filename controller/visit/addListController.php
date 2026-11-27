@@ -109,27 +109,9 @@ function createData()
       }
       $stmt1->close();
 
-      // Simpan ke visit_pemeriksaan
-      $query2 = "INSERT INTO visit_pemeriksaan 
-           (nomor_rm, nomor_visit, kondisi_masuk, tekanan_darah, suhu, nadi, respirasi, tinggi, berat, created_at, bmi, bmi_ket) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?)";
-
-      $stmt2 = $koneksi->prepare($query2);
-
-      $stmt2->bind_param(
-         "ssssdiiddds",   // ✅ 11 format sesuai 11 variabel
-         $nomor_rm,     // varchar → s
-         $visit_ID,       // varchar → s
-         $kondisi_masuk,  // varchar → s
-         $tekanan_darah,  // varchar → s
-         $suhu,           // decimal → d
-         $nadi,           // int → i
-         $respirasi,      // int → i
-         $tinggi,         // decimal → d
-         $berat,          // decimal → d
-         $bmi,            // float → d
-         $bmi_ket         // varchar → s
-      );
+      // Simpan vital sign ke pasien_visit
+      $stmt2 = $koneksi->prepare("UPDATE pasien_visit SET kondisi_masuk=?, tekanan_darah=?, suhu=?, nadi=?, respirasi=?, tinggi_badan=?, berat_badan=?, bmi=?, bmi_keterangan=? WHERE visit_ID=?");
+      $stmt2->bind_param("ssssssssss", $kondisi_masuk, $tekanan_darah, $suhu, $nadi, $respirasi, $tinggi, $berat, $bmi, $bmi_ket, $visit_ID);
       if (!$stmt2->execute()) {
          throw new Exception("Gagal simpan vital sign: " . $stmt2->error);
       }

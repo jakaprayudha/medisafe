@@ -22,42 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
    $koneksi->begin_transaction();
    try {
       // 1. Update pemeriksaan perawat/dokter
-      $stmt = $koneksi->prepare("UPDATE visit_pemeriksaan SET 
-      kondisi_masuk=?, 
-      tekanan_darah=?, 
-      suhu=?, 
-      nadi=?, 
-      respirasi=?, 
-      tinggi=?, 
-      berat=?, 
-      analyst=?, 
-      riwayat_konsumsi=?, 
-      pemeriksaan_fisik=?, 
-      bmi=?, 
-      bmi_ket=?,
-      diagnosa =?,
-      anamnesa =?
-WHERE nomor_rm=? AND nomor_visit=?");
-
-      $stmt->bind_param(
-         "ssssdddsssssssss",
-         $kondisi_masuk,     // s
-         $tekanan_darah,     // s
-         $suhu,              // s
-         $nadi,              // s
-         $respirasi,         // d
-         $tinggi,            // d
-         $berat,             // d
-         $analyst,           // s
-         $riwayat_konsumsi,  // s
-         $pemeriksaan_fisik, // s
-         $bmi,               // d
-         $bmi_ket,           // s
-         $diagnosa,
-         $anamnesa_text,
-         $nomor_rm,          // s (WHERE)
-         $nomor_visit        // s (WHERE)
-      );
+      // analyst & riwayat_konsumsi tidak punya kolom di pasien_visit (prod) -> tidak disimpan
+      $stmt = $koneksi->prepare("UPDATE pasien_visit SET kondisi_masuk=?, tekanan_darah=?, suhu=?, nadi=?, respirasi=?, tinggi_badan=?, berat_badan=?, pemeriksaan_fisik=?, bmi=?, bmi_keterangan=?, diagnosa=?, anamnesa=? WHERE visit_ID=?");
+      $stmt->bind_param("sssssssssssss", $kondisi_masuk, $tekanan_darah, $suhu, $nadi, $respirasi, $tinggi, $berat, $pemeriksaan_fisik, $bmi, $bmi_ket, $diagnosa, $anamnesa_text, $nomor_visit);
 
       $stmt->execute();
       $stmt->close();

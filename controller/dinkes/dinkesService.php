@@ -42,7 +42,6 @@ function dkAuth(mysqli $k, int $idc, bool $segar = false): ?array
    return $t === '' ? null : ($cache[$idc] = ['username' => $u, 'token' => $t]);
 }
 
-/** Puskesmas faskes dari setting_clinic.puskes_id. 0 = faskes ini tidak ikut integrasi Dinkes. */
 function dkPuskesClinic(mysqli $k, int $idc): int
 {
    $st = $k->prepare("SELECT puskes_id FROM setting_clinic WHERE id_customer=? LIMIT 1");
@@ -120,10 +119,16 @@ function dkKonteks(mysqli $k, int $idc, string $visitID): ?array
 {
    $st = $k->prepare("SELECT pv.id_visit, pv.visit_ID, pv.visit_date, pv.diagnosa AS dx_visit,
          mp.id_patient, mp.patient_nik, mp.patient_kk, mp.patient_name, mp.patient_gender, mp.patient_datebirth, mp.patient_place,
-         mp.patient_address, mp.patient_provinsi, mp.patient_kabupaten, mp.patient_kecamatan, mp.patient_kelurahan,
-         pv.diagnosa AS dx_periksa, pv.anamnesa, pv.tekanan_darah, pv.suhu, pv.nadi, pv.respirasi, pv.tinggi_badan AS tinggi, pv.berat_badan AS berat, pv.bmi, NULL AS bmi_ket
+         COALESCE(NULLIF(TRIM(mp.patient_address),''), f.faskes_address) AS patient_address,
+         COALESCE(NULLIF(TRIM(mp.patient_provinsi),''), f.faskes_prov) AS patient_provinsi,
+         COALESCE(NULLIF(TRIM(mp.patient_kabupaten),''), f.faskes_city) AS patient_kabupaten,
+         COALESCE(NULLIF(TRIM(mp.patient_kecamatan),''), f.faskes_district) AS patient_kecamatan,
+         COALESCE(NULLIF(TRIM(mp.patient_kelurahan),''), f.faskes_village) AS patient_kelurahan,
+         pv.diagnosa AS dx_periksa, pv.anamnesa, pv.tekanan_darah, pv.suhu, pv.nadi, pv.respirasi, pv.tinggi_badan AS tinggi, pv.berat_badan AS berat, pv.bmi, pv.bmi_keterangan AS bmi_ket
       FROM pasien_visit pv
       INNER JOIN ms_patient mp ON mp.id_patient = pv.id_patient
+      LEFT JOIN setting_clinic sc ON sc.id_customer = pv.id_customer
+      LEFT JOIN ms_faskes f ON f.id_clinic = sc.id
       WHERE pv.visit_ID = ? AND pv.id_customer = ? LIMIT 1");
    $st->bind_param('si', $visitID, $idc);
    $st->execute();
