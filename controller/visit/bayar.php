@@ -62,6 +62,9 @@ try {
    $kena = $st->affected_rows;
    $st->close();
    if ($kena < 1) balas(409, ['status' => 'error', 'message' => 'Kunjungan ini sudah lunas.']);
+   require_once __DIR__ . '/../../utility/visitLog.php';
+   logKunjungan($koneksi, 'bayar', $no, 'No. transaksi ' . $nomor . ' · ' . $metode . ' · Rp' . number_format($total, 0, ',', '.'),
+      ['status_bayar' => (int) $kv['status_bayar']], ['status_bayar' => 1, 'metode_bayar' => $metode, 'nomor_transaksi' => $nomor, 'total' => $total, 'bayar' => $bayar, 'kembalian' => $kembalian], 'Kasir');
 } catch (Throwable $e) {
    error_log('[visit/bayar] ' . $e->getMessage());
    balas(500, ['status' => 'error', 'message' => 'Gagal menyimpan pembayaran.']);

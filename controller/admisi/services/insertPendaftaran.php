@@ -285,6 +285,10 @@ if ($type == "BPJS") {
         ];
     }
 }
+if (!empty($response['success']) && !empty($visit_ID)) {
+    require_once __DIR__ . '/../../../utility/visitLog.php';
+    logKunjungan($koneksi, 'daftar', (string) $visit_ID, 'Poli ' . ($nmPoli ?? '-') . ' · ' . ($nmDokter ?? '-') . ' · ' . ($response['type'] ?? ''), null, null, $created_user ?? null);
+}
 echo json_encode($response);
 function generateVisitID($koneksi, $idcustomer){
     do {

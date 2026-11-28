@@ -159,6 +159,8 @@ try {
     $updateBed->close();
 
     $koneksi->commit();
+    require_once __DIR__ . '/../../utility/visitLog.php';
+    logKunjungan($koneksi, 'daftar', (string) $visit_ID, 'Registrasi langsung rawat inap · diagnosa awal: ' . $diagnosa_awal, null, ['id_room' => $id_room, 'id_bed' => $id_bed], 'Rawat Inap');
 
     echo json_encode([
         'status' => 'success',

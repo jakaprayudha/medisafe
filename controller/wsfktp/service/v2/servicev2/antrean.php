@@ -280,6 +280,8 @@ if ($cek->num_rows > 0) {
             $stmt->execute();
             $dataAntrian = $stmt->get_result()->fetch_assoc();
             $koneksi->commit();
+            require_once __DIR__ . '/../../../../../utility/visitLog.php';
+            logKunjungan($koneksi, 'daftar', (string) $visit_ID, 'Ambil antrean Mobile JKN · ' . $nmPoli . ' · ' . $namaDokter . ' · antrean ' . $nomorantrean, null, null, 'MobileJKN');
             echo json_encode([
                 "response" => [
                     "nomorantrean" => $nomorantrean,

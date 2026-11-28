@@ -116,6 +116,8 @@ if ($data['created_user'] == "MobileJKN") {
                 'result' => $result,
             ];
             updateStatus($visit_id, $idcustomer);
+            require_once __DIR__ . '/../../../utility/visitLog.php';
+            logKunjungan($koneksi, 'checkin', (string) $visit_id, 'Check-in + pendaftaran PCare · ' . $nmDokter, ['visit_status' => 10], ['visit_status' => 0, 'id_doctor' => $nmDokter, 'visit_time' => $jamSekarang]);
         } else {
             $response = [
                 'success' => false,

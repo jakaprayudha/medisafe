@@ -135,6 +135,12 @@
             <span class="hide-menu">Gabung RME</span>
          </a>
       </li>
+      <li class="sidebar-item">
+         <a class="sidebar-link" href="module/admin/log_kunjungan" aria-expanded="false">
+            <iconify-icon icon="mdi:clipboard-text-clock-outline"></iconify-icon>
+            <span class="hide-menu">Log Kunjungan</span>
+         </a>
+      </li>
 
       <li class="nav-small-cap">
          <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>

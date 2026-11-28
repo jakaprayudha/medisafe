@@ -86,6 +86,9 @@ if ($hasil1 and $hasil2) {
         'peringatan' => $msg !== '' ? 'Pendaftaran di PCare mungkin belum terhapus' . $msg . ' Hapus manual di PCare bila perlu.' : null,
     ];
     batalCatat($koneksi, $kunj, $klinis, $alasan, $provider, $hasilBpjs);
+    require_once __DIR__ . '/../../../utility/visitLog.php';
+    logKunjungan($koneksi, 'batal', $kunj, 'Alasan: ' . $alasan . ($hasilBpjs !== '' ? ' · BPJS: ' . $hasilBpjs : '') . ($klinis['rincian'] ? ' · data klinis: ' . implode('; ', $klinis['rincian']) : ''),
+        ['visit_status' => (int) $kunj['visit_status']], ['visit_status' => 99]);
 } else {
     $response = [
         'success' => false,

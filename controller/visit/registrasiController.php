@@ -138,6 +138,8 @@ function updateData()
       echo json_encode(['status' => 'error', 'message' => 'Tidak ada data diupdate.']);
       return;
    }
+   require_once __DIR__ . '/../../utility/visitLog.php';
+   $snapLama = logKunjunganSnapshot($koneksi, 'id_visit', $id, (int) $ID_CUSTOMER);
    $values[] = $id;
    $values[] = $ID_CUSTOMER;
    $stmt = $koneksi->prepare("UPDATE pasien_visit SET " . implode(', ', $fields) . " WHERE id_visit = ? AND id_customer = ?");
@@ -145,6 +147,11 @@ function updateData()
    $ok = $stmt->execute();
    $n = $stmt->affected_rows;
    $stmt->close();
+   if ($ok && $n > 0 && $snapLama) {
+      $baru = [];
+      foreach (['id_doctor', 'id_poli', 'visit_notes'] as $f) if (isset($put[$f])) $baru[$f] = (string) $put[$f];
+      logKunjungan($koneksi, 'ubah', $snapLama, 'Edit data kunjungan', array_intersect_key($snapLama, $baru), $baru);
+   }
    echo json_encode($ok && $n >= 0 ? ['status' => 'success', 'message' => 'Data berhasil diperbarui.'] : ['status' => 'error', 'message' => 'Update gagal.']);
 }
 
@@ -166,12 +173,15 @@ function deleteData()
    require_once __DIR__ . '/../../utility/visitGuard.php';
    $kunciSelesai = bolehBukaKunciSelesai() ? '' : ' AND visit_status NOT IN (3,4)';
    $dkVid = dkVisitIdDikirim($koneksi, (int) $ID_CUSTOMER, $id); // Dinkes
+   require_once __DIR__ . '/../../utility/visitLog.php';
+   $snapHapus = logKunjunganSnapshot($koneksi, 'id_visit', $id); // data kunjungan sebelum dihapus
    $stmt = $koneksi->prepare("DELETE FROM pasien_visit WHERE id_visit = ? AND id_customer = ?" . $kunciSelesai);
    $stmt->bind_param('ii', $id, $ID_CUSTOMER);
    $stmt->execute();
    $n = $stmt->affected_rows;
    $stmt->close();
    if ($n > 0 && $dkVid) dkHapusVisit($koneksi, (int) $ID_CUSTOMER, $dkVid); // Dinkes
+   if ($n > 0 && $snapHapus) logKunjungan($koneksi, 'hapus', $snapHapus, 'Kunjungan dihapus permanen dari menu Registrasi poliklinik', $snapHapus);
    if ($n > 0) error_log("[registrasiController] kunjungan #$id dihapus oleh " . ($_SESSION['username'] ?? $ROLE));
    echo json_encode($n > 0 ? ['status' => 'success', 'message' => 'Data berhasil dihapus.']
       : ['status' => 'error', 'message' => 'Data tidak ditemukan atau sudah dilayani (tidak dapat dihapus).']);
