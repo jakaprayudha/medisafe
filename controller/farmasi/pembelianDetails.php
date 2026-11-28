@@ -1,13 +1,15 @@
 <?php
 include '../../database/connect.php';
 require_once __DIR__ . '/../../utility/activityLog.php';
+require_once __DIR__ . '/../../utility/pembelianGuard.php';
 
-/** Log item pembelian (modul stok). Tabel ini belum punya id_customer -> faskes diambil dari session. */
+/** Baris pharmacy_buy_detail milik faskes session (data lama tanpa faskes: hanya superadmin), atau null. */
 function pbAmbil($id): ?array
 {
    global $koneksi;
-   $st = $koneksi->prepare("SELECT * FROM pharmacy_buy_detail WHERE id_buy = ? LIMIT 1");
-   $st->bind_param('s', $id);
+   [$w, $t, $p] = pembelianFilter();
+   $st = $koneksi->prepare("SELECT * FROM pharmacy_buy_detail WHERE id_buy = ? AND $w LIMIT 1");
+   $st->bind_param('s' . $t, $id, ...$p);
    $st->execute();
    $r = $st->get_result()->fetch_assoc();
    $st->close();
@@ -23,6 +25,8 @@ function pbLog(string $aksi, $id, ?array $lama, ?array $baru, string $ket): void
    }
    logAktivitas($koneksi, 'stok', $aksi, ['tipe' => 'pembelian_item', 'id' => $id, 'label' => trim(($r['buy_item'] ?? '') . ' × ' . ($r['buy_qty'] ?? '') . ' (' . ($r['order_number'] ?? '') . ')', ' ·×()')], $ket, $lama, $baru);
 }
+pembelianWajibLogin();
+pembelianSiapkan($koneksi);
 $method = $_SERVER['REQUEST_METHOD'];
 switch ($method) {
    case 'POST':
@@ -65,6 +69,12 @@ function createData()
       ]);
       exit;
    }
+   // item hanya boleh ditambahkan ke order pembelian milik faskes ini
+   if (!pembelianOrderMilik($koneksi, (string) ($_POST['order_number'] ?? ''))) {
+      http_response_code(404);
+      echo json_encode(['status' => 'error', 'message' => 'Order pembelian tidak ditemukan di faskes ini.']);
+      exit;
+   }
 
    // Ambil semua field yang valid untuk tabel pharmacy_buy_detail
    $allowedFields = [
@@ -77,8 +87,8 @@ function createData()
       'buy_notes'
    ];
 
-   $fields = ['buy_number']; // tambahkan buy_number
-   $values = [generateDoctorNumber($koneksi)];
+   $fields = ['buy_number', 'id_customer']; // nomor + faskes session
+   $values = [generateDoctorNumber($koneksi), (string) pembelianIdc()];
 
    foreach ($allowedFields as $f) {
       if (isset($_POST[$f])) {
@@ -156,14 +166,17 @@ function getData()
    // baca parameter GET no
    $no = $_GET['no'] ?? '';
 
-   // kalau ada parameter no, filter query-nya
+   // kalau ada parameter no, filter query-nya (selalu dibatasi faskes session)
+   [$w, $t, $p] = pembelianFilter();
    if (!empty($no)) {
-      $query = "SELECT * FROM pharmacy_buy_detail WHERE order_number = '" . mysqli_real_escape_string($koneksi, $no) . "' ORDER BY id_buy DESC";
+      $st = $koneksi->prepare("SELECT * FROM pharmacy_buy_detail WHERE order_number = ? AND $w ORDER BY id_buy DESC");
+      $st->bind_param('s' . $t, $no, ...$p);
    } else {
-      $query = "SELECT * FROM pharmacy_buy_detail ORDER BY id_buy DESC";
+      $st = $koneksi->prepare("SELECT * FROM pharmacy_buy_detail WHERE $w ORDER BY id_buy DESC");
+      $st->bind_param($t, ...$p);
    }
-
-   $result = mysqli_query($koneksi, $query);
+   $st->execute();
+   $result = $st->get_result();
 
    if (!$result) {
       http_response_code(500);
@@ -188,36 +201,8 @@ function getData()
 // Function untuk Read User berdasarkan ID
 function  getID($iduser)
 {
-   global $koneksi;
-
-   // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM pharmacy_buy_detail WHERE id_buy = ?";
-
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $iduser); // Bind parameter iduser
-      $stmt->execute();
-      $result = $stmt->get_result();
-
-      if ($result->num_rows > 0) {
-         $data = $result->fetch_assoc();
-         echo json_encode([
-            'status' => 'success',
-            'data' => $data
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Data tidak ditemukan.'
-         ]);
-      }
-
-      $stmt->close();
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
-   }
+   $data = pbAmbil($iduser);
+   echo json_encode($data ? ['status' => 'success', 'data' => $data] : ['status' => 'error', 'message' => 'Data tidak ditemukan.']);
 }
 
 
@@ -262,6 +247,17 @@ function updateData()
 
    $query = "UPDATE pharmacy_buy_detail SET " . implode(',', $fields) . " WHERE id_buy=?";
    $pbLama = pbAmbil($id);
+   if (!$pbLama) {
+      http_response_code(404);
+      echo json_encode(['status' => 'error', 'message' => 'Data tidak ditemukan.']);
+      return;
+   }
+   // tidak boleh dipindah ke order pembelian faskes lain
+   if (isset($_PUT['order_number']) && $_PUT['order_number'] !== $pbLama['order_number'] && !pembelianOrderMilik($koneksi, (string) $_PUT['order_number'])) {
+      http_response_code(404);
+      echo json_encode(['status' => 'error', 'message' => 'Order pembelian tujuan tidak ditemukan di faskes ini.']);
+      return;
+   }
    $stmt = $koneksi->prepare($query);
 
    if ($stmt) {
@@ -300,6 +296,11 @@ function deleteData()
 
    // Query untuk menghapus data user
    $pbLama = pbAmbil($id);
+   if (!$pbLama) {
+      http_response_code(404);
+      echo json_encode(['status' => 'error', 'message' => 'Data tidak ditemukan.']);
+      exit;
+   }
    $query = "DELETE FROM pharmacy_buy_detail WHERE id_buy = ?";
 
    if ($stmt = $koneksi->prepare($query)) {

@@ -1,13 +1,33 @@
 <?php
 require '../../database/connect.php';
-$no = $_GET['no'] ?? '';
+require_once __DIR__ . '/../../utility/pembelianGuard.php';
+// dulu: nomor order langsung ditempel ke SQL (SQL injection), tanpa batas faskes, kop klinik = faskes pertama di tabel
+$no = trim((string) ($_GET['no'] ?? ''));
+$idcStruk = pembelianIdc();
+pembelianSiapkan($koneksi);
 
-$checkklinik = mysqli_query($koneksi, "SELECT * FROM setting_clinic LIMIT 1");
-$dataklinik = mysqli_fetch_array($checkklinik);
+$st = $koneksi->prepare("SELECT * FROM setting_clinic WHERE id_customer = ? LIMIT 1");
+$st->bind_param('i', $idcStruk);
+$st->execute();
+$dataklinik = $st->get_result()->fetch_assoc() ?: [];
+$st->close();
 
-$order = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM pharmacy_order_buy WHERE order_number='$no' LIMIT 1"));
+[$wStruk, $tStruk, $pStruk] = pembelianFilter();
+$st = $koneksi->prepare("SELECT * FROM pharmacy_order_buy WHERE order_number = ? AND $wStruk LIMIT 1");
+$st->bind_param('s' . $tStruk, $no, ...$pStruk);
+$st->execute();
+$order = $st->get_result()->fetch_assoc();
+$st->close();
+if (!$order) {
+   http_response_code(404);
+   exit('Order pembelian tidak ditemukan di faskes ini.');
+}
 
-$details = mysqli_query($koneksi, "SELECT * FROM pharmacy_buy_detail WHERE order_number='$no'");
+$st = $koneksi->prepare("SELECT * FROM pharmacy_buy_detail WHERE order_number = ? AND $wStruk");
+$st->bind_param('s' . $tStruk, $no, ...$pStruk);
+$st->execute();
+$details = $st->get_result();
+$st->close();
 ?>
 <!DOCTYPE html>
 <html lang="id">

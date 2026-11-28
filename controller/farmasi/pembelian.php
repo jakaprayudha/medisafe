@@ -1,13 +1,15 @@
 <?php
 include '../../database/connect.php';
 require_once __DIR__ . '/../../utility/activityLog.php';
+require_once __DIR__ . '/../../utility/pembelianGuard.php';
 
-/** Log pembelian (modul stok). Tabel ini belum punya id_customer -> faskes diambil dari session. */
+/** Baris pharmacy_order_buy milik faskes session (data lama tanpa faskes: hanya superadmin), atau null. */
 function pbAmbil($id): ?array
 {
    global $koneksi;
-   $st = $koneksi->prepare("SELECT * FROM pharmacy_order_buy WHERE id_order_buy = ? LIMIT 1");
-   $st->bind_param('s', $id);
+   [$w, $t, $p] = pembelianFilter();
+   $st = $koneksi->prepare("SELECT * FROM pharmacy_order_buy WHERE id_order_buy = ? AND $w LIMIT 1");
+   $st->bind_param('s' . $t, $id, ...$p);
    $st->execute();
    $r = $st->get_result()->fetch_assoc();
    $st->close();
@@ -23,6 +25,8 @@ function pbLog(string $aksi, $id, ?array $lama, ?array $baru, string $ket): void
    }
    logAktivitas($koneksi, 'stok', $aksi, ['tipe' => 'pembelian', 'id' => $id, 'label' => trim(($r['order_number'] ?? '') . ' · ' . ($r['order_market'] ?? ''), ' ·×()')], $ket, $lama, $baru);
 }
+pembelianWajibLogin();
+pembelianSiapkan($koneksi);
 $method = $_SERVER['REQUEST_METHOD'];
 switch ($method) {
    case 'POST':
@@ -73,8 +77,8 @@ function createData()
       'order_description'
    ];
 
-   $fields = ['order_number']; // tambahkan order_number
-   $values = [generateDoctorNumber($koneksi)];
+   $fields = ['order_number', 'id_customer']; // nomor + faskes session
+   $values = [generateDoctorNumber($koneksi), (string) pembelianIdc()];
 
    foreach ($allowedFields as $f) {
       if (isset($_POST[$f])) {
@@ -149,8 +153,11 @@ function getData()
 {
    global $koneksi;
 
-   $query = "SELECT * FROM pharmacy_order_buy ORDER BY order_date DESC";
-   $result = mysqli_query($koneksi, $query);
+   [$w, $t, $p] = pembelianFilter();
+   $st = $koneksi->prepare("SELECT * FROM pharmacy_order_buy WHERE $w ORDER BY order_date DESC");
+   $st->bind_param($t, ...$p);
+   $st->execute();
+   $result = $st->get_result();
 
    if (!$result) {
       http_response_code(500);
@@ -178,36 +185,8 @@ function getData()
 // Function untuk Read User berdasarkan ID
 function  getID($iduser)
 {
-   global $koneksi;
-
-   // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM pharmacy_order_buy WHERE id_order_buy = ?";
-
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $iduser); // Bind parameter iduser
-      $stmt->execute();
-      $result = $stmt->get_result();
-
-      if ($result->num_rows > 0) {
-         $data = $result->fetch_assoc();
-         echo json_encode([
-            'status' => 'success',
-            'data' => $data
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Data tidak ditemukan.'
-         ]);
-      }
-
-      $stmt->close();
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
-   }
+   $data = pbAmbil($iduser);
+   echo json_encode($data ? ['status' => 'success', 'data' => $data] : ['status' => 'error', 'message' => 'Data tidak ditemukan.']);
 }
 
 
@@ -248,6 +227,11 @@ function updateData()
 
    $query = "UPDATE pharmacy_order_buy SET " . implode(',', $fields) . " WHERE id_order_buy=?";
    $pbLama = pbAmbil($id);
+   if (!$pbLama) {
+      http_response_code(404);
+      echo json_encode(['status' => 'error', 'message' => 'Data tidak ditemukan.']);
+      return;
+   }
    $stmt = $koneksi->prepare($query);
 
    if ($stmt) {
@@ -286,6 +270,11 @@ function deleteData()
 
    // Query untuk menghapus data user
    $pbLama = pbAmbil($id);
+   if (!$pbLama) {
+      http_response_code(404);
+      echo json_encode(['status' => 'error', 'message' => 'Data tidak ditemukan.']);
+      exit;
+   }
    $query = "DELETE FROM pharmacy_order_buy WHERE id_order_buy = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
