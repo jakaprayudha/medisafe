@@ -11,6 +11,7 @@
  */
 require_once __DIR__ . '/../../database/connect.php';
 require_once __DIR__ . '/../../utility/security.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 requireRole(['superadmin', 'administrator']);
@@ -85,12 +86,19 @@ if ($method !== 'POST') lbJson('error', 'Method tidak didukung.', null, 405);
 
 $aksi = (string) ($_POST['aksi'] ?? 'simpan');
 $id = (int) ($_POST['id_lab'] ?? 0);
+$lbLama = $id > 0 ? logAmbilBaris($koneksi, 'laboratorium_detail', 'id_lab', $id) : null;
+function lbLog(mysqli $k, int $id, ?array $lama, string $ket, ?string $aksi = null): void
+{
+   $r = $lama ?? logAmbilBaris($k, 'laboratorium_detail', 'id_lab', $id) ?? [];
+   logBaris($k, 'master', 'laboratorium_detail', 'id_lab', $id, $lama, ['tipe' => 'lab', 'label' => trim(($r['kode'] ?? '') . ' · ' . ($r['assemen'] ?? ''), ' ·')], $ket, $aksi);
+}
 
 /* --------------------------- status ----------------------------- */
 if ($aksi === 'status') {
    if ($id <= 0) lbJson('error', 'ID tidak valid.', null, 422);
    $s = (int) (($_POST['status'] ?? '0') === '1');
    lbExec($koneksi, 'UPDATE laboratorium_detail SET status = ? WHERE id_lab = ?', 'ii', [$s, $id]);
+   if ($lbLama) lbLog($koneksi, $id, $lbLama, $s ? 'Pemeriksaan lab diaktifkan' : 'Pemeriksaan lab dinonaktifkan', $s ? 'aktifkan' : 'nonaktifkan');
    lbJson('success', $s ? 'Pemeriksaan diaktifkan.' : 'Pemeriksaan dinonaktifkan.');
 }
 
@@ -108,9 +116,10 @@ if ($aksi === 'hapus') {
       $koneksi->rollback();
       lbJson('error', 'Parameter pemeriksaan ini sudah punya hasil pasien sehingga tidak bisa dihapus. Nonaktifkan saja.', null, 409);
    }
-   lbExec($koneksi, 'DELETE FROM laboratorium_item WHERE kode = ?', 's', [$row['kode']]);
+   $nParam = lbExec($koneksi, 'DELETE FROM laboratorium_item WHERE kode = ?', 's', [$row['kode']]);
    lbExec($koneksi, 'DELETE FROM laboratorium_detail WHERE id_lab = ?', 'i', [$id]);
    $koneksi->commit();
+   lbLog($koneksi, $id, $lbLama, "Pemeriksaan lab dihapus (beserta $nParam parameter)");
    lbJson('success', 'Pemeriksaan dihapus.');
 }
 
@@ -133,6 +142,7 @@ if ($id > 0) {
       if ($n > 0) lbJson('error', "Nama tidak bisa diganti: pemeriksaan ini sudah dipakai di $n kunjungan dan hasilnya dicari berdasarkan nama. Anda masih bisa mengubah tarif atau menonaktifkannya.", ['field' => 'assemen'], 409);
    }
    lbExec($koneksi, 'UPDATE laboratorium_detail SET assemen = ?, tarif = ? WHERE id_lab = ?', 'sii', [$assemen, $tarif, $id]);
+   lbLog($koneksi, $id, $lbLama, 'Pemeriksaan lab diubah');
    lbJson('success', 'Pemeriksaan diperbarui.');
 }
 
@@ -141,4 +151,5 @@ for ($i = 0; $i < 5; $i++) {
    if (!lbQ($koneksi, 'SELECT 1 FROM laboratorium_detail WHERE kode = ? LIMIT 1', 's', [$kode])) break;
 }
 lbExec($koneksi, 'INSERT INTO laboratorium_detail (kode, assemen, tarif, status) VALUES (?, ?, ?, 1)', 'ssi', [$kode, $assemen, $tarif]);
+lbLog($koneksi, (int) $koneksi->insert_id, null, 'Pemeriksaan lab ditambahkan');
 lbJson('success', 'Pemeriksaan ditambahkan. Lanjutkan dengan mengisi parameternya.', ['kode' => $kode]);

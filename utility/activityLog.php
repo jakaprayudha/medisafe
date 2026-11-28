@@ -28,6 +28,9 @@ const LOG_AKTIVITAS_MODUL = [
    'ranap'  => 'Rawat inap',
    'surat'  => 'Surat',
    'dokumen' => 'Dokumen & tanda tangan',
+   'master' => 'Master data',
+   'pengaturan' => 'Pengaturan faskes',
+   'import' => 'Import / upload massal',
 ];
 
 const LOG_AKTIVITAS_AKSI = [
@@ -39,6 +42,7 @@ const LOG_AKTIVITAS_AKSI = [
    'approve' => 'Approve / serahkan', 'batal_approve' => 'Batal approve', 'kirim_obat' => 'Kirim obat PCare', 'ubah_status' => 'Ubah status',
    'cetak' => 'Cetak', 'tanda_tangan' => 'Tanda tangan', 'hapus_pcare' => 'Hapus di PCare',
    'stok_masuk' => 'Stok masuk', 'stok_keluar' => 'Stok keluar', 'penyesuaian' => 'Penyesuaian stok', 'terima' => 'Terima barang', 'ubah_harga' => 'Ubah harga',
+   'import' => 'Import data', 'import_gagal' => 'Import gagal',
 ];
 
 /** Kunci yang tidak boleh masuk log. */

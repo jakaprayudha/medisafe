@@ -1,5 +1,6 @@
 <?php
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 header('Content-Type: application/json');
 $data = json_decode(file_get_contents("php://input"), true);
 
@@ -15,6 +16,33 @@ if (!$type || !$rows) {
 if (!$id_faskes) {
    echo json_encode(['status' => 'error', 'message' => 'Faskes wajib dipilih']);
    exit;
+}
+
+// id_faskes tujuan diambil dari request. Bila dipanggil dari browser yang login, hanya superadmin/administrator yang
+// boleh memilih faskes lain; peran lain dipaksa ke faskes session.
+// CATATAN: request TANPA session masih diterima (kemungkinan dipanggil layanan importjobs.medisafe.id dari server) dan
+// tetap dicatat di log dengan pelaku kosong. Bila layanan itu sudah dipastikan tidak memanggil endpoint ini, tolak
+// request tanpa session (401) untuk menutup celah import ke faskes mana pun.
+$impIdc = (int) ($_SESSION['id_customer'] ?? 0);
+if ($impIdc > 0 && !in_array($_SESSION['roles'] ?? '', ['superadmin', 'administrator'], true)) {
+   $id_faskes = $impIdc;
+}
+$id_faskes = (int) $id_faskes;
+$idBaru = [];
+
+/** Satu log ringkasan per proses import (bukan per baris; data baris tidak disimpan). */
+function impLog(mysqli $db, string $type, bool $ok, int $total, int $berhasil, array $dup, array $err, array $idBaru, int $idFaskes, string $pesan = ''): void
+{
+   $jenis = ['farmasi' => 'obat', 'visit' => 'kunjungan'][$type] ?? $type;
+   $file = $GLOBALS['data']['file_name'] ?? ($GLOBALS['data']['filename'] ?? null);
+   $contoh = array_map(fn($e) => ['baris' => $e['row'] ?? null, 'error' => $e['error'] ?? ($e['reason'] ?? '')], array_slice(array_merge($err, $dup), 0, 5));
+   $ket = $ok
+      ? "Import $jenis: $berhasil dari $total baris berhasil, " . count($dup) . ' duplikat dilewati, ' . count($err) . ' gagal'
+      : "Import $jenis gagal: $pesan";
+   logAktivitas($db, 'import', $ok ? 'import' : 'import_gagal',
+      ['tipe' => $jenis, 'id' => $file, 'label' => trim($jenis . ' · ' . ($file ?? ''), ' ·')], $ket, null,
+      ['file' => $file, 'jenis' => $jenis, 'id_faskes' => $idFaskes, 'total' => $total, 'berhasil' => $berhasil,
+         'duplikat' => count($dup), 'gagal' => count($err), 'contoh_error' => $contoh, 'id_baru' => $idBaru], $idFaskes);
 }
 
 // Trim and remove extra whitespaces
@@ -80,6 +108,7 @@ switch ($type) {
                   throw new Exception('Execute gagal: ' . $stmt->error);
                }
 
+               if (count($idBaru) < 50) $idBaru[] = $stmt->insert_id;
                $stmt->close();
                $successCount++;
             } catch (Exception $e) {
@@ -120,9 +149,11 @@ switch ($type) {
             $response['errors'] = $errorData;
          }
 
+         impLog($koneksi, $type, true, count($rows), $successCount, $duplicateData, $errorData, $idBaru, $id_faskes);
          echo json_encode($response);
          exit;
       } catch (Exception $e) {
+         impLog($koneksi, $type, false, count($rows), $successCount, $duplicateData, $errorData, $idBaru, $id_faskes, $e->getMessage());
          echo json_encode([
             'status' => 'error',
             'message' => 'Terjadi kesalahan: ' . $e->getMessage()
@@ -236,6 +267,7 @@ switch ($type) {
                   throw new Exception('Execute gagal: ' . $stmt->error);
                }
 
+               if (count($idBaru) < 50) $idBaru[] = $stmt->insert_id;
                $stmt->close();
                $successCount++;
             } catch (Exception $e) {
@@ -280,9 +312,11 @@ switch ($type) {
             $response['errors'] = $errorData;
          }
 
+         impLog($koneksi, $type, true, count($rows), $successCount, $duplicateData, $errorData, $idBaru, $id_faskes);
          echo json_encode($response);
          exit;
       } catch (Exception $e) {
+         impLog($koneksi, $type, false, count($rows), $successCount, $duplicateData, $errorData, $idBaru, $id_faskes, $e->getMessage());
          echo json_encode([
             'status' => 'error',
             'message' => 'Terjadi kesalahan: ' . $e->getMessage()
@@ -342,6 +376,7 @@ switch ($type) {
                   throw new Exception('Execute gagal: ' . $stmt->error);
                }
 
+               if (count($idBaru) < 50) $idBaru[] = $stmt->insert_id;
                $stmt->close();
                $successCount++;
             } catch (Exception $e) {
@@ -382,9 +417,11 @@ switch ($type) {
             $response['errors'] = $errorData;
          }
 
+         impLog($koneksi, $type, true, count($rows), $successCount, $duplicateData, $errorData, $idBaru, $id_faskes);
          echo json_encode($response);
          exit;
       } catch (Exception $e) {
+         impLog($koneksi, $type, false, count($rows), $successCount, $duplicateData, $errorData, $idBaru, $id_faskes, $e->getMessage());
          echo json_encode([
             'status' => 'error',
             'message' => 'Terjadi kesalahan: ' . $e->getMessage()
@@ -469,6 +506,7 @@ switch ($type) {
                   throw new Exception('Execute gagal: ' . $stmt->error);
                }
 
+               if (count($idBaru) < 50) $idBaru[] = $stmt->insert_id;
                $stmt->close();
                $successCount++;
             } catch (Exception $e) {
@@ -509,9 +547,11 @@ switch ($type) {
             $response['errors'] = $errorData;
          }
 
+         impLog($koneksi, $type, true, count($rows), $successCount, $duplicateData, $errorData, $idBaru, $id_faskes);
          echo json_encode($response);
          exit;
       } catch (Exception $e) {
+         impLog($koneksi, $type, false, count($rows), $successCount, $duplicateData, $errorData, $idBaru, $id_faskes, $e->getMessage());
          echo json_encode([
             'status' => 'error',
             'message' => 'Terjadi kesalahan: ' . $e->getMessage()
@@ -571,6 +611,7 @@ switch ($type) {
                   throw new Exception('Execute gagal: ' . $stmt->error);
                }
 
+               if (count($idBaru) < 50) $idBaru[] = $stmt->insert_id;
                $stmt->close();
                $successCount++;
             } catch (Exception $e) {
@@ -611,9 +652,11 @@ switch ($type) {
             $response['errors'] = $errorData;
          }
 
+         impLog($koneksi, $type, true, count($rows), $successCount, $duplicateData, $errorData, $idBaru, $id_faskes);
          echo json_encode($response);
          exit;
       } catch (Exception $e) {
+         impLog($koneksi, $type, false, count($rows), $successCount, $duplicateData, $errorData, $idBaru, $id_faskes, $e->getMessage());
          echo json_encode([
             'status' => 'error',
             'message' => 'Terjadi kesalahan: ' . $e->getMessage()

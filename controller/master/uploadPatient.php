@@ -1,5 +1,6 @@
 <?php
 include "../../database/connect.php";
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 header("Content-Type: application/json");
 
@@ -134,6 +135,7 @@ $params[] = $id_customer;
 $types   .= "i";
 
 $sql = "UPDATE ms_patient SET " . implode(",", $fields) . " WHERE id_patient=? AND id_customer=?";
+$lgPasien = logAmbilBaris($koneksi, 'ms_patient', 'id_patient', $id_patient); // log: kondisi sebelum diubah
 $stmt = $koneksi->prepare($sql);
 
 if (!$stmt) {
@@ -147,6 +149,9 @@ if (!$stmt) {
 $stmt->bind_param($types, ...$params);
 
 if ($stmt->execute()) {
+   logBaris($koneksi, 'pasien', 'ms_patient', 'id_patient', $id_patient, $lgPasien,
+      ['tipe' => 'pasien', 'label' => trim(($lgPasien['nomor_rm'] ?? '') . ' · ' . ($lgPasien['patient_name'] ?? ''), ' ·')],
+      'Upload berkas pasien: ' . implode(', ', array_map('strtoupper', array_keys($uploadedFiles))), 'upload_file');
    echo json_encode([
       "status" => "success",
       "message" => "Upload berhasil",

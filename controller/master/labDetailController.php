@@ -9,6 +9,7 @@
  */
 require_once __DIR__ . '/../../database/connect.php';
 require_once __DIR__ . '/../../utility/security.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 requireRole(['superadmin', 'administrator']);
@@ -76,6 +77,13 @@ if ($method !== 'POST') ldJson('error', 'Method tidak didukung.', null, 405);
 
 $aksi = (string) ($_POST['aksi'] ?? 'simpan');
 $idItem = (int) ($_POST['id_item'] ?? 0);
+$ldLama = $idItem > 0 ? logAmbilBaris($koneksi, 'laboratorium_item', 'id', $idItem) : null;
+function ldLog(mysqli $k, int $id, ?array $lama, string $ket): void
+{
+   $r = $lama ?? logAmbilBaris($k, 'laboratorium_item', 'id', $id) ?? [];
+   $induk = logAmbilBaris($k, 'laboratorium_detail', 'kode', $r['kode'] ?? null);
+   logBaris($k, 'master', 'laboratorium_item', 'id', $id, $lama, ['tipe' => 'lab_parameter', 'label' => trim(($induk['assemen'] ?? $r['kode'] ?? '') . ' · ' . ($r['assemen'] ?? ''), ' ·')], $ket);
+}
 
 /* ---------------------------- hapus ----------------------------- */
 if ($aksi === 'hapus') {
@@ -84,6 +92,7 @@ if ($aksi === 'hapus') {
    $n = (int) (ldQ($koneksi, 'SELECT COUNT(*) n FROM laboratorium_result WHERE id_item = ?', 'i', [$idItem])[0]['n'] ?? 0);
    if ($n > 0) ldJson('error', "Parameter ini sudah punya $n hasil pasien sehingga tidak bisa dihapus.", null, 409);
    ldExec($koneksi, 'DELETE FROM laboratorium_item WHERE id = ?', 'i', [$idItem]);
+   ldLog($koneksi, $idItem, $ldLama, 'Parameter lab dihapus');
    ldJson('success', 'Parameter dihapus.');
 }
 
@@ -112,6 +121,7 @@ if ($tipe === 'numerik') {
 if ($idItem > 0) {
    if (!ldQ($koneksi, 'SELECT 1 FROM laboratorium_item WHERE id = ? LIMIT 1', 'i', [$idItem])) ldJson('error', 'Parameter tidak ditemukan.', null, 404);
    ldExec($koneksi, 'UPDATE laboratorium_item SET urutan = ?, assemen = ?, satuan = ?, minimum = ?, maksimum = ?, tipe_isian = ? WHERE id = ?', 'ssssssi', [$urutan, $nama, $satuan, $min, $max, $tipe, $idItem]);
+   ldLog($koneksi, $idItem, $ldLama, 'Parameter lab diubah');
    ldJson('success', 'Parameter diperbarui.');
 }
 
@@ -121,4 +131,5 @@ if ($urutan === '') {
    $urutan = (string) (((int) (ldQ($koneksi, 'SELECT MAX(CAST(urutan AS UNSIGNED)) m FROM laboratorium_item WHERE kode = ?', 's', [$kode])[0]['m'] ?? 0)) + 1);
 }
 ldExec($koneksi, 'INSERT INTO laboratorium_item (kode, urutan, assemen, satuan, minimum, maksimum, tipe_isian) VALUES (?, ?, ?, ?, ?, ?, ?)', 'sssssss', [$kode, $urutan, $nama, $satuan, $min, $max, $tipe]);
+ldLog($koneksi, (int) $koneksi->insert_id, null, 'Parameter lab ditambahkan');
 ldJson('success', 'Parameter ditambahkan.');
