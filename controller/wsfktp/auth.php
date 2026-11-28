@@ -68,7 +68,7 @@ $secret_key = $user['secret_key'];
 
 $config = Configuration::forSymmetricSigner(
     new Sha256(),
-    InMemory::plainText($secret_key)
+    InMemory::plainText(hash('sha256', $secret_key, true)) // hash => always 256 bits
 );
 
 $now = new DateTimeImmutable();
