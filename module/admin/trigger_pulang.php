@@ -2,6 +2,7 @@
 /**
  * Tombol "Selesaikan Pemeriksaan" pada menu RME (menu_rme / menu_rme_inap).
  * Tombol hanya tampil bila kunjungan belum selesai; status selesai/pulang (3, 4) atau batal (99) diganti label status.
+ * Peran admin tetap melihat tombol pada kunjungan selesai (buka kunci), mis. pasien ranap yang diaktifkan kembali.
  */
 $tpNo = trim((string) ($_GET['no'] ?? ''));
 $tpIdc = (int) ($_SESSION['id_customer'] ?? 0);
@@ -14,8 +15,11 @@ if ($tpNo !== '' && $tpIdc > 0 && isset($koneksi)) {
    $tpSt->close();
 }
 $tpStatus = $tpStatus === null ? null : (int) $tpStatus;
+require_once __DIR__ . '/../../utility/visitGuard.php';
+$tpSelesai = $tpStatus === 3 || $tpStatus === 4;
+$tpBuka = $tpSelesai && bolehBukaKunciSelesai();
 ?>
-<?php if ($tpStatus === 3 || $tpStatus === 4): ?>
+<?php if ($tpSelesai && !$tpBuka): ?>
    <span class="nav-link text-success fw-semibold" style="cursor:default" title="Pemeriksaan kunjungan ini sudah diselesaikan">
       <i class="fas fa-check-circle me-2"></i> Pemeriksaan selesai
    </span>
@@ -25,7 +29,7 @@ $tpStatus = $tpStatus === null ? null : (int) $tpStatus;
    </span>
 <?php elseif ($tpStatus !== null): ?>
 <button type="button" id="btnSelesai" class="nav-link text-success">
-   <i class="fas fa-check-circle me-2"></i> Selesaikan Pemeriksaan
+   <i class="fas fa-check-circle me-2"></i> <?= $tpBuka ? 'Selesaikan Ulang (admin)' : 'Selesaikan Pemeriksaan' ?>
 </button>
 <script>
    document.getElementById("btnSelesai").addEventListener("click", function() {

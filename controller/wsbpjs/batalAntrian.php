@@ -8,7 +8,7 @@ $nomor_visit = (string) ($_POST['novisit'] ?? '');
 $kunjBatal = visitGuard($koneksi, 'visit_ID', $nomor_visit);
 // alasan wajib + konfirmasi bila kunjungan sudah punya asesmen/CPPT/rawat inap (sebelum antrean BPJS dibatalkan)
 require_once __DIR__ . '/../../utility/batalGuard.php';
-if ((int) $kunjBatal['visit_status'] === 4) {
+if (kunjunganSelesai($kunjBatal['visit_status']) && !bolehBukaKunciSelesai()) {
     http_response_code(409);
     echo json_encode(['success' => false, 'message' => 'Kunjungan sudah selesai dilayani, tidak dapat dibatalkan.']);
     exit;

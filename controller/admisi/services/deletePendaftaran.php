@@ -12,7 +12,7 @@ $hasilBpjs = '';
 
 // hanya kunjungan faskes di session (dulu: kunjungan faskes mana pun bisa dibatalkan cukup dengan visit_ID)
 $kunj = visitGuard($koneksi, 'visit_ID', $visit);
-if ((int) $kunj['visit_status'] === 4) {
+if (kunjunganSelesai($kunj['visit_status']) && !bolehBukaKunciSelesai()) {
     echo json_encode(['success' => false, 'message' => 'Kunjungan sudah selesai dilayani, tidak dapat dibatalkan.']);
     exit;
 }

@@ -10,7 +10,7 @@ header('Content-Type: application/json; charset=utf-8');
 $visit = trim((string) ($_POST['novisit'] ?? $_GET['novisit'] ?? ''));
 $kunj = visitGuard($koneksi, 'visit_ID', $visit);
 session_write_close();
-if ((int) $kunj['visit_status'] === 4) {
+if (kunjunganSelesai($kunj['visit_status']) && !bolehBukaKunciSelesai()) {
     echo json_encode(['success' => false, 'message' => 'Kunjungan sudah selesai dilayani, tidak dapat dibatalkan.']);
     exit;
 }

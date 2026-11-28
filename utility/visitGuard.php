@@ -35,3 +35,21 @@ function visitGuard(mysqli $db, string $kolom, $nilai, bool $jsonStatusBool = fa
    if (!$row) $tolak(404, 'Kunjungan tidak ditemukan di faskes ini.');
    return $row;
 }
+
+/**
+ * Kunci kunjungan selesai (visit_status 3/4): ubah waktu, ganti dokter, hapus, batal pendaftaran, selesaikan ulang.
+ * Hanya peran admin yang boleh membuka kunci; peran lain tetap terkunci.
+ */
+const VISIT_ROLE_BUKA_KUNCI = ['admin', 'superadmin', 'administrator'];
+
+function bolehBukaKunciSelesai(): bool
+{
+   // session_write_close() tidak menghapus $_SESSION -> jangan buka ulang sesi bila sudah terbaca
+   if (!isset($_SESSION) && session_status() === PHP_SESSION_NONE) @session_start();
+   return in_array((string) ($_SESSION['roles'] ?? ''), VISIT_ROLE_BUKA_KUNCI, true);
+}
+
+function kunjunganSelesai($status): bool
+{
+   return in_array((int) $status, [3, 4], true);
+}

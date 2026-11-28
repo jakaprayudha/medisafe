@@ -1258,6 +1258,8 @@ session_write_close();
   $(document).ready(function() {
     const apiUrl = 'controller/visit/registrasiController';
     const tipePasien = "Poliklinik";
+    // admin boleh membuka kunci kunjungan selesai (ganti dokter, ubah waktu, batal); peran lain tetap terkunci
+    const ADMIN_BUKA_KUNCI = <?= json_encode(in_array((string) ($_SESSION['roles'] ?? ''), ['admin', 'superadmin', 'administrator'], true)) ?>;
     const BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const fmt = n => Number(n || 0).toLocaleString('id-ID');
@@ -1375,7 +1377,7 @@ session_write_close();
           <li><a class="dropdown-item dok-btn" href="javascript:;" data-visit="${esc(row.visit_ID)}" data-jenis="sep">${row.ada_sep ? '<i class="fas fa-file-circle-check me-2 text-success"></i>Lihat SEP' : '<i class="fas fa-file-arrow-up me-2 text-info"></i>Upload SEP'}</a></li>
           <li><a class="dropdown-item dok-btn" href="javascript:;" data-visit="${esc(row.visit_ID)}" data-jenis="fkpp">${row.ada_fkpp ? '<i class="fas fa-file-circle-check me-2 text-success"></i>Lihat FKPP' : '<i class="fas fa-file-arrow-up me-2 text-info"></i>Upload FKPP'}</a></li>
           ${!batal ? dinkesAksiHtml(row) : ''}
-          ${!selesai && !batal ? `<li><hr class="dropdown-divider"></li>
+          ${(!selesai || ADMIN_BUKA_KUNCI) && !batal ? `<li><hr class="dropdown-divider"></li>
           <li><a class="dropdown-item btn-reschedule" href="javascript:;" data-id="${row.id_visit}" data-doctor="${esc(row.id_doctor)}"><i class="fas fa-user-md me-2 text-dark"></i>Ganti dokter</a></li>
           <li><a class="dropdown-item edit-visit-btn" href="javascript:;" data-visit="${esc(row.visit_ID)}" data-date="${esc(row.visit_date)}" data-patient="${esc(row.id_patient)}" data-time="${esc(row.visit_time)}"><i class="fas fa-clock me-2 text-warning"></i>Ubah waktu</a></li>
           <li><a class="dropdown-item delete-btn text-danger" href="javascript:;" data-id="${row.id_visit}" data-prov="${esc(row.id_provider)}" data-visit="${esc(row.visit_ID)}" data-nama="${esc(row.patient_name || row.patient_name_pcare || '')}"><i class="fas fa-times-circle me-2"></i>Batalkan pendaftaran</a></li>` : ''}
