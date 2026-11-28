@@ -1,5 +1,6 @@
 <?php
 require '../../database/connect.php'; // Koneksi ke database
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 header("Content-Type: application/json");
 
@@ -43,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $stmt->bind_param("s", $newFileName);
 
       if ($stmt->execute()) {
+         logAktivitas($koneksi, 'pengaturan', 'upload_file', ['tipe' => 'setting_clinic', 'label' => 'Logo faskes'], 'Logo faskes diupload', null, ['image_clinic' => $newFileName]);
          echo json_encode(["status" => "success", "message" => "Logo berhasil diupload.", "file" => $newFileName]);
       } else {
          echo json_encode(["status" => "error", "message" => "Gagal menyimpan ke database."]);

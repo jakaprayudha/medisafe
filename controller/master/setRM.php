@@ -1,5 +1,6 @@
 <?php
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 header("Content-Type: application/json");
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -33,6 +34,7 @@ switch ($method) {
          exit;
       }
 
+      $lgLama = logAmbilBaris($koneksi, 'setting_clinic', 'id', 1);
       // Cek apakah record sudah ada
       $check = $koneksi->query("SELECT id FROM setting_clinic WHERE id = 1 LIMIT 1");
 
@@ -52,6 +54,9 @@ switch ($method) {
          $stmt->close();
       }
 
+      if ($success && (string) ($lgLama['nomor_rm_end'] ?? '') !== (string) $nomor_rm) {
+         logAktivitas($koneksi, 'pengaturan', $lgLama ? 'ubah' : 'tambah', ['tipe' => 'setting_clinic', 'id' => 1, 'label' => 'Nomor RM terakhir'], 'Nomor RM terakhir diatur', $lgLama ? ['nomor_rm_end' => $lgLama['nomor_rm_end']] : null, ['nomor_rm_end' => $nomor_rm]);
+      }
       if ($success) {
          echo json_encode(["status" => 200, "message" => "Nomor RM berhasil disimpan"]);
       } else {

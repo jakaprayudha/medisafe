@@ -7,6 +7,7 @@
  */
 require_once __DIR__ . '/../../database/connect.php';
 require_once __DIR__ . '/../../utility/security.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 header('Content-Type: application/json');
 
@@ -80,6 +81,13 @@ function bsLogPcare(mysqli $k, int $idc, int $batas = 10): array
 }
 
 /** Tampilkan hanya 4 karakter terakhir. */
+/** Log jadwal dokter (modul master). */
+function bsLogJadwal(mysqli $k, $id, ?array $lama, string $ket, ?string $aksi = null): void
+{
+   $r = $lama ?? logAmbilBaris($k, 'ms_doctor_schedule', 'id_schedule', $id) ?? [];
+   $label = trim(($r['id_doctor'] ?? '') . ' · ' . ($r['day_of_week'] ?? '') . ' ' . substr((string) ($r['start_time'] ?? ''), 0, 5), ' ·');
+   logBaris($k, 'master', 'ms_doctor_schedule', 'id_schedule', $id, $lama, ['tipe' => 'jadwal_dokter', 'label' => 'Jadwal ' . $label], $ket, $aksi);
+}
 function bsMasker(?string $v): ?string
 {
    $v = (string) $v;
@@ -158,6 +166,9 @@ if (in_array($aksi, ['tes', 'sinkron'], true) && $_SERVER['REQUEST_METHOD'] === 
       bsGagal('Gagal menyimpan hasil sinkron.', 500);
    }
 
+   if ($tambah || $nonaktif) {
+      logAktivitas($koneksi, 'master', 'ubah', ['tipe' => 'dokter_bpjs', 'label' => 'Sinkron dokter PCare'], "Sinkron dokter PCare: $tambah baru, $update diperbarui, $nonaktif dinonaktifkan", null, ['tambah' => $tambah, 'update' => $update, 'nonaktif' => $nonaktif]);
+   }
    bsJawab([
       'success' => true,
       'message' => "Sinkron selesai: $tambah baru, $update diperbarui, $nonaktif dinonaktifkan.",
@@ -240,6 +251,10 @@ switch ($aksi) {
          bsJalankan($koneksi, "INSERT INTO setting_pcare_log (id_customer, username_lama, username_baru, password_diganti, diubah_oleh, uid_user, ip) VALUES (?, ?, ?, ?, ?, ?, ?)",
             'ississs', [$idc, (string) $lama['username'], $user, $gantiPass ? 1 : 0, $oleh, $uid, $ip]);
       }
+      if ($gantiUser || $gantiPass) {
+         logAktivitas($koneksi, 'pengaturan', 'ubah', ['tipe' => 'setting_pcare', 'id' => $idc, 'label' => 'Akun PCare'], 'Akun PCare diubah' . ($gantiPass ? ' (password diganti)' : ''),
+            $gantiUser ? ['username' => (string) $lama['username']] : null, ($gantiUser ? ['username' => $user] : []) + ($gantiPass ? ['password_diganti' => 'ya'] : []));
+      }
       bsJawab(['success' => true, 'message' => ($gantiUser || $gantiPass) ? 'Akun PCare disimpan.' : 'Tidak ada perubahan pada akun PCare.']);
 
    // password PCare hanya dikirim saat diminta (tombol mata), tidak ikut di data status
@@ -282,7 +297,10 @@ switch ($aksi) {
       if (!bsSatu($koneksi, "SELECT id FROM master_doctor_bpjs WHERE id=? AND id_customer=?", 'ii', [$id, $idc])) {
          bsGagal('Dokter tidak ditemukan.', 404);
       }
+      $lgLama = logAmbilBaris($koneksi, 'master_doctor_bpjs', 'id', $id);
       bsJalankan($koneksi, "UPDATE master_doctor_bpjs SET icare_username=?, icare_password=? WHERE id=? AND id_customer=?", 'ssii', [$user, $pass, $id, $idc]);
+      logAktivitas($koneksi, 'pengaturan', 'ubah', ['tipe' => 'dokter_bpjs', 'id' => $id, 'label' => 'Akun iCare · ' . ($lgLama['nmDokter'] ?? '')], 'Akun iCare dokter disimpan',
+         ['icare_username' => $lgLama['icare_username'] ?? null], ['icare_username' => $user] + (($lgLama['icare_password'] ?? '') !== $pass ? ['icare_password_diganti' => 'ya'] : []));
       bsJawab(['success' => true, 'message' => 'Akun iCare disimpan.']);
 
    // ================= JADWAL =================
@@ -353,12 +371,14 @@ switch ($aksi) {
          if (!$n) {
             bsGagal('Jadwal tidak ditemukan.', 404);
          }
+         $lgLama = logAmbilBaris($koneksi, 'ms_doctor_schedule', 'id_schedule', $id);
          bsJalankan(
             $koneksi,
             "UPDATE ms_doctor_schedule SET day_of_week=?, start_time=?, end_time=?, id_poli=?, kuota=?, updated_at=NOW() WHERE id_schedule=? AND id_customer=?",
             'ssssiii',
             [$hari, $mulai, $selesai, $poli, $kuota, $id, $idc]
          );
+         bsLogJadwal($koneksi, $id, $lgLama, 'Jadwal dokter BPJS diubah');
          bsJawab(['success' => true, 'message' => 'Jadwal diperbarui.']);
       }
       bsJalankan(
@@ -367,6 +387,7 @@ switch ($aksi) {
          'sssssii',
          [$kode, $hari, $mulai, $selesai, $poli, $kuota, $idc]
       );
+      bsLogJadwal($koneksi, $koneksi->insert_id, null, 'Jadwal dokter BPJS ditambahkan');
       bsJawab(['success' => true, 'message' => 'Jadwal ditambahkan.']);
 
    case 'kuota':
@@ -379,7 +400,9 @@ switch ($aksi) {
       if (!bsSatu($koneksi, "SELECT id_schedule FROM ms_doctor_schedule WHERE id_schedule=? AND id_customer=?", 'ii', [$id, $idc])) {
          bsGagal('Jadwal tidak ditemukan.', 404);
       }
+      $lgLama = logAmbilBaris($koneksi, 'ms_doctor_schedule', 'id_schedule', $id);
       bsJalankan($koneksi, "UPDATE ms_doctor_schedule SET kuota=?, updated_at=NOW() WHERE id_schedule=? AND id_customer=?", 'iii', [$kuota, $id, $idc]);
+      bsLogJadwal($koneksi, $id, $lgLama, 'Kuota JKN jadwal diubah');
       bsJawab(['success' => true, 'message' => 'Kuota diperbarui.']);
 
    case 'status_jadwal':
@@ -391,7 +414,9 @@ switch ($aksi) {
       if (!bsSatu($koneksi, "SELECT id_schedule FROM ms_doctor_schedule WHERE id_schedule=? AND id_customer=?", 'ii', [$id, $idc])) {
          bsGagal('Jadwal tidak ditemukan.', 404);
       }
+      $lgLama = logAmbilBaris($koneksi, 'ms_doctor_schedule', 'id_schedule', $id);
       bsJalankan($koneksi, "UPDATE ms_doctor_schedule SET sch_status=?, updated_at=NOW() WHERE id_schedule=? AND id_customer=?", 'sii', [$s, $id, $idc]);
+      bsLogJadwal($koneksi, $id, $lgLama, $s === '1' ? 'Jadwal dokter diaktifkan' : 'Jadwal dokter dinonaktifkan', $s === '1' ? 'aktifkan' : 'nonaktifkan');
       bsJawab(['success' => true, 'message' => $s === '1' ? 'Jadwal diaktifkan.' : 'Jadwal dinonaktifkan.']);
 
    case 'hapus_jadwal':
@@ -399,7 +424,9 @@ switch ($aksi) {
       if ($id <= 0 || !bsSatu($koneksi, "SELECT id_schedule FROM ms_doctor_schedule WHERE id_schedule=? AND id_customer=?", 'ii', [$id, $idc])) {
          bsGagal('Jadwal tidak ditemukan.', 404);
       }
+      $lgLama = logAmbilBaris($koneksi, 'ms_doctor_schedule', 'id_schedule', $id);
       bsJalankan($koneksi, "DELETE FROM ms_doctor_schedule WHERE id_schedule=? AND id_customer=?", 'ii', [$id, $idc]);
+      bsLogJadwal($koneksi, $id, $lgLama, 'Jadwal dokter BPJS dihapus');
       bsJawab(['success' => true, 'message' => 'Jadwal dihapus.']);
 
    // ================= DOKTER INTERNAL (pemetaan ke dokter BPJS) =================

@@ -1,6 +1,8 @@
 <?php
 
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/security.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -30,6 +32,52 @@ set_exception_handler(function (Throwable $e) {
 });
 
 $method = $_SERVER['REQUEST_METHOD'];
+
+// Dulu tanpa cek role: user faskes mana pun bisa membuat/mengubah/menonaktifkan faskes lain. Halaman pemakai
+// (module/administrator/master-faskes*) hanya untuk superadmin/administrator.
+if ($method !== 'GET') requireRole(['superadmin', 'administrator']);
+
+/*
+|--------------------------------------------------------------------------
+| LOG AKTIVITAS
+|--------------------------------------------------------------------------
+| Kondisi setting_clinic + ms_faskes direkam sebelum diproses; saat skrip selesai (semua respons memakai exit)
+| kondisi dibaca ulang dan hanya kolom yang berubah dicatat. Tambah setting_clinic baru dicatat di createData().
+*/
+function fkSnapshot(mysqli $k, int $idClinic): ?array
+{
+   $c = logAmbilBaris($k, 'setting_clinic', 'id', $idClinic);
+   if (!$c) return null;
+   $f = logAmbilBaris($k, 'ms_faskes', 'id_clinic', $idClinic) ?? [];
+   $buang = array_flip(['image_clinic', 'updated_at', 'udpated_at', 'created_at']);
+   $out = [];
+   foreach (array_diff_key($c, $buang) as $kk => $v) $out["clinic.$kk"] = $v;
+   foreach (array_diff_key($f, $buang) as $kk => $v) $out["faskes.$kk"] = $v;
+   return $out;
+}
+$fkIdClinic = 0;
+if ($method === 'DELETE') {
+   $fkIdClinic = (int) ($_GET['id'] ?? 0);
+} elseif ($method === 'POST' || $method === 'PUT') {
+   $fkIn = $_POST;
+   if ($method === 'PUT') parse_str((string) file_get_contents('php://input'), $fkIn);
+   $fkIdClinic = ctype_digit((string) ($fkIn['id_clinic'] ?? '')) ? (int) $fkIn['id_clinic'] : 0;
+   if ($fkIdClinic <= 0 && ctype_digit(trim((string) ($fkIn['order_number'] ?? '')))) $fkIdClinic = (int) trim((string) $fkIn['order_number']);
+}
+if ($fkIdClinic > 0 && ($fkLama = fkSnapshot($koneksi, $fkIdClinic))) {
+   register_shutdown_function(function () use ($koneksi, $fkIdClinic, $fkLama, $method) {
+      $baru = fkSnapshot($koneksi, $fkIdClinic);
+      if (!$baru) return;
+      [$l, $b] = logBeda($fkLama, $baru);
+      if (!$b) return;
+      $nonaktif = $method === 'DELETE' && (string) ($baru['clinic.status'] ?? '') === '99';
+      $faskesBaru = !isset($fkLama['faskes.id_faskes']) && isset($baru['faskes.id_faskes']);
+      logAktivitas($koneksi, 'pengaturan', $nonaktif ? 'nonaktifkan' : ($faskesBaru ? 'tambah' : 'ubah'),
+         ['tipe' => 'faskes', 'id' => $fkIdClinic, 'label' => 'Faskes · ' . ($baru['clinic.clinic_name'] ?? '')],
+         $nonaktif ? 'Faskes dinonaktifkan (status 99)' : ($faskesBaru ? 'Data faskes (profil/kontrak) dibuat' : 'Data faskes (profil/kontrak) diubah'),
+         $l, $b, isset($baru['clinic.id_customer']) ? (int) $baru['clinic.id_customer'] : null);
+   });
+}
 
 
 /*
@@ -381,6 +429,10 @@ function createData()
    $newId = $koneksi->insert_id;
 
    $stmt->close();
+
+   $lgBaru = logAmbilBaris($koneksi, 'setting_clinic', 'id', $newId);
+   if ($lgBaru) unset($lgBaru['image_clinic']);
+   logAktivitas($koneksi, 'pengaturan', 'tambah', ['tipe' => 'faskes', 'id' => $newId, 'label' => 'Faskes · ' . ($lgBaru['clinic_name'] ?? '')], 'Faskes baru didaftarkan', null, $lgBaru, (int) $id_customer);
 
    responseJson(
       'success',

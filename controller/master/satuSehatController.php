@@ -14,6 +14,7 @@
  */
 require_once __DIR__ . '/../../database/connect.php';
 require_once __DIR__ . '/../../utility/security.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 requireRole(['superadmin', 'administrator']);
@@ -117,6 +118,7 @@ if ($lat !== '' && (!is_numeric($lat) || abs((float) $lat) > 90)) shJson('error'
 if ($lon !== '' && (!is_numeric($lon) || abs((float) $lon) > 180)) shJson('error', 'Longitude harus angka antara -180 dan 180.', ['field' => 'longitude'], 422);
 if (mb_strlen($alamat) > 1000 || mb_strlen($kota) > 255 || mb_strlen($pos) > 20 || mb_strlen($loc) > 255) shJson('error', 'Salah satu isian terlalu panjang.', null, 422);
 
+$lgLama = logAmbilBaris($koneksi, 'setting_satusehat', 'id_customer', $idc);
 $secBaru = $sec !== '' ? $sec : (string) ($lama['client_secret'] ?? '');
 $berubah = !$lama || $lama['organization_id'] !== $org || $lama['client_id'] !== $cid || $lama['client_secret'] !== $secBaru;
 
@@ -135,4 +137,14 @@ if (!$st || !$st->execute()) {
    shJson('error', 'Gagal menyimpan data.', null, 500);
 }
 $st->close();
+$lgBuang = ['token', 'expire_at', 'client_secret', 'user'];
+$lgBaru = logAmbilBaris($koneksi, 'setting_satusehat', 'id_customer', $idc);
+$lgL = $lgLama ? array_diff_key($lgLama, array_flip($lgBuang)) : null;
+$lgB = $lgBaru ? array_diff_key($lgBaru, array_flip($lgBuang)) : null;
+if ($lgL && $lgB) [$lgL, $lgB] = logBeda($lgL, $lgB);
+if ($lgLama && $lgBaru && (string) $lgLama['client_secret'] !== (string) $lgBaru['client_secret']) $lgB['client_secret_diganti'] = 'ya';
+if (!$lgLama || $lgB) {
+   logAktivitas($koneksi, 'pengaturan', $lgLama ? 'ubah' : 'tambah', ['tipe' => 'setting_satusehat', 'id' => $idc, 'label' => 'Kredensial Satu Sehat faskes #' . $idc],
+      $berubah ? 'Kredensial Satu Sehat disimpan (token direset)' : 'Lokasi Satu Sehat disimpan', $lgL, $lgB, $idc);
+}
 shJson('success', $berubah ? 'Kredensial disimpan. Token lama dihapus dan akan dibuat ulang otomatis.' : 'Data lokasi disimpan.');

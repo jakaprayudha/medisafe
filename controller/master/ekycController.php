@@ -1,6 +1,7 @@
 <?php
 
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -47,6 +48,20 @@ if ($method === 'POST' && isset($_POST['_method'])) {
 |--------------------------------------------------------------------------
 | Simpan / upload / verifikasi / hapus hanya untuk module admin.
 */
+
+/** Log perubahan tte_ekyc; faskes log = faskes pemilik data (superadmin bisa mengubah lintas faskes). */
+function ekLog(string $aksi, int $id, ?array $lama, string $ket): void
+{
+   global $koneksi;
+   $baru = logAmbilBaris($koneksi, 'tte_ekyc', 'id_ekyc', $id);
+   $r = $baru ?? $lama ?? [];
+   [$l, $b] = [$lama, $baru];
+   if ($lama && $baru) {
+      [$l, $b] = logBeda($lama, $baru);
+      if (!$b) return;
+   }
+   logAktivitas($koneksi, 'pengaturan', $aksi, ['tipe' => 'tte_ekyc', 'id' => $id, 'label' => 'eKYC TTE · ' . ($r['nama'] ?? '')], $ket, $l, $b, isset($r['id_customer']) ? (int) $r['id_customer'] : null);
+}
 
 function requireAdmin()
 {
@@ -303,6 +318,7 @@ function createData()
 
    $newId = $koneksi->insert_id;
    $stmt->close();
+   ekLog('tambah', (int) $newId, null, 'Data eKYC TTE ditambahkan');
 
    responseJson('success', 'Data eKYC berhasil disimpan.', [
       'id_ekyc' => $newId
@@ -328,6 +344,7 @@ function toggleStatus()
       responseJson('error', 'ID tidak ditemukan.');
    }
 
+   $lgLama = logAmbilBaris($koneksi, 'tte_ekyc', 'id_ekyc', $id);
    $stmt = $koneksi->prepare("
       UPDATE tte_ekyc
       SET status = ?
@@ -341,6 +358,7 @@ function toggleStatus()
    }
 
    $stmt->close();
+   if ($lgLama) ekLog($status ? 'aktifkan' : 'nonaktifkan', $id, $lgLama, $status ? 'eKYC TTE diaktifkan' : 'eKYC TTE dinonaktifkan');
 
    responseJson('success', 'Status berhasil diperbarui.');
 }
@@ -370,6 +388,7 @@ function deleteData()
       responseJson('error', 'Data tidak ditemukan.');
    }
 
+   $lgLama = logAmbilBaris($koneksi, 'tte_ekyc', 'id_ekyc', $id);
    $stmt = $koneksi->prepare("
       DELETE FROM tte_ekyc
       WHERE id_ekyc = ? AND (? IS NULL OR id_customer = ?)
@@ -382,7 +401,9 @@ function deleteData()
       responseJson('error', 'Gagal menghapus data.');
    }
 
+   $lgHapus = $stmt->affected_rows > 0;
    $stmt->close();
+   if ($lgHapus && $lgLama) ekLog('hapus', $id, $lgLama, 'Data eKYC TTE dihapus (foto KTP & wajah ikut dihapus)');
 
    // foto KTP & wajah adalah data pribadi: ikut dihapus dari server
    foreach (['ktp_file', 'face_file'] as $kolomFoto) {
@@ -520,6 +541,7 @@ function uploadFile()
       $statusBaru = 'menunggu';
    }
 
+   $lgLama = logAmbilBaris($koneksi, 'tte_ekyc', 'id_ekyc', $id);
    $stmt = $koneksi->prepare("
       UPDATE tte_ekyc
       SET $column = ?, status_verifikasi = ?
@@ -535,6 +557,7 @@ function uploadFile()
    }
 
    $stmt->close();
+   if ($lgLama) ekLog('upload_file', $id, $lgLama, $type === 'ktp' ? 'Foto KTP eKYC diunggah' : 'Liveness wajah eKYC diunggah');
 
    responseJson('success', 'File berhasil diupload.', [
       'file' => $fileName,
@@ -602,6 +625,7 @@ function verifyData($data)
 
    $verifiedAt = $status === 'terverifikasi' ? date('Y-m-d H:i:s') : null;
 
+   $lgLama = logAmbilBaris($koneksi, 'tte_ekyc', 'id_ekyc', $id);
    $stmt = $koneksi->prepare("
       UPDATE tte_ekyc
       SET status_verifikasi = ?, verified_at = ?
@@ -622,6 +646,8 @@ function verifyData($data)
       'terverifikasi'     => 'Terverifikasi',
       'ditolak'           => 'Ditolak'
    ][$status];
+
+   if ($lgLama) ekLog($status === 'ditolak' ? 'batal_verifikasi' : 'verifikasi', $id, $lgLama, 'Verifikasi eKYC: ' . $label);
 
    responseJson('success', 'Status verifikasi diubah menjadi ' . $label . '.');
 }

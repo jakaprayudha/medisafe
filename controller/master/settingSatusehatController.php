@@ -12,6 +12,7 @@
  */
 require_once __DIR__ . '/../../database/connect.php';
 require_once __DIR__ . '/../../utility/security.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 header('Content-Type: application/json');
 
@@ -201,10 +202,12 @@ switch ($aksi) {
          ssJawab(['status' => 'success', 'message' => 'NIK tidak berubah.', 'berubah' => false]);
       }
       // ID IHS milik NIK lama tidak berlaku lagi
+      $lgLama = logAmbilBaris($koneksi, 'ms_doctor', 'id_doctor', $id);
       $st = $koneksi->prepare("UPDATE ms_doctor SET doctor_nik=?, idsh=NULL, updated_at=NOW() WHERE id_doctor=? AND id_customer=?");
       $st->bind_param('sii', $nik, $id, $idc);
       $st->execute();
       $st->close();
+      logBaris($koneksi, 'master', 'ms_doctor', 'id_doctor', $id, $lgLama, ['tipe' => 'dokter', 'label' => (string) ($lgLama['doctor_name'] ?? '')], 'NIK dokter diubah (Satu Sehat; ID IHS direset)');
       ssJawab(['status' => 'success', 'message' => 'NIK disimpan.', 'berubah' => true]);
 
    case 'ihs':
@@ -235,10 +238,12 @@ switch ($aksi) {
          ssJawab(['status' => 'error', 'message' => 'NIK ini belum terdaftar sebagai tenaga kesehatan di Satu Sehat (SISDMK). Pastikan NIK benar atau daftarkan lewat SISDMK.'], 404);
       }
       $namaSS = $res0['name'][0]['text'] ?? null;
+      $lgLama = logAmbilBaris($koneksi, 'ms_doctor', 'id_doctor', $id);
       $st = $koneksi->prepare("UPDATE ms_doctor SET idsh=?, doctor_nik=?, updated_at=NOW() WHERE id_doctor=? AND id_customer=?");
       $st->bind_param('ssii', $ihs, $nik, $id, $idc);
       $st->execute();
       $st->close();
+      logBaris($koneksi, 'master', 'ms_doctor', 'id_doctor', $id, $lgLama, ['tipe' => 'dokter', 'label' => (string) ($lgLama['doctor_name'] ?? '')], 'ID IHS dokter diambil dari Satu Sehat');
       ssJawab(['status' => 'success', 'message' => 'ID Satu Sehat ditemukan.', 'idsh' => $ihs, 'nama_satusehat' => $namaSS]);
 
    case 'ihs_pasien':
@@ -275,6 +280,9 @@ switch ($aksi) {
       $ihs ? $st->bind_param('sii', $ihs, $id, $idc) : $st->bind_param('ii', $id, $idc);
       $st->execute();
       $st->close();
+      if ($ihs && $ihs !== (string) $p['idsh']) {
+         logAktivitas($koneksi, 'pasien', 'ubah', ['tipe' => 'pasien', 'id' => $id, 'label' => 'ID IHS pasien'], 'ID IHS pasien diambil dari Satu Sehat', ['idsh' => $p['idsh']], ['idsh' => $ihs]);
+      }
       if (!$ihs) {
          ssJawab(['status' => 'error', 'message' => 'NIK ini tidak ditemukan di Satu Sehat (Dukcapil). Pastikan NIK sesuai KTP/KK.'], 404);
       }

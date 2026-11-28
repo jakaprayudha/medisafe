@@ -13,6 +13,7 @@
  */
 require_once __DIR__ . '/../../database/connect.php';
 require_once __DIR__ . '/../../utility/security.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -59,6 +60,7 @@ if ($aksi === 'hapus') {
    $st->execute();
    $st->close();
    hapusFile($folder, $fileLama);
+   logAktivitas($koneksi, 'pengaturan', 'hapus_file', ['tipe' => 'ttd_user', 'id' => $idUser, 'label' => 'Tanda tangan · ' . $user['fullname']], 'Tanda tangan digital user dihapus', ['signature_user' => $fileLama], null);
    jawab(['status' => 'success', 'message' => 'Tanda tangan dihapus.']);
 }
 
@@ -158,5 +160,7 @@ if (!$st->execute()) {
 $st->close();
 if ($fileLama !== $nama) hapusFile($folder, $fileLama);
 error_log("[saveSignatureFaskes] tanda tangan user #$idUser diperbarui oleh $oleh");
+logAktivitas($koneksi, 'pengaturan', 'tanda_tangan', ['tipe' => 'ttd_user', 'id' => $idUser, 'label' => 'Tanda tangan · ' . $user['fullname']],
+   $aksi === 'unggah' ? 'Tanda tangan digital user diunggah (scan)' : 'Tanda tangan digital user digambar', $fileLama !== '' ? ['signature_user' => $fileLama] : null, ['signature_user' => $nama]);
 
 jawab(['status' => 'success', 'message' => 'Tanda tangan disimpan.', 'file' => $nama, 'waktu' => $now]);

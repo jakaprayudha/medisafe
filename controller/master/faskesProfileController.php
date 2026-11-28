@@ -1,5 +1,6 @@
 <?php
 require '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 session_start();
 
 header('Content-Type: application/json');
@@ -74,6 +75,8 @@ switch ($method) {
          if ($clinic = mysqli_fetch_assoc($checkClinic)) {
 
             $id_clinic = $clinic['id'];
+            $lgClinic = logAmbilBaris($koneksi, 'setting_clinic', 'id', $id_clinic);
+            $lgFaskes = logAmbilBaris($koneksi, 'ms_faskes', 'id_clinic', $id_clinic);
 
             // 🔸 UPDATE CLINIC
             mysqli_query($koneksi, "
@@ -152,6 +155,16 @@ switch ($method) {
          }
 
          mysqli_commit($koneksi);
+
+         // log: gabungan setting_clinic + ms_faskes, tanpa gambar & kolom waktu
+         $lgBuang = array_flip(['image_clinic', 'udpated_at', 'updated_at']);
+         $lgAdaLama = isset($lgClinic);
+         $lgL = array_diff_key(($lgClinic ?? []) + ($lgFaskes ?? []), $lgBuang);
+         $lgB = array_diff_key((logAmbilBaris($koneksi, 'setting_clinic', 'id', $id_clinic) ?? []) + (logAmbilBaris($koneksi, 'ms_faskes', 'id_clinic', $id_clinic) ?? []), $lgBuang);
+         if ($lgAdaLama) [$lgL, $lgB] = logBeda($lgL, $lgB);
+         if (!$lgAdaLama || $lgB) {
+            logAktivitas($koneksi, 'pengaturan', $lgAdaLama ? 'ubah' : 'tambah', ['tipe' => 'setting_clinic', 'id' => $id_clinic, 'label' => 'Profil faskes · ' . $clinic_name], 'Profil faskes disimpan', $lgAdaLama ? $lgL : null, $lgB);
+         }
 
          echo json_encode([
             'status' => 'success',
