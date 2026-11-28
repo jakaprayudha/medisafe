@@ -39,8 +39,14 @@ if (!in_array($ROLE, ['admin', 'superadmin', 'administrator'], true)) lkJawab(['
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') lkJawab(['status' => 'error', 'message' => 'Metode tidak diizinkan.'], 405);
 
 logKunjunganSiapkan($koneksi);
+// tabel versi lama belum punya kolom pelaku_asli -> tambahkan (abaikan bila sudah ada)
+try {
+   if (!$koneksi->query("SHOW COLUMNS FROM log_kunjungan LIKE 'pelaku_asli'")->num_rows) logUpgrade($koneksi, LOG_KUNJUNGAN_UPGRADE);
+} catch (Throwable $e) {
+   error_log('[logKunjunganController] cek kolom: ' . $e->getMessage());
+}
 $KOLOM = "l.id_log, l.created_at, l.aksi, l.visit_ID, l.id_visit, l.id_patient, l.nama_pasien, l.sumber, l.keterangan,
-   l.username, l.fullname, l.roles, l.ip, p.nomor_rm";
+   l.username, l.fullname, l.roles, l.pelaku_asli, l.ip, p.nomor_rm";
 $DARI = "FROM log_kunjungan l LEFT JOIN ms_patient p ON p.id_patient = l.id_patient";
 
 try {
@@ -70,9 +76,9 @@ try {
    $p = [$IDC, $dari . ' 00:00:00', date('Y-m-d', strtotime($sampai . ' +1 day')) . ' 00:00:00'];
    if ($q !== '') {
       $like = '%' . addcslashes($q, '%_\\') . '%';
-      $w[] = '(l.visit_ID LIKE ? OR l.nama_pasien LIKE ? OR l.username LIKE ? OR l.fullname LIKE ? OR l.keterangan LIKE ? OR p.nomor_rm LIKE ?)';
-      $t .= 'ssssss';
-      array_push($p, $like, $like, $like, $like, $like, $like);
+      $w[] = '(l.visit_ID LIKE ? OR l.nama_pasien LIKE ? OR l.username LIKE ? OR l.fullname LIKE ? OR l.pelaku_asli LIKE ? OR l.keterangan LIKE ? OR p.nomor_rm LIKE ?)';
+      $t .= 'sssssss';
+      array_push($p, $like, $like, $like, $like, $like, $like, $like);
    }
    $whereTanpaAksi = implode(' AND ', $w);
    [$tA, $pA] = [$t, $p];
@@ -86,10 +92,10 @@ try {
       header('Content-Disposition: attachment; filename="log-kunjungan-' . $dari . '_' . $sampai . '.csv"');
       $out = fopen('php://output', 'w');
       fwrite($out, "\xEF\xBB\xBF"); // BOM agar Excel membaca UTF-8
-      fputcsv($out, ['Waktu', 'Aksi', 'No. Kunjungan', 'No. RM', 'Pasien', 'Sumber', 'Keterangan', 'Username', 'Nama User', 'Peran', 'IP', 'Data Lama', 'Data Baru'], ',', '"', '');
+      fputcsv($out, ['Waktu', 'Aksi', 'No. Kunjungan', 'No. RM', 'Pasien', 'Sumber', 'Keterangan', 'Username', 'Nama User', 'Peran', 'Pelaku Asli (switch)', 'IP', 'Data Lama', 'Data Baru'], ',', '"', '');
       foreach ($rows as $r) {
          fputcsv($out, [$r['created_at'], LOG_KUNJUNGAN_AKSI[$r['aksi']] ?? $r['aksi'], $r['visit_ID'], $r['nomor_rm'], $r['nama_pasien'], $r['sumber'], $r['keterangan'],
-            $r['username'], $r['fullname'], $r['roles'], $r['ip'], $r['data_lama'], $r['data_baru']], ',', '"', '');
+            $r['username'], $r['fullname'], $r['roles'], $r['pelaku_asli'], $r['ip'], $r['data_lama'], $r['data_baru']], ',', '"', '');
       }
       fclose($out);
       exit;

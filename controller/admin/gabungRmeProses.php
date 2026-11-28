@@ -252,6 +252,10 @@ function gProsesGabung(mysqli $db, int $idc, int $utamaId, array $gabungIds, str
    }
 
    error_log("[gabungRme] faskes $idc: RM " . implode(',', array_column($ringkas, 'rm')) . " digabung ke $rmUtama (#$utamaId) oleh $oleh");
+   require_once __DIR__ . '/../../utility/activityLog.php';
+   logAktivitas($db, 'rme', 'gabung', ['tipe' => 'pasien', 'id' => $utamaId, 'label' => $rmUtama . ' · ' . $utama['patient_name']],
+      'RM ' . implode(', ', array_column($ringkas, 'rm')) . ' digabung ke ' . $rmUtama . ($paksa ? ' (dipaksa walau ada peringatan)' : '') . '. Cadangan: logs/merge_rme/' . date('Y-m') . '.jsonl',
+      ['digabung' => $ringkas, 'peringatan' => $peringatan], ['utama' => ['id' => $utamaId, 'rm' => $rmUtama, 'nama' => $utama['patient_name']], 'dilengkapi' => $diisi], $idc);
    return ['status' => 'success', 'message' => count($gabungIds) . ' RM berhasil digabung ke RM ' . $rmUtama . '.',
       'utama' => ['id' => $utamaId, 'rm' => $rmUtama, 'nama' => $utama['patient_name']], 'digabung' => $ringkas, 'dilengkapi' => $diisi];
 }

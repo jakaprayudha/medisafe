@@ -1,6 +1,7 @@
 <?php
 include '../../database/connect.php';
 require_once __DIR__ . '/../../utility/security.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 header('Content-Type: application/json');
 
@@ -204,6 +205,8 @@ function createData($id_customer)
    $st->bind_param("sisssssss", $uid, $id_customer, $fullname, $username, $hash, $roles, $path, $kdDokter, $by);
 
    if ($st->execute()) {
+      logAktivitas($koneksi, 'user', 'tambah', ['tipe' => 'user', 'id' => $uid, 'label' => $username], 'User baru dengan peran ' . $roles,
+         null, ['fullname' => $fullname, 'username' => $username, 'roles' => $roles, 'kdDokter' => $kdDokter]);
       jawab(['status' => 'success', 'message' => 'User berhasil ditambahkan']);
    }
    jawab(['status' => 'error', 'message' => 'Gagal menyimpan user.'], 500);
@@ -372,6 +375,8 @@ function updateData($id_customer)
       $st = $koneksi->prepare("UPDATE ms_users SET status=? WHERE id_user=? AND id_customer=?");
       $st->bind_param("iii", $s, $id, $id_customer);
       if ($st->execute()) {
+         logAktivitas($koneksi, 'user', $s ? 'aktifkan' : 'nonaktifkan', ['tipe' => 'user', 'id' => $lama['uid_user'], 'label' => $lama['username']],
+            $lama['fullname'] . ' (' . $lama['roles'] . ')', ['status' => $lama['status']], ['status' => $s]);
          jawab(['status' => 'success', 'message' => $s ? 'User diaktifkan.' : 'User dinonaktifkan, tidak bisa login lagi.']);
       }
       jawab(['status' => 'error', 'message' => 'Gagal update status.'], 500);
@@ -432,6 +437,12 @@ function updateData($id_customer)
       jawab(['status' => 'error', 'message' => 'Tidak ada perubahan'], 422);
    }
 
+   // untuk log: kolom yang diubah (password hanya ditandai "diganti", hash tidak pernah dicatat)
+   $baruLog = [];
+   foreach ($set as $i => $kol) $baruLog[substr($kol, 0, -2)] = $vals[$i];
+   $gantiPw = isset($baruLog['password']);
+   unset($baruLog['password']);
+
    $set[] = 'udpated_at=?';
    $vals[] = date('Y-m-d H:i:s');
    $vals[] = $id;
@@ -441,6 +452,10 @@ function updateData($id_customer)
    $st->bind_param(str_repeat('s', count($vals) - 2) . "ii", ...$vals);
 
    if ($st->execute()) {
+      [$l, $b] = logBeda($lama, $baruLog);
+      if ($l || $b) logAktivitas($koneksi, 'user', 'ubah', ['tipe' => 'user', 'id' => $lama['uid_user'], 'label' => $lama['username']], 'Ubah data user', $l, $b);
+      if ($gantiPw) logAktivitas($koneksi, 'user', 'reset_password', ['tipe' => 'user', 'id' => $lama['uid_user'], 'label' => $lama['username']],
+         $isSelf ? 'Ganti password akun sendiri' : 'Password user diganti admin');
       jawab(['status' => 'success', 'message' => 'Data berhasil diupdate']);
    }
    jawab(['status' => 'error', 'message' => 'Gagal memperbarui user.'], 500);
@@ -469,7 +484,8 @@ function deleteData($id_customer)
 
    $st = $koneksi->prepare("DELETE FROM ms_users WHERE id_user=? AND id_customer=?");
    $st->bind_param("ii", $id, $id_customer);
-   if ($st->execute()) {
+   if ($st->execute() && $st->affected_rows > 0) {
+      logAktivitas($koneksi, 'user', 'hapus', ['tipe' => 'user', 'id' => $u['uid_user'], 'label' => $u['username']], $u['fullname'] . ' (' . $u['roles'] . ')', $u);
       jawab(['status' => 'success', 'message' => 'User dihapus.']);
    }
    jawab(['status' => 'error', 'message' => 'Gagal menghapus user.'], 500);

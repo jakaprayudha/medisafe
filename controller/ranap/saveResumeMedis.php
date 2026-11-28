@@ -96,15 +96,18 @@ try {
    // ---- simpan (kunci baris kunjungan agar klik ganda tidak membuat resume dobel) ----
    $koneksi->begin_transaction();
    try {
-      $st = $koneksi->prepare("SELECT id_visit FROM pasien_visit WHERE visit_ID = ? AND id_customer = ? FOR UPDATE");
+      $st = $koneksi->prepare("SELECT id_visit, diagnosa_utama, diagnosa_sekunder, pemeriksaan_fisik, alergi_obat, kondisi_pulang, cara_keluar, rencana_tindak_lanjut
+         FROM pasien_visit WHERE visit_ID = ? AND id_customer = ? FOR UPDATE");
       $st->bind_param('si', $no, $idc);
       $st->execute();
-      $st->get_result()->fetch_all();
+      $visitLama = $st->get_result()->fetch_assoc() ?: [];
       $st->close();
-      $st = $koneksi->prepare("SELECT id_resume FROM resume_medis WHERE visit_ID = ? ORDER BY id_resume DESC LIMIT 1");
+      $st = $koneksi->prepare("SELECT id_resume, diagnosa, tindakan, pemeriksaan_penunjang, obat, instruksi, dokter, tanggal_pulang, jam_pulang
+         FROM resume_medis WHERE visit_ID = ? ORDER BY id_resume DESC LIMIT 1");
       $st->bind_param('s', $no);
       $st->execute();
-      $idResume = (int) ($st->get_result()->fetch_row()[0] ?? 0);
+      $resumeLama = $st->get_result()->fetch_assoc() ?: [];
+      $idResume = (int) ($resumeLama['id_resume'] ?? 0);
       $st->close();
       if ($idResume > 0) {
          $st = $koneksi->prepare("UPDATE resume_medis SET nomor_rm = ?, diagnosa = ?, tindakan = ?, pemeriksaan_penunjang = ?, obat = ?, instruksi = ?,
@@ -130,6 +133,14 @@ try {
       $koneksi->rollback();
       throw $e;
    }
+   // log perubahan isi resume (setelah commit)
+   require_once __DIR__ . '/../../utility/activityLog.php';
+   $rsBaru = ['diagnosa' => $ringkas, 'tindakan' => $fisik, 'pemeriksaan_penunjang' => $terapiRawat, 'obat' => $alergi, 'instruksi' => $terapiPulang,
+      'dokter' => $dokter, 'tanggal_pulang' => $tgl, 'jam_pulang' => $jam, 'diagnosa_utama' => $teksUtama, 'diagnosa_sekunder' => $teksSek,
+      'kondisi_pulang' => $kondisi, 'cara_keluar' => $cara, 'rencana_tindak_lanjut' => $rtl];
+   [$l, $b] = logBeda($resumeLama + $visitLama, $rsBaru);
+   if ($b) logAktivitas($koneksi, 'resume', $idResume > 0 ? 'ubah' : 'tambah', ['tipe' => 'resume', 'id' => $idResume ?: null, 'label' => $rm, 'visit_ID' => $no],
+      $pesan . ' Diagnosa utama: ' . $teksUtama, $idResume > 0 ? $l : null, $b, $idc);
    rsBalas(200, ['status' => 'success', 'message' => $pesan]);
 } catch (Throwable $e) {
    error_log('[ranap/saveResumeMedis] ' . $e->getMessage());

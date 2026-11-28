@@ -566,5 +566,17 @@ if ($status_pasien == "UMUM") {
         }
     }
 }
+// log diagnosa / kirim kunjungan PCare (baik berhasil maupun ditolak BPJS)
+require_once __DIR__ . '/../../../../utility/activityLog.php';
+$logDiag = array_filter(['kdDiag1' => $diag1, 'kdDiag2' => $diag2, 'kdDiag3' => $diag3], fn($v) => $v !== null && $v !== '');
+if ($status_pasien == "UMUM") {
+    if (!empty($response['success'])) logAktivitas($koneksi, 'diagnosa', 'simpan', ['tipe' => 'kunjungan', 'id' => $nomor_visit, 'label' => $nomor_visit, 'visit_ID' => $nomor_visit],
+        'Simpan pemeriksaan & diagnosa pasien umum · ' . implode(', ', $logDiag), null, $logDiag + ['kdStatusPulang' => $kdStatusPulang, 'kdDokter' => $kdDokter]);
+} else {
+    logAktivitas($koneksi, 'diagnosa', 'kirim_pcare', ['tipe' => 'kunjungan', 'id' => $nomor_visit, 'label' => $noKunjungan ?: $nomor_visit, 'visit_ID' => $nomor_visit],
+        (!empty($response['success']) ? (($method ?? '') === 'PUT' ? 'Ubah kunjungan PCare' : 'Kirim kunjungan PCare') . ' berhasil' : 'Kirim kunjungan PCare GAGAL: ' . mb_substr((string) (is_scalar($response['message'] ?? null) ? $response['message'] : json_encode($response['message'] ?? null)), 0, 300))
+        . ' · ' . implode(', ', $logDiag),
+        null, $logDiag + ['noKunjungan' => $noKunjungan, 'kdStatusPulang' => $kdStatusPulang, 'kdDokter' => $kdDokter, 'metode' => $method ?? null, 'berhasil' => !empty($response['success'])]);
+}
 echo json_encode($response);
 function getObat() {}

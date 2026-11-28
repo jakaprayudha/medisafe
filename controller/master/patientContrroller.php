@@ -1,5 +1,21 @@
 <?php
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
+
+/** Kolom identitas pasien yang dicatat di log perubahan. */
+const PT_KOLOM_LOG = ['nomor_rm', 'patient_name', 'patient_nik', 'patient_bpjs', 'patient_gender', 'patient_datebirth', 'patient_place', 'patient_phone',
+   'patient_address', 'patient_religion', 'patient_provinsi', 'patient_kabupaten', 'patient_kecamatan', 'patient_kelurahan'];
+
+function ptAmbil(int $id, int $idc): ?array
+{
+   global $koneksi;
+   $st = $koneksi->prepare("SELECT id_patient, " . implode(', ', PT_KOLOM_LOG) . " FROM ms_patient WHERE id_patient = ? AND id_customer = ? LIMIT 1");
+   $st->bind_param('ii', $id, $idc);
+   $st->execute();
+   $r = $st->get_result()->fetch_assoc();
+   $st->close();
+   return $r ?: null;
+}
 
 header('Content-Type: application/json');
 
@@ -183,12 +199,15 @@ function createData($id_customer)
       if (!$stmt->execute()) {
          throw new Exception($stmt->error);
       }
+      $idBaru = (int) $stmt->insert_id;
 
       $stmt->close();
 
       // ================== COMMIT ==================
       $koneksi->commit();
       unset($_SESSION['pasien_total']);
+      logAktivitas($koneksi, 'pasien', 'tambah', ['tipe' => 'pasien', 'id' => $idBaru, 'label' => $nomorRM . ' · ' . ($data['patient_name'] ?? '')],
+         'Pasien baru', null, array_combine($fields, $values));
 
       echo json_encode([
          'status' => 'success',
@@ -443,10 +462,19 @@ function updateData($id_customer)
    $query = "UPDATE ms_patient SET " . implode(',', $fields) . " 
              WHERE id_patient=? AND id_customer=?";
 
+   $ptLama = ptAmbil((int) $id, (int) $id_customer);
    $stmt = $koneksi->prepare($query);
    $stmt->bind_param($types, ...$values);
 
    if ($stmt->execute()) {
+      if ($ptLama && $stmt->affected_rows > 0) {
+         $ptBaru = [];
+         foreach ($allowedFields as $f) if (isset($_PUT[$f])) $ptBaru[$f] = $_PUT[$f];
+         [$l, $b] = logBeda($ptLama, $ptBaru);
+         $penting = array_intersect(array_keys($b), ['patient_name', 'patient_nik', 'patient_bpjs', 'patient_datebirth', 'patient_gender']);
+         if ($b) logAktivitas($koneksi, 'pasien', 'ubah', ['tipe' => 'pasien', 'id' => $ptLama['id_patient'], 'label' => $ptLama['nomor_rm'] . ' · ' . $ptLama['patient_name']],
+            $penting ? 'Ubah identitas: ' . implode(', ', $penting) : 'Ubah data pasien', $l, $b);
+      }
       echo json_encode(['status' => 'success', 'message' => 'Update berhasil']);
    } else {
       echo json_encode(['status' => 'error', 'message' => $stmt->error]);
@@ -494,11 +522,14 @@ function deleteData($id_customer)
       return;
    }
 
+   $ptLama = ptAmbil($id, $idc);
    $stmt = $koneksi->prepare("DELETE FROM ms_patient WHERE id_patient = ? AND id_customer = ?");
    $stmt->bind_param('ii', $id, $idc);
    $ok = $stmt->execute();
    $stmt->close();
    if ($ok) unset($_SESSION['pasien_total']);
+   if ($ok && $ptLama) logAktivitas($koneksi, 'pasien', 'hapus', ['tipe' => 'pasien', 'id' => $id, 'label' => $ptLama['nomor_rm'] . ' · ' . $ptLama['patient_name']],
+      'Pasien tanpa kunjungan dihapus', $ptLama);
    echo json_encode($ok
       ? ['status' => 'success', 'message' => 'Data pasien berhasil dihapus']
       : ['status' => 'error', 'message' => 'Gagal menghapus data']);

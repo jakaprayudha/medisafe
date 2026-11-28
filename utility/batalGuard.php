@@ -14,15 +14,17 @@ function batalCekKlinis(mysqli $db, array $kunj): array
    $idv = (int) $kunj['id_visit'];
    $vid = (string) $kunj['visit_ID'];
    $idc = (int) $kunj['id_customer'];
+   // visit_inspection.id_visit & pasien_billing.id_visit berisi visit_ID (teks), bukan pasien_visit.id_visit (angka).
+   // Dulu dibandingkan dengan pv.id_visit -> permintaan lab & item tagihan tidak pernah terhitung, pembatalan lolos tanpa konfirmasi.
    $st = $db->prepare("SELECT pv.id_poli, pv.id_doctor, pv.visit_out, pv.kondisi_keluar, pv.triase,
          (COALESCE(pv.pemeriksaan_fisik,'') <> '') AS fisik, (COALESCE(pv.catatan_screening,'') <> '') AS screening,
-         (SELECT COUNT(*) FROM visit_inspection i WHERE i.id_visit = pv.id_visit) AS insp,
+         (SELECT COUNT(*) FROM visit_inspection i WHERE i.id_visit = pv.visit_ID AND i.id_customer = pv.id_customer) AS insp,
          (SELECT COUNT(*) FROM visit_anamnesa a WHERE a.nomor_visit = pv.visit_ID) AS anam,
          (SELECT COUNT(*) FROM visit_terapi t WHERE t.nomor_visit = pv.visit_ID) AS terapi,
          (SELECT COUNT(*) FROM visit_cppt c WHERE c.visit_ID = pv.visit_ID AND c.id_customer = pv.id_customer) AS cppt,
          (SELECT COUNT(*) FROM visit_cppt_dokter d WHERE d.visit_ID = pv.visit_ID AND d.id_customer = pv.id_customer) AS cppt_dokter,
          (SELECT COUNT(*) FROM visit_ranap r WHERE r.visit_ID = pv.visit_ID) AS ranap,
-         (SELECT COUNT(*) FROM pasien_billing b WHERE b.id_visit = pv.id_visit AND b.id_customer = pv.id_customer) AS billing
+         (SELECT COUNT(*) FROM pasien_billing b WHERE b.id_visit = pv.visit_ID AND b.id_customer = pv.id_customer) AS billing
       FROM pasien_visit pv WHERE pv.id_visit = ? AND pv.id_customer = ? LIMIT 1");
    $st->bind_param('ii', $idv, $idc);
    $st->execute();

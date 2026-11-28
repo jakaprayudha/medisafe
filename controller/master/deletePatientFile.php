@@ -69,6 +69,9 @@ $stmt = $koneksi->prepare(
 $stmt->bind_param("si", $id_patient, $id_customer);
 
 if ($stmt->execute()) {
+   require_once __DIR__ . '/../../utility/activityLog.php';
+   logAktivitas($koneksi, 'pasien', 'hapus_file', ['tipe' => 'pasien', 'id' => $id_patient, 'label' => 'Dokumen ' . strtoupper($field)],
+      'File ' . $field . ' pasien dihapus', [$dbField => $filename], [$dbField => null]);
 
    echo json_encode([
       "status" => "success",

@@ -1,6 +1,7 @@
 <?php
 require '../../database/connect.php';
 require_once __DIR__ . '/../../utility/security.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 header('Content-Type: application/json');
 requireRole(['administrator', 'superadmin']);
 
@@ -24,11 +25,13 @@ if (!$id_customer || !$username) {
 // ===============================
 // 🔥 CEK USER EXIST
 // ===============================
-$cekUser = mysqli_query($koneksi, "
-   SELECT * FROM ms_users WHERE id_customer='$id_customer' LIMIT 1
-");
-
-$existing = mysqli_fetch_assoc($cekUser);
+// akun admin faskes ini (dulu: user PERTAMA faskes apa pun perannya, lalu UPDATE ... WHERE id_customer=?
+// menimpa nama/username/password SEMUA user faskes tersebut)
+$cekUser = $koneksi->prepare("SELECT id_user, uid_user, fullname, username, roles FROM ms_users WHERE id_customer = ? AND roles = 'admin' ORDER BY id_user LIMIT 1");
+$cekUser->bind_param('i', $id_customer);
+$cekUser->execute();
+$existing = $cekUser->get_result()->fetch_assoc();
+$cekUser->close();
 
 // ===============================
 // 🔥 GENERATE UID (HANYA SAAT INSERT)
@@ -59,20 +62,25 @@ if ($existing) {
       $stmt = $koneksi->prepare("
          UPDATE ms_users 
          SET fullname=?, username=?, password=? 
-         WHERE id_customer=?
+         WHERE id_user=? AND id_customer=?
       ");
-      $stmt->bind_param("sssi", $nama, $username, $password_hash, $id_customer);
+      $idAdmin = (int) $existing['id_user'];
+      $stmt->bind_param("sssii", $nama, $username, $password_hash, $idAdmin, $id_customer);
    } else {
       // tanpa ubah password
       $stmt = $koneksi->prepare("
          UPDATE ms_users 
          SET fullname=?, username=? 
-         WHERE id_customer=?
+         WHERE id_user=? AND id_customer=?
       ");
-      $stmt->bind_param("ssi", $nama, $username, $id_customer);
+      $idAdmin = (int) $existing['id_user'];
+      $stmt->bind_param("ssii", $nama, $username, $idAdmin, $id_customer);
    }
 
    if ($stmt->execute()) {
+      [$l, $b] = logBeda($existing, ['fullname' => $nama, 'username' => $username]);
+      logAktivitas($koneksi, 'user', 'ubah', ['tipe' => 'user', 'id' => $existing['uid_user'], 'label' => $username],
+         'Akun admin faskes diubah dari menu superadmin' . (!empty($password) ? ' (password diganti)' : ''), $l ?: null, $b ?: null, $id_customer);
       echo json_encode([
          'status' => 'success',
          'message' => 'User berhasil diupdate'
@@ -114,6 +122,8 @@ $stmt = $koneksi->prepare("
 $stmt->bind_param("sisssss", $uid_user, $id_customer, $nama, $username, $password_hash, $roles, $path);
 
 if ($stmt->execute()) {
+   logAktivitas($koneksi, 'user', 'tambah', ['tipe' => 'user', 'id' => $uid_user, 'label' => $username], 'Akun admin faskes dibuat dari menu superadmin',
+      null, ['fullname' => $nama, 'username' => $username, 'roles' => $roles], $id_customer);
    echo json_encode([
       'status' => 'success',
       'message' => 'User admin berhasil dibuat'
