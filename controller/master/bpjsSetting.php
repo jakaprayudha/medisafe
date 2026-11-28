@@ -175,7 +175,7 @@ if ($aksi === 'tes_antrol' && $_SERVER['REQUEST_METHOD'] === 'POST') {
    require_once __DIR__ . '/../wsbpjs/serviceantrian.php';
 
    $t0 = microtime(true);
-   $res = antrolGet('ref/poli', antrolGetConfigBPJS($idc, $koneksi));
+   $res = antrolGet('ref/poli/tanggal/' . date('Y-m-d'), antrolGetConfigBPJS($idc, $koneksi));
    $ms = (int) round((microtime(true) - $t0) * 1000);
 
    if (empty($res['success'])) {
