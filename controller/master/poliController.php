@@ -8,6 +8,7 @@
 //   DELETE ?id=ID               -> hapus
 session_start();
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 mysqli_report(MYSQLI_REPORT_OFF);
 
 header('Content-Type: application/json; charset=utf-8');
@@ -120,6 +121,12 @@ function cekDuplikat(mysqli $k, int $idc, string $kode, string $nama, int $kecua
    }
 }
 
+function poliLog(mysqli $k, int $id, ?array $lama, string $ket, ?string $aksi = null): void
+{
+   $r = $lama ?? logAmbilBaris($k, 'ms_poli', 'id_poli', $id) ?? [];
+   logBaris($k, 'master', 'ms_poli', 'id_poli', $id, $lama, ['tipe' => 'poli', 'label' => trim(($r['poli_code'] ?? '') . ' · ' . ($r['poli_name'] ?? ''), ' ·')], $ket, $aksi);
+}
+
 function poliMilik(mysqli $k, int $id, int $idc): array
 {
    $row = semua($k, "SELECT * FROM ms_poli WHERE id_poli = ? AND id_customer = ?", 'ii', [$id, $idc]);
@@ -225,6 +232,7 @@ if ($method === 'POST') {
       'sssi',
       [$kode, $nama, $antri, $idc]
    );
+   poliLog($koneksi, (int) $koneksi->insert_id, null, 'Poliklinik ditambahkan');
    jawab(['status' => 'success', 'message' => 'Poliklinik berhasil ditambahkan.']);
 }
 
@@ -238,6 +246,7 @@ if ($method === 'PUT') {
       $status = (int) $in['poli_status'];
       if (!in_array($status, [0, 1], true)) jawab(['status' => 'error', 'message' => 'Status tidak valid.'], 422);
       eksekusi($koneksi, "UPDATE ms_poli SET poli_status = ? WHERE id_poli = ? AND id_customer = ?", 'iii', [$status, $id, $idc]);
+      poliLog($koneksi, $id, $lama, $status ? 'Poliklinik diaktifkan' : 'Poliklinik dinonaktifkan', $status ? 'aktifkan' : 'nonaktifkan');
       jawab(['status' => 'success', 'message' => $status ? 'Poliklinik diaktifkan.' : 'Poliklinik dinonaktifkan.']);
    }
 
@@ -249,6 +258,7 @@ if ($method === 'PUT') {
       'sssii',
       [$kode, $nama, $antri, $id, $idc]
    );
+   poliLog($koneksi, $id, $lama, 'Poliklinik diubah');
    jawab(['status' => 'success', 'message' => 'Poliklinik berhasil diperbarui.']);
 }
 
@@ -262,6 +272,7 @@ if ($method === 'DELETE') {
       jawab(['status' => 'error', 'message' => "Poliklinik {$poli['poli_name']} sudah memiliki " . number_format($jml, 0, ',', '.') . " data kunjungan pasien sehingga tidak dapat dihapus. Nonaktifkan saja bila tidak dipakai."], 409);
    }
    eksekusi($koneksi, "DELETE FROM ms_poli WHERE id_poli = ? AND id_customer = ?", 'ii', [$id, $idc]);
+   poliLog($koneksi, $id, $poli, 'Poliklinik dihapus');
    jawab(['status' => 'success', 'message' => 'Poliklinik berhasil dihapus.']);
 }
 

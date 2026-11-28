@@ -7,6 +7,20 @@
 //   PUT    ?toggle_bed=1     -> ubah status bed (id_bed, bed_status 1=kosong 0=terisi)
 //   DELETE ?id=ID            -> hapus ruangan (ditolak bila masih ada bed / pasien aktif)
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
+
+/** Log master ruangan / bed (modul master). */
+function ruangLog(mysqli $k, int $id, ?array $lama, string $ket, ?string $aksi = null): void
+{
+   $r = $lama ?? logAmbilBaris($k, 'ms_room', 'id_room', $id) ?? [];
+   logBaris($k, 'master', 'ms_room', 'id_room', $id, $lama, ['tipe' => 'ruangan', 'label' => trim(($r['room_name'] ?? '') . ' · ' . ($r['service_class'] ?? ''), ' ·')], $ket, $aksi);
+}
+function bedLog(mysqli $k, int $id, ?array $lama, string $ket, ?string $aksi = null): void
+{
+   $r = $lama ?? logAmbilBaris($k, 'ms_room_bed', 'id_bed', $id) ?? [];
+   $room = logAmbilBaris($k, 'ms_room', 'id_room', $r['id_room'] ?? null);
+   logBaris($k, 'master', 'ms_room_bed', 'id_bed', $id, $lama, ['tipe' => 'bed', 'label' => trim(($room['room_name'] ?? '') . ' · ' . ($r['bed_name'] ?? ''), ' ·')], $ket, $aksi);
+}
 mysqli_report(MYSQLI_REPORT_OFF);
 
 header('Content-Type: application/json; charset=utf-8');
@@ -166,6 +180,7 @@ if ($method === 'POST') {
       'ssisi',
       [$kelas, $nama, $kap, $desk, $idc]
    );
+   ruangLog($koneksi, (int) $koneksi->insert_id, null, 'Ruangan ditambahkan');
    jawab(['status' => 'success', 'message' => 'Ruangan berhasil ditambahkan.']);
 }
 
@@ -180,7 +195,9 @@ if ($method === 'PUT') {
       if ($idBed <= 0 || !in_array($status, [0, 1], true)) jawab(['status' => 'error', 'message' => 'Data bed tidak valid.'], 422);
       $ada = semua($koneksi, "SELECT 1 FROM ms_room_bed WHERE id_bed = ? AND id_customer = ?", 'ii', [$idBed, $idc]);
       if (!$ada) jawab(['status' => 'error', 'message' => 'Bed tidak ditemukan.'], 404);
+      $lama = logAmbilBaris($koneksi, 'ms_room_bed', 'id_bed', $idBed);
       eksekusi($koneksi, "UPDATE ms_room_bed SET bed_status = ? WHERE id_bed = ? AND id_customer = ?", 'iii', [$status, $idBed, $idc]);
+      bedLog($koneksi, $idBed, $lama, $status === 1 ? 'Bed ditandai kosong (manual)' : 'Bed ditandai terisi (manual)', 'ubah_status');
       jawab(['status' => 'success', 'message' => $status === 1 ? 'Bed ditandai kosong.' : 'Bed ditandai terisi.']);
    }
 
@@ -189,11 +206,13 @@ if ($method === 'PUT') {
    if (!semua($koneksi, "SELECT 1 FROM ms_room WHERE id_room = ? AND id_customer = ?", 'ii', [$id, $idc])) {
       jawab(['status' => 'error', 'message' => 'Data tidak ditemukan.'], 404);
    }
+   $lama = logAmbilBaris($koneksi, 'ms_room', 'id_room', $id);
 
    // status ruangan
    if (isset($in['room_status']) && !isset($in['room_name'])) {
       $status = (int) $in['room_status'] === 1 ? 1 : 0;
       eksekusi($koneksi, "UPDATE ms_room SET room_status = ? WHERE id_room = ? AND id_customer = ?", 'iii', [$status, $id, $idc]);
+      ruangLog($koneksi, $id, $lama, $status ? 'Ruangan diaktifkan' : 'Ruangan dinonaktifkan', $status ? 'aktifkan' : 'nonaktifkan');
       jawab(['status' => 'success', 'message' => $status ? 'Ruangan diaktifkan.' : 'Ruangan dinonaktifkan.']);
    }
 
@@ -207,6 +226,7 @@ if ($method === 'PUT') {
       'ssisii',
       [$kelas, $nama, $kap, $desk, $id, $idc]
    );
+   ruangLog($koneksi, $id, $lama, 'Ruangan diubah');
    jawab(['status' => 'success', 'message' => 'Ruangan berhasil diperbarui.']);
 }
 
@@ -225,7 +245,9 @@ if ($method === 'DELETE') {
    if ($bed > 0) {
       jawab(['status' => 'error', 'message' => "Ruangan masih memiliki $bed tempat tidur. Hapus tempat tidur terlebih dahulu di menu detail, atau nonaktifkan ruangan."], 409);
    }
+   $lama = logAmbilBaris($koneksi, 'ms_room', 'id_room', $id);
    eksekusi($koneksi, "DELETE FROM ms_room WHERE id_room = ? AND id_customer = ?", 'ii', [$id, $idc]);
+   ruangLog($koneksi, $id, $lama, 'Ruangan dihapus');
    jawab(['status' => 'success', 'message' => 'Ruangan berhasil dihapus.']);
 }
 

@@ -11,6 +11,7 @@
  */
 require_once __DIR__ . '/../../database/connect.php';
 require_once __DIR__ . '/../../utility/security.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 requireRole(['superadmin', 'administrator']);
@@ -132,10 +133,20 @@ if ($method !== 'POST') mdJson('error', 'Method tidak didukung.', null, 405);
 $aksi = (string) ($_POST['aksi'] ?? '');
 $id = (int) ($_POST['id'] ?? 0);
 
+/** Log master_poli global (snapshot $lama diambil sebelum perubahan). */
+function mdLog(mysqli $k, int $id, ?array $lama, string $ket, ?string $aksi = null): void
+{
+   $r = $lama ?? logAmbilBaris($k, 'master_poli', 'id', $id) ?? [];
+   logBaris($k, 'master', 'master_poli', 'id', $id, $lama, ['tipe' => 'master_poli', 'label' => trim(($r['kdPoli'] ?? '') . ' · ' . ($r['nmPoli'] ?? ''), ' ·')], $ket, $aksi);
+}
+
 /* ----------------------------- status ---------------------------- */
 if ($aksi === 'poli_status') {
    if ($id <= 0) mdJson('error', 'ID tidak valid.', null, 422);
-   mdExec($koneksi, 'UPDATE master_poli SET status_poli = ? WHERE id = ?', 'ii', [(int) (($_POST['status'] ?? '0') === '1'), $id]);
+   $lama = logAmbilBaris($koneksi, 'master_poli', 'id', $id);
+   $st = (int) (($_POST['status'] ?? '0') === '1');
+   mdExec($koneksi, 'UPDATE master_poli SET status_poli = ? WHERE id = ?', 'ii', [$st, $id]);
+   if ($lama) mdLog($koneksi, $id, $lama, $st ? 'Poli master diaktifkan' : 'Poli master dinonaktifkan', $st ? 'aktifkan' : 'nonaktifkan');
    mdJson('success', 'Status poli diperbarui.');
 }
 
@@ -145,7 +156,9 @@ if ($aksi === 'poli_hapus') {
    if (!$row) mdJson('error', 'Poli tidak ditemukan.', null, 404);
    $n = mdPakaiPoli($koneksi, true)[mb_strtolower(trim((string) $row['nmPoli']))] ?? 0;
    if ($n > 0) mdJson('error', "Poli \"{$row['nmPoli']}\" sudah dipakai di " . number_format($n, 0, ',', '.') . ' kunjungan sehingga tidak bisa dihapus. Nonaktifkan saja.', null, 409);
+   $lama = logAmbilBaris($koneksi, 'master_poli', 'id', $id);
    mdExec($koneksi, 'DELETE FROM master_poli WHERE id = ?', 'i', [$id]);
+   mdLog($koneksi, $id, $lama, 'Poli master dihapus');
    mdJson('success', 'Poli dihapus.');
 }
 
@@ -167,11 +180,14 @@ if ($aksi === 'poli_simpan') {
          $n = mdPakaiPoli($koneksi, true)[mb_strtolower(trim((string) $row['nmPoli']))] ?? 0;
          if ($n > 0) mdJson('error', 'Nama/kode tidak bisa diganti: poli ini sudah dipakai di ' . number_format($n, 0, ',', '.') . ' kunjungan (riwayat mencatat nama poli). Anda masih bisa mengubah status atau jenisnya.', ['field' => 'nmPoli'], 409);
       }
+      $lama = logAmbilBaris($koneksi, 'master_poli', 'id', $id);
       mdExec($koneksi, 'UPDATE master_poli SET kdPoli = ?, nmPoli = ?, status_poli = ?, poliSakit = ? WHERE id = ?', 'ssiii', [$kd, $nm, $aktif, $sakit, $id]);
+      mdLog($koneksi, $id, $lama, 'Poli master diubah');
       mdJson('success', 'Poli diperbarui.');
    }
    if (mdQ($koneksi, 'SELECT 1 FROM master_poli WHERE nmPoli = ? LIMIT 1', 's', [$nm])) mdJson('error', 'Nama poli sudah ada.', ['field' => 'nmPoli'], 422);
    mdExec($koneksi, 'INSERT INTO master_poli (kdPoli, nmPoli, status_poli, poliSakit) VALUES (?, ?, ?, ?)', 'ssii', [$kd, $nm, $aktif, $sakit]);
+   mdLog($koneksi, (int) $koneksi->insert_id, null, 'Poli master ditambahkan');
    mdJson('success', 'Poli ditambahkan.');
 }
 

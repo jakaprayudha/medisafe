@@ -8,6 +8,20 @@
 //   POST   ?no=ID_ROOM&reset=1    -> kosongkan bed yang tidak ditempati pasien aktif
 //   DELETE ?no=ID_ROOM&id=ID_BED  -> hapus bed (ditolak bila ada pasien aktif)
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
+
+/** Log master ruangan / bed (modul master). */
+function ruangLog(mysqli $k, int $id, ?array $lama, string $ket, ?string $aksi = null): void
+{
+   $r = $lama ?? logAmbilBaris($k, 'ms_room', 'id_room', $id) ?? [];
+   logBaris($k, 'master', 'ms_room', 'id_room', $id, $lama, ['tipe' => 'ruangan', 'label' => trim(($r['room_name'] ?? '') . ' · ' . ($r['service_class'] ?? ''), ' ·')], $ket, $aksi);
+}
+function bedLog(mysqli $k, int $id, ?array $lama, string $ket, ?string $aksi = null): void
+{
+   $r = $lama ?? logAmbilBaris($k, 'ms_room_bed', 'id_bed', $id) ?? [];
+   $room = logAmbilBaris($k, 'ms_room', 'id_room', $r['id_room'] ?? null);
+   logBaris($k, 'master', 'ms_room_bed', 'id_bed', $id, $lama, ['tipe' => 'bed', 'label' => trim(($room['room_name'] ?? '') . ' · ' . ($r['bed_name'] ?? ''), ' ·')], $ket, $aksi);
+}
 mysqli_report(MYSQLI_REPORT_OFF);
 
 header('Content-Type: application/json; charset=utf-8');
@@ -174,6 +188,11 @@ if ($method === 'POST') {
             array_merge([$idc, $idRoom], $target)
          );
       }
+      if ($n > 0) {
+         $rm = $room[0] ?? [];
+         logAktivitas($koneksi, 'master', 'ubah_status', ['tipe' => 'ruangan', 'id' => $idRoom, 'label' => trim(($rm['room_name'] ?? '') . ' · ' . ($rm['service_class'] ?? ''), ' ·')],
+            "$n tempat tidur dikosongkan (reset ruangan)", ['id_bed' => $target, 'bed_status' => 0], ['bed_status' => 1]);
+      }
       $pesan = $n ? "$n tempat tidur dikosongkan." : 'Tidak ada tempat tidur yang perlu dikosongkan.';
       if ($dipakai) $pesan .= ' ' . count($dipakai) . ' bed tetap terisi karena masih ada pasien rawat inap aktif.';
       jawab(['status' => 'success', 'message' => $pesan, 'jumlah' => $n]);
@@ -189,6 +208,7 @@ if ($method === 'POST') {
       'isssi',
       [$idRoom, $nama, $gender, $notes, $idc]
    );
+   bedLog($koneksi, (int) $koneksi->insert_id, null, 'Tempat tidur ditambahkan');
    jawab(['status' => 'success', 'message' => 'Tempat tidur berhasil ditambahkan.']);
 }
 
@@ -196,12 +216,13 @@ if ($method === 'POST') {
 if ($method === 'PUT') {
    parse_str(file_get_contents('php://input'), $in);
    $idBed = (int) ($in['id_bed'] ?? 0);
-   bedMilikRuangan($koneksi, $idBed, $idRoom, $idc);
+   $lama = bedMilikRuangan($koneksi, $idBed, $idRoom, $idc);
 
    if (isset($_GET['toggle'])) {
       $status = (int) ($in['bed_status'] ?? -1);
       if (!in_array($status, [0, 1], true)) jawab(['status' => 'error', 'message' => 'Status tidak valid.'], 422);
       eksekusi($koneksi, "UPDATE ms_room_bed SET bed_status = ? WHERE id_bed = ? AND id_customer = ?", 'iii', [$status, $idBed, $idc]);
+      bedLog($koneksi, $idBed, $lama, $status === 1 ? 'Tempat tidur ditandai kosong (manual)' : 'Tempat tidur ditandai terisi (manual)', 'ubah_status');
       jawab(['status' => 'success', 'message' => $status === 1 ? 'Tempat tidur ditandai kosong.' : 'Tempat tidur ditandai terisi.']);
    }
 
@@ -215,18 +236,20 @@ if ($method === 'PUT') {
       'sssii',
       [$nama, $gender, $notes, $idBed, $idc]
    );
+   bedLog($koneksi, $idBed, $lama, 'Tempat tidur diubah');
    jawab(['status' => 'success', 'message' => 'Tempat tidur berhasil diperbarui.']);
 }
 
 // ================= DELETE =================
 if ($method === 'DELETE') {
    $idBed = (int) ($_GET['id'] ?? 0);
-   bedMilikRuangan($koneksi, $idBed, $idRoom, $idc);
+   $lama = bedMilikRuangan($koneksi, $idBed, $idRoom, $idc);
    $p = pasienAktif($koneksi, [$idBed])[$idBed] ?? null;
    if ($p) {
       jawab(['status' => 'error', 'message' => 'Tempat tidur masih ditempati pasien rawat inap aktif' . ($p['nama'] ? " ({$p['nama']})" : '') . '.'], 409);
    }
    eksekusi($koneksi, "DELETE FROM ms_room_bed WHERE id_bed = ? AND id_customer = ?", 'ii', [$idBed, $idc]);
+   bedLog($koneksi, $idBed, $lama, 'Tempat tidur dihapus');
    jawab(['status' => 'success', 'message' => 'Tempat tidur berhasil dihapus.']);
 }
 

@@ -8,6 +8,12 @@
 //   POST / PUT / DELETE           -> superadmin saja
 session_start();
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
+function provLog(mysqli $k, int $id, ?array $lama, string $ket, ?string $aksi = null): void
+{
+   $r = $lama ?? logAmbilBaris($k, 'ms_provider', 'id_provider', $id) ?? [];
+   logBaris($k, 'master', 'ms_provider', 'id_provider', $id, $lama, ['tipe' => 'jenis_bayar', 'label' => trim(($r['provider_code'] ?? '') . ' · ' . ($r['provider_name'] ?? ''), ' ·')], $ket, $aksi);
+}
 mysqli_report(MYSQLI_REPORT_OFF);
 
 header('Content-Type: application/json; charset=utf-8');
@@ -150,30 +156,34 @@ if (($_SESSION['roles'] ?? '') !== 'superadmin') {
 if ($method === 'POST') {
    [$kode, $nama] = inputProvider($_POST);
    eksekusi($koneksi, "INSERT INTO ms_provider (provider_code, provider_name) VALUES (?, ?)", 'ss', [$kode, $nama]);
+   provLog($koneksi, (int) $koneksi->insert_id, null, 'Jenis bayar ditambahkan');
    jawab(['status' => 'success', 'message' => 'Jenis bayar berhasil ditambahkan.']);
 }
 
 if ($method === 'PUT') {
    parse_str(file_get_contents('php://input'), $in);
    $id = (int) ($in['id_provider'] ?? 0);
-   providerAda($koneksi, $id);
+   $lama = providerAda($koneksi, $id);
 
    if (isset($in['provider_status'])) {
       $status = (int) $in['provider_status'];
       if (!in_array($status, [0, 1], true)) jawab(['status' => 'error', 'message' => 'Status tidak valid.'], 422);
       eksekusi($koneksi, "UPDATE ms_provider SET provider_status = ? WHERE id_provider = ?", 'ii', [$status, $id]);
+      provLog($koneksi, $id, $lama, $status ? 'Jenis bayar diaktifkan' : 'Jenis bayar dinonaktifkan', $status ? 'aktifkan' : 'nonaktifkan');
       jawab(['status' => 'success', 'message' => 'Status jenis bayar diperbarui.']);
    }
 
    [$kode, $nama] = inputProvider($in);
    eksekusi($koneksi, "UPDATE ms_provider SET provider_code = ?, provider_name = ? WHERE id_provider = ?", 'ssi', [$kode, $nama, $id]);
+   provLog($koneksi, $id, $lama, 'Jenis bayar diubah');
    jawab(['status' => 'success', 'message' => 'Jenis bayar berhasil diperbarui.']);
 }
 
 // DELETE
 $id = (int) ($_GET['id'] ?? 0);
-providerAda($koneksi, $id);
+$lama = providerAda($koneksi, $id);
 $dipakai = semua($koneksi, "SELECT 1 FROM pasien_visit WHERE id_provider = ? LIMIT 1", 's', [(string) $id]);
 if ($dipakai) jawab(['status' => 'error', 'message' => 'Jenis bayar sudah dipakai pada kunjungan pasien, tidak dapat dihapus.'], 409);
 eksekusi($koneksi, "DELETE FROM ms_provider WHERE id_provider = ?", 'i', [$id]);
+provLog($koneksi, $id, $lama, 'Jenis bayar dihapus');
 jawab(['status' => 'success', 'message' => 'Jenis bayar berhasil dihapus.']);

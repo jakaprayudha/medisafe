@@ -1,5 +1,17 @@
 <?php
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
+if (empty($_SESSION['id_customer'])) {
+   http_response_code(401);
+   echo json_encode(['status' => 'error', 'message' => 'Session tidak valid / expired']);
+   exit;
+}
+function ctLog($id, ?array $lama, string $ket): void
+{
+   global $koneksi;
+   $r = $lama ?? logAmbilBaris($koneksi, 'ms_counter', 'id_counter', $id) ?? [];
+   logBaris($koneksi, 'master', 'ms_counter', 'id_counter', $id, $lama, ['tipe' => 'counter', 'label' => trim(($r['counter_code'] ?? '') . ' · ' . ($r['counter_name'] ?? ''), ' ·')], $ket);
+}
 $method = $_SERVER['REQUEST_METHOD'];
 switch ($method) {
    case 'POST':
@@ -79,6 +91,7 @@ function createData()
       $stmt->bind_param($types, ...$values);
 
       if ($stmt->execute()) {
+         ctLog($stmt->insert_id, null, 'Counter antrean ditambahkan');
          echo json_encode([
             'status' => 'success',
             'message' => 'Data berhasil ditambahkan.'
@@ -201,11 +214,13 @@ function updateData()
    $types = str_repeat('s', count($values) - 1) . "i";
 
    $query = "UPDATE ms_counter SET " . implode(',', $fields) . " WHERE id_counter=?";
+   $ctLama = logAmbilBaris($koneksi, 'ms_counter', 'id_counter', $id);
    $stmt = $koneksi->prepare($query);
 
    if ($stmt) {
       $stmt->bind_param($types, ...$values);
       if ($stmt->execute()) {
+         if ($ctLama) ctLog($id, $ctLama, 'Counter antrean diubah');
          echo json_encode(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
       } else {
          echo json_encode(['status' => 'error', 'message' => 'Update gagal: ' . $stmt->error]);
@@ -236,11 +251,13 @@ function deleteData()
 
    // Query untuk menghapus data user
    $query = "DELETE FROM ms_counter WHERE id_counter = ?";
+   $ctLama = logAmbilBaris($koneksi, 'ms_counter', 'id_counter', $id);
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $id);
 
       if ($stmt->execute()) {
+         if ($ctLama && $stmt->affected_rows > 0) ctLog($id, $ctLama, 'Counter antrean dihapus');
          echo json_encode([
             'status' => 'success',
             'message' => 'Data berhasil dihapus.'

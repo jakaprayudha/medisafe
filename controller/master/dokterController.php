@@ -7,6 +7,7 @@
 //   PUT                            -> ubah | toggle status: id_doctor + doctor_status
 //   DELETE ?id=ID                  -> hapus (ditolak bila sudah ada kunjungan pasien)
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 mysqli_report(MYSQLI_REPORT_OFF);
 
 header('Content-Type: application/json; charset=utf-8');
@@ -100,6 +101,12 @@ function kunjunganPerDokter(mysqli $k, int $idc): array
       foreach ($ids as $id) $out[$id] = ($out[$id] ?? 0) + (int) $r['n'];
    }
    return $out;
+}
+
+function dokterLog(mysqli $k, int $id, ?array $lama, string $ket, ?string $aksi = null): void
+{
+   $r = $lama ?? logAmbilBaris($k, 'ms_doctor', 'id_doctor', $id) ?? [];
+   logBaris($k, 'master', 'ms_doctor', 'id_doctor', $id, $lama, ['tipe' => 'dokter', 'label' => trim(($r['doctor_name'] ?? '') . ' · ' . ($r['id_poli'] ?? ''), ' ·')], $ket, $aksi);
 }
 
 function dokterMilik(mysqli $k, int $id, int $idc): array
@@ -217,6 +224,7 @@ if ($method === 'POST') {
       'sssssssi',
       [$nomor, $kode, $nama, $poli, $poli, $hp, $alamat, $idc]
    );
+   dokterLog($koneksi, (int) $koneksi->insert_id, null, 'Dokter ditambahkan');
    jawab(['status' => 'success', 'message' => 'Dokter berhasil ditambahkan.']);
 }
 
@@ -224,12 +232,13 @@ if ($method === 'POST') {
 if ($method === 'PUT') {
    parse_str(file_get_contents('php://input'), $in);
    $id = (int) ($in['id_doctor'] ?? 0);
-   dokterMilik($koneksi, $id, $idc);
+   $lama = dokterMilik($koneksi, $id, $idc);
 
    if (isset($in['doctor_status'])) {
       $status = (int) $in['doctor_status'];
       if (!in_array($status, [0, 1], true)) jawab(['status' => 'error', 'message' => 'Status tidak valid.'], 422);
       eksekusi($koneksi, "UPDATE ms_doctor SET doctor_status = ? WHERE id_doctor = ? AND id_customer = ?", 'iii', [$status, $id, $idc]);
+      dokterLog($koneksi, $id, $lama, $status ? 'Dokter diaktifkan' : 'Dokter dinonaktifkan', $status ? 'aktifkan' : 'nonaktifkan');
       jawab(['status' => 'success', 'message' => $status ? 'Dokter diaktifkan.' : 'Dokter dinonaktifkan.']);
    }
 
@@ -250,6 +259,7 @@ if ($method === 'PUT') {
    $vals[] = $id;
    $vals[] = $idc;
    eksekusi($koneksi, "UPDATE ms_doctor SET " . implode(', ', $set) . " WHERE id_doctor = ? AND id_customer = ?", str_repeat('s', count($set)) . 'ii', $vals);
+   dokterLog($koneksi, $id, $lama, 'Data dokter diubah');
    jawab(['status' => 'success', 'message' => 'Data dokter berhasil diperbarui.']);
 }
 
@@ -262,6 +272,7 @@ if ($method === 'DELETE') {
       jawab(['status' => 'error', 'message' => "{$dokter['doctor_name']} sudah memiliki " . number_format($jml, 0, ',', '.') . " data kunjungan pasien sehingga tidak dapat dihapus. Nonaktifkan saja bila tidak bertugas."], 409);
    }
    eksekusi($koneksi, "DELETE FROM ms_doctor WHERE id_doctor = ? AND id_customer = ?", 'ii', [$id, $idc]);
+   dokterLog($koneksi, $id, $dokter, 'Dokter dihapus');
    jawab(['status' => 'success', 'message' => 'Dokter berhasil dihapus.']);
 }
 

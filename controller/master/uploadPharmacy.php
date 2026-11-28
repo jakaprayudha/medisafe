@@ -5,6 +5,7 @@
 // Hanya obat milik faskes (master bawaan harus disimpan dulu agar menjadi salinan faskes).
 include "../../database/connect.php";
 require_once __DIR__ . '/pharmacyAkses.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 header("Content-Type: application/json; charset=utf-8");
 
 function jawab(array $data, int $code = 200): void
@@ -12,6 +13,13 @@ function jawab(array $data, int $code = 200): void
    http_response_code($code);
    echo json_encode($data);
    exit;
+}
+
+function upLog(string $aksi, array $lama, array $baru, string $ket): void
+{
+   global $koneksi, $id, $row;
+   logAktivitas($koneksi, 'stok', $aksi, ['tipe' => 'obat', 'id' => $id,
+      'label' => (string) (($row['pharmacy_name_trade'] ?? '') ?: ($row['pharmacy_name_generic'] ?? ('Obat #' . $id)))], $ket, $lama, $baru);
 }
 
 $idc = (int) ($_SESSION['id_customer'] ?? 0);
@@ -37,6 +45,7 @@ if (isset($_POST['hapus'])) {
    $stmt->bind_param("ii", $id, $idc);
    $stmt->execute();
    $stmt->close();
+   upLog('hapus_file', [$kolom[$f] => $row[$kolom[$f]] ?? null], [$kolom[$f] => null], 'Hapus ' . $f . ' obat');
    jawab(["status" => "success", "message" => "File dihapus."]);
 }
 
@@ -70,4 +79,5 @@ $vals = array_merge(array_values($set), [$id, $idc]);
 $stmt->bind_param(str_repeat('s', count($set)) . 'ii', ...$vals);
 $ok = $stmt->execute();
 $stmt->close();
+if ($ok) upLog('upload_file', array_intersect_key($row, $set), $set, 'Upload ' . implode(' & ', array_keys(array_intersect($kolom, array_keys($set)))) . ' obat');
 jawab($ok ? ["status" => "success", "message" => "File berhasil diupload.", "files" => $set] : ["status" => "error", "message" => "Gagal menyimpan ke database."], $ok ? 200 : 500);
