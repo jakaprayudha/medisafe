@@ -1,5 +1,6 @@
 <?php
 require '../../database/connect.php';
+require_once __DIR__ . '/../../utility/visitGuard.php';
 header('Content-Type: application/json');
 
 $input = json_decode(file_get_contents("php://input"), true);
@@ -26,7 +27,7 @@ if ($status === null) {
    echo json_encode(['status' => 'error', 'message' => 'Kunjungan tidak ditemukan untuk faskes ini.']);
    exit;
 }
-if (in_array((int) $status, [3, 4], true)) {
+if (kunjunganSelesai($status) && !bolehBukaKunciSelesai()) {
    echo json_encode(['status' => 'error', 'message' => 'Pemeriksaan kunjungan ini sudah diselesaikan.']);
    exit;
 }

@@ -26,7 +26,8 @@ $oleh = (string) ($_SESSION['username'] ?? '-');
 session_write_close();
 $idc = (int) $kunj['id_customer'];
 $status = (int) $kunj['visit_status'];
-if (in_array($status, [3, 4], true)) rsJawab(false, 'Pasien sudah dilayani dokter, dokter tidak dapat diganti.');
+$bukaKunci = bolehBukaKunciSelesai();
+if (kunjunganSelesai($status) && !$bukaKunci) rsJawab(false, 'Pasien sudah dilayani dokter, dokter tidak dapat diganti.');
 if ($status === 99) rsJawab(false, 'Kunjungan sudah dibatalkan.');
 
 $st = $koneksi->prepare("SELECT nmDokter, kdDokter FROM master_doctor_bpjs WHERE kdDokter = ? AND id_customer = ? AND status = '1' LIMIT 1");
@@ -45,7 +46,7 @@ if ((string) ($lama['code_doctor'] ?? '') === (string) $dokter['kdDokter'] || tr
     rsJawab(false, 'Pasien sudah terdaftar pada dokter ini.');
 }
 
-$st = $koneksi->prepare("UPDATE pasien_visit SET id_doctor = ?, code_doctor = ? WHERE id_visit = ? AND id_customer = ? AND visit_status NOT IN (3, 4, 99)");
+$st = $koneksi->prepare("UPDATE pasien_visit SET id_doctor = ?, code_doctor = ? WHERE id_visit = ? AND id_customer = ? AND visit_status NOT IN (" . ($bukaKunci ? '99' : '3, 4, 99') . ")");
 $st->bind_param("ssii", $dokter['nmDokter'], $dokter['kdDokter'], $id_visit, $idc);
 if (!$st->execute()) {
     error_log('[serviceRescheduleDoctor] ' . $st->error);

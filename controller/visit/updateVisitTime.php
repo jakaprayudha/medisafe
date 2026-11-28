@@ -24,7 +24,7 @@ if ((string) $kunj['id_patient'] !== (string) $id_patient) {
    echo json_encode(["status" => "error", "message" => "Data kunjungan tidak sesuai"]);
    exit;
 }
-if (in_array((int) $kunj['visit_status'], [3, 4, 99], true)) {
+if ((int) $kunj['visit_status'] === 99 || (kunjunganSelesai($kunj['visit_status']) && !bolehBukaKunciSelesai())) {
    echo json_encode(["status" => "error", "message" => "Kunjungan sudah dilayani / batal, waktu tidak dapat diubah"]);
    exit;
 }

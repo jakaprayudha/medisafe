@@ -161,10 +161,12 @@ function deleteData()
       echo json_encode(['status' => 'error', 'message' => 'Akses ditolak.']);
       return;
    }
-   // kunjungan yang sudah selesai dilayani berisi rekam medis -> tidak boleh dihapus
+   // kunjungan yang sudah selesai dilayani berisi rekam medis -> tidak boleh dihapus (kecuali admin)
    require_once __DIR__ . '/../dinkes/dinkesService.php';
+   require_once __DIR__ . '/../../utility/visitGuard.php';
+   $kunciSelesai = bolehBukaKunciSelesai() ? '' : ' AND visit_status NOT IN (3,4)';
    $dkVid = dkVisitIdDikirim($koneksi, (int) $ID_CUSTOMER, $id); // Dinkes
-   $stmt = $koneksi->prepare("DELETE FROM pasien_visit WHERE id_visit = ? AND id_customer = ? AND visit_status NOT IN (3,4)");
+   $stmt = $koneksi->prepare("DELETE FROM pasien_visit WHERE id_visit = ? AND id_customer = ?" . $kunciSelesai);
    $stmt->bind_param('ii', $id, $ID_CUSTOMER);
    $stmt->execute();
    $n = $stmt->affected_rows;
