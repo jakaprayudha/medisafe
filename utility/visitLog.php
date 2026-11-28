@@ -19,6 +19,7 @@ const LOG_KUNJUNGAN_AKSI = [
    'ubah_waktu'    => 'Ubah waktu',
    'ganti_dokter'  => 'Ganti dokter',
    'checkin'       => 'Check-in',
+   'panggil'       => 'Panggil pasien',
    'selesai'       => 'Selesai pemeriksaan',
    'ranap_masuk'   => 'Masuk rawat inap',
    'ranap_batal'   => 'Batal rawat inap',

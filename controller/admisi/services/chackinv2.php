@@ -116,8 +116,6 @@ if ($data['created_user'] == "MobileJKN") {
                 'result' => $result,
             ];
             updateStatus($visit_id, $idcustomer);
-            require_once __DIR__ . '/../../../utility/visitLog.php';
-            logKunjungan($koneksi, 'checkin', (string) $visit_id, 'Check-in + pendaftaran PCare · ' . $nmDokter, ['visit_status' => 10], ['visit_status' => 0, 'id_doctor' => $nmDokter, 'visit_time' => $jamSekarang]);
         } else {
             $response = [
                 'success' => false,
@@ -134,6 +132,19 @@ if ($data['created_user'] == "MobileJKN") {
         'user' => $data['created_user'],
         'data' => $data
     ];
+}
+
+// log klik "Hadir" dari daftar pemeriksaan dokter: berhasil, gagal PCare, gagal simpan, atau pasien non-Mobile JKN
+require_once __DIR__ . '/../../../utility/visitLog.php';
+$ckOk = !empty($response['success']);
+$ckPesan = $response['message'] ?? '';
+$ckPesan = is_scalar($ckPesan) ? (string) $ckPesan : json_encode($ckPesan, JSON_UNESCAPED_UNICODE);
+if (($data['created_user'] ?? '') === 'MobileJKN') {
+    logKunjungan($koneksi, 'checkin', (string) $visit_id,
+        $ckOk ? 'Hadir: check-in + pendaftaran PCare berhasil · ' . ($nmDokter ?? '') : 'Hadir: check-in GAGAL · ' . mb_substr($ckPesan, 0, 300),
+        ['visit_status' => 10], $ckOk ? ['visit_status' => 0, 'id_doctor' => $nmDokter ?? null, 'visit_time' => $jamSekarang ?? null] : null, 'MobileJKN');
+} elseif ($data) {
+    logKunjungan($koneksi, 'checkin', (string) $visit_id, 'Ditandai hadir dari daftar pemeriksaan (antrean dipanggil)', null, null, (string) ($data['created_user'] ?? ''));
 }
 echo json_encode($response);
 

@@ -30,6 +30,13 @@ $up->bind_param('ss', $visit_id, $idcAntri);
 $up->execute();
 $up->close();
 
+// log panggilan (berhasil maupun gagal kirim ke display)
+require_once __DIR__ . '/../../utility/visitLog.php';
+if ($visit_id !== '') {
+    logKunjungan($koneksi, 'panggil', $visit_id, ($result['success'] ? 'Dipanggil ke ruang periksa (dokter)' : 'Panggilan GAGAL dikirim ke display: ' . mb_substr((string) ($result['message'] ?? ''), 0, 200))
+        . ($dokter !== '' ? ' · ' . $dokter : ''));
+}
+
 if (!$result['success']) {
     http_response_code(500);
 

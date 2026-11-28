@@ -144,7 +144,7 @@ session_write_close();
       const waktu = s => { const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2})(:\d{2})?/); return m ? `${+m[3]} ${BLN[m[2] - 1]} ${m[1]}` + `<div class="lk-sub">${m[4]}${m[5] || ''}</div>` : esc(s); };
       const API = 'controller/visit/logKunjunganController';
       const GRUP = {
-        daftar: 'daftar', ubah: 'ubah', ubah_waktu: 'ubah', ganti_dokter: 'ubah', checkin: 'ubah',
+        daftar: 'daftar', ubah: 'ubah', ubah_waktu: 'ubah', ganti_dokter: 'ubah', checkin: 'ubah', panggil: 'ubah',
         selesai: 'selesai', pulang: 'selesai', ranap_masuk: 'ranap', pindah_bed: 'ranap', ranap_aktif: 'ranap', aktif_kembali: 'ranap',
         batal: 'batal', tidak_hadir: 'batal', ranap_batal: 'batal', hapus: 'hapus', bayar: 'bayar'
       };

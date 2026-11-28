@@ -138,10 +138,11 @@ function  getID($iduser)
    global $koneksi;
 
    // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM pasien_visit WHERE id_visit = ?";
+   $query = "SELECT * FROM pasien_visit WHERE id_visit = ? AND id_customer = ?"; // hanya kunjungan faskes sesi
 
    if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $iduser); // Bind parameter iduser
+      $idcSesi = (int) ($_SESSION['id_customer'] ?? 0);
+      $stmt->bind_param("si", $iduser, $idcSesi);
       $stmt->execute();
       $result = $stmt->get_result();
 
@@ -202,9 +203,11 @@ function updateData()
    }
 
    $values[] = $id;
-   $types = str_repeat('s', count($values) - 1) . "i";
+   $values[] = (int) ($_SESSION['id_customer'] ?? 0);
+   $types = str_repeat('s', count($values) - 2) . "ii";
 
-   $query = "UPDATE pasien_visit SET " . implode(',', $fields) . " WHERE id_visit=?";
+   // hanya kunjungan faskes sesi (dulu kunjungan faskes mana pun bisa diubah lewat id_visit)
+   $query = "UPDATE pasien_visit SET " . implode(',', $fields) . " WHERE id_visit=? AND id_customer=?";
    $stmt = $koneksi->prepare($query);
 
    if ($stmt) {
@@ -242,13 +245,15 @@ function deleteData()
    require_once __DIR__ . '/../dinkes/dinkesService.php';
    $dkVid = dkVisitIdDikirim($koneksi, (int) ($_SESSION['id_customer'] ?? 0), $id); // Dinkes
    require_once __DIR__ . '/../../utility/visitLog.php';
-   $snapHapus = logKunjunganSnapshot($koneksi, 'id_visit', $id); // data kunjungan sebelum dihapus
-   $query = "DELETE FROM pasien_visit WHERE id_visit = ?";
+   $idcHapus = (int) ($_SESSION['id_customer'] ?? 0);
+   $snapHapus = logKunjunganSnapshot($koneksi, 'id_visit', $id, $idcHapus); // data kunjungan sebelum dihapus
+   // hanya kunjungan faskes sesi (dulu kunjungan faskes mana pun bisa dihapus lewat id_visit)
+   $query = "DELETE FROM pasien_visit WHERE id_visit = ? AND id_customer = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $id);
+      $stmt->bind_param("si", $id, $idcHapus);
 
-      if ($stmt->execute()) {
+      if ($stmt->execute() && $stmt->affected_rows > 0) { // 0 baris = bukan kunjungan faskes ini / sudah terhapus
       if ($dkVid) dkHapusVisit($koneksi, (int) ($_SESSION['id_customer'] ?? 0), $dkVid); // Dinkes
       if ($stmt->affected_rows > 0 && $snapHapus) logKunjungan($koneksi, 'hapus', $snapHapus, 'Kunjungan dihapus permanen dari menu Registrasi admisi', $snapHapus);
          echo json_encode([
@@ -258,7 +263,7 @@ function deleteData()
       } else {
          echo json_encode([
             'status' => 'error',
-            'message' => 'Gagal menghapus.'
+            'message' => 'Data tidak ditemukan di faskes ini atau gagal dihapus.'
          ]);
       }
 
