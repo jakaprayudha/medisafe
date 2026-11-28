@@ -754,7 +754,8 @@ require '../../controller/view.php';
               <div class="col-lg-5"><div class="bs-card d-flex flex-column justify-content-center text-center">
                 <span class="bs-icon bg-success-subtle text-success mx-auto mb-2" style="width:56px;height:56px;font-size:1.4rem"><i class="fas fa-check"></i></span>
                 <div class="fw-semibold mb-1">Terhubung ke Antrean Online BPJS</div>
-                <div class="small text-muted">Pasien dapat mengambil antrean lewat Mobile JKN. Konfigurasi dikelola tim IT dan hanya bisa dilihat di sini.</div>
+                <div class="small text-muted mb-3">Pasien dapat mengambil antrean lewat Mobile JKN. Konfigurasi dikelola tim IT dan hanya bisa dilihat di sini.</div>
+                <div><button class="btn btn-outline-primary btn-sm" id="btnTesAntrol"><i class="fas fa-plug me-1"></i> Tes Koneksi Antrean Online</button></div>
               </div></div>
               <div class="col-lg-7"><div class="bs-card">
                 <div class="bs-sec d-flex justify-content-between">Konfigurasi <span class="bs-badge b-mute"><i class="fas fa-lock"></i>Hanya baca</span></div>
@@ -859,6 +860,23 @@ require '../../controller/view.php';
             html: esc(m).replace(/\n/g, '<br>') + '<br><small class="text-muted">Periksa username / password PCare di tab Akun PCare.</small>'
           }))
           .always(() => btn.prop('disabled', false).html('<i class="fas fa-plug me-1"></i> Tes Koneksi PCare'));
+      });
+
+      // tombol dibuat ulang tiap muatStatus(), jadi pakai delegasi
+      $(document).on('click', '#btnTesAntrol', function() {
+        const lbl = '<i class="fas fa-plug me-1"></i> Tes Koneksi Antrean Online';
+        const btn = $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Menghubungi Antrean Online…');
+        api('tes_antrol', {})
+          .then(res => Swal.fire({
+            icon: 'success',
+            title: 'Terhubung',
+            text: `Antrean Online merespons dalam ${res.ms} ms. Kredensial valid.`
+          }), m => Swal.fire({
+            icon: 'error',
+            title: 'Tidak terhubung',
+            html: esc(m).replace(/\n/g, '<br>') + '<br><small class="text-muted">Hubungi tim IT untuk memeriksa kredensial Antrean Online.</small>'
+          }))
+          .always(() => btn.prop('disabled', false).html(lbl));
       });
 
       // ================= DOKTER BPJS =================

@@ -165,6 +165,25 @@ if (in_array($aksi, ['tes', 'sinkron'], true) && $_SERVER['REQUEST_METHOD'] === 
    ]);
 }
 
+// ---- tes koneksi Antrean Online (GET ref/poli: ringan, hanya baca) ----
+if ($aksi === 'tes_antrol' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+   $a = bsSatu($koneksi, "SELECT 1 FROM setting_antrol WHERE id_customer=? AND base_url<>'' AND constid<>'' AND secretkey<>'' AND userkey<>'' LIMIT 1", 'i', [$idc]);
+   if (!$a) {
+      bsGagal('Kredensial Antrean Online faskes ini belum lengkap. Hubungi tim IT.', 409);
+   }
+   require_once __DIR__ . '/../../vendor/autoload.php';
+   require_once __DIR__ . '/../wsbpjs/serviceantrian.php';
+
+   $t0 = microtime(true);
+   $res = antrolGet('ref/poli', antrolGetConfigBPJS($idc, $koneksi));
+   $ms = (int) round((microtime(true) - $t0) * 1000);
+
+   if (empty($res['success'])) {
+      bsJawab(['success' => false, 'message' => 'Antrean Online menolak / tidak merespons: ' . trim((string) ($res['message'] ?? 'Gagal terhubung')), 'ms' => $ms], 502);
+   }
+   bsJawab(['success' => true, 'message' => 'Terhubung ke Antrean Online', 'ms' => $ms]);
+}
+
 switch ($aksi) {
    // ================= STATUS / KONFIGURASI =================
    case 'status':
