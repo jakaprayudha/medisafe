@@ -53,7 +53,7 @@ function validateBpjsToken($usernameParam)
     // JWT config
     $config = Configuration::forSymmetricSigner(
         new Sha256(),
-        InMemory::plainText($secret_key)
+        InMemory::plainText(hash('sha256', $secret_key, true)) // must match auth.php
     );
 
     try {
