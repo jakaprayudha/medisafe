@@ -96,6 +96,9 @@ try {
     $idBaru = (int) $st->insert_id;
     $st->close();
     $koneksi->commit();
+    require_once __DIR__ . '/../../../utility/activityLog.php';
+    logAktivitas($koneksi, 'pasien', 'tambah', ['tipe' => 'pasien', 'id' => $idBaru, 'label' => $nomorRM . ' · ' . $nama], 'Pasien baru dari pendaftaran admisi (data peserta BPJS)',
+        null, ['patient_bpjs' => $bpjsDb, 'patient_nik' => $nikDb, 'patient_name' => $nama, 'patient_gender' => $jenisKelamin, 'patient_datebirth' => $tgl, 'nomor_rm' => $nomorRM]);
 } catch (Throwable $e) {
     $koneksi->rollback();
     error_log('[addDataPatient] ' . $e->getMessage());

@@ -10,6 +10,7 @@
  */
 include '../../database/connect.php';
 require_once __DIR__ . '/../../utility/visitGuard.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 header('Content-Type: application/json; charset=utf-8');
 
 function sfBalas(int $kode, array $isi): void
@@ -43,6 +44,7 @@ try {
       $st->execute();
       $st->close();
       sfHapusFile($dir, $lama['foto_path']);
+      logAktivitas($koneksi, 'dokumen', 'hapus_file', ['tipe' => 'foto_pasien', 'label' => 'Foto pasien', 'visit_ID' => $no], 'Foto pasien dihapus', ['foto_path' => $lama['foto_path']], null);
       sfBalas(200, ['status' => 'success', 'message' => 'Foto dihapus.']);
    }
 
@@ -82,6 +84,8 @@ try {
       throw $e;
    }
    if ($lama) sfHapusFile($dir, $lama['foto_path']);   // foto lama diganti
+   logAktivitas($koneksi, 'dokumen', 'upload_file', ['tipe' => 'foto_pasien', 'label' => 'Foto pasien', 'visit_ID' => $no], $lama ? 'Foto pasien diganti' : 'Foto pasien diunggah',
+      $lama ? ['foto_path' => $lama['foto_path']] : null, ['foto_path' => $nama]);
    sfBalas(200, ['status' => 'success', 'message' => 'Foto berhasil disimpan.', 'foto' => 'uploads/foto/' . rawurlencode($nama)]);
 } catch (Throwable $e) {
    error_log('[visit/saveFoto] ' . $e->getMessage());

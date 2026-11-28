@@ -1,6 +1,8 @@
 <?php
 header('Content-Type: application/json');
 require '../../database/connect.php'; // sesuaikan path-nya
+require_once __DIR__ . '/../../utility/visitGuard.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 $input = json_decode(file_get_contents("php://input"), true);
 $action = $input['action'] ?? '';
@@ -13,10 +15,21 @@ if ($action === "save") {
    $letter_sign = mysqli_real_escape_string($koneksi, $data['letter_sign']);
    $letter_sign_position = mysqli_real_escape_string($koneksi, $data['letter_sign_position']);
    $tanggal_surat = date('Y-m-d');
+   visitGuard($koneksi, 'visit_ID', (string) ($data['visit_ID'] ?? '')); // hanya kunjungan faskes sesi
 
    // cek apakah data sudah ada
    $cek = mysqli_query($koneksi, "SELECT * FROM pasien_surat_ranap WHERE visit_ID='$visit_ID' AND id_patient='$id_patient'");
-   if (mysqli_num_rows($cek) > 0) {
+   $srLama = mysqli_fetch_assoc($cek) ?: null;
+   $srLog = function (string $ket) use ($koneksi, $srLama, $visit_ID, $id_patient) {
+      $st = $koneksi->prepare("SELECT * FROM pasien_surat_ranap WHERE visit_ID = ? AND id_patient = ? LIMIT 1");
+      $st->bind_param('ss', $visit_ID, $id_patient);
+      $st->execute();
+      $baru = $st->get_result()->fetch_assoc() ?: null;
+      $st->close();
+      [$l, $b] = $srLama && $baru ? logBeda($srLama, $baru) : [$srLama, $baru];
+      if ($b) logAktivitas($koneksi, 'surat', $srLama ? 'ubah' : 'tambah', ['tipe' => 'pasien_surat_ranap', 'label' => 'Surat rawat inap ' . ($baru['number_letter'] ?? ''), 'visit_ID' => $visit_ID], $ket, $l, $b);
+   };
+   if ($srLama) {
       // update data
       $update = mysqli_query($koneksi, "UPDATE pasien_surat_ranap SET 
             number_letter='$number_letter',
@@ -25,6 +38,7 @@ if ($action === "save") {
             tanggal_surat='$tanggal_surat'
             WHERE visit_ID='$visit_ID' AND id_patient='$id_patient'");
       if ($update) {
+         $srLog('Surat rawat inap diperbarui');
          echo json_encode(["status" => "success", "message" => "Data berhasil diperbarui."]);
       } else {
          echo json_encode(["status" => "error", "message" => "Gagal memperbarui data."]);
@@ -35,6 +49,7 @@ if ($action === "save") {
             (visit_ID, id_patient, number_letter, tanggal_surat, letter_sign, letter_sign_position, created_at)
             VALUES ('$visit_ID','$id_patient','$number_letter','$tanggal_surat','$letter_sign','$letter_sign_position', NOW())");
       if ($insert) {
+         $srLog('Surat rawat inap dibuat');
          echo json_encode(["status" => "success", "message" => "Data berhasil disimpan."]);
       } else {
          echo json_encode(["status" => "error", "message" => "Gagal menyimpan data."]);

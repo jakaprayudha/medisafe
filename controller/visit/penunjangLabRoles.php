@@ -14,6 +14,7 @@
  *  - session_start() ganda (Notice sebelum JSON), pesan error SQL dikirim ke browser
  */
 require '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 header('Content-Type: application/json; charset=utf-8');
 
 function balas(int $kode, array $isi): void
@@ -101,11 +102,13 @@ try {
             if ((int) $lama['isi'] > 0 && $lama['inspection_name'] !== $nama) {
                balas(409, ['status' => 'error', 'message' => 'Hasil "' . $lama['inspection_name'] . '" sudah diisi, jenis pemeriksaan tidak bisa diganti. Tambahkan pemeriksaan baru.']);
             }
+            $pjLama = logAmbilBaris($koneksi, 'visit_inspection', 'id_inspection', $id);
             $st = $koneksi->prepare("UPDATE visit_inspection SET inspection_name = ?, inspection_date = ?, inspection_source = ?, inspection_note = ?
                WHERE id_inspection = ? AND id_customer = ?");
             $st->bind_param('ssssis', $nama, $tgl, $sumber, $catatan, $id, $idc);
             $st->execute();
             $st->close();
+            logBaris($koneksi, 'klinis', 'visit_inspection', 'id_inspection', $id, $pjLama, ['label' => 'Permintaan penunjang ' . $nama, 'visit_ID' => $pjLama['id_visit'] ?? null], 'Pemeriksaan penunjang diperbarui (petugas lab)');
             balas(200, ['status' => 'success', 'message' => 'Pemeriksaan diperbarui.']);
          }
          $visit = trim((string) ($_POST['id_visit'] ?? ''));
@@ -122,11 +125,18 @@ try {
          $st->execute();
          $baru = (int) $koneksi->insert_id;
          $st->close();
+         logBaris($koneksi, 'klinis', 'visit_inspection', 'id_inspection', $baru, null, ['label' => 'Permintaan penunjang ' . $nama, 'visit_ID' => $visit], 'Pemeriksaan penunjang ditambahkan (petugas lab)');
          balas(200, ['status' => 'success', 'message' => 'Pemeriksaan ditambahkan.', 'id_inspection' => $baru]);
 
       case 'DELETE':
          $id = (int) ($_GET['id'] ?? 0);
          if ($id <= 0 || !ambilSatu($koneksi, $id, $idc)) balas(404, ['status' => 'error', 'message' => 'Data tidak ditemukan.']);
+         $pjLama = logAmbilBaris($koneksi, 'visit_inspection', 'id_inspection', $id);
+         $st = $koneksi->prepare("SELECT li.assemen AS parameter, lr.hasil FROM laboratorium_result lr LEFT JOIN laboratorium_item li ON li.id = lr.id_item WHERE lr.id_inspection = ?");
+         $st->bind_param('i', $id);
+         $st->execute();
+         $pjHasil = $st->get_result()->fetch_all(MYSQLI_ASSOC);
+         $st->close();
          $koneksi->begin_transaction();
          $st = $koneksi->prepare("DELETE FROM laboratorium_result WHERE id_inspection = ?");
          $st->bind_param('i', $id);
@@ -137,6 +147,8 @@ try {
          $st->execute();
          $st->close();
          $koneksi->commit();
+         if ($pjLama) logAktivitas($koneksi, 'klinis', 'hapus', ['tipe' => 'visit_inspection', 'id' => $id, 'label' => 'Permintaan penunjang ' . $pjLama['inspection_name'], 'visit_ID' => $pjLama['id_visit']],
+            'Pemeriksaan penunjang dan ' . count($pjHasil) . ' hasil dihapus (petugas lab)', $pjLama + ['hasil' => $pjHasil], null);
          balas(200, ['status' => 'success', 'message' => 'Pemeriksaan dan hasilnya dihapus.']);
 
       default:

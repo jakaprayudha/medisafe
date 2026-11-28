@@ -16,6 +16,7 @@
  */
 include '../../database/connect.php';
 require_once __DIR__ . '/../../utility/visitGuard.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
@@ -109,6 +110,7 @@ $nama = $jenis . '_' . $aman . '_' . time() . '.pdf';
 if (!move_uploaded_file($f['tmp_name'], "$dir/$nama")) dkJawab(['status' => 'error', 'message' => 'Gagal menyimpan file.'], 500);
 
 $kol = DK_JENIS[$jenis]['kolom'];
+$dkLama = (logAmbilBaris($koneksi, 'pasien_visit', 'id_visit', $idVisit) ?? [])[$kol] ?? null;
 $st = $koneksi->prepare("UPDATE pasien_visit SET `$kol` = ? WHERE id_visit = ? AND id_customer = ?");
 $st->bind_param('sii', $nama, $idVisit, $idc);
 if (!$st->execute()) {
@@ -119,6 +121,9 @@ if (!$st->execute()) {
 $st->close();
 // file lama tidak dihapus (dokumen klaim), hanya tidak lagi dirujuk
 error_log("[dokumenKlaim] {$kunj['visit_ID']} $jenis -> $nama oleh $idUser");
+
+logAktivitas($koneksi, 'dokumen', 'upload_file', ['tipe' => 'dokumen_klaim', 'id' => $idVisit, 'label' => DK_JENIS[$jenis]['label'], 'visit_ID' => $kunj['visit_ID']],
+   DK_JENIS[$jenis]['label'] . ($dkLama ? ' diganti (file lama tetap disimpan)' : ' diunggah'), $dkLama ? [$kol => $dkLama] : null, [$kol => $nama]);
 
 $row = dkBaris($koneksi, $idVisit, $idc);
 dkJawab(['status' => 'success', 'message' => DK_JENIS[$jenis]['label'] . ' berhasil diunggah.', 'jenis' => $jenis, 'info' => dkInfo($root, $row, $jenis)]);

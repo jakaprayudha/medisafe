@@ -9,6 +9,7 @@
  */
 include '../../database/connect.php';
 require_once __DIR__ . '/../../utility/visitGuard.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 header('Content-Type: application/json; charset=utf-8');
 
 const KIA_DIR = 'uploads/bukukia/';
@@ -41,6 +42,7 @@ try {
       $st->execute();
       $st->close();
       if (strpos((string) $path, KIA_DIR) === 0 && is_file($dir . basename($path))) @unlink($dir . basename($path));
+      logAktivitas($koneksi, 'dokumen', 'hapus_file', ['tipe' => 'buku_kia', 'id' => $id, 'label' => 'Foto Buku KIA', 'visit_ID' => $no], 'Foto Buku KIA dihapus', ['file_path' => $path], null);
       kiaBalas(200, ['status' => 'success', 'message' => 'Foto dihapus.']);
    }
 
@@ -95,6 +97,7 @@ try {
       foreach ($baru as $n) @unlink($dir . $n);   // jangan tinggalkan file yatim
       throw $e;
    }
+   logAktivitas($koneksi, 'dokumen', 'upload_file', ['tipe' => 'buku_kia', 'label' => 'Foto Buku KIA', 'visit_ID' => $no], count($baru) . ' foto Buku KIA diunggah', null, ['file' => $baru]);
    kiaBalas(200, ['status' => 'success', 'message' => count($baru) . ' foto Buku KIA tersimpan.', 'jumlah' => count($baru), 'file_url' => KIA_DIR . rawurlencode(end($baru))]);
 } catch (Throwable $e) {
    error_log('[visit/uploadKIA] ' . $e->getMessage());

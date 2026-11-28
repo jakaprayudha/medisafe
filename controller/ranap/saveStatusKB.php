@@ -10,6 +10,7 @@
  */
 include '../../database/connect.php';
 require_once __DIR__ . '/../../utility/visitGuard.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 define('KB_LIB', true);
 require_once __DIR__ . '/getFormStatusKB.php';
 header('Content-Type: application/json; charset=utf-8');
@@ -96,15 +97,18 @@ try {
          $sql = 'INSERT INTO visit_kb_status (`' . implode('`, `', $nama) . '`) VALUES (' . implode(', ', array_fill(0, count($nama), '?')) . ')';
          $tipe = str_repeat('s', count($nama));
       }
+      $lgLama = $id ? logAmbilBaris($koneksi, 'visit_kb_status', 'id_kb_status', $id) : null;
       $st = $koneksi->prepare($sql);
       $st->bind_param($tipe, ...$nilai);
       $st->execute();
+      $lgId = $id ?: (int) $st->insert_id;
       $st->close();
       $koneksi->commit();
    } catch (Throwable $e) {
       $koneksi->rollback();
       throw $e;
    }
+   logBaris($koneksi, 'klinis', 'visit_kb_status', 'id_kb_status', $lgId, $lgLama, ['label' => 'Kartu status KB', 'visit_ID' => $no], 'Kartu status KB');
    kbBalas(200, ['status' => 'success', 'message' => $id ? 'Kartu status KB diperbarui.' : 'Kartu status KB disimpan.']);
 } catch (Throwable $e) {
    error_log('[ranap/saveStatusKB] ' . $e->getMessage());

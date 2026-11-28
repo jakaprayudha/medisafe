@@ -21,6 +21,7 @@ const LOG_KUNJUNGAN_AKSI = [
    'checkin'       => 'Check-in',
    'panggil'       => 'Panggil pasien',
    'selesai'       => 'Selesai pemeriksaan',
+   'ranap_minta'   => 'Permintaan rawat inap',
    'ranap_masuk'   => 'Masuk rawat inap',
    'ranap_batal'   => 'Batal rawat inap',
    'pulang'        => 'Pulang rawat inap',

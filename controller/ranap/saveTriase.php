@@ -6,6 +6,7 @@
  * angka kosong disimpan '' ke kolom INT; pesan error SQL dikirim ke browser.
  */
 require '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 header('Content-Type: application/json; charset=utf-8');
 
 function balas(int $kode, string $status, string $pesan): void
@@ -89,8 +90,11 @@ try {
       $st->bind_param('sssssssssssssssssssi', $visit, $rm, $tglV, $jamV, $keluhan, $td, $nadi, $rr, $suhu, $spo2, $e, $v, $m, $gcs, $nyeri, $triase, $ref, $anamnesa, $catatan, $idc);
       $pesan = 'Data triase disimpan.';
    }
+   $trLama = $lama ? logAmbilBaris($koneksi, 'pasien_triase', 'id_triase', (int) $lama['id_triase']) : null;
    $st->execute();
+   $trId = $lama ? (int) $lama['id_triase'] : (int) $st->insert_id;
    $st->close();
+   logBaris($koneksi, 'klinis', 'pasien_triase', 'id_triase', $trId, $trLama, ['tipe' => 'triase', 'label' => 'Triase ' . $triase . ' · RM ' . $rm, 'visit_ID' => $visit], $pesan);
 } catch (Throwable $ex) {
    error_log('[ranap/saveTriase] ' . $ex->getMessage());
    balas(500, 'error', 'Gagal menyimpan triase.');

@@ -13,6 +13,7 @@
  * tanpa kode HTTP.
  */
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 header('Content-Type: application/json; charset=utf-8');
 $idc = (int) ($_SESSION['id_customer'] ?? 0);
@@ -146,6 +147,7 @@ function dpUnggah(string $no, array $k): void
       @unlink(DP_DIR . $nama);   // jangan tinggalkan file tanpa data
       throw $e;
    }
+   logBaris($koneksi, 'dokumen', 'pasien_dokumen', 'id_dokumen', $id, $__lg ?? null, ['label' => 'Dokumentasi perawatan (foto)', 'visit_ID' => $no], 'Dokumentasi perawatan (foto)');
    dpBalas(200, ['status' => 'success', 'message' => 'Foto disimpan.', 'id' => $id, 'foto_path' => $path]);
 }
 
@@ -155,10 +157,12 @@ function dpUbahTanggal(int $id, string $no, array $k): void
    if (!dpCari($id, $no)) dpBalas(404, ['status' => 'error', 'message' => 'Foto tidak ditemukan.']);
    $tgl = dpTanggal(trim((string) ($_POST['tgl_upload'] ?? '')), $k);
    $j = DP_JENIS;
+   $__lg ??= logAmbilBaris($koneksi, 'pasien_dokumen', 'id_dokumen', $id); // log: kondisi sebelum diubah/dihapus
    $st = $koneksi->prepare("UPDATE pasien_dokumen SET rilis = ? WHERE id_dokumen = ? AND visit_ID = ? AND jenis_dokumen = ?");
    $st->bind_param('siss', $tgl, $id, $no, $j);
    $st->execute();
    $st->close();
+   logBaris($koneksi, 'dokumen', 'pasien_dokumen', 'id_dokumen', $id, $__lg ?? null, ['label' => 'Dokumentasi perawatan (foto)', 'visit_ID' => $no], 'Dokumentasi perawatan (foto)');
    dpBalas(200, ['status' => 'success', 'message' => 'Tanggal foto diperbarui.']);
 }
 
@@ -168,6 +172,7 @@ function dpHapus(int $id, string $no): void
    $lama = $id > 0 ? dpCari($id, $no) : null;
    if (!$lama) dpBalas(404, ['status' => 'error', 'message' => 'Foto tidak ditemukan atau sudah terhapus.']);
    $j = DP_JENIS;
+   $__lg ??= logAmbilBaris($koneksi, 'pasien_dokumen', 'id_dokumen', $id); // log: kondisi sebelum diubah/dihapus
    $st = $koneksi->prepare("DELETE FROM pasien_dokumen WHERE id_dokumen = ? AND visit_ID = ? AND jenis_dokumen = ?");
    $st->bind_param('iss', $id, $no, $j);
    $st->execute();
@@ -175,5 +180,6 @@ function dpHapus(int $id, string $no): void
    // hapus file hanya bila berada di folder foto perawatan
    $path = (string) $lama['foto_path'];
    if (str_starts_with($path, DP_DIR_WEB) && is_file(DP_DIR . basename($path))) @unlink(DP_DIR . basename($path));
+   logBaris($koneksi, 'dokumen', 'pasien_dokumen', 'id_dokumen', $id, $__lg ?? null, ['label' => 'Dokumentasi perawatan (foto)', 'visit_ID' => $no], 'Dokumentasi perawatan (foto)');
    dpBalas(200, ['status' => 'success', 'message' => 'Foto dihapus.']);
 }

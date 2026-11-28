@@ -13,6 +13,7 @@
  * yatim; pesan error SQL dikirim ke browser.
  */
 require_once __DIR__ . '/../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 header('Content-Type: application/json; charset=utf-8');
 $id_customer = (int) ($_SESSION['id_customer'] ?? 0);
 session_write_close();
@@ -91,6 +92,7 @@ function createData()
    $st->execute();
    $id = $st->insert_id;
    $st->close();
+   logBaris($koneksi, 'klinis', 'visit_inspection', 'id_inspection', $id, $__lg ?? null, ['label' => 'Permintaan penunjang', 'visit_ID' => ($__lg['id_visit'] ?? ($visit ?? null))], 'Permintaan penunjang');
    pjBalas(200, ['status' => 'success', 'message' => 'Permintaan pemeriksaan ditambahkan.', 'id' => $id]);
 }
 
@@ -158,6 +160,7 @@ function updateData()
    [$nama, $tgl, $catatan] = validasiPenunjang();
    $sumber = 'Lab Klinik';
    // id_visit sengaja tidak ikut diubah (dulu bisa memindahkan pemeriksaan ke kunjungan lain)
+   $__lg ??= logAmbilBaris($koneksi, 'visit_inspection', 'id_inspection', $id); // log: kondisi sebelum diubah/dihapus
    $st = $koneksi->prepare("UPDATE visit_inspection SET inspection_name = ?, inspection_date = ?, inspection_source = ?, inspection_note = ?
       WHERE id_inspection = ? AND id_customer = ?");
    $st->bind_param('ssssii', $nama, $tgl, $sumber, $catatan, $id, $id_customer);
@@ -169,6 +172,7 @@ function updateData()
    $ada = (bool) $st->get_result()->fetch_row();
    $st->close();
    if (!$ada) pjBalas(404, ['status' => 'error', 'message' => 'Data tidak ditemukan.']);
+   logBaris($koneksi, 'klinis', 'visit_inspection', 'id_inspection', $id, $__lg ?? null, ['label' => 'Permintaan penunjang', 'visit_ID' => ($__lg['id_visit'] ?? ($visit ?? null))], 'Permintaan penunjang');
    pjBalas(200, ['status' => 'success', 'message' => 'Pemeriksaan diperbarui.']);
 }
 
@@ -194,6 +198,7 @@ function deleteData()
       $st->execute();
       $nHasil = $st->affected_rows;
       $st->close();
+      $__lg ??= logAmbilBaris($koneksi, 'visit_inspection', 'id_inspection', $id); // log: kondisi sebelum diubah/dihapus
       $st = $koneksi->prepare("DELETE FROM visit_inspection WHERE id_inspection = ? AND id_customer = ?");
       $st->bind_param('ii', $id, $id_customer);
       $st->execute();
@@ -203,6 +208,7 @@ function deleteData()
       $koneksi->rollback();
       throw $e;
    }
+   logBaris($koneksi, 'klinis', 'visit_inspection', 'id_inspection', $id, $__lg ?? null, ['label' => 'Permintaan penunjang', 'visit_ID' => ($__lg['id_visit'] ?? ($visit ?? null))], 'Permintaan penunjang');
    pjBalas(200, ['status' => 'success', 'message' => 'Pemeriksaan dihapus' . ($nHasil > 0 ? " beserta $nHasil hasil." : '.')]);
 }
 

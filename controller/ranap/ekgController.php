@@ -13,6 +13,7 @@
  * file; pesan error SQL ke browser.
  */
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 header('Content-Type: application/json; charset=utf-8');
 $idc = (int) ($_SESSION['id_customer'] ?? 0);
@@ -159,6 +160,7 @@ function ekSimpan(string $no, array $k): void
       $p1 = $baru['ekg1'] ?? ($lama['ekg1'] ?? null);
       $p2 = $baru['ekg2'] ?? ($hapus2 ? null : ($lama['ekg2'] ?? null));
       if ($lama) {
+         $__lg ??= logAmbilBaris($koneksi, 'ekg_results', 'id_ekg', $id); // log: kondisi sebelum diubah/dihapus
          $st = $koneksi->prepare("UPDATE ekg_results SET tanggal_pemeriksaan = ?, dokter = ?, interpretasi = ?, ekg1 = ?, ekg2 = ? WHERE id_ekg = ? AND visit_ID = ?");
          $st->bind_param('sssssis', $tgl, $dokter, $interp, $p1, $p2, $id, $no);
       } else {
@@ -179,6 +181,7 @@ function ekSimpan(string $no, array $k): void
          if ((isset($baru[$kol]) || ($kol === 'ekg2' && $hapus2)) && $lama[$kol]) ekBuangFile($lama[$kol]);
       }
    }
+   logBaris($koneksi, 'klinis', 'ekg_results', 'id_ekg', $id, $__lg ?? null, ['label' => 'EKG', 'visit_ID' => $no], 'EKG');
    ekBalas(200, ['status' => 'success', 'message' => $lama ? 'Pemeriksaan EKG diperbarui.' : 'Pemeriksaan EKG disimpan.', 'id' => $id]);
 }
 
@@ -193,11 +196,13 @@ function ekHapus(int $id, string $no): void
    global $koneksi;
    $lama = $id > 0 ? ekCari($id, $no) : null;
    if (!$lama) ekBalas(404, ['status' => 'error', 'message' => 'Data EKG tidak ditemukan atau sudah terhapus.']);
+   $__lg ??= logAmbilBaris($koneksi, 'ekg_results', 'id_ekg', $id); // log: kondisi sebelum diubah/dihapus
    $st = $koneksi->prepare("DELETE FROM ekg_results WHERE id_ekg = ? AND visit_ID = ?");
    $st->bind_param('is', $id, $no);
    $st->execute();
    $st->close();
    ekBuangFile($lama['ekg1']);
    ekBuangFile($lama['ekg2']);
+   logBaris($koneksi, 'klinis', 'ekg_results', 'id_ekg', $id, $__lg ?? null, ['label' => 'EKG', 'visit_ID' => $no], 'EKG');
    ekBalas(200, ['status' => 'success', 'message' => 'Pemeriksaan EKG dihapus.']);
 }

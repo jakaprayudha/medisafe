@@ -14,6 +14,7 @@
 header('Content-Type: application/json; charset=utf-8');
 include '../../database/connect.php';
 require_once __DIR__ . '/../../utility/visitGuard.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 function scJawab(array $d, int $kode = 200): void
 {
@@ -115,6 +116,7 @@ $idVisit = (int) $kunj['id_visit'];
 $idc = (int) $kunj['id_customer'];
 $nilai[] = $idVisit;
 $nilai[] = $idc;
+$scLama = logAmbilBaris($koneksi, 'pasien_visit', 'id_visit', $idVisit);
 $st = $koneksi->prepare('UPDATE pasien_visit SET ' . implode(', ', $set) . ' WHERE id_visit = ? AND id_customer = ?');
 if (!$st) {
    error_log('[saveScreening] ' . $koneksi->error);
@@ -126,5 +128,7 @@ if (!$st->execute()) {
    scJawab(['status' => 'error', 'message' => 'Gagal menyimpan data.'], 500);
 }
 $st->close();
+if ($scLama) logBaris($koneksi, 'klinis', 'pasien_visit', 'id_visit', $idVisit, $scLama,
+   ['tipe' => 'vital_sign', 'label' => 'Vital sign · ' . ($scLama['patient_name_pcare'] ?? ''), 'visit_ID' => $kunj['visit_ID']], 'Vital sign / skrining disimpan');
 
 scJawab(['status' => 'success', 'message' => 'Vital sign tersimpan.', 'bmi' => $bmi ?? null, 'bmi_keterangan' => $ket ?? null]);

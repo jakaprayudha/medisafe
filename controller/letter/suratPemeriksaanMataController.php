@@ -20,6 +20,7 @@ date_default_timezone_set('Asia/Jakarta');
 if (session_status() === PHP_SESSION_NONE) session_start();
 include '../../database/connect.php';
 require_once __DIR__ . '/nomorSurat.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 require_once __DIR__ . '/suratMataAturan.php';
 header('Content-Type: application/json; charset=utf-8');
 
@@ -161,6 +162,7 @@ try {
          $idBaru = (int) $koneksi->insert_id;
          nsSimpan($koneksi, $n);
          $koneksi->commit();
+         logBaris($koneksi, 'surat', 'surat_pemeriksaan_mata', 'id', $idBaru, $__lg ?? null, ['label' => 'Surat pemeriksaan mata' . ' ' . (logAmbilBaris($koneksi, 'surat_pemeriksaan_mata', 'id', $idBaru)['nomor_surat'] ?? $__lg['nomor_surat'] ?? '')], 'Surat pemeriksaan mata');
          responseJson('success', 'Surat hasil pemeriksaan mata ' . $n['nomor'] . ' tersimpan.',
             ['id' => $idBaru, 'nomor_surat' => $n['nomor'], 'mode_nomor' => $n['mode']], 200, ['id' => $idBaru, 'nomor_surat' => $n['nomor']]);
 
@@ -189,15 +191,19 @@ try {
          $set[] = 'spm.updated_at = ?'; $nilai[] = date('Y-m-d H:i:s');
          $set[] = 'spm.updated_by = ?'; $nilai[] = $PENGGUNA;
          array_push($nilai, $id, $id_customer, $id_customer);
+         $__lg ??= logAmbilBaris($koneksi, 'surat_pemeriksaan_mata', 'id', $id); // log: kondisi sebelum diubah/dihapus
          smExec('UPDATE surat_pemeriksaan_mata spm JOIN pasien_visit pv ON pv.id_visit = spm.id_visit SET ' . implode(', ', $set)
             . ' WHERE spm.id = ? AND spm.id_customer = ? AND pv.id_customer = ?', str_repeat('s', count($nilai) - 3) . 'iss', $nilai);
+         logBaris($koneksi, 'surat', 'surat_pemeriksaan_mata', 'id', $id, $__lg ?? null, ['label' => 'Surat pemeriksaan mata' . ' ' . (logAmbilBaris($koneksi, 'surat_pemeriksaan_mata', 'id', $id)['nomor_surat'] ?? $__lg['nomor_surat'] ?? '')], 'Surat pemeriksaan mata');
          responseJson('success', 'Surat hasil pemeriksaan mata diperbarui.', ['id' => $id, 'nomor_surat' => $nomor]);
 
       case 'DELETE':
          $id = (int) ($_GET['id'] ?? 0);
          if ($id <= 0) responseJson('error', 'ID surat tidak ditemukan.', [], 422);
+         $__lg ??= logAmbilBaris($koneksi, 'surat_pemeriksaan_mata', 'id', $id); // log: kondisi sebelum dihapus
          $n = smExec("DELETE spm FROM surat_pemeriksaan_mata spm JOIN pasien_visit pv ON pv.id_visit = spm.id_visit
             WHERE spm.id = ? AND spm.id_customer = ? AND pv.id_customer = ?", 'iss', [$id, $id_customer, $id_customer]);
+         if ($n > 0) logBaris($koneksi, 'surat', 'surat_pemeriksaan_mata', 'id', $id, $__lg ?? null, ['label' => 'Surat pemeriksaan mata' . ' ' . (logAmbilBaris($koneksi, 'surat_pemeriksaan_mata', 'id', $id)['nomor_surat'] ?? $__lg['nomor_surat'] ?? '')], 'Surat pemeriksaan mata');
          $n > 0 ? responseJson('success', 'Surat berhasil dihapus.') : responseJson('error', 'Data tidak ditemukan atau tidak memiliki akses.', [], 404);
 
       default:

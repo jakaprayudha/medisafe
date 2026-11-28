@@ -20,6 +20,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 if (empty($_SESSION['uid_user'])) markerResponse(401, ['status' => 'error', 'message' => 'Session berakhir. Silakan login kembali.']);
 require_once __DIR__ . '/../../database/connect.php';
 require_once __DIR__ . '/operationMarkerStore.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 $clinic = (int) ($_SESSION['id_customer'] ?? 0);
 if ($clinic <= 0) markerResponse(401, ['status' => 'error', 'message' => 'Session klinik tidak ditemukan']);
 $method = $_SERVER['REQUEST_METHOD'];
@@ -137,7 +138,12 @@ try {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
    $stmt->bind_param('issssssss', $clinic, $visit, $type, $json, $binary, $notes, $authorId, $author, $createdAt);
    $stmt->execute();
-   markerResponse(201, ['status' => 'success', 'message' => 'Versi baru penanda operasi berhasil disimpan', 'id' => $koneksi->insert_id]);
+   $omId = $koneksi->insert_id;
+   $omBaru = logAmbilBaris($koneksi, 'operation_markers', 'id', $omId);
+   if ($omBaru) unset($omBaru['image_png'], $omBaru['annotations']); // gambar & anotasi tidak disimpan di log
+   logAktivitas($koneksi, 'klinis', 'tambah', ['tipe' => 'operation_marker', 'id' => $omId, 'label' => 'Penanda operasi ' . ($omBaru['marker_type'] ?? ''), 'visit_ID' => $visit],
+      'Versi baru penanda operasi disimpan', null, $omBaru);
+   markerResponse(201, ['status' => 'success', 'message' => 'Versi baru penanda operasi berhasil disimpan', 'id' => $omId]);
 } catch (mysqli_sql_exception $error) {
    error_log('Operation marker: ' . $error->getMessage());
    markerResponse(500, ['status' => 'error', 'message' => 'Gagal mengakses dokumen penanda operasi. Pastikan migrasi database sudah dijalankan.']);

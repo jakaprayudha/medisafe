@@ -9,6 +9,7 @@
  */
 include '../../database/connect.php';
 require_once __DIR__ . '/../../utility/visitGuard.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 define('IO_RANAP_LIB', true);
 require_once __DIR__ . '/getFormInap.php';
 header('Content-Type: application/json; charset=utf-8');
@@ -107,15 +108,18 @@ try {
          $sql = 'INSERT INTO visit_ranap (`' . implode('`, `', $nama) . '`) VALUES (' . implode(', ', array_fill(0, count($nama), '?')) . ')';
          $tipe = str_repeat('s', count($nama));
       }
+      $lgLama = $id ? logAmbilBaris($koneksi, 'visit_ranap', 'id_inap', $id) : null;
       $st = $koneksi->prepare($sql);
       $st->bind_param($tipe, ...$nilai);
       $st->execute();
+      $lgId = $id ?: (int) $st->insert_id;
       $st->close();
       $koneksi->commit();
    } catch (Throwable $e) {
       $koneksi->rollback();
       throw $e;
    }
+   logBaris($koneksi, 'ranap', 'visit_ranap', 'id_inap', $lgId, $lgLama, ['label' => 'Data rawat inap (masuk/keluar)', 'visit_ID' => $no], 'Data rawat inap (masuk/keluar)');
    ioBalas(200, ['status' => 'success', 'message' => $id ? 'Data rawat inap diperbarui.' : 'Data rawat inap disimpan.', 'lama_dirawat' => $d['lama_dirawat']]);
 } catch (Throwable $e) {
    error_log('[ranap/saveInap] ' . $e->getMessage());

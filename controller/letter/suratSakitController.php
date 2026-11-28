@@ -18,6 +18,7 @@ date_default_timezone_set('Asia/Jakarta');
 if (session_status() === PHP_SESSION_NONE) session_start();
 include '../../database/connect.php';
 require_once __DIR__ . '/nomorSurat.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 header('Content-Type: application/json; charset=utf-8');
 
 function responseJson(string $status, string $message = '', array $data = [], int $kode = 200): void
@@ -131,6 +132,7 @@ try {
          $idBaru = (int) $koneksi->insert_id;
          nsSimpan($koneksi, $n);
          $koneksi->commit();
+         logBaris($koneksi, 'surat', 'surat_sakit', 'id', $idBaru, $__lg ?? null, ['label' => 'Surat keterangan sakit' . ' ' . (logAmbilBaris($koneksi, 'surat_sakit', 'id', $idBaru)['nomor_surat'] ?? $__lg['nomor_surat'] ?? '')], 'Surat keterangan sakit');
          responseJson('success', 'Surat keterangan sakit ' . $n['nomor'] . ' tersimpan.', ['id' => $idBaru, 'nomor_surat' => $n['nomor'], 'lama' => $lama, 'mode_nomor' => $n['mode']]);
 
       case 'PUT':
@@ -150,15 +152,19 @@ try {
             if ($nomorBaru !== $nomor && ssNomorDipakai($nomorBaru, $id)) responseJson('error', "Nomor surat $nomorBaru sudah dipakai surat lain.", [], 409);
             $nomor = $nomorBaru;
          }
+         $__lg ??= logAmbilBaris($koneksi, 'surat_sakit', 'id', $id); // log: kondisi sebelum diubah/dihapus
          ssExec("UPDATE surat_sakit ss JOIN pasien_visit pv ON pv.id_visit = ss.id_visit
             SET ss.nomor_surat = ?, ss.tanggal_surat = ?, ss.tanggal_mulai = ?, ss.tanggal_selesai = ?, ss.lama = ?, ss.keterangan = ?, ss.updated_at = NOW(), ss.updated_by = ?
             WHERE ss.id = ? AND pv.id_customer = ?", 'ssssissis', [$nomor, $ts, $mulai, $selesai, $lama, $ket, $PENGGUNA, $id, $id_customer]);
+         logBaris($koneksi, 'surat', 'surat_sakit', 'id', $id, $__lg ?? null, ['label' => 'Surat keterangan sakit' . ' ' . (logAmbilBaris($koneksi, 'surat_sakit', 'id', $id)['nomor_surat'] ?? $__lg['nomor_surat'] ?? '')], 'Surat keterangan sakit');
          responseJson('success', 'Surat keterangan sakit diperbarui.', ['id' => $id, 'nomor_surat' => $nomor, 'lama' => $lama]);
 
       case 'DELETE':
          $id = (int) ($_GET['id'] ?? 0);
          if ($id <= 0) responseJson('error', 'ID surat tidak ditemukan.', [], 422);
+         $__lg ??= logAmbilBaris($koneksi, 'surat_sakit', 'id', $id); // log: kondisi sebelum dihapus
          $n = ssExec("DELETE ss FROM surat_sakit ss JOIN pasien_visit pv ON pv.id_visit = ss.id_visit WHERE ss.id = ? AND pv.id_customer = ?", 'is', [$id, $id_customer]);
+         if ($n > 0) logBaris($koneksi, 'surat', 'surat_sakit', 'id', $id, $__lg ?? null, ['label' => 'Surat keterangan sakit' . ' ' . (logAmbilBaris($koneksi, 'surat_sakit', 'id', $id)['nomor_surat'] ?? $__lg['nomor_surat'] ?? '')], 'Surat keterangan sakit');
          $n > 0 ? responseJson('success', 'Surat keterangan sakit dihapus.') : responseJson('error', 'Data tidak ditemukan atau tidak memiliki akses.', [], 404);
 
       default:

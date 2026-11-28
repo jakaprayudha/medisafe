@@ -1,5 +1,14 @@
 <?php
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
+
+/** Log imunisasi (modul klinis); baris dibandingkan sebelum/sesudah. */
+function imLogBaris($id, ?array $lama, string $ket): void
+{
+   global $koneksi;
+   $r = logAmbilBaris($koneksi, 'pasien_imunisasi', 'id_imunisasi', $id) ?? $lama ?? [];
+   logBaris($koneksi, 'klinis', 'pasien_imunisasi', 'id_imunisasi', $id, $lama, ['tipe' => 'imunisasi', 'label' => 'Imunisasi ' . ($r['imunisasi_number'] ?? ''), 'visit_ID' => $r['id_visit'] ?? null], $ket);
+}
 $method = $_SERVER['REQUEST_METHOD'];
 switch ($method) {
    case 'POST':
@@ -79,6 +88,7 @@ function createData()
       $stmt->bind_param($types, ...$values);
 
       if ($stmt->execute()) {
+         imLogBaris($stmt->insert_id, null, 'Imunisasi ditambahkan');
          echo json_encode([
             'status' => 'success',
             'message' => 'Data imunisasi berhasil ditambahkan.'
@@ -220,12 +230,14 @@ function updateData()
    $values[] = $id;
    $types = str_repeat('s', count($values));
 
+   $imLama = logAmbilBaris($koneksi, 'pasien_imunisasi', 'id_imunisasi', $id);
    $query = "UPDATE pasien_imunisasi SET " . implode(',', $fields) . " WHERE id_imunisasi=?";
    $stmt = $koneksi->prepare($query);
 
    if ($stmt) {
       $stmt->bind_param($types, ...$values);
       if ($stmt->execute()) {
+         if ($imLama) imLogBaris($id, $imLama, 'Imunisasi diubah');
          echo json_encode(['status' => 'success', 'message' => 'Data imunisasi berhasil diperbarui.']);
       } else {
          echo json_encode(['status' => 'error', 'message' => 'Update gagal: ' . $stmt->error]);
@@ -251,12 +263,14 @@ function deleteData()
       exit;
    }
 
+   $imLama = logAmbilBaris($koneksi, 'pasien_imunisasi', 'id_imunisasi', $id);
    $query = "DELETE FROM pasien_imunisasi WHERE id_imunisasi = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $id);
 
       if ($stmt->execute()) {
+         if ($imLama && $stmt->affected_rows > 0) imLogBaris($id, $imLama, 'Imunisasi dihapus');
          echo json_encode([
             'status' => 'success',
             'message' => 'Data imunisasi berhasil dihapus.'
