@@ -19,6 +19,7 @@ if (!is_string($_POST['rme_cycle_token'] ?? null) ||
 }
 require_once __DIR__ . '/../../database/connect.php';
 require_once __DIR__ . '/rmeCycleService.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 require_once __DIR__ . '/../admisi/services/view.php';
 require_once __DIR__ . '/../admisi/services/servicebpjs.php';
 
@@ -35,6 +36,12 @@ try {
         }
         return json_decode($output, true, 512, JSON_THROW_ON_ERROR);
     });
+    // kunjungan PCare sudah dicatat oleh insertKunjungan.php; di sini hanya resep yang ditandai terkirim ke farmasi
+    if (($result['prescriptions_sent'] ?? 0) > 0) {
+        $vid = (string) ($_POST['nomor_visit'] ?? '');
+        logAktivitas($koneksi, 'farmasi', 'ubah_status', ['tipe' => 'resep', 'id' => $vid, 'label' => 'Resep kunjungan', 'visit_ID' => $vid],
+            $result['prescriptions_sent'] . ' resep dikirim ke farmasi (simpan satu siklus RME)', ['status_permintaan' => 0], ['status_permintaan' => 1]);
+    }
     echo json_encode($result, JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $error) {
     http_response_code(422);

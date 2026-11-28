@@ -2,6 +2,7 @@
 require_once __DIR__ . '/view.php';
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/servicebpjs.php';
+require_once __DIR__ . '/../../../utility/activityLog.php';
 header('Content-Type: application/json');
 $kdTindakanSK = $_POST['kdTindakanSK'] ?? '0';
 $noKunjungan = $_POST['noKunjungan'];
@@ -26,6 +27,16 @@ if ($kdTindakanSK > 0) {
     $method = "PUT";
 }
 // echo json_encode($payload, JSON_PRETTY_PRINT);die();
+$lgLama = null;
+if ($kdTindakanSK > 0) {
+    $lgSt = $koneksi->prepare("SELECT * FROM pcare_tindakan WHERE kdTindakanSK = ? AND noKunjungan = ? LIMIT 1");
+    if ($lgSt) {
+        $lgSt->bind_param('ss', $kdTindakanSK, $noKunjungan);
+        $lgSt->execute();
+        $lgLama = $lgSt->get_result()->fetch_assoc() ?: null;
+        $lgSt->close();
+    }
+}
 $result = bpjsPost('/tindakan', $payload, $method);
 // echo json_encode($result, JSON_PRETTY_PRINT);die();
 if ($result['code'] != '200') {
@@ -73,4 +84,9 @@ if ($result['code'] != '200') {
         ];
     }
 }
+// log aktivitas PCare (berhasil maupun ditolak BPJS)
+$lgBaru = ['kdTindakanSK' => $kdTindakanSKBaru ?? $kdTindakanSK, 'noKunjungan' => $noKunjungan, 'kdTindakan' => $kdTindakan, 'nmTindakan' => $nmtindakan, 'biaya' => $biaya, 'keterangan' => $keterangan, 'hasil' => $_POST['hasil'] ?? '0'];
+if ($lgLama) [$lgLama, $lgBaru] = logBeda(array_intersect_key($lgLama, $lgBaru), $lgBaru);
+logAktivitas($koneksi, 'diagnosa', 'kirim_pcare', ['tipe' => 'pcare_tindakan', 'id' => $kdTindakanSKBaru ?? $kdTindakanSK, 'label' => 'Tindakan PCare · ' . $nmtindakan . ' · kunjungan ' . $noKunjungan, 'visit_ID' => (logAmbilBaris($koneksi, 'pcare_kunjungan', 'noKunjungan', $noKunjungan) ?? [])['nomor_visit'] ?? null],
+    (!empty($response['success']) ? ($statusEdit ? 'Tindakan diubah di PCare' : 'Tindakan dikirim ke PCare') : ($statusEdit ? 'Ubah' : 'Kirim') . ' tindakan PCare GAGAL: ' . mb_substr((is_string($response['message'] ?? null) ? $response['message'] : json_encode($response['message'] ?? '')), 0, 300)), $lgLama ?: null, $lgBaru);
 echo json_encode($response);

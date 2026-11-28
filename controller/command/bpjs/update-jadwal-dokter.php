@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../../../database/connect.php';
 require_once __DIR__ . '/../../../controller/wsbpjs/serviceantrian.php';
+require_once __DIR__ . '/../../../utility/activityLog.php';
 
 function tampildata($query)
 {
@@ -76,7 +77,10 @@ foreach ($clinics as $clinic) {
     $deleteSchedule = $koneksi->prepare("DELETE FROM ms_doctor_schedule WHERE id_customer = ?");
     $deleteSchedule->bind_param("s", $clinic['id_customer']);
     $deleteSchedule->execute();
+    $jmlHapus = $deleteSchedule->affected_rows;
     $deleteSchedule->close();
+    $jmlJadwal = 0;
+    $jmlGagalApi = 0;
 
     $policlinics = tampildata("SELECT * FROM master_poli");
     $clinicResult = [];
@@ -102,6 +106,10 @@ foreach ($clinics as $clinic) {
                 $responseData = $result;
             }
 
+            if (!isset($responseData['data']) || !is_array($responseData['data'])) {
+                $jmlGagalApi++;
+                $responseData['data'] = [];
+            }
             foreach ($responseData['data'] as $doctor) {
                 if (!isset($doctor['kodedokter'], $doctor['namadokter'], $doctor['jampraktek'])) {
                     continue;
@@ -123,7 +131,7 @@ foreach ($clinics as $clinic) {
 
                 $insertSchedule = $koneksi->prepare("INSERT INTO ms_doctor_schedule (id_doctor, id_poli, id_customer, day_of_week, start_time, end_time, sch_status, kuota) VALUES (?, ?, ?, ?, ?, ?, 1, ?)");
                 $insertSchedule->bind_param("ssssssi", $kodeDokter, $kdpoli, $clinic['id_customer'], $hariIndonesia, $startTime, $endTime, $kapasitas);
-                $insertSchedule->execute();
+                if ($insertSchedule->execute()) $jmlJadwal++;
                 $insertSchedule->close();
             }
 
@@ -136,6 +144,13 @@ foreach ($clinics as $clinic) {
         }
 
     }
+
+    // satu log ringkasan per faskes: jadwal lama dihapus seluruhnya lalu diisi ulang dari BPJS
+    logAktivitas($koneksi, 'sistem', $jmlJadwal === 0 && $jmlHapus > 0 ? 'sinkron_gagal' : 'sinkron',
+        ['tipe' => 'jadwal_dokter_bpjs', 'id' => $clinic['id_customer'], 'label' => 'Sinkron jadwal dokter BPJS'],
+        "Jadwal dokter BPJS $tanggalAwal s/d $tanggalAkhir: $jmlHapus jadwal lama dihapus, $jmlJadwal jadwal baru, $jmlGagalApi permintaan BPJS tanpa data"
+            . (PHP_SAPI === 'cli' ? ' (cron)' : ' (via URL, IP ' . ($_SERVER['REMOTE_ADDR'] ?? '-') . ')'),
+        null, ['dihapus' => $jmlHapus, 'jadwal_baru' => $jmlJadwal, 'tanpa_data' => $jmlGagalApi], (int) $clinic['id_customer']);
 
     $syncResults[] = [
         'id_customer' => $clinic['id_customer'],

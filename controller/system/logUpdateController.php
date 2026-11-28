@@ -9,6 +9,7 @@ session_start();
 header('Content-Type: application/json; charset=utf-8');
 require '../../database/connect.php';
 require_once '../../utility/security.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 requireRole(['superadmin']);
 $method = $_SERVER['REQUEST_METHOD'];
@@ -121,11 +122,13 @@ if ($aksi === 'hapus') {
    $row = $st->get_result()->fetch_assoc();
    $st->close();
    if (!$row) luJson('error', 'Data log update tidak ditemukan.', null, 404);
+   $luLama = logAmbilBaris($koneksi, 'system_update_log', 'id_update', $id);
    $st = $koneksi->prepare('DELETE FROM system_update_log WHERE id_update = ?');
    $st->bind_param('i', $id);
    if (!$st->execute()) luGagal('Gagal menghapus data.', $st->error);
    $st->close();
    luHapusFile($row['guide_file']);
+   logBaris($koneksi, 'sistem', 'system_update_log', 'id_update', $id, $luLama, ['tipe' => 'log_update', 'label' => trim(($luLama['version'] ?? '') . ' · ' . ($luLama['title'] ?? ''), ' ·')], 'Log update sistem dihapus');
    luJson('success', 'Log update berhasil dihapus.');
 }
 
@@ -144,6 +147,7 @@ if ($id > 0) {
    if (!$lama) luJson('error', 'Data log update tidak ditemukan.', null, 404);
 }
 
+$luLama = $id > 0 ? logAmbilBaris($koneksi, 'system_update_log', 'id_update', $id) : null;
 $fileBaru = $d['guide_type'] === 'pdf' ? luSimpanPdf() : null;
 $fileLama = $lama['guide_file'] ?? null;
 if ($d['guide_type'] === 'pdf') {
@@ -164,7 +168,9 @@ if (!$st->execute()) {
    luHapusFile($fileBaru);
    luGagal('Gagal menyimpan data.', $st->error);
 }
+$luId = $id > 0 ? $id : (int) $st->insert_id;
 $st->close();
+logBaris($koneksi, 'sistem', 'system_update_log', 'id_update', $luId, $luLama, ['tipe' => 'log_update', 'label' => trim($d['version'] . ' · ' . $d['title'], ' ·')], $id > 0 ? 'Log update sistem diubah' : 'Log update sistem ditambahkan');
 // PDF lama dibuang bila diganti atau jenis panduan tidak lagi PDF
 if ($fileLama && $fileLama !== $guideFile) luHapusFile($fileLama);
 luJson('success', $id > 0 ? 'Log update berhasil diperbarui.' : 'Log update berhasil ditambahkan.');

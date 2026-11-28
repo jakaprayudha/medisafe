@@ -2,6 +2,7 @@
 require_once __DIR__ . '/view.php';
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/servicebpjs.php';
+require_once __DIR__ . '/../../../utility/activityLog.php';
 header('Content-Type: application/json');
 $kdProvider            = $kodeppk;
 $kdMCU                 = $_POST['kdMCU'] ?? 0;
@@ -84,6 +85,7 @@ if ($kdMCU > 0) {
     $method = "PUT";
 }
 // echo json_encode($payload, JSON_PRETTY_PRINT);die();
+$lgLama = $statusEdit ? logAmbilBaris($koneksi, 'pcare_mcu', 'kdMCU', $kdMCU) : null;
 $result = bpjsPost('/MCU', $payload, $method);
 // $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
 if ($result['code'] != '200') {
@@ -253,5 +255,15 @@ if ($result['code'] != '200') {
             'message' => "Gagal Proses Medical Check Up",
         ];
     }
+}
+// log aktivitas PCare (berhasil maupun ditolak BPJS)
+$lgRef = ['tipe' => 'pcare_mcu', 'id' => $kdMCU, 'label' => 'MCU ' . $kdMCU . ' · kunjungan ' . $noKunjungan . ' · ' . $DBtglPelayanan,
+    'visit_ID' => (logAmbilBaris($koneksi, 'pcare_kunjungan', 'noKunjungan', $noKunjungan) ?? [])['nomor_visit'] ?? null];
+if (!empty($response['success'])) {
+    logBaris($koneksi, 'diagnosa', 'pcare_mcu', 'kdMCU', $kdMCU, $lgLama, $lgRef, $statusEdit ? 'MCU diubah di PCare' : 'MCU dikirim ke PCare', 'kirim_pcare');
+} else {
+    $lgMsg = is_string($response['message'] ?? null) ? $response['message'] : json_encode($response['message'] ?? '');
+    logAktivitas($koneksi, 'diagnosa', 'kirim_pcare', $lgRef, ($statusEdit ? 'Ubah' : 'Kirim') . ' MCU PCare GAGAL: ' . mb_substr($lgMsg, 0, 300), null,
+        ['kdMCU' => $kdMCU, 'noKunjungan' => $noKunjungan, 'tglPelayanan' => $DBtglPelayanan]);
 }
 echo json_encode($response);

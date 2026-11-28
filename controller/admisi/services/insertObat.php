@@ -2,6 +2,7 @@
 require_once __DIR__ . '/view.php';
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/servicebpjs.php';
+require_once __DIR__ . '/../../../utility/activityLog.php';
 header('Content-Type: application/json');
 $kdObatSK  = !empty($_POST['kdObatSK']) ? $_POST['kdObatSK'] : '0';
 // $kdRacikan = !empty($_POST['kdRacikan']) ? $_POST['kdRacikan'] : null;
@@ -83,4 +84,8 @@ if ($result['code'] != '200') {
         ];
     }
 }
+// log aktivitas PCare (berhasil maupun ditolak BPJS)
+logAktivitas($koneksi, 'diagnosa', 'kirim_obat', ['tipe' => 'pcare_obat', 'id' => !empty($response['success']) ? $kdObatSK : null, 'label' => 'Obat PCare · ' . $nmObat . ' · kunjungan ' . $noKunjungan, 'visit_ID' => (logAmbilBaris($koneksi, 'pcare_kunjungan', 'noKunjungan', $noKunjungan) ?? [])['nomor_visit'] ?? null],
+    (!empty($response['success']) ? 'Obat dikirim ke PCare' : 'Kirim obat PCare GAGAL: ' . mb_substr((is_string($response['message'] ?? null) ? $response['message'] : json_encode($response['message'] ?? '')), 0, 300)), null,
+    ['kdObatSK' => $kdObatSK, 'noKunjungan' => $noKunjungan, 'racikan' => $racikan, 'kdRacikan' => $kdRacikan ?? null, 'kdObat' => $kdObat, 'nmObat' => $nmObat, 'signa1' => $signa1, 'signa2' => $signa2, 'jmlObat' => $jmlObat, 'jmlPermintaan' => $jmlPermintaan]);
 echo json_encode($response);

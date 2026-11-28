@@ -2,6 +2,8 @@
 header('Content-Type: application/json');
 include '../../database/connect.php';
 require_once __DIR__ . '/../socket/sendSocket.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
+mysqli_report(MYSQLI_REPORT_OFF);
 $id_customer = $_SESSION['id_customer'];
 date_default_timezone_set('Asia/Jakarta');
 $today = date('Y-m-d');
@@ -39,14 +41,13 @@ if ($jenis === 'BPJS') {
    GENERATE NOMOR ANTRIAN
    (PER HARI + PER JENIS)
 ========================= */
-$q = mysqli_query($koneksi, "
-   SELECT COUNT(*) AS total
-   FROM transaction_queue
-   WHERE queue_date = '$today'
-     AND no_antrian LIKE '$prefix-%'
-");
-
-$row = mysqli_fetch_assoc($q);
+// (dulu nilai ditempel langsung ke SQL; kini prepared statement)
+$st = $koneksi->prepare("SELECT COUNT(*) AS total FROM transaction_queue WHERE queue_date = ? AND no_antrian LIKE ?");
+$pola = $prefix . '-%';
+$st->bind_param('ss', $today, $pola);
+$st->execute();
+$row = $st->get_result()->fetch_assoc();
+$st->close();
 $urut = (int)$row['total'] + 1;
 
 $noAntrian = $prefix . '-' . str_pad($urut, 3, '0', STR_PAD_LEFT);
@@ -54,24 +55,9 @@ $noAntrian = $prefix . '-' . str_pad($urut, 3, '0', STR_PAD_LEFT);
 /* =========================
    INSERT DATA ANTRIAN
 ========================= */
-$insert = mysqli_query($koneksi, "
-   INSERT INTO transaction_queue
-   (
-      no_antrian,
-      nama_pasien,
-      id_poli,
-      status,
-      queue_date
-   )
-   VALUES
-   (
-      '$noAntrian',
-      '$nama',
-      $idPoli,
-      'menunggu',
-      '$today'
-   )
-");
+$st = $koneksi->prepare("INSERT INTO transaction_queue (no_antrian, nama_pasien, id_poli, status, queue_date) VALUES (?, ?, ?, 'menunggu', ?)");
+$insert = $st && $st->bind_param('ssis', $noAntrian, $nama, $idPoli, $today) && $st->execute();
+$idQueue = $insert ? $st->insert_id : null;
 
 if (!$insert) {
    echo json_encode([
@@ -80,6 +66,8 @@ if (!$insert) {
    ]);
    exit;
 }
+logAktivitas($koneksi, 'antrean', 'ambil_tiket', ['tipe' => 'antrean_admisi', 'id' => $idQueue, 'label' => "$noAntrian · $nama"],
+   "Tiket antrean admisi $jenis", null, ['no_antrian' => $noAntrian, 'nama_pasien' => $nama, 'id_poli' => $idPoli, 'jenis' => $jenis]);
 trigger([
    "rs_id" => $id_customer,
    "target_role" => "ADMISI",

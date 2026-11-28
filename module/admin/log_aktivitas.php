@@ -27,11 +27,11 @@ session_write_close();
     .la-chip.on .c { background: rgba(255, 255, 255, .25); color: #fff; }
     .la-chip:disabled { opacity: .45; cursor: default; }
     .la-badge { display: inline-block; border-radius: 6px; padding: 2px 8px; font-size: .72rem; font-weight: 600; white-space: nowrap; background: #ecf2ff; color: #3b5bdb; }
-    .la-tambah, .la-login, .la-simpan, .la-aktifkan, .la-verifikasi { background: #e6fffa; color: #047857; }
-    .la-hapus, .la-hapus_file, .la-login_gagal, .la-login_terkunci, .la-switch_tolak, .la-nonaktifkan, .la-import_gagal { background: #fee2e2; color: #b91c1c; }
+    .la-tambah, .la-login, .la-simpan, .la-aktifkan, .la-verifikasi, .la-selesai { background: #e6fffa; color: #047857; }
+    .la-hapus, .la-hapus_file, .la-login_gagal, .la-login_terkunci, .la-switch_tolak, .la-nonaktifkan, .la-import_gagal, .la-sinkron_gagal { background: #fee2e2; color: #b91c1c; }
     .la-switch_user, .la-switch_kembali, .la-reset_password, .la-ubah_peran, .la-gabung, .la-batal_verifikasi { background: #fff4e5; color: #b45309; }
     .la-logout, .la-login_nonaktif { background: #f1f5f9; color: #475569; }
-    .la-kirim_pcare, .la-kirim_obat, .la-ubah_status, .la-import { background: #e0f2fe; color: #075985; }
+    .la-kirim_pcare, .la-kirim_obat, .la-ubah_status, .la-import, .la-panggil, .la-sinkron, .la-ambil_tiket { background: #e0f2fe; color: #075985; }
     .la-approve, .la-stok_masuk, .la-terima { background: #e6fffa; color: #047857; }
     .la-ubah_harga, .la-penyesuaian, .la-stok_keluar { background: #f3e8ff; color: #6b21a8; }
     .la-sub { font-size: .72rem; color: #94a3b8; }

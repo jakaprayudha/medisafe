@@ -2,6 +2,7 @@
 require_once __DIR__ . '/view.php';
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/servicebpjs.php';
+require_once __DIR__ . '/../../../utility/activityLog.php';
 header('Content-Type: application/json');
 
 $noKunjungan = $_POST['noKunjungan'] ?? null;
@@ -126,6 +127,7 @@ if ($noKunjungan != null) {
     $method = "PUT";
 }
 // echo json_encode($payload, JSON_PRETTY_PRINT);die();
+$lgLama = $method === "PUT" ? logAmbilBaris($koneksi, 'pcare_kunjungan', 'noKunjungan', $noKunjungan) : null;
 $result = bpjsPost("/kunjungan", $payload, $method);
 // $result = testingBPJS_POST("http://localhost/medisafe/controller/admisi/api/getpeserta.php", $payload);
 // echo json_encode($result, JSON_PRETTY_PRINT);die();
@@ -320,4 +322,12 @@ if ($result['code'] != "200") {
         ];
     }
 }
+// log aktivitas kirim kunjungan PCare (halaman testing; berhasil maupun ditolak BPJS)
+$lgDiag = array_filter(['diag1' => $diag1, 'diag2' => $diag2, 'diag3' => $diag3]);
+$lgVisit = ($lgLama ?? logAmbilBaris($koneksi, 'pcare_kunjungan', 'noKunjungan', $noKunjungan) ?? [])['nomor_visit'] ?? null;
+$lgMsg = is_scalar($response['message'] ?? null) ? (string) $response['message'] : json_encode($response['message'] ?? null);
+logAktivitas($koneksi, 'diagnosa', 'kirim_pcare', ['tipe' => 'pcare_kunjungan', 'id' => $noKunjungan, 'label' => ($noKunjungan ?: 'kartu ' . $noKartu) . ' · ' . $DBtglDatar, 'visit_ID' => $lgVisit],
+    (!empty($response['success']) ? ($method === 'PUT' ? 'Ubah kunjungan PCare' : 'Kirim kunjungan PCare') . ' berhasil (prosesinsertkunjungan)' : 'Kirim kunjungan PCare GAGAL (prosesinsertkunjungan): ' . mb_substr($lgMsg, 0, 300))
+    . ($lgDiag ? ' · ' . implode(', ', $lgDiag) : ''),
+    null, $lgDiag + ['noKunjungan' => $noKunjungan, 'noKartu' => $noKartu, 'kdPoli' => $kdPoli, 'kdStatusPulang' => $kdStatusPulang, 'kdDokter' => $kdDokter, 'metode' => $method, 'berhasil' => !empty($response['success'])]);
 echo json_encode($response);

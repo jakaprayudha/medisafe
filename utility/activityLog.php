@@ -31,6 +31,8 @@ const LOG_AKTIVITAS_MODUL = [
    'master' => 'Master data',
    'pengaturan' => 'Pengaturan faskes',
    'import' => 'Import / upload massal',
+   'antrean' => 'Antrean admisi',
+   'sistem' => 'Sistem & jadwal otomatis',
 ];
 
 const LOG_AKTIVITAS_AKSI = [
@@ -43,6 +45,7 @@ const LOG_AKTIVITAS_AKSI = [
    'cetak' => 'Cetak', 'tanda_tangan' => 'Tanda tangan', 'hapus_pcare' => 'Hapus di PCare',
    'stok_masuk' => 'Stok masuk', 'stok_keluar' => 'Stok keluar', 'penyesuaian' => 'Penyesuaian stok', 'terima' => 'Terima barang', 'ubah_harga' => 'Ubah harga',
    'import' => 'Import data', 'import_gagal' => 'Import gagal',
+   'ambil_tiket' => 'Ambil tiket', 'panggil' => 'Panggil', 'selesai' => 'Selesai', 'sinkron' => 'Sinkron otomatis', 'sinkron_gagal' => 'Sinkron gagal',
 ];
 
 /** Kunci yang tidak boleh masuk log. */

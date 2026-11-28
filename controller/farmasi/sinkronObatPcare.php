@@ -11,6 +11,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../admisi/services/servicebpjs.php';
 require_once __DIR__ . '/../doctor/rmeCycleService.php';
 require_once __DIR__ . '/pcareTerapiService.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 header('Content-Type: application/json');
 mysqli_report(MYSQLI_REPORT_OFF);
@@ -56,13 +57,17 @@ try {
    $stmt->close();
 
    $kirim = pcareKirimTerapiVisit($koneksi, $id_customer, (string)$tiket['id_visit']);
+   $lgRef = ['tipe' => 'tiket_resep', 'id' => $idTiket, 'label' => 'Sinkron obat PCare', 'visit_ID' => $tiket['id_visit']];
    if (!$kirim['ok']) {
       $koneksi->rollback();
+      logAktivitas($koneksi, 'farmasi', 'kirim_obat', $lgRef, 'GAGAL sinkron obat ke PCare: ' . mb_substr((string) $kirim['message'], 0, 300));
       sinkronJawab('error', 'Obat tersimpan, tetapi gagal dikirim ke PCare: ' . $kirim['message'], ['result' => $kirim['result']]);
    }
    $koneksi->commit();
+   logAktivitas($koneksi, 'farmasi', 'kirim_obat', $lgRef, 'Obat disinkronkan ulang ke PCare (tiket sudah terkirim diubah)');
    sinkronJawab('success', 'Obat berhasil diperbarui di PCare.');
 } catch (Throwable $e) {
    $koneksi->rollback();
+   logAktivitas($koneksi, 'farmasi', 'kirim_obat', ['tipe' => 'tiket_resep', 'id' => $idTiket, 'label' => 'Sinkron obat PCare', 'visit_ID' => $tiket['id_visit']], 'GAGAL sinkron obat ke PCare: ' . mb_substr($e->getMessage(), 0, 300));
    sinkronJawab('error', 'Obat tersimpan, tetapi gagal dikirim ke PCare: ' . $e->getMessage());
 }

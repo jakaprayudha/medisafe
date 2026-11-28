@@ -2,6 +2,7 @@
 require_once __DIR__ . '/view.php';
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/servicebpjs.php';
+require_once __DIR__ . '/../../../utility/activityLog.php';
 header('Content-Type: application/json');
 
 $eduid = $_POST['eduid'] ?? null;
@@ -58,4 +59,8 @@ if ($result['code'] != '200') {
         ];
     }
 }
+// log aktivitas PCare (berhasil maupun ditolak BPJS)
+logAktivitas($koneksi, 'diagnosa', 'kirim_pcare', ['tipe' => 'pcare_kegiatan', 'id' => !empty($response['success']) ? ($eduId ?? null) : $eduid, 'label' => 'Kegiatan kelompok · ' . $DBtglPelayanan . ' · ' . $materi],
+    (!empty($response['success']) ? 'Kegiatan kelompok dibuat di PCare' : 'Buat kegiatan kelompok PCare GAGAL: ' . mb_substr((is_string($response['message'] ?? null) ? $response['message'] : json_encode($response['message'] ?? '')), 0, 300)), null,
+    ['eduId' => $eduId ?? $eduid, 'clubId' => $kdClpprolanis, 'tglPelayanan' => $DBtglPelayanan, 'kdKegiatan' => $kdkegiatan, 'kdKelompok' => $kdkelompok, 'materi' => $materi, 'pembicara' => $pembicara, 'lokasi' => $lokasi, 'keterangan' => $keterangan, 'biaya' => $biaya]);
 echo json_encode($response);

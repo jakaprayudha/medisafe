@@ -1,5 +1,49 @@
 <?php
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
+/*
+ * Perbaikan: tanpa cek login & tanpa filter faskes (lbp_bpjs tidak punya id_customer: LBP faskes lain bisa dibaca,
+ * diubah, dihapus lewat id_lbp / visit_ID); tidak ada log. Kini kepemilikan dicek lewat pasien_visit.
+ */
+if (empty($_SESSION['id_customer'])) {
+   http_response_code(401);
+   echo json_encode(['status' => 'error', 'message' => 'Session tidak valid / expired']);
+   exit;
+}
+function lbpIdc(): int
+{
+   return (int) $_SESSION['id_customer'];
+}
+function lbpVisitMilik(string $visitID): bool
+{
+   global $koneksi;
+   $idc = lbpIdc();
+   $st = $koneksi->prepare("SELECT 1 FROM pasien_visit WHERE visit_ID = ? AND id_customer = ? LIMIT 1");
+   $st->bind_param('si', $visitID, $idc);
+   $st->execute();
+   $ada = (bool) $st->get_result()->fetch_row();
+   $st->close();
+   return $ada;
+}
+/** Baris LBP milik faskes session (lewat kunjungannya), atau null. */
+function lbpAmbil($id): ?array
+{
+   global $koneksi;
+   $idc = lbpIdc();
+   $id = (string) $id;
+   $st = $koneksi->prepare("SELECT l.* FROM lbp_bpjs l JOIN pasien_visit v ON v.visit_ID = l.visit_ID AND v.id_customer = ? WHERE l.id_lbp = ? LIMIT 1");
+   $st->bind_param('is', $idc, $id);
+   $st->execute();
+   $r = $st->get_result()->fetch_assoc();
+   $st->close();
+   return $r ?: null;
+}
+function lbpLog($id, ?array $lama, string $ket): void
+{
+   global $koneksi;
+   $r = $lama ?? logAmbilBaris($koneksi, 'lbp_bpjs', 'id_lbp', $id) ?? [];
+   logBaris($koneksi, 'ranap', 'lbp_bpjs', 'id_lbp', $id, $lama, ['tipe' => 'lbp', 'label' => trim('LBP · ' . ($r['tgl_pelayanan'] ?? ''), ' ·'), 'visit_ID' => $r['visit_ID'] ?? null], $ket);
+}
 $method = $_SERVER['REQUEST_METHOD'];
 switch ($method) {
    case 'POST':
@@ -51,6 +95,12 @@ function createData()
       'uraian'
    ];
 
+   if (!lbpVisitMilik((string) ($_POST['visit_ID'] ?? ''))) {
+      http_response_code(404);
+      echo json_encode(['status' => 'error', 'message' => 'Kunjungan tidak ditemukan di faskes ini.']);
+      exit;
+   }
+
    $fields = ['lbp_number']; // tambahkan CPPT ID
    $values = [generateDoctorNumber($koneksi)];
 
@@ -80,6 +130,7 @@ function createData()
       $stmt->bind_param($types, ...$values);
 
       if ($stmt->execute()) {
+         lbpLog($stmt->insert_id, null, 'LBP ditambahkan');
          echo json_encode([
             'status' => 'success',
             'message' => 'Data berhasil ditambahkan.'
@@ -126,11 +177,14 @@ function getData()
 {
    global $koneksi;
    // pastikan ada parameter "no" (nomor_visit)
-   $no = isset($_GET['no']) ? mysqli_real_escape_string($koneksi, $_GET['no']) : '';
-   $rm = isset($_GET['rm']) ? mysqli_real_escape_string($koneksi, $_GET['rm']) : '';
-   $query = "SELECT * FROM lbp_bpjs WHERE visit_ID = '$no' AND nomor_rm = '$rm'
-             ORDER BY tgl_pelayanan  ASC";
-   $result = mysqli_query($koneksi, $query);
+   $no = (string) ($_GET['no'] ?? '');
+   $rm = (string) ($_GET['rm'] ?? '');
+   $idc = lbpIdc();
+   $st = $koneksi->prepare("SELECT l.* FROM lbp_bpjs l JOIN pasien_visit v ON v.visit_ID = l.visit_ID AND v.id_customer = ?
+             WHERE l.visit_ID = ? AND l.nomor_rm = ? ORDER BY l.tgl_pelayanan ASC");
+   $st->bind_param('iss', $idc, $no, $rm);
+   $st->execute();
+   $result = $st->get_result();
 
    if (!$result) {
       http_response_code(500);
@@ -158,36 +212,8 @@ function getData()
 // Function untuk Read User berdasarkan ID
 function  getID($iduser)
 {
-   global $koneksi;
-
-   // Query untuk mengambil data user berdasarkan iduser
-   $query = "SELECT * FROM lbp_bpjs   WHERE id_lbp = ?";
-
-   if ($stmt = $koneksi->prepare($query)) {
-      $stmt->bind_param("s", $iduser); // Bind parameter iduser
-      $stmt->execute();
-      $result = $stmt->get_result();
-
-      if ($result->num_rows > 0) {
-         $data = $result->fetch_assoc();
-         echo json_encode([
-            'status' => 'success',
-            'data' => $data
-         ]);
-      } else {
-         echo json_encode([
-            'status' => 'error',
-            'message' => 'Data tidak ditemukan.'
-         ]);
-      }
-
-      $stmt->close();
-   } else {
-      echo json_encode([
-         'status' => 'error',
-         'message' => 'Gagal menyiapkan query.'
-      ]);
-   }
+   $data = lbpAmbil($iduser);
+   echo json_encode($data ? ['status' => 'success', 'data' => $data] : ['status' => 'error', 'message' => 'Data tidak ditemukan.']);
 }
 
 
@@ -228,11 +254,18 @@ function updateData()
    $types = str_repeat('s', count($values) - 1) . "i";
 
    $query = "UPDATE lbp_bpjs SET " . implode(',', $fields) . " WHERE id_lbp=?";
+   $lbpLama = lbpAmbil($id);
+   if (!$lbpLama || (isset($_PUT['visit_ID']) && !lbpVisitMilik((string) $_PUT['visit_ID']))) {
+      http_response_code(404);
+      echo json_encode(['status' => 'error', 'message' => 'Data tidak ditemukan.']);
+      return;
+   }
    $stmt = $koneksi->prepare($query);
 
    if ($stmt) {
       $stmt->bind_param($types, ...$values);
       if ($stmt->execute()) {
+         lbpLog($id, $lbpLama, 'LBP diubah');
          echo json_encode(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
       } else {
          echo json_encode(['status' => 'error', 'message' => 'Update gagal: ' . $stmt->error]);
@@ -263,11 +296,18 @@ function deleteData()
 
    // Query untuk menghapus data user
    $query = "DELETE FROM lbp_bpjs WHERE id_lbp = ?";
+   $lbpLama = lbpAmbil($id);
+   if (!$lbpLama) {
+      http_response_code(404);
+      echo json_encode(['status' => 'error', 'message' => 'Data tidak ditemukan.']);
+      exit;
+   }
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $id);
 
       if ($stmt->execute()) {
+         lbpLog($id, $lbpLama, 'LBP dihapus');
          echo json_encode([
             'status' => 'success',
             'message' => 'Data berhasil dihapus.'

@@ -2,6 +2,7 @@
 require_once __DIR__ . '/view.php';
 require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/servicebpjs.php';
+require_once __DIR__ . '/../../../utility/activityLog.php';
 header('Content-Type: application/json');
 $noKartu = $_POST['pesertaId'];
 $noKlp = $_POST['idKlp'];
@@ -40,4 +41,8 @@ if ($result['code'] != "200") {
         ];
     }
 }
+// log aktivitas PCare (berhasil maupun ditolak BPJS)
+logAktivitas($koneksi, 'diagnosa', 'kirim_pcare', ['tipe' => 'pcare_pstKelompok', 'id' => $noKlp, 'label' => 'Peserta kelompok ' . $noKlp . ' · kartu ' . $noKartu],
+    (!empty($response['success']) ? 'Peserta ditambahkan ke kelompok di PCare' : 'Tambah peserta kelompok PCare GAGAL: ' . mb_substr((is_string($response['message'] ?? null) ? $response['message'] : json_encode($response['message'] ?? '')), 0, 300)), null,
+    ['idKelompok' => $noKlp, 'noKartu' => $noKartu, 'tgl_kegiatan' => $tgl]);
 echo json_encode($response);
