@@ -52,6 +52,8 @@ $stmt3 = $koneksi->prepare("
    ");
 $stmt3->bind_param("ii", $id, $id_customer);
 if ($stmt3->execute()) {
+    require_once __DIR__ . '/../../utility/activityLog.php';
+    logTiketResep($koneksi, 'ubah_status', (int) $id, (string) $nomor_visit, 'Tiket rawat inap dikirim ke farmasi (status 1)', null, ['status_permintaan' => 1]);
     echo json_encode([
         'status' => 'success',
         'message' => 'Berhasil Simpan Obat'

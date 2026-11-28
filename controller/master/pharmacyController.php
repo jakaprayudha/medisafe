@@ -1,5 +1,6 @@
 <?php
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 header('Content-Type: application/json');
 
@@ -120,6 +121,9 @@ function createData($id_customer)
    $stmt->bind_param($types, ...$values);
 
    if ($stmt->execute()) {
+      $baru = array_combine($fields, $values);
+      logAktivitas($koneksi, 'stok', 'tambah', ['tipe' => 'obat', 'id' => $stmt->insert_id,
+         'label' => (string) (($baru['pharmacy_name_trade'] ?? '') ?: ($baru['pharmacy_name_generic'] ?? '-'))], 'Obat baru di master', null, $baru);
       echo json_encode(['status' => 'success', 'message' => 'Obat berhasil ditambahkan.']);
    } else {
       error_log('[pharmacyController] ' . $stmt->error);
@@ -343,6 +347,20 @@ function updateData($id_customer)
    }
 
    if ($stmt->execute()) {
+      // log: bandingkan data sebelum & sesudah (stok, harga beli/jual, status, nama, dst.)
+      $ck = $koneksi->prepare("SELECT * FROM ms_pharmacy WHERE id_pharmacy=?");
+      $ck->bind_param("i", $id);
+      $ck->execute();
+      $rowBaru = $ck->get_result()->fetch_assoc() ?: [];
+      $ck->close();
+      unset($rowBaru['updated_at'], $rowBaru['udpated_at']);
+      [$l, $b] = logBeda($row, $rowBaru);
+      if ($b) {
+         $kunciHarga = array_intersect(array_keys($b), ['pharmacy_buy', 'pharmacy_price_buy', 'pharmacy_sale', 'pharmacy_price_item']);
+         $aksiOb = isset($b['pharmacy_stock']) ? 'penyesuaian' : ($kunciHarga ? 'ubah_harga' : 'ubah');
+         logAktivitas($koneksi, 'stok', $aksiOb, ['tipe' => 'obat', 'id' => $id, 'label' => (string) (($row['pharmacy_name_trade'] ?? '') ?: ($row['pharmacy_name_generic'] ?? '-'))],
+            'Ubah master obat: ' . implode(', ', array_keys($b)) . ((int) $row['id_customer'] !== (int) $id_customer ? ' (obat master bersama)' : ''), $l, $b);
+      }
       echo json_encode(['status' => 'success']);
    } else {
       echo json_encode(['status' => 'error', 'message' => $stmt->error]);
@@ -403,6 +421,8 @@ function deleteData($id_customer)
    }
 
    if ($stmt->execute()) {
+      $ob = obatSnapshot($koneksi, (int) $id);
+      logAktivitas($koneksi, 'stok', 'hapus', ['tipe' => 'obat', 'id' => $id, 'label' => (string) ($ob['nama_obat'] ?? 'Obat #' . $id)], 'Obat dihapus dari daftar faskes', $ob, null);
       echo json_encode(['status' => 'success', 'message' => 'Obat dihapus dari daftar faskes.']);
    } else {
       error_log('[pharmacyController] ' . $stmt->error);

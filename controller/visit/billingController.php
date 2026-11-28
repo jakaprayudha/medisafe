@@ -154,7 +154,9 @@ function blSimpan(array $in, int $idc, bool $ubah): void
          WHERE id_billing = ? AND id_customer = ?");
       $st->bind_param('ssiiisii', $d['billing_item'], $d['billing_category'], $d['billing_price'], $d['billing_qty'], $d['billing_discount'], $d['billing_notes'], $id, $idc);
       $st->execute();
+      $kena = $st->affected_rows;
       $st->close();
+      if ($kena > 0) blLog('ubah', $id, $visit, $lama, $d);
       blBalas(200, ['status' => 'success', 'message' => 'Item diperbarui.', 'id' => $id]);
    }
    $nomor = blNomor();
@@ -164,6 +166,7 @@ function blSimpan(array $in, int $idc, bool $ubah): void
    $st->execute();
    $id = $st->insert_id;
    $st->close();
+   if ($id) blLog('tambah', (int) $id, $visit, null, $d + ['billing_number' => $nomor]);
    blBalas(200, ['status' => 'success', 'message' => 'Item ditambahkan.', 'id' => $id]);
 }
 
@@ -177,8 +180,18 @@ function blHapus(int $id, int $idc): void
    $st = $koneksi->prepare("DELETE FROM pasien_billing WHERE id_billing = ? AND id_customer = ?");
    $st->bind_param('ii', $id, $idc);
    $st->execute();
+   $kena = $st->affected_rows;
    $st->close();
+   if ($kena > 0) blLog('hapus', $id, (string) $lama['id_visit'], $lama, null);
    blBalas(200, ['status' => 'success', 'message' => 'Item dihapus.']);
+}
+
+/** Log perubahan item tagihan (modul billing). */
+function blLog(string $aksi, int $id, string $visit, ?array $lama, ?array $baru): void
+{
+   global $koneksi;
+   require_once __DIR__ . '/../../utility/activityLog.php';
+   logTagihan($koneksi, $aksi, $id, $visit, $lama, $baru, 'Menu Tindakan');
 }
 
 function blNomor(): string

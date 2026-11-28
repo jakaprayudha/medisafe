@@ -1,6 +1,7 @@
 <?php
 
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -351,6 +352,7 @@ function createData()
 
 
    if ($stmt->execute()) {
+      logResepItem($koneksi, 'tambah', (int) $stmt->insert_id, null, farmasiItemSnapshot($koneksi, (int) $stmt->insert_id), 'BMHP / obat tambahan');
 
       $insertId = $stmt->insert_id;
 
@@ -794,6 +796,7 @@ function updateData()
     ";
 
 
+   $rsLama = farmasiItemSnapshot($koneksi, (int) $id);
    $stmt = $koneksi->prepare($query);
 
 
@@ -823,6 +826,7 @@ function updateData()
 
 
    if ($stmt->execute()) {
+      if ($stmt->affected_rows > 0 && $rsLama) logResepItem($koneksi, 'ubah', (int) $id, $rsLama, farmasiItemSnapshot($koneksi, (int) $id), 'BMHP / obat tambahan');
 
       echo json_encode([
          'status' => 'success',
@@ -900,6 +904,7 @@ function deleteData()
     ";
 
 
+   $rsLama = farmasiItemSnapshot($koneksi, (int) $id);
    $stmt = $koneksi->prepare($query);
 
 
@@ -921,6 +926,7 @@ function deleteData()
 
 
    if ($stmt->execute()) {
+      if ($stmt->affected_rows > 0 && $rsLama) logResepItem($koneksi, 'hapus', (int) $id, $rsLama, null, 'BMHP / obat tambahan');
 
       echo json_encode([
          'status' => 'success',
@@ -998,6 +1004,7 @@ function approveData($data)
 
 
    if ($stmt->execute()) {
+      if ($stmt->affected_rows > 0) logResepItem($koneksi, 'approve', (int) $id, null, farmasiItemSnapshot($koneksi, (int) $id), 'Item di-approve');
 
       echo json_encode([
          'status' => 'success',

@@ -20,6 +20,10 @@ const LOG_AKTIVITAS_MODUL = [
    'resume' => 'Resume medis',
    'diagnosa' => 'Diagnosa & PCare',
    'lab'    => 'Hasil lab',
+   'billing' => 'Tagihan / tindakan',
+   'tarif'  => 'Tarif',
+   'farmasi' => 'Farmasi & resep',
+   'stok'   => 'Stok & pembelian',
 ];
 
 const LOG_AKTIVITAS_AKSI = [
@@ -28,6 +32,8 @@ const LOG_AKTIVITAS_AKSI = [
    'tambah' => 'Tambah', 'ubah' => 'Ubah', 'hapus' => 'Hapus', 'ubah_peran' => 'Ubah peran', 'reset_password' => 'Reset password',
    'aktifkan' => 'Aktifkan', 'nonaktifkan' => 'Nonaktifkan', 'gabung' => 'Gabung RME', 'verifikasi' => 'Verifikasi', 'batal_verifikasi' => 'Batal verifikasi',
    'simpan' => 'Simpan', 'kirim_pcare' => 'Kirim PCare', 'hapus_file' => 'Hapus file', 'upload_file' => 'Upload file',
+   'approve' => 'Approve / serahkan', 'batal_approve' => 'Batal approve', 'kirim_obat' => 'Kirim obat PCare', 'ubah_status' => 'Ubah status',
+   'stok_masuk' => 'Stok masuk', 'stok_keluar' => 'Stok keluar', 'penyesuaian' => 'Penyesuaian stok', 'terima' => 'Terima barang', 'ubah_harga' => 'Ubah harga',
 ];
 
 /** Kunci yang tidak boleh masuk log. */
@@ -177,5 +183,87 @@ function logAktivitas(mysqli $db, string $modul, string $aksi, array $ref = [], 
          ], '20261128_log_aktivitas.sql');
    } catch (Throwable $e) {
       error_log('[logAktivitas] ' . $modul . '/' . $aksi . ': ' . $e->getMessage());
+   }
+}
+
+/** Log item tagihan pasien_billing (dipakai controller/visit/billingController.php & tindakan.php). */
+function logTagihan(mysqli $db, string $aksi, int $id, string $visit, ?array $lama, ?array $baru, string $sumber = ''): void
+{
+   $kol = ['billing_number', 'billing_item', 'billing_category', 'billing_price', 'billing_qty', 'billing_discount', 'billing_notes'];
+   $l = $lama ? array_intersect_key($lama, array_flip($kol)) : null;
+   $b = $baru ? array_intersect_key($baru, array_flip($kol)) : null;
+   if ($l && $b) [$l, $b] = logBeda($l, $b);
+   if ($aksi === 'ubah' && !$b) return;
+   $r = ($baru ?? []) + ($lama ?? []);
+   $rp = fn($n) => 'Rp' . number_format((int) $n, 0, ',', '.');
+   $total = (int) ($r['billing_price'] ?? 0) * (int) ($r['billing_qty'] ?? 0) - (int) ($r['billing_discount'] ?? 0);
+   logAktivitas($db, 'billing', $aksi, ['tipe' => 'billing', 'id' => $id, 'label' => (string) ($r['billing_item'] ?? '-'), 'visit_ID' => $visit],
+      implode(' · ', array_filter([$sumber, (string) ($r['billing_category'] ?? ''), ($r['billing_qty'] ?? 0) . ' × ' . $rp($r['billing_price'] ?? 0)
+         . (!empty($r['billing_discount']) ? ' − diskon ' . $rp($r['billing_discount']) : '') . ' = ' . $rp($total)], 'strlen')), $l, $b);
+}
+
+/** Item resep + nama obat + tiket (untuk log farmasi). */
+function farmasiItemSnapshot(mysqli $db, int $idDetail): ?array
+{
+   try {
+      $st = $db->prepare("SELECT pd.id_pharmacy_details, pd.id_permintaan_farmasi, pd.id_pharmacy,
+            COALESCE(NULLIF(mp.pharmacy_name_trade, ''), NULLIF(mp.pharmacy_name_generic, ''), pd.item_name) AS nama_obat, pd.qty, pd.signa, pd.catatan, pd.harga,
+            pp.id_visit, pp.tipe_obat, pp.status_permintaan
+         FROM permintaan_pharmacy_details pd
+         LEFT JOIN ms_pharmacy mp ON mp.id_pharmacy = pd.id_pharmacy
+         LEFT JOIN permintaan_pharmacy pp ON pp.id_permintaan_farmasi = pd.id_permintaan_farmasi
+         WHERE pd.id_pharmacy_details = ? LIMIT 1");
+      if (!$st) return null;
+      $st->bind_param('i', $idDetail);
+      $st->execute();
+      $r = $st->get_result()->fetch_assoc();
+      $st->close();
+      return $r ?: null;
+   } catch (Throwable $e) {
+      error_log('[farmasiItemSnapshot] ' . $e->getMessage());
+      return null;
+   }
+}
+
+/** Log item resep: $lama/$baru = snapshot (farmasiItemSnapshot) sebelum/sesudah. */
+function logResepItem(mysqli $db, string $aksi, int $idDetail, ?array $lama, ?array $baru, string $sumber = ''): void
+{
+   $r = $baru ?? $lama ?? [];
+   $kol = ['nama_obat', 'id_pharmacy', 'qty', 'signa', 'catatan', 'harga'];
+   $l = $lama ? array_intersect_key($lama, array_flip($kol)) : null;
+   $b = $baru ? array_intersect_key($baru, array_flip($kol)) : null;
+   if ($l && $b) {
+      [$l, $b] = logBeda($l, $b);
+      if (!$b) return;
+   }
+   $status = (int) ($r['status_permintaan'] ?? 0);
+   logAktivitas($db, 'farmasi', $aksi, ['tipe' => 'resep_item', 'id' => $idDetail, 'label' => (string) ($r['nama_obat'] ?? 'Obat #' . ($r['id_pharmacy'] ?? '?')),
+      'visit_ID' => $r['id_visit'] ?? null],
+      trim(($sumber !== '' ? $sumber . ' · ' : '') . 'Tiket #' . ($r['id_permintaan_farmasi'] ?? '-') . ' ' . ($r['tipe_obat'] ?? '') . ' · qty ' . ($r['qty'] ?? '-')
+         . ($r['signa'] ?? '' ? ' · ' . $r['signa'] : '') . ($status === 3 ? ' · tiket sudah selesai' : '')), $l, $b);
+}
+
+/** Log tiket resep (permintaan_pharmacy). */
+function logTiketResep(mysqli $db, string $aksi, int $idTiket, string $visit, string $ket, ?array $lama = null, ?array $baru = null): void
+{
+   logAktivitas($db, 'farmasi', $aksi, ['tipe' => 'resep_tiket', 'id' => $idTiket ?: null, 'label' => 'Tiket resep #' . $idTiket, 'visit_ID' => $visit], $ket, $lama, $baru);
+}
+
+/** Data ringkas master obat untuk log stok / harga. */
+function obatSnapshot(mysqli $db, int $idObat): ?array
+{
+   try {
+      $st = $db->prepare("SELECT id_pharmacy, pharmacy_code, COALESCE(NULLIF(pharmacy_name_trade, ''), pharmacy_name_generic) AS nama_obat, pharmacy_category,
+            pharmacy_unit, pharmacy_stock, pharmacy_buy, pharmacy_price_buy, pharmacy_sale, pharmacy_status
+         FROM ms_pharmacy WHERE id_pharmacy = ? LIMIT 1");
+      if (!$st) return null;
+      $st->bind_param('i', $idObat);
+      $st->execute();
+      $r = $st->get_result()->fetch_assoc();
+      $st->close();
+      return $r ?: null;
+   } catch (Throwable $e) {
+      error_log('[obatSnapshot] ' . $e->getMessage());
+      return null;
    }
 }

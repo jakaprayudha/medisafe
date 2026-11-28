@@ -43,6 +43,12 @@ try {
 
    $stmt->bind_param("isi", $status, $visit, $id_customer);
    $stmt->execute();
+   if ($stmt->affected_rows > 0) {
+      require_once __DIR__ . '/../../utility/activityLog.php';
+      $labelStatus = [1 => 'Waiting', 2 => 'Persiapan', 3 => 'Selesai (obat diserahkan)'][$status];
+      logAktivitas($koneksi, 'farmasi', $status === 3 ? 'approve' : 'ubah_status', ['tipe' => 'resep_tiket', 'label' => $stmt->affected_rows . ' tiket kunjungan', 'visit_ID' => $visit],
+         'Status tiket farmasi → ' . $labelStatus, null, ['status_permintaan' => $status, 'jumlah_tiket' => $stmt->affected_rows]);
+   }
 
    echo json_encode([
       'status' => 'success',

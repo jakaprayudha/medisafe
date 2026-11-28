@@ -31,7 +31,9 @@ session_write_close();
     .la-hapus, .la-hapus_file, .la-login_gagal, .la-login_terkunci, .la-switch_tolak, .la-nonaktifkan { background: #fee2e2; color: #b91c1c; }
     .la-switch_user, .la-switch_kembali, .la-reset_password, .la-ubah_peran, .la-gabung, .la-batal_verifikasi { background: #fff4e5; color: #b45309; }
     .la-logout, .la-login_nonaktif { background: #f1f5f9; color: #475569; }
-    .la-kirim_pcare { background: #e0f2fe; color: #075985; }
+    .la-kirim_pcare, .la-kirim_obat, .la-ubah_status { background: #e0f2fe; color: #075985; }
+    .la-approve, .la-stok_masuk, .la-terima { background: #e6fffa; color: #047857; }
+    .la-ubah_harga, .la-penyesuaian, .la-stok_keluar { background: #f3e8ff; color: #6b21a8; }
     .la-sub { font-size: .72rem; color: #94a3b8; }
     .la-ket { max-width: 380px; white-space: normal; font-size: .8rem; color: #475569; }
     .la-asli { display: inline-block; background: #fff4e5; color: #b45309; border-radius: 4px; padding: 0 5px; font-size: .68rem; }
@@ -58,7 +60,7 @@ session_write_close();
                 <span class="la-icon bg-warning-subtle text-warning"><i class="fas fa-user-shield"></i></span>
                 <div class="min-w-0 flex-grow-1">
                   <h5 class="fw-semibold mb-0">Log Aktivitas</h5>
-                  <div class="text-muted small">Login, switch user, perubahan user &amp; hak akses, data pasien, gabung RME, CPPT, resume medis, diagnosa/PCare, dan hasil lab.</div>
+                  <div class="text-muted small">Login, switch user, user &amp; hak akses, data pasien, gabung RME, CPPT, resume medis, diagnosa/PCare, hasil lab, tagihan, tarif, farmasi, serta stok &amp; harga obat.</div>
                 </div>
                 <a class="btn btn-outline-primary btn-sm" href="module/admin/log_kunjungan"><i class="fas fa-clipboard-list me-1"></i>Log Kunjungan</a>
                 <button type="button" class="btn btn-light btn-sm" id="laRefresh" title="Muat ulang"><i class="fas fa-sync-alt"></i></button>

@@ -7,6 +7,17 @@
 include '../../database/connect.php';
 require_once __DIR__ . '/pharmacyAkses.php';
 require_once __DIR__ . '/marginHarga.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
+
+/** Log perubahan detail obat (stok/harga dicatat dengan aksi khusus). */
+function pdLog(mysqli $k, int $id, array $row, array $data, string $ket): void
+{
+   [$l, $b] = logBeda($row, $data);
+   if (!$b) return;
+   $aksi = isset($b['pharmacy_stock']) ? 'penyesuaian' : (array_intersect(array_keys($b), ['pharmacy_buy', 'pharmacy_price_buy', 'pharmacy_sale', 'pharmacy_price_item']) ? 'ubah_harga' : 'ubah');
+   logAktivitas($k, 'stok', $aksi, ['tipe' => 'obat', 'id' => $id, 'label' => (string) (($row['pharmacy_name_trade'] ?? '') ?: ($row['pharmacy_name_generic'] ?? '-'))],
+      $ket . ': ' . implode(', ', array_keys($b)), $l, $b);
+}
 mysqli_report(MYSQLI_REPORT_OFF);
 header("Content-Type: application/json; charset=utf-8");
 
@@ -93,6 +104,7 @@ if ($row['sumber'] === 'faskes') {
       error_log('[pharmacyDetailsController] ' . $err);
       jawab(["success" => false, "message" => "Gagal menyimpan data obat"], 500);
    }
+   pdLog($koneksi, (int) $id, $row, $data, 'Ubah detail obat' . ($hargaOtomatis !== null ? ' (harga jual dari margin)' : ''));
    jawab(["success" => true, "message" => "Data obat berhasil diperbarui", "harga_jual" => $hargaOtomatis]);
 }
 
@@ -117,6 +129,7 @@ try {
    $newId = $koneksi->insert_id;
    $stmt->close();
    $koneksi->commit();
+   pdLog($koneksi, (int) $newId, $row, $data, 'Obat master bawaan disalin jadi obat faskes (#' . $id . ' → #' . $newId . ')');
    jawab(["success" => true, "message" => "Data obat disimpan sebagai salinan khusus faskes Anda", "new_id" => $newId, "harga_jual" => $hargaOtomatis]);
 } catch (Throwable $e) {
    $koneksi->rollback();
