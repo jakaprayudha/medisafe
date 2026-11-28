@@ -179,7 +179,7 @@ if ($aksi === 'tes_antrol' && $_SERVER['REQUEST_METHOD'] === 'POST') {
    $ms = (int) round((microtime(true) - $t0) * 1000);
 
    if (empty($res['success'])) {
-      bsJawab(['success' => false, 'message' => 'Antrean Online menolak / tidak merespons: ' . trim((string) ($res['message'] ?? 'Gagal terhubung')), 'ms' => $ms], 502);
+      bsJawab(['success' => false, 'message' => 'Antrean Online menolak / tidak merespons: ' . trim((string) ($res['message'] ?? 'Gagal terhubung')), 'ms' => $ms], 422);
    }
    bsJawab(['success' => true, 'message' => 'Terhubung ke Antrean Online', 'ms' => $ms]);
 }
