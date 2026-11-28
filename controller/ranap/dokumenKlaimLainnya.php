@@ -13,6 +13,7 @@
  * file PDF; judul kosong tersimpan; file tertinggal bila insert gagal; respon tanpa header JSON.
  */
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 require_once __DIR__ . '/../../utility/visitGuard.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -133,6 +134,7 @@ function dlTambah(string $no, string $idc, array $kunj, string $root): void
       @unlink($dir . $nama);   // jangan tinggalkan file yatim
       throw $e;
    }
+   logBaris($koneksi, 'dokumen', 'pasien_dokumen_klaim_lainnya', 'id_dokumen', $id, $__lg ?? null, ['label' => 'Dokumen klaim lainnya', 'visit_ID' => $no], 'Dokumen klaim lainnya');
    dlBalas(200, ['status' => 'success', 'message' => 'Dokumen berhasil disimpan.', 'id' => $id]);
 }
 
@@ -141,10 +143,12 @@ function dlUbah(int $id, string $no, string $idc): void
    global $koneksi;
    if (!$id || !dlCari($id, $no, $idc)) dlBalas(404, ['status' => 'error', 'message' => 'Data tidak ditemukan.']);
    [$tgl, $judul] = dlIsi();
+   $__lg ??= logAmbilBaris($koneksi, 'pasien_dokumen_klaim_lainnya', 'id_dokumen', $id); // log: kondisi sebelum diubah/dihapus
    $st = $koneksi->prepare("UPDATE pasien_dokumen_klaim_lainnya SET tanggal = ?, judul_dokumen = ? WHERE id_dokumen = ? AND visit_ID = ? AND id_customer = ?");
    $st->bind_param('ssiss', $tgl, $judul, $id, $no, $idc);
    $st->execute();
    $st->close();
+   logBaris($koneksi, 'dokumen', 'pasien_dokumen_klaim_lainnya', 'id_dokumen', $id, $__lg ?? null, ['label' => 'Dokumen klaim lainnya', 'visit_ID' => $no], 'Dokumen klaim lainnya');
    dlBalas(200, ['status' => 'success', 'message' => 'Dokumen diperbarui.']);
 }
 
@@ -153,6 +157,7 @@ function dlHapus(int $id, string $no, string $idc, string $root): void
    global $koneksi;
    $r = $id ? dlCari($id, $no, $idc) : null;
    if (!$r) dlBalas(404, ['status' => 'error', 'message' => 'Data tidak ditemukan atau sudah terhapus.']);
+   $__lg ??= logAmbilBaris($koneksi, 'pasien_dokumen_klaim_lainnya', 'id_dokumen', $id); // log: kondisi sebelum diubah/dihapus
    $st = $koneksi->prepare("DELETE FROM pasien_dokumen_klaim_lainnya WHERE id_dokumen = ? AND visit_ID = ? AND id_customer = ?");
    $st->bind_param('iss', $id, $no, $idc);
    $st->execute();
@@ -163,5 +168,6 @@ function dlHapus(int $id, string $no, string $idc, string $root): void
       $file = $root . '/' . DL_DIR . basename($p);
       if (is_file($file)) @unlink($file);
    }
+   logBaris($koneksi, 'dokumen', 'pasien_dokumen_klaim_lainnya', 'id_dokumen', $id, $__lg ?? null, ['label' => 'Dokumen klaim lainnya', 'visit_ID' => $no], 'Dokumen klaim lainnya');
    dlBalas(200, ['status' => 'success', 'message' => 'Dokumen dihapus.']);
 }

@@ -9,6 +9,7 @@
 header('Content-Type: application/json; charset=utf-8');
 include '../../database/connect.php';
 require_once __DIR__ . '/../../utility/visitGuard.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 $input = json_decode(file_get_contents('php://input'), true);
 $id_visit = (int) ($input['id_visit'] ?? 0);
@@ -53,6 +54,8 @@ if (!$st->execute()) {
    exit;
 }
 $st->close();
+logAktivitas($koneksi, 'dokumen', 'tanda_tangan', ['tipe' => 'ttd_pasien', 'id' => $id_visit, 'label' => 'Tanda tangan pasien', 'visit_ID' => $kunj['visit_ID']],
+   'Tanda tangan pasien disimpan (registrasi)', null, ['signature_path' => $filename]);
 
 echo json_encode([
    'status' => 'success',

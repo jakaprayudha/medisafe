@@ -1,5 +1,6 @@
 <?php
 require '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 if (isset($_POST['simpan_pemeriksaan'])) {
 
@@ -23,6 +24,7 @@ if (isset($_POST['simpan_pemeriksaan'])) {
    $cekAsesmen->execute();
    $asesmenAda = (bool) $cekAsesmen->get_result()->fetch_row();
    $cekAsesmen->close();
+   $asLama = $asesmenAda ? logAmbilBaris($koneksi, 'pasien_visit', 'visit_ID', $nomor_visit) : null;
 
 
    $stmt = $koneksi->prepare("UPDATE pasien_visit SET
@@ -90,6 +92,8 @@ if (isset($_POST['simpan_pemeriksaan'])) {
    );
 
    $asesmenTersimpan = $asesmenAda && $stmt->execute();
+   if ($asesmenTersimpan && $asLama) logBaris($koneksi, 'klinis', 'pasien_visit', 'visit_ID', $nomor_visit, $asLama,
+      ['tipe' => 'asesmen', 'label' => 'Asesmen · ' . ($asLama['patient_name_pcare'] ?? ''), 'visit_ID' => $nomor_visit], 'Asesmen / pemeriksaan disimpan');
    // halaman yang mendefinisikan ASESMEN_TANPA_ALERT menampilkan notifikasinya sendiri (tanpa <script> sebelum <!doctype>)
    if (!defined('ASESMEN_TANPA_ALERT')) {
       echo $asesmenTersimpan ? "<script>alert('Pemeriksaan berhasil disimpan');</script>" : "<script>alert('Gagal menyimpan');</script>";

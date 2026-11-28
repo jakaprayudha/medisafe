@@ -8,6 +8,7 @@
  */
 include '../../database/connect.php';
 require_once __DIR__ . '/../../utility/visitGuard.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 define('RP_LIB', true);
 require_once __DIR__ . '/getFormRekapPersalinan.php';
 header('Content-Type: application/json; charset=utf-8');
@@ -78,7 +79,9 @@ try {
          $st = $koneksi->prepare("INSERT INTO visit_persalinan (visit_ID, nomor_rm, gravid, partus, abortus, jenis_persalinan, tarif_paket, ttd_file) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
          $st->bind_param('ssssssss', $no, $rm, $d['gravid'], $d['partus'], $d['abortus'], $d['jenis_persalinan'], $d['tarif_paket'], $ttd);
       }
+      $lgLama = $row ? logAmbilBaris($koneksi, 'visit_persalinan', 'id_persalinan', (int) $row['id_persalinan']) : null;
       $st->execute();
+      $lgId = $row ? (int) $row['id_persalinan'] : (int) $st->insert_id;
       $st->close();
       $koneksi->commit();
    } catch (Throwable $e) {
@@ -87,6 +90,7 @@ try {
    }
    // hanya file tanda tangan form ini yang dihapus (bukan tanda tangan registrasi)
    if ($lama && str_starts_with(basename($lama), 'ttd_persalinan_') && is_file($root . basename($lama))) @unlink($root . basename($lama));
+   logBaris($koneksi, 'klinis', 'visit_persalinan', 'id_persalinan', $lgId, $lgLama, ['label' => 'Rekap persalinan', 'visit_ID' => $no], 'Rekap persalinan');
    rpBalas(200, ['status' => 'success', 'message' => $row ? 'Rekap persalinan diperbarui.' : 'Rekap persalinan disimpan.']);
 } catch (Throwable $e) {
    if ($ttdBaru) @unlink($root . $ttdBaru);

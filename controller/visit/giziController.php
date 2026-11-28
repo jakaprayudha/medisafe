@@ -9,6 +9,7 @@
  * Semua field divalidasi terhadap giziSkema(); nilai hitungan (IMT, BB ideal, perubahan BB, PES) dihitung ulang di server.
  */
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 require_once __DIR__ . '/giziSchema.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 header('Content-Type: application/json; charset=utf-8');
@@ -251,6 +252,7 @@ function gzSimpan(string $no, array $k, int $idc, string $pengguna): void
    $risiko = $d['risiko_gizi'] !== '' ? $d['risiko_gizi'] : null;
    $diet = $d['jenis_diet'] !== '' ? $d['jenis_diet'] : null;
    if ($id > 0) {
+      $__lg ??= logAmbilBaris($koneksi, 'pasien_gizi', 'id_gizi', $id); // log: kondisi sebelum diubah/dihapus
       $st = $koneksi->prepare("UPDATE pasien_gizi SET tanggal_asesmen = ?, nutrisionis = ?, risiko_gizi = ?, status = ?, diagnosis_pes = ?, jenis_diet = ?, data = ?, updated_by = ?
          WHERE id_gizi = ? AND visit_ID = ? AND id_customer = ?");
       $st->bind_param('ssssssssisi', $d['tanggal_asesmen'], $d['nutrisionis'], $risiko, $status, $pes, $diet, $json, $pengguna, $id, $no, $idc);
@@ -262,6 +264,7 @@ function gzSimpan(string $no, array $k, int $idc, string $pengguna): void
    $st->execute();
    if ($id <= 0) $id = $st->insert_id;
    $st->close();
+   logBaris($koneksi, 'klinis', 'pasien_gizi', 'id_gizi', $id, $__lg ?? null, ['label' => 'Asesmen gizi', 'visit_ID' => $no], 'Asesmen gizi');
    gzBalas(200, ['status' => 'success', 'message' => $status === 'Selesai' ? 'Asesmen gizi disimpan & ditandai selesai.' : 'Draft asesmen gizi disimpan.', 'id' => $id, 'data' => $d]);
 }
 
@@ -271,9 +274,11 @@ function gzHapus(int $id, string $no, int $idc): void
    $r = $id > 0 ? gzCari($id, $no, $idc) : null;
    if (!$r) gzBalas(404, ['status' => 'error', 'message' => 'Asesmen tidak ditemukan atau sudah terhapus.']);
    if ($r['status'] === 'Selesai') gzBalas(423, ['status' => 'error', 'message' => 'Asesmen berstatus Selesai tidak bisa dihapus. Ubah status ke Draft terlebih dahulu.']);
+   $__lg ??= logAmbilBaris($koneksi, 'pasien_gizi', 'id_gizi', $id); // log: kondisi sebelum diubah/dihapus
    $st = $koneksi->prepare("DELETE FROM pasien_gizi WHERE id_gizi = ? AND visit_ID = ? AND id_customer = ? AND status = 'Draft'");
    $st->bind_param('isi', $id, $no, $idc);
    $st->execute();
    $st->close();
+   logBaris($koneksi, 'klinis', 'pasien_gizi', 'id_gizi', $id, $__lg ?? null, ['label' => 'Asesmen gizi', 'visit_ID' => $no], 'Asesmen gizi');
    gzBalas(200, ['status' => 'success', 'message' => 'Draft asesmen dihapus.']);
 }

@@ -136,6 +136,19 @@ ORDER BY r.service_class ASC, r.room_name ASC, b.bed_name ASC
          }
 
          // Jika status diubah menjadi 1 (kosong), lepaskan/pulangkan pasien aktif (faskes ini) yang menggantung di bed ini
+         // log: pasien aktif di bed ini yang akan ikut dipulangkan
+         require_once __DIR__ . '/../../utility/visitLog.php';
+         $bedPasien = [];
+         if ($status == 1) {
+            $stl = $koneksi->prepare("SELECT pr.id_ranap, pr.visit_ID_inpatient FROM permintaan_ranap pr JOIN pasien_visit pv ON pv.visit_ID = pr.visit_ID_inpatient
+               WHERE pr.id_bed = ? AND pr.status = 'aktif' AND pv.id_customer = ?");
+            $sbl = (string) $id_bed;
+            $stl->bind_param('si', $sbl, $idc);
+            $stl->execute();
+            $bedPasien = $stl->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stl->close();
+         }
+         $bedLama = logAmbilBaris($koneksi, 'ms_room_bed', 'id_bed', $id_bed);
          if ($status == 1) {
             $stp = $koneksi->prepare("UPDATE permintaan_ranap pr JOIN pasien_visit pv ON pv.visit_ID = pr.visit_ID_inpatient
                SET pr.status = 'pulang' WHERE pr.id_bed = ? AND pr.status = 'aktif' AND pv.id_customer = ?");
@@ -149,6 +162,10 @@ ORDER BY r.service_class ASC, r.room_name ASC, b.bed_name ASC
          $update = $stu->execute();
 
          if ($update) {
+            logBaris($koneksi, 'ranap', 'ms_room_bed', 'id_bed', $id_bed, $bedLama, ['tipe' => 'bed', 'label' => 'Bed ' . ($bedLama['bed_name'] ?? '#' . $id_bed)],
+               'Status bed diubah jadi ' . ($status ? 'kosong' : 'terisi') . ($bedPasien ? ' · ' . count($bedPasien) . ' pasien aktif ikut dipulangkan' : ''));
+            foreach ($bedPasien as $bp) logKunjungan($koneksi, 'pulang', (string) $bp['visit_ID_inpatient'],
+               'Dipulangkan otomatis karena bed ' . ($bedLama['bed_name'] ?? '#' . $id_bed) . ' diset kosong dari master bed', ['status_ranap' => 'aktif'], ['status_ranap' => 'pulang', 'id_ranap' => $bp['id_ranap']], 'Rawat Inap');
             echo json_encode([
                "status" => "success",
                "message" => "Status berhasil diupdate"

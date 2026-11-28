@@ -12,6 +12,7 @@
  * pesan error SQL dikirim ke browser.
  */
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 header('Content-Type: application/json; charset=utf-8');
 $idc = (int) ($_SESSION['id_customer'] ?? 0);
@@ -135,11 +136,13 @@ function inSimpan(array $in, string $no, array $k, int $idc, string $pengguna, b
    $d = inIsi($in, $k);
    if ($ubah) {
       // visit_ID / nomor_rm / petugas pencatat tidak ikut diubah
+      $__lg ??= logAmbilBaris($koneksi, 'visit_cppt_dokter', 'id_cppt', $id); // log: kondisi sebelum diubah/dihapus
       $st = $koneksi->prepare("UPDATE visit_cppt_dokter SET cppt_date = ?, cppt_time = ?, perjalanan = ?, tindakan = ?, ku = ?, pemeriksaan_fisik = ?, diagnosa = ?, pengobatan = ?
          WHERE id_cppt = ? AND visit_ID = ? AND id_customer = ?");
       $st->bind_param('ssssssssiss', $d['cppt_date'], $d['cppt_time'], $d['perjalanan'], $d['tindakan'], $d['ku'], $d['pemeriksaan_fisik'], $d['diagnosa'], $d['pengobatan'], $id, $no, $c);
       $st->execute();
       $st->close();
+      logBaris($koneksi, 'ranap', 'visit_cppt_dokter', 'id_cppt', $id, $__lg ?? null, ['label' => 'Instruksi dokter', 'visit_ID' => $no], 'Instruksi dokter');
       inBalas(200, ['status' => 'success', 'message' => 'Instruksi diperbarui.', 'id' => $id]);
    }
    $nomor = inNomor();
@@ -150,6 +153,7 @@ function inSimpan(array $in, string $no, array $k, int $idc, string $pengguna, b
    $st->execute();
    $id = $st->insert_id;
    $st->close();
+   logBaris($koneksi, 'ranap', 'visit_cppt_dokter', 'id_cppt', $id, $__lg ?? null, ['label' => 'Instruksi dokter', 'visit_ID' => $no], 'Instruksi dokter');
    inBalas(200, ['status' => 'success', 'message' => 'Instruksi ditambahkan.', 'id' => $id]);
 }
 
@@ -158,10 +162,12 @@ function inHapus(int $id, string $no, int $idc): void
    global $koneksi;
    if (!$id || !inCari($id, $no, $idc)) inBalas(404, ['status' => 'error', 'message' => 'Data tidak ditemukan atau sudah terhapus.']);
    $c = (string) $idc;
+   $__lg ??= logAmbilBaris($koneksi, 'visit_cppt_dokter', 'id_cppt', $id); // log: kondisi sebelum diubah/dihapus
    $st = $koneksi->prepare("DELETE FROM visit_cppt_dokter WHERE id_cppt = ? AND visit_ID = ? AND id_customer = ?");
    $st->bind_param('iss', $id, $no, $c);
    $st->execute();
    $st->close();
+   logBaris($koneksi, 'ranap', 'visit_cppt_dokter', 'id_cppt', $id, $__lg ?? null, ['label' => 'Instruksi dokter', 'visit_ID' => $no], 'Instruksi dokter');
    inBalas(200, ['status' => 'success', 'message' => 'Instruksi dihapus.']);
 }
 

@@ -7,6 +7,7 @@
  */
 include '../../database/connect.php';
 require_once __DIR__ . '/cpoService.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') cpoBalas(405, ['status' => 'error', 'message' => 'Method tidak diizinkan.']);
 $idc = cpoCustomer();
@@ -56,4 +57,6 @@ try {
    error_log('[visit/cpoController] ' . $e->getMessage());
    cpoBalas(500, ['status' => 'error', 'message' => 'Gagal menyimpan CPO.']);
 }
+logAktivitas($koneksi, 'klinis', 'tambah', ['tipe' => 'cpo', 'label' => 'CPO ' . count($baris) . ' obat', 'visit_ID' => $visit],
+   'Catatan pemberian obat: ' . implode(', ', array_map(fn($d) => $d['nama_item'] . ' ' . $d['dosis'], $baris)), null, ['baris' => $baris]);
 cpoBalas(200, ['status' => 'success', 'message' => count($baris) . ' baris CPO tersimpan.', 'total' => count($baris)]);

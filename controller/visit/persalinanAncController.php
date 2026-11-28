@@ -14,6 +14,7 @@
  * tidak ada fitur ubah.
  */
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 header('Content-Type: application/json; charset=utf-8');
 $idc = (int) ($_SESSION['id_customer'] ?? 0);
@@ -244,6 +245,7 @@ function ancSimpan(string $no, int $idc, string $pengguna): void
          $nilai = array_values($d);
          $nilai[] = $id;
          $nilai[] = (string) $idc;
+         $__lg ??= logAmbilBaris($koneksi, 'pasien_persalinan_anc', 'id_anc', $id); // log: kondisi sebelum diubah/dihapus
          $st = $koneksi->prepare("UPDATE pasien_persalinan_anc SET $set WHERE id_anc = ? AND id_customer = ?");
          $st->bind_param(str_repeat('s', count($d)) . 'is', ...$nilai);
          $st->execute();
@@ -264,6 +266,7 @@ function ancSimpan(string $no, int $idc, string $pengguna): void
             $fileBaru = 'anc_' . $id . '_' . bin2hex(random_bytes(6)) . '.' . $gbr[1];
             if (!move_uploaded_file($gbr[0], ANC_DIR . $fileBaru)) throw new RuntimeException('Gagal memindahkan file gambar.');
          }
+         $__lg ??= logAmbilBaris($koneksi, 'pasien_persalinan_anc', 'id_anc', $id); // log: kondisi sebelum diubah/dihapus
          $st = $koneksi->prepare("UPDATE pasien_persalinan_anc SET gambar = ? WHERE id_anc = ?");
          $st->bind_param('si', $fileBaru, $id);
          $st->execute();
@@ -277,6 +280,7 @@ function ancSimpan(string $no, int $idc, string $pengguna): void
    }
    // file lama dibuang setelah data tersimpan
    if ($lama && ($gbr || $hapusGambar) && !empty($lama['gambar']) && is_file(ANC_DIR . basename($lama['gambar']))) @unlink(ANC_DIR . basename($lama['gambar']));
+   logBaris($koneksi, 'klinis', 'pasien_persalinan_anc', 'id_anc', $id, $__lg ?? null, ['label' => 'ANC / persalinan', 'visit_ID' => $no], 'ANC / persalinan');
    ancBalas(200, ['status' => 'success', 'message' => $lama ? 'Catatan ANC diperbarui.' : 'Catatan ANC disimpan.', 'id' => $id]);
 }
 
@@ -287,11 +291,13 @@ function ancHapus(int $id, string $no, int $idc): void
    if (!$lama) ancBalas(404, ['status' => 'error', 'message' => 'Data tidak ditemukan atau sudah terhapus.']);
    if ($lama['id_visit'] !== $no) ancBalas(403, ['status' => 'error', 'message' => 'Catatan dari kunjungan lain hanya bisa dihapus dari kunjungan tersebut.']);
    $c = (string) $idc;
+   $__lg ??= logAmbilBaris($koneksi, 'pasien_persalinan_anc', 'id_anc', $id); // log: kondisi sebelum diubah/dihapus
    $st = $koneksi->prepare("DELETE FROM pasien_persalinan_anc WHERE id_anc = ? AND id_customer = ?");
    $st->bind_param('is', $id, $c);
    $st->execute();
    $st->close();
    if (!empty($lama['gambar']) && is_file(ANC_DIR . basename($lama['gambar']))) @unlink(ANC_DIR . basename($lama['gambar']));
+   logBaris($koneksi, 'klinis', 'pasien_persalinan_anc', 'id_anc', $id, $__lg ?? null, ['label' => 'ANC / persalinan', 'visit_ID' => $no], 'ANC / persalinan');
    ancBalas(200, ['status' => 'success', 'message' => 'Catatan ANC dihapus.']);
 }
 

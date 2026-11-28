@@ -13,6 +13,7 @@
  * ukuran; file tidak ikut terhapus saat data dihapus; pesan error SQL dikirim ke browser.
  */
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 require_once __DIR__ . '/../../utility/visitGuard.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -156,6 +157,7 @@ function usSimpan(string $no, array $kunj, string $root): void
             $isi = array_values(array_filter($foto));
             if (!$isi) throw new LengthException('kosong');
             [$f1, $f2, $f3] = array_pad($isi, 3, null);
+            $__lg ??= logAmbilBaris($koneksi, 'usg_results', 'id_usg', $id); // log: kondisi sebelum diubah/dihapus
             $st = $koneksi->prepare("UPDATE usg_results SET tanggal_pemeriksaan = ?, usia_kandungan = ?, dokter = ?, interpretasi = ?, usg1 = ?, usg2 = ?, usg3 = ? WHERE id_usg = ? AND visit_ID = ?");
             $st->bind_param('sssssssis', $d['tanggal'], $d['usia'], $d['dokter'], $d['interpretasi'], $f1, $f2, $f3, $id, $no);
          } else {
@@ -178,6 +180,7 @@ function usSimpan(string $no, array $kunj, string $root): void
       throw $e;
    }
    foreach ($dibuang as $p) usHapusFile($root, $p);
+   logBaris($koneksi, 'klinis', 'usg_results', 'id_usg', $id, $__lg ?? null, ['label' => 'USG', 'visit_ID' => $no], 'USG');
    usBalas(200, ['status' => 'success', 'message' => 'Pemeriksaan USG tersimpan.', 'id' => $id]);
 }
 
@@ -186,10 +189,12 @@ function usHapus(int $id, string $no, string $root): void
    global $koneksi;
    $r = $id ? usCari($id, $no) : null;
    if (!$r) usBalas(404, ['status' => 'error', 'message' => 'Data tidak ditemukan atau sudah terhapus.']);
+   $__lg ??= logAmbilBaris($koneksi, 'usg_results', 'id_usg', $id); // log: kondisi sebelum diubah/dihapus
    $st = $koneksi->prepare("DELETE FROM usg_results WHERE id_usg = ? AND visit_ID = ?");
    $st->bind_param('is', $id, $no);
    $st->execute();
    $st->close();
    foreach (USG_SLOT as $s) usHapusFile($root, $r[$s]);
+   logBaris($koneksi, 'klinis', 'usg_results', 'id_usg', $id, $__lg ?? null, ['label' => 'USG', 'visit_ID' => $no], 'USG');
    usBalas(200, ['status' => 'success', 'message' => 'Pemeriksaan USG dihapus.']);
 }

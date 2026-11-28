@@ -22,6 +22,7 @@ date_default_timezone_set('Asia/Jakarta');
 if (session_status() === PHP_SESSION_NONE) session_start();
 include '../../database/connect.php';
 require_once __DIR__ . '/nomorSurat.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 header('Content-Type: application/json; charset=utf-8');
 
 function responseJson(string $status, string $message = '', array $data = [], int $kode = 200): void
@@ -236,6 +237,7 @@ try {
          $idBaru = (int) $koneksi->insert_id;
          nsSimpan($koneksi, $n);
          $koneksi->commit();
+         logBaris($koneksi, 'surat', 'surat_rawat_inap', 'id', $idBaru, $__lg ?? null, ['label' => 'Surat keterangan rawat inap' . ' ' . (logAmbilBaris($koneksi, 'surat_rawat_inap', 'id', $idBaru)['nomor_surat'] ?? $__lg['nomor_surat'] ?? '')], 'Surat keterangan rawat inap');
          responseJson('success', 'Surat keterangan rawat inap ' . $n['nomor'] . ' tersimpan.', ['id' => $idBaru, 'nomor_surat' => $n['nomor'], 'lama' => $lama, 'mode_nomor' => $n['mode']]);
 
       case 'PUT':
@@ -263,15 +265,19 @@ try {
             if ($k && trim($diag) === '') $diag = $k['diagnosa'];
             if ($k && trim($dok) === '') $dok = (string) $k['id_doctor'];
          }
+         $__lg ??= logAmbilBaris($koneksi, 'surat_rawat_inap', 'id', $id); // log: kondisi sebelum diubah/dihapus
          riExec("UPDATE surat_rawat_inap SET nomor_surat = ?, tanggal_surat = ?, tanggal_masuk = ?, tanggal_pulang = ?, lama = ?, ruangan = ?,
                keterangan = ?, diagnosa = ?, id_doctor = ?, updated_at = NOW(), updated_by = ?
             WHERE id = ? AND id_customer = ?", 'ssssssssssis', [$nomor, $ts, $masuk, $pulang, $lama, $ruangan, $ket, $diag, $dok, $PENGGUNA, $id, $id_customer]);
+         logBaris($koneksi, 'surat', 'surat_rawat_inap', 'id', $id, $__lg ?? null, ['label' => 'Surat keterangan rawat inap' . ' ' . (logAmbilBaris($koneksi, 'surat_rawat_inap', 'id', $id)['nomor_surat'] ?? $__lg['nomor_surat'] ?? '')], 'Surat keterangan rawat inap');
          responseJson('success', 'Surat keterangan rawat inap diperbarui.', ['id' => $id, 'nomor_surat' => $nomor, 'ruangan' => $ruangan, 'lama' => $lama]);
 
       case 'DELETE':
          $id = (int) ($_GET['id'] ?? 0);
          if ($id <= 0) responseJson('error', 'ID surat tidak ditemukan.', [], 422);
+         $__lg ??= logAmbilBaris($koneksi, 'surat_rawat_inap', 'id', $id); // log: kondisi sebelum diubah/dihapus
          $n = riExec("DELETE FROM surat_rawat_inap WHERE id = ? AND id_customer = ?", 'is', [$id, $id_customer]);
+         if ($n > 0) logBaris($koneksi, 'surat', 'surat_rawat_inap', 'id', $id, $__lg ?? null, ['label' => 'Surat keterangan rawat inap' . ' ' . (logAmbilBaris($koneksi, 'surat_rawat_inap', 'id', $id)['nomor_surat'] ?? $__lg['nomor_surat'] ?? '')], 'Surat keterangan rawat inap');
          $n > 0 ? responseJson('success', 'Surat keterangan rawat inap dihapus.') : responseJson('error', 'Data tidak ditemukan atau tidak memiliki akses.', [], 404);
 
       default:

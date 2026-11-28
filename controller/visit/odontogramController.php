@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -120,6 +121,18 @@ try {
       }
    }
 
+   // log: kondisi gigi sebelum diubah/dihapus
+   $odLama = null;
+   if ($action !== 'insert') {
+      $st = $koneksi->prepare($id_row ? "SELECT no_gigi, elemen, elemen_gigi, diagnosa, prosedur, keterangan FROM odontogram WHERE id = ? AND visit_ID = ? AND id_customer = ? LIMIT 1"
+         : "SELECT no_gigi, elemen, elemen_gigi, diagnosa, prosedur, keterangan FROM odontogram WHERE no_gigi = ? AND visit_ID = ? AND id_customer = ? LIMIT 1");
+      $kunciGigi = $id_row ?: ($action === 'update' ? $old_no_gigi : $no_gigi);
+      $st->bind_param('isi', $kunciGigi, $visit_ID, $id_customer);
+      $st->execute();
+      $odLama = $st->get_result()->fetch_assoc() ?: null;
+      $st->close();
+   }
+
    if ($action === 'insert') {
       $query = $koneksi->prepare("
          INSERT INTO odontogram
@@ -179,6 +192,10 @@ try {
    }
 
    $query->execute();
+   $odBaru = $action === 'delete' ? null : ['no_gigi' => $no_gigi, 'elemen' => $elemen, 'elemen_gigi' => $elemen_gigi, 'diagnosa' => $diagnosa, 'prosedur' => $prosedur, 'keterangan' => $keterangan];
+   [$odL, $odB] = $odLama && $odBaru ? logBeda($odLama, $odBaru) : [$odLama, $odBaru];
+   if ($odB || $action === 'delete') logAktivitas($koneksi, 'klinis', ['insert' => 'tambah', 'update' => 'ubah', 'delete' => 'hapus'][$action] ?? $action,
+      ['tipe' => 'odontogram', 'id' => $id_row ?: null, 'label' => 'Odontogram gigi ' . ($odBaru['no_gigi'] ?? $odLama['no_gigi'] ?? '-'), 'visit_ID' => $visit_ID], $message, $odL, $odB);
    echo json_encode(["status" => "success", "message" => $message]);
 } catch (mysqli_sql_exception $error) {
    error_log('Odontogram ' . $action . ': ' . $error->getMessage());

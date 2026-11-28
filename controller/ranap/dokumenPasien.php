@@ -1,5 +1,7 @@
 <?php
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/visitGuard.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
@@ -37,6 +39,7 @@ function uploadPerawatan()
       echo json_encode(["status" => "error", "message" => "Parameter tidak lengkap"]);
       exit;
    }
+   visitGuard($koneksi, 'visit_ID', $visit); // hanya kunjungan faskes sesi
 
    if (!isset($_FILES['foto_path']) || $_FILES['foto_path']['error'] !== UPLOAD_ERR_OK) {
       echo json_encode(["status" => "error", "message" => "File tidak valid"]);
@@ -65,11 +68,13 @@ function uploadPerawatan()
    }
 
    // INSERT DB
-   mysqli_query($koneksi, "
-      INSERT INTO pasien_dokumen 
-      (nomor_rm, visit_ID, jenis_dokumen, foto_path, rilis)
-      VALUES ('$rm', '$visit', '$pilih_jenis', '$pathDB', '$tgl')
-   ");
+   // dulu nilai POST ditempel langsung ke SQL (SQL injection)
+   $st = $koneksi->prepare("INSERT INTO pasien_dokumen (nomor_rm, visit_ID, jenis_dokumen, foto_path, rilis) VALUES (?, ?, ?, ?, ?)");
+   $st->bind_param('sssss', $rm, $visit, $pilih_jenis, $pathDB, $tgl);
+   $st->execute();
+   $idDok = (int) $st->insert_id;
+   $st->close();
+   logBaris($koneksi, 'dokumen', 'pasien_dokumen', 'id_dokumen', $idDok, null, ['label' => 'Dokumen pasien ' . $pilih_jenis, 'visit_ID' => $visit], 'Dokumen pasien diunggah');
 
    echo json_encode(["status" => "success", "message" => "Dokumentasi berhasil disimpan"]);
 }
@@ -138,12 +143,16 @@ function deleteData()
       return;
    }
 
-   $st = $koneksi->prepare("DELETE FROM pasien_dokumen WHERE id_dokumen=?");
-   $st->bind_param("i", $id);
+   // hanya dokumen kunjungan faskes sesi (dulu dokumen faskes mana pun bisa dihapus lewat id)
+   $idc = (int) ($_SESSION['id_customer'] ?? 0);
+   $dokLama = logAmbilBaris($koneksi, 'pasien_dokumen', 'id_dokumen', $id);
+   $st = $koneksi->prepare("DELETE d FROM pasien_dokumen d JOIN pasien_visit pv ON pv.visit_ID = d.visit_ID WHERE d.id_dokumen = ? AND pv.id_customer = ?");
+   $st->bind_param("ii", $id, $idc);
 
-   if ($st->execute()) {
+   if ($st->execute() && $st->affected_rows > 0) {
+      logBaris($koneksi, 'dokumen', 'pasien_dokumen', 'id_dokumen', $id, $dokLama, ['label' => 'Dokumen pasien ' . ($dokLama['jenis_dokumen'] ?? ''), 'visit_ID' => $dokLama['visit_ID'] ?? null], 'Dokumen pasien dihapus');
       echo json_encode(["status" => "success", "message" => "Data dihapus"]);
    } else {
-      echo json_encode(["status" => "error", "message" => "Gagal menghapus"]);
+      echo json_encode(["status" => "error", "message" => "Data tidak ditemukan di faskes ini atau gagal dihapus"]);
    }
 }

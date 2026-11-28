@@ -5,6 +5,7 @@
  */
 include '../../database/connect.php';
 require_once __DIR__ . '/cpoService.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') cpoBalas(405, ['status' => 'error', 'message' => 'Method tidak diizinkan.']);
 $idc = cpoCustomer();
@@ -26,6 +27,7 @@ try {
    [$d, $err] = cpoBaris($in, $valid);
    if ($err) cpoBalas(422, ['status' => 'error', 'message' => ucfirst($err)]);
 
+   $cpoLama = logAmbilBaris($koneksi, 'pasien_cpo', 'id', $id);
    $st = $koneksi->prepare("UPDATE pasien_cpo SET tanggal = ?, nama_item = ?, dosis = ?, signature = ?, jam_pagi = ?, jam_siang = ?,
          jam_sore = ?, jam_malam = ?, petugas = ?
       WHERE id = ? AND id_customer = ?");
@@ -37,4 +39,5 @@ try {
    error_log('[visit/updateCPO] ' . $e->getMessage());
    cpoBalas(500, ['status' => 'error', 'message' => 'Gagal memperbarui CPO.']);
 }
+logBaris($koneksi, 'klinis', 'pasien_cpo', 'id', $id, $cpoLama, ['tipe' => 'cpo', 'label' => 'CPO ' . ($cpoLama['nama_item'] ?? ''), 'visit_ID' => $cpoLama['visit_ID'] ?? null], 'Catatan pemberian obat diubah');
 cpoBalas(200, ['status' => 'success', 'message' => 'Data CPO diperbarui.']);

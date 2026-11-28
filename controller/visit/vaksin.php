@@ -13,6 +13,7 @@
  * lain; tanpa validasi; pesan error SQL dikirim ke browser.
  */
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 require_once __DIR__ . '/../satusehat/immunizationService.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 header('Content-Type: application/json; charset=utf-8');
@@ -163,6 +164,7 @@ function vkSimpan(array $in, int $idc, bool $ubah): void
       if (!$lama) vkBalas(404, ['status' => 'error', 'message' => 'Data vaksin tidak ditemukan.']);
       if ($lama['ss_status'] === 'dibatalkan') vkBalas(422, ['status' => 'error', 'message' => 'Data ini sudah dibatalkan di SATUSEHAT.']);
       // id_visit sengaja tidak ikut diubah
+      $__lg ??= logAmbilBaris($koneksi, 'pasien_vaksin', 'id_vaksin', $id); // log: kondisi sebelum diubah/dihapus
       $st = $koneksi->prepare("UPDATE pasien_vaksin SET kfa_code = ?, vaksin_name = ?, vaksin_date = ?, vaksin_time = ?, vaksin_dosis = ?, reason_code = ?,
             route_code = ?, dose_ml = ?, lot_number = ?, expiration_date = ?, vaksin_notes = ? WHERE id_vaksin = ?");
       $st->bind_param('sssssssssssi', $d['kfa_code'], $d['vaksin_name'], $d['vaksin_date'], $d['vaksin_time'], $d['vaksin_dosis'], $d['reason_code'],
@@ -192,6 +194,9 @@ function vkSimpan(array $in, int $idc, bool $ubah): void
 
    // data sudah aman di database -> baru kirim ke SATUSEHAT
    $k = imKirim($koneksi, $idc, $id);
+   $vkBaru = logAmbilBaris($koneksi, 'pasien_vaksin', 'id_vaksin', $id);
+   logBaris($koneksi, 'klinis', 'pasien_vaksin', 'id_vaksin', $id, $__lg ?? null, ['label' => 'Vaksin ' . ($vkBaru['vaksin_name'] ?? ''), 'visit_ID' => $vkBaru['id_visit'] ?? null],
+      $pesanDb . ' SATUSEHAT: ' . ($k['ok'] ? 'terkirim' : 'belum terkirim (' . mb_substr((string) $k['pesan'], 0, 150) . ')'));
    vkBalas(200, [
       'status' => 'success',
       'id' => $id,
@@ -241,10 +246,12 @@ function vkHapus(int $id, int $idc): void
       $k = imKirim($koneksi, $idc, $id, 'entered-in-error');
       if (!$k['ok']) vkBalas(422, ['status' => 'error', 'message' => 'Data sudah terkirim ke SATUSEHAT dan gagal dibatalkan di sana, jadi belum dihapus: ' . $k['pesan']]);
    }
+   $__lg ??= logAmbilBaris($koneksi, 'pasien_vaksin', 'id_vaksin', $id); // log: kondisi sebelum diubah/dihapus
    $st = $koneksi->prepare("DELETE FROM pasien_vaksin WHERE id_vaksin = ?");
    $st->bind_param('i', $id);
    $st->execute();
    $st->close();
+   logBaris($koneksi, 'klinis', 'pasien_vaksin', 'id_vaksin', $id, $__lg ?? null, ['label' => 'Vaksin', 'visit_ID' => ($__lg['id_visit'] ?? null)], 'Vaksin');
    vkBalas(200, ['status' => 'success', 'message' => !empty($v['ss_id']) ? 'Data vaksin dihapus dan dibatalkan di SATUSEHAT.' : 'Data vaksin dihapus.']);
 }
 

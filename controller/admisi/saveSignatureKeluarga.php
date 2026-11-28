@@ -13,6 +13,7 @@
 header('Content-Type: application/json; charset=utf-8');
 include '../../database/connect.php';
 require_once __DIR__ . '/../../utility/visitGuard.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 function skJawab(array $d, int $kode = 200): void
 {
@@ -60,6 +61,8 @@ if ($image === '') {
       skJawab(['status' => 'error', 'message' => 'Gagal menyimpan data'], 500);
    }
    $st->close();
+   logAktivitas($koneksi, 'dokumen', 'ubah', ['tipe' => 'ttd_keluarga', 'id' => $id_visit, 'label' => 'Penanda tangan keluarga ' . $nama, 'visit_ID' => $kunj['visit_ID']],
+      'Data penanda tangan keluarga (persetujuan rawat inap) diperbarui', null, ['nama' => $nama, 'umur' => $umur, 'gender' => $jk, 'hubungan' => $hubungan]);
    skJawab(['status' => 'success', 'file' => $lama, 'message' => 'Data penanda tangan diperbarui']);
 }
 
@@ -83,5 +86,7 @@ if (!$st->execute()) {
    skJawab(['status' => 'error', 'message' => 'Gagal menyimpan tanda tangan'], 500);
 }
 $st->close();
+logAktivitas($koneksi, 'dokumen', 'tanda_tangan', ['tipe' => 'ttd_keluarga', 'id' => $id_visit, 'label' => 'Tanda tangan keluarga ' . $nama, 'visit_ID' => $kunj['visit_ID']],
+   'Tanda tangan keluarga (persetujuan rawat inap) disimpan', null, ['signature_opname' => $filename, 'nama' => $nama, 'umur' => $umur, 'gender' => $jk, 'hubungan' => $hubungan]);
 
 skJawab(['status' => 'success', 'file' => $filename, 'message' => 'Tanda tangan tersimpan']);

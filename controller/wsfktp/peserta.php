@@ -95,6 +95,10 @@ if ($result->num_rows > 0) {
     $result = $stmt->execute();
 
     if ($result) {
+        require_once __DIR__ . '/../../utility/activityLog.php';
+        logAktivitas($koneksi, 'pasien', 'tambah', ['tipe' => 'pasien', 'id' => $stmt->insert_id, 'label' => $nomorRM . ' · ' . $nama], 'Pasien baru dari Mobile JKN (webservice BPJS)',
+            null, ['patient_bpjs' => $noKartu, 'patient_nik' => $nik, 'patient_name' => $nama, 'patient_gender' => $jenisKelamin, 'patient_datebirth' => $tanggalLahir, 'nomor_rm' => $nomorRM],
+            (int) $id_customer);
         echo json_encode([
             "metadata" => [
                 "message" => "Ok",

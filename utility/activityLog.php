@@ -24,6 +24,10 @@ const LOG_AKTIVITAS_MODUL = [
    'tarif'  => 'Tarif',
    'farmasi' => 'Farmasi & resep',
    'stok'   => 'Stok & pembelian',
+   'klinis' => 'Pemeriksaan & form klinis',
+   'ranap'  => 'Rawat inap',
+   'surat'  => 'Surat',
+   'dokumen' => 'Dokumen & tanda tangan',
 ];
 
 const LOG_AKTIVITAS_AKSI = [
@@ -33,6 +37,7 @@ const LOG_AKTIVITAS_AKSI = [
    'aktifkan' => 'Aktifkan', 'nonaktifkan' => 'Nonaktifkan', 'gabung' => 'Gabung RME', 'verifikasi' => 'Verifikasi', 'batal_verifikasi' => 'Batal verifikasi',
    'simpan' => 'Simpan', 'kirim_pcare' => 'Kirim PCare', 'hapus_file' => 'Hapus file', 'upload_file' => 'Upload file',
    'approve' => 'Approve / serahkan', 'batal_approve' => 'Batal approve', 'kirim_obat' => 'Kirim obat PCare', 'ubah_status' => 'Ubah status',
+   'cetak' => 'Cetak', 'tanda_tangan' => 'Tanda tangan', 'hapus_pcare' => 'Hapus di PCare',
    'stok_masuk' => 'Stok masuk', 'stok_keluar' => 'Stok keluar', 'penyesuaian' => 'Penyesuaian stok', 'terima' => 'Terima barang', 'ubah_harga' => 'Ubah harga',
 ];
 
@@ -46,7 +51,10 @@ function logBersihkan(?array $a): ?array
          $out[$k] = '[disembunyikan]';
          continue;
       }
-      $out[$k] = is_array($v) ? logBersihkan($v) : $v;
+      if (is_array($v)) $out[$k] = logBersihkan($v);
+      // nilai sangat panjang (tanda tangan / gambar base64, dokumen) tidak disimpan utuh di log
+      elseif (is_string($v) && strlen($v) > 3000) $out[$k] = (str_starts_with($v, 'data:') ? '[data ' . strtok(substr($v, 5), ';,') . '] ' : '[teks] ') . strlen($v) . ' byte';
+      else $out[$k] = $v;
    }
    return $out;
 }
@@ -266,4 +274,46 @@ function obatSnapshot(mysqli $db, int $idObat): ?array
       error_log('[obatSnapshot] ' . $e->getMessage());
       return null;
    }
+}
+
+/** Satu baris tabel (untuk dibandingkan sebelum/sesudah). $tabel & $kolom harus konstanta dari kode, bukan input. */
+function logAmbilBaris(mysqli $db, string $tabel, string $kolom, $nilai): ?array
+{
+   if (!preg_match('/^[a-z0-9_]+$/i', $tabel . $kolom) || $nilai === null || $nilai === '') return null;
+   try {
+      $st = $db->prepare("SELECT * FROM `$tabel` WHERE `$kolom` = ? LIMIT 1");
+      if (!$st) return null;
+      $v = (string) $nilai;
+      $st->bind_param('s', $v);
+      $st->execute();
+      $r = $st->get_result()->fetch_assoc();
+      $st->close();
+      return $r ?: null;
+   } catch (Throwable $e) {
+      error_log('[logAmbilBaris] ' . $tabel . ': ' . $e->getMessage());
+      return null;
+   }
+}
+
+/**
+ * Log perubahan satu baris: ambil kondisi terbaru dari DB lalu bandingkan dengan $lama.
+ *   $lama = logAmbilBaris($koneksi, 'ekg_results', 'id_ekg', $id);   // sebelum ubah/hapus (null untuk tambah)
+ *   ... INSERT/UPDATE/DELETE ...
+ *   logBaris($koneksi, 'klinis', 'ekg_results', 'id_ekg', $id, $lama, ['label' => 'EKG', 'visit_ID' => $no], 'EKG disimpan');
+ * Aksi otomatis: tambah (tidak ada $lama), hapus (baris sudah tidak ada), ubah (hanya kolom yang berubah; tidak dicatat bila sama).
+ */
+function logBaris(mysqli $db, string $modul, string $tabel, string $kolom, $nilai, ?array $lama, array $ref, string $ket = '', ?string $aksi = null): void
+{
+   $baru = logAmbilBaris($db, $tabel, $kolom, $nilai);
+   $abaikan = ['updated_at', 'udpated_at', 'update_at', 'modified_at'];
+   $bersih = fn(?array $r) => $r === null ? null : array_diff_key($r, array_flip($abaikan));
+   $l = $bersih($lama);
+   $b = $bersih($baru);
+   if ($aksi === null) $aksi = $l === null ? 'tambah' : ($b === null ? 'hapus' : 'ubah');
+   if ($l !== null && $b !== null) {
+      [$l, $b] = logBeda($l, $b);
+      if (!$b && $aksi === 'ubah') return;
+   }
+   $ref += ['tipe' => $tabel, 'id' => $nilai];
+   logAktivitas($db, $modul, $aksi, $ref, $ket, $l, $b);
 }
