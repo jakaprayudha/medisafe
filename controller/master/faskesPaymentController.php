@@ -1,8 +1,12 @@
 <?php
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
+require_once __DIR__ . '/../../utility/security.php';
 header('Content-Type: application/json');
 $method = $_SERVER['REQUEST_METHOD'];
+// dulu tanpa cek login/role: siapa pun bisa melihat/menambah/mengubah/menghapus pembayaran kontrak faskes
+requireRole(['superadmin', 'administrator']);
 
 /**
  * Generate invoice number berurut
@@ -80,8 +84,10 @@ switch ($method) {
          $_POST['keterangan']
       );
 
+      $ok = $stmt->execute();
+      if ($ok) logBaris($koneksi, 'pengaturan', 'ms_faskes_payment', 'id_payment', $stmt->insert_id, null, ['tipe' => 'pembayaran_faskes', 'label' => $invoice . ' · ' . ($_POST['order_number'] ?? '')], 'Pembayaran faskes ditambahkan');
       echo json_encode([
-         'status' => $stmt->execute() ? 'success' : 'error',
+         'status' => $ok ? 'success' : 'error',
          'message' => 'Data disimpan'
       ]);
       break;
@@ -89,6 +95,7 @@ switch ($method) {
    // 🔹 UPDATE
    case 'PUT':
       parse_str(file_get_contents("php://input"), $_PUT);
+      $lgLama = logAmbilBaris($koneksi, 'ms_faskes_payment', 'id_payment', $_PUT['id_payment'] ?? '');
 
       $stmt = $koneksi->prepare("
          UPDATE ms_faskes_payment SET
@@ -108,8 +115,10 @@ switch ($method) {
          $_PUT['id_payment']
       );
 
+      $ok = $stmt->execute();
+      if ($ok && $lgLama) logBaris($koneksi, 'pengaturan', 'ms_faskes_payment', 'id_payment', $_PUT['id_payment'], $lgLama, ['tipe' => 'pembayaran_faskes', 'label' => $lgLama['invoice_number'] . ' · ' . $lgLama['order_number']], 'Pembayaran faskes diubah');
       echo json_encode([
-         'status' => $stmt->execute() ? 'success' : 'error',
+         'status' => $ok ? 'success' : 'error',
          'message' => 'Data diupdate'
       ]);
       break;
@@ -117,6 +126,7 @@ switch ($method) {
    // 🔹 DELETE
    case 'DELETE':
       $id = $_GET['id'];
+      $lgLama = logAmbilBaris($koneksi, 'ms_faskes_payment', 'id_payment', $id);
 
       $stmt = $koneksi->prepare("
          DELETE FROM ms_faskes_payment 
@@ -124,8 +134,10 @@ switch ($method) {
       ");
       $stmt->bind_param("i", $id);
 
+      $ok = $stmt->execute();
+      if ($ok && $lgLama && $stmt->affected_rows > 0) logBaris($koneksi, 'pengaturan', 'ms_faskes_payment', 'id_payment', $id, $lgLama, ['tipe' => 'pembayaran_faskes', 'label' => $lgLama['invoice_number'] . ' · ' . $lgLama['order_number']], 'Pembayaran faskes dihapus');
       echo json_encode([
-         'status' => $stmt->execute() ? 'success' : 'error'
+         'status' => $ok ? 'success' : 'error'
       ]);
       break;
 }

@@ -12,6 +12,7 @@
 date_default_timezone_set('Asia/Jakarta');
 require_once __DIR__ . '/../../database/connect.php';
 require_once __DIR__ . '/../../utility/security.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -102,6 +103,19 @@ if ($method !== 'POST') {
 
 requireRole(['admin', 'superadmin', 'administrator']);
 
+/** Log perubahan setting_surat (hanya kolom yang berubah). */
+function ssLog(mysqli $k, ?array $lama, ?array $baru, string $ket): void
+{
+   $buang = array_flip(['updated_at', 'updated_by', 'created_at', 'created_by']);
+   $l = $lama ? array_diff_key($lama, $buang) : null;
+   $b = $baru ? array_diff_key($baru, $buang) : null;
+   if ($l && $b) {
+      [$l, $b] = logBeda($l, $b);
+      if (!$b) return;
+   }
+   logAktivitas($k, 'pengaturan', $lama ? 'ubah' : 'tambah', ['tipe' => 'setting_surat', 'id' => $baru['id'] ?? ($lama['id'] ?? ''), 'label' => 'Penomoran surat'], $ket, $l, $b);
+}
+
 $action = $_POST['action'] ?? 'save_setting';
 $mode = strtoupper(trim((string) ($_POST['mode_nomor'] ?? '')));
 if (!in_array($mode, ['AUTO', 'MANUAL'], true)) {
@@ -123,6 +137,7 @@ if ($action === 'update_mode') {
       responseJson('error', 'Mode penomoran gagal disimpan.', [], 500);
    }
    $st->close();
+   ssLog($koneksi, $ada, ambilSetting($koneksi, $id_customer), 'Mode penomoran surat disimpan');
    responseJson('success', 'Mode penomoran berhasil disimpan.', ambilSetting($koneksi, $id_customer) ?? []);
 }
 
@@ -198,5 +213,6 @@ if (!$st->execute()) {
    responseJson('error', 'Pengaturan nomor surat gagal disimpan.', [], 500);
 }
 $st->close();
+ssLog($koneksi, $ada, ambilSetting($koneksi, $id_customer), 'Format & nomor terakhir surat disimpan');
 
 responseJson('success', 'Pengaturan nomor surat berhasil disimpan.', ambilSetting($koneksi, $id_customer) ?? []);

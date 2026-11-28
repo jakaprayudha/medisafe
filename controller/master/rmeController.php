@@ -1,5 +1,6 @@
 <?php
 require '../../database/connect.php'; // Koneksi ke database
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 header("Content-Type: application/json");
 
@@ -43,6 +44,7 @@ if ($method === 'POST') {
       $query = "UPDATE setting_clinic SET rme_type = ?, billing_tarif = ?";
    }
 
+   $lgLama = $row['total'] == 0 ? null : ($koneksi->query("SELECT id, rme_type, billing_tarif FROM setting_clinic LIMIT 1")->fetch_assoc() ?: null);
    // Jalankan query dengan prepared statement
    $stmt = $koneksi->prepare($query);
    if (!$stmt) {
@@ -53,6 +55,10 @@ if ($method === 'POST') {
    $stmt->bind_param("ss", $rme_type, $billing_tarif);
 
    if ($stmt->execute()) {
+      $lgBaru = ['rme_type' => $rme_type, 'billing_tarif' => $billing_tarif];
+      $lgL = $lgLama ? array_intersect_key($lgLama, $lgBaru) : null;
+      if ($lgL) [$lgL, $lgBaru] = logBeda($lgL, $lgBaru);
+      if (!$lgLama || $lgBaru) logAktivitas($koneksi, 'pengaturan', $lgLama ? 'ubah' : 'tambah', ['tipe' => 'setting_clinic', 'id' => $lgLama['id'] ?? '', 'label' => 'Setting RME'], 'Setting RME / tarif billing disimpan', $lgL, $lgBaru);
       echo json_encode(["status" => "success", "message" => "Data berhasil disimpan."]);
    } else {
       echo json_encode(["status" => "error", "message" => "Gagal menyimpan data."]);
