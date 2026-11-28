@@ -37,6 +37,7 @@ session_write_close();
     .lk-rm { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .72rem; background: #f1f5f9; border-radius: 4px; padding: 0 5px; color: #334155; }
     .lk-ket { max-width: 360px; white-space: normal; font-size: .8rem; color: #475569; }
     .lk-sub { font-size: .72rem; color: #94a3b8; }
+    .lk-asli { display: inline-block; background: #fff4e5; color: #b45309; border-radius: 4px; padding: 0 5px; font-size: .68rem; }
     #lkTable td { vertical-align: middle; }
     #lkTable > thead > tr > th, #lkTable > tbody > tr > td { padding: .55rem .55rem; }
     .lk-diff td, .lk-diff th { font-size: .8rem; vertical-align: top; }
@@ -62,6 +63,7 @@ session_write_close();
                   <h5 class="fw-semibold mb-0">Log Kunjungan</h5>
                   <div class="text-muted small">Jejak pendaftaran, perubahan, pembatalan, penghapusan, pulang, dan pembayaran kunjungan pasien beserta user pelakunya.</div>
                 </div>
+                <a class="btn btn-outline-warning btn-sm" href="module/admin/log_aktivitas"><i class="fas fa-user-shield me-1"></i>Log Aktivitas</a>
                 <button type="button" class="btn btn-light btn-sm" id="lkRefresh" title="Muat ulang"><i class="fas fa-sync-alt"></i></button>
                 <button type="button" class="btn btn-outline-success btn-sm" id="lkExport"><i class="fas fa-file-csv me-1"></i>Export CSV</button>
               </div>
@@ -202,7 +204,8 @@ session_write_close();
           { data: 'aksi', render: (v, t, r) => `<span class="lk-badge lk-${GRUP[v] || 'ubah'}">${esc(r.aksi_label)}</span>` + (r.sumber ? `<div class="lk-sub">${esc(r.sumber)}</div>` : '') },
           { data: 'nama_pasien', render: (v, t, r) => `<div class="fw-semibold small">${esc(v || '-')}</div><div class="lk-sub">${r.nomor_rm ? `<span class="lk-rm">${esc(r.nomor_rm)}</span> ` : ''}${esc(r.visit_ID || '')}</div>` },
           { data: 'keterangan', render: v => `<div class="lk-ket">${esc(v || '')}</div>` },
-          { data: 'username', render: (v, t, r) => `<div class="small">${esc(r.fullname || v || '-')}</div><div class="lk-sub">${esc([r.fullname && v ? v : '', r.roles].filter(Boolean).join(' · '))}${r.ip ? ' · ' + esc(r.ip) : ''}</div>` },
+          { data: 'username', render: (v, t, r) => `<div class="small">${esc(r.fullname || v || '-')}</div><div class="lk-sub">${esc([r.fullname && v ? v : '', r.roles].filter(Boolean).join(' · '))}${r.ip ? ' · ' + esc(r.ip) : ''}</div>` +
+              (r.pelaku_asli ? `<span class="lk-asli" title="Aksi dilakukan saat memakai akun lain (switch user)">oleh ${esc(r.pelaku_asli)}</span>` : '') },
           { data: 'id_log', className: 'text-end', render: (v, t, r) => r.ada_data ? `<button type="button" class="btn btn-sm btn-light border lk-detail" data-id="${v}" title="Lihat perubahan data"><i class="fas fa-eye"></i></button>` : '' }
         ]
       });
@@ -225,7 +228,7 @@ session_write_close();
           if (!j || j.status !== 'success') { $id('lkmIsi').innerHTML = `<div class="text-danger small">${esc((j && j.message) || 'Gagal memuat.')}</div>`; return; }
           const r = j.data, lama = r.data_lama || {}, baru = r.data_baru || {};
           $id('lkmJudul').textContent = r.aksi_label + ' · ' + (r.nama_pasien || '-');
-          $id('lkmSub').textContent = [r.created_at, r.visit_ID, r.fullname || r.username].filter(Boolean).join(' · ');
+          $id('lkmSub').textContent = [r.created_at, r.visit_ID, r.fullname || r.username, r.pelaku_asli ? 'pelaku asli ' + r.pelaku_asli : ''].filter(Boolean).join(' · ');
           const kunci = [...new Set([...Object.keys(lama), ...Object.keys(baru)])];
           const duaKolom = r.data_lama && r.data_baru && r.aksi !== 'hapus';
           const baris = kunci.map(k => {

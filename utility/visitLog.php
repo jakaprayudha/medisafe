@@ -9,7 +9,9 @@
  * Pencatatan tidak pernah menggagalkan proses utama (semua error hanya masuk error_log).
  * Panggil SETELAH commit transaksi: pembuatan tabel otomatis (CREATE TABLE) memicu implicit commit di MySQL.
  * User diambil dari session; tanpa session (webservice BPJS / Mobile JKN) tercatat sebagai SISTEM.
+ * Saat admin sedang switch user, pelaku asli ikut dicatat (kolom pelaku_asli).
  */
+require_once __DIR__ . '/activityLog.php';
 
 const LOG_KUNJUNGAN_AKSI = [
    'daftar'        => 'Pendaftaran',
@@ -30,21 +32,13 @@ const LOG_KUNJUNGAN_AKSI = [
    'bayar'         => 'Pembayaran',
 ];
 
+/** Perubahan skema untuk tabel versi lama (lihat migrations/20261128b_log_kunjungan_pelaku_asli.sql). */
+const LOG_KUNJUNGAN_UPGRADE = ["ALTER TABLE log_kunjungan ADD COLUMN pelaku_asli VARCHAR(150) NULL AFTER roles"];
+
 /** Buat tabel log bila belum ada. Jangan dipanggil di dalam transaksi. */
 function logKunjunganSiapkan(mysqli $db): bool
 {
-   static $siap = false;
-   if ($siap) return true;
-   try {
-      $sql = file_get_contents(__DIR__ . '/../migrations/20261128_log_kunjungan.sql');
-      if ($sql === false) return false;
-      $sql = trim(preg_replace('/^\s*--.*$/m', '', $sql));
-      $db->query(rtrim($sql, "; \n"));
-      return $siap = true;
-   } catch (Throwable $e) {
-      error_log('[logKunjungan] gagal membuat tabel: ' . $e->getMessage());
-      return false;
-   }
+   return logBuatTabel($db, '20261128_log_kunjungan.sql');
 }
 
 /** Data ringkas kunjungan untuk log. $kolom: id_visit | visit_ID. */
@@ -89,43 +83,18 @@ function logKunjungan(mysqli $db, string $aksi, $kunj, string $keterangan = '', 
          if ($lengkap) $kunj = array_merge($lengkap, array_filter($kunj, fn($x) => $x !== null && $x !== ''));
       }
 
-      if (session_status() === PHP_SESSION_NONE && !isset($_SESSION) && !headers_sent()) @session_start();
-      $s = $_SESSION ?? [];
-      $idc = (int) ($kunj['id_customer'] ?? $s['id_customer'] ?? 0);
+      $p = logPelaku();
+      $idc = (int) ($kunj['id_customer'] ?? $p['id_customer'] ?? 0);
       if ($idc <= 0) return;
-      $uid = isset($s['uid_user']) ? (string) $s['uid_user'] : null;
-      $username = (string) ($s['username'] ?? '') ?: ($uid ? null : 'SISTEM');
-      $fullname = isset($s['fullname']) ? (string) $s['fullname'] : null;
-      $roles = isset($s['roles']) ? (string) $s['roles'] : null;
-      $ip = mb_substr((string) ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? ''), 0, 45) ?: null;
-      $json = fn(?array $a) => $a === null ? null : json_encode($a, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR);
-
-      $vid = isset($kunj['visit_ID']) ? (string) $kunj['visit_ID'] : null;
-      $idv = isset($kunj['id_visit']) ? (int) $kunj['id_visit'] : null;
-      $idp = isset($kunj['id_patient']) ? mb_substr((string) $kunj['id_patient'], 0, 50) : null;
-      $nama = isset($kunj['nama_pasien']) ? mb_substr((string) $kunj['nama_pasien'], 0, 150) : null;
-      $aksi = mb_substr($aksi, 0, 30);
-      $sumber = $sumber !== null ? mb_substr($sumber, 0, 50) : null;
-      $ket = $keterangan !== '' ? $keterangan : null;
-      $dl = $json($lama);
-      $db2 = $json($baru);
-
-      $sql = "INSERT INTO log_kunjungan (id_customer, visit_ID, id_visit, id_patient, nama_pasien, aksi, sumber, keterangan, data_lama, data_baru,
-            uid_user, username, fullname, roles, ip, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-      $waktu = date('Y-m-d H:i:s'); // zona waktu PHP (Asia/Jakarta), sama dengan filter tanggal di menu log
-      $tulis = function () use ($db, $sql, $idc, $vid, $idv, $idp, $nama, $aksi, $sumber, $ket, $dl, $db2, $uid, $username, $fullname, $roles, $ip, $waktu) {
-         $st = $db->prepare($sql);
-         if (!$st) throw new RuntimeException($db->error, $db->errno); // mode mysqli tanpa exception
-         $st->bind_param('isisssssssssssss', $idc, $vid, $idv, $idp, $nama, $aksi, $sumber, $ket, $dl, $db2, $uid, $username, $fullname, $roles, $ip, $waktu);
-         if (!$st->execute()) throw new RuntimeException($st->error, $st->errno);
-         $st->close();
-      };
-      try {
-         $tulis();
-      } catch (Throwable $e) {
-         if ((int) $e->getCode() !== 1146 || !logKunjunganSiapkan($db)) throw $e; // 1146 = tabel belum ada
-         $tulis();
-      }
+      $cut = fn($v, int $n) => $v === null || $v === '' ? null : mb_substr((string) $v, 0, $n);
+      logTulis($db, "INSERT INTO log_kunjungan (id_customer, visit_ID, id_visit, id_patient, nama_pasien, aksi, sumber, keterangan, data_lama, data_baru,
+            uid_user, username, fullname, roles, pelaku_asli, ip, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+         'isissssssssssssss', [
+            $idc, $cut($kunj['visit_ID'] ?? null, 100), isset($kunj['id_visit']) ? (int) $kunj['id_visit'] : null, $cut($kunj['id_patient'] ?? null, 50),
+            $cut($kunj['nama_pasien'] ?? null, 150), mb_substr($aksi, 0, 30), $cut($sumber, 50), $keterangan !== '' ? $keterangan : null,
+            logJson($lama), logJson($baru), $p['uid_user'], $p['username'], $p['fullname'], $p['roles'], $p['pelaku_asli'], $p['ip'],
+            date('Y-m-d H:i:s'), // zona waktu PHP (Asia/Jakarta), sama dengan filter tanggal di menu log
+         ], '20261128_log_kunjungan.sql', LOG_KUNJUNGAN_UPGRADE);
    } catch (Throwable $e) {
       error_log('[logKunjungan] ' . $aksi . ' ' . ($kunj['visit_ID'] ?? '') . ': ' . $e->getMessage());
    }

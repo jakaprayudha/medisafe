@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS log_kunjungan (
    username VARCHAR(100) NULL,
    fullname VARCHAR(150) NULL,
    roles VARCHAR(50) NULL,
+   pelaku_asli VARCHAR(150) NULL,
    ip VARCHAR(45) NULL,
    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
    PRIMARY KEY (id_log),

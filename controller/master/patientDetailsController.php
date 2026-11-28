@@ -4,6 +4,7 @@
 //   POST _method=PUT, id_patient   -> ubah field yang dikirim
 // Hanya pasien milik faskes sesi.
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 mysqli_report(MYSQLI_REPORT_OFF);
 header("Content-Type: application/json; charset=utf-8");
 
@@ -90,6 +91,12 @@ if ($method === 'PUT') {
    if (!$ok) {
       error_log('[patientDetailsController] ' . $err);
       jawab(["success" => false, "message" => "Gagal menyimpan data pasien"], 500);
+   }
+   [$l, $b] = logBeda($lama, $data);
+   if ($b) {
+      $penting = array_intersect(array_keys($b), ['nomor_rm', 'patient_name', 'patient_nik', 'patient_kk', 'patient_bpjs', 'patient_datebirth', 'patient_gender']);
+      logAktivitas($koneksi, 'pasien', 'ubah', ['tipe' => 'pasien', 'id' => $id, 'label' => $lama['nomor_rm'] . ' · ' . $lama['patient_name']],
+         $penting ? 'Ubah identitas: ' . implode(', ', $penting) : 'Ubah data pasien (detail)', $l, $b);
    }
    jawab(["success" => true, "message" => "Data pasien berhasil diperbarui"]);
 }

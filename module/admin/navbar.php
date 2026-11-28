@@ -221,7 +221,27 @@ $dataCust = is_array($dataCust) ? $dataCust : [];
 
          <ul class="navbar-nav align-items-center gap-2">
 
-            <?php if ($_SESSION['username'] === 'alfi') { ?>
+            <?php if (!empty($_SESSION['switch_dari']['uid_user'])) { ?>
+               <!-- sedang switch user: tampilkan akun asal + tombol kembali (controller/session/switchUser, aksi=kembali) -->
+               <li class="nav-item">
+                  <div class="d-flex align-items-center gap-2 border border-warning rounded-pill px-3 py-1 small" style="background:#fff8e6">
+                     <iconify-icon icon="solar:user-id-linear" class="text-warning"></iconify-icon>
+                     <span>Masuk sebagai <b><?= htmlspecialchars((string) ($_SESSION['username'] ?? ''), ENT_QUOTES) ?></b>
+                        <span class="text-muted">· asal <?= htmlspecialchars((string) ($_SESSION['switch_dari']['username'] ?? ''), ENT_QUOTES) ?></span></span>
+                     <button type="button" class="btn btn-sm btn-warning py-0 px-2" id="btnSwitchKembali">Kembali</button>
+                  </div>
+               </li>
+               <script>
+                  document.getElementById('btnSwitchKembali').addEventListener('click', function() {
+                     this.disabled = true;
+                     $.post('controller/session/switchUser', { aksi: 'kembali' }, null, 'json')
+                        .done(res => { if (res.status === 'success') window.location.href = res.redirect; else { this.disabled = false; Swal.fire('Gagal', res.message, 'error'); } })
+                        .fail(x => { this.disabled = false; Swal.fire('Gagal', (x.responseJSON && x.responseJSON.message) || 'Gagal kembali ke akun asal', 'error'); });
+                  });
+               </script>
+            <?php } ?>
+
+            <?php if ((($_SESSION['switch_dari']['username'] ?? null) ?: $_SESSION['username']) === 'alfi') { ?>
                <li class="nav-item" style="min-width: 280px;">
                   <select id="switchUserSelect" class="form-select" style="width: 100%;">
                      <option value="">🔄 Login sebagai...</option>
@@ -469,7 +489,7 @@ $dataCust = is_array($dataCust) ? $dataCust : [];
       }
    });
 
-   <?php if ($_SESSION['username'] === 'alfi') { ?>
+   <?php if ((($_SESSION['switch_dari']['username'] ?? null) ?: $_SESSION['username']) === 'alfi') { ?>
       $(document).ready(function() {
          $('#switchUserSelect').select2({
             placeholder: '🔄 Login sebagai...',

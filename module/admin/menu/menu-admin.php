@@ -135,11 +135,16 @@
             <span class="hide-menu">Gabung RME</span>
          </a>
       </li>
-      <li class="sidebar-item">
-         <a class="sidebar-link" href="module/admin/log_kunjungan" aria-expanded="false">
+      <li class="sidebar-item has-sub">
+         <a href="javascript:void(0)" class="sidebar-link" onclick="toggleSidebarMenu(this)">
             <iconify-icon icon="mdi:clipboard-text-clock-outline"></iconify-icon>
-            <span class="hide-menu">Log Kunjungan</span>
+            <span class="hide-menu">Log</span>
+            <i class="ti ti-chevron-down arrow"></i>
          </a>
+         <ul class="collapse-menu">
+            <li><a href="module/admin/log_kunjungan">Log Kunjungan</a></li>
+            <li><a href="module/admin/log_aktivitas">Log Aktivitas</a></li>
+         </ul>
       </li>
 
       <li class="nav-small-cap">

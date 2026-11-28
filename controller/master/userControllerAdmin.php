@@ -2,6 +2,19 @@
 
 include '../../database/connect.php';
 require_once __DIR__ . '/../../utility/security.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
+
+/** Data user untuk log (tanpa password). */
+function uaAmbil(int $id, int $idc): ?array
+{
+   global $koneksi;
+   $st = $koneksi->prepare("SELECT id_user, uid_user, fullname, username, roles, path, status, kdDokter FROM ms_users WHERE id_user = ? AND id_customer = ? LIMIT 1");
+   $st->bind_param('ii', $id, $idc);
+   $st->execute();
+   $r = $st->get_result()->fetch_assoc();
+   $st->close();
+   return $r ?: null;
+}
 
 header('Content-Type: application/json; charset=utf-8');
 requireRole(['administrator', 'superadmin']);
@@ -362,6 +375,10 @@ function createData()
 
    if ($stmt->execute()) {
 
+      logAktivitas($koneksi, 'user', 'tambah', ['tipe' => 'user', 'id' => $uid_user, 'label' => $username], 'User dibuat dari menu superadmin (peran ' . $roles . ')',
+
+         null, ['fullname' => $fullname, 'username' => $username, 'roles' => $roles, 'kdDokter' => $kdDokter], (int) $id_customer);
+
       echo json_encode([
          'status' => 'success',
          'message' => 'User berhasil ditambahkan.',
@@ -708,6 +725,7 @@ function updateData()
       $status = (int) $_PUT['status'];
 
 
+      $uaLama = uaAmbil($id, (int) $id_customer);
       $stmt = $koneksi->prepare("
             UPDATE ms_users
             SET status = ?
@@ -736,6 +754,10 @@ function updateData()
 
 
       if ($stmt->execute()) {
+
+         if ($uaLama) logAktivitas($koneksi, 'user', $status ? 'aktifkan' : 'nonaktifkan', ['tipe' => 'user', 'id' => $uaLama['uid_user'], 'label' => $uaLama['username']],
+
+            'Dari menu superadmin', ['status' => $uaLama['status']], ['status' => $status], (int) $id_customer);
 
          echo json_encode([
             'status' => 'success',
@@ -985,6 +1007,7 @@ function updateData()
    $types .= "ii";
 
 
+   $uaLama = uaAmbil($id, (int) $id_customer);
    $query = "
         UPDATE ms_users
         SET " . implode(", ", $fields) . "
@@ -1014,6 +1037,28 @@ function updateData()
 
 
    if ($stmt->execute()) {
+
+      if ($uaLama) {
+
+         $uaBaru = [];
+
+         foreach ($fields as $i => $kol) $uaBaru[trim(explode('=', $kol)[0])] = $values[$i];
+
+         $uaPw = isset($uaBaru['password']);
+
+         unset($uaBaru['password']);
+
+         [$l, $b] = logBeda($uaLama, $uaBaru);
+
+         $ref = ['tipe' => 'user', 'id' => $uaLama['uid_user'], 'label' => $uaLama['username']];
+
+         if (isset($b['roles'])) logAktivitas($koneksi, 'user', 'ubah_peran', $ref, $uaLama['roles'] . ' → ' . $b['roles'], ['roles' => $uaLama['roles']], ['roles' => $b['roles']], (int) $id_customer);
+
+         if ($l || $b) logAktivitas($koneksi, 'user', 'ubah', $ref, 'Dari menu superadmin', $l, $b, (int) $id_customer);
+
+         if ($uaPw) logAktivitas($koneksi, 'user', 'reset_password', $ref, 'Password diganti dari menu superadmin', null, null, (int) $id_customer);
+
+      }
 
       echo json_encode([
          'status' => 'success',
@@ -1062,6 +1107,7 @@ function deleteData()
    $id = (int) $id;
 
 
+   $uaLama = uaAmbil($id, (int) $id_customer);
    $stmt = $koneksi->prepare("
         DELETE FROM ms_users
         WHERE id_user = ?
@@ -1088,6 +1134,10 @@ function deleteData()
 
 
    if ($stmt->execute()) {
+
+      if ($uaLama && $stmt->affected_rows > 0) logAktivitas($koneksi, 'user', 'hapus', ['tipe' => 'user', 'id' => $uaLama['uid_user'], 'label' => $uaLama['username']],
+
+         $uaLama['fullname'] . ' (' . $uaLama['roles'] . ')', $uaLama, null, (int) $id_customer);
 
       echo json_encode([
          'status' => 'success',

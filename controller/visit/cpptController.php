@@ -16,6 +16,7 @@
  * (jam diabaikan); pesan error SQL ke browser; gagal hapus tanpa pesan.
  */
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 header('Content-Type: application/json; charset=utf-8');
 $idc = (int) ($_SESSION['id_customer'] ?? 0);
@@ -194,7 +195,9 @@ function cpSimpan(array $in, string $no, int $idc, string $peran, bool $ubah): v
       $st->bind_param('sssssssssis', $d['cppt_date'], $d['cppt_time'], $d['subjective'], $d['objective'], $d['analysis'], $d['planning'],
          $d['instruction'], $d['users_entry'], $d['cppt_profesi'], $id, $c);
       $st->execute();
+      $kena = $st->affected_rows;
       $st->close();
+      if ($kena > 0) cpLog('ubah', $id, $no, $lama, $d, 'Catatan ' . ($lama['cppt_profesi'] ?? '') . ' diubah');
       cpBalas(200, ['status' => 'success', 'message' => 'CPPT diperbarui.', 'id' => $id]);
    }
    $nomor = cpNomor();
@@ -206,6 +209,7 @@ function cpSimpan(array $in, string $no, int $idc, string $peran, bool $ubah): v
    $st->execute();
    $id = $st->insert_id;
    $st->close();
+   if ($id) cpLog('tambah', (int) $id, $no, null, $d + ['cppt_number' => $nomor], 'Catatan ' . $d['cppt_profesi'] . ' ditambahkan');
    cpBalas(200, ['status' => 'success', 'message' => 'CPPT ditambahkan.', 'id' => $id]);
 }
 
@@ -219,7 +223,9 @@ function cpHapus(int $id, string $no, int $idc, string $peran): void
    $st = $koneksi->prepare("DELETE FROM visit_cppt WHERE id_cppt = ? AND id_customer = ? AND verifikasi = 0");
    $st->bind_param('is', $id, $c);
    $st->execute();
+   $kena = $st->affected_rows;
    $st->close();
+   if ($kena > 0) cpLog('hapus', $id, $no, $lama, null, 'Catatan ' . ($lama['cppt_profesi'] ?? '') . ' dihapus');
    cpBalas(200, ['status' => 'success', 'message' => 'CPPT dihapus.']);
 }
 
@@ -233,8 +239,24 @@ function cpVerifikasi(int $id, string $no, int $idc, string $peran, int $nilai):
    $st = $koneksi->prepare("UPDATE visit_cppt SET verifikasi = ? WHERE id_cppt = ? AND id_customer = ?");
    $st->bind_param('iis', $nilai, $id, $c);
    $st->execute();
+   $kena = $st->affected_rows;
    $st->close();
+   if ($kena > 0) cpLog($nilai ? 'verifikasi' : 'batal_verifikasi', $id, $no, ['verifikasi' => (int) $lama['verifikasi'], 'cppt_number' => $lama['cppt_number'] ?? null], ['verifikasi' => $nilai],
+      $nilai ? 'CPPT diverifikasi' : 'Verifikasi CPPT dibatalkan');
    cpBalas(200, ['status' => 'success', 'message' => $nilai ? 'CPPT diverifikasi.' : 'Verifikasi dibatalkan.']);
+}
+
+/** Catat aktivitas CPPT (isi SOAP lama/baru ikut disimpan agar perubahan catatan medis bisa ditelusuri). */
+function cpLog(string $aksi, int $id, string $no, ?array $lama, ?array $baru, string $ket = ''): void
+{
+   global $koneksi;
+   $isi = fn(?array $r) => $r === null ? null : array_intersect_key($r, array_flip(['cppt_number', 'cppt_date', 'cppt_time', 'subjective', 'objective',
+      'analysis', 'planning', 'instruction', 'users_entry', 'cppt_profesi', 'verifikasi']));
+   $l = $isi($lama);
+   $b = $isi($baru);
+   if ($l !== null && $b !== null) [$l, $b] = logBeda($l, $b);
+   logAktivitas($koneksi, 'cppt', $aksi, ['tipe' => 'cppt', 'id' => $id, 'label' => ($lama['cppt_number'] ?? $baru['cppt_number'] ?? '#' . $id), 'visit_ID' => $no],
+      $ket, $l, $b);
 }
 
 function cpNomor(): string

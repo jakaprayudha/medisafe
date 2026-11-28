@@ -56,6 +56,8 @@ foreach ($items as $item) {
       exit;
    }
 }
+$labLama = [];
+$labBaru = [];
 foreach ($items as $item) {
 
    if (!is_array($item) || !isset($item['id_item']) || !ctype_digit((string) $item['id_item'])) continue;
@@ -64,12 +66,17 @@ foreach ($items as $item) {
 
    // 🔹 cek apakah sudah ada
    $check = $koneksi->prepare("
-      SELECT id FROM laboratorium_result 
+      SELECT id, hasil FROM laboratorium_result 
       WHERE id_inspection=? AND id_item=?
    ");
    $check->bind_param("ii", $id_inspection, $id_item);
    $check->execute();
    $res = $check->get_result();
+   $hasilLama = $res->num_rows > 0 ? $res->fetch_assoc()['hasil'] : null;
+   $res->data_seek(0);
+   $namaItem = $tipeItem[$id_item]['assemen'] ?? ('item #' . $id_item);
+   if ($hasilLama === null) { if ($hasil !== '') $labBaru[$namaItem] = $hasil; }
+   elseif (trim((string) $hasilLama) !== $hasil) { $labLama[$namaItem] = $hasilLama; $labBaru[$namaItem] = $hasil; }
 
    if ($res->num_rows > 0) {
 
@@ -91,6 +98,19 @@ foreach ($items as $item) {
    }
 
    $stmt->execute();
+}
+
+// log hanya parameter yang berubah; hasil yang diubah setelah sebelumnya terisi ditandai "ubah"
+if ($labBaru || $labLama) {
+   require_once __DIR__ . '/../../utility/activityLog.php';
+   // visit_inspection.id_visit berisi visit_ID (teks)
+   $st = $koneksi->prepare("SELECT id_visit FROM visit_inspection WHERE id_inspection = ? LIMIT 1");
+   $st->bind_param('i', $id_inspection);
+   $st->execute();
+   $labVisit = $st->get_result()->fetch_row()[0] ?? null;
+   $st->close();
+   logAktivitas($koneksi, 'lab', $labLama ? 'ubah' : 'simpan', ['tipe' => 'lab', 'id' => $id_inspection, 'label' => 'Permintaan lab #' . $id_inspection, 'visit_ID' => $labVisit],
+      ($labLama ? count($labLama) . ' hasil diubah' : count($labBaru) . ' hasil diisi') . ': ' . implode(', ', array_keys($labBaru + $labLama)), $labLama ?: null, $labBaru);
 }
 
 echo json_encode([
