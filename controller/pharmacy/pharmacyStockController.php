@@ -12,6 +12,7 @@
 include '../../database/connect.php';
 require_once __DIR__ . '/../report/farmasiStokService.php';
 require_once __DIR__ . '/../master/marginHarga.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 mysqli_report(MYSQLI_REPORT_OFF);
 
 header('Content-Type: application/json; charset=utf-8');
@@ -233,6 +234,7 @@ function setStockAwal(mysqli $koneksi, string $idCustomer): void
       jawab(false, ['message' => 'Obat master bersama tidak bisa diubah stok awalnya dari klinik.'], 403);
    }
    $stok = (int) $stok;
+   $obLama = obatSnapshot($koneksi, $idObat);
    $stmt = $koneksi->prepare("UPDATE ms_pharmacy SET pharmacy_stock = ? WHERE id_pharmacy = ? AND id_customer = ?");
    $stmt->bind_param('iis', $stok, $idObat, $idCustomer);
    if (!$stmt->execute()) {
@@ -240,6 +242,11 @@ function setStockAwal(mysqli $koneksi, string $idCustomer): void
       jawab(false, ['message' => 'Stok awal gagal disimpan.'], 500);
    }
    $stmt->close();
+   if ($obLama && (int) $obLama['pharmacy_stock'] !== $stok) {
+      logAktivitas($koneksi, 'stok', 'penyesuaian', ['tipe' => 'obat', 'id' => $idObat, 'label' => (string) $obLama['nama_obat']],
+         'Stok awal ' . (int) $obLama['pharmacy_stock'] . ' → ' . $stok . ' (' . ($stok - (int) $obLama['pharmacy_stock'] >= 0 ? '+' : '') . ($stok - (int) $obLama['pharmacy_stock']) . ')',
+         ['pharmacy_stock' => (int) $obLama['pharmacy_stock']], ['pharmacy_stock' => $stok]);
+   }
    jawab(true, ['message' => 'Stok awal berhasil disimpan.', 'data' => ['id_pharmacy' => $idObat, 'stock_awal' => $stok]]);
 }
 
@@ -288,6 +295,7 @@ function savePenerimaan(mysqli $koneksi, string $idCustomer, string $username): 
    }
    $id = $stmt->insert_id;
    $stmt->close();
+   $obLama = obatSnapshot($koneksi, $idObat);
 
    // Margin aktif (Setting Margin): harga beli penerimaan ini menjadi harga beli terbaru
    // dan harga jual obat dihitung ulang dari margin.
@@ -313,6 +321,14 @@ function savePenerimaan(mysqli $koneksi, string $idCustomer, string $username): 
       }
    }
 
+   $pnBaru = ['tanggal' => $tanggal, 'nomor_faktur' => $faktur, 'supplier' => $supplier, 'batch' => $batch, 'expired' => $expired, 'jumlah' => $jumlah, 'harga_beli' => $hargaBeli, 'keterangan' => $keterangan];
+   logAktivitas($koneksi, 'stok', 'stok_masuk', ['tipe' => 'obat', 'id' => $idObat, 'label' => (string) ($obLama['nama_obat'] ?? 'Obat #' . $idObat)],
+      'Penerimaan +' . $jumlah . ($faktur !== '' ? ' · faktur ' . $faktur : '') . ($supplier !== '' ? ' · ' . $supplier : '') . ' (penerimaan #' . $id . ')', null, $pnBaru);
+   if ($hargaJual !== null && $obLama && (int) $obLama['pharmacy_sale'] !== (int) $hargaJual) {
+      logAktivitas($koneksi, 'stok', 'ubah_harga', ['tipe' => 'obat', 'id' => $idObat, 'label' => (string) $obLama['nama_obat']],
+         'Harga otomatis dari margin setelah penerimaan #' . $id,
+         ['pharmacy_buy' => $obLama['pharmacy_buy'], 'pharmacy_sale' => $obLama['pharmacy_sale']], ['pharmacy_buy' => (int) round($hargaBeli), 'pharmacy_sale' => $hargaJual]);
+   }
    jawab(true, [
       'message' => 'Penerimaan stok berhasil disimpan.' . ($hargaJual !== null ? ' Harga jual diperbarui otomatis menjadi Rp ' . number_format($hargaJual, 0, ',', '.') . ' (margin).' : ''),
       'id' => $id,
@@ -329,6 +345,12 @@ function deletePenerimaan(mysqli $koneksi, string $idCustomer): void
    if ($id <= 0) {
       jawab(false, ['message' => 'ID penerimaan tidak valid.'], 422);
    }
+   $st = $koneksi->prepare("SELECT id_pharmacy, tanggal, nomor_faktur, supplier, batch, expired, jumlah, harga_beli, keterangan, created_by
+      FROM pharmacy_stock_penerimaan WHERE id_penerimaan = ? AND id_customer = ? LIMIT 1");
+   $st->bind_param('is', $id, $idCustomer);
+   $st->execute();
+   $pnLama = $st->get_result()->fetch_assoc();
+   $st->close();
    $stmt = $koneksi->prepare("DELETE FROM pharmacy_stock_penerimaan WHERE id_penerimaan = ? AND id_customer = ?");
    $stmt->bind_param('is', $id, $idCustomer);
    if (!$stmt->execute()) {
@@ -337,6 +359,11 @@ function deletePenerimaan(mysqli $koneksi, string $idCustomer): void
    }
    $hapus = $stmt->affected_rows;
    $stmt->close();
+   if ($hapus > 0 && $pnLama) {
+      $ob = obatSnapshot($koneksi, (int) $pnLama['id_pharmacy']);
+      logAktivitas($koneksi, 'stok', 'hapus', ['tipe' => 'penerimaan', 'id' => $id, 'label' => (string) ($ob['nama_obat'] ?? 'Obat #' . $pnLama['id_pharmacy'])],
+         'Penerimaan #' . $id . ' dihapus (stok −' . (int) $pnLama['jumlah'] . ')', $pnLama, null);
+   }
    $hapus > 0
       ? jawab(true, ['message' => 'Data penerimaan berhasil dihapus.'])
       : jawab(false, ['message' => 'Data penerimaan tidak ditemukan atau bukan milik klinik ini.'], 404);

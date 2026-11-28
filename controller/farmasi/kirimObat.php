@@ -103,6 +103,8 @@ try {
       }
 
       $koneksi->commit();
+      require_once __DIR__ . '/../../utility/activityLog.php';
+      foreach ($ids as $idT) logTiketResep($koneksi, 'ubah_status', (int) $idT, (string) $nomor_visit, 'Tiket dikirim ke farmasi (tanpa PCare: pasien umum / rawat inap)', ['status_permintaan' => 0], ['status_permintaan' => 1]);
       echo json_encode([
          'status' => 'success',
          'message' => 'Berhasil (pasien umum, tidak kirim BPJS)',
@@ -118,6 +120,9 @@ try {
 
    if (!$kirim['ok']) {
       $koneksi->rollback();
+      require_once __DIR__ . '/../../utility/activityLog.php';
+      logAktivitas($koneksi, 'farmasi', 'kirim_obat', ['tipe' => 'resep_tiket', 'id' => implode(',', $ids), 'label' => 'Tiket #' . implode(', #', $ids), 'visit_ID' => $nomor_visit],
+         'Kirim terapi ke PCare GAGAL: ' . mb_substr((string) $kirim['message'], 0, 300));
       echo json_encode([
          'status' => 'error',
          'message' => $kirim['message'] . ' Status farmasi tidak diubah.',
@@ -133,6 +138,9 @@ try {
    }
 
    $koneksi->commit();
+   require_once __DIR__ . '/../../utility/activityLog.php';
+   logAktivitas($koneksi, 'farmasi', 'kirim_obat', ['tipe' => 'resep_tiket', 'id' => implode(',', $ids), 'label' => 'Tiket #' . implode(', #', $ids), 'visit_ID' => $nomor_visit],
+      'Tiket dikirim ke farmasi dan terapi terkirim ke PCare', ['status_permintaan' => 0], ['status_permintaan' => 1]);
    echo json_encode([
       'status' => 'success',
       'message' => 'Berhasil kirim ke farmasi dan PCare BPJS',

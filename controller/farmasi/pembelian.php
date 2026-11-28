@@ -1,5 +1,28 @@
 <?php
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
+
+/** Log pembelian (modul stok). Tabel ini belum punya id_customer -> faskes diambil dari session. */
+function pbAmbil($id): ?array
+{
+   global $koneksi;
+   $st = $koneksi->prepare("SELECT * FROM pharmacy_order_buy WHERE id_order_buy = ? LIMIT 1");
+   $st->bind_param('s', $id);
+   $st->execute();
+   $r = $st->get_result()->fetch_assoc();
+   $st->close();
+   return $r ?: null;
+}
+function pbLog(string $aksi, $id, ?array $lama, ?array $baru, string $ket): void
+{
+   global $koneksi;
+   $r = ($baru ?? []) + ($lama ?? []);
+   if ($lama && $baru) {
+      [$lama, $baru] = logBeda($lama, $baru);
+      if (!$baru) return;
+   }
+   logAktivitas($koneksi, 'stok', $aksi, ['tipe' => 'pembelian', 'id' => $id, 'label' => trim(($r['order_number'] ?? '') . ' · ' . ($r['order_market'] ?? ''), ' ·×()')], $ket, $lama, $baru);
+}
 $method = $_SERVER['REQUEST_METHOD'];
 switch ($method) {
    case 'POST':
@@ -79,6 +102,7 @@ function createData()
       $stmt->bind_param($types, ...$values);
 
       if ($stmt->execute()) {
+         pbLog('tambah', $stmt->insert_id, null, array_combine($fields, $values), 'Pembelian ditambahkan');
          echo json_encode([
             'status' => 'success',
             'message' => 'Data berhasil ditambahkan.'
@@ -223,11 +247,15 @@ function updateData()
    $types = str_repeat('s', count($values) - 1) . "i";
 
    $query = "UPDATE pharmacy_order_buy SET " . implode(',', $fields) . " WHERE id_order_buy=?";
+   $pbLama = pbAmbil($id);
    $stmt = $koneksi->prepare($query);
 
    if ($stmt) {
       $stmt->bind_param($types, ...$values);
       if ($stmt->execute()) {
+         $pbBaru = [];
+         foreach ($allowedFields as $f) if (isset($_PUT[$f])) $pbBaru[$f] = $_PUT[$f];
+         if ($pbLama) pbLog('ubah', $id, $pbLama, $pbBaru, 'Pembelian diubah');
          echo json_encode(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
       } else {
          echo json_encode(['status' => 'error', 'message' => 'Update gagal: ' . $stmt->error]);
@@ -257,12 +285,14 @@ function deleteData()
    }
 
    // Query untuk menghapus data user
+   $pbLama = pbAmbil($id);
    $query = "DELETE FROM pharmacy_order_buy WHERE id_order_buy = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
       $stmt->bind_param("s", $id);
 
       if ($stmt->execute()) {
+         if ($pbLama && $stmt->affected_rows > 0) pbLog('hapus', $id, $pbLama, null, 'Pembelian dihapus');
          echo json_encode([
             'status' => 'success',
             'message' => 'Data berhasil dihapus.'

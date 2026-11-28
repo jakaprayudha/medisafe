@@ -1,5 +1,6 @@
 <?php
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 $method = $_SERVER['REQUEST_METHOD'];
 switch ($method) {
    case 'POST':
@@ -172,6 +173,7 @@ function createData()
       $stmt->bind_param($types, ...$values);
 
       if ($stmt->execute()) {
+         if ($stmt->insert_id) logResepItem($koneksi, 'tambah', (int) $stmt->insert_id, null, farmasiItemSnapshot($koneksi, (int) $stmt->insert_id));
          echo json_encode([
             'status' => 'success',
             'message' => 'Data berhasil ditambahkan.',
@@ -357,12 +359,14 @@ function updateData()
              SET " . implode(',', $fields) . " 
              WHERE id_pharmacy_details=?";
 
+   $rsLama = farmasiItemSnapshot($koneksi, (int) $id);
    $stmt = $koneksi->prepare($query);
 
    if ($stmt) {
       $stmt->bind_param($types, ...$values);
 
       if ($stmt->execute()) {
+         if ($stmt->affected_rows > 0 && $rsLama) logResepItem($koneksi, 'ubah', (int) $id, $rsLama, farmasiItemSnapshot($koneksi, (int) $id));
          echo json_encode([
             'status' => 'success',
             'message' => 'Data berhasil diperbarui.'
@@ -404,6 +408,7 @@ function deleteData()
    tolakJikaTerkunci(null, (string)$id);
 
    // Query untuk menghapus data user
+   $rsLama = farmasiItemSnapshot($koneksi, (int) $id);
    $query = "DELETE FROM permintaan_pharmacy_details WHERE id_pharmacy_details = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
@@ -415,6 +420,7 @@ function deleteData()
             'message' => 'Data obat tidak ditemukan atau sudah terhapus.'
          ]);
       } elseif ($stmt->errno === 0) {
+         if ($rsLama) logResepItem($koneksi, 'hapus', (int) $id, $rsLama, null);
          echo json_encode([
             'status' => 'success',
             'message' => 'Data berhasil dihapus.'
@@ -458,6 +464,7 @@ function approveData($data)
       $stmt->bind_param("i", $id);
 
       if ($stmt->execute()) {
+         if ($stmt->affected_rows > 0) logResepItem($koneksi, 'approve', (int) $id, null, farmasiItemSnapshot($koneksi, (int) $id), 'Item resep di-approve');
          echo json_encode([
             'status' => 'success',
             'message' => 'Permintaan farmasi berhasil di-approve.'

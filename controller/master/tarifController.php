@@ -1,5 +1,13 @@
 <?php
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
+
+/** Log perubahan master tarif. */
+function tfLog(string $aksi, array $row, string $ket, ?array $lama, ?array $baru): void
+{
+   global $koneksi;
+   logAktivitas($koneksi, 'tarif', $aksi, ['tipe' => 'tarif', 'id' => $row['id_tarif'] ?? null, 'label' => (string) ($row['tarif_name'] ?? '-')], $ket, $lama, $baru);
+}
 
 header('Content-Type: application/json');
 
@@ -168,6 +176,7 @@ function createData($id_customer)
    $stmt->bind_param(str_repeat('s', count($values)), ...$values);
 
    if ($stmt->execute()) {
+      tfLog('tambah', ['id_tarif' => $stmt->insert_id, 'tarif_name' => $d['tarif_name']], 'Tarif baru Rp' . number_format((int) ($d['tarif_amount'] ?? 0), 0, ',', '.'), null, $d);
       jawab(['status' => 'success', 'message' => 'Tarif berhasil ditambahkan.', 'id' => $stmt->insert_id]);
    }
    jawab(['status' => 'error', 'message' => 'Gagal menyimpan tarif.'], 500);
@@ -283,6 +292,7 @@ function updateData($id_customer)
       $stmt = $koneksi->prepare("UPDATE ms_tarif SET tarif_status=? WHERE id_tarif=? AND id_customer=?");
       $stmt->bind_param("iii", $status, $id, $id_customer);
       if ($stmt->execute()) {
+         tfLog($status ? 'aktifkan' : 'nonaktifkan', $lama, '', ['tarif_status' => $lama['tarif_status'] ?? null], ['tarif_status' => $status]);
          jawab(['status' => 'success', 'message' => $status ? 'Tarif diaktifkan.' : 'Tarif dinonaktifkan.']);
       }
       jawab(['status' => 'error', 'message' => 'Gagal update status.'], 500);
@@ -313,6 +323,12 @@ function updateData($id_customer)
    $stmt->bind_param(str_repeat('s', count($values) - 2) . "ii", ...$values);
 
    if ($stmt->execute()) {
+      [$l, $b] = logBeda($lama, $d);
+      if ($b) {
+         $hargaBerubah = array_key_exists('tarif_amount', $b);
+         tfLog($hargaBerubah ? 'ubah_harga' : 'ubah', $lama, $hargaBerubah
+            ? 'Harga Rp' . number_format((int) $lama['tarif_amount'], 0, ',', '.') . ' → Rp' . number_format((int) $b['tarif_amount'], 0, ',', '.') : 'Ubah data tarif', $l, $b);
+      }
       jawab(['status' => 'success', 'message' => 'Data berhasil diperbarui.']);
    }
    jawab(['status' => 'error', 'message' => 'Gagal memperbarui tarif.'], 500);
@@ -344,6 +360,7 @@ function deleteData($id_customer)
    $stmt = $koneksi->prepare("DELETE FROM ms_tarif WHERE id_tarif=? AND id_customer=?");
    $stmt->bind_param("ii", $id, $id_customer);
    if ($stmt->execute()) {
+      tfLog('hapus', $row, 'Tarif dihapus', $row, null);
       jawab(['status' => 'success', 'message' => 'Tarif dihapus.']);
    }
    jawab(['status' => 'error', 'message' => 'Gagal menghapus tarif.'], 500);

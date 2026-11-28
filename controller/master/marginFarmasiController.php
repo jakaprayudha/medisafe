@@ -10,6 +10,7 @@
 require_once __DIR__ . '/../../database/connect.php';
 require_once __DIR__ . '/../../utility/security.php';
 require_once __DIR__ . '/marginHarga.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 
 header('Content-Type: application/json');
 
@@ -188,10 +189,11 @@ if ($mo === false || $mb === false) {
 
 $koneksi->begin_transaction();
 try {
-   $st = $koneksi->prepare("SELECT id FROM setting_clinic WHERE id_customer = ? LIMIT 1");
+   $st = $koneksi->prepare("SELECT id, margin_obat, margin_bmhp FROM setting_clinic WHERE id_customer = ? LIMIT 1");
    $st->bind_param('i', $idc);
    $st->execute();
-   $ada = (bool) $st->get_result()->fetch_row();
+   $mfLama = $st->get_result()->fetch_assoc();
+   $ada = (bool) $mfLama;
    $st->close();
 
    $st = $ada
@@ -204,11 +206,19 @@ try {
    $st->close();
 
    $diterapkan = 0;
+   $mfUbah = [];
    if (!empty($_POST['terapkan'])) {
       $r = mfRencana($koneksi, $idc, marginFaskes($koneksi, $idc));
       $diterapkan = mfTerapkan($koneksi, $idc, $r['perubahan']);
+      $mfUbah = $r['perubahan'];
    }
    $koneksi->commit();
+   // log setelah commit: setting margin + daftar harga jual yang diubah massal (maks. 500 baris di log)
+   logAktivitas($koneksi, 'stok', 'ubah_harga', ['tipe' => 'margin', 'label' => 'Margin farmasi'],
+      'Margin obat ' . ($mo === null ? 'nonaktif' : $mo . '%') . ', BMHP ' . ($mb === null ? 'nonaktif' : $mb . '%')
+         . (!empty($_POST['terapkan']) ? " · harga jual $diterapkan obat diperbarui" : ' · harga belum diterapkan'),
+      ['margin_obat' => $mfLama['margin_obat'] ?? null, 'margin_bmhp' => $mfLama['margin_bmhp'] ?? null],
+      ['margin_obat' => $mo, 'margin_bmhp' => $mb, 'harga_diubah' => array_slice($mfUbah, 0, 500)]);
 } catch (Throwable $e) {
    $koneksi->rollback();
    error_log('[marginFarmasiController] ' . $e->getMessage());

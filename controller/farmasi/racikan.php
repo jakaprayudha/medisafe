@@ -374,6 +374,14 @@ function simpanRacikan(mysqli $koneksi, string $idCustomer): void
    $stmt->execute();
    $detailLama = array_map('intval', array_column($stmt->get_result()->fetch_all(MYSQLI_ASSOC), 'id_pharmacy_details'));
    $stmt->close();
+   // untuk log: komposisi racikan sebelum disimpan
+   require_once __DIR__ . '/../../utility/activityLog.php';
+   $ringkasBahan = function (array $ids) use ($koneksi) {
+      $out = [];
+      foreach ($ids as $d) if ($s = farmasiItemSnapshot($koneksi, (int) $d)) $out[] = $s['nama_obat'] . ' × ' . $s['qty'];
+      return $out;
+   };
+   $bahanLama = $ringkasBahan($detailLama);
 
    $user = (string) ($_SESSION['fullname'] ?? '');
    $signaDetail = '-'; // signa racikan ada di header tiket (rck_signa)
@@ -418,6 +426,15 @@ function simpanRacikan(mysqli $koneksi, string $idCustomer): void
 
    $koneksi->commit();
    unset($GLOBALS['racikanTrx']);
+   $stmt = $koneksi->prepare("SELECT id_pharmacy_details FROM permintaan_pharmacy_details WHERE id_permintaan_farmasi = ?");
+   $stmt->bind_param('i', $id);
+   $stmt->execute();
+   $bahanBaru = $ringkasBahan(array_column($stmt->get_result()->fetch_all(MYSQLI_ASSOC), 'id_pharmacy_details'));
+   $stmt->close();
+   $rckLama = ['rck_nama' => $tiket['rck_nama'] ?? null, 'rck_jumlah' => $tiket['rck_jumlah'] ?? null, 'rck_satuan' => $tiket['rck_satuan'] ?? null, 'rck_signa' => $tiket['rck_signa'] ?? null, 'bahan' => $bahanLama];
+   $rckBaru = ['rck_nama' => $nama, 'rck_jumlah' => $jumlahStr, 'rck_satuan' => $satuan, 'rck_signa' => $signa, 'bahan' => $bahanBaru];
+   logTiketResep($koneksi, $detailLama ? 'ubah' : 'tambah', $id, (string) ($tiket['id_visit'] ?? ''), 'Racikan "' . $nama . '" ' . $jumlahStr . ' ' . $satuan . ' · ' . count($bahanBaru) . ' bahan',
+      $detailLama ? $rckLama : null, $rckBaru);
 
    jsonKeluar([
       'status' => 'success',

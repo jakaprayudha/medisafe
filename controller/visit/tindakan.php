@@ -13,6 +13,7 @@
  * qty/diskon negatif atau diskon melebihi subtotal, session_start() ganda (Notice sebelum JSON).
  */
 require '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 header('Content-Type: application/json; charset=utf-8');
 
 function balas(int $kode, array $isi): void
@@ -92,7 +93,10 @@ try {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
          $st->bind_param('sssiiiss', $idc, $no, $item, $harga, $qty, $diskon, $kategori, $catatan);
          $st->execute();
+         $idBaru = (int) $st->insert_id;
          $st->close();
+         if ($idBaru) logTagihan($koneksi, 'tambah', $idBaru, $no, null, ['billing_item' => $item, 'billing_category' => $kategori, 'billing_price' => $harga,
+            'billing_qty' => $qty, 'billing_discount' => $diskon, 'billing_notes' => $catatan], 'Kasir');
          balas(200, ['status' => 'success', 'message' => 'Tindakan ditambahkan.']);
 
       case 'PUT':
@@ -108,7 +112,10 @@ try {
          $st = $koneksi->prepare("UPDATE pasien_billing SET billing_price = ?, billing_qty = ?, billing_discount = ?, billing_notes = ? WHERE id_billing = ? AND id_customer = ?");
          $st->bind_param('iiisis', $harga, $qty, $diskon, $catatan, $id, $idc);
          $st->execute();
+         $kena = $st->affected_rows;
          $st->close();
+         if ($kena > 0) logTagihan($koneksi, 'ubah', $id, (string) $lama['id_visit'], $lama, ['billing_item' => $lama['billing_item'], 'billing_price' => $harga,
+            'billing_qty' => $qty, 'billing_discount' => $diskon, 'billing_notes' => $catatan], 'Kasir');
          balas(200, ['status' => 'success', 'message' => 'Tindakan diperbarui.']);
 
       case 'DELETE':
@@ -118,7 +125,9 @@ try {
          $st = $koneksi->prepare("DELETE FROM pasien_billing WHERE id_billing = ? AND id_customer = ?");
          $st->bind_param('is', $id, $idc);
          $st->execute();
+         $kena = $st->affected_rows;
          $st->close();
+         if ($kena > 0) logTagihan($koneksi, 'hapus', $id, (string) $lama['id_visit'], $lama, null, 'Kasir');
          balas(200, ['status' => 'success', 'message' => 'Tindakan dihapus.']);
 
       default:

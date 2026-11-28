@@ -12,6 +12,7 @@
  * gagal hapus/ubah tidak mengirim respons apa pun.
  */
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 if (session_status() === PHP_SESSION_NONE) {
    session_start();
 }
@@ -104,6 +105,8 @@ function createData($id_customer)
    $st->execute();
    $id = $st->insert_id;
    $st->close();
+   if ($id) logTiketResep($koneksi, 'tambah', (int) $id, $visit, 'Tiket ' . $tipe . ' dibuat', null,
+      ['tipe_obat' => $tipe, 'catatan_permintaan' => $catatan, 'rck_jumlah' => $jumlah, 'rck_satuan' => $satuan, 'rck_signa' => $signa]);
 
    try {
       sendSocketAntrianBaru($id_customer, $visit);
@@ -196,10 +199,18 @@ function updateData($put, $id_customer)
    $id = (int) ($put['id_permintaan_farmasi'] ?? ($_GET['id'] ?? 0));
    $catatan = mb_substr(trim((string) ($put['catatan_permintaan'] ?? '')), 0, 5000);
 
+   $st = $koneksi->prepare("SELECT id_visit, catatan_permintaan FROM permintaan_pharmacy WHERE id_permintaan_farmasi = ? AND id_customer = ? LIMIT 1");
+   $st->bind_param("is", $id, $id_customer);
+   $st->execute();
+   $pfLama = $st->get_result()->fetch_assoc();
+   $st->close();
    $st = $koneksi->prepare("UPDATE permintaan_pharmacy SET catatan_permintaan = ? WHERE id_permintaan_farmasi = ? AND id_customer = ?");
    $st->bind_param("sis", $catatan, $id, $id_customer);
    $st->execute();
+   $kena = $st->affected_rows;
    $st->close();
+   if ($kena > 0 && $pfLama) logTiketResep($koneksi, 'ubah', $id, (string) $pfLama['id_visit'], 'Catatan tiket diubah',
+      ['catatan_permintaan' => $pfLama['catatan_permintaan']], ['catatan_permintaan' => $catatan]);
    $st = $koneksi->prepare("SELECT 1 FROM permintaan_pharmacy WHERE id_permintaan_farmasi = ? AND id_customer = ?");
    $st->bind_param("is", $id, $id_customer);
    $st->execute();
@@ -217,7 +228,7 @@ function deleteData($id_customer)
 
    $koneksi->begin_transaction();
    try {
-      $st = $koneksi->prepare("SELECT status_permintaan FROM permintaan_pharmacy WHERE id_permintaan_farmasi = ? AND id_customer = ? FOR UPDATE");
+      $st = $koneksi->prepare("SELECT status_permintaan, id_visit, tipe_obat FROM permintaan_pharmacy WHERE id_permintaan_farmasi = ? AND id_customer = ? FOR UPDATE");
       $st->bind_param("is", $id, $id_customer);
       $st->execute();
       $tiket = $st->get_result()->fetch_assoc();
@@ -238,6 +249,9 @@ function deleteData($id_customer)
       $st->execute();
       $detailIds = array_map('intval', array_column($st->get_result()->fetch_all(MYSQLI_ASSOC), 'id_pharmacy_details'));
       $st->close();
+      // untuk log: rincian obat yang ikut terhapus
+      $obatHapus = [];
+      foreach ($detailIds as $d) if ($s = farmasiItemSnapshot($koneksi, $d)) $obatHapus[] = ['obat' => $s['nama_obat'], 'qty' => $s['qty'], 'signa' => $s['signa']];
       if ($detailIds) {
          $ph = implode(',', array_fill(0, count($detailIds), '?'));
          $st = $koneksi->prepare("DELETE FROM permintaan_pharmacy_details WHERE id_pharmacy_details IN ($ph) AND id_permintaan_farmasi = ?");
@@ -256,6 +270,8 @@ function deleteData($id_customer)
       $koneksi->rollback();
       throw $e;
    }
+   logTiketResep($koneksi, 'hapus', $id, (string) $tiket['id_visit'], 'Tiket ' . ($tiket['tipe_obat'] ?? '') . ' dihapus beserta ' . count($detailIds) . ' obat',
+      ['status_permintaan' => (int) $tiket['status_permintaan'], 'obat' => $obatHapus], null);
    pfBalas(200, ['status' => 'success', 'message' => 'Tiket dan ' . count($detailIds) . ' rincian obat dihapus.']);
 }
 
@@ -269,6 +285,14 @@ function approveData($data, $id_customer)
    $st->execute();
    $n = $st->affected_rows;
    $st->close();
+   if ($n > 0) {
+      $st = $koneksi->prepare("SELECT id_visit FROM permintaan_pharmacy WHERE id_permintaan_farmasi = ? LIMIT 1");
+      $st->bind_param("i", $id);
+      $st->execute();
+      $vid = (string) ($st->get_result()->fetch_row()[0] ?? '');
+      $st->close();
+      logTiketResep($koneksi, 'ubah_status', $id, $vid, 'Tiket dikirim ke farmasi (status 1)', null, ['status_permintaan' => 1]);
+   }
    pfBalas($n > 0 ? 200 : 404, $n > 0 ? ['status' => 'success'] : ['status' => 'error', 'message' => 'Tiket tidak ditemukan.']);
 }
 

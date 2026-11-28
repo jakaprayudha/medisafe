@@ -12,6 +12,7 @@
  * Kepemilikan dicek lewat pasien_visit (visit_ID + id_customer sesi).
  */
 include '../../database/connect.php';
+require_once __DIR__ . '/../../utility/activityLog.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 header('Content-Type: application/json; charset=utf-8');
 $idc = (int) ($_SESSION['id_customer'] ?? 0);
@@ -116,6 +117,7 @@ function rlCreate(array $in, int $idc): void
    $st->execute();
    $id = $st->insert_id;
    $st->close();
+   if ($id) logAktivitas($koneksi, 'farmasi', 'tambah', ['tipe' => 'resep_luar', 'id' => $id, 'label' => 'Resep luar ' . $nomor, 'visit_ID' => $visit], 'Resep luar ditambahkan', null, $d);
    rlBalas(200, ['status' => 'success', 'message' => 'Resep luar ditambahkan.', 'id' => $id, 'resep_number' => $nomor]);
 }
 
@@ -123,24 +125,31 @@ function rlUpdate(array $in, int $idc): void
 {
    global $koneksi;
    $id = (int) ($in['id_resep'] ?? ($_GET['id'] ?? 0));
-   if ($id <= 0 || !rlCari($id, $idc)) rlBalas(404, ['status' => 'error', 'message' => 'Resep tidak ditemukan.']);
+   $rlLama = $id > 0 ? rlCari($id, $idc) : null;
+   if (!$rlLama) rlBalas(404, ['status' => 'error', 'message' => 'Resep tidak ditemukan.']);
    $d = rlIsi($in);
    // id_visit sengaja tidak ikut diubah (dulu bisa memindahkan resep ke kunjungan lain)
    $st = $koneksi->prepare("UPDATE resep_luar SET prescriptio = ?, signatura = ?, subscriptio = ?, pro = ? WHERE id_resep = ?");
    $st->bind_param('ssssi', $d['prescriptio'], $d['signatura'], $d['subscriptio'], $d['pro'], $id);
    $st->execute();
    $st->close();
+   [$l, $b] = logBeda($rlLama, $d);
+   if ($b) logAktivitas($koneksi, 'farmasi', 'ubah', ['tipe' => 'resep_luar', 'id' => $id, 'label' => 'Resep luar ' . ($rlLama['resep_number'] ?? '#' . $id), 'visit_ID' => $rlLama['id_visit'] ?? null],
+      'Resep luar diubah', $l, $b);
    rlBalas(200, ['status' => 'success', 'message' => 'Resep luar diperbarui.']);
 }
 
 function rlDelete(int $id, int $idc): void
 {
    global $koneksi;
-   if ($id <= 0 || !rlCari($id, $idc)) rlBalas(404, ['status' => 'error', 'message' => 'Resep tidak ditemukan atau sudah terhapus.']);
+   $rlLama = $id > 0 ? rlCari($id, $idc) : null;
+   if (!$rlLama) rlBalas(404, ['status' => 'error', 'message' => 'Resep tidak ditemukan atau sudah terhapus.']);
    $st = $koneksi->prepare("DELETE FROM resep_luar WHERE id_resep = ?");
    $st->bind_param('i', $id);
    $st->execute();
    $st->close();
+   logAktivitas($koneksi, 'farmasi', 'hapus', ['tipe' => 'resep_luar', 'id' => $id, 'label' => 'Resep luar ' . ($rlLama['resep_number'] ?? '#' . $id), 'visit_ID' => $rlLama['id_visit'] ?? null],
+      'Resep luar dihapus', $rlLama);
    rlBalas(200, ['status' => 'success', 'message' => 'Resep luar dihapus.']);
 }
 
