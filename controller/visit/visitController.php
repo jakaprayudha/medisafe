@@ -137,6 +137,8 @@ function createVisit()
       if (!$stmt->execute()) throw new Exception($stmt->error);
       $stmt->close();
       $koneksi->commit();
+      require_once __DIR__ . '/../../utility/visitLog.php';
+      logKunjungan($koneksi, 'daftar', (string) $visit_ID, 'Poli ' . $poli_name . ' · ' . $doctor_name . ' · antrean ' . $nomorantrean, null, null, $created_user);
       $jawab(['status' => 'success', 'message' => 'Berhasil daftar', 'data' => [
          'visit_ID' => $visit_ID, 'antrian' => $nomorantrean, 'id_patient' => $id_patient, 'nomor_rm' => $nomor_rm, 'nama' => $patient_name_pcare,
       ]]);

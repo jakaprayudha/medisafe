@@ -74,6 +74,9 @@ try {
     mysqli_commit($koneksi);
     $alasan = trim((string) ($_POST['alasan'] ?? ''));
     error_log('[batalchackin] ' . $visit_id . ' dibatalkan oleh ' . ($_SESSION['username'] ?? '-') . ($alasan !== '' ? ' alasan: ' . $alasan : ''));
+    require_once __DIR__ . '/../../../utility/visitLog.php';
+    logKunjungan($koneksi, 'batal', $visit_id, 'Batal booking Mobile JKN' . ($alasan !== '' ? ' · alasan: ' . $alasan : ''),
+        ['visit_status' => (int) $rowCek['visit_status']], ['visit_status' => 99], 'MobileJKN');
 
     echo json_encode([
         "success" => true,

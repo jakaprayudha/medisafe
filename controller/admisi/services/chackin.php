@@ -29,4 +29,8 @@ $st = $koneksi->prepare("UPDATE pasien_visit SET visit_status = '0' WHERE id_vis
 $st->bind_param('ii', $id, $idc);
 $ok = $st->execute() && $st->affected_rows > 0;
 $st->close();
+if ($ok) {
+    require_once __DIR__ . '/../../../utility/visitLog.php';
+    logKunjungan($koneksi, 'checkin', $kunj, 'Check-in booking Mobile JKN', ['visit_status' => 10], ['visit_status' => 0]);
+}
 echo json_encode($ok ? ['success' => true, 'message' => 'Pasien berhasil check-in'] : ['success' => false, 'message' => 'Gagal check-in, muat ulang data.']);

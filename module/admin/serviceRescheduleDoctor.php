@@ -54,6 +54,11 @@ if (!$st->execute()) {
 }
 $n = $st->affected_rows;
 $st->close();
+if ($n > 0) {
+    require_once __DIR__ . '/../../utility/visitLog.php';
+    logKunjungan($koneksi, 'ganti_dokter', $kunj, kunjunganSelesai($status) ? 'Kunjungan sudah selesai (buka kunci admin)' : '',
+        ['id_doctor' => $lama['id_doctor'] ?? null, 'code_doctor' => $lama['code_doctor'] ?? null], ['id_doctor' => $dokter['nmDokter'], 'code_doctor' => $dokter['kdDokter']]);
+}
 if ($n < 1) rsJawab(false, 'Kunjungan tidak dapat diubah (mungkin baru saja dilayani). Muat ulang data.');
 
 error_log("[serviceRescheduleDoctor] kunjungan #$id_visit: " . ($lama['id_doctor'] ?? '-') . " -> {$dokter['nmDokter']} oleh $oleh");

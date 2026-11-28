@@ -81,4 +81,6 @@ if ((string) $v['id_provider'] === '1') {
 }
 $_SESSION['username'] = $uname;
 batalCatat($koneksi, $kunj, $klinis, '[DIAKTIFKAN KEMBALI] ' . $alasan, (string) $v['id_provider'], 'Status dipulihkan ke ' . $baru);
+require_once __DIR__ . '/../../../utility/visitLog.php';
+logKunjungan($koneksi, 'aktif_kembali', $kunj, 'Alasan: ' . $alasan, ['visit_status' => 99], ['visit_status' => (int) $baru]);
 echo json_encode(['success' => true, 'message' => 'Kunjungan diaktifkan kembali.', 'status' => $baru, 'peringatan' => $peringatan], JSON_UNESCAPED_UNICODE);

@@ -24,12 +24,21 @@ $id = (int) ($_POST['id_ranap'] ?? 0);
 if ($id <= 0) cbJawab(['status' => 'error', 'message' => 'ID rawat inap tidak ditemukan.']);
 
 try {
+   require_once __DIR__ . '/../../utility/visitLog.php';
+   $st = $koneksi->prepare("SELECT rn.visit_ID_inpatient, rn.diagnosa_awal FROM permintaan_ranap rn JOIN pasien_visit pv ON pv.visit_ID = rn.visit_ID_inpatient
+      WHERE rn.id_ranap = ? AND pv.id_customer = ? LIMIT 1");
+   $st->bind_param('ii', $id, $IDC);
+   $st->execute();
+   $rq = $st->get_result()->fetch_assoc();
+   $st->close();
+   $snap = $rq ? logKunjunganSnapshot($koneksi, 'visit_ID', $rq['visit_ID_inpatient'], $IDC) : null;
    $st = $koneksi->prepare("DELETE rn FROM permintaan_ranap rn JOIN pasien_visit pv ON pv.visit_ID = rn.visit_ID_inpatient
       WHERE rn.id_ranap = ? AND rn.ranap_booking = 0 AND pv.id_customer = ?");
    $st->bind_param('ii', $id, $IDC);
    $st->execute();
    $n = $st->affected_rows;
    $st->close();
+   if ($n > 0 && $snap) logKunjungan($koneksi, 'ranap_batal', $snap, 'Permintaan rawat inap dibatalkan', ['id_ranap' => $id, 'diagnosa_awal' => $rq['diagnosa_awal']], null, 'Rawat Inap');
    $n > 0
       ? cbJawab(['status' => 'success', 'message' => 'Permintaan rawat inap dibatalkan.'])
       : cbJawab(['status' => 'error', 'message' => 'Permintaan tidak ditemukan atau sudah di-approve (tidak dapat dibatalkan).']);

@@ -250,6 +250,8 @@ function deleteData()
    // Query untuk menghapus data user
    require_once __DIR__ . '/../dinkes/dinkesService.php';
    $dkVid = dkVisitIdDikirim($koneksi, (int) ($_SESSION['id_customer'] ?? 0), $id); // Dinkes
+   require_once __DIR__ . '/../../utility/visitLog.php';
+   $snapHapus = logKunjunganSnapshot($koneksi, 'id_visit', $id); // data kunjungan sebelum dihapus
    $query = "DELETE FROM pasien_visit WHERE id_visit = ?";
 
    if ($stmt = $koneksi->prepare($query)) {
@@ -257,6 +259,7 @@ function deleteData()
 
       if ($stmt->execute()) {
       if ($dkVid) dkHapusVisit($koneksi, (int) ($_SESSION['id_customer'] ?? 0), $dkVid); // Dinkes
+      if ($stmt->affected_rows > 0 && $snapHapus) logKunjungan($koneksi, 'hapus', $snapHapus, 'Kunjungan dihapus permanen dari menu Registrasi rawat inap (perawat)', $snapHapus);
          echo json_encode([
             'status' => 'success',
             'message' => 'Data berhasil dihapus.'

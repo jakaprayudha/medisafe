@@ -39,6 +39,8 @@ if ($visit_date < date('Y-m-d', strtotime('-7 days')) || $visit_date > date('Y-m
    exit;
 }
 
+require_once __DIR__ . '/../../utility/visitLog.php';
+$snapLama = logKunjunganSnapshot($koneksi, 'visit_ID', $visit_ID, (int) $kunj['id_customer']);
 $query = $koneksi->prepare("
    UPDATE pasien_visit 
    SET visit_date=?, visit_time=? 
@@ -48,6 +50,10 @@ $idcSesi = (int) $kunj['id_customer'];
 $query->bind_param("ssssi", $visit_date, $visit_time, $id_patient, $visit_ID, $idcSesi);
 
 if ($query->execute()) {
+   if ($query->affected_rows > 0 && $snapLama) {
+      logKunjungan($koneksi, 'ubah_waktu', $snapLama, '',
+         ['visit_date' => $snapLama['visit_date'], 'visit_time' => $snapLama['visit_time']], ['visit_date' => $visit_date, 'visit_time' => $visit_time]);
+   }
    echo json_encode([
       "status" => "success",
       "message" => "Berhasil update visit"

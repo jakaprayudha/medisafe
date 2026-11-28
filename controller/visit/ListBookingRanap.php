@@ -167,6 +167,9 @@ try {
       $p[] = (int) $ranap['id_visit'];
       lbExec("UPDATE pasien_visit SET " . implode(', ', $set) . " WHERE id_visit = ?", $t . 'i', $p);
       $koneksi->commit();
+      require_once __DIR__ . '/../../utility/visitLog.php';
+      logKunjungan($koneksi, 'pulang', (int) $ranap['id_visit'], 'Dipulangkan dari menu Bed & status pulang',
+         ['status_ranap' => 'aktif', 'id_bed' => $bedLama ?: null], ['status_ranap' => 'pulang', 'visit_status' => 4, 'cara_keluar' => $cara, 'kondisi_pulang' => $kondisi], 'Rawat Inap');
       error_log("[ListBookingRanap] ranap #$idRanap dipulangkan oleh $USER");
       lbJawab(['status' => 'success', 'message' => 'Pasien dipulangkan, bed dikosongkan.']);
    }
@@ -184,6 +187,9 @@ try {
       lbExec("UPDATE permintaan_ranap SET id_bed = ?, id_room = ?, status = 'aktif' WHERE id_ranap = ?", 'iii', [$bedBaru, (int) $bed['id_room'], $idRanap]);
       // dulu "aktifkan" juga mengubah visit_status kunjungan (selesai -> 1); status kunjungan tidak lagi diubah
       $koneksi->commit();
+      require_once __DIR__ . '/../../utility/visitLog.php';
+      logKunjungan($koneksi, $aksi === 'pindah' ? 'pindah_bed' : 'ranap_aktif', (int) $ranap['id_visit'], 'Bed ' . $bed['bed_name'],
+         ['status_ranap' => $ranap['status'], 'id_bed' => $bedLama ?: null], ['status_ranap' => 'aktif', 'id_bed' => $bedBaru, 'id_room' => (int) $bed['id_room']], 'Rawat Inap');
       error_log("[ListBookingRanap] ranap #$idRanap $aksi ke bed $bedBaru oleh $USER");
       lbJawab(['status' => 'success', 'message' => $aksi === 'pindah' ? "Pasien dipindah ke bed {$bed['bed_name']}." : "Pasien kembali berstatus dirawat di bed {$bed['bed_name']}."]);
    }

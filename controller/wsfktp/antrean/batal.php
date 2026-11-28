@@ -94,6 +94,9 @@ try {
     $stmtUpdateAntrian->bind_param("sssss", $status_antrian_batal, $nomor_visit, $id_customer, $kodepoli, $tanggal);
     $resultAntrian = $stmtUpdateAntrian->execute();
     if ($resultVisit && $resultAntrian) {
+        require_once __DIR__ . '/../../../utility/visitLog.php';
+        logKunjungan($koneksi, 'batal', (string) $nomor_visit, 'Dibatalkan peserta lewat Mobile JKN (webservice BPJS) · poli ' . $kodepoli . ' · ' . $tanggal,
+            ['visit_status' => (int) ($row['visit_status'] ?? 0)], ['visit_status' => (int) $status_visit_batal], 'MobileJKN');
         echo json_encode([
             "metadata" => [
                 "message" => "OK",

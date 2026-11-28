@@ -150,6 +150,7 @@ $bmiKetLokal = $bmiLokal === null ? null : ($bmiKet !== '' ? $bmiKet : null);
 $safe_idcustomer = (int)$idcustomer; 
 $safe_kdProv     = (int)$kdProv;
 $safe_kunjSakit  = $kunjSakit ? "1" : "0";
+require_once __DIR__ . '/../../../utility/visitLog.php';
 $koneksi->begin_transaction();
 try {
     if ($typePatient != 'BPJS') {
@@ -166,6 +167,7 @@ try {
             throw new Exception("Gagal menyimpan data kunjungan lokal UMUM: " . $stmt->error);
         }
         $koneksi->commit();
+        logKunjungan($koneksi, 'daftar', (string) $visit_ID, 'Poli ' . $namapoli . ' · ' . $namadokter . ' · UMUM', null, null, $created_user);
         echo json_encode(['success' => true, 'message' => 'Berhasil Mendaftar Pasien UMUM', 'type' => 'UMUM', 'visitID' => $visit_ID, 'antian' => $nomorantrean]);
         exit;
     }
@@ -302,6 +304,7 @@ try {
     $stmtUpdate->close();
 
     $koneksi->commit();
+    logKunjungan($koneksi, 'daftar', (string) $visit_ID, 'Poli ' . $namapoli . ' · ' . $namadokter . ' · BPJS', null, null, $created_user);
     echo json_encode([
         'success' => true,
         'message' => "Berhasil Mendaftar Pasien BPJS",

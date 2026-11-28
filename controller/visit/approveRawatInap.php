@@ -76,6 +76,9 @@ try {
    apExec("UPDATE ms_room_bed SET bed_status = 0 WHERE id_bed = ?", 'i', [$idBed]);
    $koneksi->commit();
    $nmBed = preg_match('/[0-9A-Za-z]/', (string) $bed['bed_name']) ? $bed['bed_name'] : 'bed #' . $idBed;
+   require_once __DIR__ . '/../../utility/visitLog.php';
+   logKunjungan($koneksi, 'ranap_masuk', (string) $rq['visit_ID_inpatient'], 'Permintaan rawat inap di-approve · ' . $nmBed . ' — ' . ($bed['room_name'] ?: 'ruang'),
+      null, ['id_ranap' => $idRanap, 'id_room' => (int) $bed['id_room'], 'id_bed' => $idBed], 'Rawat Inap');
    apJawab(['status' => 'success', 'message' => 'Pasien ditempatkan di ' . $nmBed . ' — ' . ($bed['room_name'] ?: 'ruang') . ' #' . $bed['id_room'] . '.',
       'visit_ID' => $rq['visit_ID_inpatient'], 'id_bed' => $idBed, 'id_room' => (int) $bed['id_room']]);
 } catch (Throwable $e) {

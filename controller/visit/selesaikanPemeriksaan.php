@@ -88,6 +88,8 @@ try {
 
    // commit
    $koneksi->commit();
+   require_once __DIR__ . '/../../utility/visitLog.php';
+   logKunjungan($koneksi, 'selesai', (string) $visit_ID, kunjunganSelesai($status) ? 'Diselesaikan ulang (buka kunci admin)' : 'Selesaikan pemeriksaan', ['visit_status' => (int) $status], ['visit_status' => 4]);
 
    echo json_encode([
       'status' => 'success',
